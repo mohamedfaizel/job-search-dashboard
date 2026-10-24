@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds and caches
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+.vite/
+.__mf__temp/
+storybook-static/
+playwright-report/
+test-results/
+
+# env files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+*.log
