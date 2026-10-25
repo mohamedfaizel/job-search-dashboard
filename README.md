@@ -53,12 +53,14 @@ which is handy while developing.
 | Tool                                                              | Why               | Check it works     |
 | ----------------------------------------------------------------- | ----------------- | ------------------ |
 | [Git](https://git-scm.com/downloads)                              | Version control   | `git --version`    |
-| [Node.js 22 LTS](https://nodejs.org/)                             | Runs JavaScript   | `node --version`   |
-| pnpm (run `corepack enable` after installing Node)                | Installs packages | `pnpm --version`   |
+| [Node.js 24 LTS](https://nodejs.org/)                             | Runs JavaScript   | `node --version`   |
+| pnpm (`npm install -g pnpm@10` after installing Node)             | Installs packages | `pnpm --version`   |
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Runs PostgreSQL   | `docker --version` |
 | [VS Code](https://code.visualstudio.com/)                         | Editor            |                    |
 
-On Windows, run `corepack enable` in a terminal opened **as Administrator**.
+On Windows, if PowerShell says _"running scripts is disabled on this system"_, run
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once. After installing any tool,
+restart VS Code so its terminal can find it.
 
 ### 2. Get the code
 
