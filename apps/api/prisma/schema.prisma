@@ -1,0 +1,80 @@
+// Database schema. After editing, run `pnpm --filter @jobsearch/api db:migrate` to create a migration.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Where a job came from.
+enum JobSource {
+  JOBSPIPE
+  MANUAL
+}
+
+enum Workplace {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+/// Your own progress on a job. Separate from `postingStatus`, which is whether the ad is still open.
+enum ApplicationStatus {
+  NONE
+  SAVED
+  APPLIED
+  INTERVIEWING
+  OFFER
+  REJECTED
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  domain    String?
+  logoUrl   String?
+  jobs      Job[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Job {
+  id                String            @id @default(cuid())
+  /// The JobsPipe posting id. Null for jobs added by hand.
+  externalId        String?           @unique
+  source            JobSource
+  title             String
+  company           Company           @relation(fields: [companyId], references: [id])
+  companyId         Int
+  url               String?
+  postedAt          DateTime
+  seniority         String?
+  jobFunction       String?
+  skills            String[]
+  city              String?
+  location          String?
+  countryCode       String?
+  salaryMinUsd      Int?
+  salaryMaxUsd      Int?
+  /// True when the salary is JobsPipe's estimate rather than stated in the ad.
+  salaryEstimated   Boolean           @default(false)
+  /// Job board the posting was found on, e.g. "indeed".
+  provider          String?
+  workplace         Workplace?
+  industry          String?
+  description       String?
+  postingStatus     String            @default("active")
+  applicationStatus ApplicationStatus @default(NONE)
+  /// The original API record, kept so new columns can be backfilled without re-fetching.
+  raw               Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([postedAt])
+  @@index([companyId])
+  @@index([applicationStatus])
+}

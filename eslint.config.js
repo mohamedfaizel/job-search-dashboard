@@ -10,7 +10,13 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/.turbo/**', '**/.__mf__temp/**'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/.turbo/**',
+      '**/.__mf__temp/**',
+      'apps/api/src/generated/**',
+    ],
   },
 
   // Rules for every TypeScript/JavaScript file.
@@ -78,13 +84,23 @@ export default tseslint.config(
     },
   },
 
+  // Tests trade some strictness for readability (expect.any(), known-present results).
+  {
+    files: ['**/*.{spec,e2e-spec,test}.{ts,tsx}', 'apps/api/test/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
+    },
+  },
+
   // Config files are not part of any app's tsconfig, so skip type-aware rules there.
   {
-    files: ['**/*.config.{js,ts}'],
+    files: ['**/*.config.{js,ts,mts}'],
     ...tseslint.configs.disableTypeChecked,
   },
   {
-    files: ['**/*.config.{js,ts}'],
+    files: ['**/*.config.{js,ts,mts}'],
     rules: {
       'import-x/no-named-as-default': 'off',
       'import-x/no-named-as-default-member': 'off',

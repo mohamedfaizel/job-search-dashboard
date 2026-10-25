@@ -1,0 +1,213 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+enum ApplicationStatus {
+  APPLIED
+  INTERVIEWING
+  NONE
+  OFFER
+  REJECTED
+  SAVED
+}
+
+type Company {
+  domain: String
+  id: Int!
+  logoUrl: String
+  name: String!
+}
+
+input CreateJobInput {
+  applicationStatus: ApplicationStatus
+  city: String
+  companyName: String!
+
+  """
+  Two-letter ISO code, e.g. "US"
+  """
+  countryCode: String
+  description: String
+  industry: String
+  jobFunction: String
+
+  """Defaults to now"""
+  postedAt: DateTime
+  salaryMaxUsd: Int
+  salaryMinUsd: Int
+  seniority: String
+  skills: [String!]
+  title: String!
+  url: String
+  workplace: Workplace
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Job {
+  applicationStatus: ApplicationStatus!
+  city: String
+  company: Company!
+  countryCode: String
+  createdAt: DateTime!
+  description: String
+
+  """JobsPipe posting id; null for manual jobs"""
+  externalId: String
+  id: ID!
+  industry: String
+  jobFunction: String
+  location: String
+  postedAt: DateTime!
+
+  """Whether the ad is still open ("active" or "closed")"""
+  postingStatus: String!
+
+  """
+  Job board, e.g. "indeed"
+  """
+  provider: String
+
+  """True when the salary is an estimate, not stated in the ad"""
+  salaryEstimated: Boolean!
+  salaryMaxUsd: Int
+  salaryMinUsd: Int
+  seniority: String
+  skills: [String!]!
+  source: JobSource!
+  title: String!
+  updatedAt: DateTime!
+  url: String
+  workplace: Workplace
+}
+
+input JobFilterInput {
+  applicationStatuses: [ApplicationStatus!]
+  cities: [String!]
+  companies: [String!]
+  countryCodes: [String!]
+  industries: [String!]
+  jobFunctions: [String!]
+
+  """Jobs whose top salary reaches at least this"""
+  minSalaryUsd: Int
+  postedAfter: DateTime
+  providers: [String!]
+
+  """Free text matched against job title and company name"""
+  search: String
+  seniorities: [String!]
+
+  """Jobs requiring any of these skills"""
+  skills: [String!]
+  sources: [JobSource!]
+  workplaces: [Workplace!]
+}
+
+type JobFilterOptions {
+  cities: [String!]!
+  companies: [String!]!
+  countryCodes: [String!]!
+  industries: [String!]!
+  jobFunctions: [String!]!
+  providers: [String!]!
+  seniorities: [String!]!
+  skills: [String!]!
+}
+
+type JobPage {
+  items: [Job!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+}
+
+enum JobSortField {
+  APPLICATION_STATUS
+  CITY
+  COMPANY
+  POSTED_AT
+  SALARY
+  SENIORITY
+  TITLE
+  WORKPLACE
+}
+
+input JobSortInput {
+  direction: SortDirection! = DESC
+  field: JobSortField!
+}
+
+enum JobSource {
+  JOBSPIPE
+  MANUAL
+}
+
+type Mutation {
+  """Add a job by hand"""
+  createJob(input: CreateJobInput!): Job!
+
+  """Fetch jobs from JobsPipe and save them"""
+  syncJobs(input: SyncJobsInput!): SyncJobsResult!
+
+  """Track your progress: Saved, Applied, Interviewing…"""
+  updateJobStatus(id: ID!, status: ApplicationStatus!): Job!
+}
+
+type Query {
+  job(id: ID!): Job!
+
+  """Values to offer in each column filter"""
+  jobFilterOptions: JobFilterOptions!
+
+  """Jobs for the dashboard table: filter, sort and paginate"""
+  jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+input SyncJobsInput {
+  """ISO country codes, e.g. ["DE"]"""
+  countryCodes: [String!]
+
+  """Only postings from the last N days"""
+  maxAgeDays: Int! = 7
+
+  """Stop after this many pages to protect credits"""
+  maxPages: Int! = 1
+
+  """Jobs per page (each job costs a credit)"""
+  pageSize: Int! = 25
+
+  """Match any of these skills, e.g. ["react"]"""
+  skills: [String!]
+
+  """Match any of these job titles, e.g. ["frontend"]"""
+  titles: [String!]!
+}
+
+type SyncJobsResult {
+  created: Int!
+  creditsRemaining: Int
+  fetched: Int!
+
+  """True when more pages were left unfetched"""
+  hasMore: Boolean!
+  pages: Int!
+
+  """Total matches JobsPipe reported"""
+  totalAvailable: Int
+  updated: Int!
+}
+
+enum Workplace {
+  HYBRID
+  ONSITE
+  REMOTE
+}
