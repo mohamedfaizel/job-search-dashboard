@@ -119,9 +119,11 @@ export const syncFormSchema = z.object({
       (v) => splitList(v).every((c) => /^[A-Za-z]{2}$/.test(c)),
       'Use 2-letter codes, like US, DE',
     ),
+  locations: z.string(),
   maxAgeDays: positiveInt(90),
-  pageSize: positiveInt(100),
-  maxPages: positiveInt(20),
+  // JobsPipe caps the page size by plan (Free 25, Builder/Growth 100, Scale/Business 500).
+  pageSize: positiveInt(500),
+  maxPages: positiveInt(50),
   onlyNew: z.boolean(),
 });
 
@@ -131,6 +133,7 @@ export const defaultSyncForm: SyncFormValues = {
   titles: 'frontend',
   skills: 'react',
   countryCodes: '',
+  locations: '',
   maxAgeDays: '7',
   pageSize: '25',
   maxPages: '1',
@@ -140,10 +143,12 @@ export const defaultSyncForm: SyncFormValues = {
 export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
   const skills = splitList(values.skills);
   const countryCodes = splitList(values.countryCodes).map((c) => c.toUpperCase());
+  const locations = splitList(values.locations);
   return {
     titles: splitList(values.titles),
     ...(skills.length ? { skills } : {}),
     ...(countryCodes.length ? { countryCodes } : {}),
+    ...(locations.length ? { locations } : {}),
     maxAgeDays: Number(values.maxAgeDays),
     pageSize: Number(values.pageSize),
     maxPages: Number(values.maxPages),

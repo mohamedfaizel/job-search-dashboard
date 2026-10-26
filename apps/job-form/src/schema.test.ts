@@ -67,6 +67,7 @@ describe('toSyncJobsInput', () => {
         titles: 'frontend, react developer',
         skills: '',
         countryCodes: 'de, us',
+        locations: ' Berlin ,, Bavaria',
         maxAgeDays: '2',
         pageSize: '10',
         maxPages: '3',
@@ -75,6 +76,7 @@ describe('toSyncJobsInput', () => {
     ).toEqual({
       titles: ['frontend', 'react developer'],
       countryCodes: ['DE', 'US'],
+      locations: ['Berlin', 'Bavaria'],
       maxAgeDays: 2,
       pageSize: 10,
       maxPages: 3,

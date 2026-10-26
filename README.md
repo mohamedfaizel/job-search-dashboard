@@ -122,6 +122,11 @@ is never stored twice: each JobsPipe posting has a stable id, saved in a unique 
 column, so a re-import updates the row instead. JobsPipe also doesn't charge twice for the same
 job in one calendar month.
 
+**Bigger imports:** JobsPipe returns jobs newest first, one page at a time. _Jobs per page_ is
+capped by your plan (Free 25, Builder/Growth 100, Scale/Business 500) and _Max pages_ limits how
+many pages one import fetches. When an import stops with pages left, the panel shows how many jobs
+match in total and a **Continue import** button that picks up from the next page.
+
 **Without Docker:** install PostgreSQL 16 natively (keep port 5432), skip `pnpm db:up`, and point
 `.env` at it with the password you chose during setup:
 

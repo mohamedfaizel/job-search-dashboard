@@ -37,16 +37,30 @@ export class SyncJobsInput {
   @Length(2, 2, { each: true })
   countryCodes?: string[];
 
+  @Field(() => [String], {
+    nullable: true,
+    description: 'Cities or regions, e.g. ["Berlin", "Bavaria"]. Combine with countryCodes.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  locations?: string[];
+
   @Field(() => Int, { defaultValue: 7, description: 'Only postings from the last N days' })
   @IsInt()
   @Min(1)
   @Max(90)
   maxAgeDays = 7;
 
-  @Field(() => Int, { defaultValue: 25, description: 'Jobs per page (each job costs a credit)' })
+  @Field(() => Int, {
+    defaultValue: 25,
+    description:
+      'Jobs per page (each job costs a credit). JobsPipe caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.',
+  })
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(500)
   pageSize = 25;
 
   @Field(() => Int, {
@@ -55,7 +69,7 @@ export class SyncJobsInput {
   })
   @IsInt()
   @Min(1)
-  @Max(20)
+  @Max(50)
   maxPages = 1;
 
   @Field(() => Boolean, {
@@ -64,6 +78,13 @@ export class SyncJobsInput {
   })
   @IsBoolean()
   onlyNew = true;
+
+  @Field(() => Boolean, {
+    defaultValue: false,
+    description: 'Continue the last import of this search from the page where it stopped',
+  })
+  @IsBoolean()
+  resume = false;
 }
 
 @ObjectType()
@@ -103,4 +124,7 @@ export class SyncJobsResult {
       'With onlyNew: postings found since this time were asked for. Null on a first run.',
   })
   newSince!: Date | null;
+
+  @Field({ description: 'True when this run continued an earlier import from its saved cursor' })
+  resumed!: boolean;
 }

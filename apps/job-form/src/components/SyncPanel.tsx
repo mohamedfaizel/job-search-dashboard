@@ -29,6 +29,10 @@ export function SyncPanel() {
   const [pageSize, maxPages] = useWatch({ control, name: ['pageSize', 'maxPages'] });
   const maxCredits = Number(pageSize) * Number(maxPages);
 
+  // "Continue import" repeats the last search from where it stopped, with the same page settings.
+  const lastInput = sync.variables;
+  const continueCredits = (lastInput?.pageSize ?? 0) * (lastInput?.maxPages ?? 0);
+
   const onSubmit = handleSubmit((values) => {
     sync.mutate(toSyncJobsInput(values));
   });
@@ -78,6 +82,13 @@ export function SyncPanel() {
       >
         <input {...register('countryCodes')} {...a11y('countryCodes')} className={inputClass} />
       </Field>
+      <Field
+        label="Cities or regions"
+        htmlFor="sync-locations"
+        hint="Optional, comma separated, e.g. Berlin, Bavaria"
+      >
+        <input {...register('locations')} {...a11y('locations')} className={inputClass} />
+      </Field>
       <div className="grid grid-cols-3 gap-3">
         <Field label="Max age (days)" htmlFor="sync-maxAgeDays" error={errors.maxAgeDays?.message}>
           <input
@@ -87,7 +98,12 @@ export function SyncPanel() {
             className={inputClass}
           />
         </Field>
-        <Field label="Jobs per page" htmlFor="sync-pageSize" error={errors.pageSize?.message}>
+        <Field
+          label="Jobs per page"
+          htmlFor="sync-pageSize"
+          error={errors.pageSize?.message}
+          hint="Free plan: max 25"
+        >
           <input
             inputMode="numeric"
             {...register('pageSize')}
@@ -146,7 +162,8 @@ export function SyncPanel() {
           className="space-y-1 rounded-md bg-emerald-50 p-3 text-sm text-emerald-800"
         >
           <p>
-            {sync.data.newSince
+            {sync.data.resumed && 'Continued the last import. '}
+            {sync.data.newSince && !sync.data.resumed
               ? `Looked for jobs found since ${formatDateTime(sync.data.newSince)}. `
               : ''}
             {sync.data.fetched === 0
@@ -156,7 +173,9 @@ export function SyncPanel() {
                   ? `, ${sync.data.updated} already in your table (updated, not added twice).`
                   : '.')}
           </p>
-          {sync.data.hasMore && <p>More are available: raise "Max pages" to fetch them.</p>}
+          {sync.data.totalAvailable !== null && !sync.data.resumed && (
+            <p>{plural(sync.data.totalAvailable, 'job')} match this search in total.</p>
+          )}
           <p>
             Used {plural(sync.data.creditsCharged, 'credit')}
             {sync.data.jobsAlreadyPaid > 0 &&
@@ -165,6 +184,21 @@ export function SyncPanel() {
               `, ${sync.data.creditsRemaining.toLocaleString()} left`}
             .
           </p>
+        </div>
+      )}
+      {sync.data?.hasMore && lastInput && (
+        <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <p>More jobs are waiting on the next pages.</p>
+          <button
+            type="button"
+            disabled={sync.isPending}
+            onClick={() => {
+              sync.mutate({ ...lastInput, resume: true });
+            }}
+            className="rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+          >
+            Continue import (up to {plural(continueCredits, 'credit')})
+          </button>
         </div>
       )}
     </form>

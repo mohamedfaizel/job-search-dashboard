@@ -90,6 +90,7 @@ export const SYNC_JOBS = /* GraphQL */ `
       creditsCharged
       jobsAlreadyPaid
       newSince
+      resumed
     }
   }
 `;
