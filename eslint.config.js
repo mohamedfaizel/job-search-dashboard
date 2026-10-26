@@ -15,6 +15,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/.turbo/**',
       '**/.__mf__temp/**',
+      '**/storybook-static/**',
       'apps/api/src/generated/**',
     ],
   },
@@ -55,7 +56,10 @@ export default tseslint.config(
 
   // React apps: hooks rules and accessibility checks.
   {
-    files: ['apps/{shell,dashboard,job-form}/src/**/*.{ts,tsx}'],
+    files: [
+      'apps/{shell,dashboard,job-form}/src/**/*.{ts,tsx}',
+      'apps/storybook/{stories,.storybook}/**/*.{ts,tsx}',
+    ],
     plugins: { 'react-hooks': reactHooks },
     languageOptions: { globals: globals.browser },
     rules: {
@@ -63,13 +67,13 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/{shell,dashboard,job-form}/src/**/*.tsx'],
+    files: ['apps/{shell,dashboard,job-form}/src/**/*.tsx', 'apps/storybook/stories/**/*.tsx'],
     ...jsxA11y.flatConfigs.strict,
   },
 
   // NestJS API: Node globals, and allow the decorated empty classes Nest uses for modules.
   {
-    files: ['apps/api/**/*.ts'],
+    files: ['apps/api/**/*.{ts,mjs}'],
     languageOptions: { globals: globals.node },
     rules: {
       '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
@@ -86,7 +90,11 @@ export default tseslint.config(
 
   // Tests trade some strictness for readability (expect.any(), known-present results).
   {
-    files: ['**/*.{spec,e2e-spec,test}.{ts,tsx}', 'apps/api/test/**/*.ts'],
+    files: [
+      '**/*.{spec,e2e-spec,test}.{ts,tsx}',
+      'apps/api/test/**/*.ts',
+      'apps/*/src/test/**/*.{ts,tsx}',
+    ],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -94,9 +102,9 @@ export default tseslint.config(
     },
   },
 
-  // Config files are not part of any app's tsconfig, so skip type-aware rules there.
+  // Config files and scripts are not part of any app's tsconfig, so skip type-aware rules there.
   {
-    files: ['**/*.config.{js,ts,mts}'],
+    files: ['**/*.config.{js,ts,mts}', 'apps/api/scripts/**/*.mjs'],
     ...tseslint.configs.disableTypeChecked,
   },
   {

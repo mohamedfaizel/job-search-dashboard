@@ -1,0 +1,44 @@
+name: Chromatic
+
+# Visual regression tests: Chromatic builds Storybook, takes a screenshot of every story
+# and shows what changed compared to main. Pixel changes are approved in Chromatic.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  chromatic:
+    name: Visual tests
+    runs-on: ubuntu-latest
+    # Every step is skipped until the CHROMATIC_PROJECT_TOKEN secret is added to the repo.
+    env:
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.CHROMATIC_PROJECT_TOKEN != ''
+        with:
+          fetch-depth: 0 # Chromatic needs the git history to find the baseline
+
+      - uses: pnpm/action-setup@v4
+        if: env.CHROMATIC_PROJECT_TOKEN != ''
+
+      - uses: actions/setup-node@v4
+        if: env.CHROMATIC_PROJECT_TOKEN != ''
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: env.CHROMATIC_PROJECT_TOKEN != ''
+
+      - uses: chromaui/action@v18
+        if: env.CHROMATIC_PROJECT_TOKEN != ''
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: apps/storybook
+          buildScriptName: build
+          storybookBuildDir: storybook-static
+          # Report visual changes without failing the check; review them in Chromatic.
+          exitZeroOnChanges: true
+          onlyChanged: true
