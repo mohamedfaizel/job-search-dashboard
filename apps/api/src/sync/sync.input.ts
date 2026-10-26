@@ -2,6 +2,7 @@ import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
@@ -56,6 +57,13 @@ export class SyncJobsInput {
   @Min(1)
   @Max(20)
   maxPages = 1;
+
+  @Field(() => Boolean, {
+    defaultValue: true,
+    description: 'Only ask for postings JobsPipe found since the last complete run of this search',
+  })
+  @IsBoolean()
+  onlyNew = true;
 }
 
 @ObjectType()
@@ -80,4 +88,19 @@ export class SyncJobsResult {
 
   @Field(() => Int, { nullable: true })
   creditsRemaining!: number | null;
+
+  @Field(() => Int, { description: 'Credits this run used' })
+  creditsCharged!: number;
+
+  @Field(() => Int, {
+    description: 'Jobs that were free because they were already paid this month',
+  })
+  jobsAlreadyPaid!: number;
+
+  @Field(() => Date, {
+    nullable: true,
+    description:
+      'With onlyNew: postings found since this time were asked for. Null on a first run.',
+  })
+  newSince!: Date | null;
 }

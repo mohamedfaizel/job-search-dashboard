@@ -182,6 +182,11 @@ input SyncJobsInput {
   """Stop after this many pages to protect credits"""
   maxPages: Int! = 1
 
+  """
+  Only ask for postings JobsPipe found since the last complete run of this search
+  """
+  onlyNew: Boolean! = true
+
   """Jobs per page (each job costs a credit)"""
   pageSize: Int! = 25
 
@@ -194,11 +199,22 @@ input SyncJobsInput {
 
 type SyncJobsResult {
   created: Int!
+
+  """Credits this run used"""
+  creditsCharged: Int!
   creditsRemaining: Int
   fetched: Int!
 
   """True when more pages were left unfetched"""
   hasMore: Boolean!
+
+  """Jobs that were free because they were already paid this month"""
+  jobsAlreadyPaid: Int!
+
+  """
+  With onlyNew: postings found since this time were asked for. Null on a first run.
+  """
+  newSince: DateTime
   pages: Int!
 
   """Total matches JobsPipe reported"""

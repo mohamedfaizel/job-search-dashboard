@@ -70,6 +70,7 @@ describe('toSyncJobsInput', () => {
         maxAgeDays: '2',
         pageSize: '10',
         maxPages: '3',
+        onlyNew: true,
       }),
     ).toEqual({
       titles: ['frontend', 'react developer'],
@@ -77,6 +78,7 @@ describe('toSyncJobsInput', () => {
       maxAgeDays: 2,
       pageSize: 10,
       maxPages: 3,
+      onlyNew: true,
     });
   });
 });
