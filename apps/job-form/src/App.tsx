@@ -25,7 +25,7 @@ function AddJobs() {
   const { data: searches } = useSavedSearches();
 
   return (
-    <section aria-labelledby="add-jobs-title" className="space-y-4">
+    <section aria-labelledby="add-jobs-title" className="space-y-6">
       <h1 id="add-jobs-title" className="text-xl font-semibold text-slate-900">
         Add jobs
       </h1>
@@ -51,11 +51,8 @@ function AddJobs() {
             id: 'import',
             label: 'Import from JobsPipe',
             panel: (
-              <div className="space-y-8">
-                <div className="max-w-2xl">
-                  <SyncPanel key={formKey} loaded={loaded} />
-                </div>
-                <ImportHistory />
+              <div className="max-w-2xl">
+                <SyncPanel key={formKey} loaded={loaded} />
               </div>
             ),
           },
@@ -70,6 +67,10 @@ function AddJobs() {
           },
         ]}
       />
+      {/* Outside the tabs, so every tab shows what the imports brought in. */}
+      <div className="border-t border-slate-200 pt-6">
+        <ImportHistory />
+      </div>
     </section>
   );
 }
