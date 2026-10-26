@@ -77,20 +77,102 @@ export const UPDATE_JOB_STATUS = /* GraphQL */ `
   }
 `;
 
+const SYNC_RESULT_FIELDS = /* GraphQL */ `
+  pages
+  fetched
+  created
+  updated
+  totalAvailable
+  hasMore
+  creditsRemaining
+  creditsCharged
+  jobsAlreadyPaid
+  newSince
+  resumed
+`;
+
 export const SYNC_JOBS = /* GraphQL */ `
   mutation SyncJobs($input: SyncJobsInput!) {
     syncJobs(input: $input) {
-      pages
-      fetched
-      created
-      updated
-      totalAvailable
-      hasMore
-      creditsRemaining
-      creditsCharged
-      jobsAlreadyPaid
-      newSince
-      resumed
+      ${SYNC_RESULT_FIELDS}
+    }
+  }
+`;
+
+const SYNC_RUN_FIELDS = /* GraphQL */ `
+  id
+  startedAt
+  finishedAt
+  complete
+  fetched
+  created
+  updated
+  creditsCharged
+  jobsAlreadyPaid
+  savedSearchId
+  savedSearchName
+  summary
+`;
+
+const SAVED_SEARCH_FIELDS = /* GraphQL */ `
+  id
+  name
+  titles
+  skills
+  countryCodes
+  locations
+  maxAgeDays
+  pageSize
+  maxPages
+  onlyNew
+  createdAt
+  lastRun {
+    ${SYNC_RUN_FIELDS}
+  }
+`;
+
+export const SAVED_SEARCHES = /* GraphQL */ `
+  query SavedSearches {
+    savedSearches {
+      ${SAVED_SEARCH_FIELDS}
+    }
+  }
+`;
+
+export const SYNC_RUNS = /* GraphQL */ `
+  query SyncRuns($limit: Int) {
+    syncRuns(limit: $limit) {
+      ${SYNC_RUN_FIELDS}
+    }
+  }
+`;
+
+export const CREATE_SAVED_SEARCH = /* GraphQL */ `
+  mutation CreateSavedSearch($input: SavedSearchInput!) {
+    createSavedSearch(input: $input) {
+      ${SAVED_SEARCH_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_SAVED_SEARCH = /* GraphQL */ `
+  mutation UpdateSavedSearch($id: Int!, $input: SavedSearchInput!) {
+    updateSavedSearch(id: $id, input: $input) {
+      ${SAVED_SEARCH_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_SAVED_SEARCH = /* GraphQL */ `
+  mutation DeleteSavedSearch($id: Int!) {
+    deleteSavedSearch(id: $id)
+  }
+`;
+
+export const RUN_SAVED_SEARCH = /* GraphQL */ `
+  mutation RunSavedSearch($id: Int!, $resume: Boolean) {
+    runSavedSearch(id: $id, resume: $resume) {
+      ${SYNC_RESULT_FIELDS}
     }
   }
 `;

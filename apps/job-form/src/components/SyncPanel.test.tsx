@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithData } from '../test/render';
-import { requests } from '../test/server';
+import { requests, SAVED } from '../test/server';
 import { SyncPanel } from './SyncPanel';
 
 describe('SyncPanel', () => {
@@ -82,5 +82,63 @@ describe('SyncPanel', () => {
 
     expect(await screen.findByText('Enter at least one job title')).toBeInTheDocument();
     expect(requests).toHaveLength(0);
+  });
+
+  describe('saving the search', () => {
+    it('saves the form as a named search', async () => {
+      renderWithData(<SyncPanel />);
+      await userEvent.type(screen.getByLabelText(/cities or regions/i), 'Berlin');
+      await userEvent.type(screen.getByLabelText('Save this search as'), 'Frontend in Berlin');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Save search' }));
+
+      expect(await screen.findByText('Saved "Frontend in Berlin".')).toBeInTheDocument();
+      expect(requests[0]).toEqual({
+        operation: 'CreateSavedSearch',
+        variables: {
+          input: {
+            name: 'Frontend in Berlin',
+            titles: ['frontend'],
+            skills: ['react'],
+            locations: ['Berlin'],
+            maxAgeDays: 7,
+            pageSize: 25,
+            maxPages: 1,
+            onlyNew: true,
+          },
+        },
+      });
+    });
+
+    it('needs a name', async () => {
+      renderWithData(<SyncPanel />);
+      await userEvent.click(screen.getByRole('button', { name: 'Save search' }));
+
+      expect(await screen.findByText('Give the search a name')).toBeInTheDocument();
+      expect(requests).toHaveLength(0);
+    });
+
+    it('starts from a loaded search and updates it', async () => {
+      renderWithData(<SyncPanel loaded={SAVED} />);
+      expect(screen.getByLabelText(/cities or regions/i)).toHaveValue('Berlin');
+      expect(screen.getByLabelText('Max pages')).toHaveValue('2');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Update saved search' }));
+
+      await screen.findByText('Saved "Frontend in Berlin".');
+      expect(requests[0]).toMatchObject({ operation: 'UpdateSavedSearch', variables: { id: 1 } });
+    });
+
+    it('saves a renamed copy as a new search', async () => {
+      renderWithData(<SyncPanel loaded={SAVED} />);
+      const name = screen.getByLabelText('Save this search as');
+      await userEvent.clear(name);
+      await userEvent.type(name, 'Frontend in Munich');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Save search' }));
+
+      await screen.findByText('Saved "Frontend in Munich".');
+      expect(requests[0]?.operation).toBe('CreateSavedSearch');
+    });
   });
 });

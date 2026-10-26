@@ -1,4 +1,4 @@
-import type { CreateJobInput, SyncJobsInput } from '@jobsearch/data';
+import type { CreateJobInput, SavedSearch, SavedSearchInput, SyncJobsInput } from '@jobsearch/data';
 import { APPLICATION_STATUSES, WORKPLACES } from '@jobsearch/data';
 import { z } from 'zod';
 
@@ -154,4 +154,22 @@ export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
     maxPages: Number(values.maxPages),
     onlyNew: values.onlyNew,
   };
+}
+
+/** A saved search → the import form, so it can be edited, run or saved again. */
+export function savedSearchToForm(search: SavedSearch): SyncFormValues {
+  return {
+    titles: search.titles.join(', '),
+    skills: search.skills.join(', '),
+    countryCodes: search.countryCodes.join(', '),
+    locations: search.locations.join(', '),
+    maxAgeDays: String(search.maxAgeDays),
+    pageSize: String(search.pageSize),
+    maxPages: String(search.maxPages),
+    onlyNew: search.onlyNew,
+  };
+}
+
+export function toSavedSearchInput(name: string, values: SyncFormValues): SavedSearchInput {
+  return { name: name.trim(), ...toSyncJobsInput(values) };
 }

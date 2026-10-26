@@ -99,6 +99,27 @@ model SyncRun {
   nextCursor      String?
   /// The discovered_at_gte the run sent. A continued run must send the same one.
   discoveredAtGte String?
+  /// The saved search that ran this import, if any. Kept when the search is deleted.
+  savedSearch     SavedSearch? @relation(fields: [savedSearchId], references: [id], onDelete: SetNull)
+  savedSearchId   Int?
 
   @@index([searchKey, startedAt])
+  @@index([savedSearchId])
+}
+
+/// A JobsPipe search you gave a name, so it can be run again in one click (and on a schedule later).
+model SavedSearch {
+  id           Int       @id @default(autoincrement())
+  name         String    @unique
+  titles       String[]
+  skills       String[]
+  countryCodes String[]
+  locations    String[]
+  maxAgeDays   Int       @default(7)
+  pageSize     Int       @default(25)
+  maxPages     Int       @default(1)
+  onlyNew      Boolean   @default(true)
+  runs         SyncRun[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

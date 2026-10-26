@@ -67,7 +67,10 @@ export class SyncService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async sync(input: SyncJobsInput): Promise<SyncJobsResult> {
+  async sync(
+    input: SyncJobsInput,
+    options: { savedSearchId?: number } = {},
+  ): Promise<SyncJobsResult> {
     const key = searchKey(input);
     const start = input.resume ? await this.resumePoint(key) : await this.freshStart(key, input);
 
@@ -135,6 +138,7 @@ export class SyncService {
         jobsAlreadyPaid: result.jobsAlreadyPaid,
         nextCursor: cursor,
         discoveredAtGte: start.discoveredAtGte,
+        savedSearchId: options.savedSearchId ?? null,
       },
     });
 
