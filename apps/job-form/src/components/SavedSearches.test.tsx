@@ -58,4 +58,41 @@ describe('SavedSearches', () => {
       expect(requests[0]).toEqual({ operation: 'DeleteSavedSearch', variables: { id: 1 } });
     });
   });
+
+  it("shows today's credit budget and the schedule", async () => {
+    const card = await renderCard();
+
+    expect(await screen.findByText(/Today: 35 of 100 credits used/)).toBeInTheDocument();
+    expect(card.getByLabelText('Run automatically')).toHaveValue('DAILY');
+    expect(card.getByLabelText('At')).toHaveValue('07:00');
+    expect(card.getByText(/^Next run:/)).toBeInTheDocument();
+    expect(card.getByText(/^Ran at 26 Oct, 07:00/)).toBeInTheDocument();
+  });
+
+  it('saves a new schedule only after something changed', async () => {
+    const card = await renderCard();
+    expect(card.queryByRole('button', { name: 'Save schedule' })).not.toBeInTheDocument();
+
+    await userEvent.selectOptions(card.getByLabelText('Run automatically'), 'Weekdays (Mon–Fri)');
+    const time = card.getByLabelText('At');
+    await userEvent.clear(time);
+    await userEvent.type(time, '08:30');
+    await userEvent.click(card.getByRole('button', { name: 'Save schedule' }));
+
+    await vi.waitFor(() => {
+      expect(requests[0]).toEqual({
+        operation: 'SetSavedSearchSchedule',
+        variables: { id: 1, input: { schedule: 'WEEKDAYS', runAt: '08:30' } },
+      });
+    });
+  });
+
+  it('hides the time when the schedule is off', async () => {
+    const card = await renderCard();
+
+    await userEvent.selectOptions(card.getByLabelText('Run automatically'), 'Off');
+
+    expect(card.queryByLabelText('At')).not.toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Save schedule' })).toBeEnabled();
+  });
 });

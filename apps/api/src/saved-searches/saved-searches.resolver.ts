@@ -1,11 +1,34 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { SyncJobsResult } from '../sync/sync.input';
-import { SavedSearch, SavedSearchInput, SyncRunModel } from './saved-search.model';
+import {
+  ImportBudget,
+  SavedSearch,
+  SavedSearchInput,
+  ScheduleInput,
+  SyncRunModel,
+} from './saved-search.model';
 import { SavedSearchesService } from './saved-searches.service';
+import { SchedulerService } from './scheduler.service';
 
 @Resolver(() => SavedSearch)
 export class SavedSearchesResolver {
-  constructor(private readonly service: SavedSearchesService) {}
+  constructor(
+    private readonly service: SavedSearchesService,
+    private readonly scheduler: SchedulerService,
+  ) {}
+
+  @Query(() => ImportBudget, { description: "Today's credits used against DAILY_CREDIT_CAP" })
+  importBudget(): Promise<ImportBudget> {
+    return this.scheduler.budget();
+  }
+
+  @Mutation(() => SavedSearch, { description: 'Turn scheduled runs of a saved search on or off' })
+  setSavedSearchSchedule(
+    @Args('id', { type: () => Int }) id: number,
+    @Args('input') input: ScheduleInput,
+  ): Promise<SavedSearch> {
+    return this.service.setSchedule(id, input.schedule, input.runAt);
+  }
 
   @Query(() => [SavedSearch], {
     description: 'Your saved searches, by name, with their last import',

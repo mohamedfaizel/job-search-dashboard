@@ -1,9 +1,12 @@
-import type { SavedSearch, SyncJobsResult } from '@jobsearch/data';
+import type { SavedSearch, ScheduleFrequency, SyncJobsResult } from '@jobsearch/data';
 import {
   getErrorMessage,
+  SCHEDULE_FREQUENCIES,
   useDeleteSavedSearch,
+  useImportBudget,
   useRunSavedSearch,
   useSavedSearches,
+  useSetSchedule,
 } from '@jobsearch/data';
 import { useState } from 'react';
 import { formatDateTime, plural } from '../format';
@@ -16,12 +19,21 @@ interface Props {
 /** Your saved searches as cards: what they look for, how the last import went, and actions. */
 export function SavedSearches({ onLoad }: Props) {
   const { data: searches, isPending, error } = useSavedSearches();
+  const { data: budget } = useImportBudget();
 
   return (
     <section aria-labelledby="saved-heading" className="space-y-3">
-      <h2 id="saved-heading" className="text-lg font-semibold text-slate-900">
-        Saved searches
-      </h2>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="saved-heading" className="text-lg font-semibold text-slate-900">
+          Saved searches
+        </h2>
+        {budget && (
+          <p className="text-sm text-slate-600">
+            Today: {budget.used} of {plural(budget.cap, 'credit')} used. Scheduled imports stop
+            before going over.
+          </p>
+        )}
+      </div>
       {isPending && <p className="text-sm text-slate-500">Loading saved searches…</p>}
       {error && (
         <p role="alert" className="text-sm text-red-700">
@@ -81,6 +93,8 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
             }.`
           : 'Never run.'}
       </p>
+
+      <ScheduleControls search={search} />
 
       {run.data && <RunResult result={run.data} />}
       {run.isError && (
@@ -173,5 +187,86 @@ function RunResult({ result }: { result: SyncJobsResult }) {
         : `${result.created} new, ${result.updated} already in your table.`}{' '}
       Used {plural(result.creditsCharged, 'credit')}.{result.hasMore && ' More pages are waiting.'}
     </p>
+  );
+}
+
+const FREQUENCY_LABELS: Record<ScheduleFrequency, string> = {
+  OFF: 'Off',
+  HOURLY: 'Every hour',
+  DAILY: 'Every day',
+  WEEKDAYS: 'Weekdays (Mon–Fri)',
+};
+
+/** Pick how often the API imports this search by itself, and see what happened last time. */
+function ScheduleControls({ search }: { search: SavedSearch }) {
+  const setSchedule = useSetSchedule();
+  const [schedule, setFrequency] = useState(search.schedule);
+  const [runAt, setRunAt] = useState(search.runAt);
+  const changed = schedule !== search.schedule || runAt !== search.runAt;
+  const id = `schedule-${search.id}`;
+
+  return (
+    <fieldset className="space-y-2 rounded-md bg-slate-50 p-3">
+      <legend className="sr-only">Schedule for {search.name}</legend>
+      <div className="flex flex-wrap items-end gap-2">
+        <div>
+          <label className="block text-xs text-slate-600" htmlFor={`${id}-frequency`}>
+            Run automatically
+          </label>
+          <select
+            id={`${id}-frequency`}
+            value={schedule}
+            onChange={(event) => {
+              setFrequency(event.target.value as ScheduleFrequency);
+            }}
+            className="mt-1 block rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+          >
+            {SCHEDULE_FREQUENCIES.map((value) => (
+              <option key={value} value={value}>
+                {FREQUENCY_LABELS[value]}
+              </option>
+            ))}
+          </select>
+        </div>
+        {schedule !== 'OFF' && (
+          <div>
+            <label className="block text-xs text-slate-600" htmlFor={`${id}-time`}>
+              {schedule === 'HOURLY' ? 'At minute of' : 'At'}
+            </label>
+            <input
+              id={`${id}-time`}
+              type="time"
+              required
+              value={runAt}
+              onChange={(event) => {
+                setRunAt(event.target.value);
+              }}
+              className="mt-1 block rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+            />
+          </div>
+        )}
+        {changed && (
+          <button
+            type="button"
+            disabled={setSchedule.isPending || runAt === ''}
+            onClick={() => {
+              setSchedule.mutate({ id: search.id, schedule, runAt });
+            }}
+            className="rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-50"
+          >
+            Save schedule
+          </button>
+        )}
+      </div>
+      {search.schedule !== 'OFF' && search.nextRunAt && (
+        <p className="text-xs text-slate-600">Next run: {formatDateTime(search.nextRunAt)}</p>
+      )}
+      {search.scheduleNote && <p className="text-xs text-slate-600">{search.scheduleNote}</p>}
+      {setSchedule.isError && (
+        <p role="alert" className="text-sm text-red-700">
+          Could not save the schedule: {getErrorMessage(setSchedule.error)}
+        </p>
+      )}
+    </fieldset>
   );
 }

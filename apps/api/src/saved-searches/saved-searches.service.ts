@@ -4,6 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { SyncJobsInput, SyncJobsResult } from '../sync/sync.input';
 import { SyncService } from '../sync/sync.service';
 import type { SavedSearch, SavedSearchInput, SyncRunModel } from './saved-search.model';
+import type { ScheduleFrequency } from './schedule';
+import { nextRunAfter } from './schedule';
 
 type RunRow = Prisma.SyncRunGetPayload<{ include: { savedSearch: { select: { name: true } } } }>;
 
@@ -32,6 +34,7 @@ export function toRunModel(run: RunRow): SyncRunModel {
     jobsAlreadyPaid: run.jobsAlreadyPaid,
     savedSearchId: run.savedSearchId,
     savedSearchName: run.savedSearch?.name ?? null,
+    scheduled: run.scheduled,
     summary: summarize(run.input),
   };
 }
@@ -82,6 +85,22 @@ export class SavedSearchesService {
     return updated;
   }
 
+  async setSchedule(id: number, schedule: ScheduleFrequency, runAt: string): Promise<SavedSearch> {
+    await this.findRow(id);
+    await this.prisma.savedSearch.update({
+      where: { id },
+      data: {
+        schedule,
+        runAt,
+        nextRunAt: nextRunAfter(schedule, runAt, new Date()),
+        scheduleNote: null,
+      },
+    });
+    const updated = (await this.list()).find((s) => s.id === id);
+    if (!updated) throw new NotFoundException(`Saved search ${id} not found`);
+    return updated;
+  }
+
   async remove(id: number): Promise<boolean> {
     await this.findRow(id);
     // Its imports stay in the history; their link is cleared (onDelete: SetNull).
@@ -89,7 +108,11 @@ export class SavedSearchesService {
     return true;
   }
 
-  async run(id: number, resume: boolean): Promise<SyncJobsResult> {
+  async run(
+    id: number,
+    resume: boolean,
+    options: { scheduled?: boolean } = {},
+  ): Promise<SyncJobsResult> {
     const row = await this.findRow(id);
     const input: SyncJobsInput = {
       titles: row.titles,
@@ -102,7 +125,7 @@ export class SavedSearchesService {
       onlyNew: row.onlyNew,
       resume,
     };
-    return this.sync.sync(input, { savedSearchId: row.id });
+    return this.sync.sync(input, { savedSearchId: row.id, scheduled: options.scheduled ?? false });
   }
 
   private async findRow(id: number): Promise<SavedSearchRow> {

@@ -52,6 +52,11 @@ export function ImportHistory() {
                       <span className="font-medium text-slate-900">{run.savedSearchName}: </span>
                     )}
                     {run.summary}
+                    {run.scheduled && (
+                      <span className="ml-2 rounded bg-indigo-50 px-1.5 py-0.5 text-xs text-indigo-700">
+                        Scheduled
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">{run.created}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{run.updated}</td>

@@ -69,7 +69,7 @@ export class SyncService {
 
   async sync(
     input: SyncJobsInput,
-    options: { savedSearchId?: number } = {},
+    options: { savedSearchId?: number; scheduled?: boolean } = {},
   ): Promise<SyncJobsResult> {
     const key = searchKey(input);
     const start = input.resume ? await this.resumePoint(key) : await this.freshStart(key, input);
@@ -139,6 +139,7 @@ export class SyncService {
         nextCursor: cursor,
         discoveredAtGte: start.discoveredAtGte,
         savedSearchId: options.savedSearchId ?? null,
+        scheduled: options.scheduled ?? false,
       },
     });
 

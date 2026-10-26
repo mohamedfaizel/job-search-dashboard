@@ -166,6 +166,8 @@ export interface SyncRun {
   jobsAlreadyPaid: number | null;
   savedSearchId: number | null;
   savedSearchName: string | null;
+  /** True when the scheduler started it. */
+  scheduled: boolean;
   /** e.g. "frontend · DE · Berlin" */
   summary: string;
 }
@@ -181,6 +183,22 @@ export interface SavedSearch {
   pageSize: number;
   maxPages: number;
   onlyNew: boolean;
+  schedule: ScheduleFrequency;
+  /** "HH:mm" in the API server's local time. */
+  runAt: string;
+  nextRunAt: string | null;
+  /** What happened at the last scheduled time (ran, skipped for credits, failed). */
+  scheduleNote: string | null;
   createdAt: string;
   lastRun: SyncRun | null;
+}
+
+export const SCHEDULE_FREQUENCIES = ['OFF', 'HOURLY', 'DAILY', 'WEEKDAYS'] as const;
+export type ScheduleFrequency = (typeof SCHEDULE_FREQUENCIES)[number];
+
+export interface ImportBudget {
+  /** Credits used by every import since midnight (server time). */
+  used: number;
+  /** DAILY_CREDIT_CAP: scheduled runs stop before going over it. */
+  cap: number;
 }
