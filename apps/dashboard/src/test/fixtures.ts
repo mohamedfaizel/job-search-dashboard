@@ -1,0 +1,55 @@
+import type { Job, JobFilterOptions } from '@jobsearch/data';
+
+export function makeJob(overrides: Partial<Job> = {}): Job {
+  return {
+    id: 'job-1',
+    source: 'JOBSPIPE',
+    title: 'Senior Frontend Engineer',
+    company: { id: 1, name: 'Acme', logoUrl: null },
+    url: 'https://example.com/jobs/1',
+    postedAt: '2026-10-24T12:00:00.000Z',
+    seniority: 'senior',
+    jobFunction: 'Engineering',
+    skills: ['react', 'typescript', 'graphql'],
+    city: 'Berlin',
+    countryCode: 'DE',
+    salaryMinUsd: 90_000,
+    salaryMaxUsd: 120_000,
+    salaryEstimated: false,
+    provider: 'indeed',
+    workplace: 'REMOTE',
+    industry: 'Computer programming',
+    description: 'Build the dashboard of the future.\n\nYou will work with React.',
+    postingStatus: 'active',
+    applicationStatus: 'NONE',
+    ...overrides,
+  };
+}
+
+export const JOBS: Job[] = [
+  makeJob(),
+  makeJob({
+    id: 'job-2',
+    title: 'Backend Developer',
+    company: { id: 2, name: 'Beta GmbH', logoUrl: null },
+    seniority: null,
+    skills: ['node.js'],
+    city: 'Aachen',
+    salaryMinUsd: null,
+    salaryMaxUsd: null,
+    workplace: 'HYBRID',
+    provider: 'linkedin',
+    applicationStatus: 'APPLIED',
+  }),
+];
+
+export const FILTER_OPTIONS: JobFilterOptions = {
+  companies: ['Acme', 'Beta GmbH'],
+  seniorities: ['senior'],
+  jobFunctions: ['Engineering'],
+  skills: ['graphql', 'node.js', 'react', 'typescript'],
+  cities: ['Aachen', 'Berlin'],
+  countryCodes: ['DE'],
+  providers: ['indeed', 'linkedin'],
+  industries: ['Computer programming'],
+};

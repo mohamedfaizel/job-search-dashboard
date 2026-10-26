@@ -14,7 +14,8 @@
     "test:e2e": "vitest run --project e2e",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "node scripts/seed-demo.mjs"
   },
   "dependencies": {
     "@apollo/server": "^5.5.1",

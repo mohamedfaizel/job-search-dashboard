@@ -17,7 +17,7 @@ export function Layout({ current, onNavigate, children }: Props) {
   return (
     <div className="min-h-screen bg-slate-100">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6">
           <span className="font-semibold text-slate-900">Job Search</span>
           <nav aria-label="Main">
             <ul className="flex gap-2">
@@ -39,7 +39,7 @@ export function Layout({ current, onNavigate, children }: Props) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+      <main className="px-4 py-6 sm:px-6">{children}</main>
     </div>
   );
 }

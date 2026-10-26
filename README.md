@@ -4,7 +4,7 @@ A full-stack job search dashboard. It pulls live job postings from the
 [JobsPipe](https://jobspipe.dev) API, stores them in PostgreSQL, and shows them in a
 sortable, filterable table. You can also add jobs by hand.
 
-> **Status:** step 2 of 4 (backend API). See the [roadmap](#roadmap).
+> **Status:** step 3 of 4 (dashboard UI). See the [roadmap](#roadmap).
 
 ## Architecture
 
@@ -32,19 +32,36 @@ flowchart LR
 | `apps/dashboard` | Microfrontend: the job posts table.                               | 5174 |
 | `apps/job-form`  | Microfrontend: form for adding a job by hand.                     | 5175 |
 | `apps/api`       | NestJS backend. Holds the JobsPipe token so it never hits the UI. | 3000 |
+| `apps/storybook` | Storybook: a catalogue of the UI components, used by Chromatic.   | 6006 |
+| `packages/data`  | Shared data layer: GraphQL client, TanStack Query hooks, Redux.   |      |
 
 The microfrontends are separate Vite apps joined with
 [Module Federation](https://module-federation.io/). Each can also run on its own,
 which is handy while developing.
 
+### How the frontend handles data
+
+- **TanStack Query** owns _server_ state: it fetches jobs over GraphQL, caches them, and
+  refetches after a change (adding a job, updating a status).
+- **Redux Toolkit** owns _UI_ state that more than one microfrontend cares about: the table's
+  search, column filters, sort and page.
+- Both live in `packages/data` and are shared as Module Federation **singletons**, so the
+  dashboard and the form use the same store and cache. Add a job in the form, go back to the
+  table, and it is already there with your filters still applied.
+
+Sorting, filtering and paging happen in PostgreSQL (through the API), not in the browser, so
+the table stays fast with thousands of jobs.
+
 ## Tech stack
 
-- **Frontend:** React 19, Vite, TypeScript (strict), Tailwind CSS 4, Module Federation
+- **Frontend:** React 19, Vite, TypeScript (strict), Tailwind CSS 4, Module Federation,
+  TanStack Query + Table, Redux Toolkit, React Hook Form + Zod
 - **Backend:** NestJS, GraphQL (Apollo, code-first), Prisma 7, PostgreSQL (Docker)
 - **Quality:** ESLint (typescript-eslint, react-hooks, jsx-a11y, import-x), Prettier,
   Husky + lint-staged, GitHub Actions CI
-- **Tests:** Vitest + React Testing Library, MSW (mocks JobsPipe), API end-to-end tests against
-  a real PostgreSQL; Playwright and Chromatic arrive in later steps
+- **Tests:** Vitest + React Testing Library, MSW (mocks the GraphQL API and JobsPipe), API
+  end-to-end tests against a real PostgreSQL, Storybook + Chromatic visual tests; Playwright
+  arrives in step 4
 - **Monorepo:** pnpm workspaces + Turborepo
 
 ## Getting started
@@ -90,6 +107,14 @@ pnpm dev                                   # start the api and all three fronten
 ```
 
 Open <http://localhost:5173>. Check the API at <http://localhost:3000/health>.
+
+**Fill the table:** either open **Add jobs** and use _Import from JobsPipe_ (needs your token
+in `.env`, and each job costs one credit), or load 36 made-up demo jobs for free while the API
+is running:
+
+```bash
+pnpm --filter @jobsearch/api db:seed
+```
 
 **Without Docker:** install PostgreSQL 16 natively (keep port 5432), skip `pnpm db:up`, and point
 `.env` at it with the password you chose during setup:
@@ -173,6 +198,22 @@ The schema lives in [`apps/api/prisma/schema.prisma`](apps/api/prisma/schema.pri
 editing it, run `pnpm --filter @jobsearch/api db:migrate` and give the migration a name. That
 creates a SQL file under `prisma/migrations` which is committed with your change.
 
+## Storybook and visual tests
+
+```bash
+pnpm --filter @jobsearch/storybook storybook   # opens http://localhost:6006
+```
+
+Storybook shows each component (table, badges, description popup, forms) on its own with
+sample data, without the API or database. The stories live in
+[`apps/storybook/stories`](apps/storybook/stories).
+
+[Chromatic](https://www.chromatic.com/) screenshots every story on each pull request and
+highlights pixel changes. To turn it on: sign in to Chromatic with GitHub, create a project for
+this repo, then add its project token as a repository secret named `CHROMATIC_PROJECT_TOKEN`
+(GitHub → Settings → Secrets and variables → Actions). Until then the Chromatic workflow skips
+itself.
+
 ## Scripts
 
 | Command             | What it does                     |
@@ -194,10 +235,11 @@ unformatted code never lands in the repo.
 ## Roadmap
 
 1. **Foundation:** monorepo, apps, tooling, CI
-2. **Backend** (this step): Prisma schema, JobsPipe sync into PostgreSQL, GraphQL API
+2. **Backend:** Prisma schema, JobsPipe sync into PostgreSQL, GraphQL API
    (jobs query with filters/sorting, add-job and status mutations)
-3. **Frontend:** sortable table with column filters, job description popup,
-   add-job form, TanStack Query + Redux Toolkit, Storybook + Chromatic, MSW
+3. **Frontend** (this step): sortable table with column filters, job description popup,
+   application status button, add-job form, JobsPipe import, TanStack Query + Redux Toolkit,
+   Storybook + Chromatic, MSW
 4. **End-to-end and publish:** Playwright tests, screenshots, live deploy
 
-Later: scheduled searches, Claude-powered resume builder, application status tracking.
+Later: scheduled searches and a Claude-powered resume builder.

@@ -19,6 +19,11 @@ export default defineConfig({
       shared: {
         react: { singleton: true },
         'react-dom': { singleton: true },
+        // One copy of the data layer, so every microfrontend shares the Redux store and query cache.
+        '@jobsearch/data': { singleton: true },
+        '@tanstack/react-query': { singleton: true },
+        'react-redux': { singleton: true },
+        '@reduxjs/toolkit': { singleton: true },
       },
     }),
   ],
