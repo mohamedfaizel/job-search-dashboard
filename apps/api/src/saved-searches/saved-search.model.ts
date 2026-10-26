@@ -1,6 +1,7 @@
 import { Field, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
-import { IsString, Length } from 'class-validator';
+import { IsEnum, IsString, Length, Matches } from 'class-validator';
 import { SyncJobsInput } from '../sync/sync.input';
+import { ScheduleFrequency } from './schedule';
 
 /** A search to save: a name plus the same fields as an import (without "continue"). */
 @InputType()
@@ -47,6 +48,9 @@ export class SyncRunModel {
   @Field(() => String, { nullable: true, description: 'Name of the saved search that ran it' })
   savedSearchName!: string | null;
 
+  @Field({ description: 'True when the scheduler started it' })
+  scheduled!: boolean;
+
   @Field({ description: 'Short description of what was searched, e.g. "frontend · DE · Berlin"' })
   summary!: string;
 }
@@ -83,6 +87,21 @@ export class SavedSearch {
   @Field()
   onlyNew!: boolean;
 
+  @Field(() => ScheduleFrequency)
+  schedule!: ScheduleFrequency;
+
+  @Field({ description: 'Time of day for scheduled runs, "HH:mm" in the server\'s local time' })
+  runAt!: string;
+
+  @Field(() => Date, { nullable: true, description: 'When the scheduler runs it next' })
+  nextRunAt!: Date | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'What happened at the last scheduled time (ran, skipped for credits, failed)',
+  })
+  scheduleNote!: string | null;
+
   @Field()
   createdAt!: Date;
 
@@ -91,4 +110,27 @@ export class SavedSearch {
     description: 'The most recent import of this search',
   })
   lastRun!: SyncRunModel | null;
+}
+
+@InputType()
+export class ScheduleInput {
+  @Field(() => ScheduleFrequency)
+  @IsEnum(ScheduleFrequency)
+  schedule!: ScheduleFrequency;
+
+  @Field(() => String, {
+    defaultValue: '07:00',
+    description: '"HH:mm", 24-hour, server local time',
+  })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'runAt must be a time like 07:30' })
+  runAt: string = '07:00';
+}
+
+@ObjectType()
+export class ImportBudget {
+  @Field(() => Int, { description: 'Credits used by every import since midnight (server time)' })
+  used!: number;
+
+  @Field(() => Int, { description: 'DAILY_CREDIT_CAP: scheduled runs stop before going over it' })
+  cap!: number;
 }

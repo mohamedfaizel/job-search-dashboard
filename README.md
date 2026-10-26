@@ -131,6 +131,13 @@ match in total and a **Continue import** button that picks up from the next page
 gets a card with **Run now**, **Edit** (loads it into the import form; save with the same name to
 update it) and **Delete**. _Import history_ lists the last 20 imports with what each brought in.
 
+**Scheduled imports:** on a saved search card, pick _Run automatically_ (every hour, every day or
+weekdays), a time, and **Save schedule**. While the API is running it checks every minute for due
+searches and imports only jobs new since the last run. Times are the API computer's local time. To
+protect your credits, a scheduled run is skipped when it could push today's total over
+`DAILY_CREDIT_CAP` (default 100, in `.env`); the card says why, and the header shows today's usage.
+Scheduled runs are tagged in _Import history_.
+
 **Without Docker:** install PostgreSQL 16 natively (keep port 5432), skip `pnpm db:up`, and point
 `.env` at it with the password you chose during setup:
 
@@ -258,4 +265,6 @@ unformatted code never lands in the repo.
    Storybook + Chromatic, MSW
 4. **End-to-end and publish:** Playwright tests, screenshots, live deploy
 
-Later: scheduled searches and a Claude-powered resume builder.
+Done since: saved and scheduled searches with a daily credit cap.
+
+Later: a Claude-powered resume builder.

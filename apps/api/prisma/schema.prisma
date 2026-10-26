@@ -82,12 +82,12 @@ model Job {
 /// One finished import from JobsPipe. The latest complete run of a search tells the next
 /// run where to start, so it only asks for postings discovered since then.
 model SyncRun {
-  id              Int      @id @default(autoincrement())
+  id              Int          @id @default(autoincrement())
   /// The search's titles, skills and countries, normalized. Same search = same key.
   searchKey       String
   input           Json
   startedAt       DateTime
-  finishedAt      DateTime @default(now())
+  finishedAt      DateTime     @default(now())
   /// True when every page was fetched (the run did not stop at maxPages).
   complete        Boolean
   fetched         Int
@@ -102,24 +102,41 @@ model SyncRun {
   /// The saved search that ran this import, if any. Kept when the search is deleted.
   savedSearch     SavedSearch? @relation(fields: [savedSearchId], references: [id], onDelete: SetNull)
   savedSearchId   Int?
+  /// True when the scheduler started this import, not a person.
+  scheduled       Boolean      @default(false)
 
   @@index([searchKey, startedAt])
   @@index([savedSearchId])
 }
 
+enum ScheduleFrequency {
+  OFF
+  HOURLY
+  DAILY
+  WEEKDAYS
+}
+
 /// A JobsPipe search you gave a name, so it can be run again in one click (and on a schedule later).
 model SavedSearch {
-  id           Int       @id @default(autoincrement())
-  name         String    @unique
+  id           Int               @id @default(autoincrement())
+  name         String            @unique
   titles       String[]
   skills       String[]
   countryCodes String[]
   locations    String[]
-  maxAgeDays   Int       @default(7)
-  pageSize     Int       @default(25)
-  maxPages     Int       @default(1)
-  onlyNew      Boolean   @default(true)
+  maxAgeDays   Int               @default(7)
+  pageSize     Int               @default(25)
+  maxPages     Int               @default(1)
+  onlyNew      Boolean           @default(true)
+  /// How often the scheduler runs this search by itself.
+  schedule     ScheduleFrequency @default(OFF)
+  /// Time of day for scheduled runs, "HH:mm" in the API server's local time.
+  runAt        String            @default("07:00")
+  /// When the scheduler will run it next. Null when the schedule is off.
+  nextRunAt    DateTime?
+  /// What happened at the last scheduled time, e.g. a skip because of the credit cap.
+  scheduleNote String?
   runs         SyncRun[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }

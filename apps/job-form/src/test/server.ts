@@ -21,6 +21,7 @@ export const LAST_RUN: SyncRun = {
   jobsAlreadyPaid: 5,
   savedSearchId: 1,
   savedSearchName: 'Frontend in Berlin',
+  scheduled: false,
   summary: 'frontend · react · DE · Berlin',
 };
 
@@ -35,6 +36,10 @@ export const SAVED: SavedSearch = {
   pageSize: 25,
   maxPages: 2,
   onlyNew: true,
+  schedule: 'DAILY',
+  runAt: '07:00',
+  nextRunAt: '2026-10-27T07:00:00.000Z',
+  scheduleNote: 'Ran at 26 Oct, 07:00: 20 new, 5 already saved.',
   createdAt: '2026-10-25T08:00:00.000Z',
   lastRun: LAST_RUN,
 };
@@ -90,6 +95,7 @@ export const server = setupServer(
             savedSearchName: null,
             summary: 'backend',
             complete: false,
+            scheduled: true,
           },
         ],
       },
@@ -109,6 +115,14 @@ export const server = setupServer(
   api.mutation('DeleteSavedSearch', ({ variables }) => {
     requests.push({ operation: 'DeleteSavedSearch', variables });
     return HttpResponse.json({ data: { deleteSavedSearch: true } });
+  }),
+  api.query('ImportBudget', () =>
+    HttpResponse.json({ data: { importBudget: { used: 35, cap: 100 } } }),
+  ),
+  api.mutation('SetSavedSearchSchedule', ({ variables }) => {
+    requests.push({ operation: 'SetSavedSearchSchedule', variables });
+    const input = variables['input'] as Pick<SavedSearch, 'schedule' | 'runAt'>;
+    return HttpResponse.json({ data: { setSavedSearchSchedule: { ...SAVED, ...input } } });
   }),
   api.mutation('RunSavedSearch', ({ variables }) => {
     requests.push({ operation: 'RunSavedSearch', variables });

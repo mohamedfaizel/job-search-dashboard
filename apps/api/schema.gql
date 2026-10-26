@@ -47,6 +47,14 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type ImportBudget {
+  """DAILY_CREDIT_CAP: scheduled runs stop before going over it"""
+  cap: Int!
+
+  """Credits used by every import since midnight (server time)"""
+  used: Int!
+}
+
 type Job {
   applicationStatus: ApplicationStatus!
   city: String
@@ -162,6 +170,9 @@ type Mutation {
     resume: Boolean! = false
   ): SyncJobsResult!
 
+  """Turn scheduled runs of a saved search on or off"""
+  setSavedSearchSchedule(id: Int!, input: ScheduleInput!): SavedSearch!
+
   """Fetch jobs from JobsPipe and save them"""
   syncJobs(input: SyncJobsInput!): SyncJobsResult!
 
@@ -171,6 +182,8 @@ type Mutation {
 }
 
 type Query {
+  """Today's credits used against DAILY_CREDIT_CAP"""
+  importBudget: ImportBudget!
   job(id: ID!): Job!
 
   """Values to offer in each column filter"""
@@ -197,8 +210,20 @@ type SavedSearch {
   maxAgeDays: Int!
   maxPages: Int!
   name: String!
+
+  """When the scheduler runs it next"""
+  nextRunAt: DateTime
   onlyNew: Boolean!
   pageSize: Int!
+
+  """Time of day for scheduled runs, "HH:mm" in the server's local time"""
+  runAt: String!
+  schedule: ScheduleFrequency!
+
+  """
+  What happened at the last scheduled time (ran, skipped for credits, failed)
+  """
+  scheduleNote: String
   skills: [String!]!
   titles: [String!]!
 }
@@ -238,6 +263,20 @@ input SavedSearchInput {
 
   """Match any of these job titles, e.g. ["frontend"]"""
   titles: [String!]!
+}
+
+"""How often a saved search runs by itself"""
+enum ScheduleFrequency {
+  DAILY
+  HOURLY
+  OFF
+  WEEKDAYS
+}
+
+input ScheduleInput {
+  """"HH:mm", 24-hour, server local time"""
+  runAt: String! = "07:00"
+  schedule: ScheduleFrequency!
 }
 
 enum SortDirection {
@@ -321,6 +360,9 @@ type SyncRunModel {
 
   """Name of the saved search that ran it"""
   savedSearchName: String
+
+  """True when the scheduler started it"""
+  scheduled: Boolean!
 
   """When the import started (for a continued import: the run it continued)"""
   startedAt: DateTime!

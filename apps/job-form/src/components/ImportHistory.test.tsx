@@ -17,5 +17,8 @@ describe('ImportHistory', () => {
     expect(cells.slice(2)).toEqual(['20', '5', '20', 'All fetched']);
     expect(rows[2]).toHaveTextContent('backend');
     expect(rows[2]).toHaveTextContent('More left');
+    // Only the run the scheduler started gets the tag.
+    expect(within(rows[2]!).getByText('Scheduled')).toBeInTheDocument();
+    expect(within(rows[1]!).queryByText('Scheduled')).not.toBeInTheDocument();
   });
 });

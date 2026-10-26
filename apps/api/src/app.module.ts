@@ -4,6 +4,7 @@ import { ApolloDriver } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
 import { JobsModule } from './jobs/jobs.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -21,6 +22,8 @@ import { SyncModule } from './sync/sync.module';
       autoSchemaFile: process.env['NODE_ENV'] === 'test' ? true : join(process.cwd(), 'schema.gql'),
       sortSchema: true,
     }),
+    // Runs @Cron jobs, like the saved-search scheduler.
+    ScheduleModule.forRoot(),
     PrismaModule,
     HealthModule,
     JobsModule,
