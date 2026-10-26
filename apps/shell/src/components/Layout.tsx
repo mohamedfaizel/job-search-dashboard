@@ -4,7 +4,7 @@ export type View = 'dashboard' | 'add-job';
 
 const NAV_ITEMS: { view: View; label: string }[] = [
   { view: 'dashboard', label: 'Job posts' },
-  { view: 'add-job', label: 'Add a job' },
+  { view: 'add-job', label: 'Add jobs' },
 ];
 
 interface Props {

@@ -13,7 +13,7 @@ describe('Layout', () => {
       'aria-current',
       'page',
     );
-    expect(screen.getByRole('button', { name: 'Add a job' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('button', { name: 'Add jobs' })).not.toHaveAttribute('aria-current');
   });
 
   it('asks to navigate when a nav item is clicked', async () => {
@@ -23,7 +23,7 @@ describe('Layout', () => {
         content
       </Layout>,
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Add a job' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Add jobs' }));
     expect(onNavigate).toHaveBeenCalledWith('add-job');
   });
 });

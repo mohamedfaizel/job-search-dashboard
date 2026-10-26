@@ -108,6 +108,9 @@ pnpm dev                                   # start the api and all three fronten
 
 Open <http://localhost:5173>. Check the API at <http://localhost:3000/health>.
 
+The **Add jobs** page has three tabs: _Saved searches_, _Import from JobsPipe_ (with the import
+history) and _Add a job by hand_.
+
 **Fill the table:** either open **Add jobs** and use _Import from JobsPipe_ (needs your token
 in `.env`, and each job costs one credit), or load 36 made-up demo jobs for free while the API
 is running:
