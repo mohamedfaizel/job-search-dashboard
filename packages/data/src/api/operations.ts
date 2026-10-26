@@ -111,6 +111,7 @@ const SYNC_RUN_FIELDS = /* GraphQL */ `
   jobsAlreadyPaid
   savedSearchId
   savedSearchName
+  scheduled
   summary
 `;
 
@@ -125,6 +126,10 @@ const SAVED_SEARCH_FIELDS = /* GraphQL */ `
   pageSize
   maxPages
   onlyNew
+  schedule
+  runAt
+  nextRunAt
+  scheduleNote
   createdAt
   lastRun {
     ${SYNC_RUN_FIELDS}
@@ -173,6 +178,23 @@ export const RUN_SAVED_SEARCH = /* GraphQL */ `
   mutation RunSavedSearch($id: Int!, $resume: Boolean) {
     runSavedSearch(id: $id, resume: $resume) {
       ${SYNC_RESULT_FIELDS}
+    }
+  }
+`;
+
+export const SET_SAVED_SEARCH_SCHEDULE = /* GraphQL */ `
+  mutation SetSavedSearchSchedule($id: Int!, $input: ScheduleInput!) {
+    setSavedSearchSchedule(id: $id, input: $input) {
+      ${SAVED_SEARCH_FIELDS}
+    }
+  }
+`;
+
+export const IMPORT_BUDGET = /* GraphQL */ `
+  query ImportBudget {
+    importBudget {
+      used
+      cap
     }
   }
 `;

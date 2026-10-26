@@ -4,10 +4,12 @@ import {
   CREATE_JOB,
   CREATE_SAVED_SEARCH,
   DELETE_SAVED_SEARCH,
+  IMPORT_BUDGET,
   JOB_FILTER_OPTIONS,
   JOBS_PAGE,
   RUN_SAVED_SEARCH,
   SAVED_SEARCHES,
+  SET_SAVED_SEARCH_SCHEDULE,
   SYNC_JOBS,
   SYNC_RUNS,
   UPDATE_JOB_STATUS,
@@ -16,12 +18,14 @@ import {
 import type {
   ApplicationStatus,
   CreateJobInput,
+  ImportBudget,
   Job,
   JobFilterOptions,
   JobsPage,
   JobsPageArgs,
   SavedSearch,
   SavedSearchInput,
+  ScheduleFrequency,
   SyncJobsInput,
   SyncJobsResult,
   SyncRun,
@@ -34,6 +38,7 @@ export const queryKeys = {
   filterOptions: ['jobs', 'filterOptions'] as const,
   savedSearches: ['savedSearches'] as const,
   syncRuns: ['syncRuns'] as const,
+  importBudget: ['importBudget'] as const,
 };
 
 export function useJobsPage(args: JobsPageArgs) {
@@ -103,7 +108,36 @@ function refreshAfterImport(queryClient: ReturnType<typeof useQueryClient>) {
     queryClient.invalidateQueries({ queryKey: queryKeys.jobs }),
     queryClient.invalidateQueries({ queryKey: queryKeys.syncRuns }),
     queryClient.invalidateQueries({ queryKey: queryKeys.savedSearches }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.importBudget }),
   ]);
+}
+
+/** The scheduler imports while the page is open, so these queries check back every minute. */
+const SCHEDULER_POLL_MS = 60_000;
+
+export function useImportBudget() {
+  return useQuery({
+    queryKey: queryKeys.importBudget,
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ importBudget: ImportBudget }>(IMPORT_BUDGET);
+      return data.importBudget;
+    },
+    refetchInterval: SCHEDULER_POLL_MS,
+  });
+}
+
+export function useSetSchedule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: number; schedule: ScheduleFrequency; runAt: string }) => {
+      const data = await graphqlClient.request<{ setSavedSearchSchedule: SavedSearch }>(
+        SET_SAVED_SEARCH_SCHEDULE,
+        { id: vars.id, input: { schedule: vars.schedule, runAt: vars.runAt } },
+      );
+      return data.setSavedSearchSchedule;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.savedSearches }),
+  });
 }
 
 export function useSavedSearches() {
@@ -113,6 +147,7 @@ export function useSavedSearches() {
       const data = await graphqlClient.request<{ savedSearches: SavedSearch[] }>(SAVED_SEARCHES);
       return data.savedSearches;
     },
+    refetchInterval: SCHEDULER_POLL_MS,
   });
 }
 
@@ -123,6 +158,7 @@ export function useSyncRuns(limit = 20) {
       const data = await graphqlClient.request<{ syncRuns: SyncRun[] }>(SYNC_RUNS, { limit });
       return data.syncRuns;
     },
+    refetchInterval: SCHEDULER_POLL_MS,
   });
 }
 

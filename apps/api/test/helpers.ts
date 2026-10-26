@@ -24,7 +24,12 @@ export interface TestApp {
 /** Boots the whole API (same modules as production) against the test database. */
 export async function createTestApp(env: Record<string, string> = {}): Promise<TestApp> {
   // Set before the app boots; ConfigModule never overrides variables that already exist.
-  Object.assign(process.env, { DATABASE_URL: TEST_DATABASE_URL, ...env });
+  Object.assign(process.env, {
+    DATABASE_URL: TEST_DATABASE_URL,
+    // Tests call the scheduler directly instead of waiting for its cron.
+    SCHEDULER_ENABLED: 'false',
+    ...env,
+  });
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleRef.createNestApplication({ logger: false });
