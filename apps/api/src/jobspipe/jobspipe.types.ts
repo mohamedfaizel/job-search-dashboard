@@ -4,12 +4,16 @@ export interface JobsPipeSearchRequest {
   job_title_or?: string[];
   skills_or?: string[];
   job_country_code_or?: string[];
+  /** City or region names, e.g. ["Seattle", "WA"]. */
+  job_location_or?: string[];
   posted_at_max_age_days?: number;
   /** Only postings JobsPipe first found at or after this UTC time, "YYYY-MM-DD HH:mm:ss". */
   discovered_at_gte?: string;
   limit?: number;
   cursor?: string;
   include_total_results?: boolean;
+  /** JobsPipe only supports newest first; sending it makes the order explicit. */
+  order_by?: { field: 'posted_at'; desc: true }[];
 }
 
 export interface JobsPipeSource {

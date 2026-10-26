@@ -176,6 +176,11 @@ input SyncJobsInput {
   """ISO country codes, e.g. ["DE"]"""
   countryCodes: [String!]
 
+  """
+  Cities or regions, e.g. ["Berlin", "Bavaria"]. Combine with countryCodes.
+  """
+  locations: [String!]
+
   """Only postings from the last N days"""
   maxAgeDays: Int! = 7
 
@@ -187,8 +192,13 @@ input SyncJobsInput {
   """
   onlyNew: Boolean! = true
 
-  """Jobs per page (each job costs a credit)"""
+  """
+  Jobs per page (each job costs a credit). JobsPipe caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.
+  """
   pageSize: Int! = 25
+
+  """Continue the last import of this search from the page where it stopped"""
+  resume: Boolean! = false
 
   """Match any of these skills, e.g. ["react"]"""
   skills: [String!]
@@ -216,6 +226,9 @@ type SyncJobsResult {
   """
   newSince: DateTime
   pages: Int!
+
+  """True when this run continued an earlier import from its saved cursor"""
+  resumed: Boolean!
 
   """Total matches JobsPipe reported"""
   totalAvailable: Int

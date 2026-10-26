@@ -122,11 +122,15 @@ export interface SyncJobsInput {
   titles: string[];
   skills?: string[];
   countryCodes?: string[];
+  /** Cities or regions, e.g. ["Berlin", "Bavaria"]. */
+  locations?: string[];
   maxAgeDays?: number;
   pageSize?: number;
   maxPages?: number;
   /** Only postings found since the last complete run of this search. Default true. */
   onlyNew?: boolean;
+  /** Continue the last import of this search from where it stopped. */
+  resume?: boolean;
 }
 
 export interface SyncJobsResult {
@@ -141,4 +145,5 @@ export interface SyncJobsResult {
   jobsAlreadyPaid: number;
   /** ISO date-time the incremental run started from, or null on a first/full run. */
   newSince: string | null;
+  resumed: boolean;
 }

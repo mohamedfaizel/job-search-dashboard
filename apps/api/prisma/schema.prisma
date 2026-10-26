@@ -95,6 +95,10 @@ model SyncRun {
   updated         Int
   creditsCharged  Int?
   jobsAlreadyPaid Int?
+  /// Where an incomplete run stopped; "Continue import" picks up from here.
+  nextCursor      String?
+  /// The discovered_at_gte the run sent. A continued run must send the same one.
+  discoveredAtGte String?
 
   @@index([searchKey, startedAt])
 }

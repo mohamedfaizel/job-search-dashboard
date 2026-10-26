@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { JobsService } from '../jobs/jobs.service';
 import { JobsPipeClient } from '../jobspipe/jobspipe.client';
 import { mapJobsPipeJob } from '../jobspipe/jobspipe.mapper';
@@ -17,16 +17,43 @@ const OVERLAP_MS = 60 * 60 * 1000;
 export function searchKey(input: SyncJobsInput): string {
   const norm = (list: string[] | undefined) =>
     [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort();
+  const locations = norm(input.locations);
   return JSON.stringify({
     titles: norm(input.titles),
     skills: norm(input.skills),
     countries: norm(input.countryCodes),
+    // Only when set, so searches saved before this filter existed keep their key.
+    ...(locations.length ? { locations } : {}),
   });
 }
 
 /** JobsPipe's date-time format: "2026-10-26 14:05:00" in UTC. */
 export function toJobsPipeTime(date: Date): string {
   return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+/** The search filters, without paging. Every page of a run sends the same ones. */
+function toFilters(input: SyncJobsInput, discoveredAtGte: string | null): JobsPipeSearchRequest {
+  return {
+    job_title_or: input.titles,
+    posted_at_max_age_days: input.maxAgeDays,
+    ...(input.skills?.length ? { skills_or: input.skills } : {}),
+    ...(input.countryCodes?.length
+      ? { job_country_code_or: input.countryCodes.map((c) => c.toUpperCase()) }
+      : {}),
+    ...(input.locations?.length ? { job_location_or: input.locations } : {}),
+    ...(discoveredAtGte ? { discovered_at_gte: discoveredAtGte } : {}),
+    // Newest first is the only order JobsPipe supports; it keeps the cursor stable.
+    order_by: [{ field: 'posted_at', desc: true }],
+  };
+}
+
+/** Where a run starts: a fresh search, an "only new" window, or an earlier run's cursor. */
+interface StartPoint {
+  startedAt: Date;
+  newSince: Date | null;
+  discoveredAtGte: string | null;
+  cursor: string | null;
 }
 
 /** Pulls postings from JobsPipe page by page and saves them. */
@@ -41,9 +68,8 @@ export class SyncService {
   ) {}
 
   async sync(input: SyncJobsInput): Promise<SyncJobsResult> {
-    const startedAt = new Date();
     const key = searchKey(input);
-    const newSince = input.onlyNew ? await this.lastCompleteRunStart(key) : null;
+    const start = input.resume ? await this.resumePoint(key) : await this.freshStart(key, input);
 
     const result: SyncJobsResult = {
       pages: 0,
@@ -55,26 +81,19 @@ export class SyncService {
       creditsRemaining: null,
       creditsCharged: 0,
       jobsAlreadyPaid: 0,
-      newSince,
+      newSince: start.newSince,
+      resumed: input.resume,
     };
 
-    let cursor: string | null = null;
+    const filters = toFilters(input, start.discoveredAtGte);
+    let cursor = start.cursor;
     do {
-      const body: JobsPipeSearchRequest = {
-        job_title_or: input.titles,
-        posted_at_max_age_days: input.maxAgeDays,
+      const page = await this.jobsPipe.searchJobs({
+        ...filters,
         limit: input.pageSize,
         include_total_results: result.pages === 0,
-        ...(input.skills?.length ? { skills_or: input.skills } : {}),
-        ...(input.countryCodes?.length
-          ? { job_country_code_or: input.countryCodes.map((c) => c.toUpperCase()) }
-          : {}),
-        ...(newSince
-          ? { discovered_at_gte: toJobsPipeTime(new Date(newSince.getTime() - OVERLAP_MS)) }
-          : {}),
         ...(cursor ? { cursor } : {}),
-      };
-      const page = await this.jobsPipe.searchJobs(body);
+      });
 
       const saved = await this.jobs.upsertMany(page.data.map(mapJobsPipeJob));
       result.pages += 1;
@@ -90,8 +109,8 @@ export class SyncService {
 
     result.hasMore = cursor !== null;
 
-    // Remember the run. Only a complete one (no pages left unfetched) moves the starting
-    // point forward, so jobs beyond maxPages are picked up next time.
+    // Remember the run. Only a complete one (no pages left unfetched) moves the "only new"
+    // starting point forward; an incomplete one keeps its cursor so it can be continued.
     await this.prisma.syncRun.create({
       data: {
         searchKey: key,
@@ -99,18 +118,23 @@ export class SyncService {
           titles: input.titles,
           skills: input.skills ?? [],
           countryCodes: input.countryCodes ?? [],
+          locations: input.locations ?? [],
           maxAgeDays: input.maxAgeDays,
           pageSize: input.pageSize,
           maxPages: input.maxPages,
           onlyNew: input.onlyNew,
+          resume: input.resume,
         },
-        startedAt,
+        // A continued run belongs to the window of the run it continues.
+        startedAt: start.startedAt,
         complete: !result.hasMore,
         fetched: result.fetched,
         created: result.created,
         updated: result.updated,
         creditsCharged: result.creditsCharged,
         jobsAlreadyPaid: result.jobsAlreadyPaid,
+        nextCursor: cursor,
+        discoveredAtGte: start.discoveredAtGte,
       },
     });
 
@@ -118,6 +142,36 @@ export class SyncService {
       `Synced ${result.fetched} jobs (${result.created} new, ${result.updated} already saved) in ${result.pages} page(s)`,
     );
     return result;
+  }
+
+  private async freshStart(key: string, input: SyncJobsInput): Promise<StartPoint> {
+    const newSince = input.onlyNew ? await this.lastCompleteRunStart(key) : null;
+    return {
+      startedAt: new Date(),
+      newSince,
+      discoveredAtGte: newSince ? toJobsPipeTime(new Date(newSince.getTime() - OVERLAP_MS)) : null,
+      cursor: null,
+    };
+  }
+
+  private async resumePoint(key: string): Promise<StartPoint> {
+    const last = await this.prisma.syncRun.findFirst({
+      where: { searchKey: key },
+      orderBy: { id: 'desc' },
+    });
+    if (!last || last.complete || !last.nextCursor) {
+      throw new BadRequestException(
+        'Nothing to continue: the last import of this search already fetched every page.',
+      );
+    }
+    return {
+      startedAt: last.startedAt,
+      newSince: last.discoveredAtGte
+        ? new Date(`${last.discoveredAtGte.replace(' ', 'T')}Z`)
+        : null,
+      discoveredAtGte: last.discoveredAtGte,
+      cursor: last.nextCursor,
+    };
   }
 
   private async lastCompleteRunStart(key: string): Promise<Date | null> {

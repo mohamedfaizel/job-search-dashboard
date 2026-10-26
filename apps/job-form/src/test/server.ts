@@ -24,6 +24,8 @@ export const server = setupServer(
   }),
   api.mutation('SyncJobs', ({ variables }) => {
     requests.push({ operation: 'SyncJobs', variables });
+    const input = variables['input'] as { onlyNew?: boolean; resume?: boolean };
+    const resumed = input.resume ?? false;
     return HttpResponse.json({
       data: {
         syncJobs: {
@@ -32,14 +34,14 @@ export const server = setupServer(
           created: 20,
           updated: 5,
           totalAvailable: 80,
-          hasMore: true,
+          // A first import stops with pages left; continuing it fetches the rest.
+          hasMore: !resumed,
           creditsRemaining: 741,
           creditsCharged: 20,
           jobsAlreadyPaid: 5,
           // The API only sets this when it ran an "only new jobs" import.
-          newSince: (variables['input'] as { onlyNew?: boolean }).onlyNew
-            ? '2026-10-25T09:30:00.000Z'
-            : null,
+          newSince: input.onlyNew ? '2026-10-25T09:30:00.000Z' : null,
+          resumed,
         },
       },
     });

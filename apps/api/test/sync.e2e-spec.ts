@@ -19,6 +19,8 @@ const SYNC = /* GraphQL */ `
       creditsCharged
       jobsAlreadyPaid
       newSince
+      resumed
+      totalAvailable
     }
   }
 `;
@@ -71,13 +73,18 @@ describe('syncJobs', () => {
         creditsCharged: 6,
         jobsAlreadyPaid: 0,
         newSince: null,
+        resumed: false,
+        totalAvailable: 3,
       },
     });
     expect(requests[0]).toMatchObject({
       job_title_or: ['frontend'],
       skills_or: ['react'],
       job_country_code_or: ['DE'],
+      order_by: [{ field: 'posted_at', desc: true }],
+      include_total_results: true,
     });
+    expect(requests[0]).not.toHaveProperty('job_location_or');
     expect(requests[1]).toMatchObject({ cursor: 'page-2' });
     expect(await t.prisma.job.count()).toBe(3);
   });
@@ -154,6 +161,62 @@ describe('syncJobs', () => {
       expect(res.data).toMatchObject({ syncJobs: { newSince: null, created: 0, updated: 3 } });
       expect(requests[0]).not.toHaveProperty('discovered_at_gte');
       expect(await t.prisma.job.count()).toBe(3);
+    });
+  });
+
+  it('sends locations as job_location_or', async () => {
+    await t.gql(SYNC, {
+      input: { titles: ['frontend'], locations: ['Berlin', 'Bavaria'], countryCodes: ['DE'] },
+    });
+    expect(requests[0]).toMatchObject({ job_location_or: ['Berlin', 'Bavaria'] });
+  });
+
+  describe('continue import', () => {
+    it('picks up from the cursor where the last run stopped', async () => {
+      const first = await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1 } });
+      expect(first.data).toMatchObject({ syncJobs: { fetched: 2, hasMore: true } });
+      requests.length = 0;
+
+      const res = await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1, resume: true } });
+
+      expect(res.data).toMatchObject({
+        syncJobs: { resumed: true, fetched: 1, created: 1, hasMore: false },
+      });
+      expect(requests).toHaveLength(1);
+      expect(requests[0]).toMatchObject({ cursor: 'page-2' });
+      expect(await t.prisma.job.count()).toBe(3);
+    });
+
+    it('keeps the same "only new" window when continuing', async () => {
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 5 } });
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1 } });
+      const window = requests.at(-1)!['discovered_at_gte'];
+      expect(window).toEqual(expect.any(String));
+      requests.length = 0;
+
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1, resume: true } });
+
+      expect(requests[0]).toMatchObject({ cursor: 'page-2', discovered_at_gte: window });
+    });
+
+    it('moves the "only new" window to the start of the run it finished', async () => {
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1 } });
+      const firstStart = await t.prisma.syncRun.findFirstOrThrow({ select: { startedAt: true } });
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1, resume: true } });
+
+      const res = await t.gql<{ syncJobs: { newSince: string } }>(SYNC, {
+        input: { titles: ['frontend'], maxPages: 5 },
+      });
+
+      expect(new Date(res.data!.syncJobs.newSince)).toEqual(firstStart.startedAt);
+    });
+
+    it('says so when there is nothing to continue', async () => {
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 5 } });
+
+      const res = await t.gql(SYNC, { input: { titles: ['frontend'], resume: true } });
+
+      expect(res.errors?.[0]?.message).toMatch(/Nothing to continue/);
     });
   });
 });
