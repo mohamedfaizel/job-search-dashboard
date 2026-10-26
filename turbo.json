@@ -12,6 +12,9 @@
     "test": {
       "outputs": ["coverage/**"]
     },
-    "typecheck": {}
+    "typecheck": {},
+    "test:e2e": {
+      "cache": false
+    }
   }
 }

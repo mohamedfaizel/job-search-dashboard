@@ -15,7 +15,8 @@
     "format:check": "prettier --check .",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:e2e": "turbo run test:e2e"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
