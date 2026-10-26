@@ -43,5 +43,5 @@ export async function createTestApp(env: Record<string, string> = {}): Promise<T
 }
 
 export async function resetDatabase(prisma: PrismaService): Promise<void> {
-  await prisma.$executeRawUnsafe('TRUNCATE "Job", "Company" RESTART IDENTITY CASCADE');
+  await prisma.$executeRawUnsafe('TRUNCATE "Job", "Company", "SyncRun" RESTART IDENTITY CASCADE');
 }

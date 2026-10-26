@@ -16,6 +16,9 @@ const SYNC = /* GraphQL */ `
       updated
       hasMore
       creditsRemaining
+      creditsCharged
+      jobsAlreadyPaid
+      newSince
     }
   }
 `;
@@ -65,6 +68,9 @@ describe('syncJobs', () => {
         updated: 0,
         hasMore: false,
         creditsRemaining: 766,
+        creditsCharged: 6,
+        jobsAlreadyPaid: 0,
+        newSince: null,
       },
     });
     expect(requests[0]).toMatchObject({
@@ -92,5 +98,62 @@ describe('syncJobs', () => {
     expect(await t.prisma.job.count()).toBe(3);
     const after = await t.prisma.job.findUniqueOrThrow({ where: { id: job.id } });
     expect(after.applicationStatus).toBe('APPLIED');
+  });
+
+  describe('only new jobs', () => {
+    it('asks only for postings found since the last run of the same search', async () => {
+      const before = Date.now();
+      await t.gql(SYNC, { input: { titles: ['Frontend'], countryCodes: ['de'], maxPages: 5 } });
+      expect(requests[0]).not.toHaveProperty('discovered_at_gte');
+
+      requests.length = 0;
+      // Same search, different order and case: it counts as the same search.
+      const res = await t.gql<{ syncJobs: { newSince: string } }>(SYNC, {
+        input: { titles: ['frontend '], countryCodes: ['DE'], maxPages: 5 },
+      });
+
+      const newSince = new Date(res.data!.syncJobs.newSince).getTime();
+      expect(newSince).toBeGreaterThanOrEqual(before - 1000);
+      // Starts one hour before the previous run, in JobsPipe's "YYYY-MM-DD HH:mm:ss" UTC format.
+      const expected = new Date(newSince - 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' ');
+      expect(requests[0]).toMatchObject({ discovered_at_gte: expected });
+      expect(requests[1]).toMatchObject({ discovered_at_gte: expected, cursor: 'page-2' });
+    });
+
+    it('treats a different search as new', async () => {
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 5 } });
+      requests.length = 0;
+
+      const res = await t.gql(SYNC, { input: { titles: ['backend'], maxPages: 5 } });
+
+      expect(res.data).toMatchObject({ syncJobs: { newSince: null } });
+      expect(requests[0]).not.toHaveProperty('discovered_at_gte');
+    });
+
+    it('does not move the starting point after a run that left pages unfetched', async () => {
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1 } });
+      requests.length = 0;
+
+      const res = await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1 } });
+
+      expect(res.data).toMatchObject({ syncJobs: { newSince: null } });
+      expect(requests[0]).not.toHaveProperty('discovered_at_gte');
+    });
+
+    it('can be turned off to re-fetch everything', async () => {
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 5 } });
+      requests.length = 0;
+
+      const res = await t.gql(SYNC, {
+        input: { titles: ['frontend'], maxPages: 5, onlyNew: false },
+      });
+
+      expect(res.data).toMatchObject({ syncJobs: { newSince: null, created: 0, updated: 3 } });
+      expect(requests[0]).not.toHaveProperty('discovered_at_gte');
+      expect(await t.prisma.job.count()).toBe(3);
+    });
   });
 });

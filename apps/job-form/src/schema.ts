@@ -122,6 +122,7 @@ export const syncFormSchema = z.object({
   maxAgeDays: positiveInt(90),
   pageSize: positiveInt(100),
   maxPages: positiveInt(20),
+  onlyNew: z.boolean(),
 });
 
 export type SyncFormValues = z.infer<typeof syncFormSchema>;
@@ -133,6 +134,7 @@ export const defaultSyncForm: SyncFormValues = {
   maxAgeDays: '7',
   pageSize: '25',
   maxPages: '1',
+  onlyNew: true,
 };
 
 export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
@@ -145,5 +147,6 @@ export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
     maxAgeDays: Number(values.maxAgeDays),
     pageSize: Number(values.pageSize),
     maxPages: Number(values.maxPages),
+    onlyNew: values.onlyNew,
   };
 }

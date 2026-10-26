@@ -5,6 +5,8 @@ export interface JobsPipeSearchRequest {
   skills_or?: string[];
   job_country_code_or?: string[];
   posted_at_max_age_days?: number;
+  /** Only postings JobsPipe first found at or after this UTC time, "YYYY-MM-DD HH:mm:ss". */
+  discovered_at_gte?: string;
   limit?: number;
   cursor?: string;
   include_total_results?: boolean;
@@ -56,6 +58,8 @@ export interface JobsPipeSearchResponse {
     total_results: number | null;
     next_cursor: string | null;
     credits_charged: number;
+    /** Postings in this page that were free because we already paid for them this month. */
+    jobs_already_paid: number;
     credits_remaining: number;
   };
   data: JobsPipeJob[];

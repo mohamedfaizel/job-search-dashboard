@@ -34,6 +34,12 @@ export const server = setupServer(
           totalAvailable: 80,
           hasMore: true,
           creditsRemaining: 741,
+          creditsCharged: 20,
+          jobsAlreadyPaid: 5,
+          // The API only sets this when it ran an "only new jobs" import.
+          newSince: (variables['input'] as { onlyNew?: boolean }).onlyNew
+            ? '2026-10-25T09:30:00.000Z'
+            : null,
         },
       },
     });

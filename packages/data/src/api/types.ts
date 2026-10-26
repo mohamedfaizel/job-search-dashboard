@@ -125,6 +125,8 @@ export interface SyncJobsInput {
   maxAgeDays?: number;
   pageSize?: number;
   maxPages?: number;
+  /** Only postings found since the last complete run of this search. Default true. */
+  onlyNew?: boolean;
 }
 
 export interface SyncJobsResult {
@@ -135,4 +137,8 @@ export interface SyncJobsResult {
   totalAvailable: number | null;
   hasMore: boolean;
   creditsRemaining: number | null;
+  creditsCharged: number;
+  jobsAlreadyPaid: number;
+  /** ISO date-time the incremental run started from, or null on a first/full run. */
+  newSince: string | null;
 }

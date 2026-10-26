@@ -87,6 +87,9 @@ export const SYNC_JOBS = /* GraphQL */ `
       totalAvailable
       hasMore
       creditsRemaining
+      creditsCharged
+      jobsAlreadyPaid
+      newSince
     }
   }
 `;

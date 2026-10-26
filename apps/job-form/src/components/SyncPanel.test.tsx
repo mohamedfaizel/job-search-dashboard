@@ -15,8 +15,13 @@ describe('SyncPanel', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Import (up to 50 credits)' }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Fetched 25 jobs: 20 new, 5 updated. More are available',
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent('Looked for jobs found since');
+    expect(status).toHaveTextContent(
+      'Fetched 25 jobs: 20 new, 5 already in your table (updated, not added twice).',
+    );
+    expect(status).toHaveTextContent(
+      'Used 20 credits (5 jobs already paid this month, so free), 741 left.',
     );
     expect(requests[0]?.variables).toEqual({
       input: {
@@ -26,8 +31,22 @@ describe('SyncPanel', () => {
         maxAgeDays: 7,
         pageSize: 25,
         maxPages: 2,
+        onlyNew: true,
       },
     });
+  });
+
+  it('can fetch everything again instead of only new jobs', async () => {
+    renderWithData(<SyncPanel />);
+    const onlyNew = screen.getByRole('checkbox', { name: 'Only jobs new since my last import' });
+    expect(onlyNew).toBeChecked();
+
+    await userEvent.click(onlyNew);
+    await userEvent.click(screen.getByRole('button', { name: /import/i }));
+
+    const status = await screen.findByRole('status');
+    expect(status).not.toHaveTextContent('Looked for jobs found since');
+    expect(requests[0]?.variables).toMatchObject({ input: { onlyNew: false } });
   });
 
   it('needs at least one job title', async () => {

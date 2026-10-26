@@ -116,6 +116,12 @@ is running:
 pnpm --filter @jobsearch/api db:seed
 ```
 
+**Importing again** only asks JobsPipe for postings it found since your last import of the same
+search (the _Only jobs new since my last import_ box). Untick it to fetch everything again. A job
+is never stored twice: each JobsPipe posting has a stable id, saved in a unique `externalId`
+column, so a re-import updates the row instead. JobsPipe also doesn't charge twice for the same
+job in one calendar month.
+
 **Without Docker:** install PostgreSQL 16 natively (keep port 5432), skip `pnpm db:up`, and point
 `.env` at it with the password you chose during setup:
 
@@ -190,7 +196,8 @@ mutation {
 }
 ```
 
-To look at the raw tables, run `pnpm --filter @jobsearch/api db:studio`.
+To look at the raw tables, run `pnpm --filter @jobsearch/api db:studio` and open
+<http://localhost:5555>. `Job` holds the postings and `SyncRun` one row per import.
 
 ### Database changes
 

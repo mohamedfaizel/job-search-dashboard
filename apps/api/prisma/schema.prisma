@@ -78,3 +78,23 @@ model Job {
   @@index([companyId])
   @@index([applicationStatus])
 }
+
+/// One finished import from JobsPipe. The latest complete run of a search tells the next
+/// run where to start, so it only asks for postings discovered since then.
+model SyncRun {
+  id              Int      @id @default(autoincrement())
+  /// The search's titles, skills and countries, normalized. Same search = same key.
+  searchKey       String
+  input           Json
+  startedAt       DateTime
+  finishedAt      DateTime @default(now())
+  /// True when every page was fetched (the run did not stop at maxPages).
+  complete        Boolean
+  fetched         Int
+  created         Int
+  updated         Int
+  creditsCharged  Int?
+  jobsAlreadyPaid Int?
+
+  @@index([searchKey, startedAt])
+}
