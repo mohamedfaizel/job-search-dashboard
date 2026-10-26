@@ -51,13 +51,13 @@ which is handy while developing.
 
 ### 1. Install the tools (once)
 
-| Tool                                                              | Why               | Check it works     |
-| ----------------------------------------------------------------- | ----------------- | ------------------ |
-| [Git](https://git-scm.com/downloads)                              | Version control   | `git --version`    |
-| [Node.js 24 LTS](https://nodejs.org/)                             | Runs JavaScript   | `node --version`   |
-| pnpm (`npm install -g pnpm@10` after installing Node)             | Installs packages | `pnpm --version`   |
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Runs PostgreSQL   | `docker --version` |
-| [VS Code](https://code.visualstudio.com/)                         | Editor            |                    |
+| Tool                                                                                                                                             | Why               | Check it works                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- | -------------------------------------- |
+| [Git](https://git-scm.com/downloads)                                                                                                             | Version control   | `git --version`                        |
+| [Node.js 24 LTS](https://nodejs.org/)                                                                                                            | Runs JavaScript   | `node --version`                       |
+| pnpm (`npm install -g pnpm@10` after installing Node)                                                                                            | Installs packages | `pnpm --version`                       |
+| PostgreSQL 16: [Docker Desktop](https://www.docker.com/products/docker-desktop/) **or** a [native install](https://www.postgresql.org/download/) | Database          | `docker --version` or `psql --version` |
+| [VS Code](https://code.visualstudio.com/)                                                                                                        | Editor            |                                        |
 
 On Windows, if PowerShell says _"running scripts is disabled on this system"_, run
 `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once. After installing any tool,
@@ -90,6 +90,16 @@ pnpm dev                                   # start the api and all three fronten
 ```
 
 Open <http://localhost:5173>. Check the API at <http://localhost:3000/health>.
+
+**Without Docker:** install PostgreSQL 16 natively (keep port 5432), skip `pnpm db:up`, and point
+`.env` at it with the password you chose during setup:
+
+```bash
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/jobsearch
+TEST_DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/jobsearch_test
+```
+
+`db:deploy` creates the database if it doesn't exist yet.
 
 ## Using the API
 

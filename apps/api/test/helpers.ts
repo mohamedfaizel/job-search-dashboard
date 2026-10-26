@@ -5,10 +5,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { createValidationPipe } from '../src/common/validation.pipe';
 import { PrismaService } from '../src/prisma/prisma.service';
-
-export const TEST_DATABASE_URL =
-  process.env['TEST_DATABASE_URL'] ??
-  'postgresql://jobsearch:jobsearch@localhost:5432/jobsearch_test';
+import { TEST_DATABASE_URL } from './env';
 
 export interface GqlResult<T> {
   data?: T;
