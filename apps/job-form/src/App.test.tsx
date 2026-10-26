@@ -29,7 +29,6 @@ describe('App tabs', () => {
     await userEvent.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Import from JobsPipe' })).toHaveFocus();
     expect(screen.getByRole('heading', { name: 'Import from JobsPipe' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Import history' })).toBeVisible();
 
     await userEvent.keyboard('{End}');
     expect(screen.getByRole('tab', { name: 'Add a job by hand' })).toHaveAttribute(
@@ -61,5 +60,14 @@ describe('App tabs', () => {
       'true',
     );
     expect(screen.getByLabelText(/^Save this search as/)).toHaveValue('Frontend in Berlin');
+  });
+
+  it('shows the import history under every tab', async () => {
+    renderWithData(<App />);
+
+    for (const name of [/^Saved searches/, 'Import from JobsPipe', 'Add a job by hand']) {
+      await userEvent.click(await screen.findByRole('tab', { name }));
+      expect(screen.getByRole('heading', { name: 'Import history' })).toBeVisible();
+    }
   });
 });
