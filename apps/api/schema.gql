@@ -149,12 +149,25 @@ enum JobSource {
 type Mutation {
   """Add a job by hand"""
   createJob(input: CreateJobInput!): Job!
+  createSavedSearch(input: SavedSearchInput!): SavedSearch!
+
+  """Delete a saved search. Its past imports stay."""
+  deleteSavedSearch(id: Int!): Boolean!
+
+  """Import from JobsPipe with a saved search"""
+  runSavedSearch(
+    id: Int!
+
+    """Continue its last import instead"""
+    resume: Boolean! = false
+  ): SyncJobsResult!
 
   """Fetch jobs from JobsPipe and save them"""
   syncJobs(input: SyncJobsInput!): SyncJobsResult!
 
   """Track your progress: Saved, Applied, Interviewing…"""
   updateJobStatus(id: ID!, status: ApplicationStatus!): Job!
+  updateSavedSearch(id: Int!, input: SavedSearchInput!): SavedSearch!
 }
 
 type Query {
@@ -165,6 +178,66 @@ type Query {
 
   """Jobs for the dashboard table: filter, sort and paginate"""
   jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!
+
+  """Your saved searches, by name, with their last import"""
+  savedSearches: [SavedSearch!]!
+
+  """Past imports, newest first"""
+  syncRuns(limit: Int! = 20, savedSearchId: Int): [SyncRunModel!]!
+}
+
+type SavedSearch {
+  countryCodes: [String!]!
+  createdAt: DateTime!
+  id: Int!
+
+  """The most recent import of this search"""
+  lastRun: SyncRunModel
+  locations: [String!]!
+  maxAgeDays: Int!
+  maxPages: Int!
+  name: String!
+  onlyNew: Boolean!
+  pageSize: Int!
+  skills: [String!]!
+  titles: [String!]!
+}
+
+input SavedSearchInput {
+  """ISO country codes, e.g. ["DE"]"""
+  countryCodes: [String!]
+
+  """
+  Cities or regions, e.g. ["Berlin", "Bavaria"]. Combine with countryCodes.
+  """
+  locations: [String!]
+
+  """Only postings from the last N days"""
+  maxAgeDays: Int! = 7
+
+  """Stop after this many pages to protect credits"""
+  maxPages: Int! = 1
+
+  """
+  A name you will recognise, e.g. "Frontend in Berlin"
+  """
+  name: String!
+
+  """
+  Only ask for postings JobsPipe found since the last complete run of this search
+  """
+  onlyNew: Boolean! = true
+
+  """
+  Jobs per page (each job costs a credit). JobsPipe caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.
+  """
+  pageSize: Int! = 25
+
+  """Match any of these skills, e.g. ["react"]"""
+  skills: [String!]
+
+  """Match any of these job titles, e.g. ["frontend"]"""
+  titles: [String!]!
 }
 
 enum SortDirection {
@@ -232,6 +305,30 @@ type SyncJobsResult {
 
   """Total matches JobsPipe reported"""
   totalAvailable: Int
+  updated: Int!
+}
+
+type SyncRunModel {
+  """False when pages were left unfetched"""
+  complete: Boolean!
+  created: Int!
+  creditsCharged: Int
+  fetched: Int!
+  finishedAt: DateTime!
+  id: Int!
+  jobsAlreadyPaid: Int
+  savedSearchId: Int
+
+  """Name of the saved search that ran it"""
+  savedSearchName: String
+
+  """When the import started (for a continued import: the run it continued)"""
+  startedAt: DateTime!
+
+  """
+  Short description of what was searched, e.g. "frontend · DE · Berlin"
+  """
+  summary: String!
   updated: Int!
 }
 

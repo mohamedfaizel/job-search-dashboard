@@ -1,21 +1,31 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getErrorMessage, useSyncJobs } from '@jobsearch/data';
+import type { SavedSearch } from '@jobsearch/data';
+import { getErrorMessage, useSaveSearch, useSyncJobs } from '@jobsearch/data';
+import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { formatDateTime, plural } from '../format';
 import type { SyncFormValues } from '../schema';
-import { defaultSyncForm, syncFormSchema, toSyncJobsInput } from '../schema';
+import {
+  defaultSyncForm,
+  savedSearchToForm,
+  syncFormSchema,
+  toSavedSearchInput,
+  toSyncJobsInput,
+} from '../schema';
 import { Field, inputClass } from './Field';
 
-function plural(count: number, word: string): string {
-  return `${count} ${word}${count === 1 ? '' : 's'}`;
+interface Props {
+  /** A saved search to start from. Saving with the same name updates it. */
+  loaded?: SavedSearch | null;
 }
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-}
-
-/** Pull fresh postings from JobsPipe into the database. */
-export function SyncPanel() {
+/** Pull fresh postings from JobsPipe into the database, and save searches to reuse. */
+export function SyncPanel({ loaded = null }: Props) {
   const sync = useSyncJobs();
+  const save = useSaveSearch();
+  const [name, setName] = useState(loaded?.name ?? '');
+  const [nameError, setNameError] = useState<string | null>(null);
+  const updating = loaded !== null && name.trim() === loaded.name;
   const {
     register,
     handleSubmit,
@@ -23,7 +33,7 @@ export function SyncPanel() {
     formState: { errors },
   } = useForm<SyncFormValues>({
     resolver: zodResolver(syncFormSchema),
-    defaultValues: defaultSyncForm,
+    defaultValues: loaded ? savedSearchToForm(loaded) : defaultSyncForm,
   });
 
   const [pageSize, maxPages] = useWatch({ control, name: ['pageSize', 'maxPages'] });
@@ -37,10 +47,22 @@ export function SyncPanel() {
     sync.mutate(toSyncJobsInput(values));
   });
 
-  const a11y = (name: keyof SyncFormValues) => ({
-    id: `sync-${name}`,
-    'aria-invalid': errors[name] ? true : undefined,
-    'aria-describedby': errors[name] ? `sync-${name}-error` : undefined,
+  const onSave = handleSubmit((values) => {
+    if (!name.trim()) {
+      setNameError('Give the search a name');
+      return;
+    }
+    setNameError(null);
+    save.mutate({
+      ...(updating ? { id: loaded.id } : {}),
+      input: toSavedSearchInput(name, values),
+    });
+  });
+
+  const a11y = (field: keyof SyncFormValues) => ({
+    id: `sync-${field}`,
+    'aria-invalid': errors[field] ? true : undefined,
+    'aria-describedby': errors[field] ? `sync-${field}-error` : undefined,
   });
 
   return (
@@ -201,6 +223,45 @@ export function SyncPanel() {
           </button>
         </div>
       )}
+
+      <div className="space-y-2 border-t border-slate-200 pt-4">
+        <Field
+          label="Save this search as"
+          htmlFor="save-name"
+          error={nameError ?? undefined}
+          hint="Run it again in one click from Saved searches"
+        >
+          <div className="flex gap-2">
+            <input
+              id="save-name"
+              value={name}
+              placeholder="e.g. Frontend in Berlin"
+              aria-invalid={nameError ? true : undefined}
+              aria-describedby={nameError ? 'save-name-error' : undefined}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              disabled={save.isPending}
+              onClick={() => {
+                void onSave();
+              }}
+              className="shrink-0 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
+            >
+              {updating ? 'Update saved search' : 'Save search'}
+            </button>
+          </div>
+        </Field>
+        {save.isError && (
+          <p role="alert" className="text-sm text-red-700">
+            Could not save: {getErrorMessage(save.error)}
+          </p>
+        )}
+        {save.isSuccess && <p className="text-sm text-emerald-700">Saved "{save.data.name}".</p>}
+      </div>
     </form>
   );
 }

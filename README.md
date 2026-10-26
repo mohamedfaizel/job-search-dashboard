@@ -127,6 +127,10 @@ capped by your plan (Free 25, Builder/Growth 100, Scale/Business 500) and _Max p
 many pages one import fetches. When an import stops with pages left, the panel shows how many jobs
 match in total and a **Continue import** button that picks up from the next page.
 
+**Saved searches:** type a name under _Save this search as_ to keep a search. Each saved search
+gets a card with **Run now**, **Edit** (loads it into the import form; save with the same name to
+update it) and **Delete**. _Import history_ lists the last 20 imports with what each brought in.
+
 **Without Docker:** install PostgreSQL 16 natively (keep port 5432), skip `pnpm db:up`, and point
 `.env` at it with the password you chose during setup:
 
@@ -202,7 +206,7 @@ mutation {
 ```
 
 To look at the raw tables, run `pnpm --filter @jobsearch/api db:studio` and open
-<http://localhost:5555>. `Job` holds the postings and `SyncRun` one row per import.
+<http://localhost:5555>. `Job` holds the postings, `SavedSearch` your saved searches and `SyncRun` one row per import.
 
 ### Database changes
 

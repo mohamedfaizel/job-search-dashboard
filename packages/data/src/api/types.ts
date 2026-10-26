@@ -147,3 +147,40 @@ export interface SyncJobsResult {
   newSince: string | null;
   resumed: boolean;
 }
+
+/** A search to save: a name plus the import fields (everything but `resume`). */
+export interface SavedSearchInput extends Omit<SyncJobsInput, 'resume'> {
+  name: string;
+}
+
+/** One finished import, as the history table shows it. */
+export interface SyncRun {
+  id: number;
+  startedAt: string;
+  finishedAt: string;
+  complete: boolean;
+  fetched: number;
+  created: number;
+  updated: number;
+  creditsCharged: number | null;
+  jobsAlreadyPaid: number | null;
+  savedSearchId: number | null;
+  savedSearchName: string | null;
+  /** e.g. "frontend · DE · Berlin" */
+  summary: string;
+}
+
+export interface SavedSearch {
+  id: number;
+  name: string;
+  titles: string[];
+  skills: string[];
+  countryCodes: string[];
+  locations: string[];
+  maxAgeDays: number;
+  pageSize: number;
+  maxPages: number;
+  onlyNew: boolean;
+  createdAt: string;
+  lastRun: SyncRun | null;
+}
