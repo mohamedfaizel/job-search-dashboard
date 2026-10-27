@@ -151,6 +151,23 @@ TEST_DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/jobsearch_t
 
 `db:deploy` creates the database if it doesn't exist yet.
 
+### Tailor your resume with Resume-Matcher (optional)
+
+[Resume-Matcher](https://github.com/srbhr/Resume-Matcher) (Apache-2.0) tailors a resume to one job
+description: match score, keyword tips, a rewritten resume, a cover letter and PDF export. It runs
+as an optional Docker container beside this project:
+
+```bash
+pnpm rm:up      # the first run downloads the image, which takes a while
+pnpm rm:down    # stop it
+```
+
+Open <http://localhost:3100> (port 3000 is taken by our API), then in **Settings** pick an AI
+provider: Anthropic (Claude) with your API key, or Ollama for free local models at
+`http://host.docker.internal:11434`. Upload your master resume once, then for each job open its
+description popup here, copy the text and paste it into Resume-Matcher. Its data lives in the
+`resume-data` Docker volume. Matching built into this dashboard is on the roadmap.
+
 ## Using the API
 
 Open <http://localhost:3000/graphql> in your browser. It shows Apollo Sandbox, where you can
@@ -252,6 +269,7 @@ itself.
 | `pnpm typecheck`    | Type-check every app             |
 | `pnpm format`       | Format all files with Prettier   |
 | `pnpm db:up`/`down` | Start or stop PostgreSQL         |
+| `pnpm rm:up`/`down` | Start or stop Resume-Matcher     |
 
 Run a script for one app with a filter, for example `pnpm --filter @jobsearch/dashboard test`.
 
