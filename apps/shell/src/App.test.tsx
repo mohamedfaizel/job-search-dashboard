@@ -51,6 +51,9 @@ describe('Shell', () => {
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('button', { name: 'Job posts' })).toBeInTheDocument();
     expect(within(nav).queryByRole('button', { name: 'Add jobs' })).not.toBeInTheDocument();
+
+    await userEvent.click(within(nav).getByRole('button', { name: 'My profile' }));
+    expect(await screen.findByText('Profile microfrontend')).toBeInTheDocument();
   });
 
   it('logs out back to the login page', async () => {

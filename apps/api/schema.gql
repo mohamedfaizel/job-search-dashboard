@@ -188,7 +188,40 @@ type Mutation {
 
   """Track your progress: Saved, Applied, Interviewing…"""
   updateJobStatus(id: ID!, status: ApplicationStatus!): Job!
+  updateProfile(input: ProfileInput!): Profile!
   updateSavedSearch(id: Int!, input: SavedSearchInput!): SavedSearch!
+}
+
+type Profile {
+  githubUrl: String
+  headline: String!
+  linkedinUrl: String
+  locations: [String!]!
+
+  """Name of the last uploaded resume file"""
+  resumeFileName: String
+
+  """Plain text of your master resume"""
+  resumeText: String!
+  skills: [String!]!
+  targetRoles: [String!]!
+
+  """Null until the profile is first saved"""
+  updatedAt: DateTime
+  websiteUrl: String
+  yearsExperience: Int
+}
+
+input ProfileInput {
+  githubUrl: String
+  headline: String! = ""
+  linkedinUrl: String
+  locations: [String!]! = []
+  resumeText: String! = ""
+  skills: [String!]! = []
+  targetRoles: [String!]! = []
+  websiteUrl: String
+  yearsExperience: Int
 }
 
 type Query {
@@ -204,6 +237,7 @@ type Query {
 
   """Who is logged in, or null"""
   me: User
+  myProfile: Profile!
 
   """Your saved searches, by name, with their last import"""
   savedSearches: [SavedSearch!]!

@@ -7,6 +7,7 @@ import { RemoteBoundary } from './components/RemoteBoundary';
 // Each import below is fetched from another app's server at runtime (Module Federation).
 const DashboardApp = lazy(() => import('dashboard/App'));
 const JobFormApp = lazy(() => import('jobForm/App'));
+const ProfileApp = lazy(() => import('profile/App'));
 
 export default function App() {
   return (
@@ -47,13 +48,19 @@ export function Shell() {
         logOut.mutate();
       }}
     >
-      {current === 'dashboard' ? (
+      {current === 'dashboard' && (
         <RemoteBoundary key="dashboard" name="dashboard">
           <DashboardApp />
         </RemoteBoundary>
-      ) : (
+      )}
+      {current === 'add-job' && (
         <RemoteBoundary key="job-form" name="job form">
           <JobFormApp />
+        </RemoteBoundary>
+      )}
+      {current === 'profile' && (
+        <RemoteBoundary key="profile" name="profile">
+          <ProfileApp />
         </RemoteBoundary>
       )}
     </Layout>

@@ -14,14 +14,17 @@ flowchart LR
     shell["shell (host app)<br/>:5173"]
     dashboard["dashboard (microfrontend)<br/>:5174"]
     jobForm["job-form (microfrontend)<br/>:5175"]
+    profile["profile (microfrontend)<br/>:5176"]
     shell -- loads at runtime --> dashboard
     shell -- loads at runtime --> jobForm
+    shell -- loads at runtime --> profile
   end
   api["api (NestJS)<br/>:3000"]
   db[(PostgreSQL<br/>:5432)]
   jobspipe[[JobsPipe API]]
   dashboard -- GraphQL --> api
   jobForm -- GraphQL --> api
+  profile -- GraphQL + resume upload --> api
   api -- Prisma --> db
   api -- sync --> jobspipe
 ```
@@ -31,6 +34,7 @@ flowchart LR
 | `apps/shell`     | Host app: page layout and navigation. Loads the microfrontends.   | 5173 |
 | `apps/dashboard` | Microfrontend: the job posts table.                               | 5174 |
 | `apps/job-form`  | Microfrontend: form for adding a job by hand.                     | 5175 |
+| `apps/profile`   | Microfrontend: your profile and master resume (PDF/Word upload).  | 5176 |
 | `apps/api`       | NestJS backend. Holds the JobsPipe token so it never hits the UI. | 3000 |
 | `apps/storybook` | Storybook: a catalogue of the UI components, used by Chromatic.   | 6006 |
 | `packages/data`  | Shared data layer: GraphQL client, TanStack Query hooks, Redux.   |      |
@@ -103,7 +107,7 @@ cp .env.example .env      # Windows PowerShell: Copy-Item .env.example .env
 ```bash
 pnpm db:up                                 # start PostgreSQL in Docker
 pnpm --filter @jobsearch/api db:deploy     # create the tables (first time, and after pulling new migrations)
-pnpm dev                                   # start the api and all three frontends
+pnpm dev                                   # start the api and all four frontends
 ```
 
 Open <http://localhost:5173>. Check the API at <http://localhost:3000/health>.
@@ -113,6 +117,12 @@ Open <http://localhost:5173>. Check the API at <http://localhost:3000/health>.
 JobsPipe credits. Accounts created after that are regular users who can browse the jobs and track
 their status. Passwords are stored as argon2 hashes, and the session lives in an httpOnly cookie
 for 7 days. Set `JWT_SECRET` in `.env` (see `.env.example`); `ALLOW_SIGNUP=false` closes sign-up.
+
+**My profile** holds your headline, the roles and places you want, your skills and links, and your
+**master resume**. Upload a PDF or Word (.docx) file and the API reads the text out of it (scanned
+images can't be read); you can fix that text by hand. Match scores and tailored resumes will start
+from it. On _Import from JobsPipe_, **Fill from my profile** copies your roles, skills and places
+into the search.
 
 The **Add jobs** page has three tabs: _Saved searches_, _Import from JobsPipe_ and _Add a job by hand_.
 _Import history_ sits below the tabs, so it shows on all three.

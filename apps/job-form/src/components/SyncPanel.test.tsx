@@ -5,6 +5,17 @@ import { requests, SAVED } from '../test/server';
 import { SyncPanel } from './SyncPanel';
 
 describe('SyncPanel', () => {
+  it('fills the search from the profile, keeping fields the profile leaves empty', async () => {
+    renderWithData(<SyncPanel />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Fill from my profile' }));
+
+    expect(screen.getByLabelText(/job titles/i)).toHaveValue('Frontend Engineer, React Developer');
+    expect(screen.getByLabelText(/cities or regions/i)).toHaveValue('Berlin');
+    // The profile has no skills, so the search keeps its own.
+    expect(screen.getByLabelText(/^skills/i)).toHaveValue('react');
+  });
+
   it('shows the credit cost and imports jobs', async () => {
     renderWithData(<SyncPanel />);
     const countries = screen.getByLabelText(/countries/i);

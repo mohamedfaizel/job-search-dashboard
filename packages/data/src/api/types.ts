@@ -221,3 +221,21 @@ export interface LogInInput {
 export interface SignUpInput extends LogInInput {
   name: string;
 }
+
+/** What the user tells us about themselves, plus the text of their master resume. */
+export interface Profile {
+  headline: string;
+  targetRoles: string[];
+  locations: string[];
+  skills: string[];
+  yearsExperience: number | null;
+  linkedinUrl: string | null;
+  githubUrl: string | null;
+  websiteUrl: string | null;
+  resumeText: string;
+  resumeFileName: string | null;
+  /** Null until the profile is first saved. */
+  updatedAt: string | null;
+}
+
+export type ProfileInput = Omit<Profile, 'resumeFileName' | 'updatedAt'>;

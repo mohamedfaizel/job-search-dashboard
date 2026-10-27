@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { SavedSearch } from '@jobsearch/data';
-import { getErrorMessage, useSaveSearch, useSyncJobs } from '@jobsearch/data';
+import { getErrorMessage, useMyProfile, useSaveSearch, useSyncJobs } from '@jobsearch/data';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { formatDateTime, plural } from '../format';
@@ -26,10 +26,15 @@ export function SyncPanel({ loaded = null }: Props) {
   const [name, setName] = useState(loaded?.name ?? '');
   const [nameError, setNameError] = useState<string | null>(null);
   const updating = loaded !== null && name.trim() === loaded.name;
+  const { data: profile } = useMyProfile();
+  const hasProfile = Boolean(
+    profile && (profile.targetRoles.length || profile.skills.length || profile.locations.length),
+  );
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<SyncFormValues>({
     resolver: zodResolver(syncFormSchema),
@@ -59,6 +64,17 @@ export function SyncPanel({ loaded = null }: Props) {
     });
   });
 
+  /** Copies the roles, skills and places from the profile page into the search. */
+  const fillFromProfile = () => {
+    if (!profile) return;
+    const fill = (field: 'titles' | 'skills' | 'locations', values: string[]) => {
+      if (values.length) setValue(field, values.join(', '), { shouldValidate: true });
+    };
+    fill('titles', profile.targetRoles);
+    fill('skills', profile.skills);
+    fill('locations', profile.locations);
+  };
+
   const a11y = (field: keyof SyncFormValues) => ({
     id: `sync-${field}`,
     'aria-invalid': errors[field] ? true : undefined,
@@ -83,6 +99,16 @@ export function SyncPanel({ loaded = null }: Props) {
           twice, and fetching them again in the same month is free.
         </p>
       </div>
+
+      {hasProfile && (
+        <button
+          type="button"
+          onClick={fillFromProfile}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          Fill from my profile
+        </button>
+      )}
 
       <Field
         label="Job titles"

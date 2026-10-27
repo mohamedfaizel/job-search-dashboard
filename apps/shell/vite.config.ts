@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
   const dashboardUrl = env['VITE_DASHBOARD_URL'] ?? 'http://localhost:5174';
   const jobFormUrl = env['VITE_JOB_FORM_URL'] ?? 'http://localhost:5175';
+  const profileUrl = env['VITE_PROFILE_URL'] ?? 'http://localhost:5176';
 
   return {
     plugins: [
@@ -25,6 +26,11 @@ export default defineConfig(({ mode }) => {
             type: 'module',
             name: 'jobForm',
             entry: `${jobFormUrl}/remoteEntry.js`,
+          },
+          profile: {
+            type: 'module',
+            name: 'profile',
+            entry: `${profileUrl}/remoteEntry.js`,
           },
         },
         // Remote types are declared by hand in the shell (src/remotes.d.ts).
