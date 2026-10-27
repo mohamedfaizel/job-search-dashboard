@@ -219,6 +219,13 @@ minute or two and several AI calls, so the API answers at once with a `PENDING` 
 popup checks back every 3 seconds. The score then shows in the **Match** column, with the missing
 keywords and tips in the popup. Each user's scores are their own.
 
+**Tailor my resume** in the same popup goes further: Resume-Matcher rewrites your resume for the
+job with its default prompt (more edits than the match), saves it, and writes a cover letter.
+It takes one to three minutes and more AI calls than a match. Then **Download resume PDF** and
+**Download cover letter PDF** fetch the files through our API (`GET /tailored/{jobId}/resume.pdf`
+and `/cover-letter.pdf`), which checks your login and asks Resume-Matcher to print them.
+Tailoring again replaces the previous version.
+
 **Settings saved in Resume-Matcher's own Settings page win over `.env`.** If **Test AI
 connection** fails and **My profile** shows a provider you didn't expect (for example `ollama`),
 pick Anthropic in <http://localhost:3100/settings>, or reset its saved settings with

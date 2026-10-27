@@ -40,19 +40,20 @@ enum Role {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
+  id            Int              @id @default(autoincrement())
+  email         String           @unique
   name          String
   /// argon2id hash. The password itself is never stored.
   passwordHash  String
-  role          Role           @default(USER)
+  role          Role             @default(USER)
   profile       Profile?
   hiddenJobs    HiddenJob[]
   applications  Application[]
   matcherResume MatcherResume?
   jobMatches    JobMatch[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  tailored      TailoredResume[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 }
 
 /// What you're looking for and your master resume. One per user, created on first save.
@@ -142,6 +143,33 @@ model JobMatch {
   @@id([userId, jobId])
 }
 
+/// Your resume rewritten for one job by Resume-Matcher, with a cover letter. The resume itself
+/// stays in Resume-Matcher, which renders the PDFs; this row remembers which one is yours.
+/// One per user and job; tailoring again replaces it.
+model TailoredResume {
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         Int
+  job            Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId          String
+  /// Same lifecycle as a match: PENDING while Resume-Matcher works, then READY or FAILED.
+  status         JobMatchStatus
+  error          String?
+  /// Resume-Matcher's id for the tailored resume. Null until READY.
+  rmResumeId     String?
+  /// Resume-Matcher's id for the job text, reused when tailoring again.
+  rmJobId        String?
+  /// ATS score of the tailored version (0-100).
+  score          Float?
+  /// Null when the resume was tailored but the cover letter failed.
+  coverLetter    String?
+  /// The master resume file it was tailored from.
+  resumeFileName String?
+  startedAt      DateTime
+  finishedAt     DateTime?
+
+  @@id([userId, jobId])
+}
+
 model Company {
   id        Int      @id @default(autoincrement())
   name      String   @unique
@@ -153,12 +181,12 @@ model Company {
 }
 
 model Job {
-  id              String        @id @default(cuid())
+  id              String           @id @default(cuid())
   /// The JobsPipe posting id. Null for jobs added by hand.
-  externalId      String?       @unique
+  externalId      String?          @unique
   source          JobSource
   title           String
-  company         Company       @relation(fields: [companyId], references: [id])
+  company         Company          @relation(fields: [companyId], references: [id])
   companyId       Int
   url             String?
   postedAt        DateTime
@@ -171,20 +199,21 @@ model Job {
   salaryMinUsd    Int?
   salaryMaxUsd    Int?
   /// True when the salary is JobsPipe's estimate rather than stated in the ad.
-  salaryEstimated Boolean       @default(false)
+  salaryEstimated Boolean          @default(false)
   /// Job board the posting was found on, e.g. "indeed".
   provider        String?
   workplace       Workplace?
   industry        String?
   description     String?
-  postingStatus   String        @default("active")
+  postingStatus   String           @default("active")
   /// The original API record, kept so new columns can be backfilled without re-fetching.
   raw             Json?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   hiddenBy        HiddenJob[]
   applications    Application[]
   matches         JobMatch[]
+  tailored        TailoredResume[]
 
   @@index([postedAt])
   @@index([companyId])

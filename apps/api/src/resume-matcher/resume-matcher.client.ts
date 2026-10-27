@@ -2,7 +2,9 @@ import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type {
   RmHealthResponse,
+  RmCoverLetterResponse,
   RmImprovePreviewResponse,
+  RmImproveResponse,
   RmJobUploadResponse,
   RmLlmConfigResponse,
   RmResumeUploadResponse,
@@ -18,6 +20,9 @@ const DELETE_TIMEOUT_MS = 15_000;
 const JOB_UPLOAD_TIMEOUT_MS = 15_000;
 /** Resume-Matcher gives up on its own after 240 s, so wait a little longer than that. */
 const PREVIEW_TIMEOUT_MS = 270_000;
+const COVER_LETTER_TIMEOUT_MS = 120_000;
+/** Resume-Matcher prints the PDF in a headless browser, which takes a few seconds. */
+const PDF_TIMEOUT_MS = 60_000;
 
 /** Resume-Matcher answered, but with an error status. `detail` is its own message. */
 export class ResumeMatcherHttpError extends ServiceUnavailableException {
@@ -95,6 +100,43 @@ export class ResumeMatcherClient {
     );
   }
 
+  /**
+   * Tailors the resume to the job and saves the result in Resume-Matcher as a new resume
+   * (with the default prompt, which edits more than the "nudge" used for matching).
+   */
+  improve(resumeId: string, jobId: string): Promise<RmImproveResponse> {
+    return this.request<RmImproveResponse>('POST', '/resumes/improve', PREVIEW_TIMEOUT_MS, {
+      resume_id: resumeId,
+      job_id: jobId,
+    });
+  }
+
+  /** Writes a cover letter for a tailored resume (one AI call) and saves it with that resume. */
+  async generateCoverLetter(tailoredResumeId: string): Promise<string> {
+    const res = await this.request<RmCoverLetterResponse>(
+      'POST',
+      `/resumes/${encodeURIComponent(tailoredResumeId)}/generate-cover-letter`,
+      COVER_LETTER_TIMEOUT_MS,
+      {},
+    );
+    return res.content;
+  }
+
+  /** The resume as a PDF, printed by Resume-Matcher. */
+  resumePdf(resumeId: string): Promise<Uint8Array> {
+    return this.requestBytes(`/resumes/${encodeURIComponent(resumeId)}/pdf`);
+  }
+
+  /** The cover letter saved with a tailored resume, as a PDF. */
+  coverLetterPdf(resumeId: string): Promise<Uint8Array> {
+    return this.requestBytes(`/resumes/${encodeURIComponent(resumeId)}/cover-letter/pdf`);
+  }
+
+  private async requestBytes(path: string): Promise<Uint8Array> {
+    const res = await this.send('GET', path, PDF_TIMEOUT_MS);
+    return new Uint8Array(await res.arrayBuffer());
+  }
+
   private get baseUrl(): string | null {
     const url = this.config.get<string>('RESUME_MATCHER_URL')?.trim();
     return url ? url.replace(/\/+$/, '') : null;
@@ -106,6 +148,17 @@ export class ResumeMatcherClient {
     timeoutMs: number,
     body?: FormData | Record<string, unknown>,
   ): Promise<T> {
+    const res = await this.send(method, path, timeoutMs, body);
+    return (await res.json()) as T;
+  }
+
+  /** Sends one request; throws a message for the user unless the answer is 2xx. */
+  private async send(
+    method: 'GET' | 'POST' | 'DELETE',
+    path: string,
+    timeoutMs: number,
+    body?: FormData | Record<string, unknown>,
+  ): Promise<Response> {
     const baseUrl = this.baseUrl;
     if (!baseUrl) {
       throw new ServiceUnavailableException('RESUME_MATCHER_URL is not set in .env');
@@ -128,7 +181,7 @@ export class ResumeMatcherClient {
     if (!res.ok) {
       throw new ResumeMatcherHttpError(path, res.status, await readDetail(res));
     }
-    return (await res.json()) as T;
+    return res;
   }
 }
 
@@ -137,6 +190,14 @@ export function describeError(error: unknown): string {
   if (error instanceof ResumeMatcherHttpError) return error.detail ?? error.message;
   const text = error instanceof Error ? error.message : String(error);
   return text.includes('not reachable') ? `${text}. Start it with pnpm rm:up.` : text;
+}
+
+/** Like describeError, for a run on a job: a 404 there means its copy of your resume is gone. */
+export function describeRunError(error: unknown): string {
+  if (error instanceof ResumeMatcherHttpError && error.rmStatus === 404) {
+    return 'Resume-Matcher no longer has your resume. Send it again on My profile, then try again.';
+  }
+  return describeError(error);
 }
 
 /** With a FormData body, fetch sets the multipart Content-Type (and its boundary) itself. */

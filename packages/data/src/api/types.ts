@@ -303,3 +303,20 @@ export interface JobMatch {
   /** You sent a newer resume since this score. */
   outdated: boolean;
 }
+
+/** Your resume rewritten by Resume-Matcher for one job, with a cover letter. */
+export interface TailoredResume {
+  jobId: string;
+  status: JobMatchStatus;
+  /** What went wrong. Null unless FAILED. */
+  error: string | null;
+  /** ATS score of the tailored version (0-100). */
+  score: number | null;
+  /** Null if the cover letter could not be written. */
+  coverLetter: string | null;
+  resumeFileName: string | null;
+  startedAt: string;
+  finishedAt: string | null;
+  /** You sent a newer resume since. */
+  outdated: boolean;
+}

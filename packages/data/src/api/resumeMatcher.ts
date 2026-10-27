@@ -1,6 +1,6 @@
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
-import { graphqlClient } from './client';
+import { API_URL, graphqlClient } from './client';
 import { queryKeys } from './hooks';
 import {
   JOB_MATCH,
@@ -8,13 +8,23 @@ import {
   MY_MATCHER_RESUME,
   RESUME_MATCHER_STATUS,
   SYNC_RESUME_TO_MATCHER,
+  TAILOR_RESUME,
+  TAILORED_RESUME,
 } from './operations';
-import type { JobMatch, MatcherResume, ResumeMatcherStatus } from './types';
+import type { JobMatch, MatcherResume, ResumeMatcherStatus, TailoredResume } from './types';
 
 export const resumeMatcherStatusKey = ['resumeMatcher', 'status'] as const;
 export const matcherResumeKey = ['resumeMatcher', 'resume'] as const;
 const syncResumeKey = ['resumeMatcher', 'sync'] as const;
 export const jobMatchKey = (jobId: string) => ['resumeMatcher', 'match', jobId] as const;
+
+export const tailoredResumeKey = (jobId: string) => ['resumeMatcher', 'tailored', jobId] as const;
+
+/** Download links for a tailored resume's PDFs. The login cookie goes with the link. */
+export function tailoredPdfUrl(jobId: string, kind: 'resume' | 'cover-letter') {
+  const base = API_URL.replace(/\/graphql\/?$/, '');
+  return `${base}/tailored/${encodeURIComponent(jobId)}/${kind}.pdf`;
+}
 
 /** How often to ask whether a running match has finished. It takes a minute or two. */
 const MATCH_POLL_MS = 3_000;
@@ -127,6 +137,37 @@ export function useMatchJob() {
       queryClient.setQueryData(jobMatchKey(match.jobId), match);
       // The table shows "Matching…" for this job straight away.
       void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+    },
+  });
+}
+
+/** Your tailored resume for one job (null if never tailored). Polls while it is PENDING. */
+export function useTailoredResume(jobId: string) {
+  return useQuery({
+    queryKey: tailoredResumeKey(jobId),
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ tailoredResume: TailoredResume | null }>(
+        TAILORED_RESUME,
+        { jobId },
+      );
+      return data.tailoredResume;
+    },
+    refetchInterval: (q) => (q.state.data?.status === 'PENDING' ? MATCH_POLL_MS : false),
+  });
+}
+
+/** Starts tailoring. The server answers at once with PENDING; useTailoredResume polls it. */
+export function useTailorResume() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const data = await graphqlClient.request<{ tailorResume: TailoredResume }>(TAILOR_RESUME, {
+        jobId,
+      });
+      return data.tailorResume;
+    },
+    onSuccess: (tailored) => {
+      queryClient.setQueryData(tailoredResumeKey(tailored.jobId), tailored);
     },
   });
 }
