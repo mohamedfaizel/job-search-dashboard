@@ -9,6 +9,11 @@ export {
   useUploadResume,
 } from './api/profile';
 export {
+  resumeMatcherStatusKey,
+  useResumeMatcherStatus,
+  useTestAiConnection,
+} from './api/resumeMatcher';
+export {
   queryKeys,
   useCreateJob,
   useDeleteSavedSearch,

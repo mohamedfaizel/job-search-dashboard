@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module';
 import { JobsModule } from './jobs/jobs.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
+import { ResumeMatcherModule } from './resume-matcher/resume-matcher.module';
 import { SavedSearchesModule } from './saved-searches/saved-searches.module';
 import { SyncModule } from './sync/sync.module';
 
@@ -35,6 +36,7 @@ import { SyncModule } from './sync/sync.module';
     SyncModule,
     SavedSearchesModule,
     ProfileModule,
+    ResumeMatcherModule,
   ],
 })
 export class AppModule {}

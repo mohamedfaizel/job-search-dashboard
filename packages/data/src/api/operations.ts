@@ -296,3 +296,15 @@ export const UPDATE_PROFILE = /* GraphQL */ `
     }
   }
 `;
+
+export const RESUME_MATCHER_STATUS = /* GraphQL */ `
+  query ResumeMatcherStatus($checkAi: Boolean) {
+    resumeMatcherStatus(checkAi: $checkAi) {
+      configured
+      reachable
+      aiConfigured
+      aiHealthy
+      message
+    }
+  }
+`;

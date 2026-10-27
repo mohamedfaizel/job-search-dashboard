@@ -266,12 +266,35 @@ type Query {
   """Your tracker: jobs you saved, applied to, etc."""
   myApplications: [Application!]!
   myProfile: Profile!
+  resumeMatcherStatus(
+    """
+    Also send a test message to the AI provider (costs a fraction of a cent)
+    """
+    checkAi: Boolean! = false
+  ): ResumeMatcherStatus!
 
   """Your saved searches, by name, with their last import"""
   savedSearches: [SavedSearch!]!
 
   """Past imports, newest first"""
   syncRuns(limit: Int! = 20, savedSearchId: Int): [SyncRunModel!]!
+}
+
+type ResumeMatcherStatus {
+  """An AI provider key is set. Null unless checkAi was true"""
+  aiConfigured: Boolean
+
+  """A test message to the AI provider worked. Null unless checkAi was true"""
+  aiHealthy: Boolean
+
+  """False when RESUME_MATCHER_URL is not set in .env"""
+  configured: Boolean!
+
+  """One sentence for the user saying what works and what to fix"""
+  message: String!
+
+  """The Resume-Matcher container answered its health check"""
+  reachable: Boolean!
 }
 
 enum Role {

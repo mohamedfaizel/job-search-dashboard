@@ -24,9 +24,19 @@ services:
     profiles: ['tools']
     ports:
       # Our API already uses 3000, so Resume-Matcher is on http://localhost:3100.
-      - '3100:3000'
+      # 127.0.0.1 keeps it on this PC only: Resume-Matcher has no logins, so it must never be
+      # reachable from your network. Our API is the only thing that calls it.
+      - '127.0.0.1:3100:3000'
     volumes:
       - resume-data:/app/backend/data
+    environment:
+      # Docker Compose fills ${...} from the repo-root .env. The defaults after :- are used
+      # when a variable is missing. Change the model with RM_LLM_MODEL, no code change needed.
+      LLM_PROVIDER: ${RM_LLM_PROVIDER:-anthropic}
+      LLM_MODEL: ${RM_LLM_MODEL:-claude-sonnet-5-5}
+      LLM_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Only for Ollama: http://host.docker.internal:11434
+      LLM_API_BASE: ${RM_LLM_API_BASE:-}
     extra_hosts:
       # Lets it reach Ollama on your PC at http://host.docker.internal:11434.
       - 'host.docker.internal:host-gateway'

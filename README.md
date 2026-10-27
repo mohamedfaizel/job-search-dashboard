@@ -188,11 +188,24 @@ pnpm rm:up      # the first run downloads the image, which takes a while
 pnpm rm:down    # stop it
 ```
 
-Open <http://localhost:3100> (port 3000 is taken by our API), then in **Settings** pick an AI
-provider: Anthropic (Claude) with your API key, or Ollama for free local models at
-`http://host.docker.internal:11434`. Upload your master resume once, then for each job open its
-description popup here, copy the text and paste it into Resume-Matcher. Its data lives in the
-`resume-data` Docker volume. Matching built into this dashboard is on the roadmap.
+It uses Anthropic's **Claude Sonnet 5.5** by default. Put your key in `.env` (create one at
+[console.anthropic.com](https://console.anthropic.com), Settings > API Keys) and run `pnpm rm:up`
+again so the container picks it up:
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-...        # keep this secret: .env is git-ignored
+RM_LLM_MODEL=claude-sonnet-5-5      # or claude-haiku-5-5 (cheaper), claude-opus-5-5 (smartest)
+```
+
+For a free local model, install [Ollama](https://ollama.com), run `ollama pull gemma3:4b` and set
+`RM_LLM_PROVIDER=ollama`, `RM_LLM_MODEL=gemma3:4b` and
+`RM_LLM_API_BASE=http://host.docker.internal:11434`. It is slower and less accurate.
+
+Our API talks to Resume-Matcher at `RESUME_MATCHER_URL` (default `http://localhost:3100`). The
+**My profile** page shows whether it is running, and **Test AI connection** sends one tiny message
+to the AI provider to check the key and model. Resume-Matcher has no logins, so the port is bound
+to `127.0.0.1` and the browser never calls it directly. You can still open <http://localhost:3100>
+to use its own screens. Its data lives in the `resume-data` Docker volume.
 
 ## Using the API
 
