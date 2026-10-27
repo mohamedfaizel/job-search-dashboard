@@ -242,3 +242,14 @@ export interface Profile {
 }
 
 export type ProfileInput = Omit<Profile, 'resumeFileName' | 'updatedAt'>;
+
+/** Whether Resume-Matcher (resume tailoring and ATS scores) is running and can reach its AI. */
+export interface ResumeMatcherStatus {
+  /** False when RESUME_MATCHER_URL is not set on the server. */
+  configured: boolean;
+  reachable: boolean;
+  /** Null unless the AI check was asked for. */
+  aiConfigured: boolean | null;
+  aiHealthy: boolean | null;
+  message: string;
+}

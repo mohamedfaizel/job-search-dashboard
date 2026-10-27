@@ -1,5 +1,6 @@
 import { DataProvider, getErrorMessage, useMyProfile } from '@jobsearch/data';
 import { ProfileForm } from './components/ProfileForm';
+import { ResumeMatcherStatus } from './components/ResumeMatcherStatus';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ function ProfilePage() {
         // The form starts from the saved profile, so it waits until that has loaded.
         <ProfileForm profile={profile} />
       )}
+      <ResumeMatcherStatus />
     </section>
   );
 }

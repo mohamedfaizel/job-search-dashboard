@@ -1,4 +1,4 @@
-import type { Profile } from '@jobsearch/data';
+import type { Profile, ResumeMatcherStatus } from '@jobsearch/data';
 import { API_URL, RESUME_UPLOAD_URL } from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -32,7 +32,27 @@ export const rejectUpload = http.post(RESUME_UPLOAD_URL, () => {
   );
 });
 
+/** Resume-Matcher is running; the AI check (checkAi: true) reports a working key. */
+export const RM_RUNNING: ResumeMatcherStatus = {
+  configured: true,
+  reachable: true,
+  aiConfigured: null,
+  aiHealthy: null,
+  message: 'Resume-Matcher is running.',
+};
+
 export const server = setupServer(
+  api.query('ResumeMatcherStatus', ({ variables }) => {
+    const status = variables['checkAi']
+      ? {
+          ...RM_RUNNING,
+          aiConfigured: true,
+          aiHealthy: true,
+          message: 'Resume-Matcher is running and the AI provider answered.',
+        }
+      : RM_RUNNING;
+    return HttpResponse.json({ data: { resumeMatcherStatus: status } });
+  }),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
   api.mutation('UpdateProfile', ({ variables }) => {
     requests.push({ operation: 'UpdateProfile', variables });
