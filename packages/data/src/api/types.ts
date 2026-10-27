@@ -69,6 +69,8 @@ export interface JobFilterInput {
   workplaces?: Workplace[];
   applicationStatuses?: ApplicationStatus[];
   minSalaryUsd?: number;
+  /** True lists only the jobs you hid; otherwise they are left out. */
+  hidden?: boolean;
 }
 
 export interface JobSortInput {

@@ -97,6 +97,9 @@ input JobFilterInput {
   cities: [String!]
   companies: [String!]
   countryCodes: [String!]
+
+  """True lists only the jobs you hid. Otherwise hidden jobs are left out."""
+  hidden: Boolean
   industries: [String!]
   jobFunctions: [String!]
 
@@ -166,6 +169,9 @@ type Mutation {
 
   """Delete a saved search. Its past imports stay."""
   deleteSavedSearch(id: Int!): Boolean!
+
+  """Hide a job from your table. Other users still see it."""
+  hideJob(id: ID!): Boolean!
   logIn(input: LogInInput!): User!
   logOut: Boolean!
 
@@ -185,6 +191,9 @@ type Mutation {
 
   """Fetch jobs from JobsPipe and save them"""
   syncJobs(input: SyncJobsInput!): SyncJobsResult!
+
+  """Show a hidden job in your table again"""
+  unhideJob(id: ID!): Boolean!
 
   """Track your progress: Saved, Applied, Interviewing…"""
   updateJobStatus(id: ID!, status: ApplicationStatus!): Job!
@@ -225,6 +234,9 @@ input ProfileInput {
 }
 
 type Query {
+  """How many jobs you have hidden"""
+  hiddenJobCount: Int!
+
   """Today's credits used against DAILY_CREDIT_CAP"""
   importBudget: ImportBudget!
   job(id: ID!): Job!

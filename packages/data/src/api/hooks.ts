@@ -4,14 +4,17 @@ import {
   CREATE_JOB,
   CREATE_SAVED_SEARCH,
   DELETE_SAVED_SEARCH,
+  HIDDEN_JOB_COUNT,
+  HIDE_JOB,
   IMPORT_BUDGET,
-  JOB_FILTER_OPTIONS,
   JOBS_PAGE,
+  JOB_FILTER_OPTIONS,
   RUN_SAVED_SEARCH,
   SAVED_SEARCHES,
   SET_SAVED_SEARCH_SCHEDULE,
   SYNC_JOBS,
   SYNC_RUNS,
+  UNHIDE_JOB,
   UPDATE_JOB_STATUS,
   UPDATE_SAVED_SEARCH,
 } from './operations';
@@ -36,6 +39,8 @@ export const queryKeys = {
   jobs: ['jobs'] as const,
   jobsPage: (args: JobsPageArgs) => ['jobs', 'page', args] as const,
   filterOptions: ['jobs', 'filterOptions'] as const,
+  // Under 'jobs', so anything that refreshes the jobs refreshes the count too.
+  hiddenJobCount: ['jobs', 'hiddenCount'] as const,
   savedSearches: ['savedSearches'] as const,
   syncRuns: ['syncRuns'] as const,
   importBudget: ['importBudget'] as const,
@@ -86,6 +91,28 @@ export function useUpdateJobStatus() {
         updateJobStatus: Pick<Job, 'id' | 'applicationStatus'>;
       }>(UPDATE_JOB_STATUS, vars);
       return data.updateJobStatus;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobs }),
+  });
+}
+
+/** How many jobs you have hidden. */
+export function useHiddenJobCount() {
+  return useQuery({
+    queryKey: queryKeys.hiddenJobCount,
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ hiddenJobCount: number }>(HIDDEN_JOB_COUNT);
+      return data.hiddenJobCount;
+    },
+  });
+}
+
+/** Hides a job from your table, or brings it back. Other users are not affected. */
+export function useSetJobHidden() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, hidden }: { id: string; hidden: boolean }) => {
+      await graphqlClient.request(hidden ? HIDE_JOB : UNHIDE_JOB, { id });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobs }),
   });

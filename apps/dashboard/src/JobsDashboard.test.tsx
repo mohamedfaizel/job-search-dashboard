@@ -101,6 +101,54 @@ describe('JobsDashboard', () => {
     });
   });
 
+  it('hides a job, lists it under Hidden jobs and brings it back', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Hide Senior Frontend Engineer at Acme' }),
+    );
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Hid “Senior Frontend Engineer” at Acme.',
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Senior Frontend Engineer' }),
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: 'Backend Developer' })).toBeInTheDocument();
+
+    await user.click(await screen.findByRole('button', { name: 'Hidden jobs (1)' }));
+
+    expect(screen.getByRole('heading', { name: 'Hidden jobs' })).toBeInTheDocument();
+    expect(lastJobsPageVariables()).toMatchObject({ filter: { hidden: true } });
+    await user.click(
+      await screen.findByRole('button', { name: 'Unhide Senior Frontend Engineer at Acme' }),
+    );
+    expect(await screen.findByText('No hidden jobs match.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Back to job posts' }));
+    expect(
+      await screen.findByRole('button', { name: 'Senior Frontend Engineer' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Hidden jobs/ })).not.toBeInTheDocument();
+  });
+
+  it('undoes a hide', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await user.click(
+      await screen.findByRole('button', { name: 'Hide Backend Developer at Beta GmbH' }),
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Undo' }));
+
+    expect(await screen.findByRole('button', { name: 'Backend Developer' })).toBeInTheDocument();
+    expect(requests.map((r) => r.operation)).toContain('UnhideJob');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('shows the API error when loading fails', async () => {
     server.use(
       api.query('JobsPage', () => HttpResponse.json({ errors: [{ message: 'Database is down' }] })),

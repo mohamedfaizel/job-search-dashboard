@@ -17,6 +17,7 @@ const meta = {
     onClearFilter: fn(),
     openJob: fn(),
     setStatus: fn(),
+    toggleHidden: fn(),
   },
 } satisfies Meta<typeof JobsTable>;
 

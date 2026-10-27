@@ -118,6 +118,10 @@ JobsPipe credits. Accounts created after that are regular users who can browse t
 their status. Passwords are stored as argon2 hashes, and the session lives in an httpOnly cookie
 for 7 days. Set `JWT_SECRET` in `.env` (see `.env.example`); `ALLOW_SIGNUP=false` closes sign-up.
 
+**Hide jobs:** click _Hide_ on any row to drop a job from your table. Only you stop seeing it.
+_Hidden jobs (n)_ above the table lists them, with _Unhide_ to bring one back, and _Undo_ right
+after hiding fixes a slip.
+
 **My profile** holds your headline, the roles and places you want, your skills and links, and your
 **master resume**. Upload a PDF or Word (.docx) file and the API reads the text out of it (scanned
 images can't be read); you can fix that text by hand. Match scores and tailored resumes will start

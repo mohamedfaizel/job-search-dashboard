@@ -77,6 +77,24 @@ export const UPDATE_JOB_STATUS = /* GraphQL */ `
   }
 `;
 
+export const HIDE_JOB = /* GraphQL */ `
+  mutation HideJob($id: ID!) {
+    hideJob(id: $id)
+  }
+`;
+
+export const UNHIDE_JOB = /* GraphQL */ `
+  mutation UnhideJob($id: ID!) {
+    unhideJob(id: $id)
+  }
+`;
+
+export const HIDDEN_JOB_COUNT = /* GraphQL */ `
+  query HiddenJobCount {
+    hiddenJobCount
+  }
+`;
+
 const SYNC_RESULT_FIELDS = /* GraphQL */ `
   pages
   fetched
