@@ -39,9 +39,10 @@ export const server = setupServer(
     const input = variables['input'] as Partial<Profile>;
     return HttpResponse.json({ data: { updateProfile: { ...PROFILE, ...input } } });
   }),
-  http.post(RESUME_UPLOAD_URL, async ({ request }) => {
-    // jsdom's File loses its name on the way through Node's fetch, so only check it's there.
-    const sent = (await request.formData()).has('file');
+  http.post(RESUME_UPLOAD_URL, ({ request }) => {
+    // jsdom's File and FormData don't survive Node's fetch intact (the name is lost, and on
+    // Node 24 reading the body aborts), so check the request is multipart without parsing it.
+    const sent = request.headers.get('content-type')?.startsWith('multipart/form-data') ?? false;
     requests.push({ operation: 'UploadResume', variables: { sent } });
     return HttpResponse.json(
       { ...PROFILE, resumeFileName: 'new cv.pdf', resumeText: 'Text from the PDF' },
