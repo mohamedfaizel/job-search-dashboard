@@ -308,3 +308,26 @@ export const RESUME_MATCHER_STATUS = /* GraphQL */ `
     }
   }
 `;
+
+const MATCHER_RESUME_FIELDS = /* GraphQL */ `
+  state
+  fileName
+  syncedAt
+  message
+`;
+
+export const MY_MATCHER_RESUME = /* GraphQL */ `
+  query MyMatcherResume {
+    myMatcherResume {
+      ${MATCHER_RESUME_FIELDS}
+    }
+  }
+`;
+
+export const SYNC_RESUME_TO_MATCHER = /* GraphQL */ `
+  mutation SyncResumeToMatcher {
+    syncResumeToMatcher {
+      ${MATCHER_RESUME_FIELDS}
+    }
+  }
+`;

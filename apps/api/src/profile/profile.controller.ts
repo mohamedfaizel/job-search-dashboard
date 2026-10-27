@@ -31,6 +31,10 @@ export class ProfileController {
   ): Promise<ProfileModel> {
     if (!file) throw new BadRequestException('Choose a file to upload');
     const text = await extractResumeText(file);
-    return this.profiles.saveResume(user.id, file.originalname, text);
+    return this.profiles.saveResume(
+      user.id,
+      { name: file.originalname, type: file.mimetype, bytes: file.buffer },
+      text,
+    );
   }
 }

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import App from './App';
 import { renderWithData } from './test/render';
-import { api, rejectUpload, requests, server } from './test/server';
+import { api, rejectUpload, requests, server, syncs } from './test/server';
 
 async function renderProfile() {
   // applyAccept: false lets tests pick a file the input's `accept` would hide, like a user
@@ -97,6 +97,10 @@ describe('profile page', () => {
     expect(screen.getByText('Last upload: new cv.pdf')).toBeInTheDocument();
     expect(headline).toHaveValue('Not saved yet');
     expect(requests).toEqual([{ operation: 'UploadResume', variables: { sent: true } }]);
+    // Resume-Matcher is running, so the new file is sent to it straight away.
+    await waitFor(() => {
+      expect(syncs).toHaveLength(1);
+    });
   });
 
   it('explains when a file can’t be used', async () => {

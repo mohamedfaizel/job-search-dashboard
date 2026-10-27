@@ -207,6 +207,11 @@ to the AI provider to check the key and model. Resume-Matcher has no logins, so 
 to `127.0.0.1` and the browser never calls it directly. You can still open <http://localhost:3100>
 to use its own screens. Its data lives in the `resume-data` Docker volume.
 
+When you upload your resume (PDF or Word) on **My profile**, it is also sent to Resume-Matcher,
+which reads it into sections with its AI (one AI call). **Send again** re-sends it. Each user has
+one copy there, and the old one is deleted first, because Resume-Matcher keeps at most 5 master
+resumes in total. Resume text you typed in by hand isn't sent: Resume-Matcher needs the file.
+
 ## Using the API
 
 Open <http://localhost:3000/graphql> in your browser. It shows Apollo Sandbox, where you can

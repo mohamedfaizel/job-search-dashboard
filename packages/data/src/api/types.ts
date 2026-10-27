@@ -253,3 +253,14 @@ export interface ResumeMatcherStatus {
   aiHealthy: boolean | null;
   message: string;
 }
+
+export type MatcherResumeState = 'NO_FILE' | 'NOT_SENT' | 'OUTDATED' | 'READY' | 'FAILED';
+
+/** Your master resume's copy in Resume-Matcher, which jobs are matched against. */
+export interface MatcherResume {
+  state: MatcherResumeState;
+  /** The file Resume-Matcher last received. */
+  fileName: string | null;
+  syncedAt: string | null;
+  message: string;
+}

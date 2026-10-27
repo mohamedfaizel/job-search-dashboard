@@ -173,6 +173,24 @@ input LogInInput {
   password: String!
 }
 
+type MatcherResume {
+  """The file Resume-Matcher last received"""
+  fileName: String
+
+  """One sentence for the user saying where things stand"""
+  message: String!
+  state: MatcherResumeState!
+  syncedAt: DateTime
+}
+
+enum MatcherResumeState {
+  FAILED
+  NOT_SENT
+  NO_FILE
+  OUTDATED
+  READY
+}
+
 type Mutation {
   """Add a job by hand"""
   createJob(input: CreateJobInput!): Job!
@@ -202,6 +220,11 @@ type Mutation {
 
   """Fetch jobs from JobsPipe and save them"""
   syncJobs(input: SyncJobsInput!): SyncJobsResult!
+
+  """
+  Send your uploaded resume file to Resume-Matcher, replacing the previous copy. Its AI reads it, which can take a minute
+  """
+  syncResumeToMatcher: MatcherResume!
 
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
@@ -265,6 +288,11 @@ type Query {
 
   """Your tracker: jobs you saved, applied to, etc."""
   myApplications: [Application!]!
+
+  """
+  Your master resume's copy in Resume-Matcher, which jobs are matched against
+  """
+  myMatcherResume: MatcherResume!
   myProfile: Profile!
   resumeMatcherStatus(
     """
