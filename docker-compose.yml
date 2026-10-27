@@ -16,5 +16,22 @@ services:
       timeout: 5s
       retries: 10
 
+  # Optional: Resume-Matcher (github.com/srbhr/Resume-Matcher) tailors a resume to one job.
+  # Only starts with `pnpm rm:up` (the "tools" profile), never with `pnpm db:up`.
+  resume-matcher:
+    image: ghcr.io/srbhr/resume-matcher:1.4.0
+    container_name: jobsearch-resume-matcher
+    profiles: ['tools']
+    ports:
+      # Our API already uses 3000, so Resume-Matcher is on http://localhost:3100.
+      - '3100:3000'
+    volumes:
+      - resume-data:/app/backend/data
+    extra_hosts:
+      # Lets it reach Ollama on your PC at http://host.docker.internal:11434.
+      - 'host.docker.internal:host-gateway'
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  resume-data:
