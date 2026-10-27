@@ -23,3 +23,44 @@ export interface RmResumeUploadResponse {
   processing_status: 'ready' | 'failed' | 'processing';
   is_master: boolean;
 }
+
+/** POST /api/v1/jobs/upload: stores job descriptions and returns one id per description. */
+export interface RmJobUploadResponse {
+  job_id: string[];
+}
+
+/** The ATS score Resume-Matcher computes without the AI, from the keywords the AI extracted. */
+export interface RmAtsScore {
+  overall_score: number;
+  sub_scores: {
+    keyword_match: number;
+    skills_coverage: number;
+    /** Null when the posting has no clear job title. */
+    title_match: number | null;
+    section_completeness: number;
+    /** Null when the resume has fewer than two dates. */
+    date_consistency: number | null;
+  };
+  missing_keywords: string[];
+  injectable_keywords: string[];
+  recommendations: string[];
+}
+
+/**
+ * POST /api/v1/resumes/improve/preview: tailors the resume to the job without saving it, and
+ * scores the result.
+ */
+export interface RmImprovePreviewResponse {
+  data: {
+    refinement_stats: { initial_match_percentage: number; final_match_percentage: number } | null;
+    /** Null when Resume-Matcher couldn't compute it. */
+    ats_score: RmAtsScore | null;
+    warnings: string[];
+  };
+}
+
+/** GET /api/v1/config/llm-api-key: the provider and model it really uses (key masked). */
+export interface RmLlmConfigResponse {
+  provider: string;
+  model: string;
+}

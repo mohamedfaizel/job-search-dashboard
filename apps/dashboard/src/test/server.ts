@@ -1,4 +1,4 @@
-import type { Application, ApplicationStatus } from '@jobsearch/data';
+import type { Application, ApplicationStatus, JobMatch } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -17,7 +17,41 @@ export const hiddenIds = new Set<string>();
 /** The test user's tracker. Tests fill it; status changes update it like the real API. */
 export const applications: Application[] = [];
 
+/** A finished match, for tests that show the score. */
+export const READY_MATCH: JobMatch = {
+  jobId: 'job-1',
+  status: 'READY',
+  error: null,
+  score: 72.4,
+  keywordMatchBefore: 55,
+  keywordMatch: 70,
+  skillsCoverage: 80,
+  titleMatch: 50,
+  sectionCompleteness: 100,
+  dateConsistency: null,
+  missingKeywords: ['Kubernetes'],
+  injectableKeywords: ['GraphQL'],
+  recommendations: ['Add "Senior Frontend Engineer" to your headline.'],
+  resumeFileName: 'ada.pdf',
+  startedAt: '2026-10-27T12:00:00.000Z',
+  finishedAt: '2026-10-27T12:01:30.000Z',
+  outdated: false,
+};
+
 export const handlers = [
+  // By default no job has been matched yet.
+  api.query('JobMatch', () => HttpResponse.json({ data: { jobMatch: null } })),
+  api.mutation('MatchJob', ({ variables }) => {
+    requests.push({ operation: 'MatchJob', variables });
+    const pending: JobMatch = {
+      ...READY_MATCH,
+      jobId: variables['jobId'] as string,
+      status: 'PENDING',
+      score: null,
+      finishedAt: null,
+    };
+    return HttpResponse.json({ data: { matchJob: pending } });
+  }),
   api.query('JobsPage', ({ variables }) => {
     requests.push({ operation: 'JobsPage', variables });
     const showHidden = (variables['filter'] as { hidden?: boolean } | undefined)?.hidden ?? false;

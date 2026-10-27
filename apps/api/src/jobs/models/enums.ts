@@ -1,8 +1,14 @@
 import { registerEnumType } from '@nestjs/graphql';
-import { ApplicationStatus, JobSource, Workplace } from '../../generated/prisma/enums';
+import {
+  ApplicationStatus,
+  JobMatchStatus,
+  JobSource,
+  Workplace,
+} from '../../generated/prisma/enums';
 
 // Reuse Prisma's enums in the GraphQL schema so the database and API never drift apart.
 registerEnumType(ApplicationStatus, { name: 'ApplicationStatus' });
+registerEnumType(JobMatchStatus, { name: 'JobMatchStatus' });
 registerEnumType(JobSource, { name: 'JobSource' });
 registerEnumType(Workplace, { name: 'Workplace' });
 
@@ -23,4 +29,4 @@ export enum SortDirection {
 }
 registerEnumType(SortDirection, { name: 'SortDirection' });
 
-export { ApplicationStatus, JobSource, Workplace };
+export { ApplicationStatus, JobMatchStatus, JobSource, Workplace };

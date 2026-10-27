@@ -22,6 +22,8 @@ export function makeJob(overrides: Partial<Job> = {}): Job {
     description: 'Build the dashboard of the future.\n\nYou will work with React.',
     postingStatus: 'active',
     applicationStatus: 'NONE',
+    matchStatus: null,
+    matchScore: null,
     ...overrides,
   };
 }

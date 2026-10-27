@@ -43,6 +43,27 @@ export function ResumeMatcherStatus() {
       ) : (
         status.data && <p className="text-sm text-slate-700">{status.data.message}</p>
       )}
+      {status.data?.aiProvider && (
+        <p className="text-xs text-slate-500">
+          AI: <span className="font-medium text-slate-700">{status.data.aiProvider}</span>
+          {status.data.aiModel && (
+            <>
+              {' · '}
+              <span className="font-medium text-slate-700">{status.data.aiModel}</span>
+            </>
+          )}
+          . To change it, set RM_LLM_MODEL in .env, or pick one in{' '}
+          <a
+            href="http://localhost:3100/settings"
+            target="_blank"
+            rel="noreferrer"
+            className="text-indigo-700 underline"
+          >
+            Resume-Matcher&apos;s Settings
+          </a>{' '}
+          (a choice saved there beats .env).
+        </p>
+      )}
 
       {ready && (
         <div className="flex flex-wrap items-center gap-3">

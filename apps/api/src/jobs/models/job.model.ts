@@ -1,5 +1,5 @@
-import { Field, GraphQLISODateTime, ID, Int, ObjectType } from '@nestjs/graphql';
-import { ApplicationStatus, JobSource, Workplace } from './enums';
+import { Field, Float, GraphQLISODateTime, ID, Int, ObjectType } from '@nestjs/graphql';
+import { ApplicationStatus, JobMatchStatus, JobSource, Workplace } from './enums';
 
 @ObjectType()
 export class Company {
@@ -85,6 +85,18 @@ export class Job {
     description: 'Where you are with this job. Each user has their own; NONE until you act.',
   })
   applicationStatus!: ApplicationStatus;
+
+  @Field(() => JobMatchStatus, {
+    nullable: true,
+    description: 'Your resume match for this job, if you asked for one. Each user has their own',
+  })
+  matchStatus!: JobMatchStatus | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: "Resume-Matcher's ATS score (0-100) for your resume. Null until a match is READY",
+  })
+  matchScore!: number | null;
 
   @Field(() => GraphQLISODateTime)
   createdAt!: Date;

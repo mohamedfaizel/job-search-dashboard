@@ -81,6 +81,16 @@ type Job {
   industry: String
   jobFunction: String
   location: String
+
+  """
+  Resume-Matcher's ATS score (0-100) for your resume. Null until a match is READY
+  """
+  matchScore: Float
+
+  """
+  Your resume match for this job, if you asked for one. Each user has their own
+  """
+  matchStatus: JobMatchStatus
   postedAt: DateTime!
 
   """Whether the ad is still open ("active" or "closed")"""
@@ -139,6 +149,62 @@ type JobFilterOptions {
   providers: [String!]!
   seniorities: [String!]!
   skills: [String!]!
+}
+
+"""
+How well your master resume fits one job. Resume-Matcher lightly tailors the resume to the job, then scores it the way an ATS would
+"""
+type JobMatch {
+  """Dates written in one format (10%). Null with fewer than two dates"""
+  dateConsistency: Float
+
+  """What went wrong. Null unless FAILED"""
+  error: String
+  finishedAt: DateTime
+
+  """
+  Job keywords elsewhere in your resume that tailoring could bring forward
+  """
+  injectableKeywords: [String!]!
+  jobId: ID!
+
+  """Keyword match after tailoring (40%)"""
+  keywordMatch: Float
+
+  """Share of the job's keywords already in your resume, before tailoring"""
+  keywordMatchBefore: Float
+
+  """Job keywords your resume lacks"""
+  missingKeywords: [String!]!
+
+  """You sent a newer resume since, so match again for a current score"""
+  outdated: Boolean!
+  recommendations: [String!]!
+
+  """The resume file this was scored against"""
+  resumeFileName: String
+
+  """ATS score 0-100: a weighted mix of the five scores below"""
+  score: Float
+
+  """Contact info and key sections (15%)"""
+  sectionCompleteness: Float
+
+  """The job's skills found in your resume (20%)"""
+  skillsCoverage: Float
+  startedAt: DateTime!
+  status: JobMatchStatus!
+
+  """
+  The job title in your headline or summary (15%). Null when the posting has none
+  """
+  titleMatch: Float
+}
+
+enum JobMatchStatus {
+  FAILED
+  PENDING
+  READY
 }
 
 type JobPage {
@@ -203,6 +269,11 @@ type Mutation {
   hideJob(id: ID!): Boolean!
   logIn(input: LogInInput!): User!
   logOut: Boolean!
+
+  """
+  Score your resume against a job with Resume-Matcher. Returns at once as PENDING; poll jobMatch until READY or FAILED (a minute or two). Uses AI credits
+  """
+  matchJob(jobId: ID!): JobMatch!
 
   """Import from JobsPipe with a saved search"""
   runSavedSearch(
@@ -280,6 +351,9 @@ type Query {
   """Values to offer in each column filter"""
   jobFilterOptions: JobFilterOptions!
 
+  """Your resume match for one job. Null if you never matched it"""
+  jobMatch(jobId: ID!): JobMatch
+
   """Jobs for the dashboard table: filter, sort and paginate"""
   jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!
 
@@ -314,6 +388,14 @@ type ResumeMatcherStatus {
 
   """A test message to the AI provider worked. Null unless checkAi was true"""
   aiHealthy: Boolean
+
+  """The AI model Resume-Matcher really uses"""
+  aiModel: String
+
+  """
+  The AI provider Resume-Matcher really uses, e.g. anthropic. One saved in its own Settings page beats .env. Null when it isn't reachable
+  """
+  aiProvider: String
 
   """False when RESUME_MATCHER_URL is not set in .env"""
   configured: Boolean!

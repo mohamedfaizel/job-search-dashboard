@@ -38,6 +38,8 @@ export const RM_RUNNING: ResumeMatcherStatus = {
   reachable: true,
   aiConfigured: null,
   aiHealthy: null,
+  aiProvider: 'anthropic',
+  aiModel: 'claude-sonnet-5-5',
   message: 'Resume-Matcher is running.',
 };
 

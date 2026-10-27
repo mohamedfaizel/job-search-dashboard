@@ -1,7 +1,11 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { MatcherResumeStatus } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { ResumeMatcherClient, ResumeMatcherHttpError } from './resume-matcher.client';
+import {
+  describeError,
+  ResumeMatcherClient,
+  ResumeMatcherHttpError,
+} from './resume-matcher.client';
 import { MatcherResumeModel, MatcherResumeState } from './resume-matcher.model';
 
 const NO_FILE_MESSAGE =
@@ -136,12 +140,12 @@ export class ResumeSyncService {
 
 /** Turns a failure into a sentence that says what to do next. */
 function describe(error: unknown): string {
-  if (error instanceof ResumeMatcherHttpError) {
-    if (error.rmStatus === 409 && error.path === '/resumes/upload') {
-      return 'Resume-Matcher already holds 5 master resumes, its limit. Delete an old one in its own screens (http://localhost:3100), then send again.';
-    }
-    return error.detail ?? error.message;
+  if (
+    error instanceof ResumeMatcherHttpError &&
+    error.rmStatus === 409 &&
+    error.path === '/resumes/upload'
+  ) {
+    return 'Resume-Matcher already holds 5 master resumes, its limit. Delete an old one in its own screens (http://localhost:3100), then send again.';
   }
-  const text = error instanceof Error ? error.message : String(error);
-  return text.includes('not reachable') ? `${text}. Start it with pnpm rm:up.` : text;
+  return describeError(error);
 }

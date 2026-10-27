@@ -212,6 +212,19 @@ which reads it into sections with its AI (one AI call). **Send again** re-sends 
 one copy there, and the old one is deleted first, because Resume-Matcher keeps at most 5 master
 resumes in total. Resume text you typed in by hand isn't sent: Resume-Matcher needs the file.
 
+To score a job, open it on **Job posts** and click **Match my resume**. Resume-Matcher lightly
+tailors your resume to the job (its "nudge" prompt: minimal edits) and computes an ATS score from
+0 to 100: keywords 40%, skills 20%, job title 15%, sections 15% and date format 10%. That takes a
+minute or two and several AI calls, so the API answers at once with a `PENDING` match and the
+popup checks back every 3 seconds. The score then shows in the **Match** column, with the missing
+keywords and tips in the popup. Each user's scores are their own.
+
+**Settings saved in Resume-Matcher's own Settings page win over `.env`.** If **Test AI
+connection** fails and **My profile** shows a provider you didn't expect (for example `ollama`),
+pick Anthropic in <http://localhost:3100/settings>, or reset its saved settings with
+`docker compose --profile tools down` and `docker volume rm job-search-dashboard_resume-data`
+(this deletes Resume-Matcher's data), then `pnpm rm:up`.
+
 ## Using the API
 
 Open <http://localhost:3000/graphql> in your browser. It shows Apollo Sandbox, where you can

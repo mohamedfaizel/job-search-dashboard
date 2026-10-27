@@ -1,11 +1,23 @@
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { graphqlClient } from './client';
-import { MY_MATCHER_RESUME, RESUME_MATCHER_STATUS, SYNC_RESUME_TO_MATCHER } from './operations';
-import type { MatcherResume, ResumeMatcherStatus } from './types';
+import { queryKeys } from './hooks';
+import {
+  JOB_MATCH,
+  MATCH_JOB,
+  MY_MATCHER_RESUME,
+  RESUME_MATCHER_STATUS,
+  SYNC_RESUME_TO_MATCHER,
+} from './operations';
+import type { JobMatch, MatcherResume, ResumeMatcherStatus } from './types';
 
 export const resumeMatcherStatusKey = ['resumeMatcher', 'status'] as const;
 export const matcherResumeKey = ['resumeMatcher', 'resume'] as const;
 const syncResumeKey = ['resumeMatcher', 'sync'] as const;
+export const jobMatchKey = (jobId: string) => ['resumeMatcher', 'match', jobId] as const;
+
+/** How often to ask whether a running match has finished. It takes a minute or two. */
+const MATCH_POLL_MS = 3_000;
 
 async function fetchStatus(checkAi: boolean) {
   const data = await graphqlClient.request<{ resumeMatcherStatus: ResumeMatcherStatus }>(
@@ -70,4 +82,51 @@ export function useSyncResumeToMatcher() {
 /** True while any component is sending the resume to Resume-Matcher. */
 export function useIsSyncingResume() {
   return useIsMutating({ mutationKey: syncResumeKey }) > 0;
+}
+
+/**
+ * Your resume match for one job (null if you never matched it). While Resume-Matcher works on
+ * it the status is PENDING and this asks again every few seconds; once it finishes, the jobs
+ * table is refreshed so its Match column shows the new score.
+ */
+export function useJobMatch(jobId: string | null) {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: jobMatchKey(jobId ?? ''),
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ jobMatch: JobMatch | null }>(JOB_MATCH, {
+        jobId,
+      });
+      return data.jobMatch;
+    },
+    enabled: jobId !== null,
+    refetchInterval: (q) => (q.state.data?.status === 'PENDING' ? MATCH_POLL_MS : false),
+  });
+
+  const status = query.data?.status;
+  const previous = useRef(status);
+  useEffect(() => {
+    if (previous.current === 'PENDING' && status !== 'PENDING') {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+    }
+    previous.current = status;
+  }, [status, queryClient]);
+
+  return query;
+}
+
+/** Starts a match. The server answers at once with a PENDING match; useJobMatch polls it. */
+export function useMatchJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const data = await graphqlClient.request<{ matchJob: JobMatch }>(MATCH_JOB, { jobId });
+      return data.matchJob;
+    },
+    onSuccess: (match) => {
+      queryClient.setQueryData(jobMatchKey(match.jobId), match);
+      // The table shows "Matching…" for this job straight away.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+    },
+  });
 }

@@ -5,7 +5,10 @@ import { createContext, useContext } from 'react';
 import { capitalize, formatDate, formatSalary, STATUS_LABELS, WORKPLACE_LABELS } from '../format';
 import type { BadgeTone } from './Badge';
 import { Badge } from './Badge';
+import { scoreTone } from './MatchPanel';
 import { StatusSelect } from './StatusSelect';
+
+const dash = <span className="text-slate-400">–</span>;
 
 /** Row actions, provided by the table so cell renderers can stay at module scope. */
 export interface RowActions {
@@ -103,6 +106,33 @@ function StatusCell({ job }: { job: Job }) {
   );
 }
 
+/** Your ATS score for the job; clicking it opens the popup with the breakdown. */
+function MatchCell({ job }: { job: Job }) {
+  const { openJob } = useRowActions();
+  const { matchStatus, matchScore } = job;
+  if (!matchStatus) return dash;
+  const label =
+    matchStatus === 'PENDING'
+      ? 'Matching…'
+      : matchStatus === 'FAILED' || matchScore === null
+        ? 'Failed'
+        : String(Math.round(matchScore));
+  const tone: BadgeTone =
+    matchStatus === 'READY' && matchScore !== null ? scoreTone(matchScore) : 'gray';
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        openJob(job);
+      }}
+      aria-label={`Resume match for ${job.title}: ${label}`}
+      className="rounded"
+    >
+      <Badge tone={tone}>{label}</Badge>
+    </button>
+  );
+}
+
 function HideCell({ job }: { job: Job }) {
   const { toggleHidden, showingHidden = false } = useRowActions();
   const action = showingHidden ? 'Unhide' : 'Hide';
@@ -120,8 +150,6 @@ function HideCell({ job }: { job: Job }) {
   );
 }
 
-const dash = <span className="text-slate-400">–</span>;
-
 export const columns = helper.columns([
   helper.display({
     id: 'company',
@@ -136,6 +164,12 @@ export const columns = helper.columns([
     id: 'title',
     header: 'Job title',
     cell: ({ row }) => <TitleCell job={row.original} />,
+  }),
+  // Next to the title, so the score is visible without scrolling the wide table sideways.
+  helper.display({
+    id: 'match',
+    header: 'Match',
+    cell: ({ row }) => <MatchCell job={row.original} />,
   }),
   helper.accessor('jobFunction', {
     header: 'Function',
@@ -255,7 +289,7 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
     },
   },
   industry: { filter: { key: 'industries', options: (o) => plain(o?.industries) } },
-  // Statuses are per user (a separate table), so the server can filter by them but not sort.
+  // Matches and statuses are per user (separate tables), so the server can't sort by them.
   status: {
     filter: {
       key: 'applicationStatuses',

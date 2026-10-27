@@ -25,6 +25,12 @@ const healthy = http.get(`${RM_URL}/api/v1/health`, () => {
   calls.push('health');
   return HttpResponse.json({ status: 'healthy' });
 });
+// Free settings read: which provider and model Resume-Matcher really uses.
+const llmConfig = (provider = 'anthropic', model = 'claude-sonnet-5-5') =>
+  http.get(`${RM_URL}/api/v1/config/llm-api-key`, () => {
+    calls.push('config');
+    return HttpResponse.json({ provider, model, api_key: 'sk-…abcd' });
+  });
 const statusWith = (llm: { llm_configured: boolean; llm_healthy: boolean }) =>
   http.get(`${RM_URL}/api/v1/status`, () => {
     calls.push('status');
@@ -32,7 +38,8 @@ const statusWith = (llm: { llm_configured: boolean; llm_healthy: boolean }) =>
   });
 
 function serviceWith(url: string | undefined) {
-  const client = new ResumeMatcherClient(new ConfigService({ RESUME_MATCHER_URL: url }));
+  // '' rather than undefined, or ConfigService falls back to a RESUME_MATCHER_URL in the shell.
+  const client = new ResumeMatcherClient(new ConfigService({ RESUME_MATCHER_URL: url ?? '' }));
   return new ResumeMatcherService(client);
 }
 
@@ -46,7 +53,7 @@ describe('ResumeMatcherService.getStatus', () => {
   });
 
   it('only calls /health unless the AI check is asked for', async () => {
-    server.use(healthy, statusWith({ llm_configured: true, llm_healthy: true }));
+    server.use(healthy, llmConfig(), statusWith({ llm_configured: true, llm_healthy: true }));
 
     const status = await serviceWith(`${RM_URL}/`).getStatus(false);
 
@@ -55,24 +62,26 @@ describe('ResumeMatcherService.getStatus', () => {
       reachable: true,
       aiConfigured: null,
       aiHealthy: null,
+      aiProvider: 'anthropic',
+      aiModel: 'claude-sonnet-5-5',
       message: 'Resume-Matcher is running.',
     });
     // /status sends a paid test message to the AI provider, so it must not run here.
-    expect(calls).toEqual(['health']);
+    expect(calls).toEqual(['health', 'config']);
   });
 
   it('checks the AI provider when asked', async () => {
-    server.use(healthy, statusWith({ llm_configured: true, llm_healthy: true }));
+    server.use(healthy, llmConfig(), statusWith({ llm_configured: true, llm_healthy: true }));
 
     const status = await serviceWith(RM_URL).getStatus(true);
 
     expect(status).toMatchObject({ reachable: true, aiConfigured: true, aiHealthy: true });
     expect(status.message).toBe('Resume-Matcher is running and the AI provider answered.');
-    expect(calls).toEqual(['health', 'status']);
+    expect(calls).toEqual(['health', 'config', 'status']);
   });
 
   it('says to add the key when none is set', async () => {
-    server.use(healthy, statusWith({ llm_configured: false, llm_healthy: false }));
+    server.use(healthy, llmConfig(), statusWith({ llm_configured: false, llm_healthy: false }));
 
     const status = await serviceWith(RM_URL).getStatus(true);
 
@@ -94,6 +103,7 @@ describe('ResumeMatcherService.getStatus', () => {
   it('reports an HTTP error from the AI check', async () => {
     server.use(
       healthy,
+      llmConfig(),
       http.get(`${RM_URL}/api/v1/status`, () => new HttpResponse(null, { status: 500 })),
     );
 
@@ -101,5 +111,33 @@ describe('ResumeMatcherService.getStatus', () => {
 
     expect(status).toMatchObject({ reachable: true, aiHealthy: null });
     expect(status.message).toContain('/status failed: 500');
+  });
+
+  it('names the provider in use when it does not answer, since RM settings beat .env', async () => {
+    server.use(
+      healthy,
+      llmConfig('ollama', 'gemma3:4b'),
+      statusWith({ llm_configured: true, llm_healthy: false }),
+    );
+
+    const status = await serviceWith(RM_URL).getStatus(true);
+
+    expect(status).toMatchObject({ aiProvider: 'ollama', aiModel: 'gemma3:4b', aiHealthy: false });
+    expect(status.message).toContain('AI provider (ollama / gemma3:4b) did not answer');
+    expect(status.message).toContain("Resume-Matcher's own Settings page");
+  });
+
+  it('still works when the settings read fails', async () => {
+    server.use(
+      healthy,
+      http.get(
+        `${RM_URL}/api/v1/config/llm-api-key`,
+        () => new HttpResponse(null, { status: 404 }),
+      ),
+    );
+
+    const status = await serviceWith(RM_URL).getStatus(false);
+
+    expect(status).toMatchObject({ reachable: true, aiProvider: null, aiModel: null });
   });
 });
