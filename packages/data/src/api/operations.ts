@@ -198,3 +198,40 @@ export const IMPORT_BUDGET = /* GraphQL */ `
     }
   }
 `;
+
+const USER_FIELDS = /* GraphQL */ `
+  id
+  email
+  name
+  role
+`;
+
+export const ME = /* GraphQL */ `
+  query Me {
+    me {
+      ${USER_FIELDS}
+    }
+  }
+`;
+
+export const SIGN_UP = /* GraphQL */ `
+  mutation SignUp($input: SignUpInput!) {
+    signUp(input: $input) {
+      ${USER_FIELDS}
+    }
+  }
+`;
+
+export const LOG_IN = /* GraphQL */ `
+  mutation LogIn($input: LogInInput!) {
+    logIn(input: $input) {
+      ${USER_FIELDS}
+    }
+  }
+`;
+
+export const LOG_OUT = /* GraphQL */ `
+  mutation LogOut {
+    logOut
+  }
+`;

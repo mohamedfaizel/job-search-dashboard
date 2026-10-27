@@ -1,4 +1,5 @@
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Roles } from '../auth/auth.decorators';
 import { CreateJobInput } from './dto/create-job.input';
 import { JobsArgs } from './dto/jobs.args';
 import { JobsService } from './jobs.service';
@@ -25,6 +26,8 @@ export class JobsResolver {
     return this.jobs.filterOptions();
   }
 
+  // Jobs are shared by every user, so only the admin adds them for now.
+  @Roles('ADMIN')
   @Mutation(() => Job, { description: 'Add a job by hand' })
   createJob(@Args('input') input: CreateJobInput) {
     return this.jobs.create(input);

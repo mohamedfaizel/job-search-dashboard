@@ -1,4 +1,5 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Roles } from '../auth/auth.decorators';
 import { SyncJobsResult } from '../sync/sync.input';
 import {
   ImportBudget,
@@ -10,6 +11,8 @@ import {
 import { SavedSearchesService } from './saved-searches.service';
 import { SchedulerService } from './scheduler.service';
 
+// Saved searches and imports spend the server's JobsPipe credits, so they are admin-only.
+@Roles('ADMIN')
 @Resolver(() => SavedSearch)
 export class SavedSearchesResolver {
   constructor(

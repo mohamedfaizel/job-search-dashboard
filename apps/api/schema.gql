@@ -154,6 +154,11 @@ enum JobSource {
   MANUAL
 }
 
+input LogInInput {
+  email: String!
+  password: String!
+}
+
 type Mutation {
   """Add a job by hand"""
   createJob(input: CreateJobInput!): Job!
@@ -161,6 +166,8 @@ type Mutation {
 
   """Delete a saved search. Its past imports stay."""
   deleteSavedSearch(id: Int!): Boolean!
+  logIn(input: LogInInput!): User!
+  logOut: Boolean!
 
   """Import from JobsPipe with a saved search"""
   runSavedSearch(
@@ -172,6 +179,9 @@ type Mutation {
 
   """Turn scheduled runs of a saved search on or off"""
   setSavedSearchSchedule(id: Int!, input: ScheduleInput!): SavedSearch!
+
+  """Create an account and log in"""
+  signUp(input: SignUpInput!): User!
 
   """Fetch jobs from JobsPipe and save them"""
   syncJobs(input: SyncJobsInput!): SyncJobsResult!
@@ -192,11 +202,19 @@ type Query {
   """Jobs for the dashboard table: filter, sort and paginate"""
   jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!
 
+  """Who is logged in, or null"""
+  me: User
+
   """Your saved searches, by name, with their last import"""
   savedSearches: [SavedSearch!]!
 
   """Past imports, newest first"""
   syncRuns(limit: Int! = 20, savedSearchId: Int): [SyncRunModel!]!
+}
+
+enum Role {
+  ADMIN
+  USER
 }
 
 type SavedSearch {
@@ -277,6 +295,12 @@ input ScheduleInput {
   """"HH:mm", 24-hour, server local time"""
   runAt: String! = "07:00"
   schedule: ScheduleFrequency!
+}
+
+input SignUpInput {
+  email: String!
+  name: String!
+  password: String!
 }
 
 enum SortDirection {
@@ -372,6 +396,13 @@ type SyncRunModel {
   """
   summary: String!
   updated: Int!
+}
+
+type User {
+  email: String!
+  id: Int!
+  name: String!
+  role: Role!
 }
 
 enum Workplace {

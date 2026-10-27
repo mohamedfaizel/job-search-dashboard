@@ -1,9 +1,10 @@
 import type { Server } from 'node:http';
 import type { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { createValidationPipe } from '../src/common/validation.pipe';
+import { configureApp } from '../src/configure-app';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { TEST_DATABASE_URL } from './env';
 
@@ -12,13 +13,21 @@ export interface GqlResult<T> {
   errors?: { message: string }[];
 }
 
+type Gql = <T = Record<string, unknown>>(
+  query: string,
+  variables?: Record<string, unknown>,
+) => Promise<GqlResult<T>>;
+
 export interface TestApp {
   app: INestApplication;
   prisma: PrismaService;
-  gql: <T = Record<string, unknown>>(
-    query: string,
-    variables?: Record<string, unknown>,
-  ) => Promise<GqlResult<T>>;
+  server: Server;
+  /** Calls GraphQL as the admin, so feature tests don't have to log in first. */
+  gql: Gql;
+  /** Calls GraphQL with no session cookie. */
+  anonymous: Gql;
+  /** Calls GraphQL as a regular (non-admin) user. */
+  asUser: Gql;
 }
 
 /** Boots the whole API (same modules as production) against the test database. */
@@ -33,22 +42,37 @@ export async function createTestApp(env: Record<string, string> = {}): Promise<T
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleRef.createNestApplication({ logger: false });
-  app.useGlobalPipes(createValidationPipe());
+  configureApp(app);
   await app.init();
 
   const prisma = app.get(PrismaService);
   const server = app.getHttpServer() as Server;
+  // Sessions are signed tokens, so tests can mint one without a user row in the database.
+  const jwt = app.get(JwtService);
+  const cookieFor = (role: 'ADMIN' | 'USER') =>
+    `session=${jwt.sign({ sub: role === 'ADMIN' ? 1 : 2, role })}`;
 
-  async function gql<T>(query: string, variables?: Record<string, unknown>) {
-    const res = await request(server).post('/graphql').send({ query, variables });
-    return res.body as GqlResult<T>;
-  }
+  const caller =
+    (cookie?: string): Gql =>
+    async <T>(query: string, variables?: Record<string, unknown>) => {
+      const req = request(server).post('/graphql');
+      if (cookie) void req.set('Cookie', cookie);
+      const res = await req.send({ query, variables });
+      return res.body as GqlResult<T>;
+    };
 
-  return { app, prisma, gql };
+  return {
+    app,
+    prisma,
+    server,
+    gql: caller(cookieFor('ADMIN')),
+    anonymous: caller(),
+    asUser: caller(cookieFor('USER')),
+  };
 }
 
 export async function resetDatabase(prisma: PrismaService): Promise<void> {
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "Job", "Company", "SyncRun", "SavedSearch" RESTART IDENTITY CASCADE',
+    'TRUNCATE "Job", "Company", "SyncRun", "SavedSearch", "User" RESTART IDENTITY CASCADE',
   );
 }

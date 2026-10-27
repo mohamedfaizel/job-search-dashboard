@@ -32,6 +32,24 @@ enum ApplicationStatus {
   REJECTED
 }
 
+/// ADMIN can import from JobsPipe and manage saved searches (it spends the server's credits).
+/// The first account to sign up becomes ADMIN; everyone after that is a USER.
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String
+  /// argon2id hash. The password itself is never stored.
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Company {
   id        Int      @id @default(autoincrement())
   name      String   @unique

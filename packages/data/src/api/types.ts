@@ -202,3 +202,22 @@ export interface ImportBudget {
   /** DAILY_CREDIT_CAP: scheduled runs stop before going over it. */
   cap: number;
 }
+
+export type Role = 'ADMIN' | 'USER';
+
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  /** ADMIN can import jobs and manage saved searches; the first account to sign up gets it. */
+  role: Role;
+}
+
+export interface LogInInput {
+  email: string;
+  password: string;
+}
+
+export interface SignUpInput extends LogInInput {
+  name: string;
+}
