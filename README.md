@@ -108,6 +108,12 @@ pnpm dev                                   # start the api and all three fronten
 
 Open <http://localhost:5173>. Check the API at <http://localhost:3000/health>.
 
+**Log in:** the first time, click _Create an account_. The first account on a server becomes the
+**admin**: only the admin sees **Add jobs**, because imports and saved searches spend the server's
+JobsPipe credits. Accounts created after that are regular users who can browse the jobs and track
+their status. Passwords are stored as argon2 hashes, and the session lives in an httpOnly cookie
+for 7 days. Set `JWT_SECRET` in `.env` (see `.env.example`); `ALLOW_SIGNUP=false` closes sign-up.
+
 The **Add jobs** page has three tabs: _Saved searches_, _Import from JobsPipe_ and _Add a job by hand_.
 _Import history_ sits below the tabs, so it shows on all three.
 

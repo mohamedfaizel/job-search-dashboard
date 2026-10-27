@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { JobsModule } from './jobs/jobs.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -21,10 +22,13 @@ import { SyncModule } from './sync/sync.module';
       // memory; otherwise it is written to schema.gql so you can read the whole API in one file.
       autoSchemaFile: process.env['NODE_ENV'] === 'test' ? true : join(process.cwd(), 'schema.gql'),
       sortSchema: true,
+      // Resolvers get the request (to read the session cookie) and response (to set it).
+      context: ({ req, res }: { req: unknown; res: unknown }) => ({ req, res }),
     }),
     // Runs @Cron jobs, like the saved-search scheduler.
     ScheduleModule.forRoot(),
     PrismaModule,
+    AuthModule,
     HealthModule,
     JobsModule,
     SyncModule,
