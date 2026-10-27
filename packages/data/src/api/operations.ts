@@ -44,6 +44,19 @@ export const JOBS_PAGE = /* GraphQL */ `
   ${JOB_FIELDS}
 `;
 
+export const MY_APPLICATIONS = /* GraphQL */ `
+  query MyApplications {
+    myApplications {
+      status
+      updatedAt
+      job {
+        ...JobFields
+      }
+    }
+  }
+  ${JOB_FIELDS}
+`;
+
 export const JOB_FILTER_OPTIONS = /* GraphQL */ `
   query JobFilterOptions {
     jobFilterOptions {

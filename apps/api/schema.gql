@@ -2,6 +2,15 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+"""A job on your tracker board"""
+type Application {
+  job: Job!
+  status: ApplicationStatus!
+
+  """When the status last changed"""
+  updatedAt: DateTime!
+}
+
 enum ApplicationStatus {
   APPLIED
   INTERVIEWING
@@ -56,6 +65,9 @@ type ImportBudget {
 }
 
 type Job {
+  """
+  Where you are with this job. Each user has their own; NONE until you act.
+  """
   applicationStatus: ApplicationStatus!
   city: String
   company: Company!
@@ -137,7 +149,6 @@ type JobPage {
 }
 
 enum JobSortField {
-  APPLICATION_STATUS
   CITY
   COMPANY
   POSTED_AT
@@ -195,7 +206,9 @@ type Mutation {
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
 
-  """Track your progress: Saved, Applied, Interviewing…"""
+  """
+  Track your progress: Saved, Applied, Interviewing… Only you see your status.
+  """
   updateJobStatus(id: ID!, status: ApplicationStatus!): Job!
   updateProfile(input: ProfileInput!): Profile!
   updateSavedSearch(id: Int!, input: SavedSearchInput!): SavedSearch!
@@ -249,6 +262,9 @@ type Query {
 
   """Who is logged in, or null"""
   me: User
+
+  """Your tracker: jobs you saved, applied to, etc."""
+  myApplications: [Application!]!
   myProfile: Profile!
 
   """Your saved searches, by name, with their last import"""

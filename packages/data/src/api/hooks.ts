@@ -9,6 +9,7 @@ import {
   IMPORT_BUDGET,
   JOBS_PAGE,
   JOB_FILTER_OPTIONS,
+  MY_APPLICATIONS,
   RUN_SAVED_SEARCH,
   SAVED_SEARCHES,
   SET_SAVED_SEARCH_SCHEDULE,
@@ -19,6 +20,7 @@ import {
   UPDATE_SAVED_SEARCH,
 } from './operations';
 import type {
+  Application,
   ApplicationStatus,
   CreateJobInput,
   ImportBudget,
@@ -41,6 +43,7 @@ export const queryKeys = {
   filterOptions: ['jobs', 'filterOptions'] as const,
   // Under 'jobs', so anything that refreshes the jobs refreshes the count too.
   hiddenJobCount: ['jobs', 'hiddenCount'] as const,
+  applications: ['jobs', 'applications'] as const,
   savedSearches: ['savedSearches'] as const,
   syncRuns: ['syncRuns'] as const,
   importBudget: ['importBudget'] as const,
@@ -83,6 +86,17 @@ export function useCreateJob() {
   });
 }
 
+/** Your tracker board: every job you gave a status, most recently moved first. */
+export function useMyApplications() {
+  return useQuery({
+    queryKey: queryKeys.applications,
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ myApplications: Application[] }>(MY_APPLICATIONS);
+      return data.myApplications;
+    },
+  });
+}
+
 export function useUpdateJobStatus() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -92,7 +106,23 @@ export function useUpdateJobStatus() {
       }>(UPDATE_JOB_STATUS, vars);
       return data.updateJobStatus;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobs }),
+    // Optimistic update: move the card on the board right away instead of after the round trip.
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.applications });
+      const previous = queryClient.getQueryData<Application[]>(queryKeys.applications);
+      if (previous) {
+        queryClient.setQueryData<Application[]>(
+          queryKeys.applications,
+          previous.map((app) => (app.job.id === id ? { ...app, status } : app)),
+        );
+      }
+      return { previous };
+    },
+    // If the server said no, put the board back the way it was.
+    onError: (_error, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKeys.applications, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobs }),
   });
 }
 

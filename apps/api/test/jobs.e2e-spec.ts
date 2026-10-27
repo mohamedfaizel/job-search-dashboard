@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
 const CREATE_JOB = /* GraphQL */ `
   mutation CreateJob($input: CreateJobInput!) {
@@ -48,6 +48,8 @@ describe('Jobs GraphQL API', () => {
   });
   beforeEach(async () => {
     await resetDatabase(t.prisma);
+    // Statuses belong to real users, so the minted sessions need matching rows.
+    await seedTestUsers(t.prisma);
   });
 
   async function addJob(input: Record<string, unknown>) {

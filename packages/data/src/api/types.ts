@@ -16,14 +16,7 @@ export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 export type JobSource = 'JOBSPIPE' | 'MANUAL';
 
 export type JobSortField =
-  | 'POSTED_AT'
-  | 'TITLE'
-  | 'COMPANY'
-  | 'SENIORITY'
-  | 'CITY'
-  | 'SALARY'
-  | 'WORKPLACE'
-  | 'APPLICATION_STATUS';
+  'POSTED_AT' | 'TITLE' | 'COMPANY' | 'SENIORITY' | 'CITY' | 'SALARY' | 'WORKPLACE';
 
 export type SortDirection = 'ASC' | 'DESC';
 
@@ -54,6 +47,14 @@ export interface Job {
   description: string | null;
   postingStatus: string;
   applicationStatus: ApplicationStatus;
+}
+
+/** A job on your tracker board: any status except NONE. */
+export interface Application {
+  status: ApplicationStatus;
+  /** When the status last changed. */
+  updatedAt: string;
+  job: Job;
 }
 
 export interface JobFilterInput {

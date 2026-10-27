@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { ApplicationStatus, Prisma } from '../generated/prisma/client';
-import { JobSource } from '../generated/prisma/enums';
+import type { Prisma } from '../generated/prisma/client';
+import { ApplicationStatus, JobSource } from '../generated/prisma/enums';
 import type { MappedJob } from '../jobspipe/jobspipe.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateJobInput } from './dto/create-job.input';
@@ -8,7 +8,19 @@ import type { JobFilterInput, JobsArgs, JobSortInput } from './dto/jobs.args';
 import { JobSortField } from './models/enums';
 import type { JobFilterOptions, JobPage } from './models/job.model';
 
-const withCompany = { company: true } satisfies Prisma.JobInclude;
+/** Loads the company and this user's application, so `applicationStatus` is theirs. */
+function forUser(userId: number) {
+  return {
+    company: true,
+    applications: { where: { userId }, select: { status: true } },
+  } satisfies Prisma.JobInclude;
+}
+type JobForUser = Prisma.JobGetPayload<{ include: ReturnType<typeof forUser> }>;
+
+/** The job as one user sees it: no application row means they haven't acted on it. */
+function withStatus({ applications, ...job }: JobForUser) {
+  return { ...job, applicationStatus: applications[0]?.status ?? ApplicationStatus.NONE };
+}
 
 export interface UpsertResult {
   created: number;
@@ -23,7 +35,7 @@ export class JobsService {
   async findPage(userId: number, { filter, sort, page, pageSize }: JobsArgs): Promise<JobPage> {
     const hiddenByMe = { hiddenBy: { some: { userId } } } satisfies Prisma.JobWhereInput;
     const where: Prisma.JobWhereInput = {
-      AND: [buildWhere(filter), filter?.hidden ? hiddenByMe : { NOT: hiddenByMe }],
+      AND: [buildWhere(filter, userId), filter?.hidden ? hiddenByMe : { NOT: hiddenByMe }],
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.job.findMany({
@@ -31,17 +43,27 @@ export class JobsService {
         orderBy: buildOrderBy(sort),
         skip: (page - 1) * pageSize,
         take: pageSize,
-        include: withCompany,
+        include: forUser(userId),
       }),
       this.prisma.job.count({ where }),
     ]);
-    return { items, total, page, pageSize };
+    return { items: items.map(withStatus), total, page, pageSize };
   }
 
-  async findOne(id: string) {
-    const job = await this.prisma.job.findUnique({ where: { id }, include: withCompany });
+  async findOne(userId: number, id: string) {
+    const job = await this.prisma.job.findUnique({ where: { id }, include: forUser(userId) });
     if (!job) throw new NotFoundException(`Job ${id} not found`);
-    return job;
+    return withStatus(job);
+  }
+
+  /** The jobs this user is tracking (any status but NONE), most recently moved first. */
+  async applications(userId: number) {
+    const rows = await this.prisma.application.findMany({
+      where: { userId },
+      orderBy: [{ updatedAt: 'desc' }, { jobId: 'asc' }],
+      include: { job: { include: forUser(userId) } },
+    });
+    return rows.map(({ status, updatedAt, job }) => ({ status, updatedAt, job: withStatus(job) }));
   }
 
   async filterOptions(): Promise<JobFilterOptions> {
@@ -95,13 +117,14 @@ export class JobsService {
     };
   }
 
-  async create(input: CreateJobInput) {
-    const { companyName, salaryMinUsd, salaryMaxUsd, ...rest } = input;
+  /** Adds a job by hand. A status in the input becomes the creator's own application. */
+  async create(userId: number, input: CreateJobInput) {
+    const { companyName, salaryMinUsd, salaryMaxUsd, applicationStatus, ...rest } = input;
     if (salaryMinUsd !== undefined && salaryMaxUsd !== undefined && salaryMinUsd > salaryMaxUsd) {
       throw new BadRequestException('salaryMinUsd cannot be greater than salaryMaxUsd');
     }
 
-    return this.prisma.job.create({
+    const job = await this.prisma.job.create({
       data: {
         ...rest,
         countryCode: rest.countryCode?.toUpperCase() ?? null,
@@ -115,14 +138,18 @@ export class JobsService {
             create: { name: companyName.trim() },
           },
         },
+        ...(applicationStatus && applicationStatus !== ApplicationStatus.NONE
+          ? { applications: { create: { userId, status: applicationStatus } } }
+          : {}),
       },
-      include: withCompany,
+      include: forUser(userId),
     });
+    return withStatus(job);
   }
 
   /** Hides a job from one user's table. Hiding it again does nothing. */
   async hide(userId: number, jobId: string): Promise<boolean> {
-    await this.findOne(jobId);
+    await this.findOne(userId, jobId);
     await this.prisma.hiddenJob.upsert({
       where: { userId_jobId: { userId, jobId } },
       create: { userId, jobId },
@@ -140,18 +167,24 @@ export class JobsService {
     return this.prisma.hiddenJob.count({ where: { userId } });
   }
 
-  async updateApplicationStatus(id: string, status: ApplicationStatus) {
-    await this.findOne(id); // gives a clean "not found" error instead of a Prisma one
-    return this.prisma.job.update({
-      where: { id },
-      data: { applicationStatus: status },
-      include: withCompany,
-    });
+  /** Moves one user's application for a job. NONE removes it from their tracker. */
+  async updateApplicationStatus(userId: number, jobId: string, status: ApplicationStatus) {
+    await this.findOne(userId, jobId); // gives a clean "not found" error instead of a Prisma one
+    if (status === ApplicationStatus.NONE) {
+      await this.prisma.application.deleteMany({ where: { userId, jobId } });
+    } else {
+      await this.prisma.application.upsert({
+        where: { userId_jobId: { userId, jobId } },
+        create: { userId, jobId, status },
+        update: { status },
+      });
+    }
+    return this.findOne(userId, jobId);
   }
 
   /**
    * Saves JobsPipe postings. Re-running with the same postings updates them in place
-   * (matched on externalId) and never touches your applicationStatus.
+   * (matched on externalId). Application statuses live in their own table, so they stay.
    */
   async upsertMany(mapped: MappedJob[]): Promise<UpsertResult> {
     if (mapped.length === 0) return { created: 0, updated: 0 };
@@ -194,7 +227,7 @@ export class JobsService {
   }
 }
 
-function buildWhere(filter: JobFilterInput | undefined): Prisma.JobWhereInput {
+function buildWhere(filter: JobFilterInput | undefined, userId: number): Prisma.JobWhereInput {
   if (!filter) return {};
   const and: Prisma.JobWhereInput[] = [];
   const inList = <T>(values: T[] | undefined) => (values?.length ? { in: values } : null);
@@ -223,10 +256,19 @@ function buildWhere(filter: JobFilterInput | undefined): Prisma.JobWhereInput {
     industry: inList(filter.industries),
     workplace: inList(filter.workplaces),
     source: inList(filter.sources),
-    applicationStatus: inList(filter.applicationStatuses),
   };
   for (const [field, condition] of Object.entries(lists)) {
     if (condition) and.push({ [field]: condition });
+  }
+
+  const statuses = filter.applicationStatuses ?? [];
+  if (statuses.length) {
+    // NONE is stored as "no row", so it needs its own condition.
+    const stored = statuses.filter((status) => status !== ApplicationStatus.NONE);
+    const or: Prisma.JobWhereInput[] = [];
+    if (stored.length) or.push({ applications: { some: { userId, status: { in: stored } } } });
+    if (stored.length < statuses.length) or.push({ applications: { none: { userId } } });
+    and.push({ OR: or });
   }
 
   return and.length ? { AND: and } : {};
@@ -247,7 +289,6 @@ function buildOrderBy(sort: JobSortInput | undefined): Prisma.JobOrderByWithRela
     [JobSortField.CITY]: [{ city: nullsLast }],
     [JobSortField.SALARY]: [{ salaryMaxUsd: nullsLast }, { salaryMinUsd: nullsLast }],
     [JobSortField.WORKPLACE]: [{ workplace: nullsLast }],
-    [JobSortField.APPLICATION_STATUS]: [{ applicationStatus: dir }],
   };
   return [...bySort[sort.field], tieBreaker];
 }

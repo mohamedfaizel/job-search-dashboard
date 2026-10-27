@@ -1,3 +1,4 @@
+import type { Application, ApplicationStatus } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -12,6 +13,9 @@ export const requests: { operation: string; variables: Record<string, unknown> }
 
 /** Ids of the jobs the test user has hidden, so hiding works like the real API. */
 export const hiddenIds = new Set<string>();
+
+/** The test user's tracker. Tests fill it; status changes update it like the real API. */
+export const applications: Application[] = [];
 
 export const handlers = [
   api.query('JobsPage', ({ variables }) => {
@@ -38,8 +42,18 @@ export const handlers = [
   api.query('JobFilterOptions', () =>
     HttpResponse.json({ data: { jobFilterOptions: FILTER_OPTIONS } }),
   ),
+  api.query('MyApplications', () => HttpResponse.json({ data: { myApplications: applications } })),
   api.mutation('UpdateJobStatus', ({ variables }) => {
     requests.push({ operation: 'UpdateJobStatus', variables });
+    const id = variables['id'] as string;
+    const status = variables['status'] as ApplicationStatus;
+    const index = applications.findIndex((app) => app.job.id === id);
+    const job = JOBS.find((j) => j.id === id);
+    if (index >= 0) applications.splice(index, 1);
+    if (status !== 'NONE' && job) {
+      const updatedAt = '2026-10-27T12:00:00.000Z';
+      applications.unshift({ status, updatedAt, job: { ...job, applicationStatus: status } });
+    }
     return HttpResponse.json({
       data: { updateJobStatus: { id: variables['id'], applicationStatus: variables['status'] } },
     });

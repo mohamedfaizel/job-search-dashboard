@@ -118,6 +118,11 @@ JobsPipe credits. Accounts created after that are regular users who can browse t
 their status. Passwords are stored as argon2 hashes, and the session lives in an httpOnly cookie
 for 7 days. Set `JWT_SECRET` in `.env` (see `.env.example`); `ALLOW_SIGNUP=false` closes sign-up.
 
+**Tracker:** give a job a status (Saved, Applied, Interviewing, Offer, Rejected) from the table or
+its popup and it lands on your **Tracker** board. Drag cards between columns, or use each card's
+status menu (works with a keyboard). Every user has their own statuses and board; _Not applied_
+takes a job off the board.
+
 **Hide jobs:** click _Hide_ on any row to drop a job from your table. Only you stop seeing it.
 _Hidden jobs (n)_ above the table lists them, with _Unhide_ to bring one back, and _Undo_ right
 after hiding fixes a slip.
@@ -133,9 +138,10 @@ _Import history_ sits below the tabs, so it shows on all three.
 
 **Fill the table:** either open **Add jobs** and use _Import from JobsPipe_ (needs your token
 in `.env`, and each job costs one credit), or load 36 made-up demo jobs for free while the API
-is running:
+is running. Adding jobs is admin-only, so the script logs in as your admin account (PowerShell):
 
-```bash
+```powershell
+$env:SEED_EMAIL="you@example.com"; $env:SEED_PASSWORD="your password"
 pnpm --filter @jobsearch/api db:seed
 ```
 

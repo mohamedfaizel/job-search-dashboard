@@ -23,6 +23,7 @@ export {
   useSyncRuns,
   useUpdateJobStatus,
   useHiddenJobCount,
+  useMyApplications,
   useSetJobHidden,
 } from './api/hooks';
 export * from './store/jobsTableSlice';

@@ -5,7 +5,8 @@ import { defineConfig } from 'vite';
 
 const PORT = 5174;
 
-// The dashboard is a "remote": it exposes its App so the shell can load it at runtime.
+// The dashboard is a "remote": it exposes its App (job posts) and the Tracker board, and the
+// shell loads either one at runtime.
 export default defineConfig({
   plugins: [
     react(),
@@ -13,7 +14,7 @@ export default defineConfig({
     federation({
       name: 'dashboard',
       filename: 'remoteEntry.js',
-      exposes: { './App': './src/App.tsx' },
+      exposes: { './App': './src/App.tsx', './Tracker': './src/Tracker.tsx' },
       // Remote types are declared by hand in the shell (src/remotes.d.ts).
       dts: false,
       shared: {

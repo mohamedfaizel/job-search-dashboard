@@ -14,7 +14,6 @@ export enum JobSortField {
   CITY = 'city',
   SALARY = 'salary',
   WORKPLACE = 'workplace',
-  APPLICATION_STATUS = 'applicationStatus',
 }
 registerEnumType(JobSortField, { name: 'JobSortField' });
 
