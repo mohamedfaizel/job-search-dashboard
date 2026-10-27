@@ -255,8 +255,8 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
     },
   },
   industry: { filter: { key: 'industries', options: (o) => plain(o?.industries) } },
+  // Statuses are per user (a separate table), so the server can filter by them but not sort.
   status: {
-    sortField: 'APPLICATION_STATUS',
     filter: {
       key: 'applicationStatuses',
       options: () => APPLICATION_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] })),

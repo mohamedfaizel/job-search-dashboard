@@ -3,6 +3,10 @@ export function DashboardStub() {
   return <p>Dashboard microfrontend</p>;
 }
 
+export function TrackerStub() {
+  return <p>Tracker microfrontend</p>;
+}
+
 export function JobFormStub() {
   return <p>Job form microfrontend</p>;
 }

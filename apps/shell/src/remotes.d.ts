@@ -4,6 +4,11 @@ declare module 'dashboard/App' {
   export default App;
 }
 
+declare module 'dashboard/Tracker' {
+  const Tracker: React.ComponentType;
+  export default Tracker;
+}
+
 declare module 'jobForm/App' {
   const App: React.ComponentType;
   export default App;

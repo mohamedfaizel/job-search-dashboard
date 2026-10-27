@@ -1,10 +1,11 @@
 import type { User } from '@jobsearch/data';
 import type { ReactNode } from 'react';
 
-export type View = 'dashboard' | 'add-job' | 'profile';
+export type View = 'dashboard' | 'tracker' | 'add-job' | 'profile';
 
 const NAV_ITEMS: { view: View; label: string; adminOnly?: boolean }[] = [
   { view: 'dashboard', label: 'Job posts' },
+  { view: 'tracker', label: 'Tracker' },
   // Imports spend the server's JobsPipe credits, so only the admin sees this page.
   { view: 'add-job', label: 'Add jobs', adminOnly: true },
   { view: 'profile', label: 'My profile' },
