@@ -57,7 +57,7 @@ export default tseslint.config(
   // React apps: hooks rules and accessibility checks.
   {
     files: [
-      'apps/{shell,dashboard,job-form}/src/**/*.{ts,tsx}',
+      'apps/{shell,dashboard,job-form,profile}/src/**/*.{ts,tsx}',
       'apps/storybook/{stories,.storybook}/**/*.{ts,tsx}',
     ],
     plugins: { 'react-hooks': reactHooks },
@@ -67,7 +67,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/{shell,dashboard,job-form}/src/**/*.tsx', 'apps/storybook/stories/**/*.tsx'],
+    files: [
+      'apps/{shell,dashboard,job-form,profile}/src/**/*.tsx',
+      'apps/storybook/stories/**/*.tsx',
+    ],
     ...jsxA11y.flatConfigs.strict,
   },
 
@@ -84,7 +87,7 @@ export default tseslint.config(
   {
     files: ['apps/shell/src/**/*.tsx'],
     rules: {
-      'import-x/no-unresolved': ['error', { ignore: ['^dashboard/', '^jobForm/'] }],
+      'import-x/no-unresolved': ['error', { ignore: ['^dashboard/', '^jobForm/', '^profile/'] }],
     },
   },
 

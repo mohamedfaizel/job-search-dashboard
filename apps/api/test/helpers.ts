@@ -28,6 +28,8 @@ export interface TestApp {
   anonymous: Gql;
   /** Calls GraphQL as a regular (non-admin) user. */
   asUser: Gql;
+  /** A `Cookie` header value for the admin (user 1) or the regular user (user 2), for REST calls. */
+  cookieFor: (role: 'ADMIN' | 'USER') => string;
 }
 
 /** Boots the whole API (same modules as production) against the test database. */
@@ -68,6 +70,7 @@ export async function createTestApp(env: Record<string, string> = {}): Promise<T
     gql: caller(cookieFor('ADMIN')),
     anonymous: caller(),
     asUser: caller(cookieFor('USER')),
+    cookieFor,
   };
 }
 

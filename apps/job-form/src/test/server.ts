@@ -1,4 +1,4 @@
-import type { SavedSearch, SyncRun } from '@jobsearch/data';
+import type { Profile, SavedSearch, SyncRun } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -44,7 +44,22 @@ export const SAVED: SavedSearch = {
   lastRun: LAST_RUN,
 };
 
+export const PROFILE: Profile = {
+  headline: '',
+  targetRoles: ['Frontend Engineer', 'React Developer'],
+  locations: ['Berlin'],
+  skills: [],
+  yearsExperience: null,
+  linkedinUrl: null,
+  githubUrl: null,
+  websiteUrl: null,
+  resumeText: '',
+  resumeFileName: null,
+  updatedAt: null,
+};
+
 export const server = setupServer(
+  api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
   api.mutation('CreateJob', ({ variables }) => {
     requests.push({ operation: 'CreateJob', variables });
     const input = variables['input'] as { title: string; companyName: string };

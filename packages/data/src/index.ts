@@ -2,6 +2,13 @@ export * from './api/types';
 export { API_URL, getErrorMessage, isUnauthenticated } from './api/client';
 export { meKey, useLogIn, useLogOut, useMe, useSignUp } from './api/auth';
 export {
+  profileKey,
+  RESUME_UPLOAD_URL,
+  useMyProfile,
+  useUpdateProfile,
+  useUploadResume,
+} from './api/profile';
+export {
   queryKeys,
   useCreateJob,
   useDeleteSavedSearch,

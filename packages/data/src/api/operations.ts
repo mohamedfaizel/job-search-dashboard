@@ -235,3 +235,33 @@ export const LOG_OUT = /* GraphQL */ `
     logOut
   }
 `;
+
+const PROFILE_FIELDS = /* GraphQL */ `
+  headline
+  targetRoles
+  locations
+  skills
+  yearsExperience
+  linkedinUrl
+  githubUrl
+  websiteUrl
+  resumeText
+  resumeFileName
+  updatedAt
+`;
+
+export const MY_PROFILE = /* GraphQL */ `
+  query MyProfile {
+    myProfile {
+      ${PROFILE_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_PROFILE = /* GraphQL */ `
+  mutation UpdateProfile($input: ProfileInput!) {
+    updateProfile(input: $input) {
+      ${PROFILE_FIELDS}
+    }
+  }
+`;

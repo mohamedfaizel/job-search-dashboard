@@ -46,8 +46,27 @@ model User {
   /// argon2id hash. The password itself is never stored.
   passwordHash String
   role         Role     @default(USER)
+  profile      Profile?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+/// What you're looking for and your master resume. One per user, created on first save.
+model Profile {
+  userId          Int       @id
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline        String    @default("")
+  targetRoles     String[]  @default([])
+  locations       String[]  @default([])
+  skills          String[]  @default([])
+  yearsExperience Int?
+  linkedinUrl     String?
+  githubUrl       String?
+  websiteUrl      String?
+  /// Plain text of your master resume, from an uploaded PDF/DOCX or typed in.
+  resumeText      String    @default("")
+  resumeFileName  String?
+  updatedAt       DateTime  @updatedAt
 }
 
 model Company {
