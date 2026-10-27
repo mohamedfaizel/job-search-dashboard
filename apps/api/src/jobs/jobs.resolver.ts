@@ -1,5 +1,6 @@
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Roles } from '../auth/auth.decorators';
+import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import type { SessionUser } from '../auth/auth.decorators';
+import { CurrentUser, Roles } from '../auth/auth.decorators';
 import { CreateJobInput } from './dto/create-job.input';
 import { JobsArgs } from './dto/jobs.args';
 import { JobsService } from './jobs.service';
@@ -12,8 +13,29 @@ export class JobsResolver {
   constructor(private readonly jobs: JobsService) {}
 
   @Query(() => JobPage, { description: 'Jobs for the dashboard table: filter, sort and paginate' })
-  jobsPage(@Args() args: JobsArgs): Promise<JobPage> {
-    return this.jobs.findPage(args);
+  jobsPage(@CurrentUser() user: SessionUser, @Args() args: JobsArgs): Promise<JobPage> {
+    return this.jobs.findPage(user.id, args);
+  }
+
+  @Query(() => Int, { description: 'How many jobs you have hidden' })
+  hiddenJobCount(@CurrentUser() user: SessionUser): Promise<number> {
+    return this.jobs.hiddenCount(user.id);
+  }
+
+  @Mutation(() => Boolean, { description: 'Hide a job from your table. Other users still see it.' })
+  hideJob(
+    @CurrentUser() user: SessionUser,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<boolean> {
+    return this.jobs.hide(user.id, id);
+  }
+
+  @Mutation(() => Boolean, { description: 'Show a hidden job in your table again' })
+  unhideJob(
+    @CurrentUser() user: SessionUser,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<boolean> {
+    return this.jobs.unhide(user.id, id);
   }
 
   @Query(() => Job)

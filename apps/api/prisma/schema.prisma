@@ -40,33 +40,34 @@ enum Role {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
+  id           Int         @id @default(autoincrement())
+  email        String      @unique
   name         String
   /// argon2id hash. The password itself is never stored.
   passwordHash String
-  role         Role     @default(USER)
+  role         Role        @default(USER)
   profile      Profile?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  hiddenJobs   HiddenJob[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 /// What you're looking for and your master resume. One per user, created on first save.
 model Profile {
-  userId          Int       @id
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  headline        String    @default("")
-  targetRoles     String[]  @default([])
-  locations       String[]  @default([])
-  skills          String[]  @default([])
+  userId          Int      @id
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline        String   @default("")
+  targetRoles     String[] @default([])
+  locations       String[] @default([])
+  skills          String[] @default([])
   yearsExperience Int?
   linkedinUrl     String?
   githubUrl       String?
   websiteUrl      String?
   /// Plain text of your master resume, from an uploaded PDF/DOCX or typed in.
-  resumeText      String    @default("")
+  resumeText      String   @default("")
   resumeFileName  String?
-  updatedAt       DateTime  @updatedAt
+  updatedAt       DateTime @updatedAt
 }
 
 model Company {
@@ -110,10 +111,23 @@ model Job {
   raw               Json?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+  hiddenBy          HiddenJob[]
 
   @@index([postedAt])
   @@index([companyId])
   @@index([applicationStatus])
+}
+
+/// A job one user doesn't want to see. Other users still see it.
+model HiddenJob {
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int
+  job      Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId    String
+  hiddenAt DateTime @default(now())
+
+  /// One row per user and job, so hiding twice does nothing.
+  @@id([userId, jobId])
 }
 
 /// One finished import from JobsPipe. The latest complete run of a search tells the next

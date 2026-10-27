@@ -79,3 +79,13 @@ export async function resetDatabase(prisma: PrismaService): Promise<void> {
     'TRUNCATE "Job", "Company", "SyncRun", "SavedSearch", "User" RESTART IDENTITY CASCADE',
   );
 }
+
+/** Rows for the users behind the minted sessions (1 = admin, 2 = user), for tables that link to them. */
+export async function seedTestUsers(prisma: PrismaService): Promise<void> {
+  await prisma.user.createMany({
+    data: [
+      { id: 1, email: 'admin@example.com', name: 'Admin', passwordHash: 'x', role: 'ADMIN' },
+      { id: 2, email: 'user@example.com', name: 'User', passwordHash: 'x' },
+    ],
+  });
+}

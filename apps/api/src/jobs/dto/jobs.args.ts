@@ -2,6 +2,7 @@ import { ArgsType, Field, GraphQLISODateTime, InputType, Int } from '@nestjs/gra
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsEnum,
   IsInt,
@@ -105,6 +106,14 @@ export class JobFilterInput {
   @IsOptional()
   @IsDate()
   postedAfter?: Date;
+
+  @Field({
+    nullable: true,
+    description: 'True lists only the jobs you hid. Otherwise hidden jobs are left out.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  hidden?: boolean;
 }
 
 @InputType()

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
 const FIELDS = `headline targetRoles locations skills yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName updatedAt`;
 const MY_PROFILE = `query { myProfile { ${FIELDS} } }`;
@@ -35,12 +35,7 @@ describe('profile', () => {
   beforeEach(async () => {
     await resetDatabase(t.prisma);
     // Profiles belong to real users, so the minted sessions need matching rows.
-    await t.prisma.user.createMany({
-      data: [
-        { id: 1, email: 'admin@example.com', name: 'Admin', passwordHash: 'x', role: 'ADMIN' },
-        { id: 2, email: 'user@example.com', name: 'User', passwordHash: 'x' },
-      ],
-    });
+    await seedTestUsers(t.prisma);
   });
 
   const upload = (role: 'ADMIN' | 'USER', file: Buffer, name: string) =>
