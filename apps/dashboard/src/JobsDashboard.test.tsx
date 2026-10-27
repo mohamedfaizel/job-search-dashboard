@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { JobsDashboard } from './JobsDashboard';
+import { makeJob } from './test/fixtures';
 import { api, requests, server } from './test/server';
 
 function renderDashboard() {
@@ -83,6 +84,35 @@ describe('JobsDashboard', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Senior Frontend Engineer' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('shows your match score in the Match column', async () => {
+    server.use(
+      api.query('JobsPage', () =>
+        HttpResponse.json({
+          data: {
+            jobsPage: {
+              items: [
+                makeJob({ matchStatus: 'READY', matchScore: 81.6 }),
+                makeJob({ id: 'job-2', title: 'Backend Developer', matchStatus: 'PENDING' }),
+              ],
+              total: 2,
+              page: 1,
+              pageSize: 25,
+            },
+          },
+        }),
+      ),
+    );
+    renderDashboard();
+
+    const score = await screen.findByRole('button', {
+      name: 'Resume match for Senior Frontend Engineer: 82',
+    });
+    expect(screen.getByText('Matching…')).toBeInTheDocument();
+
+    await userEvent.click(score);
+    expect(screen.getByRole('dialog', { name: 'Senior Frontend Engineer' })).toBeInTheDocument();
   });
 
   it('updates the application status from the table', async () => {

@@ -8,18 +8,25 @@ import type { JobFilterInput, JobsArgs, JobSortInput } from './dto/jobs.args';
 import { JobSortField } from './models/enums';
 import type { JobFilterOptions, JobPage } from './models/job.model';
 
-/** Loads the company and this user's application, so `applicationStatus` is theirs. */
+/** Loads the company and this user's application and match, so those fields are theirs. */
 function forUser(userId: number) {
   return {
     company: true,
     applications: { where: { userId }, select: { status: true } },
+    matches: { where: { userId }, select: { status: true, score: true } },
   } satisfies Prisma.JobInclude;
 }
 type JobForUser = Prisma.JobGetPayload<{ include: ReturnType<typeof forUser> }>;
 
 /** The job as one user sees it: no application row means they haven't acted on it. */
-function withStatus({ applications, ...job }: JobForUser) {
-  return { ...job, applicationStatus: applications[0]?.status ?? ApplicationStatus.NONE };
+function withStatus({ applications, matches, ...job }: JobForUser) {
+  const match = matches[0];
+  return {
+    ...job,
+    applicationStatus: applications[0]?.status ?? ApplicationStatus.NONE,
+    matchStatus: match?.status ?? null,
+    matchScore: match?.score ?? null,
+  };
 }
 
 export interface UpsertResult {

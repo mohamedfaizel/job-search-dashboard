@@ -27,6 +27,8 @@ const JOB_FIELDS = /* GraphQL */ `
     description
     postingStatus
     applicationStatus
+    matchStatus
+    matchScore
   }
 `;
 
@@ -304,6 +306,8 @@ export const RESUME_MATCHER_STATUS = /* GraphQL */ `
       reachable
       aiConfigured
       aiHealthy
+      aiProvider
+      aiModel
       message
     }
   }
@@ -330,4 +334,44 @@ export const SYNC_RESUME_TO_MATCHER = /* GraphQL */ `
       ${MATCHER_RESUME_FIELDS}
     }
   }
+`;
+
+const JOB_MATCH_FIELDS = /* GraphQL */ `
+  fragment JobMatchFields on JobMatch {
+    jobId
+    status
+    error
+    score
+    keywordMatchBefore
+    keywordMatch
+    skillsCoverage
+    titleMatch
+    sectionCompleteness
+    dateConsistency
+    missingKeywords
+    injectableKeywords
+    recommendations
+    resumeFileName
+    startedAt
+    finishedAt
+    outdated
+  }
+`;
+
+export const JOB_MATCH = /* GraphQL */ `
+  query JobMatch($jobId: ID!) {
+    jobMatch(jobId: $jobId) {
+      ...JobMatchFields
+    }
+  }
+  ${JOB_MATCH_FIELDS}
+`;
+
+export const MATCH_JOB = /* GraphQL */ `
+  mutation MatchJob($jobId: ID!) {
+    matchJob(jobId: $jobId) {
+      ...JobMatchFields
+    }
+  }
+  ${JOB_MATCH_FIELDS}
 `;

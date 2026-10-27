@@ -2,6 +2,7 @@ import type { ApplicationStatus, Job } from '@jobsearch/data';
 import { useEffect, useRef } from 'react';
 import { capitalize, formatDate, formatSalary, WORKPLACE_LABELS } from '../format';
 import { Badge } from './Badge';
+import { MatchPanel } from './MatchPanel';
 import { StatusSelect } from './StatusSelect';
 
 interface Props {
@@ -72,8 +73,11 @@ export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
             ))}
           </div>
 
-          <div className="overflow-y-auto px-5 py-4 text-sm leading-relaxed whitespace-pre-line text-slate-700">
-            {job.description ?? 'No description available.'}
+          <div className="overflow-y-auto">
+            {job.description && <MatchPanel jobId={job.id} />}
+            <div className="px-5 py-4 text-sm leading-relaxed whitespace-pre-line text-slate-700">
+              {job.description ?? 'No description available.'}
+            </div>
           </div>
 
           <footer className="flex items-center justify-between gap-4 border-t border-slate-200 p-4">

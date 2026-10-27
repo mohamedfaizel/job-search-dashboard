@@ -12,6 +12,9 @@ describe('ResumeMatcherStatus', () => {
 
     expect(await screen.findByText('Running')).toBeInTheDocument();
     expect(screen.getByText('Resume-Matcher is running.')).toBeInTheDocument();
+    // Which AI it really uses, since Resume-Matcher's own settings can override .env.
+    expect(screen.getByText('anthropic')).toBeInTheDocument();
+    expect(screen.getByText('claude-sonnet-5-5')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Test AI connection' }));
 

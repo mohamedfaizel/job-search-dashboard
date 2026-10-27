@@ -9,9 +9,12 @@ export {
   useUploadResume,
 } from './api/profile';
 export {
+  jobMatchKey,
   matcherResumeKey,
   resumeMatcherStatusKey,
   useIsSyncingResume,
+  useJobMatch,
+  useMatchJob,
   useMyMatcherResume,
   useResumeMatcherStatus,
   useSyncResumeToMatcher,

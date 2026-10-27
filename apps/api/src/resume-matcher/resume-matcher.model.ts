@@ -1,4 +1,12 @@
-import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+import {
+  Field,
+  Float,
+  GraphQLISODateTime,
+  ID,
+  ObjectType,
+  registerEnumType,
+} from '@nestjs/graphql';
+import { JobMatchStatus } from '../jobs/models/enums';
 
 @ObjectType('ResumeMatcherStatus')
 export class ResumeMatcherStatusModel {
@@ -19,6 +27,16 @@ export class ResumeMatcherStatusModel {
     description: 'A test message to the AI provider worked. Null unless checkAi was true',
   })
   aiHealthy!: boolean | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "The AI provider Resume-Matcher really uses, e.g. anthropic. One saved in its own Settings page beats .env. Null when it isn't reachable",
+  })
+  aiProvider!: string | null;
+
+  @Field(() => String, { nullable: true, description: 'The AI model Resume-Matcher really uses' })
+  aiModel!: string | null;
 
   @Field({ description: 'One sentence for the user saying what works and what to fix' })
   message!: string;
@@ -50,4 +68,78 @@ export class MatcherResumeModel {
 
   @Field({ description: 'One sentence for the user saying where things stand' })
   message!: string;
+}
+
+@ObjectType('JobMatch', {
+  description:
+    'How well your master resume fits one job. Resume-Matcher lightly tailors the resume to the job, then scores it the way an ATS would',
+})
+export class JobMatchModel {
+  @Field(() => ID)
+  jobId!: string;
+
+  @Field(() => JobMatchStatus)
+  status!: JobMatchStatus;
+
+  @Field(() => String, { nullable: true, description: 'What went wrong. Null unless FAILED' })
+  error!: string | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: 'ATS score 0-100: a weighted mix of the five scores below',
+  })
+  score!: number | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: "Share of the job's keywords already in your resume, before tailoring",
+  })
+  keywordMatchBefore!: number | null;
+
+  @Field(() => Float, { nullable: true, description: 'Keyword match after tailoring (40%)' })
+  keywordMatch!: number | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: "The job's skills found in your resume (20%)",
+  })
+  skillsCoverage!: number | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: 'The job title in your headline or summary (15%). Null when the posting has none',
+  })
+  titleMatch!: number | null;
+
+  @Field(() => Float, { nullable: true, description: 'Contact info and key sections (15%)' })
+  sectionCompleteness!: number | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: 'Dates written in one format (10%). Null with fewer than two dates',
+  })
+  dateConsistency!: number | null;
+
+  @Field(() => [String], { description: 'Job keywords your resume lacks' })
+  missingKeywords!: string[];
+
+  @Field(() => [String], {
+    description: 'Job keywords elsewhere in your resume that tailoring could bring forward',
+  })
+  injectableKeywords!: string[];
+
+  @Field(() => [String])
+  recommendations!: string[];
+
+  @Field(() => String, { nullable: true, description: 'The resume file this was scored against' })
+  resumeFileName!: string | null;
+
+  @Field(() => GraphQLISODateTime)
+  startedAt!: Date;
+
+  @Field(() => GraphQLISODateTime, { nullable: true })
+  finishedAt!: Date | null;
+
+  @Field({ description: 'You sent a newer resume since, so match again for a current score' })
+  outdated!: boolean;
 }

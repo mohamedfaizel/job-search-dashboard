@@ -47,6 +47,10 @@ export interface Job {
   description: string | null;
   postingStatus: string;
   applicationStatus: ApplicationStatus;
+  /** Your resume match for this job, if you asked for one. */
+  matchStatus: JobMatchStatus | null;
+  /** Resume-Matcher's ATS score (0-100). Null until the match is READY. */
+  matchScore: number | null;
 }
 
 /** A job on your tracker board: any status except NONE. */
@@ -251,6 +255,9 @@ export interface ResumeMatcherStatus {
   /** Null unless the AI check was asked for. */
   aiConfigured: boolean | null;
   aiHealthy: boolean | null;
+  /** The provider and model Resume-Matcher really uses; its own Settings page beats .env. */
+  aiProvider: string | null;
+  aiModel: string | null;
   message: string;
 }
 
@@ -263,4 +270,36 @@ export interface MatcherResume {
   fileName: string | null;
   syncedAt: string | null;
   message: string;
+}
+
+export type JobMatchStatus = 'PENDING' | 'READY' | 'FAILED';
+
+/**
+ * How well your master resume fits one job. Resume-Matcher lightly tailors the resume to the
+ * job, then scores it the way an ATS would. All scores are 0-100.
+ */
+export interface JobMatch {
+  jobId: string;
+  status: JobMatchStatus;
+  /** What went wrong. Null unless FAILED. */
+  error: string | null;
+  /** Weighted mix of the five scores below. */
+  score: number | null;
+  /** Share of the job's keywords already in your resume, before tailoring. */
+  keywordMatchBefore: number | null;
+  keywordMatch: number | null;
+  skillsCoverage: number | null;
+  /** Null when the posting has no clear job title. */
+  titleMatch: number | null;
+  sectionCompleteness: number | null;
+  /** Null when the resume has fewer than two dates. */
+  dateConsistency: number | null;
+  missingKeywords: string[];
+  injectableKeywords: string[];
+  recommendations: string[];
+  resumeFileName: string | null;
+  startedAt: string;
+  finishedAt: string | null;
+  /** You sent a newer resume since this score. */
+  outdated: boolean;
 }

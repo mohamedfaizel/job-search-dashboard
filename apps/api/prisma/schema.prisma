@@ -50,6 +50,7 @@ model User {
   hiddenJobs    HiddenJob[]
   applications  Application[]
   matcherResume MatcherResume?
+  jobMatches    JobMatch[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -97,6 +98,50 @@ model MatcherResume {
   syncedAt   DateTime
 }
 
+enum JobMatchStatus {
+  /// Resume-Matcher is still working on it (about a minute).
+  PENDING
+  READY
+  FAILED
+}
+
+/// How well one user's master resume fits one job, scored by Resume-Matcher. One row per user
+/// and job; matching again overwrites it.
+model JobMatch {
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              Int
+  job                 Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId               String
+  status              JobMatchStatus
+  /// What went wrong, in words for the user. Null unless FAILED.
+  error               String?
+  /// Resume-Matcher's id for this job description, reused when matching again so it doesn't
+  /// have to extract the keywords twice.
+  rmJobId             String?
+  /// Resume-Matcher's ATS score (0-100), a weighted mix of the five scores below.
+  score               Float?
+  /// Share of the job's keywords already in your resume, before any tailoring.
+  keywordMatchBefore  Float?
+  keywordMatch        Float?
+  skillsCoverage      Float?
+  /// Null when the posting has no clear job title.
+  titleMatch          Float?
+  sectionCompleteness Float?
+  /// Null when the resume has fewer than two dates.
+  dateConsistency     Float?
+  /// Job keywords your resume lacks entirely.
+  missingKeywords     String[]       @default([])
+  /// Job keywords elsewhere in your resume that tailoring could bring forward.
+  injectableKeywords  String[]       @default([])
+  recommendations     String[]       @default([])
+  /// The resume file this was scored against, so a newer upload shows the score is old.
+  resumeFileName      String?
+  startedAt           DateTime
+  finishedAt          DateTime?
+
+  @@id([userId, jobId])
+}
+
 model Company {
   id        Int      @id @default(autoincrement())
   name      String   @unique
@@ -139,6 +184,7 @@ model Job {
   updatedAt       DateTime      @updatedAt
   hiddenBy        HiddenJob[]
   applications    Application[]
+  matches         JobMatch[]
 
   @@index([postedAt])
   @@index([companyId])
