@@ -18,7 +18,10 @@ const EMPTY: ProfileModel = {
   updatedAt: null,
 };
 
-function toModel(profile: Profile | null): ProfileModel {
+/** The file bytes can be 5 MB, so normal reads leave them out. */
+const WITHOUT_FILE = { resumeFile: true } as const;
+
+function toModel(profile: Omit<Profile, 'resumeFile'> | null): ProfileModel {
   if (!profile) return EMPTY;
   return {
     headline: profile.headline,
@@ -40,7 +43,7 @@ export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
   async get(userId: number): Promise<ProfileModel> {
-    return toModel(await this.prisma.profile.findUnique({ where: { userId } }));
+    return toModel(await this.prisma.profile.findUnique({ where: { userId }, omit: WITHOUT_FILE }));
   }
 
   async update(userId: number, input: ProfileInput): Promise<ProfileModel> {
@@ -59,16 +62,32 @@ export class ProfileService {
       where: { userId },
       create: { userId, ...data },
       update: data,
+      omit: WITHOUT_FILE,
     });
     return toModel(profile);
   }
 
-  /** Replaces the resume text with what was read from an uploaded file. */
-  async saveResume(userId: number, fileName: string, resumeText: string): Promise<ProfileModel> {
+  /**
+   * Replaces the resume text with what was read from an uploaded file, and keeps the file
+   * itself so Resume-Matcher can read the original layout.
+   */
+  async saveResume(
+    userId: number,
+    file: { name: string; type: string; bytes: Buffer },
+    resumeText: string,
+  ): Promise<ProfileModel> {
+    const data = {
+      resumeText,
+      resumeFileName: file.name,
+      resumeFile: new Uint8Array(file.bytes),
+      resumeFileType: file.type,
+      resumeUploadedAt: new Date(),
+    };
     const profile = await this.prisma.profile.upsert({
       where: { userId },
-      create: { userId, resumeText, resumeFileName: fileName },
-      update: { resumeText, resumeFileName: fileName },
+      create: { userId, ...data },
+      update: data,
+      omit: WITHOUT_FILE,
     });
     return toModel(profile);
   }

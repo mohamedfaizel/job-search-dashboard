@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { ResumeMatcherClient } from './resume-matcher.client';
 import { ResumeMatcherResolver } from './resume-matcher.resolver';
 import { ResumeMatcherService } from './resume-matcher.service';
+import { ResumeSyncService } from './resume-sync.service';
 
 @Module({
-  providers: [ResumeMatcherClient, ResumeMatcherService, ResumeMatcherResolver],
+  providers: [ResumeMatcherClient, ResumeMatcherService, ResumeSyncService, ResumeMatcherResolver],
   // Later PRs (resume sync, job matching) use the client from their own modules.
   exports: [ResumeMatcherClient],
 })

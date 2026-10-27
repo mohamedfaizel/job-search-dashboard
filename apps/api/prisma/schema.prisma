@@ -40,35 +40,61 @@ enum Role {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  name         String
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String
   /// argon2id hash. The password itself is never stored.
-  passwordHash String
-  role         Role          @default(USER)
-  profile      Profile?
-  hiddenJobs   HiddenJob[]
-  applications Application[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  passwordHash  String
+  role          Role           @default(USER)
+  profile       Profile?
+  hiddenJobs    HiddenJob[]
+  applications  Application[]
+  matcherResume MatcherResume?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 /// What you're looking for and your master resume. One per user, created on first save.
 model Profile {
-  userId          Int      @id
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  headline        String   @default("")
-  targetRoles     String[] @default([])
-  locations       String[] @default([])
-  skills          String[] @default([])
-  yearsExperience Int?
-  linkedinUrl     String?
-  githubUrl       String?
-  websiteUrl      String?
+  userId           Int       @id
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline         String    @default("")
+  targetRoles      String[]  @default([])
+  locations        String[]  @default([])
+  skills           String[]  @default([])
+  yearsExperience  Int?
+  linkedinUrl      String?
+  githubUrl        String?
+  websiteUrl       String?
   /// Plain text of your master resume, from an uploaded PDF/DOCX or typed in.
-  resumeText      String   @default("")
-  resumeFileName  String?
-  updatedAt       DateTime @updatedAt
+  resumeText       String    @default("")
+  resumeFileName   String?
+  /// The uploaded PDF/DOCX itself, kept so it can be sent to Resume-Matcher (max 5 MB).
+  resumeFile       Bytes?
+  resumeFileType   String?
+  resumeUploadedAt DateTime?
+  updatedAt        DateTime  @updatedAt
+}
+
+enum MatcherResumeStatus {
+  /// Resume-Matcher read the resume into sections; jobs can be matched against it.
+  READY
+  /// It has the file, but its AI could not read it (often a missing or wrong API key).
+  FAILED
+}
+
+/// Your master resume's copy inside Resume-Matcher. Resume-Matcher has no users, so this row
+/// is how we know which of its resumes is yours.
+model MatcherResume {
+  userId     Int                 @id
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Resume-Matcher's id for it. Null when the last send failed before it was stored.
+  rmResumeId String?
+  status     MatcherResumeStatus
+  /// What went wrong, in words for the user. Null when READY.
+  error      String?
+  fileName   String
+  syncedAt   DateTime
 }
 
 model Company {

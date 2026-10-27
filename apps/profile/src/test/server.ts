@@ -1,4 +1,4 @@
-import type { Profile, ResumeMatcherStatus } from '@jobsearch/data';
+import type { MatcherResume, Profile, ResumeMatcherStatus } from '@jobsearch/data';
 import { API_URL, RESUME_UPLOAD_URL } from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -41,7 +41,33 @@ export const RM_RUNNING: ResumeMatcherStatus = {
   message: 'Resume-Matcher is running.',
 };
 
+export const MATCHER_RESUME: MatcherResume = {
+  state: 'NOT_SENT',
+  fileName: null,
+  syncedAt: null,
+  message: "ada.pdf hasn't been sent to Resume-Matcher yet.",
+};
+
+/** Sends to Resume-Matcher made in the current test. */
+export const syncs: number[] = [];
+
 export const server = setupServer(
+  api.query('MyMatcherResume', () =>
+    HttpResponse.json({ data: { myMatcherResume: MATCHER_RESUME } }),
+  ),
+  api.mutation('SyncResumeToMatcher', () => {
+    syncs.push(Date.now());
+    return HttpResponse.json({
+      data: {
+        syncResumeToMatcher: {
+          state: 'READY',
+          fileName: 'ada.pdf',
+          syncedAt: '2026-10-27T20:00:00.000Z',
+          message: 'Resume-Matcher has read ada.pdf. Jobs will be matched against it.',
+        },
+      },
+    });
+  }),
   api.query('ResumeMatcherStatus', ({ variables }) => {
     const status = variables['checkAi']
       ? {

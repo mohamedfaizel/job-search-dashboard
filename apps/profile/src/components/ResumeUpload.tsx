@@ -1,5 +1,10 @@
 import type { Profile } from '@jobsearch/data';
-import { getErrorMessage, useUploadResume } from '@jobsearch/data';
+import {
+  getErrorMessage,
+  useResumeMatcherStatus,
+  useSyncResumeToMatcher,
+  useUploadResume,
+} from '@jobsearch/data';
 import { useId, useState } from 'react';
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -14,6 +19,8 @@ interface Props {
 /** Picks a PDF or Word file and sends it straight away; the API turns it into text. */
 export function ResumeUpload({ fileName, onUploaded }: Props) {
   const upload = useUploadResume();
+  const matcher = useResumeMatcherStatus();
+  const syncToMatcher = useSyncResumeToMatcher();
   const inputId = useId();
   const [tooBig, setTooBig] = useState(false);
 
@@ -39,7 +46,14 @@ export function ResumeUpload({ fileName, onUploaded }: Props) {
               upload.reset();
               // The API refuses bigger files too; checking here saves sending them.
               setTooBig(file.size > MAX_BYTES);
-              if (file.size <= MAX_BYTES) upload.mutate(file, { onSuccess: onUploaded });
+              if (file.size > MAX_BYTES) return;
+              upload.mutate(file, {
+                onSuccess: (profile) => {
+                  onUploaded(profile);
+                  // Jobs are matched against Resume-Matcher's copy, so send the new file along.
+                  if (matcher.data?.reachable) syncToMatcher.mutate();
+                },
+              });
             }}
           />
         </label>
