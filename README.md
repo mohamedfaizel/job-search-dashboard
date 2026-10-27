@@ -158,7 +158,7 @@ description: match score, keyword tips, a rewritten resume, a cover letter and P
 as an optional Docker container beside this project:
 
 ```bash
-pnpm rm:up      # first run downloads the image (about 1 GB)
+pnpm rm:up      # the first run downloads the image, which takes a while
 pnpm rm:down    # stop it
 ```
 
