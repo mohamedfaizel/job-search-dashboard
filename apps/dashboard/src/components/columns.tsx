@@ -11,6 +11,10 @@ import { StatusSelect } from './StatusSelect';
 export interface RowActions {
   openJob: (job: Job) => void;
   setStatus: (job: Job, status: Job['applicationStatus']) => void;
+  /** Hides the job from your table, or brings it back when hidden jobs are shown. */
+  toggleHidden: (job: Job) => void;
+  /** True while the table lists the jobs you hid. */
+  showingHidden?: boolean;
 }
 export const RowActionsContext = createContext<RowActions | null>(null);
 function useRowActions(): RowActions {
@@ -96,6 +100,23 @@ function StatusCell({ job }: { job: Job }) {
         setStatus(job, status);
       }}
     />
+  );
+}
+
+function HideCell({ job }: { job: Job }) {
+  const { toggleHidden, showingHidden = false } = useRowActions();
+  const action = showingHidden ? 'Unhide' : 'Hide';
+  return (
+    <button
+      type="button"
+      aria-label={`${action} ${job.title} at ${job.company.name}`}
+      onClick={() => {
+        toggleHidden(job);
+      }}
+      className="rounded px-1.5 py-0.5 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+    >
+      {action}
+    </button>
   );
 }
 
@@ -189,6 +210,11 @@ export const columns = helper.columns([
     id: 'status',
     header: 'Status',
     cell: ({ row }) => <StatusCell job={row.original} />,
+  }),
+  helper.display({
+    id: 'hide',
+    header: 'Actions',
+    cell: ({ row }) => <HideCell job={row.original} />,
   }),
 ]);
 

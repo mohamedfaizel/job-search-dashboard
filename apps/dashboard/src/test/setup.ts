@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { requests, server } from './server';
+import { hiddenIds, requests, server } from './server';
 
 beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
@@ -7,6 +7,7 @@ beforeAll(() => {
 afterEach(() => {
   server.resetHandlers();
   requests.length = 0;
+  hiddenIds.clear();
 });
 afterAll(() => {
   server.close();

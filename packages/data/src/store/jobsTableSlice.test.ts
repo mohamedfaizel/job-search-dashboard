@@ -7,6 +7,7 @@ import {
   setPage,
   setSearch,
   toggleFilterValue,
+  setShowHidden,
   toJobsPageArgs,
 } from './jobsTableSlice';
 
@@ -49,6 +50,17 @@ describe('jobsTable slice', () => {
       pageSize: 25,
       filter: { search: 'frontend', workplaces: ['REMOTE'] },
       sort: { field: 'POSTED_AT', direction: 'ASC' },
+    });
+  });
+
+  it('asks for only the hidden jobs while they are shown, from page 1', () => {
+    let state = reduce(initialJobsTableState, setPage(3));
+    state = reduce(state, setShowHidden(true));
+
+    expect(toJobsPageArgs(state)).toEqual({ page: 1, pageSize: 25, filter: { hidden: true } });
+    expect(toJobsPageArgs(reduce(state, setShowHidden(false)))).toEqual({
+      page: 1,
+      pageSize: 25,
     });
   });
 

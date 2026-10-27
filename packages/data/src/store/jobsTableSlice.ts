@@ -17,6 +17,8 @@ export interface JobsTableState {
   sort: JobSortInput | null;
   page: number;
   pageSize: number;
+  /** Show only the jobs you hid, instead of leaving them out. */
+  showHidden: boolean;
 }
 
 export const initialJobsTableState: JobsTableState = {
@@ -25,6 +27,7 @@ export const initialJobsTableState: JobsTableState = {
   sort: null,
   page: 1,
   pageSize: 25,
+  showHidden: false,
 };
 
 export const jobsTableSlice = createSlice({
@@ -62,6 +65,10 @@ export const jobsTableSlice = createSlice({
       else state.sort = null;
       state.page = 1;
     },
+    setShowHidden(state, action: PayloadAction<boolean>) {
+      state.showHidden = action.payload;
+      state.page = 1;
+    },
     setPage(state, action: PayloadAction<number>) {
       state.page = Math.max(1, action.payload);
     },
@@ -80,6 +87,7 @@ export const {
   cycleSort,
   setPage,
   setPageSize,
+  setShowHidden,
 } = jobsTableSlice.actions;
 
 /** Converts table state into the arguments for the jobsPage GraphQL query. */
@@ -88,6 +96,7 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
   const search = state.search.trim();
   if (search) filter.search = search;
   Object.assign(filter, state.filters);
+  if (state.showHidden) filter.hidden = true;
 
   return {
     page: state.page,

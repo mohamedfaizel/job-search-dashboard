@@ -10,12 +10,30 @@ export const api = graphql.link(API_URL);
 /** Every request the dashboard made in the current test, so tests can check the variables. */
 export const requests: { operation: string; variables: Record<string, unknown> }[] = [];
 
+/** Ids of the jobs the test user has hidden, so hiding works like the real API. */
+export const hiddenIds = new Set<string>();
+
 export const handlers = [
   api.query('JobsPage', ({ variables }) => {
     requests.push({ operation: 'JobsPage', variables });
+    const showHidden = (variables['filter'] as { hidden?: boolean } | undefined)?.hidden ?? false;
+    const items = JOBS.filter((job) => hiddenIds.has(job.id) === showHidden);
     return HttpResponse.json({
-      data: { jobsPage: { items: JOBS, total: JOBS.length, page: 1, pageSize: 25 } },
+      data: { jobsPage: { items, total: items.length, page: 1, pageSize: 25 } },
     });
+  }),
+  api.query('HiddenJobCount', () =>
+    HttpResponse.json({ data: { hiddenJobCount: hiddenIds.size } }),
+  ),
+  api.mutation('HideJob', ({ variables }) => {
+    requests.push({ operation: 'HideJob', variables });
+    hiddenIds.add(variables['id'] as string);
+    return HttpResponse.json({ data: { hideJob: true } });
+  }),
+  api.mutation('UnhideJob', ({ variables }) => {
+    requests.push({ operation: 'UnhideJob', variables });
+    hiddenIds.delete(variables['id'] as string);
+    return HttpResponse.json({ data: { unhideJob: true } });
   }),
   api.query('JobFilterOptions', () =>
     HttpResponse.json({ data: { jobFilterOptions: FILTER_OPTIONS } }),

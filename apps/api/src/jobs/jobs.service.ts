@@ -19,8 +19,12 @@ export interface UpsertResult {
 export class JobsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findPage({ filter, sort, page, pageSize }: JobsArgs): Promise<JobPage> {
-    const where = buildWhere(filter);
+  /** One page of jobs as `userId` sees them: their hidden jobs are left out, or only those. */
+  async findPage(userId: number, { filter, sort, page, pageSize }: JobsArgs): Promise<JobPage> {
+    const hiddenByMe = { hiddenBy: { some: { userId } } } satisfies Prisma.JobWhereInput;
+    const where: Prisma.JobWhereInput = {
+      AND: [buildWhere(filter), filter?.hidden ? hiddenByMe : { NOT: hiddenByMe }],
+    };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.job.findMany({
         where,
@@ -50,9 +54,12 @@ export class JobsService {
         select: { [field]: true },
         orderBy: { [field]: 'asc' },
       });
-      return rows
-        .map((row) => (row as Record<string, string>)[field])
-        .filter((v): v is string => !!v);
+      return (
+        rows
+          // The computed `select` key hides the row type from TypeScript, so name it here.
+          .map((row) => (row as unknown as Record<string, string | null>)[field])
+          .filter((v): v is string => !!v)
+      );
     };
 
     const [
@@ -111,6 +118,26 @@ export class JobsService {
       },
       include: withCompany,
     });
+  }
+
+  /** Hides a job from one user's table. Hiding it again does nothing. */
+  async hide(userId: number, jobId: string): Promise<boolean> {
+    await this.findOne(jobId);
+    await this.prisma.hiddenJob.upsert({
+      where: { userId_jobId: { userId, jobId } },
+      create: { userId, jobId },
+      update: {},
+    });
+    return true;
+  }
+
+  async unhide(userId: number, jobId: string): Promise<boolean> {
+    await this.prisma.hiddenJob.deleteMany({ where: { userId, jobId } });
+    return true;
+  }
+
+  hiddenCount(userId: number): Promise<number> {
+    return this.prisma.hiddenJob.count({ where: { userId } });
   }
 
   async updateApplicationStatus(id: string, status: ApplicationStatus) {

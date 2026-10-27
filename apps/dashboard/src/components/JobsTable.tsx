@@ -40,10 +40,15 @@ export function JobsTable({
   onClearFilter,
   openJob,
   setStatus,
+  toggleHidden,
+  showingHidden = false,
   isFetching = false,
 }: JobsTableProps) {
   const table = useTable({ features, columns, data: jobs, getRowId: (job) => job.id });
-  const actions = useMemo(() => ({ openJob, setStatus }), [openJob, setStatus]);
+  const actions = useMemo(
+    () => ({ openJob, setStatus, toggleHidden, showingHidden }),
+    [openJob, setStatus, toggleHidden, showingHidden],
+  );
 
   return (
     <RowActionsContext.Provider value={actions}>

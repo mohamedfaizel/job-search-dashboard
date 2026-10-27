@@ -22,6 +22,8 @@ export {
   useSyncJobs,
   useSyncRuns,
   useUpdateJobStatus,
+  useHiddenJobCount,
+  useSetJobHidden,
 } from './api/hooks';
 export * from './store/jobsTableSlice';
 export { makeStore, useAppDispatch, useAppSelector } from './store/store';
