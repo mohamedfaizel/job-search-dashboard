@@ -3,7 +3,7 @@ import { setupServer } from 'msw/node';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadSearchResponse } from './fixtures/load';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
 const JOBSPIPE_URL = 'https://jobspipe.test/v1';
 
@@ -97,14 +97,17 @@ describe('syncJobs', () => {
   it('updates existing jobs on re-sync without losing your application status', async () => {
     await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 5 } });
     const job = await t.prisma.job.findFirstOrThrow({ where: { externalId: '8a5adb17ca3a27ec' } });
-    await t.prisma.job.update({ where: { id: job.id }, data: { applicationStatus: 'APPLIED' } });
+    await seedTestUsers(t.prisma);
+    await t.prisma.application.create({ data: { userId: 1, jobId: job.id, status: 'APPLIED' } });
 
     const res = await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 5 } });
 
     expect(res.data).toMatchObject({ syncJobs: { created: 0, updated: 3 } });
     expect(await t.prisma.job.count()).toBe(3);
-    const after = await t.prisma.job.findUniqueOrThrow({ where: { id: job.id } });
-    expect(after.applicationStatus).toBe('APPLIED');
+    const after = await t.prisma.application.findUniqueOrThrow({
+      where: { userId_jobId: { userId: 1, jobId: job.id } },
+    });
+    expect(after.status).toBe('APPLIED');
   });
 
   describe('only new jobs', () => {

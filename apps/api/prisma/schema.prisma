@@ -40,16 +40,17 @@ enum Role {
 }
 
 model User {
-  id           Int         @id @default(autoincrement())
-  email        String      @unique
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
   name         String
   /// argon2id hash. The password itself is never stored.
   passwordHash String
-  role         Role        @default(USER)
+  role         Role          @default(USER)
   profile      Profile?
   hiddenJobs   HiddenJob[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  applications Application[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 /// What you're looking for and your master resume. One per user, created on first save.
@@ -81,41 +82,55 @@ model Company {
 }
 
 model Job {
-  id                String            @id @default(cuid())
+  id              String        @id @default(cuid())
   /// The JobsPipe posting id. Null for jobs added by hand.
-  externalId        String?           @unique
-  source            JobSource
-  title             String
-  company           Company           @relation(fields: [companyId], references: [id])
-  companyId         Int
-  url               String?
-  postedAt          DateTime
-  seniority         String?
-  jobFunction       String?
-  skills            String[]
-  city              String?
-  location          String?
-  countryCode       String?
-  salaryMinUsd      Int?
-  salaryMaxUsd      Int?
+  externalId      String?       @unique
+  source          JobSource
+  title           String
+  company         Company       @relation(fields: [companyId], references: [id])
+  companyId       Int
+  url             String?
+  postedAt        DateTime
+  seniority       String?
+  jobFunction     String?
+  skills          String[]
+  city            String?
+  location        String?
+  countryCode     String?
+  salaryMinUsd    Int?
+  salaryMaxUsd    Int?
   /// True when the salary is JobsPipe's estimate rather than stated in the ad.
-  salaryEstimated   Boolean           @default(false)
+  salaryEstimated Boolean       @default(false)
   /// Job board the posting was found on, e.g. "indeed".
-  provider          String?
-  workplace         Workplace?
-  industry          String?
-  description       String?
-  postingStatus     String            @default("active")
-  applicationStatus ApplicationStatus @default(NONE)
+  provider        String?
+  workplace       Workplace?
+  industry        String?
+  description     String?
+  postingStatus   String        @default("active")
   /// The original API record, kept so new columns can be backfilled without re-fetching.
-  raw               Json?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  hiddenBy          HiddenJob[]
+  raw             Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  hiddenBy        HiddenJob[]
+  applications    Application[]
 
   @@index([postedAt])
   @@index([companyId])
-  @@index([applicationStatus])
+}
+
+/// Where one user is with one job. No row means "not applied" (NONE is never stored), so
+/// each user's tracker only holds the jobs they acted on.
+model Application {
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId     String
+  status    ApplicationStatus
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@id([userId, jobId])
+  @@index([userId, status])
 }
 
 /// A job one user doesn't want to see. Other users still see it.

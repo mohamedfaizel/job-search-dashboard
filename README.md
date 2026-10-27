@@ -133,9 +133,10 @@ _Import history_ sits below the tabs, so it shows on all three.
 
 **Fill the table:** either open **Add jobs** and use _Import from JobsPipe_ (needs your token
 in `.env`, and each job costs one credit), or load 36 made-up demo jobs for free while the API
-is running:
+is running. Adding jobs is admin-only, so the script logs in as your admin account (PowerShell):
 
-```bash
+```powershell
+$env:SEED_EMAIL="you@example.com"; $env:SEED_PASSWORD="your password"
 pnpm --filter @jobsearch/api db:seed
 ```
 

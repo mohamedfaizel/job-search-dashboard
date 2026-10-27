@@ -81,7 +81,9 @@ export class Job {
   @Field({ description: 'Whether the ad is still open ("active" or "closed")' })
   postingStatus!: string;
 
-  @Field(() => ApplicationStatus)
+  @Field(() => ApplicationStatus, {
+    description: 'Where you are with this job. Each user has their own; NONE until you act.',
+  })
   applicationStatus!: ApplicationStatus;
 
   @Field(() => GraphQLISODateTime)
@@ -89,6 +91,18 @@ export class Job {
 
   @Field(() => GraphQLISODateTime)
   updatedAt!: Date;
+}
+
+@ObjectType({ description: 'A job on your tracker board' })
+export class Application {
+  @Field(() => ApplicationStatus)
+  status!: ApplicationStatus;
+
+  @Field(() => GraphQLISODateTime, { description: 'When the status last changed' })
+  updatedAt!: Date;
+
+  @Field(() => Job)
+  job!: Job;
 }
 
 @ObjectType()
