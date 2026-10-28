@@ -329,6 +329,8 @@ export interface TailoredResume {
 export interface TermCheck {
   term: string;
   inResume: boolean;
+  /** For a missing term: the skill you have that it goes with, e.g. "graphql" for "apollo". */
+  relatedTo: string | null;
 }
 
 /** What a job asks for, worked out without AI and checked against your resume. */

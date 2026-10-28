@@ -41,3 +41,63 @@ export function mentions(text: string, skill: string): boolean {
     new RegExp(`(?<![\\p{L}\\p{N}])${escape(spelling)}(?![\\p{L}\\p{N}+#])`, 'u').test(lower),
   );
 }
+
+/**
+ * Skills that usually come together: the job's term on the left, what makes it a fair addition
+ * on the right ("apollo" fits a resume that has "graphql"). Only a hint for you and for the
+ * prompt; the score still counts only words that are really in the resume.
+ */
+const RELATED: Record<string, string[]> = {
+  apollo: ['graphql'],
+  'apollo client': ['graphql'],
+  relay: ['graphql', 'react'],
+  urql: ['graphql'],
+  'next.js': ['react'],
+  remix: ['react'],
+  redux: ['react'],
+  'react native': ['react'],
+  jest: ['javascript', 'typescript', 'unit testing'],
+  vitest: ['jest', 'vite', 'unit testing'],
+  'testing library': ['react', 'jest'],
+  cypress: ['playwright', 'selenium', 'e2e'],
+  playwright: ['cypress', 'selenium', 'e2e'],
+  storybook: ['react', 'design system'],
+  vite: ['webpack'],
+  webpack: ['vite'],
+  'module federation': ['microfrontends', 'webpack'],
+  microfrontends: ['module federation'],
+  'micro frontends': ['module federation', 'microfrontends'],
+  tailwind: ['css'],
+  sass: ['css'],
+  'styled-components': ['css', 'react'],
+  'nest.js': ['node.js', 'typescript'],
+  nestjs: ['node.js', 'typescript'],
+  express: ['node.js'],
+  prisma: ['postgresql', 'typescript'],
+  typeorm: ['postgresql', 'typescript'],
+  postgresql: ['sql', 'mysql'],
+  mysql: ['sql', 'postgresql'],
+  kubernetes: ['docker'],
+  helm: ['kubernetes'],
+  terraform: ['aws', 'gcp', 'azure'],
+  'github actions': ['ci-cd', 'gitlab ci'],
+  'gitlab ci': ['ci-cd', 'github actions'],
+  'ci-cd': ['github actions', 'gitlab ci', 'jenkins'],
+  vue: ['react', 'angular'],
+  nuxt: ['vue.js'],
+  kotlin: ['java'],
+  scala: ['java'],
+};
+
+/**
+ * The skill in your resume (or your profile's Skills) that makes a missing term a fair addition,
+ * e.g. "graphql" for "apollo". Null when nothing related is there.
+ */
+export function relatedTo(term: string, text: string): string | null {
+  return (RELATED[term.toLowerCase()] ?? []).find((skill) => mentions(text, skill)) ?? null;
+}
+
+/** Every skill name we know (aliases and related skills), so keywords that are tools rank first. */
+export const KNOWN_SKILLS: ReadonlySet<string> = new Set(
+  [ALIASES, RELATED].flatMap((map) => Object.entries(map).flat(2)),
+);

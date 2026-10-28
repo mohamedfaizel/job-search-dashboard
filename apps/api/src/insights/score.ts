@@ -79,7 +79,11 @@ export function checkResume(
   resume: string,
   job: { skills: string[]; keywords: string[]; title: string; language: string | null },
 ): ResumeCheck {
-  const check = (term: string): TermCheckModel => ({ term, inResume: mentions(resume, term) });
+  const check = (term: string): TermCheckModel => ({
+    term,
+    inResume: mentions(resume, term),
+    relatedTo: null,
+  });
   const skillChecks = job.skills.map(check);
   const keywordChecks = job.keywords.map(check);
   if (!resume.trim()) {

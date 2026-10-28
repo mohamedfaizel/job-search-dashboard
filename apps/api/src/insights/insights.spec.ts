@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildResumePrompt } from './prompt';
 import { checkResume, coverage, matchScore, titleMatch } from './score';
-import { mentions, spellings } from './skills';
+import { KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
 import { detectLanguage, keywordTokens, stopwordsFor, tokenize } from './text';
 import { documentFrequencies, rankTerms } from './tfidf';
 
@@ -74,6 +74,24 @@ describe('mentions', () => {
   });
 });
 
+describe('relatedTo', () => {
+  it('names the skill you have that a missing term goes with', () => {
+    expect(relatedTo('apollo', 'GraphQL APIs in NodeJS')).toBe('graphql');
+    expect(relatedTo('Next.js', 'Five years of ReactJS')).toBe('react');
+  });
+
+  it('gives nothing when no related skill is there', () => {
+    expect(relatedTo('apollo', 'REST APIs')).toBeNull();
+    expect(relatedTo('cobol', 'GraphQL')).toBeNull();
+  });
+
+  it('knows tool names, so they can rank above plain words', () => {
+    expect(KNOWN_SKILLS.has('apollo')).toBe(true);
+    expect(KNOWN_SKILLS.has('module federation')).toBe(true);
+    expect(KNOWN_SKILLS.has('business')).toBe(false);
+  });
+});
+
 describe('rankTerms', () => {
   it('ranks words that are rare across the collection above common ones', () => {
     const docs = [
@@ -102,9 +120,9 @@ describe('matchScore', () => {
   it('turns found terms into a percent', () => {
     expect(
       coverage([
-        { term: 'a', inResume: true },
-        { term: 'b', inResume: false },
-        { term: 'c', inResume: false },
+        { term: 'a', inResume: true, relatedTo: null },
+        { term: 'b', inResume: false, relatedTo: null },
+        { term: 'c', inResume: false, relatedTo: null },
       ]),
     ).toBe(33);
     expect(coverage([])).toBeNull();
@@ -122,8 +140,8 @@ describe('checkResume', () => {
   it('scores any resume text the same way', () => {
     const check = checkResume('Backend Engineer: Kafka and microservices', job);
     expect(check.skillChecks).toEqual([
-      { term: 'kafka', inResume: true },
-      { term: 'react', inResume: false },
+      { term: 'kafka', inResume: true, relatedTo: null },
+      { term: 'react', inResume: false, relatedTo: null },
     ]);
     expect(check).toMatchObject({ skills: 50, keywords: 100, title: 100 });
     expect(check.score).toBe(matchScore({ skills: 50, keywords: 100, title: 100 }));
@@ -154,6 +172,7 @@ describe('buildResumePrompt', () => {
     language: 'de',
     missingSkills: ['kafka'],
     missingKeywords: ['microfrontends'],
+    otherSkills: ['Apollo', 'Jest'],
     resume: 'React developer since 2019.',
     description: 'Wir suchen …',
   };
@@ -166,10 +185,28 @@ describe('buildResumePrompt', () => {
     expect(prompt).toContain('- microfrontends');
     expect(prompt).toContain('React developer since 2019.');
     expect(prompt).toContain('Never invent');
+    expect(prompt).toContain('Goal: use at least 85%');
+    expect(prompt).toContain('Up to three pages');
+  });
+
+  it('lets Claude use related terms and the skills on your profile', () => {
+    const prompt = buildResumePrompt(input);
+    expect(prompt).toContain(
+      'Other skills I have (not all of them are in my resume):\n- Apollo\n- Jest',
+    );
+    expect(prompt).toContain('2. Related:');
+    expect(prompt).toContain('- Related: the terms you added under rule 2');
+    expect(prompt).toContain('- Skipped:');
   });
 
   it('asks Claude to request the resume when there is none', () => {
-    const prompt = buildResumePrompt({ ...input, resume: ' ', missingSkills: [], language: null });
+    const prompt = buildResumePrompt({
+      ...input,
+      resume: ' ',
+      missingSkills: [],
+      otherSkills: [],
+      language: null,
+    });
     expect(prompt).toContain('Ask me for it before you start');
     expect(prompt).toContain('- (none)');
     expect(prompt).toContain('Write the resume in the language of the job ad');
