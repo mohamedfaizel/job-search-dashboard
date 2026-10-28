@@ -49,6 +49,7 @@ export const PROFILE: Profile = {
   targetRoles: ['Frontend Engineer', 'React Developer'],
   locations: ['Berlin'],
   skills: [],
+  languages: [],
   yearsExperience: null,
   linkedinUrl: null,
   githubUrl: null,
