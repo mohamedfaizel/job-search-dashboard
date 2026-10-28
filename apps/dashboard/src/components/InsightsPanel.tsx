@@ -8,6 +8,7 @@ import {
 import { useState } from 'react';
 import { languageName } from '../format';
 import { Badge } from './Badge';
+import { JobResumePanel } from './JobResumePanel';
 import { scoreTone } from './MatchPanel';
 
 const CHIP =
@@ -232,7 +233,7 @@ function Score({ insights }: { insights: JobInsights }) {
 /**
  * Title, language, skills and keywords of the job, checked against your resume text. Worked out
  * on our server with plain word matching and TF-IDF, so it is instant and free (no AI). Remove
- * what doesn't apply with ×, then copy a prompt to write the resume in Claude.
+ * what doesn't apply with ×, copy a prompt to write the resume in Claude, then bring it back.
  */
 export function InsightsPanel({ jobId }: { jobId: string }) {
   const insights = useJobInsights(jobId);
@@ -313,6 +314,7 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
         </p>
       )}
       <CopyPrompt prompt={data.prompt} />
+      <JobResumePanel insights={data} />
     </section>
   );
 }

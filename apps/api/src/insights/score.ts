@@ -63,3 +63,32 @@ export function matchScore(parts: ScoreParts): number | null {
   const weight = all.reduce((sum, [, w]) => sum + w, 0);
   return Math.round(all.reduce((sum, [value, w]) => sum + value * w, 0) / weight);
 }
+
+export interface ResumeCheck extends ScoreParts {
+  skillChecks: TermCheckModel[];
+  keywordChecks: TermCheckModel[];
+  score: number | null;
+}
+
+/**
+ * Checks one resume text against a job's skills, keywords and title. Used for your profile
+ * resume (the "before") and for the resume you wrote for the job (the "after"), so both are
+ * scored exactly the same way. An empty resume gets no percentages.
+ */
+export function checkResume(
+  resume: string,
+  job: { skills: string[]; keywords: string[]; title: string; language: string | null },
+): ResumeCheck {
+  const check = (term: string): TermCheckModel => ({ term, inResume: mentions(resume, term) });
+  const skillChecks = job.skills.map(check);
+  const keywordChecks = job.keywords.map(check);
+  if (!resume.trim()) {
+    return { skillChecks, keywordChecks, skills: null, keywords: null, title: null, score: null };
+  }
+  const parts = {
+    skills: coverage(skillChecks),
+    keywords: coverage(keywordChecks),
+    title: titleMatch(job.title, resume, job.language),
+  };
+  return { skillChecks, keywordChecks, ...parts, score: matchScore(parts) };
+}

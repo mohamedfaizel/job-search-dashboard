@@ -1,15 +1,31 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { JobInsightsModel, RemovedTermModel, TermCheckModel } from './insights.model';
+import { tidy } from '../profile/resume-text';
+import type {
+  JobInsightsModel,
+  JobResumeModel,
+  RemovedTermModel,
+  TermCheckModel,
+} from './insights.model';
 import { buildResumePrompt } from './prompt';
-import { coverage, matchScore, titleMatch } from './score';
-import { mentions } from './skills';
+import type { ResumeCheck } from './score';
+import { checkResume } from './score';
 import { detectLanguage, keywordTokens } from './text';
 import type { DocumentFrequencies } from './tfidf';
 import { documentFrequencies, rankTerms } from './tfidf';
 
 /** How many TF-IDF keywords to show for a job. */
 const KEYWORD_COUNT = 15;
+
+/** Longer than any real resume, short enough to keep junk out. */
+export const MAX_RESUME_CHARS = 50_000;
+
+/** A resume file: what was uploaded, or what a download sends. */
+export interface JobResumeFile {
+  name: string;
+  type: string;
+  bytes: Buffer;
+}
 
 @Injectable()
 export class InsightsService {
@@ -19,7 +35,7 @@ export class InsightsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async forJob(userId: number, jobId: string): Promise<JobInsightsModel> {
-    const [job, profile, removedRows] = await Promise.all([
+    const [job, profile, removedRows, jobResume] = await Promise.all([
       this.prisma.job.findUnique({
         where: { id: jobId },
         select: {
@@ -37,13 +53,16 @@ export class InsightsService {
         where: { userId, OR: [{ jobId }, { jobId: null }] },
         orderBy: { createdAt: 'asc' },
       }),
+      this.prisma.jobResume.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { text: true, fileName: true, updatedAt: true },
+      }),
     ]);
     if (!job) throw new NotFoundException(`Job ${jobId} not found`);
 
     const raw = (job.raw ?? {}) as { normalized_title?: string; keyword_slugs?: string[] };
     const resume = profile?.resumeText ?? '';
     const language = job.language ?? detectLanguage(job.description);
-    const check = (term: string): TermCheckModel => ({ term, inResume: mentions(resume, term) });
 
     // Terms you removed with × leave both lists. One removed everywhere wins over this job's.
     const removed = new Map<string, RemovedTermModel>();
@@ -68,18 +87,13 @@ export class InsightsService {
       .filter((term) => !known.has(term) && !removed.has(term))
       .slice(0, KEYWORD_COUNT);
 
-    const skills = tags.map(check);
-    const keywordChecks = keywords.map(check);
-    const hasResume = resume.trim().length > 0;
-    const skillsCoverage = hasResume ? coverage(skills) : null;
-    const keywordsCoverage = hasResume ? coverage(keywordChecks) : null;
     const normalizedTitle =
       raw.normalized_title && raw.normalized_title !== job.title ? raw.normalized_title : null;
-    const titleCoverage = hasResume
-      ? titleMatch(normalizedTitle ?? job.title, resume, language)
-      : null;
-    const missing = (terms: TermCheckModel[]) =>
-      terms.filter((t) => !hasResume || !t.inResume).map((t) => t.term);
+    const terms = { skills: tags, keywords, title: normalizedTitle ?? job.title, language };
+    const before = checkResume(resume, terms);
+    const hasResume = resume.trim().length > 0;
+    const missing = (checks: TermCheckModel[]) =>
+      checks.filter((t) => !hasResume || !t.inResume).map((t) => t.term);
 
     return {
       jobId,
@@ -88,22 +102,21 @@ export class InsightsService {
       language,
       languageDetected: !job.language && !!language,
       hasResume,
-      skills,
-      keywords: keywordChecks,
+      skills: before.skillChecks,
+      keywords: before.keywordChecks,
       removed: [...removed.values()],
-      skillsCoverage,
-      keywordsCoverage,
-      titleMatch: titleCoverage,
-      score: hasResume
-        ? matchScore({ keywords: keywordsCoverage, skills: skillsCoverage, title: titleCoverage })
-        : null,
+      skillsCoverage: before.skills,
+      keywordsCoverage: before.keywords,
+      titleMatch: before.title,
+      score: before.score,
+      jobResume: jobResume && this.afterScore(jobResume, terms, before),
       prompt: buildResumePrompt({
         title: job.title,
         company: job.company.name,
         city: job.city,
         language,
-        missingSkills: missing(skills),
-        missingKeywords: missing(keywordChecks),
+        missingSkills: missing(before.skillChecks),
+        missingKeywords: missing(before.keywordChecks),
         resume,
         description: job.description,
       }),
@@ -119,9 +132,7 @@ export class InsightsService {
     if (!clean || clean.length > 100)
       throw new BadRequestException('A term is 1 to 100 characters');
     const scope = everywhere ? null : jobId;
-    if (!(await this.prisma.job.findUnique({ where: { id: jobId }, select: { id: true } }))) {
-      throw new NotFoundException(`Job ${jobId} not found`);
-    }
+    await this.assertJob(jobId);
     const existing = await this.prisma.removedTerm.findFirst({
       where: { userId, jobId: scope, term: clean },
     });
@@ -137,6 +148,87 @@ export class InsightsService {
       where: { userId, term: term.trim().toLowerCase(), OR: [{ jobId }, { jobId: null }] },
     });
     return this.forJob(userId, jobId);
+  }
+
+  /**
+   * Saves the resume you wrote for a job, replacing the one before. Pasted text comes without a
+   * file; an upload keeps its file so it can be downloaded again.
+   */
+  async saveJobResume(userId: number, jobId: string, text: string, file?: JobResumeFile) {
+    const clean = tidy(text);
+    if (!clean) throw new BadRequestException('The resume is empty');
+    if (clean.length > MAX_RESUME_CHARS) {
+      throw new BadRequestException(`A resume is at most ${String(MAX_RESUME_CHARS)} characters`);
+    }
+    await this.assertJob(jobId);
+    const data = {
+      text: clean,
+      fileName: file?.name ?? null,
+      file: file ? new Uint8Array(file.bytes) : null,
+      fileType: file?.type ?? null,
+    };
+    await this.prisma.jobResume.upsert({
+      where: { userId_jobId: { userId, jobId } },
+      create: { userId, jobId, ...data },
+      update: data,
+    });
+    return this.forJob(userId, jobId);
+  }
+
+  /** Deletes the resume you wrote for a job. Deleting again does nothing. */
+  async deleteJobResume(userId: number, jobId: string) {
+    await this.prisma.jobResume.deleteMany({ where: { userId, jobId } });
+    return this.forJob(userId, jobId);
+  }
+
+  /** The resume you wrote for a job, as a file: the uploaded one, or the pasted text as .txt. */
+  async jobResumeFile(userId: number, jobId: string): Promise<JobResumeFile> {
+    const row = await this.prisma.jobResume.findUnique({
+      where: { userId_jobId: { userId, jobId } },
+      select: { text: true, fileName: true, file: true, fileType: true },
+    });
+    if (!row) throw new NotFoundException('No resume saved for this job');
+    if (row.file && row.fileName) {
+      return {
+        name: row.fileName,
+        type: row.fileType ?? 'application/octet-stream',
+        bytes: Buffer.from(row.file),
+      };
+    }
+    return {
+      name: 'resume.txt',
+      type: 'text/plain; charset=utf-8',
+      bytes: Buffer.from(row.text, 'utf8'),
+    };
+  }
+
+  private async assertJob(jobId: string) {
+    if (!(await this.prisma.job.findUnique({ where: { id: jobId }, select: { id: true } }))) {
+      throw new NotFoundException(`Job ${jobId} not found`);
+    }
+  }
+
+  /** Scores the resume you wrote for the job, and what changed from your profile resume. */
+  private afterScore(
+    jobResume: { text: string; fileName: string | null; updatedAt: Date },
+    terms: Parameters<typeof checkResume>[1],
+    before: ResumeCheck,
+  ): JobResumeModel {
+    const after = checkResume(jobResume.text, terms);
+    const beforeChecks = [...before.skillChecks, ...before.keywordChecks];
+    const afterChecks = [...after.skillChecks, ...after.keywordChecks];
+    return {
+      fileName: jobResume.fileName,
+      updatedAt: jobResume.updatedAt,
+      skillsCoverage: after.skills,
+      keywordsCoverage: after.keywords,
+      titleMatch: after.title,
+      score: after.score,
+      nowCovered: afterChecks
+        .filter((t, i) => t.inResume && !beforeChecks[i]?.inResume)
+        .map((t) => t.term),
+      stillMissing: afterChecks.filter((t) => !t.inResume).map((t) => t.term),
+    };
   }
 
   /** Word counts over every job description, rebuilt only when jobs were added or changed. */

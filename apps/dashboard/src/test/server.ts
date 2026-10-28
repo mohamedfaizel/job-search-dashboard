@@ -3,11 +3,12 @@ import type {
   ApplicationStatus,
   JobInsights,
   JobMatch,
+  JobResume,
   RemovedTerm,
   TailoredResume,
 } from '@jobsearch/data';
-import { API_URL } from '@jobsearch/data';
-import { HttpResponse } from 'msw';
+import { API_URL, jobResumeUrl } from '@jobsearch/data';
+import { http, HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
 import { setupServer } from 'msw/node';
 import { FILTER_OPTIONS, JOBS } from './fixtures';
@@ -45,8 +46,24 @@ export const INSIGHTS: JobInsights = {
   keywordsCoverage: 50,
   titleMatch: 100,
   score: 50,
+  jobResume: null,
   prompt: 'Please tailor my resume for this job.\n- graphql',
 };
+
+/** The resume the test user saved for job-1, once they upload or paste one. */
+export const SAVED_RESUME: JobResume = {
+  fileName: null,
+  updatedAt: '2026-10-28T12:00:00.000Z',
+  skillsCoverage: 100,
+  keywordsCoverage: 50,
+  titleMatch: 100,
+  score: 85,
+  nowCovered: ['graphql'],
+  stillMissing: ['microfrontends'],
+};
+
+/** What the test user saved for job-1. Tests start with nothing. */
+export const jobResume: { current: JobResume | null } = { current: null };
 
 /** Terms the test user removed with ×. Tests start with none. */
 export const removedTerms: RemovedTerm[] = [];
@@ -54,15 +71,24 @@ export const removedTerms: RemovedTerm[] = [];
 /** INSIGHTS minus the removed terms, like the real API (score fixed at 80 once any is gone). */
 function insightsNow(): JobInsights {
   const kept = (t: { term: string }) => !removedTerms.some((r) => r.term === t.term);
-  if (removedTerms.length === 0) return INSIGHTS;
+  if (removedTerms.length === 0) return { ...INSIGHTS, jobResume: jobResume.current };
   return {
     ...INSIGHTS,
+    jobResume: jobResume.current,
     skills: INSIGHTS.skills.filter(kept),
     keywords: INSIGHTS.keywords.filter(kept),
     removed: [...removedTerms],
     score: 80,
   };
 }
+
+/** What the API answers for a job resume file it can't read. */
+export const rejectJobResumeUpload = http.post(jobResumeUrl('job-1'), () =>
+  HttpResponse.json(
+    { statusCode: 400, message: 'Upload a PDF, Word (.docx), text or Markdown file' },
+    { status: 400 },
+  ),
+);
 
 /** A finished match, for tests that show the score. */
 export const READY_MATCH: JobMatch = {
@@ -125,6 +151,24 @@ export const handlers = [
       everywhere: variables['everywhere'] === true,
     });
     return HttpResponse.json({ data: { removeInsightTerm: insightsNow() } });
+  }),
+  api.mutation('SaveJobResumeText', ({ variables }) => {
+    requests.push({ operation: 'SaveJobResumeText', variables });
+    jobResume.current = SAVED_RESUME;
+    return HttpResponse.json({ data: { saveJobResumeText: insightsNow() } });
+  }),
+  api.mutation('DeleteJobResume', ({ variables }) => {
+    requests.push({ operation: 'DeleteJobResume', variables });
+    jobResume.current = null;
+    return HttpResponse.json({ data: { deleteJobResume: insightsNow() } });
+  }),
+  http.post(jobResumeUrl('job-1'), ({ request }) => {
+    // jsdom's File and FormData don't survive Node's fetch intact (the name is lost), so check
+    // the request is multipart without parsing it.
+    const sent = request.headers.get('content-type')?.startsWith('multipart/form-data') ?? false;
+    requests.push({ operation: 'UploadJobResume', variables: { sent } });
+    jobResume.current = { ...SAVED_RESUME, fileName: 'resume-acme.pdf' };
+    return HttpResponse.json(insightsNow(), { status: 201 });
   }),
   api.mutation('RestoreInsightTerm', ({ variables }) => {
     requests.push({ operation: 'RestoreInsightTerm', variables });

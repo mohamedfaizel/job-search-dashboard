@@ -18,6 +18,44 @@ export class RemovedTermModel {
   everywhere!: boolean;
 }
 
+@ObjectType('JobResume', {
+  description:
+    'The resume you wrote for this job, uploaded or pasted, scored the same way as your profile resume',
+})
+export class JobResumeModel {
+  @Field(() => String, {
+    nullable: true,
+    description: 'Name of the uploaded file. Null when the text was pasted',
+  })
+  fileName!: string | null;
+
+  @Field()
+  updatedAt!: Date;
+
+  @Field(() => Int, { nullable: true, description: 'Percent of the skills in this resume' })
+  skillsCoverage!: number | null;
+
+  @Field(() => Int, { nullable: true, description: 'Percent of the keywords in this resume' })
+  keywordsCoverage!: number | null;
+
+  @Field(() => Int, { nullable: true })
+  titleMatch!: number | null;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'The "after" score: the same weights as the profile resume\'s score',
+  })
+  score!: number | null;
+
+  @Field(() => [String], {
+    description: 'Skills and keywords this resume has and your profile resume doesn’t',
+  })
+  nowCovered!: string[];
+
+  @Field(() => [String], { description: 'Skills and keywords still missing from this resume' })
+  stillMissing!: string[];
+}
+
 @ObjectType('JobInsights', {
   description:
     'What the job asks for, worked out without AI: JobsPipe tags, TF-IDF and word matching against your resume text.',
@@ -75,6 +113,12 @@ export class JobInsightsModel {
       "Our own match score, weighted like Resume-Matcher's: keywords 40%, skills 20%, title 15%, sections 15% and dates 10% (both always full). Null without a resume",
   })
   score!: number | null;
+
+  @Field(() => JobResumeModel, {
+    nullable: true,
+    description: 'The resume you wrote for this job, if you uploaded or pasted one',
+  })
+  jobResume!: JobResumeModel | null;
 
   @Field({
     description:

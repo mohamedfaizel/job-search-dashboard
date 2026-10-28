@@ -3,9 +3,13 @@ export { API_URL, getErrorMessage, isUnauthenticated } from './api/client';
 export { meKey, useLogIn, useLogOut, useMe, useSignUp } from './api/auth';
 export {
   jobInsightsKey,
+  jobResumeUrl,
+  useDeleteJobResume,
   useJobInsights,
   useRemoveInsightTerm,
   useRestoreInsightTerm,
+  useSaveJobResumeText,
+  useUploadJobResume,
 } from './api/insights';
 export {
   profileKey,
