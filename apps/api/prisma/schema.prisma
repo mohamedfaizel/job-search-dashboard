@@ -66,6 +66,8 @@ model Profile {
   targetRoles      String[]  @default([])
   locations        String[]  @default([])
   skills           String[]  @default([])
+  /// Languages you speak with your real level, e.g. "German A2". Copied into the resume prompt.
+  languages        String[]  @default([])
   yearsExperience  Int?
   linkedinUrl      String?
   githubUrl        String?

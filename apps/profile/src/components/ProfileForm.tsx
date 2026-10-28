@@ -89,6 +89,14 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             <input {...register('skills')} {...a11y('skills')} className={inputClass} />
           </Field>
           <Field
+            label="Languages"
+            htmlFor="languages"
+            error={errors.languages?.message}
+            hint="With your real level, e.g. German A2, English C1. Resumes copy it exactly."
+          >
+            <input {...register('languages')} {...a11y('languages')} className={inputClass} />
+          </Field>
+          <Field
             label="Years of experience"
             htmlFor="yearsExperience"
             error={errors.yearsExperience?.message}

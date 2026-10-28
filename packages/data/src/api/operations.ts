@@ -276,6 +276,7 @@ const PROFILE_FIELDS = /* GraphQL */ `
   targetRoles
   locations
   skills
+  languages
   yearsExperience
   linkedinUrl
   githubUrl
@@ -417,6 +418,9 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     normalizedTitle
     language
     languageDetected
+    germanRequired
+    germanLevel
+    resumeLanguage
     hasResume
     skills {
       term

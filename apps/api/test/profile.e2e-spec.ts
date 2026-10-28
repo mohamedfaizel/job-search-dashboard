@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
-const FIELDS = `headline targetRoles locations skills yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName updatedAt`;
+const FIELDS = `headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName updatedAt`;
 const MY_PROFILE = `query { myProfile { ${FIELDS} } }`;
 const UPDATE = `mutation ($input: ProfileInput!) { updateProfile(input: $input) { ${FIELDS} } }`;
 
@@ -16,6 +16,7 @@ const INPUT = {
   targetRoles: ['Frontend Engineer', ' frontend engineer ', '', 'React Developer'],
   locations: ['Berlin', 'Remote'],
   skills: ['React', 'TypeScript'],
+  languages: [' German A2 ', 'German a2', 'English C1'],
   yearsExperience: 4,
   linkedinUrl: 'https://www.linkedin.com/in/ada',
   githubUrl: '',
@@ -61,6 +62,7 @@ describe('profile', () => {
         targetRoles: [],
         locations: [],
         skills: [],
+        languages: [],
         yearsExperience: null,
         linkedinUrl: null,
         githubUrl: null,
@@ -82,6 +84,7 @@ describe('profile', () => {
       targetRoles: ['Frontend Engineer', 'React Developer'],
       locations: ['Berlin', 'Remote'],
       skills: ['React', 'TypeScript'],
+      languages: ['German A2', 'English C1'],
       yearsExperience: 4,
       linkedinUrl: 'https://www.linkedin.com/in/ada',
       githubUrl: null,

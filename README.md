@@ -270,6 +270,14 @@ a **Skipped** list for you to check. Tip: put tools you know but left out of you
 into **My profile → Skills**. The template is in
 [`apps/api/src/insights/prompt.ts`](apps/api/src/insights/prompt.ts).
 
+**German or English resume.** The popup shows **German required (B2)** when the ad is written in
+German or asks for German (_Deutschkenntnisse_, _fließend Deutsch_, _fluent German_, _German C1_;
+"German is a plus" doesn't count). Then the prompt asks Claude for a German resume, translated
+from your one master resume with the ad's own German words. Otherwise it asks for English. Put
+your languages with your **real** levels in **My profile → Languages** (e.g. `German A2, English
+C1`): the prompt tells Claude to copy them exactly and never raise them. The patterns are in
+[`apps/api/src/insights/german.ts`](apps/api/src/insights/german.ts).
+
 **Your resume for this job** brings Claude's answer back. Upload it (PDF, Word, or the text or
 Markdown Claude gave you) or paste the text. It is scored exactly like your profile resume, so
 you see **Before → After**, which terms it **now covers** and which are **still missing**. It is

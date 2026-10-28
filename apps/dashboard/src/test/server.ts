@@ -32,6 +32,9 @@ export const INSIGHTS: JobInsights = {
   normalizedTitle: 'Frontend Engineer',
   language: 'de',
   languageDetected: false,
+  germanRequired: true,
+  germanLevel: 'B2',
+  resumeLanguage: 'de',
   hasResume: true,
   skills: [
     { term: 'react', inResume: true, relatedTo: null },

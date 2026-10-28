@@ -86,6 +86,20 @@ export class JobInsightsModel {
   @Field({ description: 'True when the language was guessed from the text, not given by JobsPipe' })
   languageDetected!: boolean;
 
+  @Field({
+    description: 'The ad is written in German or asks for German skills (not just as a plus)',
+  })
+  germanRequired!: boolean;
+
+  @Field(() => String, { nullable: true, description: 'The German level the ad names, e.g. "B2"' })
+  germanLevel!: string | null;
+
+  @Field({
+    description:
+      'The language the prompt asks Claude to write the resume in: "de" when German is required, else "en"',
+  })
+  resumeLanguage!: string;
+
   @Field({ description: 'False until you upload a resume or type it on your profile' })
   hasResume!: boolean;
 

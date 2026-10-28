@@ -2,25 +2,18 @@ export interface PromptInput {
   title: string;
   company: string;
   city: string | null;
-  /** ISO 639-1 code of the job ad, e.g. "de". */
-  language: string | null;
+  /** "de" when the job needs German, else "en". */
+  resumeLanguage: 'de' | 'en';
+  /** The German level the ad asks for, e.g. "B2". */
+  germanLevel: string | null;
+  /** Your languages with your real level, from My profile, e.g. "German A2". */
+  languages: string[];
   missingSkills: string[];
   missingKeywords: string[];
   /** The Skills list on My profile: tools you have that may not be in the resume. */
   otherSkills: string[];
   resume: string;
   description: string | null;
-}
-
-const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
-
-function languageName(code: string | null): string | null {
-  if (!code) return null;
-  try {
-    return languageNames.of(code) ?? null;
-  } catch {
-    return null;
-  }
 }
 
 const list = (items: string[]) =>
@@ -33,7 +26,13 @@ const list = (items: string[]) =>
  * titles, dates or numbers, and lists what it added as related so you can check it.
  */
 export function buildResumePrompt(input: PromptInput): string {
-  const language = languageName(input.language);
+  const writeIn =
+    input.resumeLanguage === 'de'
+      ? `Write the whole resume in German: the job asks for German${input.germanLevel ? ` (${input.germanLevel})` : ''}. Translate my resume and use the job ad's own German words.`
+      : "Write the resume in English: the job doesn't ask for German.";
+  const languages = input.languages.length
+    ? `My languages, with my real levels. List them in a Languages section exactly like this, never higher:\n${list(input.languages)}`
+    : 'Keep any language levels from my resume exactly as they are. Never raise them.';
   const where = input.city ? ` in ${input.city}` : '';
   const resume = input.resume.trim()
     ? input.resume.trim()
@@ -42,7 +41,7 @@ export function buildResumePrompt(input: PromptInput): string {
   return `Please tailor my resume for this job. Goal: use at least 85% of the skills and keywords below, as long as each one is honest for me.
 
 Job: ${input.title} at ${input.company}${where}
-${language ? `Write the whole resume in ${language}, the language of the job ad.` : 'Write the resume in the language of the job ad.'}
+${writeIn}
 
 Skills the job asks for that my resume does not show yet:
 ${list(input.missingSkills)}
@@ -60,6 +59,8 @@ How to handle each skill or keyword:
 4. No connection to my experience: leave it out.
 
 Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.
+
+${languages}
 
 Layout: ATS-friendly, plain headings (Summary, Skills, Experience, Education), no tables, columns, icons or images. Up to three pages, most relevant experience first.
 

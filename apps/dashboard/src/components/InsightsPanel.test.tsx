@@ -21,6 +21,8 @@ describe('InsightsPanel', () => {
 
     expect(await screen.findByText('Frontend Engineer')).toBeInTheDocument();
     expect(screen.getByText('German')).toBeInTheDocument();
+    expect(screen.getByText('German required (B2)')).toBeInTheDocument();
+    expect(screen.getByText('· resume in German')).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
     expect(screen.getByText('Skills: 1 of 2 in your resume (50%)')).toBeInTheDocument();
     // Weighted like Resume-Matcher's ATS score.
@@ -85,6 +87,27 @@ describe('InsightsPanel', () => {
     const missing = await screen.findByRole('list', { name: 'Missing skills' });
     expect(within(missing).getByText('(you have graphql)')).toBeInTheDocument();
     expect(within(missing).getByRole('button', { name: 'Remove apollo' })).toBeInTheDocument();
+  });
+
+  it('says an English resume is fine when the job does not need German', async () => {
+    server.use(
+      api.query('JobInsights', () =>
+        HttpResponse.json({
+          data: {
+            jobInsights: {
+              ...INSIGHTS,
+              germanRequired: false,
+              germanLevel: null,
+              resumeLanguage: 'en',
+            },
+          },
+        }),
+      ),
+    );
+    renderPanel();
+
+    expect(await screen.findByText('Resume in English')).toBeInTheDocument();
+    expect(screen.queryByText(/German required/)).not.toBeInTheDocument();
   });
 
   it('copies the prompt for Claude', async () => {

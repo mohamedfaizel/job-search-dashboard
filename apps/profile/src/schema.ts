@@ -30,6 +30,7 @@ export const profileSchema = z.object({
   targetRoles: list(20, 'roles'),
   locations: list(20, 'locations'),
   skills: list(60, 'skills'),
+  languages: list(10, 'languages'),
   yearsExperience: z
     .string()
     .trim()
@@ -50,6 +51,7 @@ export function profileToForm(profile: Profile): ProfileFormValues {
     targetRoles: profile.targetRoles.join(', '),
     locations: profile.locations.join(', '),
     skills: profile.skills.join(', '),
+    languages: profile.languages.join(', '),
     yearsExperience: profile.yearsExperience === null ? '' : String(profile.yearsExperience),
     linkedinUrl: profile.linkedinUrl ?? '',
     githubUrl: profile.githubUrl ?? '',
@@ -65,6 +67,7 @@ export function toProfileInput(values: ProfileFormValues): ProfileInput {
     targetRoles: splitList(values.targetRoles),
     locations: splitList(values.locations),
     skills: splitList(values.skills),
+    languages: splitList(values.languages),
     yearsExperience: values.yearsExperience === '' ? null : Number(values.yearsExperience),
     linkedinUrl: orNull(values.linkedinUrl),
     githubUrl: orNull(values.githubUrl),

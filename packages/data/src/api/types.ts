@@ -239,6 +239,8 @@ export interface Profile {
   targetRoles: string[];
   locations: string[];
   skills: string[];
+  /** Languages with your real level, e.g. "German A2". */
+  languages: string[];
   yearsExperience: number | null;
   linkedinUrl: string | null;
   githubUrl: string | null;
@@ -343,6 +345,12 @@ export interface JobInsights {
   language: string | null;
   /** True when the language was guessed from the text. */
   languageDetected: boolean;
+  /** The ad is written in German or asks for German skills (not just as a plus). */
+  germanRequired: boolean;
+  /** The German level the ad names, e.g. "B2". */
+  germanLevel: string | null;
+  /** The language the prompt asks for: "de" when German is required, else "en". */
+  resumeLanguage: string;
   hasResume: boolean;
   skills: TermCheck[];
   keywords: TermCheck[];

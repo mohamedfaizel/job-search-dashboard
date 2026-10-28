@@ -38,6 +38,9 @@ describe('profile page', () => {
     const skills = screen.getByRole('textbox', { name: 'Skills' });
     await user.clear(skills);
     await user.type(skills, 'React,  Node.js , ,GraphQL');
+    const languages = screen.getByRole('textbox', { name: 'Languages' });
+    await user.clear(languages);
+    await user.type(languages, 'German A2, English C1');
     await user.type(screen.getByRole('textbox', { name: 'GitHub' }), 'https://github.com/ada');
 
     await user.click(screen.getByRole('button', { name: 'Save profile' }));
@@ -48,6 +51,7 @@ describe('profile page', () => {
       variables: {
         input: {
           skills: ['React', 'Node.js', 'GraphQL'],
+          languages: ['German A2', 'English C1'],
           yearsExperience: 4,
           githubUrl: 'https://github.com/ada',
           websiteUrl: null,

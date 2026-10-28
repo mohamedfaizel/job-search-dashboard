@@ -275,7 +275,8 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
   }
 
   const data = insights.data;
-  const { normalizedTitle, language, languageDetected, hasResume } = data;
+  const { normalizedTitle, language, languageDetected, germanRequired, germanLevel, hasResume } =
+    data;
   const removeTerm = (term: string, everywhere = false) => {
     remove.mutate({ jobId, term, everywhere });
   };
@@ -299,6 +300,14 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
           </span>
           {languageDetected && <span className="text-slate-400"> (detected)</span>}
         </span>
+        {germanRequired ? (
+          <span title="The ad is in German or asks for German, so the prompt asks for a German resume">
+            <Badge tone="orange">German required{germanLevel ? ` (${germanLevel})` : ''}</Badge>{' '}
+            <span className="text-slate-500">· resume in German</span>
+          </span>
+        ) : (
+          <span className="text-slate-500">Resume in English</span>
+        )}
         <Score insights={data} />
       </div>
       {!hasResume && (
