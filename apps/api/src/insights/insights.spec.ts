@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { germanRequirement } from './german';
 import { buildResumePrompt } from './prompt';
 import { checkResume, coverage, matchScore, titleMatch } from './score';
 import { KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
@@ -169,7 +170,9 @@ describe('buildResumePrompt', () => {
     title: 'Frontend Entwickler',
     company: 'Acme',
     city: 'Berlin',
-    language: 'de',
+    resumeLanguage: 'de' as const,
+    germanLevel: 'B2',
+    languages: ['German A2', 'English C1'],
     missingSkills: ['kafka'],
     missingKeywords: ['microfrontends'],
     otherSkills: ['Apollo', 'Jest'],
@@ -180,7 +183,7 @@ describe('buildResumePrompt', () => {
   it('asks for the job’s language and lists what is missing', () => {
     const prompt = buildResumePrompt(input);
     expect(prompt).toContain('Job: Frontend Entwickler at Acme in Berlin');
-    expect(prompt).toContain('Write the whole resume in German');
+    expect(prompt).toContain('Write the whole resume in German: the job asks for German (B2).');
     expect(prompt).toContain('- kafka');
     expect(prompt).toContain('- microfrontends');
     expect(prompt).toContain('React developer since 2019.');
@@ -199,16 +202,59 @@ describe('buildResumePrompt', () => {
     expect(prompt).toContain('- Skipped:');
   });
 
+  it('keeps your real language levels', () => {
+    expect(buildResumePrompt(input)).toContain(
+      'exactly like this, never higher:\n- German A2\n- English C1',
+    );
+    expect(buildResumePrompt({ ...input, languages: [] })).toContain('Never raise them.');
+  });
+
+  it('asks for an English resume when the job does not need German', () => {
+    const prompt = buildResumePrompt({ ...input, resumeLanguage: 'en', germanLevel: null });
+    expect(prompt).toContain("Write the resume in English: the job doesn't ask for German.");
+    expect(prompt).not.toContain('Write the whole resume in German');
+  });
+
   it('asks Claude to request the resume when there is none', () => {
     const prompt = buildResumePrompt({
       ...input,
       resume: ' ',
       missingSkills: [],
       otherSkills: [],
-      language: null,
     });
     expect(prompt).toContain('Ask me for it before you start');
     expect(prompt).toContain('- (none)');
-    expect(prompt).toContain('Write the resume in the language of the job ad');
+  });
+});
+
+describe('germanRequirement', () => {
+  it('needs German when the ad is written in German', () => {
+    expect(germanRequirement('Wir suchen einen Entwickler.', 'de')).toEqual({
+      required: true,
+      level: null,
+    });
+  });
+
+  it('finds German skills and their level in an English ad', () => {
+    expect(germanRequirement('You speak fluent German (C1) and English.', 'en')).toEqual({
+      required: true,
+      level: 'C1',
+    });
+    expect(germanRequirement('Requirements:\n- German B2 or better', 'en')).toEqual({
+      required: true,
+      level: 'B2',
+    });
+    expect(germanRequirement('Sehr gute Deutschkenntnisse (B2) are a must.', 'en')).toEqual({
+      required: true,
+      level: 'B2',
+    });
+  });
+
+  it('does not need German when it is a plus or not mentioned', () => {
+    expect(germanRequirement('German skills are a plus.', 'en').required).toBe(false);
+    expect(
+      germanRequirement('We are a German company. English is our office language.', 'en'),
+    ).toEqual({ required: false, level: null });
+    expect(germanRequirement(null, null).required).toBe(false);
   });
 });

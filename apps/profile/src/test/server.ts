@@ -14,6 +14,7 @@ export const PROFILE: Profile = {
   targetRoles: ['Frontend Engineer', 'React Developer'],
   locations: ['Berlin', 'Remote'],
   skills: ['React', 'TypeScript'],
+  languages: ['German A2', 'English C1'],
   yearsExperience: 4,
   linkedinUrl: 'https://www.linkedin.com/in/ada',
   githubUrl: null,

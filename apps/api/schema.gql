@@ -167,6 +167,16 @@ type JobFilterOptions {
 What the job asks for, worked out without AI: JobsPipe tags, TF-IDF and word matching against your resume text.
 """
 type JobInsights {
+  """
+  The German level the ad names, e.g. "B2"
+  """
+  germanLevel: String
+
+  """
+  The ad is written in German or asks for German skills (not just as a plus)
+  """
+  germanRequired: Boolean!
+
   """False until you upload a resume or type it on your profile"""
   hasResume: Boolean!
   jobId: String!
@@ -202,6 +212,11 @@ type JobInsights {
 
   """Skills and keywords you removed with ×"""
   removed: [RemovedTerm!]!
+
+  """
+  The language the prompt asks Claude to write the resume in: "de" when German is required, else "en"
+  """
+  resumeLanguage: String!
 
   """
   Our own match score, weighted like Resume-Matcher's: keywords 40%, skills 20%, title 15%, sections 15% and dates 10% (both always full). Null without a resume
@@ -429,6 +444,11 @@ type Mutation {
 type Profile {
   githubUrl: String
   headline: String!
+
+  """
+  Languages with your real level, e.g. "German A2"
+  """
+  languages: [String!]!
   linkedinUrl: String
   locations: [String!]!
 
@@ -449,6 +469,7 @@ type Profile {
 input ProfileInput {
   githubUrl: String
   headline: String! = ""
+  languages: [String!]! = []
   linkedinUrl: String
   locations: [String!]! = []
   resumeText: String! = ""

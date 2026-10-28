@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { tidy } from '../profile/resume-text';
+import { germanRequirement } from './german';
 import type {
   JobInsightsModel,
   JobResumeModel,
@@ -60,7 +61,7 @@ export class InsightsService {
       }),
       this.prisma.profile.findUnique({
         where: { userId },
-        select: { resumeText: true, skills: true },
+        select: { resumeText: true, skills: true, languages: true },
       }),
       this.prisma.removedTerm.findMany({
         where: { userId, OR: [{ jobId }, { jobId: null }] },
@@ -77,6 +78,7 @@ export class InsightsService {
     const resume = profile?.resumeText ?? '';
     const otherSkills = profile?.skills ?? [];
     const language = job.language ?? detectLanguage(job.description);
+    const german = germanRequirement(job.description, language);
 
     // Terms you removed with × leave both lists. One removed everywhere wins over this job's.
     const removed = new Map<string, RemovedTermModel>();
@@ -127,6 +129,9 @@ export class InsightsService {
       normalizedTitle,
       language,
       languageDetected: !job.language && !!language,
+      germanRequired: german.required,
+      germanLevel: german.level,
+      resumeLanguage: german.required ? 'de' : 'en',
       hasResume,
       skills: withHint(before.skillChecks),
       keywords: withHint(before.keywordChecks),
@@ -140,7 +145,9 @@ export class InsightsService {
         title: job.title,
         company: job.company.name,
         city: job.city,
-        language,
+        resumeLanguage: german.required ? 'de' : 'en',
+        germanLevel: german.level,
+        languages: profile?.languages ?? [],
         missingSkills: missing(before.skillChecks),
         missingKeywords: missing(before.keywordChecks),
         otherSkills,

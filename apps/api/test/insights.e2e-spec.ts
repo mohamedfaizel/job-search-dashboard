@@ -32,6 +32,9 @@ const INSIGHTS = /* GraphQL */ `
       normalizedTitle
       language
       languageDetected
+      germanRequired
+      germanLevel
+      resumeLanguage
       hasResume
       skills {
         term
@@ -120,6 +123,9 @@ interface Insights {
   title: string;
   language: string | null;
   languageDetected: boolean;
+  germanRequired: boolean;
+  germanLevel: string | null;
+  resumeLanguage: string;
   hasResume: boolean;
   skills: { term: string; inResume: boolean; relatedTo?: string | null }[];
   keywords: { term: string; inResume: boolean; relatedTo?: string | null }[];
@@ -199,7 +205,13 @@ describe('job insights without AI', () => {
     expect(job.language).toBe('de');
 
     const result = await insights(job.id);
-    expect(result).toMatchObject({ language: 'de', languageDetected: false, hasResume: false });
+    expect(result).toMatchObject({
+      language: 'de',
+      languageDetected: false,
+      hasResume: false,
+      germanRequired: true,
+      resumeLanguage: 'de',
+    });
   });
 
   it('scores the resume and builds a prompt with what is missing', async () => {
@@ -246,6 +258,40 @@ describe('job insights without AI', () => {
     expect(result.skills).toEqual([{ term: 'apollo', inResume: false, relatedTo: 'graphql' }]);
     expect(result.prompt).toContain(
       'Other skills I have (not all of them are in my resume):\n- Jest\n- Docker',
+    );
+  });
+
+  it('asks for a German resume only when the job needs German, with your real level', async () => {
+    const german = await addJob({
+      title: 'Frontend Engineer',
+      description:
+        'We build web apps in React for customers across Europe. You speak fluent German (C1).',
+    });
+    const english = await addJob({
+      title: 'Frontend Engineer',
+      description:
+        'We build web apps in React for customers across Europe. Office language is English.',
+    });
+    await t.prisma.profile.create({
+      data: { userId: 2, resumeText: 'React.', languages: ['German A2', 'English C1'] },
+    });
+
+    const needsGerman = await insights(german.id);
+    expect(needsGerman).toMatchObject({
+      language: 'en',
+      germanRequired: true,
+      germanLevel: 'C1',
+      resumeLanguage: 'de',
+    });
+    expect(needsGerman.prompt).toContain(
+      'Write the whole resume in German: the job asks for German (C1).',
+    );
+    expect(needsGerman.prompt).toContain('never higher:\n- German A2\n- English C1');
+
+    const englishOnly = await insights(english.id);
+    expect(englishOnly).toMatchObject({ germanRequired: false, resumeLanguage: 'en' });
+    expect(englishOnly.prompt).toContain(
+      "Write the resume in English: the job doesn't ask for German.",
     );
   });
 

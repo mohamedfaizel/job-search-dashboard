@@ -26,6 +26,9 @@ export class ProfileModel {
   @Field(() => [String])
   skills!: string[];
 
+  @Field(() => [String], { description: 'Languages with your real level, e.g. "German A2"' })
+  languages!: string[];
+
   @Field(() => Int, { nullable: true })
   yearsExperience!: number | null;
 
@@ -98,6 +101,13 @@ export class ProfileInput {
   @ArrayMaxSize(60)
   @MaxLength(80, LIST_RULES)
   skills: string[] = [];
+
+  @Field(() => [String], { defaultValue: [] })
+  @Transform(cleanList)
+  @IsArray()
+  @ArrayMaxSize(10)
+  @MaxLength(80, LIST_RULES)
+  languages: string[] = [];
 
   @Field(() => Int, { nullable: true })
   @IsOptional()
