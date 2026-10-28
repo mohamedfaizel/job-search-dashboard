@@ -356,8 +356,26 @@ export interface JobInsights {
    * sections 15% and dates 10% (both always full).
    */
   score: number | null;
+  /** The resume you wrote for this job, if you uploaded or pasted one. */
+  jobResume: JobResume | null;
   /** Paste into Claude desktop or web to tailor your resume to this job. */
   prompt: string;
+}
+
+/** The resume you wrote for one job, scored the same way as your profile resume. */
+export interface JobResume {
+  /** Name of the uploaded file. Null when the text was pasted. */
+  fileName: string | null;
+  updatedAt: string;
+  skillsCoverage: number | null;
+  keywordsCoverage: number | null;
+  titleMatch: number | null;
+  /** The "after" score. The job's `score` is the "before". */
+  score: number | null;
+  /** Skills and keywords it has and your profile resume doesn't. */
+  nowCovered: string[];
+  /** Skills and keywords still missing. */
+  stillMissing: string[];
 }
 
 export interface RemovedTerm {

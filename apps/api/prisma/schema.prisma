@@ -53,6 +53,7 @@ model User {
   jobMatches    JobMatch[]
   tailored      TailoredResume[]
   removedTerms  RemovedTerm[]
+  jobResumes    JobResume[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 }
@@ -218,6 +219,7 @@ model Job {
   matches         JobMatch[]
   tailored        TailoredResume[]
   removedTerms    RemovedTerm[]
+  jobResumes      JobResume[]
 
   @@index([postedAt])
   @@index([companyId])
@@ -326,4 +328,23 @@ model RemovedTerm {
   createdAt DateTime @default(now())
 
   @@index([userId, jobId])
+}
+
+/// The resume you wrote for one job (e.g. with the copied Claude prompt), uploaded or pasted.
+/// Scored against the job like your profile resume, so you see the before and after.
+/// One per user and job; saving again replaces it.
+model JobResume {
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId     String
+  /// Plain text, read out of the file or pasted. This is what gets scored.
+  text      String
+  /// The uploaded file, kept so you can download it again. Null when the text was pasted.
+  fileName  String?
+  file      Bytes?
+  fileType  String?
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, jobId])
 }

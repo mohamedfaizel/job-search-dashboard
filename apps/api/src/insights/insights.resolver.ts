@@ -40,4 +40,24 @@ export class InsightsResolver {
   ): Promise<JobInsightsModel> {
     return this.insights.restoreTerm(user.id, jobId, term);
   }
+
+  @Mutation(() => JobInsightsModel, {
+    description:
+      'Saves pasted text as the resume you wrote for this job (replacing the one before), and scores it',
+  })
+  saveJobResumeText(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('text') text: string,
+  ): Promise<JobInsightsModel> {
+    return this.insights.saveJobResume(user.id, jobId, text);
+  }
+
+  @Mutation(() => JobInsightsModel, { description: 'Deletes the resume you wrote for this job' })
+  deleteJobResume(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+  ): Promise<JobInsightsModel> {
+    return this.insights.deleteJobResume(user.id, jobId);
+  }
 }

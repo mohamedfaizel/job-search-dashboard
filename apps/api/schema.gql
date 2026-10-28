@@ -171,6 +171,9 @@ type JobInsights {
   hasResume: Boolean!
   jobId: String!
 
+  """The resume you wrote for this job, if you uploaded or pasted one"""
+  jobResume: JobResume
+
   """
   The words that set this description apart from your other jobs (TF-IDF)
   """
@@ -283,6 +286,31 @@ type JobPage {
   total: Int!
 }
 
+"""
+The resume you wrote for this job, uploaded or pasted, scored the same way as your profile resume
+"""
+type JobResume {
+  """Name of the uploaded file. Null when the text was pasted"""
+  fileName: String
+
+  """Percent of the keywords in this resume"""
+  keywordsCoverage: Int
+
+  """Skills and keywords this resume has and your profile resume doesn’t"""
+  nowCovered: [String!]!
+
+  """The "after" score: the same weights as the profile resume's score"""
+  score: Int
+
+  """Percent of the skills in this resume"""
+  skillsCoverage: Int
+
+  """Skills and keywords still missing from this resume"""
+  stillMissing: [String!]!
+  titleMatch: Int
+  updatedAt: DateTime!
+}
+
 enum JobSortField {
   CITY
   COMPANY
@@ -331,6 +359,9 @@ type Mutation {
   createJob(input: CreateJobInput!): Job!
   createSavedSearch(input: SavedSearchInput!): SavedSearch!
 
+  """Deletes the resume you wrote for this job"""
+  deleteJobResume(jobId: ID!): JobInsights!
+
   """Delete a saved search. Its past imports stay."""
   deleteSavedSearch(id: Int!): Boolean!
 
@@ -359,6 +390,11 @@ type Mutation {
     """Continue its last import instead"""
     resume: Boolean! = false
   ): SyncJobsResult!
+
+  """
+  Saves pasted text as the resume you wrote for this job (replacing the one before), and scores it
+  """
+  saveJobResumeText(jobId: ID!, text: String!): JobInsights!
 
   """Turn scheduled runs of a saved search on or off"""
   setSavedSearchSchedule(id: Int!, input: ScheduleInput!): SavedSearch!

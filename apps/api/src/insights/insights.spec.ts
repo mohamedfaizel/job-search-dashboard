@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildResumePrompt } from './prompt';
-import { coverage, matchScore, titleMatch } from './score';
+import { checkResume, coverage, matchScore, titleMatch } from './score';
 import { mentions, spellings } from './skills';
 import { detectLanguage, keywordTokens, stopwordsFor, tokenize } from './text';
 import { documentFrequencies, rankTerms } from './tfidf';
@@ -108,6 +108,29 @@ describe('matchScore', () => {
       ]),
     ).toBe(33);
     expect(coverage([])).toBeNull();
+  });
+});
+
+describe('checkResume', () => {
+  const job = {
+    skills: ['kafka', 'react'],
+    keywords: ['microservices'],
+    title: 'Backend Engineer',
+    language: 'en',
+  };
+
+  it('scores any resume text the same way', () => {
+    const check = checkResume('Backend Engineer: Kafka and microservices', job);
+    expect(check.skillChecks).toEqual([
+      { term: 'kafka', inResume: true },
+      { term: 'react', inResume: false },
+    ]);
+    expect(check).toMatchObject({ skills: 50, keywords: 100, title: 100 });
+    expect(check.score).toBe(matchScore({ skills: 50, keywords: 100, title: 100 }));
+  });
+
+  it('gives no percentages without a resume', () => {
+    expect(checkResume('  ', job)).toMatchObject({ skills: null, keywords: null, score: null });
   });
 });
 

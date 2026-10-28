@@ -434,6 +434,16 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     keywordsCoverage
     titleMatch
     score
+    jobResume {
+      fileName
+      updatedAt
+      skillsCoverage
+      keywordsCoverage
+      titleMatch
+      score
+      nowCovered
+      stillMissing
+    }
     prompt
   }
 `;
@@ -460,6 +470,24 @@ export const RESTORE_INSIGHT_TERM = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation RestoreInsightTerm($jobId: ID!, $term: String!) {
     restoreInsightTerm(jobId: $jobId, term: $term) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const SAVE_JOB_RESUME_TEXT = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation SaveJobResumeText($jobId: ID!, $text: String!) {
+    saveJobResumeText(jobId: $jobId, text: $text) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const DELETE_JOB_RESUME = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation DeleteJobResume($jobId: ID!) {
+    deleteJobResume(jobId: $jobId) {
       ...JobInsightsFields
     }
   }

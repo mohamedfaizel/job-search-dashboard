@@ -261,6 +261,13 @@ keywords, your resume and the job ad) to paste into Claude desktop or web. Claud
 tailored resume on your subscription, so it costs no API credits. The prompt tells Claude to add
 only what is true for you.
 
+**Your resume for this job** brings Claude's answer back. Upload it (PDF, Word, or the text or
+Markdown Claude gave you) or paste the text. It is scored exactly like your profile resume, so
+you see **Before → After**, which terms it **now covers** and which are **still missing**. It is
+kept with the job: **Download** gives you the same file back (pasted text comes as
+`resume.txt`), **Replace** swaps it for a new version, and **Delete** removes it. Your profile
+resume doesn't change.
+
 ## Using the API
 
 Open <http://localhost:3000/graphql> in your browser. It shows Apollo Sandbox, where you can
