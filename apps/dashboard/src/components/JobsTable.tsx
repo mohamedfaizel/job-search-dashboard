@@ -23,7 +23,11 @@ export interface JobsTableProps extends RowActions {
   onClearFilter: (key: ListFilterKey) => void;
   /** Dims the rows while a new page or sort is loading. */
   isFetching?: boolean;
+  /** Columns switched off in the Columns menu, as { columnId: false }. */
+  columnVisibility?: Record<string, boolean>;
 }
+
+const NO_HIDDEN_COLUMNS: Record<string, boolean> = {};
 
 /**
  * The job posts table. It only displays what it is given and reports clicks; the
@@ -43,8 +47,15 @@ export function JobsTable({
   toggleHidden,
   showingHidden = false,
   isFetching = false,
+  columnVisibility = NO_HIDDEN_COLUMNS,
 }: JobsTableProps) {
-  const table = useTable({ features, columns, data: jobs, getRowId: (job) => job.id });
+  const table = useTable({
+    features,
+    columns,
+    data: jobs,
+    getRowId: (job) => job.id,
+    state: { columnVisibility },
+  });
   const actions = useMemo(
     () => ({ openJob, setStatus, toggleHidden, showingHidden }),
     [openJob, setStatus, toggleHidden, showingHidden],
@@ -52,9 +63,10 @@ export function JobsTable({
 
   return (
     <RowActionsContext.Provider value={actions}>
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      {/* Scrolls inside its own box so the header can stick to the top while you scroll. */}
+      <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full text-left text-[13px]">
-          <thead className="bg-slate-50 text-slate-500">
+          <thead className="sticky top-0 z-10 bg-slate-50/95 text-slate-500 shadow-[inset_0_-1px_0_var(--color-slate-200)] backdrop-blur">
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>
                 {group.headers.map((header) => {
@@ -114,8 +126,11 @@ export function JobsTable({
           </thead>
           <tbody className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="border-t border-slate-100 hover:bg-slate-50">
-                {row.getAllCells().map((cell) => (
+              <tr
+                key={row.id}
+                className="border-t border-slate-100 even:bg-slate-50/50 hover:bg-indigo-50/40"
+              >
+                {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-3 py-2 align-middle text-slate-700">
                     <table.FlexRender cell={cell} />
                   </td>

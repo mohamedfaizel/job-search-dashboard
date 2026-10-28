@@ -115,6 +115,63 @@ describe('JobsDashboard', () => {
     expect(screen.getByRole('dialog', { name: 'Senior Frontend Engineer' })).toBeInTheDocument();
   });
 
+  it('hides and shows columns from the Columns menu, and remembers the choice', async () => {
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    expect(screen.getByRole('columnheader', { name: /Salary/ })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /Columns/ }));
+    const menu = screen.getByRole('dialog', { name: 'Show or hide columns' });
+    // The title opens the popup, so it can't be switched off.
+    expect(within(menu).getByRole('checkbox', { name: /Job title/ })).toBeDisabled();
+    await userEvent.click(within(menu).getByRole('checkbox', { name: 'Salary' }));
+
+    expect(screen.queryByRole('columnheader', { name: /Salary/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('$90k - $120k')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('1 hidden');
+    expect(localStorage.getItem('jobsearch.dashboard.hiddenColumns')).toBe('["salary"]');
+
+    await userEvent.click(within(menu).getByRole('button', { name: 'Show all columns' }));
+    expect(screen.getByRole('columnheader', { name: /Salary/ })).toBeInTheDocument();
+
+    // Columns that read a field (City) have ids too, so only that one goes.
+    await userEvent.click(within(menu).getByRole('checkbox', { name: 'City' }));
+    expect(screen.queryByRole('columnheader', { name: /City/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Seniority/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('1 hidden');
+  });
+
+  it('starts with the columns hidden on an earlier visit', async () => {
+    localStorage.setItem('jobsearch.dashboard.hiddenColumns', '["industry","skills"]');
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+
+    expect(screen.queryByRole('columnheader', { name: /Industry/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /Skills/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /City/ })).toBeInTheDocument();
+  });
+
+  it('shows counts above the table', async () => {
+    renderDashboard();
+
+    const jobsFound = (await screen.findByText('Jobs found')).closest('div')!;
+    await waitFor(() => {
+      expect(within(jobsFound).getByText('2')).toBeInTheDocument();
+    });
+  });
+
+  it('maximizes the job popup and restores it', async () => {
+    renderDashboard();
+    await userEvent.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Maximize' }));
+    expect(dialog).toHaveClass('w-screen');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Restore size' }));
+    expect(dialog).toHaveClass('max-w-3xl');
+  });
+
   it('updates the application status from the table', async () => {
     renderDashboard();
     const select = await screen.findByRole('combobox', {

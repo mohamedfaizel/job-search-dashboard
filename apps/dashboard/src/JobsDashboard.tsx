@@ -16,16 +16,29 @@ import {
   useJobFilterOptions,
   useHiddenJobCount,
   useJobsPage,
+  useMyApplications,
   useSetJobHidden,
   useUpdateJobStatus,
 } from '@jobsearch/data';
 import { useCallback, useMemo, useState } from 'react';
+import { columns } from './components/columns';
+import { ColumnsMenu } from './components/ColumnsMenu';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { JobsTable } from './components/JobsTable';
 import { Pagination } from './components/Pagination';
+import { StatCards } from './components/StatCards';
 import { Toolbar } from './components/Toolbar';
+import { useColumnVisibility } from './useColumnVisibility';
 
 const NO_JOBS: Job[] = [];
+
+/** Every column for the Columns menu, in table order. */
+const COLUMN_CHOICES = columns.map((column) => ({
+  // Accessor columns take their id from the field they read.
+  id: column.id ?? ('accessorKey' in column ? String(column.accessorKey) : ''),
+  label: String(column.header),
+  canHide: column.enableHiding !== false,
+}));
 
 /** Connects the table to Redux (what the user chose) and TanStack Query (the data). */
 export function JobsDashboard() {
@@ -38,6 +51,8 @@ export function JobsDashboard() {
   const updateStatus = useUpdateJobStatus();
   const setHidden = useSetJobHidden();
   const hiddenCount = useHiddenJobCount();
+  const applications = useMyApplications();
+  const columnVisibility = useColumnVisibility();
   const [openJobId, setOpenJobId] = useState<string | null>(null);
   // The last job hidden or brought back, for the "Undo" message.
   const [lastChange, setLastChange] = useState<{ job: Job; hidden: boolean } | null>(null);
@@ -87,10 +102,20 @@ export function JobsDashboard() {
 
   return (
     <section aria-labelledby="job-posts-heading" className="space-y-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 id="job-posts-heading" className="text-xl font-semibold text-slate-900">
-          {showingHidden ? 'Hidden jobs' : 'Job posts'}
-        </h1>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1
+            id="job-posts-heading"
+            className="text-2xl font-semibold tracking-tight text-slate-900"
+          >
+            {showingHidden ? 'Hidden jobs' : 'Job posts'}
+          </h1>
+          {!showingHidden && (
+            <p className="text-sm text-slate-500">
+              Search, filter and track the jobs you imported. Click a title for details.
+            </p>
+          )}
+        </div>
         {showingHidden ? (
           <button
             type="button"
@@ -115,6 +140,13 @@ export function JobsDashboard() {
           )
         )}
       </div>
+      {!showingHidden && (
+        <StatCards
+          total={jobsQuery.data?.total}
+          applications={applications.data}
+          hiddenCount={hiddenCount.data}
+        />
+      )}
       {showingHidden && (
         <p className="text-sm text-slate-600">
           Only you don’t see these. Unhide a job to put it back in your table.
@@ -147,7 +179,14 @@ export function JobsDashboard() {
         onSearch={handleSearch}
         activeFilterCount={countActiveFilters(tableState)}
         onClearAll={() => dispatch(clearAll())}
-      />
+      >
+        <ColumnsMenu
+          columns={COLUMN_CHOICES}
+          visibility={columnVisibility.visibility}
+          onToggle={columnVisibility.toggle}
+          onShowAll={columnVisibility.showAll}
+        />
+      </Toolbar>
 
       {jobsQuery.isError && (
         <div
@@ -187,6 +226,7 @@ export function JobsDashboard() {
         toggleHidden={handleToggleHidden}
         showingHidden={showingHidden}
         isFetching={jobsQuery.isFetching && !jobsQuery.isPending}
+        columnVisibility={columnVisibility.visibility}
       />
 
       {jobsQuery.isPending && <p className="text-center text-sm text-slate-500">Loading jobs…</p>}
