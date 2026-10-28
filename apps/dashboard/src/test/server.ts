@@ -43,6 +43,7 @@ export const INSIGHTS: JobInsights = {
   removed: [],
   skillsCoverage: 50,
   keywordsCoverage: 50,
+  titleMatch: 100,
   score: 50,
   prompt: 'Please tailor my resume for this job.\n- graphql',
 };

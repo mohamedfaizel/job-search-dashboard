@@ -65,8 +65,14 @@ export class JobInsightsModel {
 
   @Field(() => Int, {
     nullable: true,
+    description: 'How well your resume names the job title (100 = the whole title appears)',
+  })
+  titleMatch!: number | null;
+
+  @Field(() => Int, {
+    nullable: true,
     description:
-      'Our own match score: skills coverage × 60% + keywords coverage × 40%. Null without a resume',
+      "Our own match score, weighted like Resume-Matcher's: keywords 40%, skills 20%, title 15%, sections 15% and dates 10% (both always full). Null without a resume",
   })
   score!: number | null;
 

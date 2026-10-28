@@ -195,17 +195,37 @@ function CopyPrompt({ prompt }: { prompt: string }) {
   );
 }
 
+/** The parts of our score, with the same weights as Resume-Matcher's ATS score. */
+function scoreParts(insights: JobInsights) {
+  return [
+    { label: 'Keywords', weight: '40%', value: insights.keywordsCoverage },
+    { label: 'Skills', weight: '20%', value: insights.skillsCoverage },
+    { label: 'Job title', weight: '15%', value: insights.titleMatch },
+    { label: 'Sections', weight: '15%', value: 100, note: 'always full' },
+    { label: 'Dates', weight: '10%', value: 100, note: 'always full' },
+  ];
+}
+
 function Score({ insights }: { insights: JobInsights }) {
   const { score } = insights;
   if (score === null) return null;
   return (
-    <span
-      className="ml-auto flex items-center gap-2"
-      title="Skills found × 60% + keywords found × 40%. Free, no AI."
-    >
-      <span className="text-slate-600">Your resume covers</span>
-      <Badge tone={scoreTone(score)}>{score}%</Badge>
-    </span>
+    <div className="ml-auto flex flex-col items-end gap-0.5">
+      <span className="flex items-center gap-2">
+        <span className="text-slate-600">Your resume covers</span>
+        <Badge tone={scoreTone(score)}>{score}%</Badge>
+      </span>
+      <ul
+        aria-label="Score parts"
+        className="flex flex-wrap justify-end gap-x-3 text-xs text-slate-500"
+      >
+        {scoreParts(insights).map(({ label, weight, value, note }) => (
+          <li key={label} title={note ? `${label}: not checked here, ${note}` : undefined}>
+            {label} {weight}: {value === null ? 'n/a' : `${value}%`}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import type { JobInsightsModel, RemovedTermModel, TermCheckModel } from './insights.model';
 import { buildResumePrompt } from './prompt';
-import { coverage, matchScore } from './score';
+import { coverage, matchScore, titleMatch } from './score';
 import { mentions } from './skills';
 import { detectLanguage, keywordTokens } from './text';
 import type { DocumentFrequencies } from './tfidf';
@@ -73,14 +73,18 @@ export class InsightsService {
     const hasResume = resume.trim().length > 0;
     const skillsCoverage = hasResume ? coverage(skills) : null;
     const keywordsCoverage = hasResume ? coverage(keywordChecks) : null;
+    const normalizedTitle =
+      raw.normalized_title && raw.normalized_title !== job.title ? raw.normalized_title : null;
+    const titleCoverage = hasResume
+      ? titleMatch(normalizedTitle ?? job.title, resume, language)
+      : null;
     const missing = (terms: TermCheckModel[]) =>
       terms.filter((t) => !hasResume || !t.inResume).map((t) => t.term);
 
     return {
       jobId,
       title: job.title,
-      normalizedTitle:
-        raw.normalized_title && raw.normalized_title !== job.title ? raw.normalized_title : null,
+      normalizedTitle,
       language,
       languageDetected: !job.language && !!language,
       hasResume,
@@ -89,7 +93,10 @@ export class InsightsService {
       removed: [...removed.values()],
       skillsCoverage,
       keywordsCoverage,
-      score: matchScore(skillsCoverage, keywordsCoverage),
+      titleMatch: titleCoverage,
+      score: hasResume
+        ? matchScore({ keywords: keywordsCoverage, skills: skillsCoverage, title: titleCoverage })
+        : null,
       prompt: buildResumePrompt({
         title: job.title,
         company: job.company.name,

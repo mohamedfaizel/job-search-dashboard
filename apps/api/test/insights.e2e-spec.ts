@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { matchScore } from '../src/insights/score';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
@@ -33,6 +34,7 @@ const INSIGHTS = /* GraphQL */ `
       }
       skillsCoverage
       keywordsCoverage
+      titleMatch
       score
       prompt
     }
@@ -81,6 +83,7 @@ interface Insights {
   removed: { term: string; everywhere: boolean }[];
   skillsCoverage: number | null;
   keywordsCoverage: number | null;
+  titleMatch: number | null;
   score: number | null;
   prompt: string;
 }
@@ -164,8 +167,10 @@ describe('job insights without AI', () => {
 
     const result = await insights(job.id);
     expect(result.skillsCoverage).toBe(50);
+    // "Backend Engineer" isn't in the resume, and neither word is.
+    expect(result.titleMatch).toBe(0);
     expect(result.score).toBe(
-      Math.round(result.skillsCoverage! * 0.6 + result.keywordsCoverage! * 0.4),
+      matchScore({ keywords: result.keywordsCoverage, skills: 50, title: 0 }),
     );
     expect(result.prompt).toContain('Job: Backend Engineer at Acme');
     expect(result.prompt).toContain('- kafka');

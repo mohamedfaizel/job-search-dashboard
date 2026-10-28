@@ -432,6 +432,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     }
     skillsCoverage
     keywordsCoverage
+    titleMatch
     score
     prompt
   }

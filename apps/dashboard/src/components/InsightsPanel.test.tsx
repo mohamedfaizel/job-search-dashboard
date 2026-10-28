@@ -23,6 +23,11 @@ describe('InsightsPanel', () => {
     expect(screen.getByText('German')).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
     expect(screen.getByText('Skills: 1 of 2 in your resume (50%)')).toBeInTheDocument();
+    // Weighted like Resume-Matcher's ATS score.
+    const parts = screen.getByRole('list', { name: 'Score parts' });
+    expect(parts).toHaveTextContent('Keywords 40%: 50%');
+    expect(parts).toHaveTextContent('Job title 15%: 100%');
+    expect(parts).toHaveTextContent('Dates 10%: 100%');
 
     const missingSkills = screen.getByRole('list', { name: 'Missing skills' });
     expect(within(missingSkills).getByText('graphql')).toBeInTheDocument();
@@ -89,6 +94,7 @@ describe('InsightsPanel', () => {
               score: null,
               skillsCoverage: null,
               keywordsCoverage: null,
+              titleMatch: null,
             },
           },
         }),
