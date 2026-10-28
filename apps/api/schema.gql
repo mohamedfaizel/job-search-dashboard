@@ -754,6 +754,11 @@ type TermCheck {
   inResume: Boolean!
 
   """
+  For a missing term: the skill in your resume or profile that makes it a fair addition, e.g. "graphql" for "apollo"
+  """
+  relatedTo: String
+
+  """
   A skill tag or keyword, e.g. "kafka"
   """
   term: String!

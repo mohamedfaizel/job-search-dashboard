@@ -10,12 +10,22 @@ import type {
 import { buildResumePrompt } from './prompt';
 import type { ResumeCheck } from './score';
 import { checkResume } from './score';
+import { KNOWN_SKILLS, relatedTo } from './skills';
 import { detectLanguage, keywordTokens } from './text';
 import type { DocumentFrequencies } from './tfidf';
 import { documentFrequencies, rankTerms } from './tfidf';
 
 /** How many TF-IDF keywords to show for a job. */
 const KEYWORD_COUNT = 15;
+
+/** What we learn from all saved jobs at once. */
+interface Corpus {
+  frequencies: DocumentFrequencies;
+  /** Every city a job is in: a place is never a keyword, for any job. */
+  cities: Set<string>;
+  /** Every skill tag JobsPipe gave any job, plus the skills we know: tools rank first. */
+  skills: Set<string>;
+}
 
 /** Longer than any real resume, short enough to keep junk out. */
 export const MAX_RESUME_CHARS = 50_000;
@@ -30,7 +40,7 @@ export interface JobResumeFile {
 @Injectable()
 export class InsightsService {
   // Counting words in every description is the slow part, so it is kept until a job changes.
-  private cache: { key: string; frequencies: DocumentFrequencies } | null = null;
+  private cache: { key: string; corpus: Corpus } | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -48,7 +58,10 @@ export class InsightsService {
           company: { select: { name: true } },
         },
       }),
-      this.prisma.profile.findUnique({ where: { userId }, select: { resumeText: true } }),
+      this.prisma.profile.findUnique({
+        where: { userId },
+        select: { resumeText: true, skills: true },
+      }),
       this.prisma.removedTerm.findMany({
         where: { userId, OR: [{ jobId }, { jobId: null }] },
         orderBy: { createdAt: 'asc' },
@@ -62,6 +75,7 @@ export class InsightsService {
 
     const raw = (job.raw ?? {}) as { normalized_title?: string; keyword_slugs?: string[] };
     const resume = profile?.resumeText ?? '';
+    const otherSkills = profile?.skills ?? [];
     const language = job.language ?? detectLanguage(job.description);
 
     // Terms you removed with × leave both lists. One removed everywhere wins over this job's.
@@ -81,16 +95,28 @@ export class InsightsService {
       ...tags,
       ...keywordTokens(`${job.company.name} ${job.city ?? ''}`, null),
     ]);
-    const frequencies = await this.frequencies();
-    const keywords = rankTerms(keywordTokens(job.description ?? '', language), frequencies)
+    const corpus = await this.corpus();
+    const candidates = rankTerms(keywordTokens(job.description ?? '', language), corpus.frequencies)
       .map((ranked) => ranked.term)
-      .filter((term) => !known.has(term) && !removed.has(term))
-      .slice(0, KEYWORD_COUNT);
+      .filter((term) => !known.has(term) && !corpus.cities.has(term) && !removed.has(term));
+    // Tools and technologies first, then the other words, each group in TF-IDF order.
+    const keywords = [
+      ...candidates.filter((term) => corpus.skills.has(term)),
+      ...candidates.filter((term) => !corpus.skills.has(term)),
+    ].slice(0, KEYWORD_COUNT);
 
     const normalizedTitle =
       raw.normalized_title && raw.normalized_title !== job.title ? raw.normalized_title : null;
     const terms = { skills: tags, keywords, title: normalizedTitle ?? job.title, language };
     const before = checkResume(resume, terms);
+    // A missing term next to a skill you have ("apollo" with "graphql") gets a hint.
+    const yourSkills = [resume, ...otherSkills].join('\n');
+    const withHint = (checks: TermCheckModel[]) =>
+      checks.map(({ term, inResume }) => ({
+        term,
+        inResume,
+        relatedTo: inResume ? null : relatedTo(term, yourSkills),
+      }));
     const hasResume = resume.trim().length > 0;
     const missing = (checks: TermCheckModel[]) =>
       checks.filter((t) => !hasResume || !t.inResume).map((t) => t.term);
@@ -102,8 +128,8 @@ export class InsightsService {
       language,
       languageDetected: !job.language && !!language,
       hasResume,
-      skills: before.skillChecks,
-      keywords: before.keywordChecks,
+      skills: withHint(before.skillChecks),
+      keywords: withHint(before.keywordChecks),
       removed: [...removed.values()],
       skillsCoverage: before.skills,
       keywordsCoverage: before.keywords,
@@ -117,6 +143,7 @@ export class InsightsService {
         language,
         missingSkills: missing(before.skillChecks),
         missingKeywords: missing(before.keywordChecks),
+        otherSkills,
         resume,
         description: job.description,
       }),
@@ -231,20 +258,28 @@ export class InsightsService {
     };
   }
 
-  /** Word counts over every job description, rebuilt only when jobs were added or changed. */
-  private async frequencies(): Promise<DocumentFrequencies> {
+  /** Word counts, cities and skill tags over every job, rebuilt only when jobs change. */
+  private async corpus(): Promise<Corpus> {
     const stats = await this.prisma.job.aggregate({ _count: true, _max: { updatedAt: true } });
     const key = `${stats._count}:${stats._max.updatedAt?.toISOString() ?? ''}`;
-    if (this.cache?.key === key) return this.cache.frequencies;
+    if (this.cache?.key === key) return this.cache.corpus;
 
     const jobs = await this.prisma.job.findMany({
-      where: { description: { not: null } },
-      select: { description: true, language: true },
+      select: { description: true, language: true, city: true, skills: true },
     });
-    const frequencies = documentFrequencies(
-      jobs.map((j) => keywordTokens(j.description ?? '', j.language)),
-    );
-    this.cache = { key, frequencies };
-    return frequencies;
+    const corpus: Corpus = {
+      frequencies: documentFrequencies(
+        jobs
+          .filter((j) => j.description)
+          .map((j) => keywordTokens(j.description ?? '', j.language)),
+      ),
+      cities: new Set(jobs.flatMap((j) => (j.city ? keywordTokens(j.city, null) : []))),
+      skills: new Set([
+        ...KNOWN_SKILLS,
+        ...jobs.flatMap((j) => j.skills.map((s) => s.toLowerCase())),
+      ]),
+    };
+    this.cache = { key, corpus };
+    return corpus;
   }
 }

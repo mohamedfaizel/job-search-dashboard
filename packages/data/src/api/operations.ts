@@ -421,10 +421,12 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     skills {
       term
       inResume
+      relatedTo
     }
     keywords {
       term
       inResume
+      relatedTo
     }
     removed {
       term

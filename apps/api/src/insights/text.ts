@@ -32,9 +32,21 @@ const JOB_AD_WORDS = [
   'strong good great years year plus etc including within new opportunity looking join offer',
   'benefits apply responsibilities requirements about us well help make across use using',
   'will would can could must should also may get like',
+  'business case cases teams outcome outcomes impact agency efficiency product products project',
+  'projects platform platforms technology technologies solutions solution customers customer',
+  'clients client environment culture growth success values mission goals tasks area areas',
+  'hybrid remote office location salary bonus vacation days flexible home',
   // German
   'erfahrung erfahrungen kenntnisse aufgaben profil bieten suchen bewerbung unternehmen',
   'mitarbeiter mitarbeitende gute sehr jahre bereich idealerweise sowie mwd',
+  'umsatz effizienz selbstzweck produkte produkt projekte projekt plattform plattformen',
+  'technologie technologien lösungen kunden kunde team teams agentur standort gehalt urlaub',
+  'arbeitsplatz zukunft wachstum erfolg werte ziele bereiche möglichkeit möglichkeiten rolle',
+  // Big cities, so an office mentioned in the ad isn't a keyword. Cities of your saved jobs are
+  // dropped too (see InsightsService), this list covers the ones you have no job in yet.
+  'berlin hamburg münchen munich köln cologne frankfurt stuttgart düsseldorf leipzig dresden',
+  'hannover nürnberg bremen essen dortmund bonn karlsruhe mannheim wien vienna zürich zurich',
+  'basel genf geneva bern amsterdam london paris madrid barcelona lisbon warsaw prague',
   // Gender notes in titles: "(all genders)", "(m/w/d)"
   'genders gender divers',
 ]

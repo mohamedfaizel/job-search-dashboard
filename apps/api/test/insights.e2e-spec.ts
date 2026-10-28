@@ -36,10 +36,12 @@ const INSIGHTS = /* GraphQL */ `
       skills {
         term
         inResume
+        relatedTo
       }
       keywords {
         term
         inResume
+        relatedTo
       }
       removed {
         term
@@ -119,8 +121,8 @@ interface Insights {
   language: string | null;
   languageDetected: boolean;
   hasResume: boolean;
-  skills: { term: string; inResume: boolean }[];
-  keywords: { term: string; inResume: boolean }[];
+  skills: { term: string; inResume: boolean; relatedTo?: string | null }[];
+  keywords: { term: string; inResume: boolean; relatedTo?: string | null }[];
   removed: { term: string; everywhere: boolean }[];
   skillsCoverage: number | null;
   keywordsCoverage: number | null;
@@ -177,15 +179,16 @@ describe('job insights without AI', () => {
     const result = await insights(job.id);
     expect(result).toMatchObject({ title: 'Backend Engineer', language: 'en', hasResume: true });
     expect(result.skills).toEqual([
-      { term: 'node.js', inResume: true },
-      { term: 'kafka', inResume: false },
+      { term: 'node.js', inResume: true, relatedTo: null },
+      { term: 'kafka', inResume: false, relatedTo: null },
     ]);
     // Skill tags aren't repeated as keywords, and words in every ad ("building") rank low.
     const keywords = result.keywords.map((k) => k.term);
-    expect(keywords[0]).toBe('microservices');
+    // Tools first (Postgres, Terraform), then the plain word that stands out most.
+    expect(keywords.slice(0, 3)).toEqual(['postgres', 'terraform', 'microservices']);
     expect(keywords).not.toContain('kafka');
-    expect(result.keywords).toContainEqual({ term: 'terraform', inResume: true });
-    expect(result.keywords).toContainEqual({ term: 'postgres', inResume: false });
+    expect(result.keywords).toContainEqual({ term: 'terraform', inResume: true, relatedTo: null });
+    expect(result.keywords).toContainEqual({ term: 'postgres', inResume: false, relatedTo: null });
   });
 
   it('detects the language of a hand-added job and says it has no resume yet', async () => {
@@ -217,6 +220,33 @@ describe('job insights without AI', () => {
     expect(result.prompt).toContain('Job: Backend Engineer at Acme');
     expect(result.prompt).toContain('- kafka');
     expect(result.prompt).not.toContain('- node.js');
+  });
+
+  it('drops generic words and cities, ranks tools first and hints at related skills', async () => {
+    const job = await addJob({
+      title: 'Frontend Engineer',
+      skills: ['apollo'],
+      description:
+        'Business impact for our teams: you build microfrontends with Storybook and drive ' +
+        'efficiency across platforms. Workshops in Hamburg twice a year.',
+    });
+    // Another job's city is still a city.
+    await addJob({ title: 'Other', city: 'Hamburg', description: 'We hire in Hamburg.' });
+    await t.prisma.profile.create({
+      data: { userId: 2, resumeText: 'React and GraphQL.', skills: ['Jest', 'Docker'] },
+    });
+
+    const result = await insights(job.id);
+    const keywords = result.keywords.map((k) => k.term);
+    for (const noise of ['business', 'teams', 'efficiency', 'platforms', 'hamburg']) {
+      expect(keywords).not.toContain(noise);
+    }
+    // Known tools come before plain words.
+    expect(keywords.slice(0, 2).sort()).toEqual(['microfrontends', 'storybook']);
+    expect(result.skills).toEqual([{ term: 'apollo', inResume: false, relatedTo: 'graphql' }]);
+    expect(result.prompt).toContain(
+      'Other skills I have (not all of them are in my resume):\n- Jest\n- Docker',
+    );
   });
 
   it('removes a term from one job or from every job, and puts it back', async () => {

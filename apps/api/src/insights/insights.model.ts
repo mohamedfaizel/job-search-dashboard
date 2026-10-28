@@ -7,6 +7,13 @@ export class TermCheckModel {
 
   @Field({ description: 'Your resume text mentions it' })
   inResume!: boolean;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'For a missing term: the skill in your resume or profile that makes it a fair addition, e.g. "graphql" for "apollo"',
+  })
+  relatedTo!: string | null;
 }
 
 @ObjectType('RemovedTerm')

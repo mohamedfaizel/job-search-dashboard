@@ -6,6 +6,8 @@ export interface PromptInput {
   language: string | null;
   missingSkills: string[];
   missingKeywords: string[];
+  /** The Skills list on My profile: tools you have that may not be in the resume. */
+  otherSkills: string[];
   resume: string;
   description: string | null;
 }
@@ -26,8 +28,9 @@ const list = (items: string[]) =>
 
 /**
  * A prompt to paste into Claude (desktop or web) that tailors your resume to one job. Writing it
- * there uses your Claude subscription instead of API credits. The rules keep the resume honest:
- * only what is true for you goes in.
+ * there uses your Claude subscription instead of API credits. Claude may add a term that is
+ * closely related to your real experience (Apollo next to GraphQL), but never invents employers,
+ * titles, dates or numbers, and lists what it added as related so you can check it.
  */
 export function buildResumePrompt(input: PromptInput): string {
   const language = languageName(input.language);
@@ -36,7 +39,7 @@ export function buildResumePrompt(input: PromptInput): string {
     ? input.resume.trim()
     : '(I have not added my resume here yet. Ask me for it before you start.)';
 
-  return `Please tailor my resume for this job.
+  return `Please tailor my resume for this job. Goal: use at least 85% of the skills and keywords below, as long as each one is honest for me.
 
 Job: ${input.title} at ${input.company}${where}
 ${language ? `Write the whole resume in ${language}, the language of the job ad.` : 'Write the resume in the language of the job ad.'}
@@ -47,13 +50,22 @@ ${list(input.missingSkills)}
 Keywords from the job ad that my resume does not use yet:
 ${list(input.missingKeywords)}
 
-Rules:
-- Add a skill or keyword only if my resume or experience really supports it. Never invent employers, job titles, dates, degrees, certificates or numbers.
-- If something on the lists is not true for me, leave it out and name it at the end under "Skipped".
-- Keep my real employers, titles and dates.
-- Where it is true for me, use the job ad's own words, so applicant tracking systems (ATS) find them.
-- ATS-friendly layout: plain headings (Summary, Skills, Experience, Education), no tables, columns, icons or images.
-- One to two pages.
+Other skills I have (not all of them are in my resume):
+${list(input.otherSkills)}
+
+How to handle each skill or keyword:
+1. Supported: my resume or my other skills show it. Use it, in the job ad's own words.
+2. Related: it is closely tied to something I have done (same ecosystem, or the usual tool for it), for example Apollo with GraphQL, Next.js with React, Jest with unit testing, Kubernetes with Docker. Add it next to that experience, e.g. "GraphQL APIs with Apollo Client".
+3. General job-ad words (teamwork, efficiency, platforms, business impact): work them naturally into the summary and bullet points.
+4. No connection to my experience: leave it out.
+
+Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.
+
+Layout: ATS-friendly, plain headings (Summary, Skills, Experience, Education), no tables, columns, icons or images. Up to three pages, most relevant experience first.
+
+At the end, after the resume, write two short lists so I can check them:
+- Related: the terms you added under rule 2, each with the experience it is tied to.
+- Skipped: the terms you left out, each with one line why.
 
 My current resume:
 """

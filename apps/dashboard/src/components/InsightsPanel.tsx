@@ -15,11 +15,31 @@ const CHIP =
   'inline-flex items-center gap-1 rounded py-0.5 pl-1.5 text-xs font-medium ring-1 ring-inset';
 const CHIP_BUTTON = 'rounded px-1 leading-none hover:bg-black/10';
 
-/** A missing term with × to remove it ("I don't have it" or "not relevant"). */
-function MissingChip({ term, onRemove }: { term: string; onRemove: () => void }) {
+/**
+ * A missing term with × to remove it ("I don't have it" or "not relevant"). When you have a
+ * skill it goes with, the chip says so: a fair term for Claude to add next to that experience.
+ */
+function MissingChip({
+  term,
+  relatedTo,
+  onRemove,
+}: {
+  term: string;
+  relatedTo: string | null;
+  onRemove: () => void;
+}) {
+  const related = relatedTo !== null;
   return (
-    <span className={`${CHIP} bg-red-50 text-red-700 ring-red-200`} title="Not in your resume">
+    <span
+      className={`${CHIP} ${related ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-red-50 text-red-700 ring-red-200'}`}
+      title={
+        related
+          ? `Not in your resume, but it goes with ${relatedTo}, which you have`
+          : 'Not in your resume'
+      }
+    >
       {term}
+      {related && <span className="font-normal opacity-75">(you have {relatedTo})</span>}
       <button
         type="button"
         onClick={onRemove}
@@ -63,6 +83,7 @@ function TermGroup({
             <li key={t.term}>
               <MissingChip
                 term={t.term}
+                relatedTo={t.relatedTo}
                 onRemove={() => {
                   onRemove(t.term);
                 }}

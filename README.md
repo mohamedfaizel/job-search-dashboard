@@ -243,9 +243,13 @@ Every job popup starts with a free, instant check that needs no AI and no Resume
   [`apps/api/src/insights/skills.ts`](apps/api/src/insights/skills.ts).
 - **Keywords** are the words that make this description stand out from your other jobs
   ([TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)), minus common words in the job's
-  language ([stopword](https://github.com/fergiemcdowall/stopword)).
+  language ([stopword](https://github.com/fergiemcdowall/stopword)), generic job-ad words
+  (_business, teams, Umsatz, Plattformen_) and the cities of all your jobs. Tools and
+  technologies come first.
 
-Red means your resume doesn't mention it, green means it does.
+Red means your resume doesn't mention it, green means it does. Amber, such as **apollo (you have
+graphql)**, means it's missing but goes with a skill you have, so it's a fair one to add. The
+pairs live in `RELATED` in [`skills.ts`](apps/api/src/insights/skills.ts).
 
 **Your resume covers N%** is our own score, weighted like Resume-Matcher's ATS score so the two
 can be compared: keywords 40%, skills 20%, job title 15% (100 when your resume contains the whole
@@ -257,9 +261,14 @@ the score; **all jobs** removes it from every job (handy for a city or company n
 puts it back.
 
 **Copy prompt for Claude** copies a ready-made prompt (job title, language, missing skills and
-keywords, your resume and the job ad) to paste into Claude desktop or web. Claude then writes a
-tailored resume on your subscription, so it costs no API credits. The prompt tells Claude to add
-only what is true for you.
+keywords, your resume, the **Skills** from My profile and the job ad) to paste into Claude
+desktop or web. Claude then writes a tailored resume on your subscription, so it costs no API
+credits. It aims for 85% of the terms and up to three pages. Claude adds a term when your
+experience supports it or when it is closely related (Apollo next to GraphQL), and never invents
+employers, titles, dates or numbers. It ends with a **Related** list (what it added and why) and
+a **Skipped** list for you to check. Tip: put tools you know but left out of your master resume
+into **My profile → Skills**. The template is in
+[`apps/api/src/insights/prompt.ts`](apps/api/src/insights/prompt.ts).
 
 **Your resume for this job** brings Claude's answer back. Upload it (PDF, Word, or the text or
 Markdown Claude gave you) or paste the text. It is scored exactly like your profile resume, so

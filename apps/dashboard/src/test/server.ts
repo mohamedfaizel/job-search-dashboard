@@ -34,12 +34,12 @@ export const INSIGHTS: JobInsights = {
   languageDetected: false,
   hasResume: true,
   skills: [
-    { term: 'react', inResume: true },
-    { term: 'graphql', inResume: false },
+    { term: 'react', inResume: true, relatedTo: null },
+    { term: 'graphql', inResume: false, relatedTo: null },
   ],
   keywords: [
-    { term: 'microfrontends', inResume: false },
-    { term: 'storybook', inResume: true },
+    { term: 'microfrontends', inResume: false, relatedTo: null },
+    { term: 'storybook', inResume: true, relatedTo: null },
   ],
   removed: [],
   skillsCoverage: 50,

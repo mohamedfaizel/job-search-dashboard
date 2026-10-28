@@ -67,6 +67,26 @@ describe('InsightsPanel', () => {
     expect(await screen.findByRole('list', { name: 'Missing skills' })).toBeInTheDocument();
   });
 
+  it('says which skill you have that a missing term goes with', async () => {
+    server.use(
+      api.query('JobInsights', () =>
+        HttpResponse.json({
+          data: {
+            jobInsights: {
+              ...INSIGHTS,
+              skills: [{ term: 'apollo', inResume: false, relatedTo: 'graphql' }],
+            },
+          },
+        }),
+      ),
+    );
+    renderPanel();
+
+    const missing = await screen.findByRole('list', { name: 'Missing skills' });
+    expect(within(missing).getByText('(you have graphql)')).toBeInTheDocument();
+    expect(within(missing).getByRole('button', { name: 'Remove apollo' })).toBeInTheDocument();
+  });
+
   it('copies the prompt for Claude', async () => {
     const user = userEvent.setup();
     renderPanel();
