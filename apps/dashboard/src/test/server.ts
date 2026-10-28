@@ -1,4 +1,10 @@
-import type { Application, ApplicationStatus, JobMatch, TailoredResume } from '@jobsearch/data';
+import type {
+  Application,
+  ApplicationStatus,
+  JobInsights,
+  JobMatch,
+  TailoredResume,
+} from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -16,6 +22,24 @@ export const hiddenIds = new Set<string>();
 
 /** The test user's tracker. Tests fill it; status changes update it like the real API. */
 export const applications: Application[] = [];
+
+/** Insights for a job when the user has a resume: some skills found, some missing. */
+export const INSIGHTS: JobInsights = {
+  jobId: 'job-1',
+  title: 'Senior Frontend Engineer',
+  normalizedTitle: 'Frontend Engineer',
+  language: 'de',
+  languageDetected: false,
+  hasResume: true,
+  skills: [
+    { term: 'react', inResume: true },
+    { term: 'graphql', inResume: false },
+  ],
+  keywords: [
+    { term: 'microfrontends', inResume: false },
+    { term: 'storybook', inResume: true },
+  ],
+};
 
 /** A finished match, for tests that show the score. */
 export const READY_MATCH: JobMatch = {
@@ -66,6 +90,9 @@ export const handlers = [
     };
     return HttpResponse.json({ data: { tailorResume: pending } });
   }),
+  api.query('JobInsights', ({ variables }) =>
+    HttpResponse.json({ data: { jobInsights: { ...INSIGHTS, jobId: variables['jobId'] } } }),
+  ),
   // By default no job has been matched yet.
   api.query('JobMatch', () => HttpResponse.json({ data: { jobMatch: null } })),
   api.mutation('MatchJob', ({ variables }) => {

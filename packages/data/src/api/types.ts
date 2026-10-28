@@ -324,3 +324,24 @@ export interface TailoredResume {
   /** You sent a newer resume since. */
   outdated: boolean;
 }
+
+/** A skill tag or keyword, and whether your resume mentions it. */
+export interface TermCheck {
+  term: string;
+  inResume: boolean;
+}
+
+/** What a job asks for, worked out without AI and checked against your resume. */
+export interface JobInsights {
+  jobId: string;
+  title: string;
+  /** JobsPipe's cleaned-up title, when it differs from the posted one. */
+  normalizedTitle: string | null;
+  /** ISO 639-1 code, e.g. "de". */
+  language: string | null;
+  /** True when the language was guessed from the text. */
+  languageDetected: boolean;
+  hasResume: boolean;
+  skills: TermCheck[];
+  keywords: TermCheck[];
+}

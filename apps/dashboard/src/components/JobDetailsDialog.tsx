@@ -2,6 +2,7 @@ import type { ApplicationStatus, Job } from '@jobsearch/data';
 import { useEffect, useRef, useState } from 'react';
 import { capitalize, formatDate, formatSalary, WORKPLACE_LABELS } from '../format';
 import { Badge } from './Badge';
+import { InsightsPanel } from './InsightsPanel';
 import { MatchPanel } from './MatchPanel';
 import { StatusSelect } from './StatusSelect';
 import { TailorPanel } from './TailorPanel';
@@ -104,6 +105,7 @@ export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
+            <InsightsPanel jobId={job.id} />
             {job.description && (
               <>
                 <MatchPanel jobId={job.id} />
