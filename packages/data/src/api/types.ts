@@ -344,4 +344,19 @@ export interface JobInsights {
   hasResume: boolean;
   skills: TermCheck[];
   keywords: TermCheck[];
+  /** Skills and keywords you removed with ×. */
+  removed: RemovedTerm[];
+  /** Percent of the skills in your resume. Null without a resume. */
+  skillsCoverage: number | null;
+  keywordsCoverage: number | null;
+  /** Our own score: skills × 60% + keywords × 40%. */
+  score: number | null;
+  /** Paste into Claude desktop or web to tailor your resume to this job. */
+  prompt: string;
+}
+
+export interface RemovedTerm {
+  term: string;
+  /** Removed from every job, not just this one. */
+  everywhere: boolean;
 }

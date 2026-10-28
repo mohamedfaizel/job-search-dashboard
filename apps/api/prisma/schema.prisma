@@ -52,6 +52,7 @@ model User {
   matcherResume MatcherResume?
   jobMatches    JobMatch[]
   tailored      TailoredResume[]
+  removedTerms  RemovedTerm[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 }
@@ -216,6 +217,7 @@ model Job {
   applications    Application[]
   matches         JobMatch[]
   tailored        TailoredResume[]
+  removedTerms    RemovedTerm[]
 
   @@index([postedAt])
   @@index([companyId])
@@ -308,4 +310,20 @@ model SavedSearch {
   runs         SyncRun[]
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
+}
+
+/// A skill or keyword you removed from a job's insights ("I don't have it" or "not relevant").
+/// It leaves the copied prompt and stops counting against your score.
+model RemovedTerm {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  /// The job it was removed from. Null means every job, e.g. a city that shows up as a keyword.
+  job       Job?     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId     String?
+  /// Lower case, as the insights show it.
+  term      String
+  createdAt DateTime @default(now())
+
+  @@index([userId, jobId])
 }

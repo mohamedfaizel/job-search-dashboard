@@ -1,49 +1,71 @@
-import type { TermCheck } from '@jobsearch/data';
-import { getErrorMessage, useJobInsights } from '@jobsearch/data';
+import type { JobInsights, RemovedTerm, TermCheck } from '@jobsearch/data';
+import {
+  getErrorMessage,
+  useJobInsights,
+  useRemoveInsightTerm,
+  useRestoreInsightTerm,
+} from '@jobsearch/data';
+import { useState } from 'react';
 import { languageName } from '../format';
 import { Badge } from './Badge';
+import { scoreTone } from './MatchPanel';
+
+const CHIP =
+  'inline-flex items-center gap-1 rounded py-0.5 pl-1.5 text-xs font-medium ring-1 ring-inset';
+const CHIP_BUTTON = 'rounded px-1 leading-none hover:bg-black/10';
+
+/** A missing term with × to remove it ("I don't have it" or "not relevant"). */
+function MissingChip({ term, onRemove }: { term: string; onRemove: () => void }) {
+  return (
+    <span className={`${CHIP} bg-red-50 text-red-700 ring-red-200`} title="Not in your resume">
+      {term}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${term}`}
+        className={CHIP_BUTTON}
+      >
+        ×
+      </button>
+    </span>
+  );
+}
 
 /** One group of terms: what your resume lacks in red, what it has in green. */
 function TermGroup({
   label,
   terms,
   hasResume,
+  coverage,
+  onRemove,
 }: {
   label: string;
   terms: TermCheck[];
   hasResume: boolean;
+  coverage: number | null;
+  onRemove: (term: string) => void;
 }) {
   if (terms.length === 0) return null;
-  const missing = terms.filter((t) => !t.inResume);
-  const found = terms.filter((t) => t.inResume);
-
-  if (!hasResume) {
-    return (
-      <div>
-        <h4 className="text-xs font-medium text-slate-500 uppercase">{label}</h4>
-        <ul className="mt-1 flex flex-wrap gap-1" aria-label={label}>
-          {terms.map((t) => (
-            <li key={t.term}>
-              <Badge>{t.term}</Badge>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
+  // Without a resume nothing is "found", so every term counts as missing.
+  const missing = terms.filter((t) => !hasResume || !t.inResume);
+  const found = hasResume ? terms.filter((t) => t.inResume) : [];
 
   return (
     <div className="space-y-1">
       <h4 className="text-xs font-medium text-slate-500 uppercase">
-        {label}: {found.length} of {terms.length} in your resume
+        {label}
+        {hasResume && `: ${found.length} of ${terms.length} in your resume (${coverage ?? 0}%)`}
       </h4>
       {missing.length > 0 && (
         <ul className="flex flex-wrap gap-1" aria-label={`Missing ${label.toLowerCase()}`}>
           {missing.map((t) => (
             <li key={t.term}>
-              <Badge tone="red" title="Not in your resume">
-                {t.term}
-              </Badge>
+              <MissingChip
+                term={t.term}
+                onRemove={() => {
+                  onRemove(t.term);
+                }}
+              />
             </li>
           ))}
         </ul>
@@ -63,12 +85,139 @@ function TermGroup({
   );
 }
 
+/** What you removed, with Undo, and "all jobs" for noise that shows up everywhere. */
+function RemovedTerms({
+  removed,
+  onRestore,
+  onRemoveEverywhere,
+}: {
+  removed: RemovedTerm[];
+  onRestore: (term: string) => void;
+  onRemoveEverywhere: (term: string) => void;
+}) {
+  if (removed.length === 0) return null;
+  return (
+    <div className="space-y-1">
+      <h4 className="text-xs font-medium text-slate-500 uppercase">
+        Removed (left out of the prompt and the score)
+      </h4>
+      <ul className="flex flex-wrap gap-1" aria-label="Removed terms">
+        {removed.map(({ term, everywhere }) => (
+          <li key={term} className={`${CHIP} bg-white pr-0.5 text-slate-500 ring-slate-200`}>
+            <span className="line-through">{term}</span>
+            {everywhere ? (
+              <span className="text-slate-400">(all jobs)</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  onRemoveEverywhere(term);
+                }}
+                aria-label={`Remove ${term} from all jobs`}
+                title="Remove from all jobs"
+                className={`${CHIP_BUTTON} text-slate-500 underline decoration-dotted`}
+              >
+                all jobs
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                onRestore(term);
+              }}
+              aria-label={`Put back ${term}`}
+              className={`${CHIP_BUTTON} text-indigo-700`}
+            >
+              Undo
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Copies the ready-made prompt, so the resume is written in Claude desktop or web. */
+function CopyPrompt({ prompt }: { prompt: string }) {
+  const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setCopied('yes');
+    } catch {
+      // Clipboard access can be blocked; the prompt below can still be selected by hand.
+      setCopied('failed');
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            void copy();
+          }}
+          className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+        >
+          Copy prompt for Claude
+        </button>
+        <a
+          href="https://claude.ai/new"
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm text-indigo-700 hover:underline"
+        >
+          Open Claude ↗
+        </a>
+        {copied && (
+          <span role="status" className="text-sm text-slate-600">
+            {copied === 'yes'
+              ? 'Copied. Paste it into Claude to write a resume for this job.'
+              : 'Could not copy. Select the prompt below instead.'}
+          </span>
+        )}
+      </div>
+      <details open={copied === 'failed'}>
+        <summary className="cursor-pointer text-xs text-slate-500">Show the prompt</summary>
+        <textarea
+          readOnly
+          value={prompt}
+          aria-label="Prompt for Claude"
+          rows={10}
+          className="mt-1 w-full rounded-md border border-slate-200 bg-white p-2 font-mono text-xs text-slate-700"
+          onFocus={(e) => {
+            e.currentTarget.select();
+          }}
+        />
+      </details>
+    </div>
+  );
+}
+
+function Score({ insights }: { insights: JobInsights }) {
+  const { score } = insights;
+  if (score === null) return null;
+  return (
+    <span
+      className="ml-auto flex items-center gap-2"
+      title="Skills found × 60% + keywords found × 40%. Free, no AI."
+    >
+      <span className="text-slate-600">Your resume covers</span>
+      <Badge tone={scoreTone(score)}>{score}%</Badge>
+    </span>
+  );
+}
+
 /**
  * Title, language, skills and keywords of the job, checked against your resume text. Worked out
- * on our server with plain word matching and TF-IDF, so it is instant and free (no AI).
+ * on our server with plain word matching and TF-IDF, so it is instant and free (no AI). Remove
+ * what doesn't apply with ×, then copy a prompt to write the resume in Claude.
  */
 export function InsightsPanel({ jobId }: { jobId: string }) {
   const insights = useJobInsights(jobId);
+  const remove = useRemoveInsightTerm();
+  const restore = useRestoreInsightTerm();
 
   if (insights.isPending) {
     return (
@@ -83,8 +232,13 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
     );
   }
 
-  const { normalizedTitle, language, languageDetected, hasResume, skills, keywords } =
-    insights.data;
+  const data = insights.data;
+  const { normalizedTitle, language, languageDetected, hasResume } = data;
+  const removeTerm = (term: string, everywhere = false) => {
+    remove.mutate({ jobId, term, everywhere });
+  };
+  const changeError = remove.error ?? restore.error;
+
   return (
     <section
       aria-label="Skills and keywords"
@@ -103,14 +257,42 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
           </span>
           {languageDetected && <span className="text-slate-400"> (detected)</span>}
         </span>
+        <Score insights={data} />
       </div>
       {!hasResume && (
         <p className="text-slate-600">
           Add your resume on “My profile” to see which of these you are missing.
         </p>
       )}
-      <TermGroup label="Skills" terms={skills} hasResume={hasResume} />
-      <TermGroup label="Keywords" terms={keywords} hasResume={hasResume} />
+      <TermGroup
+        label="Skills"
+        terms={data.skills}
+        hasResume={hasResume}
+        coverage={data.skillsCoverage}
+        onRemove={removeTerm}
+      />
+      <TermGroup
+        label="Keywords"
+        terms={data.keywords}
+        hasResume={hasResume}
+        coverage={data.keywordsCoverage}
+        onRemove={removeTerm}
+      />
+      <RemovedTerms
+        removed={data.removed}
+        onRestore={(term) => {
+          restore.mutate({ jobId, term });
+        }}
+        onRemoveEverywhere={(term) => {
+          removeTerm(term, true);
+        }}
+      />
+      {changeError && (
+        <p role="alert" className="text-red-700">
+          Could not change that: {getErrorMessage(changeError)}
+        </p>
+      )}
+      <CopyPrompt prompt={data.prompt} />
     </section>
   );
 }

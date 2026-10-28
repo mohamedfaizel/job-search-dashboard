@@ -247,6 +247,17 @@ Every job popup starts with a free, instant check that needs no AI and no Resume
 
 Red means your resume doesn't mention it, green means it does.
 
+**Your resume covers N%** is our own score: skills found × 60% + keywords found × 40%.
+
+Click **×** on a red term you don't have or that doesn't fit the job. It leaves the prompt and
+the score; **all jobs** removes it from every job (handy for a city or company name), **Undo**
+puts it back.
+
+**Copy prompt for Claude** copies a ready-made prompt (job title, language, missing skills and
+keywords, your resume and the job ad) to paste into Claude desktop or web. Claude then writes a
+tailored resume on your subscription, so it costs no API credits. The prompt tells Claude to add
+only what is true for you.
+
 ## Using the API
 
 Open <http://localhost:3000/graphql> in your browser. It shows Apollo Sandbox, where you can

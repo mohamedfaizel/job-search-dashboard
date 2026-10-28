@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType('TermCheck')
 export class TermCheckModel {
@@ -7,6 +7,15 @@ export class TermCheckModel {
 
   @Field({ description: 'Your resume text mentions it' })
   inResume!: boolean;
+}
+
+@ObjectType('RemovedTerm')
+export class RemovedTermModel {
+  @Field()
+  term!: string;
+
+  @Field({ description: 'True when it is removed from every job, not just this one' })
+  everywhere!: boolean;
 }
 
 @ObjectType('JobInsights', {
@@ -35,11 +44,35 @@ export class JobInsightsModel {
   @Field({ description: 'False until you upload a resume or type it on your profile' })
   hasResume!: boolean;
 
-  @Field(() => [TermCheckModel], { description: 'The job’s skill tags' })
+  @Field(() => [TermCheckModel], {
+    description: 'The job’s skill tags, minus the ones you removed',
+  })
   skills!: TermCheckModel[];
 
   @Field(() => [TermCheckModel], {
     description: 'The words that set this description apart from your other jobs (TF-IDF)',
   })
   keywords!: TermCheckModel[];
+
+  @Field(() => [RemovedTermModel], { description: 'Skills and keywords you removed with ×' })
+  removed!: RemovedTermModel[];
+
+  @Field(() => Int, { nullable: true, description: 'Percent of the skills in your resume' })
+  skillsCoverage!: number | null;
+
+  @Field(() => Int, { nullable: true, description: 'Percent of the keywords in your resume' })
+  keywordsCoverage!: number | null;
+
+  @Field(() => Int, {
+    nullable: true,
+    description:
+      'Our own match score: skills coverage × 60% + keywords coverage × 40%. Null without a resume',
+  })
+  score!: number | null;
+
+  @Field({
+    description:
+      'A prompt to paste into Claude desktop or web that tailors your resume to this job',
+  })
+  prompt!: string;
 }
