@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { configure } from '@testing-library/react';
-import { applications, hiddenIds, requests, server } from './server';
+import { applications, hiddenIds, removedTerms, requests, server } from './server';
 
 // The first render of the big jobs table can take over a second on a busy CI runner (turbo runs
 // every package's tests at once), longer than findBy*'s 1 s default. Waiting longer only slows
@@ -15,6 +15,7 @@ afterEach(() => {
   requests.length = 0;
   hiddenIds.clear();
   applications.length = 0;
+  removedTerms.length = 0;
   localStorage.clear();
 });
 afterAll(() => {

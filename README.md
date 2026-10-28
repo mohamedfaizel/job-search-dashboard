@@ -247,6 +247,20 @@ Every job popup starts with a free, instant check that needs no AI and no Resume
 
 Red means your resume doesn't mention it, green means it does.
 
+**Your resume covers N%** is our own score, weighted like Resume-Matcher's ATS score so the two
+can be compared: keywords 40%, skills 20%, job title 15% (100 when your resume contains the whole
+title), sections 15% and dates 10%. Sections and dates always count as full here: this check
+doesn't read them, and tailoring doesn't change them. Resume-Matcher's match does check them.
+
+Click **×** on a red term you don't have or that doesn't fit the job. It leaves the prompt and
+the score; **all jobs** removes it from every job (handy for a city or company name), **Undo**
+puts it back.
+
+**Copy prompt for Claude** copies a ready-made prompt (job title, language, missing skills and
+keywords, your resume and the job ad) to paste into Claude desktop or web. Claude then writes a
+tailored resume on your subscription, so it costs no API credits. The prompt tells Claude to add
+only what is true for you.
+
 ## Using the API
 
 Open <http://localhost:3000/graphql> in your browser. It shows Apollo Sandbox, where you can

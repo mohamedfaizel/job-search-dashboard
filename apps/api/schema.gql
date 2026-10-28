@@ -176,6 +176,9 @@ type JobInsights {
   """
   keywords: [TermCheck!]!
 
+  """Percent of the keywords in your resume"""
+  keywordsCoverage: Int
+
   """
   ISO 639-1 code, e.g. "de"
   """
@@ -189,11 +192,32 @@ type JobInsights {
   """JobsPipe’s cleaned-up title, when it differs from the posted one"""
   normalizedTitle: String
 
-  """The job’s skill tags"""
+  """
+  A prompt to paste into Claude desktop or web that tailors your resume to this job
+  """
+  prompt: String!
+
+  """Skills and keywords you removed with ×"""
+  removed: [RemovedTerm!]!
+
+  """
+  Our own match score, weighted like Resume-Matcher's: keywords 40%, skills 20%, title 15%, sections 15% and dates 10% (both always full). Null without a resume
+  """
+  score: Int
+
+  """The job’s skill tags, minus the ones you removed"""
   skills: [TermCheck!]!
+
+  """Percent of the skills in your resume"""
+  skillsCoverage: Int
 
   """The title as posted"""
   title: String!
+
+  """
+  How well your resume names the job title (100 = the whole title appears)
+  """
+  titleMatch: Int
 }
 
 """
@@ -320,6 +344,14 @@ type Mutation {
   """
   matchJob(jobId: ID!): JobMatch!
 
+  """
+  Removes a skill or keyword ("I don’t have it" or "not relevant") from this job, or from every job
+  """
+  removeInsightTerm(everywhere: Boolean! = false, jobId: ID!, term: String!): JobInsights!
+
+  """Puts a removed skill or keyword back"""
+  restoreInsightTerm(jobId: ID!, term: String!): JobInsights!
+
   """Import from JobsPipe with a saved search"""
   runSavedSearch(
     id: Int!
@@ -438,6 +470,12 @@ type Query {
 
   """Your tailored resume for one job. Null if you never tailored it"""
   tailoredResume(jobId: ID!): TailoredResume
+}
+
+type RemovedTerm {
+  """True when it is removed from every job, not just this one"""
+  everywhere: Boolean!
+  term: String!
 }
 
 type ResumeMatcherStatus {

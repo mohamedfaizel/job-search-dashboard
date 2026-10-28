@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { buildResumePrompt } from './prompt';
+import { coverage, matchScore, titleMatch } from './score';
 import { mentions, spellings } from './skills';
 import { detectLanguage, keywordTokens, stopwordsFor, tokenize } from './text';
 import { documentFrequencies, rankTerms } from './tfidf';
@@ -81,5 +83,72 @@ describe('rankTerms', () => {
     ];
     const ranked = rankTerms(docs[0]!, documentFrequencies(docs)).map((r) => r.term);
     expect(ranked).toEqual(['kafka', 'react', 'team']);
+  });
+});
+
+describe('matchScore', () => {
+  it('weighs the parts like Resume-Matcher, with sections and dates full', () => {
+    // 40% × 50 + 20% × 100 + 15% × 0 + 25% × 100 = 65
+    expect(matchScore({ keywords: 50, skills: 100, title: 0 })).toBe(65);
+    expect(matchScore({ keywords: 100, skills: 100, title: 100 })).toBe(100);
+  });
+
+  it('shares the weight of a part with nothing to check', () => {
+    // No skills: 40% × 0 + 15% × 0 + 25% × 100, out of 80%
+    expect(matchScore({ keywords: 0, skills: null, title: 0 })).toBe(31);
+    expect(matchScore({ keywords: null, skills: null, title: null })).toBeNull();
+  });
+
+  it('turns found terms into a percent', () => {
+    expect(
+      coverage([
+        { term: 'a', inResume: true },
+        { term: 'b', inResume: false },
+        { term: 'c', inResume: false },
+      ]),
+    ).toBe(33);
+    expect(coverage([])).toBeNull();
+  });
+});
+
+describe('titleMatch', () => {
+  it('gives full marks when the whole title appears', () => {
+    expect(titleMatch('Frontend Engineer', 'Senior Frontend Engineer at Acme', 'en')).toBe(100);
+  });
+
+  it('counts the title’s words otherwise, ignoring gender notes', () => {
+    expect(
+      titleMatch('Frontend Softwareentwickler (all genders)', 'Frontend developer', 'de'),
+    ).toBe(50);
+  });
+});
+
+describe('buildResumePrompt', () => {
+  const input = {
+    title: 'Frontend Entwickler',
+    company: 'Acme',
+    city: 'Berlin',
+    language: 'de',
+    missingSkills: ['kafka'],
+    missingKeywords: ['microfrontends'],
+    resume: 'React developer since 2019.',
+    description: 'Wir suchen …',
+  };
+
+  it('asks for the job’s language and lists what is missing', () => {
+    const prompt = buildResumePrompt(input);
+    expect(prompt).toContain('Job: Frontend Entwickler at Acme in Berlin');
+    expect(prompt).toContain('Write the whole resume in German');
+    expect(prompt).toContain('- kafka');
+    expect(prompt).toContain('- microfrontends');
+    expect(prompt).toContain('React developer since 2019.');
+    expect(prompt).toContain('Never invent');
+  });
+
+  it('asks Claude to request the resume when there is none', () => {
+    const prompt = buildResumePrompt({ ...input, resume: ' ', missingSkills: [], language: null });
+    expect(prompt).toContain('Ask me for it before you start');
+    expect(prompt).toContain('- (none)');
+    expect(prompt).toContain('Write the resume in the language of the job ad');
   });
 });

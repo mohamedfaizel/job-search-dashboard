@@ -35,6 +35,8 @@ const JOB_AD_WORDS = [
   // German
   'erfahrung erfahrungen kenntnisse aufgaben profil bieten suchen bewerbung unternehmen',
   'mitarbeiter mitarbeitende gute sehr jahre bereich idealerweise sowie mwd',
+  // Gender notes in titles: "(all genders)", "(m/w/d)"
+  'genders gender divers',
 ]
   .join(' ')
   .split(' ');

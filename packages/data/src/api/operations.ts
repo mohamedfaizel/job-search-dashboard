@@ -410,23 +410,57 @@ export const TAILOR_RESUME = /* GraphQL */ `
   ${TAILORED_RESUME_FIELDS}
 `;
 
+const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
+  fragment JobInsightsFields on JobInsights {
+    jobId
+    title
+    normalizedTitle
+    language
+    languageDetected
+    hasResume
+    skills {
+      term
+      inResume
+    }
+    keywords {
+      term
+      inResume
+    }
+    removed {
+      term
+      everywhere
+    }
+    skillsCoverage
+    keywordsCoverage
+    titleMatch
+    score
+    prompt
+  }
+`;
+
 export const JOB_INSIGHTS = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
   query JobInsights($jobId: ID!) {
     jobInsights(jobId: $jobId) {
-      jobId
-      title
-      normalizedTitle
-      language
-      languageDetected
-      hasResume
-      skills {
-        term
-        inResume
-      }
-      keywords {
-        term
-        inResume
-      }
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const REMOVE_INSIGHT_TERM = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation RemoveInsightTerm($jobId: ID!, $term: String!, $everywhere: Boolean) {
+    removeInsightTerm(jobId: $jobId, term: $term, everywhere: $everywhere) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const RESTORE_INSIGHT_TERM = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation RestoreInsightTerm($jobId: ID!, $term: String!) {
+    restoreInsightTerm(jobId: $jobId, term: $term) {
+      ...JobInsightsFields
     }
   }
 `;

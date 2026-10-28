@@ -1,4 +1,4 @@
-import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
 import { JobInsightsModel } from './insights.model';
@@ -17,5 +17,27 @@ export class InsightsResolver {
     @Args('jobId', { type: () => ID }) jobId: string,
   ): Promise<JobInsightsModel> {
     return this.insights.forJob(user.id, jobId);
+  }
+
+  @Mutation(() => JobInsightsModel, {
+    description:
+      'Removes a skill or keyword ("I don’t have it" or "not relevant") from this job, or from every job',
+  })
+  removeInsightTerm(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('term') term: string,
+    @Args('everywhere', { defaultValue: false }) everywhere: boolean,
+  ): Promise<JobInsightsModel> {
+    return this.insights.removeTerm(user.id, jobId, term, everywhere);
+  }
+
+  @Mutation(() => JobInsightsModel, { description: 'Puts a removed skill or keyword back' })
+  restoreInsightTerm(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('term') term: string,
+  ): Promise<JobInsightsModel> {
+    return this.insights.restoreTerm(user.id, jobId, term);
   }
 }

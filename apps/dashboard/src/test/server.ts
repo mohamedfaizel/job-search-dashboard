@@ -3,6 +3,7 @@ import type {
   ApplicationStatus,
   JobInsights,
   JobMatch,
+  RemovedTerm,
   TailoredResume,
 } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
@@ -39,7 +40,29 @@ export const INSIGHTS: JobInsights = {
     { term: 'microfrontends', inResume: false },
     { term: 'storybook', inResume: true },
   ],
+  removed: [],
+  skillsCoverage: 50,
+  keywordsCoverage: 50,
+  titleMatch: 100,
+  score: 50,
+  prompt: 'Please tailor my resume for this job.\n- graphql',
 };
+
+/** Terms the test user removed with ×. Tests start with none. */
+export const removedTerms: RemovedTerm[] = [];
+
+/** INSIGHTS minus the removed terms, like the real API (score fixed at 80 once any is gone). */
+function insightsNow(): JobInsights {
+  const kept = (t: { term: string }) => !removedTerms.some((r) => r.term === t.term);
+  if (removedTerms.length === 0) return INSIGHTS;
+  return {
+    ...INSIGHTS,
+    skills: INSIGHTS.skills.filter(kept),
+    keywords: INSIGHTS.keywords.filter(kept),
+    removed: [...removedTerms],
+    score: 80,
+  };
+}
 
 /** A finished match, for tests that show the score. */
 export const READY_MATCH: JobMatch = {
@@ -91,8 +114,24 @@ export const handlers = [
     return HttpResponse.json({ data: { tailorResume: pending } });
   }),
   api.query('JobInsights', ({ variables }) =>
-    HttpResponse.json({ data: { jobInsights: { ...INSIGHTS, jobId: variables['jobId'] } } }),
+    HttpResponse.json({ data: { jobInsights: { ...insightsNow(), jobId: variables['jobId'] } } }),
   ),
+  api.mutation('RemoveInsightTerm', ({ variables }) => {
+    requests.push({ operation: 'RemoveInsightTerm', variables });
+    const term = variables['term'] as string;
+    const others = removedTerms.filter((r) => r.term !== term);
+    removedTerms.splice(0, removedTerms.length, ...others, {
+      term,
+      everywhere: variables['everywhere'] === true,
+    });
+    return HttpResponse.json({ data: { removeInsightTerm: insightsNow() } });
+  }),
+  api.mutation('RestoreInsightTerm', ({ variables }) => {
+    requests.push({ operation: 'RestoreInsightTerm', variables });
+    const others = removedTerms.filter((r) => r.term !== variables['term']);
+    removedTerms.splice(0, removedTerms.length, ...others);
+    return HttpResponse.json({ data: { restoreInsightTerm: insightsNow() } });
+  }),
   // By default no job has been matched yet.
   api.query('JobMatch', () => HttpResponse.json({ data: { jobMatch: null } })),
   api.mutation('MatchJob', ({ variables }) => {
