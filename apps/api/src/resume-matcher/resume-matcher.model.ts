@@ -143,3 +143,39 @@ export class JobMatchModel {
   @Field({ description: 'You sent a newer resume since, so match again for a current score' })
   outdated!: boolean;
 }
+
+@ObjectType('TailoredResume', {
+  description:
+    'Your resume rewritten by Resume-Matcher for one job, with a cover letter. Download both as PDFs from /tailored/{jobId}/resume.pdf and /tailored/{jobId}/cover-letter.pdf',
+})
+export class TailoredResumeModel {
+  @Field(() => ID)
+  jobId!: string;
+
+  @Field(() => JobMatchStatus)
+  status!: JobMatchStatus;
+
+  @Field(() => String, { nullable: true, description: 'What went wrong. Null unless FAILED' })
+  error!: string | null;
+
+  @Field(() => Float, { nullable: true, description: 'ATS score of the tailored version (0-100)' })
+  score!: number | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'The cover letter text. Null if it could not be written',
+  })
+  coverLetter!: string | null;
+
+  @Field(() => String, { nullable: true, description: 'The resume file it was tailored from' })
+  resumeFileName!: string | null;
+
+  @Field(() => GraphQLISODateTime)
+  startedAt!: Date;
+
+  @Field(() => GraphQLISODateTime, { nullable: true })
+  finishedAt!: Date | null;
+
+  @Field({ description: 'You sent a newer resume since, so tailor again to use it' })
+  outdated!: boolean;
+}

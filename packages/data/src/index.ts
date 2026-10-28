@@ -12,12 +12,16 @@ export {
   jobMatchKey,
   matcherResumeKey,
   resumeMatcherStatusKey,
+  tailoredPdfUrl,
+  tailoredResumeKey,
   useIsSyncingResume,
   useJobMatch,
   useMatchJob,
   useMyMatcherResume,
   useResumeMatcherStatus,
   useSyncResumeToMatcher,
+  useTailoredResume,
+  useTailorResume,
   useTestAiConnection,
 } from './api/resumeMatcher';
 export {

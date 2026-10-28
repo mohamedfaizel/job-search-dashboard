@@ -6,9 +6,11 @@ import {
   JobMatchModel,
   MatcherResumeModel,
   ResumeMatcherStatusModel,
+  TailoredResumeModel,
 } from './resume-matcher.model';
 import { ResumeMatcherService } from './resume-matcher.service';
 import { ResumeSyncService } from './resume-sync.service';
+import { TailorService } from './tailor.service';
 
 /** Any logged-in user may use these; the global AuthGuard already rejects anonymous requests. */
 @Resolver(() => ResumeMatcherStatusModel)
@@ -17,6 +19,7 @@ export class ResumeMatcherResolver {
     private readonly resumeMatcher: ResumeMatcherService,
     private readonly resumeSync: ResumeSyncService,
     private readonly jobMatches: JobMatchService,
+    private readonly tailor: TailorService,
   ) {}
 
   @Query(() => ResumeMatcherStatusModel)
@@ -65,5 +68,27 @@ export class ResumeMatcherResolver {
     @Args('jobId', { type: () => ID }) jobId: string,
   ): Promise<JobMatchModel> {
     return this.jobMatches.start(user.id, jobId);
+  }
+
+  @Query(() => TailoredResumeModel, {
+    nullable: true,
+    description: 'Your tailored resume for one job. Null if you never tailored it',
+  })
+  tailoredResume(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+  ): Promise<TailoredResumeModel | null> {
+    return this.tailor.get(user.id, jobId);
+  }
+
+  @Mutation(() => TailoredResumeModel, {
+    description:
+      'Have Resume-Matcher rewrite your resume for a job and write a cover letter. Returns at once as PENDING; poll tailoredResume until READY or FAILED. Uses AI credits',
+  })
+  tailorResume(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+  ): Promise<TailoredResumeModel> {
+    return this.tailor.start(user.id, jobId);
   }
 }

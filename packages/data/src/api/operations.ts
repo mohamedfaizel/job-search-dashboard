@@ -375,3 +375,35 @@ export const MATCH_JOB = /* GraphQL */ `
   }
   ${JOB_MATCH_FIELDS}
 `;
+
+const TAILORED_RESUME_FIELDS = /* GraphQL */ `
+  fragment TailoredResumeFields on TailoredResume {
+    jobId
+    status
+    error
+    score
+    coverLetter
+    resumeFileName
+    startedAt
+    finishedAt
+    outdated
+  }
+`;
+
+export const TAILORED_RESUME = /* GraphQL */ `
+  query TailoredResume($jobId: ID!) {
+    tailoredResume(jobId: $jobId) {
+      ...TailoredResumeFields
+    }
+  }
+  ${TAILORED_RESUME_FIELDS}
+`;
+
+export const TAILOR_RESUME = /* GraphQL */ `
+  mutation TailorResume($jobId: ID!) {
+    tailorResume(jobId: $jobId) {
+      ...TailoredResumeFields
+    }
+  }
+  ${TAILORED_RESUME_FIELDS}
+`;

@@ -4,6 +4,7 @@ import { capitalize, formatDate, formatSalary, WORKPLACE_LABELS } from '../forma
 import { Badge } from './Badge';
 import { MatchPanel } from './MatchPanel';
 import { StatusSelect } from './StatusSelect';
+import { TailorPanel } from './TailorPanel';
 
 interface Props {
   job: Job | null;
@@ -74,7 +75,12 @@ export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
           </div>
 
           <div className="overflow-y-auto">
-            {job.description && <MatchPanel jobId={job.id} />}
+            {job.description && (
+              <>
+                <MatchPanel jobId={job.id} />
+                <TailorPanel jobId={job.id} />
+              </>
+            )}
             <div className="px-5 py-4 text-sm leading-relaxed whitespace-pre-line text-slate-700">
               {job.description ?? 'No description available.'}
             </div>

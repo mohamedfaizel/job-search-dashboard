@@ -64,3 +64,19 @@ export interface RmLlmConfigResponse {
   provider: string;
   model: string;
 }
+
+/** POST /api/v1/resumes/improve: tailors the resume and saves it as a new resume. */
+export interface RmImproveResponse {
+  data: {
+    /** The saved tailored resume. */
+    resume_id: string;
+    ats_score: RmAtsScore | null;
+    /** Only filled when cover letters are switched on in Resume-Matcher's settings. */
+    cover_letter: string | null;
+  };
+}
+
+/** POST /api/v1/resumes/{id}/generate-cover-letter */
+export interface RmCoverLetterResponse {
+  content: string;
+}

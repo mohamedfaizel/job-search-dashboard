@@ -297,6 +297,11 @@ type Mutation {
   """
   syncResumeToMatcher: MatcherResume!
 
+  """
+  Have Resume-Matcher rewrite your resume for a job and write a cover letter. Returns at once as PENDING; poll tailoredResume until READY or FAILED. Uses AI credits
+  """
+  tailorResume(jobId: ID!): TailoredResume!
+
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
 
@@ -380,6 +385,9 @@ type Query {
 
   """Past imports, newest first"""
   syncRuns(limit: Int! = 20, savedSearchId: Int): [SyncRunModel!]!
+
+  """Your tailored resume for one job. Null if you never tailored it"""
+  tailoredResume(jobId: ID!): TailoredResume
 }
 
 type ResumeMatcherStatus {
@@ -591,6 +599,30 @@ type SyncRunModel {
   """
   summary: String!
   updated: Int!
+}
+
+"""
+Your resume rewritten by Resume-Matcher for one job, with a cover letter. Download both as PDFs from /tailored/{jobId}/resume.pdf and /tailored/{jobId}/cover-letter.pdf
+"""
+type TailoredResume {
+  """The cover letter text. Null if it could not be written"""
+  coverLetter: String
+
+  """What went wrong. Null unless FAILED"""
+  error: String
+  finishedAt: DateTime
+  jobId: ID!
+
+  """You sent a newer resume since, so tailor again to use it"""
+  outdated: Boolean!
+
+  """The resume file it was tailored from"""
+  resumeFileName: String
+
+  """ATS score of the tailored version (0-100)"""
+  score: Float
+  startedAt: DateTime!
+  status: JobMatchStatus!
 }
 
 type User {

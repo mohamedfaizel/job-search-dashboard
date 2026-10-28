@@ -1,4 +1,4 @@
-import type { Application, ApplicationStatus, JobMatch } from '@jobsearch/data';
+import type { Application, ApplicationStatus, JobMatch, TailoredResume } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -38,7 +38,34 @@ export const READY_MATCH: JobMatch = {
   outdated: false,
 };
 
+/** A finished tailored resume, for tests that show the downloads. */
+export const READY_TAILORED: TailoredResume = {
+  jobId: 'job-1',
+  status: 'READY',
+  error: null,
+  score: 84,
+  coverLetter: 'Dear Acme team,\n\nI would love to build your dashboard.',
+  resumeFileName: 'ada.pdf',
+  startedAt: '2026-10-27T12:00:00.000Z',
+  finishedAt: '2026-10-27T12:02:00.000Z',
+  outdated: false,
+};
+
 export const handlers = [
+  // By default nothing has been tailored yet.
+  api.query('TailoredResume', () => HttpResponse.json({ data: { tailoredResume: null } })),
+  api.mutation('TailorResume', ({ variables }) => {
+    requests.push({ operation: 'TailorResume', variables });
+    const pending: TailoredResume = {
+      ...READY_TAILORED,
+      jobId: variables['jobId'] as string,
+      status: 'PENDING',
+      score: null,
+      coverLetter: null,
+      finishedAt: null,
+    };
+    return HttpResponse.json({ data: { tailorResume: pending } });
+  }),
   // By default no job has been matched yet.
   api.query('JobMatch', () => HttpResponse.json({ data: { jobMatch: null } })),
   api.mutation('MatchJob', ({ variables }) => {
