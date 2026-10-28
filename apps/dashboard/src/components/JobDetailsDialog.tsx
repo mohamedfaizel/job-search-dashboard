@@ -1,5 +1,5 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { capitalize, formatDate, formatSalary, WORKPLACE_LABELS } from '../format';
 import { Badge } from './Badge';
 import { MatchPanel } from './MatchPanel';
@@ -18,6 +18,8 @@ interface Props {
  */
 export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Stays as you left it for the next job you open.
+  const [maximized, setMaximized] = useState(false);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -33,10 +35,14 @@ export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
       ref={ref}
       onClose={onClose}
       aria-labelledby="job-dialog-title"
-      className="m-auto w-full max-w-3xl rounded-xl p-0 shadow-2xl backdrop:bg-slate-900/40"
+      className={`p-0 shadow-2xl backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm ${
+        maximized
+          ? 'm-0 h-dvh max-h-none w-screen max-w-none rounded-none'
+          : 'm-auto w-full max-w-3xl rounded-xl'
+      }`}
     >
       {job && (
-        <div className="flex max-h-[85vh] flex-col">
+        <div className={`flex flex-col ${maximized ? 'h-full' : 'max-h-[85vh]'}`}>
           <header className="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
             <div className="space-y-1">
               <h2 id="job-dialog-title" className="text-lg font-semibold text-slate-900">
@@ -49,14 +55,37 @@ export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
                 {` · Posted ${formatDate(job.postedAt)}`}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="rounded p-1 text-slate-500 hover:bg-slate-100"
-            >
-              ✕
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setMaximized((m) => !m);
+                }}
+                aria-label={maximized ? 'Restore size' : 'Maximize'}
+                title={maximized ? 'Restore size' : 'Maximize'}
+                className="rounded p-1.5 text-slate-500 hover:bg-slate-100"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 16 16"
+                  className="h-4 w-4 fill-none stroke-current stroke-[1.5]"
+                >
+                  {maximized ? (
+                    <path d="M6 2v4H2M10 2v4h4M6 14v-4H2M10 14v-4h4" />
+                  ) : (
+                    <path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" />
+                  )}
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="rounded p-1 text-slate-500 hover:bg-slate-100"
+              >
+                ✕
+              </button>
+            </div>
           </header>
 
           <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-5 py-3">
@@ -74,7 +103,7 @@ export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
             ))}
           </div>
 
-          <div className="overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {job.description && (
               <>
                 <MatchPanel jobId={job.id} />

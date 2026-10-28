@@ -15,6 +15,7 @@ afterEach(() => {
   requests.length = 0;
   hiddenIds.clear();
   applications.length = 0;
+  localStorage.clear();
 });
 afterAll(() => {
   server.close();

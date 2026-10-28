@@ -1,6 +1,6 @@
 import type { Job, JobFilterOptions, JobSortField, ListFilterKey } from '@jobsearch/data';
 import { APPLICATION_STATUSES, WORKPLACES } from '@jobsearch/data';
-import { createColumnHelper, tableFeatures } from '@tanstack/react-table';
+import { columnVisibilityFeature, createColumnHelper, tableFeatures } from '@tanstack/react-table';
 import { createContext, useContext } from 'react';
 import { capitalize, formatDate, formatSalary, STATUS_LABELS, WORKPLACE_LABELS } from '../format';
 import type { BadgeTone } from './Badge';
@@ -26,9 +26,10 @@ function useRowActions(): RowActions {
   return actions;
 }
 
-// Sorting, filtering and paging all happen on the server, so the table only needs its
-// core features. Defined once at module scope, as TanStack Table recommends.
-export const features = tableFeatures({});
+// Sorting, filtering and paging all happen on the server, so the table only needs its core
+// features plus column visibility (the Columns menu). Defined once at module scope, as
+// TanStack Table recommends.
+export const features = tableFeatures({ columnVisibilityFeature });
 const helper = createColumnHelper<typeof features, Job>();
 
 const INDUSTRY_TONES: BadgeTone[] = ['green', 'purple', 'pink', 'blue', 'orange', 'red'];
@@ -163,6 +164,8 @@ export const columns = helper.columns([
   helper.display({
     id: 'title',
     header: 'Job title',
+    // Every row needs something to click to open the job, so this column can't be hidden.
+    enableHiding: false,
     cell: ({ row }) => <TitleCell job={row.original} />,
   }),
   // Next to the title, so the score is visible without scrolling the wide table sideways.
