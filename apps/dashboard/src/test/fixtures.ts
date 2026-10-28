@@ -13,6 +13,7 @@ export function makeJob(overrides: Partial<Job> = {}): Job {
     skills: ['react', 'typescript', 'graphql'],
     city: 'Berlin',
     countryCode: 'DE',
+    language: 'de',
     salaryMinUsd: 90_000,
     salaryMaxUsd: 120_000,
     salaryEstimated: false,
@@ -37,6 +38,7 @@ export const JOBS: Job[] = [
     seniority: null,
     skills: ['node.js'],
     city: 'Aachen',
+    language: 'en',
     salaryMinUsd: null,
     salaryMaxUsd: null,
     workplace: 'HYBRID',
@@ -52,6 +54,7 @@ export const FILTER_OPTIONS: JobFilterOptions = {
   skills: ['graphql', 'node.js', 'react', 'typescript'],
   cities: ['Aachen', 'Berlin'],
   countryCodes: ['DE'],
+  languages: ['de', 'en'],
   providers: ['indeed', 'linkedin'],
   industries: ['Computer programming'],
 };

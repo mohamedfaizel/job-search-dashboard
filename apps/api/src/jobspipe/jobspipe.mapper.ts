@@ -63,6 +63,7 @@ export function mapJobsPipeJob(raw: JobsPipeJob): MappedJob {
       city: raw.normalized_city ?? raw.cities?.[0] ?? raw.short_location,
       location: raw.long_location,
       countryCode: raw.country_code,
+      language: raw.language?.toLowerCase() ?? null,
       ...toSalary(raw),
       provider: raw.sources?.[0]?.provider ?? null,
       workplace: toWorkplace(raw),

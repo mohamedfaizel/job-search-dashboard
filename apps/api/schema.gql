@@ -40,6 +40,11 @@ input CreateJobInput {
   industry: String
   jobFunction: String
 
+  """
+  Two-letter ISO 639-1 code, e.g. "en"
+  """
+  language: String
+
   """Defaults to now"""
   postedAt: DateTime
   salaryMaxUsd: Int
@@ -80,6 +85,11 @@ type Job {
   id: ID!
   industry: String
   jobFunction: String
+
+  """
+  ISO 639-1 code, e.g. "de"
+  """
+  language: String
   location: String
 
   """
@@ -124,6 +134,7 @@ input JobFilterInput {
   hidden: Boolean
   industries: [String!]
   jobFunctions: [String!]
+  languages: [String!]
 
   """Jobs whose top salary reaches at least this"""
   minSalaryUsd: Int
@@ -146,6 +157,7 @@ type JobFilterOptions {
   countryCodes: [String!]!
   industries: [String!]!
   jobFunctions: [String!]!
+  languages: [String!]!
   providers: [String!]!
   seniorities: [String!]!
   skills: [String!]!

@@ -70,6 +70,12 @@ export class JobFilterInput {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  languages?: string[];
+
+  @Field(() => [String], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   providers?: string[];
 
   @Field(() => [String], { nullable: true })

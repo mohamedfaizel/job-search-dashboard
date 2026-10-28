@@ -1,51 +1,68 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-const STORAGE_KEY = 'jobsearch.dashboard.hiddenColumns';
+const STORAGE_KEY = 'jobsearch.dashboard.columns';
+/** The first version saved only the ids you switched off. Still read, so nobody loses a choice. */
+const OLD_STORAGE_KEY = 'jobsearch.dashboard.hiddenColumns';
 
-/** Reads the saved choice. Storage can be blocked (private mode, settings), so never throw. */
-function load(): Record<string, boolean> {
+type Choices = Record<string, boolean>;
+
+/** Reads the saved choices. Storage can be blocked (private mode, settings), so never throw. */
+function load(): Choices {
   try {
-    const saved: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
-    if (!Array.isArray(saved)) return {};
+    const saved: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      return Object.fromEntries(
+        Object.entries(saved).filter(
+          (entry): entry is [string, boolean] => typeof entry[1] === 'boolean',
+        ),
+      );
+    }
+    const old: unknown = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY) ?? '[]');
+    if (!Array.isArray(old)) return {};
     return Object.fromEntries(
-      saved.filter((id): id is string => typeof id === 'string').map((id) => [id, false]),
+      old.filter((id): id is string => typeof id === 'string').map((id) => [id, false]),
     );
   } catch {
     return {};
   }
 }
 
-function save(visibility: Record<string, boolean>) {
+function save(choices: Choices) {
   try {
-    const hidden = Object.keys(visibility).filter((id) => visibility[id] === false);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(hidden));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(choices));
   } catch {
     // Not saved this time; the table still works for this visit.
   }
 }
 
 /**
- * Which table columns you switched off. A display preference for this browser only, so it lives
- * in localStorage rather than in the database or Redux.
+ * Which table columns are switched on. `hiddenByDefault` columns start off; every checkbox you
+ * tick or untick is saved as your own choice and wins over the default. A display preference for
+ * this browser only, so it lives in localStorage rather than in the database or Redux.
  */
-export function useColumnVisibility() {
-  const [visibility, setVisibility] = useState(load);
+export function useColumnVisibility(hiddenByDefault: readonly string[] = []) {
+  const [choices, setChoices] = useState(load);
 
-  const update = useCallback((next: Record<string, boolean>) => {
-    setVisibility(next);
+  // TanStack Table's shape: { columnId: false } for each hidden column.
+  const visibility = useMemo(
+    () => ({ ...Object.fromEntries(hiddenByDefault.map((id) => [id, false])), ...choices }),
+    [hiddenByDefault, choices],
+  );
+
+  const update = useCallback((next: Choices) => {
+    setChoices(next);
     save(next);
   }, []);
 
   const toggle = useCallback(
     (id: string) => {
-      const { [id]: current, ...rest } = visibility;
-      update(current === false ? rest : { ...rest, [id]: false });
+      update({ ...choices, [id]: visibility[id] === false });
     },
-    [visibility, update],
+    [choices, visibility, update],
   );
   const showAll = useCallback(() => {
-    update({});
-  }, [update]);
+    update(Object.fromEntries(Object.keys(visibility).map((id) => [id, true])));
+  }, [visibility, update]);
 
   return { visibility, toggle, showAll };
 }

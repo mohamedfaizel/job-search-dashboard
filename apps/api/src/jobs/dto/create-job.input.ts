@@ -70,6 +70,12 @@ export class CreateJobInput {
   @Length(2, 2)
   countryCode?: string;
 
+  @Field({ nullable: true, description: 'Two-letter ISO 639-1 code, e.g. "en"' })
+  @IsOptional()
+  @IsString()
+  @Length(2, 2)
+  language?: string;
+
   @Field(() => Int, { nullable: true })
   @IsOptional()
   @IsInt()

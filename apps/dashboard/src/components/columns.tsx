@@ -2,7 +2,15 @@ import type { Job, JobFilterOptions, JobSortField, ListFilterKey } from '@jobsea
 import { APPLICATION_STATUSES, WORKPLACES } from '@jobsearch/data';
 import { columnVisibilityFeature, createColumnHelper, tableFeatures } from '@tanstack/react-table';
 import { createContext, useContext } from 'react';
-import { capitalize, formatDate, formatSalary, STATUS_LABELS, WORKPLACE_LABELS } from '../format';
+import {
+  capitalize,
+  countryName,
+  formatDate,
+  formatSalary,
+  languageName,
+  STATUS_LABELS,
+  WORKPLACE_LABELS,
+} from '../format';
 import type { BadgeTone } from './Badge';
 import { Badge } from './Badge';
 import { scoreTone } from './MatchPanel';
@@ -196,6 +204,26 @@ export const columns = helper.columns([
     header: 'City',
     cell: (info) => <span className="whitespace-nowrap">{info.getValue() ?? '–'}</span>,
   }),
+  helper.accessor('countryCode', {
+    header: 'Country',
+    cell: (info) => {
+      const value = info.getValue();
+      return value ? (
+        <span className="whitespace-nowrap" title={value}>
+          {countryName(value)}
+        </span>
+      ) : (
+        dash
+      );
+    },
+  }),
+  helper.accessor('language', {
+    header: 'Language',
+    cell: (info) => {
+      const value = info.getValue();
+      return value ? <Badge tone="purple">{languageName(value)}</Badge> : dash;
+    },
+  }),
   helper.display({
     id: 'salary',
     header: 'Salary',
@@ -255,6 +283,12 @@ export const columns = helper.columns([
   }),
 ]);
 
+/**
+ * Columns that start switched off to keep the table narrow. They stay in the Columns menu, so you
+ * can turn them back on.
+ */
+export const DEFAULT_HIDDEN_COLUMNS = ['jobFunction', 'workplace', 'industry'];
+
 /** How each column header sorts and filters. Columns not listed here do neither. */
 export interface ColumnControls {
   sortField?: JobSortField;
@@ -282,6 +316,18 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
   },
   skills: { filter: { key: 'skills', options: (o) => plain(o?.skills) } },
   city: { sortField: 'CITY', filter: { key: 'cities', options: (o) => plain(o?.cities) } },
+  countryCode: {
+    filter: {
+      key: 'countryCodes',
+      options: (o) => (o?.countryCodes ?? []).map((v) => ({ value: v, label: countryName(v) })),
+    },
+  },
+  language: {
+    filter: {
+      key: 'languages',
+      options: (o) => (o?.languages ?? []).map((v) => ({ value: v, label: languageName(v) })),
+    },
+  },
   salary: { sortField: 'SALARY' },
   provider: { filter: { key: 'providers', options: (o) => capitalized(o?.providers) } },
   workplace: {
