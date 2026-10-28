@@ -409,3 +409,24 @@ export const TAILOR_RESUME = /* GraphQL */ `
   }
   ${TAILORED_RESUME_FIELDS}
 `;
+
+export const JOB_INSIGHTS = /* GraphQL */ `
+  query JobInsights($jobId: ID!) {
+    jobInsights(jobId: $jobId) {
+      jobId
+      title
+      normalizedTitle
+      language
+      languageDetected
+      hasResume
+      skills {
+        term
+        inResume
+      }
+      keywords {
+        term
+        inResume
+      }
+    }
+  }
+`;

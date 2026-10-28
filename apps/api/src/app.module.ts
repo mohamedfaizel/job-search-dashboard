@@ -7,6 +7,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
+import { InsightsModule } from './insights/insights.module';
 import { JobsModule } from './jobs/jobs.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
@@ -37,6 +38,7 @@ import { SyncModule } from './sync/sync.module';
     SavedSearchesModule,
     ProfileModule,
     ResumeMatcherModule,
+    InsightsModule,
   ],
 })
 export class AppModule {}

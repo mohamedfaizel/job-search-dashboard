@@ -1,5 +1,6 @@
 import type { Prisma } from '../generated/prisma/client';
 import { JobSource, Workplace } from '../generated/prisma/enums';
+import { detectLanguage } from '../insights/text';
 import type { JobsPipeJob } from './jobspipe.types';
 
 export interface MappedCompany {
@@ -63,7 +64,7 @@ export function mapJobsPipeJob(raw: JobsPipeJob): MappedJob {
       city: raw.normalized_city ?? raw.cities?.[0] ?? raw.short_location,
       location: raw.long_location,
       countryCode: raw.country_code,
-      language: raw.language?.toLowerCase() ?? null,
+      language: raw.language?.toLowerCase() ?? detectLanguage(raw.description),
       ...toSalary(raw),
       provider: raw.sources?.[0]?.provider ?? null,
       workplace: toWorkplace(raw),

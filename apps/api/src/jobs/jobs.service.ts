@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client';
 import { ApplicationStatus, JobSource } from '../generated/prisma/enums';
+import { detectLanguage } from '../insights/text';
 import type { MappedJob } from '../jobspipe/jobspipe.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateJobInput } from './dto/create-job.input';
@@ -139,7 +140,8 @@ export class JobsService {
       data: {
         ...rest,
         countryCode: rest.countryCode?.toUpperCase() ?? null,
-        language: rest.language?.toLowerCase() ?? null,
+        // Hand-added jobs rarely say their language, so guess it from the description.
+        language: rest.language?.toLowerCase() ?? detectLanguage(rest.description),
         salaryMinUsd: salaryMinUsd ?? null,
         salaryMaxUsd: salaryMaxUsd ?? null,
         source: JobSource.MANUAL,

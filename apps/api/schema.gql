@@ -164,6 +164,39 @@ type JobFilterOptions {
 }
 
 """
+What the job asks for, worked out without AI: JobsPipe tags, TF-IDF and word matching against your resume text.
+"""
+type JobInsights {
+  """False until you upload a resume or type it on your profile"""
+  hasResume: Boolean!
+  jobId: String!
+
+  """
+  The words that set this description apart from your other jobs (TF-IDF)
+  """
+  keywords: [TermCheck!]!
+
+  """
+  ISO 639-1 code, e.g. "de"
+  """
+  language: String
+
+  """
+  True when the language was guessed from the text, not given by JobsPipe
+  """
+  languageDetected: Boolean!
+
+  """JobsPipe’s cleaned-up title, when it differs from the posted one"""
+  normalizedTitle: String
+
+  """The job’s skill tags"""
+  skills: [TermCheck!]!
+
+  """The title as posted"""
+  title: String!
+}
+
+"""
 How well your master resume fits one job. Resume-Matcher lightly tailors the resume to the job, then scores it the way an ATS would
 """
 type JobMatch {
@@ -367,6 +400,11 @@ type Query {
 
   """Values to offer in each column filter"""
   jobFilterOptions: JobFilterOptions!
+
+  """
+  Title, language, skills and keywords of a job, checked against your resume. Free and instant: no AI
+  """
+  jobInsights(jobId: ID!): JobInsights!
 
   """Your resume match for one job. Null if you never matched it"""
   jobMatch(jobId: ID!): JobMatch
@@ -635,6 +673,16 @@ type TailoredResume {
   score: Float
   startedAt: DateTime!
   status: JobMatchStatus!
+}
+
+type TermCheck {
+  """Your resume text mentions it"""
+  inResume: Boolean!
+
+  """
+  A skill tag or keyword, e.g. "kafka"
+  """
+  term: String!
 }
 
 type User {

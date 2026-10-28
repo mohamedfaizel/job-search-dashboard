@@ -232,6 +232,21 @@ pick Anthropic in <http://localhost:3100/settings>, or reset its saved settings 
 `docker compose --profile tools down` and `docker volume rm job-search-dashboard_resume-data`
 (this deletes Resume-Matcher's data), then `pnpm rm:up`.
 
+### Skills and keywords without AI
+
+Every job popup starts with a free, instant check that needs no AI and no Resume-Matcher:
+
+- **Title and language** come from JobsPipe. For jobs you add by hand, the language is guessed
+  from the description with [tinyld](https://github.com/komodojp/tinyld).
+- **Skills** are JobsPipe's skill tags, checked against your resume text (from **My profile**).
+  Different spellings count (`NodeJS` = `node.js`); add more in
+  [`apps/api/src/insights/skills.ts`](apps/api/src/insights/skills.ts).
+- **Keywords** are the words that make this description stand out from your other jobs
+  ([TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)), minus common words in the job's
+  language ([stopword](https://github.com/fergiemcdowall/stopword)).
+
+Red means your resume doesn't mention it, green means it does.
+
 ## Using the API
 
 Open <http://localhost:3000/graphql> in your browser. It shows Apollo Sandbox, where you can
@@ -304,6 +319,11 @@ To look at the raw tables, run `pnpm --filter @jobsearch/api db:studio` and open
 The schema lives in [`apps/api/prisma/schema.prisma`](apps/api/prisma/schema.prisma). After
 editing it, run `pnpm --filter @jobsearch/api db:migrate` and give the migration a name. That
 creates a SQL file under `prisma/migrations` which is committed with your change.
+
+After pulling someone else's schema change, stop `pnpm dev` and run both
+`pnpm --filter @jobsearch/api db:migrate` and `pnpm --filter @jobsearch/api exec prisma generate`.
+Prisma 7's `migrate dev` no longer regenerates the client, so without the second command the API
+fails to compile with errors about missing fields.
 
 ## Storybook and visual tests
 
