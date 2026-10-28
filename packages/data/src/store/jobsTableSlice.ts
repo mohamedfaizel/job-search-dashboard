@@ -48,6 +48,13 @@ export const jobsTableSlice = createSlice({
       else Reflect.deleteProperty(state.filters, key);
       state.page = 1;
     },
+    /** Replaces a filter's values in one go, e.g. when a dashboard card picks a status. */
+    setFilterValues(state, action: PayloadAction<{ key: ListFilterKey; values: string[] }>) {
+      const { key, values } = action.payload;
+      if (values.length) state.filters[key] = values;
+      else Reflect.deleteProperty(state.filters, key);
+      state.page = 1;
+    },
     clearFilter(state, action: PayloadAction<ListFilterKey>) {
       Reflect.deleteProperty(state.filters, action.payload);
       state.page = 1;
@@ -82,6 +89,7 @@ export const jobsTableSlice = createSlice({
 export const {
   setSearch,
   toggleFilterValue,
+  setFilterValues,
   clearFilter,
   clearAll,
   cycleSort,

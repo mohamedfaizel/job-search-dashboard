@@ -39,6 +39,8 @@ export interface JobsPipeJob {
   normalized_city: string | null;
   cities: string[] | null;
   country_code: string | null;
+  /** ISO 639-1 code of the posting's language, e.g. "de". */
+  language: string | null;
   remote: boolean | null;
   hybrid: boolean | null;
   work_arrangement: string | null;

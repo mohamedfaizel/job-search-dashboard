@@ -20,6 +20,7 @@ describe('mapJobsPipeJob', () => {
       title: 'Lead Frontend / Fullstack Engineer',
       city: 'Berlin',
       countryCode: 'DE',
+      language: 'de',
       seniority: 'director',
       jobFunction: 'Engineering',
       provider: 'indeed',

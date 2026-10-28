@@ -75,7 +75,8 @@ export class JobsService {
 
   async filterOptions(): Promise<JobFilterOptions> {
     const distinct = async (
-      field: 'seniority' | 'jobFunction' | 'city' | 'countryCode' | 'provider' | 'industry',
+      field:
+        'seniority' | 'jobFunction' | 'city' | 'countryCode' | 'language' | 'provider' | 'industry',
     ) => {
       const rows = await this.prisma.job.findMany({
         where: { [field]: { not: null } },
@@ -98,6 +99,7 @@ export class JobsService {
       jobFunctions,
       cities,
       countryCodes,
+      languages,
       providers,
       industries,
     ] = await Promise.all([
@@ -108,6 +110,7 @@ export class JobsService {
       distinct('jobFunction'),
       distinct('city'),
       distinct('countryCode'),
+      distinct('language'),
       distinct('provider'),
       distinct('industry'),
     ]);
@@ -119,6 +122,7 @@ export class JobsService {
       jobFunctions,
       cities,
       countryCodes,
+      languages,
       providers,
       industries,
     };
@@ -135,6 +139,7 @@ export class JobsService {
       data: {
         ...rest,
         countryCode: rest.countryCode?.toUpperCase() ?? null,
+        language: rest.language?.toLowerCase() ?? null,
         salaryMinUsd: salaryMinUsd ?? null,
         salaryMaxUsd: salaryMaxUsd ?? null,
         source: JobSource.MANUAL,
@@ -259,6 +264,7 @@ function buildWhere(filter: JobFilterInput | undefined, userId: number): Prisma.
     jobFunction: inList(filter.jobFunctions),
     city: inList(filter.cities),
     countryCode: inList(filter.countryCodes),
+    language: inList(filter.languages),
     provider: inList(filter.providers),
     industry: inList(filter.industries),
     workplace: inList(filter.workplaces),

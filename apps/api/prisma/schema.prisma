@@ -196,6 +196,8 @@ model Job {
   city            String?
   location        String?
   countryCode     String?
+  /// Language the posting is written in, as an ISO 639-1 code such as "de".
+  language        String?
   salaryMinUsd    Int?
   salaryMaxUsd    Int?
   /// True when the salary is JobsPipe's estimate rather than stated in the ad.

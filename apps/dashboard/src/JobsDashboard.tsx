@@ -7,6 +7,7 @@ import {
   getErrorMessage,
   setPage,
   setPageSize,
+  setFilterValues,
   setSearch,
   setShowHidden,
   toggleFilterValue,
@@ -21,16 +22,18 @@ import {
   useUpdateJobStatus,
 } from '@jobsearch/data';
 import { useCallback, useMemo, useState } from 'react';
-import { columns } from './components/columns';
+import { columns, DEFAULT_HIDDEN_COLUMNS } from './components/columns';
 import { ColumnsMenu } from './components/ColumnsMenu';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { JobsTable } from './components/JobsTable';
 import { Pagination } from './components/Pagination';
+import type { StatCardKey } from './components/StatCards';
 import { StatCards } from './components/StatCards';
 import { Toolbar } from './components/Toolbar';
 import { useColumnVisibility } from './useColumnVisibility';
 
 const NO_JOBS: Job[] = [];
+const STATUS_CARDS: StatCardKey[] = ['SAVED', 'APPLIED', 'INTERVIEWING'];
 
 /** Every column for the Columns menu, in table order. */
 const COLUMN_CHOICES = columns.map((column) => ({
@@ -52,11 +55,26 @@ export function JobsDashboard() {
   const setHidden = useSetJobHidden();
   const hiddenCount = useHiddenJobCount();
   const applications = useMyApplications();
-  const columnVisibility = useColumnVisibility();
+  const columnVisibility = useColumnVisibility(DEFAULT_HIDDEN_COLUMNS);
   const [openJobId, setOpenJobId] = useState<string | null>(null);
   // The last job hidden or brought back, for the "Undo" message.
   const [lastChange, setLastChange] = useState<{ job: Job; hidden: boolean } | null>(null);
   const showingHidden = tableState.showHidden;
+
+  // "Jobs found" counts your search and column filters, whatever the status card picked.
+  const foundArgs = useMemo(() => {
+    const filters = { ...tableState.filters };
+    Reflect.deleteProperty(filters, 'applicationStatuses');
+    return toJobsPageArgs({
+      ...tableState,
+      filters,
+      showHidden: false,
+      sort: null,
+      page: 1,
+      pageSize: 1,
+    });
+  }, [tableState]);
+  const foundQuery = useJobsPage(foundArgs);
 
   const jobs = jobsQuery.data?.items ?? NO_JOBS;
   const openJob = jobs.find((job) => job.id === openJobId) ?? null;
@@ -95,9 +113,24 @@ export function JobsDashboard() {
     },
     [setHidden, showingHidden],
   );
-  const switchView = (hidden: boolean) => {
+  // Which card matches what the table shows now: none when the Status column filter picks
+  // something the cards don't cover, such as two statuses at once.
+  const statuses = tableState.filters.applicationStatuses ?? [];
+  const activeCard: StatCardKey | null = showingHidden
+    ? 'hidden'
+    : statuses.length === 0
+      ? 'total'
+      : statuses.length === 1 && STATUS_CARDS.includes(statuses[0] as StatCardKey)
+        ? (statuses[0] as StatCardKey)
+        : null;
+
+  /** Shows the card's jobs in the table. Clicking the card that is on goes back to all jobs. */
+  const selectCard = (key: StatCardKey) => {
+    const target = key === activeCard ? 'total' : key;
     setLastChange(null);
-    dispatch(setShowHidden(hidden));
+    dispatch(setShowHidden(target === 'hidden'));
+    const values = target === 'total' || target === 'hidden' ? [] : [target];
+    dispatch(setFilterValues({ key: 'applicationStatuses', values }));
   };
 
   return (
@@ -116,40 +149,18 @@ export function JobsDashboard() {
             </p>
           )}
         </div>
-        {showingHidden ? (
-          <button
-            type="button"
-            onClick={() => {
-              switchView(false);
-            }}
-            className="text-sm text-indigo-700 hover:underline"
-          >
-            Back to job posts
-          </button>
-        ) : (
-          (hiddenCount.data ?? 0) > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                switchView(true);
-              }}
-              className="text-sm text-slate-600 hover:text-slate-900 hover:underline"
-            >
-              Hidden jobs ({hiddenCount.data})
-            </button>
-          )
-        )}
       </div>
-      {!showingHidden && (
-        <StatCards
-          total={jobsQuery.data?.total}
-          applications={applications.data}
-          hiddenCount={hiddenCount.data}
-        />
-      )}
+      <StatCards
+        total={foundQuery.data?.total}
+        applications={applications.data}
+        hiddenCount={hiddenCount.data}
+        active={activeCard}
+        onSelect={selectCard}
+      />
       {showingHidden && (
         <p className="text-sm text-slate-600">
-          Only you don’t see these. Unhide a job to put it back in your table.
+          Only you don’t see these. Unhide a job to put it back in your table, or click “Jobs found”
+          to go back.
         </p>
       )}
 

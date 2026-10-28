@@ -16,8 +16,12 @@ function renderDashboard() {
   );
 }
 
+// The "Jobs found" card asks for a one-row page just to read the total; skip that one.
 const lastJobsPageVariables = () =>
-  requests.filter((r) => r.operation === 'JobsPage').at(-1)?.variables;
+  requests.filter((r) => r.operation === 'JobsPage' && r.variables['pageSize'] !== 1).at(-1)
+    ?.variables;
+
+const card = (name: RegExp) => screen.getByRole('button', { name });
 
 describe('JobsDashboard', () => {
   it('shows jobs from the API', async () => {
@@ -29,7 +33,8 @@ describe('JobsDashboard', () => {
     const row = screen.getByRole('button', { name: 'Senior Frontend Engineer' }).closest('tr')!;
     expect(within(row).getByText('Acme')).toBeInTheDocument();
     expect(within(row).getByText('$90k - $120k')).toBeInTheDocument();
-    expect(within(row).getByText('Remote')).toBeInTheDocument();
+    expect(within(row).getByText('Germany')).toBeInTheDocument();
+    expect(within(row).getByText('German')).toBeInTheDocument();
     expect(within(row).getByText('+1')).toBeInTheDocument(); // 3 skills: 2 shown, +1
     expect(screen.getByText('Showing 1–2 of 2')).toBeInTheDocument();
   });
@@ -54,17 +59,18 @@ describe('JobsDashboard', () => {
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Filter Workplace' }));
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Remote' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Filter Language' }));
+    // The API sends ISO codes; the filter shows their names.
+    await userEvent.click(screen.getByRole('checkbox', { name: 'English' }));
 
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({
-        filter: { workplaces: ['REMOTE'] },
+        filter: { languages: ['en'] },
         page: 1,
       });
     });
     expect(
-      screen.getByRole('button', { name: 'Filter Workplace (1 selected)' }),
+      screen.getByRole('button', { name: 'Filter Language (1 selected)' }),
     ).toBeInTheDocument();
     expect(screen.getByText('1 filter active')).toBeInTheDocument();
   });
@@ -128,17 +134,37 @@ describe('JobsDashboard', () => {
 
     expect(screen.queryByRole('columnheader', { name: /Salary/ })).not.toBeInTheDocument();
     expect(screen.queryByText('$90k - $120k')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('1 hidden');
-    expect(localStorage.getItem('jobsearch.dashboard.hiddenColumns')).toBe('["salary"]');
+    // Salary plus the three columns that start hidden.
+    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('4 hidden');
+    expect(localStorage.getItem('jobsearch.dashboard.columns')).toBe('{"salary":false}');
 
     await userEvent.click(within(menu).getByRole('button', { name: 'Show all columns' }));
     expect(screen.getByRole('columnheader', { name: /Salary/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Industry/ })).toBeInTheDocument();
 
     // Columns that read a field (City) have ids too, so only that one goes.
     await userEvent.click(within(menu).getByRole('checkbox', { name: 'City' }));
     expect(screen.queryByRole('columnheader', { name: /City/ })).not.toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /Seniority/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('1 hidden');
+  });
+
+  it('starts with Function, Workplace and Industry switched off, but in the menu', async () => {
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+
+    for (const name of [/Function/, /Workplace/, /Industry/]) {
+      expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole('columnheader', { name: /Country/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Language/ })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /Columns/ }));
+    const menu = screen.getByRole('dialog', { name: 'Show or hide columns' });
+    expect(within(menu).getByRole('checkbox', { name: 'Workplace' })).not.toBeChecked();
+    await userEvent.click(within(menu).getByRole('checkbox', { name: 'Workplace' }));
+    expect(screen.getByRole('columnheader', { name: /Workplace/ })).toBeInTheDocument();
+    expect(localStorage.getItem('jobsearch.dashboard.columns')).toBe('{"workplace":true}');
   });
 
   it('starts with the columns hidden on an earlier visit', async () => {
@@ -154,10 +180,38 @@ describe('JobsDashboard', () => {
   it('shows counts above the table', async () => {
     renderDashboard();
 
-    const jobsFound = (await screen.findByText('Jobs found')).closest('div')!;
+    const jobsFound = (await screen.findByText('Jobs found')).closest('button')!;
     await waitFor(() => {
       expect(within(jobsFound).getByText('2')).toBeInTheDocument();
     });
+    expect(jobsFound).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('shows a card’s jobs in the table when you click it', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+
+    await user.click(card(/^Applied/));
+    await waitFor(() => {
+      expect(lastJobsPageVariables()).toMatchObject({
+        filter: { applicationStatuses: ['APPLIED'] },
+      });
+    });
+    expect(card(/^Applied/)).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Senior Frontend Engineer' }),
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: 'Backend Developer' })).toBeInTheDocument();
+    // "Jobs found" still counts every status.
+    expect(within(card(/^Jobs found/)).getByText('2')).toBeInTheDocument();
+
+    // Clicking the card that is on goes back to all jobs.
+    await user.click(card(/^Applied/));
+    expect(card(/^Jobs found/)).toHaveAttribute('aria-pressed', 'true');
+    expect(lastJobsPageVariables()).not.toHaveProperty('filter');
   });
 
   it('maximizes the job popup and restores it', async () => {
@@ -206,7 +260,10 @@ describe('JobsDashboard', () => {
     });
     expect(screen.getByRole('button', { name: 'Backend Developer' })).toBeInTheDocument();
 
-    await user.click(await screen.findByRole('button', { name: 'Hidden jobs (1)' }));
+    await waitFor(() => {
+      expect(within(card(/^Hidden/)).getByText('1')).toBeInTheDocument();
+    });
+    await user.click(card(/^Hidden/));
 
     expect(screen.getByRole('heading', { name: 'Hidden jobs' })).toBeInTheDocument();
     expect(lastJobsPageVariables()).toMatchObject({ filter: { hidden: true } });
@@ -215,11 +272,11 @@ describe('JobsDashboard', () => {
     );
     expect(await screen.findByText('No hidden jobs match.')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Back to job posts' }));
+    await user.click(card(/^Jobs found/));
     expect(
       await screen.findByRole('button', { name: 'Senior Frontend Engineer' }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Hidden jobs/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Job posts' })).toBeInTheDocument();
   });
 
   it('undoes a hide', async () => {

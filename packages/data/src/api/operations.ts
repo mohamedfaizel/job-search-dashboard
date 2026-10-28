@@ -18,6 +18,7 @@ const JOB_FIELDS = /* GraphQL */ `
     skills
     city
     countryCode
+    language
     salaryMinUsd
     salaryMaxUsd
     salaryEstimated
@@ -68,6 +69,7 @@ export const JOB_FILTER_OPTIONS = /* GraphQL */ `
       skills
       cities
       countryCodes
+      languages
       providers
       industries
     }

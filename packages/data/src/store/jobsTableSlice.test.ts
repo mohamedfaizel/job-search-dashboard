@@ -5,6 +5,7 @@ import {
   initialJobsTableState,
   jobsTableSlice,
   setPage,
+  setFilterValues,
   setSearch,
   toggleFilterValue,
   setShowHidden,
@@ -21,6 +22,16 @@ describe('jobsTable slice', () => {
 
     state = reduce(state, toggleFilterValue({ key: 'skills', value: 'react' }));
     state = reduce(state, toggleFilterValue({ key: 'skills', value: 'node' }));
+    expect(state.filters).toEqual({});
+  });
+
+  it('replaces a filter in one go, and removes it when empty', () => {
+    let state = reduce(initialJobsTableState, setPage(3));
+    state = reduce(state, setFilterValues({ key: 'applicationStatuses', values: ['SAVED'] }));
+    expect(state.filters.applicationStatuses).toEqual(['SAVED']);
+    expect(state.page).toBe(1);
+
+    state = reduce(state, setFilterValues({ key: 'applicationStatuses', values: [] }));
     expect(state.filters).toEqual({});
   });
 

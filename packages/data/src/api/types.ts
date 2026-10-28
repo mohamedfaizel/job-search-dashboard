@@ -38,6 +38,8 @@ export interface Job {
   skills: string[];
   city: string | null;
   countryCode: string | null;
+  /** ISO 639-1 code of the posting's language, e.g. "de". */
+  language: string | null;
   salaryMinUsd: number | null;
   salaryMaxUsd: number | null;
   salaryEstimated: boolean;
@@ -69,6 +71,7 @@ export interface JobFilterInput {
   skills?: string[];
   cities?: string[];
   countryCodes?: string[];
+  languages?: string[];
   providers?: string[];
   industries?: string[];
   workplaces?: Workplace[];
@@ -104,6 +107,7 @@ export interface JobFilterOptions {
   skills: string[];
   cities: string[];
   countryCodes: string[];
+  languages: string[];
   providers: string[];
   industries: string[];
 }

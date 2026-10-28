@@ -156,16 +156,41 @@ describe('Jobs GraphQL API', () => {
   });
 
   it('lists distinct values for the column filters', async () => {
-    await addJob({ title: 'A', companyName: 'Acme', skills: ['react', 'node'], city: 'Berlin' });
+    await addJob({
+      title: 'A',
+      companyName: 'Acme',
+      skills: ['react', 'node'],
+      city: 'Berlin',
+      language: 'DE',
+    });
     await addJob({ title: 'B', companyName: 'Beta', skills: ['react'], city: 'Aachen' });
 
     const res = await t.gql<{ jobFilterOptions: Record<string, string[]> }>(
-      `{ jobFilterOptions { companies skills cities } }`,
+      `{ jobFilterOptions { companies skills cities languages } }`,
     );
     expect(res.data?.jobFilterOptions).toEqual({
       companies: ['Acme', 'Beta'],
       skills: ['node', 'react'],
       cities: ['Aachen', 'Berlin'],
+      // Stored in lower case, the way JobsPipe sends it.
+      languages: ['de'],
     });
+  });
+
+  it('filters by country and language', async () => {
+    await addJob({ title: 'Berlin job', companyName: 'Acme', countryCode: 'de', language: 'de' });
+    await addJob({
+      title: 'Berlin, English ad',
+      companyName: 'Acme',
+      countryCode: 'DE',
+      language: 'en',
+    });
+    await addJob({ title: 'London job', companyName: 'Beta', countryCode: 'GB', language: 'en' });
+
+    const res = await t.gql<JobsPageData>(JOBS_PAGE, {
+      filter: { countryCodes: ['DE'], languages: ['en'] },
+    });
+    expect(res.errors).toBeUndefined();
+    expect(res.data?.jobsPage.items.map((job) => job.title)).toEqual(['Berlin, English ad']);
   });
 });

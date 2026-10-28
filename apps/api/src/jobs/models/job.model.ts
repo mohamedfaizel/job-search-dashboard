@@ -57,6 +57,9 @@ export class Job {
   @Field(() => String, { nullable: true })
   countryCode!: string | null;
 
+  @Field(() => String, { nullable: true, description: 'ISO 639-1 code, e.g. "de"' })
+  language!: string | null;
+
   @Field(() => Int, { nullable: true })
   salaryMinUsd!: number | null;
 
@@ -152,6 +155,9 @@ export class JobFilterOptions {
 
   @Field(() => [String])
   countryCodes!: string[];
+
+  @Field(() => [String])
+  languages!: string[];
 
   @Field(() => [String])
   providers!: string[];

@@ -81,8 +81,15 @@ export const handlers = [
   }),
   api.query('JobsPage', ({ variables }) => {
     requests.push({ operation: 'JobsPage', variables });
-    const showHidden = (variables['filter'] as { hidden?: boolean } | undefined)?.hidden ?? false;
-    const items = JOBS.filter((job) => hiddenIds.has(job.id) === showHidden);
+    const filter = variables['filter'] as
+      { hidden?: boolean; applicationStatuses?: ApplicationStatus[] } | undefined;
+    const showHidden = filter?.hidden ?? false;
+    const statuses = filter?.applicationStatuses ?? [];
+    const items = JOBS.filter(
+      (job) =>
+        hiddenIds.has(job.id) === showHidden &&
+        (statuses.length === 0 || statuses.includes(job.applicationStatus)),
+    );
     return HttpResponse.json({
       data: { jobsPage: { items, total: items.length, page: 1, pageSize: 25 } },
     });
