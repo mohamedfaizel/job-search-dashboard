@@ -14,7 +14,7 @@ describe('SavedSearches', () => {
   it('shows what each search looks for and how its last import went', async () => {
     const card = await renderCard();
 
-    expect(card.getByText('frontend · react · DE · Berlin')).toBeInTheDocument();
+    expect(card.getByText('frontend · react · Germany · Berlin')).toBeInTheDocument();
     expect(card.getByText(/up to 50 credits per run · only new jobs/)).toBeInTheDocument();
     expect(card.getByText(/20 new, 5 already saved, 20 credits\./)).toBeInTheDocument();
   });

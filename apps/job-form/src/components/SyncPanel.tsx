@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { SavedSearch } from '@jobsearch/data';
 import { getErrorMessage, useMyProfile, useSaveSearch, useSyncJobs } from '@jobsearch/data';
 import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { formatDateTime, plural } from '../format';
 import type { SyncFormValues } from '../schema';
 import {
@@ -12,6 +12,7 @@ import {
   toSavedSearchInput,
   toSyncJobsInput,
 } from '../schema';
+import { CountrySelect } from './CountrySelect';
 import { Field, inputClass } from './Field';
 
 interface Props {
@@ -126,9 +127,21 @@ export function SyncPanel({ loaded = null }: Props) {
         label="Countries"
         htmlFor="sync-countryCodes"
         error={errors.countryCodes?.message}
-        hint="Optional, e.g. US, DE"
+        hint="Pick one or more, or leave it on Worldwide"
       >
-        <input {...register('countryCodes')} {...a11y('countryCodes')} className={inputClass} />
+        <Controller
+          control={control}
+          name="countryCodes"
+          render={({ field }) => (
+            <CountrySelect
+              id="sync-countryCodes"
+              value={field.value}
+              onChange={field.onChange}
+              invalid={Boolean(errors.countryCodes)}
+              describedBy={errors.countryCodes ? 'sync-countryCodes-error' : undefined}
+            />
+          )}
+        />
       </Field>
       <Field
         label="Cities or regions"

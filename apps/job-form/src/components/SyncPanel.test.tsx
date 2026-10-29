@@ -18,8 +18,8 @@ describe('SyncPanel', () => {
 
   it('shows the credit cost and imports jobs', async () => {
     renderWithData(<SyncPanel />);
-    const countries = screen.getByLabelText(/countries/i);
-    await userEvent.type(countries, 'de');
+    const countries = screen.getByRole('combobox', { name: 'Countries' });
+    await userEvent.type(countries, 'germ{Enter}');
     const maxPages = screen.getByLabelText('Max pages');
     await userEvent.clear(maxPages);
     await userEvent.type(maxPages, '2');
