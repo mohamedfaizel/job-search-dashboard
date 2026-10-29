@@ -9,10 +9,12 @@ import {
   formatSalary,
   languageName,
   STATUS_LABELS,
+  timeAgo,
   WORKPLACE_LABELS,
 } from '../format';
 import type { BadgeTone } from './Badge';
 import { Badge } from './Badge';
+import { BookmarkIcon, ExternalLinkIcon, EyeIcon, EyeSlashIcon } from './icons';
 import { scoreTone } from './MatchPanel';
 import { StatusSelect } from './StatusSelect';
 
@@ -27,8 +29,18 @@ export interface RowActions {
   /** True while the table lists the jobs you hid. */
   showingHidden?: boolean;
 }
-export const RowActionsContext = createContext<RowActions | null>(null);
-function useRowActions(): RowActions {
+
+/** The ticked rows, for actions on several jobs at once. */
+export interface RowSelection {
+  selected: ReadonlySet<string>;
+  toggleSelected: (job: Job) => void;
+  /** Ticks every job on this page, or unticks them all when they are all ticked. */
+  toggleAll: () => void;
+  allSelected: boolean;
+}
+
+export const RowActionsContext = createContext<(RowActions & RowSelection) | null>(null);
+function useRowActions(): RowActions & RowSelection {
   const actions = useContext(RowActionsContext);
   if (!actions) throw new Error('RowActionsContext is missing');
   return actions;
@@ -47,40 +59,91 @@ function toneFor(text: string): BadgeTone {
   return INDUSTRY_TONES[Math.abs(hash) % INDUSTRY_TONES.length] ?? 'gray';
 }
 
-function CompanyCell({ job }: { job: Job }) {
+/** "at Acme" names in labels, so a screen reader knows which row a button belongs to. */
+const jobName = (job: Job) => `${job.title} at ${job.company.name}`;
+
+function CompanyLogo({ job }: { job: Job }) {
   const { name, logoUrl } = job.company;
+  return logoUrl ? (
+    <img
+      src={logoUrl}
+      alt=""
+      className="h-9 w-9 shrink-0 rounded-lg border border-slate-200 bg-white object-contain"
+    />
+  ) : (
+    <span
+      aria-hidden="true"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-500"
+    >
+      {name.charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
+/** Title (opens the popup) with the company under it: one cell instead of two columns. */
+export function JobCell({ job }: { job: Job }) {
+  const { openJob } = useRowActions();
   return (
-    <div className="flex items-center gap-2">
-      {logoUrl ? (
-        <img src={logoUrl} alt="" className="h-6 w-6 shrink-0 rounded border border-slate-200" />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-slate-200 text-xs text-slate-500"
+    <div className="flex min-w-0 items-center gap-3">
+      <CompanyLogo job={job} />
+      <div className="min-w-0">
+        <button
+          type="button"
+          onClick={() => {
+            openJob(job);
+          }}
+          className="block max-w-[22rem] truncate text-left text-sm font-semibold text-slate-900 hover:text-indigo-700"
+          title={job.title}
         >
-          {name.charAt(0).toUpperCase()}
+          {job.title}
+        </button>
+        <span className="block max-w-[22rem] truncate text-slate-500" title={job.company.name}>
+          {job.company.name}
         </span>
-      )}
-      <span className="max-w-40 truncate font-medium text-slate-900" title={name}>
-        {name}
-      </span>
+      </div>
     </div>
   );
 }
 
-function TitleCell({ job }: { job: Job }) {
-  const { openJob } = useRowActions();
+/** City on top; country and Remote/Hybrid under it. */
+export function LocationCell({ job }: { job: Job }) {
+  const country = job.countryCode ? countryName(job.countryCode) : null;
+  const top = job.city ?? country;
+  const below = [job.city ? country : null, job.workplace && WORKPLACE_LABELS[job.workplace]]
+    .filter(Boolean)
+    .join(' · ');
+  if (!top && !below) return dash;
   return (
-    <button
-      type="button"
-      onClick={() => {
-        openJob(job);
-      }}
-      className="max-w-80 truncate text-left font-medium text-slate-900 hover:text-indigo-700 hover:underline"
-      title={job.title}
+    <div className="whitespace-nowrap">
+      <span className="block text-slate-700">{top ?? WORKPLACE_LABELS.REMOTE}</span>
+      {below && top && <span className="block text-xs text-slate-500">{below}</span>}
+    </div>
+  );
+}
+
+export function PostedCell({ job }: { job: Job }) {
+  return (
+    <time
+      dateTime={job.postedAt}
+      title={formatDate(job.postedAt)}
+      className="whitespace-nowrap text-slate-500"
     >
-      {job.title}
-    </button>
+      {timeAgo(job.postedAt)}
+    </time>
+  );
+}
+
+export function SalaryCell({ job }: { job: Job }) {
+  const salary = formatSalary(job.salaryMinUsd, job.salaryMaxUsd);
+  if (!salary) return dash;
+  return (
+    <span
+      className="whitespace-nowrap text-slate-700 tabular-nums"
+      title={job.salaryEstimated ? 'Estimated by JobsPipe' : 'Stated in the posting'}
+    >
+      {salary}
+      {job.salaryEstimated && <span className="text-slate-400"> est.</span>}
+    </span>
   );
 }
 
@@ -102,11 +165,11 @@ function SkillsCell({ skills }: { skills: string[] }) {
   );
 }
 
-function StatusCell({ job }: { job: Job }) {
+export function StatusCell({ job }: { job: Job }) {
   const { setStatus } = useRowActions();
   return (
     <StatusSelect
-      label={`Status for ${job.title} at ${job.company.name}`}
+      label={`Status for ${jobName(job)}`}
       value={job.applicationStatus}
       onChange={(status) => {
         setStatus(job, status);
@@ -116,7 +179,7 @@ function StatusCell({ job }: { job: Job }) {
 }
 
 /** Your ATS score for the job; clicking it opens the popup with the breakdown. */
-function MatchCell({ job }: { job: Job }) {
+export function MatchCell({ job }: { job: Job }) {
   const { openJob } = useRowActions();
   const { matchStatus, matchScore } = job;
   if (!matchStatus) return dash;
@@ -142,39 +205,119 @@ function MatchCell({ job }: { job: Job }) {
   );
 }
 
-function HideCell({ job }: { job: Job }) {
-  const { toggleHidden, showingHidden = false } = useRowActions();
-  const action = showingHidden ? 'Unhide' : 'Hide';
+export function SelectCell({ job }: { job: Job }) {
+  const { selected, toggleSelected } = useRowActions();
   return (
-    <button
-      type="button"
-      aria-label={`${action} ${job.title} at ${job.company.name}`}
-      onClick={() => {
-        toggleHidden(job);
+    <input
+      type="checkbox"
+      aria-label={`Select ${jobName(job)}`}
+      checked={selected.has(job.id)}
+      onChange={() => {
+        toggleSelected(job);
       }}
-      className="rounded px-1.5 py-0.5 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-    >
-      {action}
-    </button>
+      className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
+    />
+  );
+}
+
+function SelectAllHeader() {
+  const { selected, toggleAll, allSelected } = useRowActions();
+  return (
+    <input
+      type="checkbox"
+      aria-label="Select all jobs on this page"
+      checked={allSelected}
+      // "Some but not all" shows a dash in the box.
+      ref={(box) => {
+        if (box) box.indeterminate = !allSelected && selected.size > 0;
+      }}
+      onChange={toggleAll}
+      className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
+    />
+  );
+}
+
+const ICON_BUTTON =
+  'inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent';
+
+/**
+ * Save (bookmark), Hide (crossed-out eye) and Open posting, as icon buttons with tooltips.
+ * `withText` adds the words next to the icons, for the phone cards.
+ */
+export function ActionsCell({ job, withText = false }: { job: Job; withText?: boolean }) {
+  const { setStatus, toggleHidden, showingHidden = false } = useRowActions();
+  const saved = job.applicationStatus === 'SAVED';
+  // Applied, Interviewing and so on are already tracked, so there is nothing to save.
+  const tracked = job.applicationStatus !== 'NONE' && !saved;
+  const saveTip = tracked
+    ? `Already on your tracker (${STATUS_LABELS[job.applicationStatus]})`
+    : saved
+      ? 'Saved. Click to unsave'
+      : 'Save to your tracker';
+  const hideAction = showingHidden ? 'Unhide' : 'Hide';
+  const wide = withText ? 'w-auto gap-1.5 px-2 text-xs font-medium text-slate-600' : '';
+
+  return (
+    <div className="flex items-center justify-end gap-0.5">
+      <button
+        type="button"
+        aria-label={`${saved ? 'Unsave' : 'Save'} ${jobName(job)}`}
+        aria-pressed={saved || tracked}
+        title={saveTip}
+        disabled={tracked}
+        onClick={() => {
+          setStatus(job, saved ? 'NONE' : 'SAVED');
+        }}
+        className={`${ICON_BUTTON} ${wide} ${saved || tracked ? 'text-indigo-600' : ''}`}
+      >
+        <BookmarkIcon filled={saved || tracked} />
+        {withText && (saved ? 'Saved' : 'Save')}
+      </button>
+      <button
+        type="button"
+        aria-label={`${hideAction} ${jobName(job)}`}
+        title={showingHidden ? 'Put back in your table' : 'Hide from your table'}
+        onClick={() => {
+          toggleHidden(job);
+        }}
+        className={`${ICON_BUTTON} ${wide} hover:text-red-600`}
+      >
+        {showingHidden ? <EyeIcon /> : <EyeSlashIcon />}
+        {withText && hideAction}
+      </button>
+      {job.url ? (
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Open posting for ${jobName(job)}`}
+          title="Open the original posting"
+          className={`${ICON_BUTTON} ${wide}`}
+        >
+          <ExternalLinkIcon />
+          {withText && 'Posting'}
+        </a>
+      ) : (
+        // Keeps the icons lined up in rows without a link.
+        !withText && <span aria-hidden="true" className="inline-block w-8" />
+      )}
+    </div>
   );
 }
 
 export const columns = helper.columns([
   helper.display({
-    id: 'company',
-    header: 'Company',
-    cell: ({ row }) => <CompanyCell job={row.original} />,
-  }),
-  helper.accessor('postedAt', {
-    header: 'Posted',
-    cell: (info) => <span className="whitespace-nowrap">{formatDate(info.getValue())}</span>,
+    id: 'select',
+    header: () => <SelectAllHeader />,
+    enableHiding: false,
+    cell: ({ row }) => <SelectCell job={row.original} />,
   }),
   helper.display({
     id: 'title',
-    header: 'Job title',
+    header: 'Job',
     // Every row needs something to click to open the job, so this column can't be hidden.
     enableHiding: false,
-    cell: ({ row }) => <TitleCell job={row.original} />,
+    cell: ({ row }) => <JobCell job={row.original} />,
   }),
   // Next to the title, so the score is visible without scrolling the wide table sideways.
   helper.display({
@@ -182,12 +325,23 @@ export const columns = helper.columns([
     header: 'Match',
     cell: ({ row }) => <MatchCell job={row.original} />,
   }),
-  helper.accessor('jobFunction', {
-    header: 'Function',
-    cell: (info) => {
-      const value = info.getValue();
-      return value ? <Badge tone="red">{value}</Badge> : dash;
-    },
+  helper.display({
+    id: 'location',
+    header: 'Location',
+    cell: ({ row }) => <LocationCell job={row.original} />,
+  }),
+  helper.accessor('postedAt', {
+    header: 'Posted',
+    cell: ({ row }) => <PostedCell job={row.original} />,
+  }),
+  helper.display({
+    id: 'salary',
+    header: 'Salary',
+    cell: ({ row }) => <SalaryCell job={row.original} />,
+  }),
+  helper.accessor('skills', {
+    header: 'Skills',
+    cell: (info) => <SkillsCell skills={info.getValue()} />,
   }),
   helper.accessor('seniority', {
     header: 'Seniority',
@@ -196,25 +350,11 @@ export const columns = helper.columns([
       return value ? <Badge tone="orange">{capitalize(value)}</Badge> : dash;
     },
   }),
-  helper.accessor('skills', {
-    header: 'Skills',
-    cell: (info) => <SkillsCell skills={info.getValue()} />,
-  }),
-  helper.accessor('city', {
-    header: 'City',
-    cell: (info) => <span className="whitespace-nowrap">{info.getValue() ?? '–'}</span>,
-  }),
-  helper.accessor('countryCode', {
-    header: 'Country',
+  helper.accessor('jobFunction', {
+    header: 'Function',
     cell: (info) => {
       const value = info.getValue();
-      return value ? (
-        <span className="whitespace-nowrap" title={value}>
-          {countryName(value)}
-        </span>
-      ) : (
-        dash
-      );
+      return value ? <Badge tone="red">{value}</Badge> : dash;
     },
   }),
   helper.accessor('language', {
@@ -222,31 +362,6 @@ export const columns = helper.columns([
     cell: (info) => {
       const value = info.getValue();
       return value ? <Badge tone="purple">{languageName(value)}</Badge> : dash;
-    },
-  }),
-  helper.display({
-    id: 'salary',
-    header: 'Salary',
-    cell: ({ row }) => {
-      const job = row.original;
-      const salary = formatSalary(job.salaryMinUsd, job.salaryMaxUsd);
-      if (!salary) return dash;
-      return (
-        <span
-          className="whitespace-nowrap"
-          title={job.salaryEstimated ? 'Estimated by JobsPipe' : 'Stated in the posting'}
-        >
-          {salary}
-          {job.salaryEstimated && <span className="text-slate-400"> est.</span>}
-        </span>
-      );
-    },
-  }),
-  helper.accessor('provider', {
-    header: 'Source',
-    cell: (info) => {
-      const value = info.getValue();
-      return value ? <span className="whitespace-nowrap">{capitalize(value)}</span> : dash;
     },
   }),
   helper.accessor('workplace', {
@@ -271,29 +386,47 @@ export const columns = helper.columns([
       );
     },
   }),
+  helper.accessor('provider', {
+    header: 'Source',
+    cell: (info) => {
+      const value = info.getValue();
+      return value ? <span className="whitespace-nowrap">{capitalize(value)}</span> : dash;
+    },
+  }),
   helper.display({
     id: 'status',
     header: 'Status',
     cell: ({ row }) => <StatusCell job={row.original} />,
   }),
   helper.display({
-    id: 'hide',
-    header: 'Actions',
-    cell: ({ row }) => <HideCell job={row.original} />,
+    id: 'actions',
+    header: () => <span className="sr-only">Actions</span>,
+    enableHiding: false,
+    cell: ({ row }) => <ActionsCell job={row.original} />,
   }),
 ]);
 
 /**
- * Columns that start switched off to keep the table narrow. They stay in the Columns menu, so you
- * can turn them back on.
+ * Columns that start switched off, so the table shows only what you decide on at a glance. They
+ * stay in the Columns menu, so you can turn them back on.
  */
-export const DEFAULT_HIDDEN_COLUMNS = ['jobFunction', 'workplace', 'industry'];
+export const DEFAULT_HIDDEN_COLUMNS = [
+  'skills',
+  'seniority',
+  'jobFunction',
+  'language',
+  'workplace',
+  'industry',
+  'provider',
+];
 
 /** How each column header sorts and filters. Columns not listed here do neither. */
 export interface ColumnControls {
   sortField?: JobSortField;
   filter?: {
     key: ListFilterKey;
+    /** What the filter picks, when it isn't the column's name: the Job column filters companies. */
+    label?: string;
     options: (opts: JobFilterOptions | undefined) => { value: string; label: string }[];
   };
 }
@@ -303,25 +436,21 @@ const capitalized = (values: string[] | undefined) =>
   (values ?? []).map((v) => ({ value: v, label: capitalize(v) }));
 
 export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
-  company: {
-    sortField: 'COMPANY',
-    filter: { key: 'companies', options: (o) => plain(o?.companies) },
+  title: {
+    sortField: 'TITLE',
+    filter: { key: 'companies', label: 'Company', options: (o) => plain(o?.companies) },
+  },
+  location: {
+    sortField: 'CITY',
+    filter: { key: 'cities', label: 'City', options: (o) => plain(o?.cities) },
   },
   postedAt: { sortField: 'POSTED_AT' },
-  title: { sortField: 'TITLE' },
   jobFunction: { filter: { key: 'jobFunctions', options: (o) => plain(o?.jobFunctions) } },
   seniority: {
     sortField: 'SENIORITY',
     filter: { key: 'seniorities', options: (o) => capitalized(o?.seniorities) },
   },
   skills: { filter: { key: 'skills', options: (o) => plain(o?.skills) } },
-  city: { sortField: 'CITY', filter: { key: 'cities', options: (o) => plain(o?.cities) } },
-  countryCode: {
-    filter: {
-      key: 'countryCodes',
-      options: (o) => (o?.countryCodes ?? []).map((v) => ({ value: v, label: countryName(v) })),
-    },
-  },
   language: {
     filter: {
       key: 'languages',

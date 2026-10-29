@@ -77,6 +77,8 @@ export interface JobFilterInput {
   workplaces?: Workplace[];
   applicationStatuses?: ApplicationStatus[];
   minSalaryUsd?: number;
+  /** ISO date-time: only jobs posted after it. */
+  postedAfter?: string;
   /** True lists only the jobs you hid; otherwise they are left out. */
   hidden?: boolean;
 }

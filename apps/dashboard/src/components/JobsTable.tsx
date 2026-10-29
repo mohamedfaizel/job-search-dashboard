@@ -8,9 +8,11 @@ import type {
 } from '@jobsearch/data';
 import { useTable } from '@tanstack/react-table';
 import { useMemo } from 'react';
+import { useIsPhone } from '../useIsPhone';
 import { ColumnFilter } from './ColumnFilter';
 import type { RowActions } from './columns';
 import { COLUMN_CONTROLS, columns, features, RowActionsContext } from './columns';
+import { JobCards } from './JobCards';
 import { SortButton } from './SortButton';
 
 export interface JobsTableProps extends RowActions {
@@ -25,9 +27,14 @@ export interface JobsTableProps extends RowActions {
   isFetching?: boolean;
   /** Columns switched off in the Columns menu, as { columnId: false }. */
   columnVisibility?: Record<string, boolean>;
+  /** Ids of the ticked rows. */
+  selected?: ReadonlySet<string>;
+  onSelectionChange?: (selected: Set<string>) => void;
 }
 
 const NO_HIDDEN_COLUMNS: Record<string, boolean> = {};
+const NO_SELECTION: ReadonlySet<string> = new Set();
+const noop = () => undefined;
 
 /**
  * The job posts table. It only displays what it is given and reports clicks; the
@@ -48,7 +55,10 @@ export function JobsTable({
   showingHidden = false,
   isFetching = false,
   columnVisibility = NO_HIDDEN_COLUMNS,
+  selected = NO_SELECTION,
+  onSelectionChange = noop,
 }: JobsTableProps) {
+  const isPhone = useIsPhone();
   const table = useTable({
     features,
     columns,
@@ -56,17 +66,41 @@ export function JobsTable({
     getRowId: (job) => job.id,
     state: { columnVisibility },
   });
-  const actions = useMemo(
-    () => ({ openJob, setStatus, toggleHidden, showingHidden }),
-    [openJob, setStatus, toggleHidden, showingHidden],
-  );
+  const actions = useMemo(() => {
+    const allSelected = jobs.length > 0 && jobs.every((job) => selected.has(job.id));
+    return {
+      openJob,
+      setStatus,
+      toggleHidden,
+      showingHidden,
+      selected,
+      allSelected,
+      toggleSelected: (job: Job) => {
+        const next = new Set(selected);
+        if (!next.delete(job.id)) next.add(job.id);
+        onSelectionChange(next);
+      },
+      toggleAll: () => {
+        onSelectionChange(allSelected ? new Set() : new Set(jobs.map((job) => job.id)));
+      },
+    };
+  }, [jobs, openJob, setStatus, toggleHidden, showingHidden, selected, onSelectionChange]);
+
+  // Phones get a list of cards: a wide table is hard to read on a narrow screen.
+  if (isPhone) {
+    return (
+      <RowActionsContext.Provider value={actions}>
+        <JobCards jobs={jobs} isFetching={isFetching} />
+      </RowActionsContext.Provider>
+    );
+  }
 
   return (
     <RowActionsContext.Provider value={actions}>
       {/* Scrolls inside its own box so the header can stick to the top while you scroll. */}
-      <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 bg-white">
         <table className="min-w-full text-left text-[13px]">
-          <thead className="sticky top-0 z-10 bg-slate-50/95 text-slate-500 shadow-[inset_0_-1px_0_var(--color-slate-200)] backdrop-blur">
+          <thead className="sticky top-0 z-10 bg-white/95 text-xs text-slate-500 shadow-[inset_0_-1px_0_var(--color-slate-200)] backdrop-blur">
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>
                 {group.headers.map((header) => {
@@ -76,7 +110,7 @@ export function JobsTable({
                       ? sort.direction
                       : null;
                   const label = <table.FlexRender header={header} />;
-                  const name = String(header.column.columnDef.header);
+                  const name = controls.filter?.label ?? String(header.column.columnDef.header);
 
                   return (
                     <th
@@ -89,7 +123,7 @@ export function JobsTable({
                             ? 'descending'
                             : undefined
                       }
-                      className="px-3 py-2.5 font-medium whitespace-nowrap"
+                      className="px-3 py-3 font-medium whitespace-nowrap first:w-10 first:pl-4"
                     >
                       <div className="flex items-center gap-1">
                         {controls.sortField ? (
@@ -128,10 +162,12 @@ export function JobsTable({
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-t border-slate-100 even:bg-slate-50/50 hover:bg-indigo-50/40"
+                className={`border-t border-slate-100 transition-colors hover:bg-slate-50 ${
+                  selected.has(row.id) ? 'bg-indigo-50/60' : ''
+                }`}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-3 py-2 align-middle text-slate-700">
+                  <td key={cell.id} className="px-3 py-3 align-middle text-slate-700 first:pl-4">
                     <table.FlexRender cell={cell} />
                   </td>
                 ))}

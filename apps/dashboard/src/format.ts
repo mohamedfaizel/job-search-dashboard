@@ -66,3 +66,15 @@ export function countryName(code: string): string {
 export function languageName(code: string): string {
   return displayName(languageNames, code.toLowerCase());
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** "Today", "1 d ago", "3 w ago", "5 mo ago": how long ago a job was posted. */
+export function timeAgo(iso: string, now = Date.now()): string {
+  const days = Math.floor((now - new Date(iso).getTime()) / DAY_MS);
+  if (days < 1) return 'Today';
+  if (days < 14) return `${days} d ago`;
+  if (days < 60) return `${Math.floor(days / 7)} w ago`;
+  if (days < 365) return `${Math.floor(days / 30)} mo ago`;
+  return `${Math.floor(days / 365)} y ago`;
+}

@@ -6,12 +6,21 @@ interface Props {
   onSearch: (value: string) => void;
   activeFilterCount: number;
   onClearAll: () => void;
+  /** Filter chips shown next to the search box. */
+  quickFilters?: ReactNode;
   /** Extra controls on the right, like the Columns menu. */
   children?: ReactNode;
 }
 
 /** Search box (debounced so we don't query on every keystroke) and a "clear filters" button. */
-export function Toolbar({ search, onSearch, activeFilterCount, onClearAll, children }: Props) {
+export function Toolbar({
+  search,
+  onSearch,
+  activeFilterCount,
+  onClearAll,
+  quickFilters,
+  children,
+}: Props) {
   const [value, setValue] = useState(search);
 
   // Keep the box in sync when the search is cleared from elsewhere (e.g. "Clear all").
@@ -36,7 +45,7 @@ export function Toolbar({ search, onSearch, activeFilterCount, onClearAll, child
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="relative">
+      <div className="relative w-full sm:w-auto">
         <svg
           aria-hidden="true"
           viewBox="0 0 20 20"
@@ -52,9 +61,10 @@ export function Toolbar({ search, onSearch, activeFilterCount, onClearAll, child
           onChange={(e) => {
             setValue(e.target.value);
           }}
-          className="w-72 rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none"
+          className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none sm:w-72"
         />
       </div>
+      {quickFilters}
       {activeFilterCount > 0 && (
         <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
           {activeFilterCount} filter{activeFilterCount === 1 ? '' : 's'} active
@@ -69,7 +79,7 @@ export function Toolbar({ search, onSearch, activeFilterCount, onClearAll, child
           Clear all
         </button>
       )}
-      {children && <div className="ml-auto flex items-center gap-2">{children}</div>}
+      {children && <div className="hidden items-center gap-2 md:ml-auto md:flex">{children}</div>}
     </div>
   );
 }
