@@ -11,13 +11,30 @@ type RunRow = Prisma.SyncRunGetPayload<{ include: { savedSearch: { select: { nam
 
 const withSearchName = { savedSearch: { select: { name: true } } } satisfies Prisma.SyncRunInclude;
 
+/** "en" → "English", for the search summary. */
+function languageName(code: string): string {
+  return (
+    ({ en: 'English', de: 'German' } as Record<string, string | undefined>)[code] ??
+    code.toUpperCase()
+  );
+}
+
 /** "frontend, react dev · DE · Berlin" from the input an import stored. */
 export function summarize(input: Prisma.JsonValue): string {
   const obj = (input ?? {}) as Record<string, unknown>;
   const list = (key: string) => (Array.isArray(obj[key]) ? (obj[key] as string[]) : []);
+  const extras = [
+    list('languages').length ? `in ${list('languages').map(languageName).join('/')}` : '',
+    obj['remoteOnly'] === true ? 'remote' : '',
+    obj['skipFluentGerman'] === true ? 'no fluent German' : '',
+    list('employmentTypes').join(', '),
+    list('excludeTitles').length ? `not ${list('excludeTitles').join(', ')}` : '',
+    typeof obj['minSalaryEur'] === 'number' ? `€${obj['minSalaryEur'].toLocaleString('en')}+` : '',
+  ];
   return [list('titles'), list('skills'), list('countryCodes'), list('locations')]
     .filter((part) => part.length > 0)
     .map((part) => part.join(', '))
+    .concat(extras.filter(Boolean))
     .join(' · ');
 }
 
@@ -119,6 +136,12 @@ export class SavedSearchesService {
       skills: row.skills,
       countryCodes: row.countryCodes,
       locations: row.locations,
+      languages: row.languages,
+      skipFluentGerman: row.skipFluentGerman,
+      remoteOnly: row.remoteOnly,
+      excludeTitles: row.excludeTitles,
+      employmentTypes: row.employmentTypes,
+      minSalaryEur: row.minSalaryEur,
       maxAgeDays: row.maxAgeDays,
       pageSize: row.pageSize,
       maxPages: row.maxPages,
@@ -154,6 +177,12 @@ function toData(input: SavedSearchInput) {
     skills: input.skills ?? [],
     countryCodes: (input.countryCodes ?? []).map((c) => c.toUpperCase()),
     locations: input.locations ?? [],
+    languages: (input.languages ?? []).map((l) => l.toLowerCase()),
+    skipFluentGerman: input.skipFluentGerman,
+    remoteOnly: input.remoteOnly,
+    excludeTitles: input.excludeTitles ?? [],
+    employmentTypes: input.employmentTypes ?? [],
+    minSalaryEur: input.minSalaryEur ?? null,
     maxAgeDays: input.maxAgeDays,
     pageSize: input.pageSize,
     maxPages: input.maxPages,

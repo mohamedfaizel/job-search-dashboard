@@ -3,6 +3,7 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -10,6 +11,9 @@ import {
   Max,
   Min,
 } from 'class-validator';
+
+/** The job types JobsPipe's employment_type_or accepts. */
+export const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
 
 /** What to fetch from JobsPipe. Also the shape a scheduled search will reuse later. */
 @InputType()
@@ -46,6 +50,59 @@ export class SyncJobsInput {
   @ArrayMaxSize(20)
   @IsString({ each: true })
   locations?: string[];
+
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      'Languages the posting is written in, ISO 639-1 codes, e.g. ["en", "de"]. Unlabelled postings are kept.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @Length(2, 2, { each: true })
+  languages?: string[];
+
+  @Field(() => Boolean, {
+    defaultValue: false,
+    description:
+      'Skip postings that ask for fluent German (fließende Deutschkenntnisse and the like)',
+  })
+  @IsBoolean()
+  skipFluentGerman = false;
+
+  @Field(() => Boolean, { defaultValue: false, description: 'Only postings flagged remote' })
+  @IsBoolean()
+  remoteOnly = false;
+
+  @Field(() => [String], {
+    nullable: true,
+    description: 'Skip postings whose title contains any of these, e.g. ["Werkstudent"]',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  excludeTitles?: string[];
+
+  @Field(() => [String], {
+    nullable: true,
+    description: `Any of ${EMPLOYMENT_TYPES.join(', ')}. Postings with no type are kept.`,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsIn(EMPLOYMENT_TYPES, { each: true })
+  employmentTypes?: string[];
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Only postings whose posted salary reaches this many euros a year',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(1_000_000)
+  minSalaryEur?: number | null;
 
   @Field(() => Int, { defaultValue: 7, description: 'Only postings from the last N days' })
   @IsInt()

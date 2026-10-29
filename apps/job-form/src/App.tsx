@@ -53,7 +53,7 @@ function AddJobs() {
             label: 'Import from JobsPipe',
             short: 'Import',
             panel: (
-              <div className="max-w-2xl">
+              <div>
                 <SyncPanel key={formKey} loaded={loaded} />
               </div>
             ),
@@ -63,7 +63,7 @@ function AddJobs() {
             label: 'Add a job by hand',
             short: 'By hand',
             panel: (
-              <div className="max-w-3xl">
+              <div>
                 <AddJobForm />
               </div>
             ),

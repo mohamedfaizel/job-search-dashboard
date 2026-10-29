@@ -1,6 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { SavedSearch } from '@jobsearch/data';
-import { getErrorMessage, useMyProfile, useSaveSearch, useSyncJobs } from '@jobsearch/data';
+import type { EmploymentType, SavedSearch } from '@jobsearch/data';
+import {
+  EMPLOYMENT_TYPES,
+  getErrorMessage,
+  useMyProfile,
+  useSaveSearch,
+  useSyncJobs,
+} from '@jobsearch/data';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { formatDateTime, plural } from '../format';
@@ -14,6 +20,25 @@ import {
 } from '../schema';
 import { CountrySelect } from './CountrySelect';
 import { Field, inputClass } from './Field';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'de', label: 'German' },
+];
+
+const JOB_TYPE_LABELS: Record<EmploymentType, string> = {
+  'full-time': 'Full-time',
+  'part-time': 'Part-time',
+  contract: 'Contract',
+  internship: 'Internship',
+};
+
+const CHECKBOX = 'size-4 rounded border-slate-300 text-indigo-600';
+
+/** Adds a value to a list, or takes it out. */
+function toggle<T>(list: T[], value: T): T[] {
+  return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+}
 
 interface Props {
   /** A saved search to start from. Saving with the same name updates it. */
@@ -47,6 +72,29 @@ export function SyncPanel({ loaded = null }: Props) {
     name: ['pageSize', 'maxPages', 'maxAgeDays'],
   });
   const maxCredits = Number(pageSize) * Number(maxPages);
+
+  const filters = useWatch({
+    control,
+    name: [
+      'languages',
+      'skipFluentGerman',
+      'remoteOnly',
+      'excludeTitles',
+      'employmentTypes',
+      'minSalaryEur',
+    ],
+  });
+  const activeFilters = [
+    filters[0].length > 0,
+    filters[1],
+    filters[2],
+    filters[3].trim() !== '',
+    filters[4].length > 0,
+    filters[5].trim() !== '',
+  ].filter(Boolean).length;
+  // Open at first when a loaded search uses any of them, and whenever one has a mistake.
+  const [moreOpen, setMoreOpen] = useState(activeFilters > 0);
+  const moreError = Boolean(errors.minSalaryEur ?? errors.excludeTitles);
 
   // The page settings sit in a fold to keep the form short; a mistake in them opens it.
   const [pageSettingsOpen, setPageSettingsOpen] = useState(false);
@@ -118,95 +166,230 @@ export function SyncPanel({ loaded = null }: Props) {
         </button>
       )}
 
-      <Field
-        label="Job titles"
-        htmlFor="sync-titles"
-        error={errors.titles?.message}
-        hint="Comma separated"
-        required
-      >
-        <input {...register('titles')} {...a11y('titles')} className={inputClass} />
-      </Field>
-      <Field label="Skills" htmlFor="sync-skills" hint="Optional, comma separated">
-        <input {...register('skills')} {...a11y('skills')} className={inputClass} />
-      </Field>
-      <Field
-        label="Countries"
-        htmlFor="sync-countryCodes"
-        error={errors.countryCodes?.message}
-        hint="Pick one or more, or leave it on Worldwide"
-      >
-        <Controller
-          control={control}
-          name="countryCodes"
-          render={({ field }) => (
-            <CountrySelect
-              id="sync-countryCodes"
-              value={field.value}
-              onChange={field.onChange}
-              invalid={Boolean(errors.countryCodes)}
-              describedBy={errors.countryCodes ? 'sync-countryCodes-error' : undefined}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Field
+          label="Job titles"
+          htmlFor="sync-titles"
+          error={errors.titles?.message}
+          hint="Comma separated"
+          required
+        >
+          <input {...register('titles')} {...a11y('titles')} className={inputClass} />
+        </Field>
+        <Field label="Skills" htmlFor="sync-skills" hint="Optional, comma separated">
+          <input {...register('skills')} {...a11y('skills')} className={inputClass} />
+        </Field>
+        <Field
+          label="Countries"
+          htmlFor="sync-countryCodes"
+          error={errors.countryCodes?.message}
+          hint="Pick one or more, or leave it on Worldwide"
+        >
+          <Controller
+            control={control}
+            name="countryCodes"
+            render={({ field }) => (
+              <CountrySelect
+                id="sync-countryCodes"
+                value={field.value}
+                onChange={field.onChange}
+                invalid={Boolean(errors.countryCodes)}
+                describedBy={errors.countryCodes ? 'sync-countryCodes-error' : undefined}
+              />
+            )}
+          />
+        </Field>
+        <Field
+          label="Cities or regions"
+          htmlFor="sync-locations"
+          hint="Optional, comma separated, e.g. Berlin, Bavaria"
+        >
+          <input {...register('locations')} {...a11y('locations')} className={inputClass} />
+        </Field>
+      </div>
+
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <details
+          open={moreOpen || moreError}
+          onToggle={(e) => {
+            setMoreOpen(e.currentTarget.open);
+          }}
+          className="rounded-md border border-slate-200 px-3 py-2"
+        >
+          <summary className="cursor-pointer text-sm font-medium text-slate-700">
+            More filters{' '}
+            {activeFilters > 0 && (
+              <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
+                {activeFilters} on
+              </span>
+            )}
+          </summary>
+          <div className="mt-3 space-y-4">
+            <Controller
+              control={control}
+              name="languages"
+              render={({ field }) => (
+                <fieldset className="space-y-1">
+                  <legend className="text-sm font-medium text-slate-700">Ad written in</legend>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {LANGUAGES.map((lang) => (
+                      <label key={lang.code} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={field.value.includes(lang.code)}
+                          onChange={() => {
+                            field.onChange(toggle(field.value, lang.code));
+                          }}
+                          className={CHECKBOX}
+                        />
+                        {lang.label}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    None ticked = any language. Many German jobs are posted in English, and ads with
+                    no language yet are kept.
+                  </p>
+                </fieldset>
+              )}
             />
-          )}
-        />
-      </Field>
-      <Field
-        label="Cities or regions"
-        htmlFor="sync-locations"
-        hint="Optional, comma separated, e.g. Berlin, Bavaria"
-      >
-        <input {...register('locations')} {...a11y('locations')} className={inputClass} />
-      </Field>
-      <details
-        open={pageSettingsOpen || pageSettingsError}
-        onToggle={(e) => {
-          setPageSettingsOpen(e.currentTarget.open);
-        }}
-        className="rounded-md border border-slate-200 px-3 py-2"
-      >
-        <summary className="cursor-pointer text-sm font-medium text-slate-700">
-          Page settings{' '}
-          <span className="font-normal text-slate-500">
-            · {maxAgeDays} days old at most · {pageSize} per page · {maxPages}{' '}
-            {Number(maxPages) === 1 ? 'page' : 'pages'}
-          </span>
-        </summary>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <Field
-            label="Max age (days)"
-            htmlFor="sync-maxAgeDays"
-            error={errors.maxAgeDays?.message}
-          >
-            <input
-              inputMode="numeric"
-              {...register('maxAgeDays')}
-              {...a11y('maxAgeDays')}
-              className={inputClass}
+
+            <div className="space-y-2">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  {...register('skipFluentGerman')}
+                  className={`mt-0.5 ${CHECKBOX}`}
+                />
+                <span>
+                  <span className="font-medium text-slate-800">
+                    Skip ads that need fluent German
+                  </span>
+                  <span className="block text-xs text-slate-500">
+                    Catches German ads asking for fließende, verhandlungssichere or C1
+                    Deutschkenntnisse. English ads saying “fluent German” get the German tag in Job
+                    posts instead.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  {...register('remoteOnly')}
+                  className={`mt-0.5 ${CHECKBOX}`}
+                />
+                <span className="font-medium text-slate-800">Remote only</span>
+              </label>
+            </div>
+
+            <Field
+              label="Skip titles with"
+              htmlFor="sync-excludeTitles"
+              hint="Comma separated, e.g. Werkstudent, Praktikum, Intern. Matches part of a word."
+            >
+              <input
+                {...register('excludeTitles')}
+                {...a11y('excludeTitles')}
+                className={inputClass}
+              />
+            </Field>
+
+            <Controller
+              control={control}
+              name="employmentTypes"
+              render={({ field }) => (
+                <fieldset className="space-y-1">
+                  <legend className="text-sm font-medium text-slate-700">Job type</legend>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {EMPLOYMENT_TYPES.map((type) => (
+                      <label key={type} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={field.value.includes(type)}
+                          onChange={() => {
+                            field.onChange(toggle(field.value, type));
+                          }}
+                          className={CHECKBOX}
+                        />
+                        {JOB_TYPE_LABELS[type]}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    None ticked = any type. Ads that don’t say are kept.
+                  </p>
+                </fieldset>
+              )}
             />
-          </Field>
-          <Field
-            label="Jobs per page"
-            htmlFor="sync-pageSize"
-            error={errors.pageSize?.message}
-            hint="Free plan: max 25"
-          >
-            <input
-              inputMode="numeric"
-              {...register('pageSize')}
-              {...a11y('pageSize')}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Max pages" htmlFor="sync-maxPages" error={errors.maxPages?.message}>
-            <input
-              inputMode="numeric"
-              {...register('maxPages')}
-              {...a11y('maxPages')}
-              className={inputClass}
-            />
-          </Field>
-        </div>
-      </details>
+
+            <Field
+              label="Minimum salary (€ a year)"
+              htmlFor="sync-minSalaryEur"
+              error={errors.minSalaryEur?.message}
+              hint="Only about half of ads post a salary, and the rest are skipped. Leave empty to keep them."
+            >
+              <input
+                inputMode="numeric"
+                placeholder="e.g. 60000"
+                {...register('minSalaryEur')}
+                {...a11y('minSalaryEur')}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+        </details>
+
+        <details
+          open={pageSettingsOpen || pageSettingsError}
+          onToggle={(e) => {
+            setPageSettingsOpen(e.currentTarget.open);
+          }}
+          className="rounded-md border border-slate-200 px-3 py-2"
+        >
+          <summary className="cursor-pointer text-sm font-medium text-slate-700">
+            Page settings{' '}
+            <span className="font-normal text-slate-500">
+              · {maxAgeDays} days old at most · {pageSize} per page · {maxPages}{' '}
+              {Number(maxPages) === 1 ? 'page' : 'pages'}
+            </span>
+          </summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <Field
+              label="Max age (days)"
+              htmlFor="sync-maxAgeDays"
+              error={errors.maxAgeDays?.message}
+            >
+              <input
+                inputMode="numeric"
+                {...register('maxAgeDays')}
+                {...a11y('maxAgeDays')}
+                className={inputClass}
+              />
+            </Field>
+            <Field
+              label="Jobs per page"
+              htmlFor="sync-pageSize"
+              error={errors.pageSize?.message}
+              hint="Free plan: max 25"
+            >
+              <input
+                inputMode="numeric"
+                {...register('pageSize')}
+                {...a11y('pageSize')}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Max pages" htmlFor="sync-maxPages" error={errors.maxPages?.message}>
+              <input
+                inputMode="numeric"
+                {...register('maxPages')}
+                {...a11y('maxPages')}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+        </details>
+      </div>
 
       <div className="flex items-start gap-2">
         <input
@@ -295,6 +478,7 @@ export function SyncPanel({ loaded = null }: Props) {
           htmlFor="save-name"
           error={nameError ?? undefined}
           hint="Run it again in one click from Saved searches"
+          className="max-w-2xl"
         >
           <div className="flex flex-col gap-2 sm:flex-row">
             <input

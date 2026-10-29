@@ -131,12 +131,26 @@ export interface CreateJobInput {
   applicationStatus?: ApplicationStatus;
 }
 
+/** The job types the import can filter on (JobsPipe's employment_type_or). */
+export const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
+export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
+
 export interface SyncJobsInput {
   titles: string[];
   skills?: string[];
   countryCodes?: string[];
   /** Cities or regions, e.g. ["Berlin", "Bavaria"]. */
   locations?: string[];
+  /** Languages the posting is written in, ISO 639-1, e.g. ["en", "de"]. */
+  languages?: string[];
+  /** Skip postings that ask for fluent German. */
+  skipFluentGerman?: boolean;
+  remoteOnly?: boolean;
+  /** Skip postings whose title contains any of these. */
+  excludeTitles?: string[];
+  employmentTypes?: EmploymentType[];
+  /** Euros a year; postings without a posted salary never match. */
+  minSalaryEur?: number | null;
   maxAgeDays?: number;
   pageSize?: number;
   maxPages?: number;
@@ -192,6 +206,12 @@ export interface SavedSearch {
   skills: string[];
   countryCodes: string[];
   locations: string[];
+  languages: string[];
+  skipFluentGerman: boolean;
+  remoteOnly: boolean;
+  excludeTitles: string[];
+  employmentTypes: EmploymentType[];
+  minSalaryEur: number | null;
   maxAgeDays: number;
   pageSize: number;
   maxPages: number;

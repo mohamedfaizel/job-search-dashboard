@@ -1,10 +1,14 @@
 import {
+  defaultSyncForm,
   emptyJobForm,
   jobFormSchema,
+  savedSearchToForm,
   splitList,
+  syncFormSchema,
   toCreateJobInput,
   toSyncJobsInput,
 } from './schema';
+import { SAVED } from './test/server';
 
 describe('splitList', () => {
   it('splits on commas and drops blanks', () => {
@@ -64,6 +68,7 @@ describe('toSyncJobsInput', () => {
   it('builds the sync input', () => {
     expect(
       toSyncJobsInput({
+        ...defaultSyncForm,
         titles: 'frontend, react developer',
         skills: '',
         countryCodes: 'de, us',
@@ -82,5 +87,50 @@ describe('toSyncJobsInput', () => {
       maxPages: 3,
       onlyNew: true,
     });
+  });
+
+  it('adds only the extra filters that are set', () => {
+    expect(
+      toSyncJobsInput({
+        ...defaultSyncForm,
+        languages: ['en'],
+        skipFluentGerman: true,
+        excludeTitles: 'Werkstudent, , Praktikum',
+        employmentTypes: ['full-time'],
+        minSalaryEur: ' 60000 ',
+      }),
+    ).toMatchObject({
+      languages: ['en'],
+      skipFluentGerman: true,
+      excludeTitles: ['Werkstudent', 'Praktikum'],
+      employmentTypes: ['full-time'],
+      minSalaryEur: 60000,
+    });
+    const plain = toSyncJobsInput(defaultSyncForm);
+    for (const key of [
+      'languages',
+      'skipFluentGerman',
+      'remoteOnly',
+      'excludeTitles',
+      'minSalaryEur',
+    ]) {
+      expect(plain).not.toHaveProperty(key);
+    }
+  });
+
+  it('turns a saved search with filters back into the form', () => {
+    expect(
+      savedSearchToForm({
+        ...SAVED,
+        remoteOnly: true,
+        excludeTitles: ['Intern'],
+        minSalaryEur: 50000,
+      }),
+    ).toMatchObject({ remoteOnly: true, excludeTitles: 'Intern', minSalaryEur: '50000' });
+  });
+
+  it('refuses a salary that is not a whole number', () => {
+    const result = syncFormSchema.safeParse({ ...defaultSyncForm, minSalaryEur: '60k' });
+    expect(result.success).toBe(false);
   });
 });

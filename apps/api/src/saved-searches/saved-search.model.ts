@@ -75,6 +75,24 @@ export class SavedSearch {
   @Field(() => [String])
   locations!: string[];
 
+  @Field(() => [String])
+  languages!: string[];
+
+  @Field()
+  skipFluentGerman!: boolean;
+
+  @Field()
+  remoteOnly!: boolean;
+
+  @Field(() => [String])
+  excludeTitles!: string[];
+
+  @Field(() => [String])
+  employmentTypes!: string[];
+
+  @Field(() => Int, { nullable: true, description: 'Euros a year' })
+  minSalaryEur!: number | null;
+
   @Field(() => Int)
   maxAgeDays!: number;
 

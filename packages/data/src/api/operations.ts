@@ -157,6 +157,12 @@ const SAVED_SEARCH_FIELDS = /* GraphQL */ `
   skills
   countryCodes
   locations
+  languages
+  skipFluentGerman
+  remoteOnly
+  excludeTitles
+  employmentTypes
+  minSalaryEur
   maxAgeDays
   pageSize
   maxPages

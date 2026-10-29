@@ -114,6 +114,40 @@ describe('SyncPanel', () => {
     expect(requests).toHaveLength(0);
   });
 
+  it('sends the extra filters from More filters', async () => {
+    renderWithData(<SyncPanel />);
+    await userEvent.click(screen.getByText('More filters'));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'English' }));
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: /Skip ads that need fluent German/ }),
+    );
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Remote only' }));
+    await userEvent.type(screen.getByLabelText('Skip titles with'), 'Werkstudent, Praktikum');
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Full-time' }));
+    await userEvent.type(screen.getByLabelText('Minimum salary (€ a year)'), '60000');
+    expect(screen.getByText('More filters')).toHaveTextContent('6 on');
+
+    await userEvent.click(screen.getByRole('button', { name: /^import/i }));
+
+    await screen.findByRole('status');
+    expect(requests[0]?.variables).toMatchObject({
+      input: {
+        languages: ['en'],
+        skipFluentGerman: true,
+        remoteOnly: true,
+        excludeTitles: ['Werkstudent', 'Praktikum'],
+        employmentTypes: ['full-time'],
+        minSalaryEur: 60000,
+      },
+    });
+  });
+
+  it('opens More filters when a loaded search uses them', () => {
+    renderWithData(<SyncPanel loaded={{ ...SAVED, remoteOnly: true }} />);
+    expect(screen.getByText('More filters').closest('details')).toHaveAttribute('open');
+    expect(screen.getByRole('checkbox', { name: 'Remote only' })).toBeChecked();
+  });
+
   describe('saving the search', () => {
     it('saves the form as a named search', async () => {
       renderWithData(<SyncPanel />);
