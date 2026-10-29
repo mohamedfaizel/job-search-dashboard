@@ -1,13 +1,17 @@
+import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_URL, graphqlClient } from './client';
 import {
+  ADD_TO_APPLY_QUEUE,
+  APPLY_QUEUE,
   DELETE_JOB_RESUME,
   JOB_INSIGHTS,
+  REMOVE_FROM_APPLY_QUEUE,
   REMOVE_INSIGHT_TERM,
   RESTORE_INSIGHT_TERM,
   SAVE_JOB_RESUME_TEXT,
 } from './operations';
-import type { JobInsights } from './types';
+import type { ApplyQueueItem, JobInsights } from './types';
 
 /** All insights share this prefix, so a new resume can refresh every job's at once. */
 export const jobInsightsPrefix = ['insights'] as const;
@@ -83,6 +87,52 @@ export function applyKitUrl(jobId: string) {
   return `${API_URL.replace(/\/graphql\/?$/, '')}/apply-kit/${encodeURIComponent(jobId)}`;
 }
 
+/** A saved or deleted reply changes the job's insights and whether it is ready in the queue. */
+function savedReply(queryClient: QueryClient, insights: JobInsights) {
+  queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+  void queryClient.invalidateQueries({ queryKey: applyQueueKey });
+}
+
+export const applyQueueKey = ['jobs', 'applyQueue'] as const;
+
+/** The jobs you lined up to apply for, oldest first. Under 'jobs', so status changes refresh it. */
+export function useApplyQueue() {
+  return useQuery({
+    queryKey: applyQueueKey,
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ myApplyQueue: ApplyQueueItem[] }>(APPLY_QUEUE);
+      return data.myApplyQueue;
+    },
+  });
+}
+
+/** Adds jobs to the Apply queue, or (remove: true) takes them out. Answers with the new queue. */
+export function useChangeApplyQueue() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ jobIds, remove = false }: { jobIds: string[]; remove?: boolean }) => {
+      if (remove) {
+        const data = await graphqlClient.request<{ removeFromApplyQueue: ApplyQueueItem[] }>(
+          REMOVE_FROM_APPLY_QUEUE,
+          { jobIds },
+        );
+        return data.removeFromApplyQueue;
+      }
+      const data = await graphqlClient.request<{ addToApplyQueue: ApplyQueueItem[] }>(
+        ADD_TO_APPLY_QUEUE,
+        { jobIds },
+      );
+      return data.addToApplyQueue;
+    },
+    onSuccess: (queue) => {
+      queryClient.setQueryData(applyQueueKey, queue);
+    },
+  });
+}
+
+/** The Apply queue page: every queued job with its posting and Apply kit, for Claude in Chrome. */
+export const APPLY_QUEUE_URL = `${API_URL.replace(/\/graphql\/?$/, '')}/apply-queue`;
+
 /** Uploads the resume you wrote for a job (PDF, Word, text or Markdown) and scores it. */
 export function useUploadJobResume() {
   const queryClient = useQueryClient();
@@ -106,7 +156,7 @@ export function useUploadJobResume() {
       return json as JobInsights;
     },
     onSuccess: (insights) => {
-      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+      savedReply(queryClient, insights);
     },
   });
 }
@@ -123,7 +173,7 @@ export function useSaveJobResumeText() {
       return data.saveJobResumeText;
     },
     onSuccess: (insights) => {
-      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+      savedReply(queryClient, insights);
     },
   });
 }
@@ -140,7 +190,7 @@ export function useDeleteJobResume() {
       return data.deleteJobResume;
     },
     onSuccess: (insights) => {
-      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+      savedReply(queryClient, insights);
     },
   });
 }

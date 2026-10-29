@@ -1,6 +1,7 @@
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
+import { ApplyQueueItemModel } from './apply-queue';
 import { JobInsightsModel } from './insights.model';
 import { InsightsService } from './insights.service';
 
@@ -59,5 +60,30 @@ export class InsightsResolver {
     @Args('jobId', { type: () => ID }) jobId: string,
   ): Promise<JobInsightsModel> {
     return this.insights.deleteJobResume(user.id, jobId);
+  }
+
+  @Query(() => [ApplyQueueItemModel], {
+    description: 'Jobs you lined up to apply for, oldest first',
+  })
+  myApplyQueue(@CurrentUser() user: SessionUser): Promise<ApplyQueueItemModel[]> {
+    return this.insights.applyQueue(user.id);
+  }
+
+  @Mutation(() => [ApplyQueueItemModel], {
+    description: 'Adds jobs to your Apply queue. Jobs already in it keep their place.',
+  })
+  addToApplyQueue(
+    @CurrentUser() user: SessionUser,
+    @Args('jobIds', { type: () => [ID] }) jobIds: string[],
+  ): Promise<ApplyQueueItemModel[]> {
+    return this.insights.addToApplyQueue(user.id, jobIds);
+  }
+
+  @Mutation(() => [ApplyQueueItemModel], { description: 'Takes jobs out of your Apply queue' })
+  removeFromApplyQueue(
+    @CurrentUser() user: SessionUser,
+    @Args('jobIds', { type: () => [ID] }) jobIds: string[],
+  ): Promise<ApplyQueueItemModel[]> {
+    return this.insights.removeFromApplyQueue(user.id, jobIds);
   }
 }

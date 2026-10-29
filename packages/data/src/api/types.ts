@@ -407,3 +407,14 @@ export interface RemovedTerm {
   /** Removed from every job, not just this one. */
   everywhere: boolean;
 }
+
+/** A job you lined up to apply for. */
+export interface ApplyQueueItem {
+  jobId: string;
+  title: string;
+  company: string;
+  url: string | null;
+  /** True once Claude's reply (resume, cover letter, form answers) is saved for the job. */
+  ready: boolean;
+  addedAt: string;
+}

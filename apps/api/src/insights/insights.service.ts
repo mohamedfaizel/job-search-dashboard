@@ -2,6 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { tidy } from '../profile/resume-text';
 import { buildApplyKit } from './apply-kit';
+import type { ApplyQueueItemModel } from './apply-queue';
+import { buildQueuePage } from './apply-queue';
 import { germanRequirement } from './german';
 import type {
   JobInsightsModel,
@@ -300,6 +302,69 @@ export class InsightsService {
       jobResume,
       resumeUrl,
     });
+  }
+
+  /** Your Apply queue, oldest first. */
+  async applyQueue(userId: number): Promise<ApplyQueueItemModel[]> {
+    const rows = await this.prisma.applyQueueItem.findMany({
+      where: { userId },
+      orderBy: { addedAt: 'asc' },
+      select: {
+        addedAt: true,
+        job: {
+          select: {
+            id: true,
+            title: true,
+            url: true,
+            company: { select: { name: true } },
+            jobResumes: { where: { userId }, select: { coverLetter: true, formAnswers: true } },
+          },
+        },
+      },
+    });
+    return rows.map(({ addedAt, job }) => {
+      const reply = job.jobResumes[0];
+      return {
+        jobId: job.id,
+        title: job.title,
+        company: job.company.name,
+        url: job.url,
+        ready: !!reply && (reply.coverLetter !== '' || reply.formAnswers !== ''),
+        addedAt,
+      };
+    });
+  }
+
+  /** Adds jobs to your Apply queue. Jobs already in it keep their place. */
+  async addToApplyQueue(userId: number, jobIds: string[]): Promise<ApplyQueueItemModel[]> {
+    const jobs = await this.prisma.job.findMany({
+      where: { id: { in: jobIds } },
+      select: { id: true },
+    });
+    await this.prisma.applyQueueItem.createMany({
+      data: jobs.map((job) => ({ userId, jobId: job.id })),
+      skipDuplicates: true,
+    });
+    return this.applyQueue(userId);
+  }
+
+  async removeFromApplyQueue(userId: number, jobIds: string[]): Promise<ApplyQueueItemModel[]> {
+    await this.prisma.applyQueueItem.deleteMany({ where: { userId, jobId: { in: jobIds } } });
+    return this.applyQueue(userId);
+  }
+
+  /** The queue page for Claude in Chrome. `kitUrl` makes each job's Apply kit link. */
+  async applyQueuePage(userId: number, kitUrl: (jobId: string) => string): Promise<string> {
+    const items = await this.applyQueue(userId);
+    return buildQueuePage(
+      items.map(({ jobId, title, company, url, ready }) => ({
+        title,
+        company,
+        url,
+        ready,
+        kitUrl: kitUrl(jobId),
+      })),
+    );
   }
 
   private async assertJob(jobId: string) {

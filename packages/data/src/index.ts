@@ -3,7 +3,11 @@ export { API_URL, getErrorMessage, isUnauthenticated } from './api/client';
 export { meKey, useLogIn, useLogOut, useMe, useSignUp } from './api/auth';
 export {
   jobInsightsKey,
+  APPLY_QUEUE_URL,
   applyKitUrl,
+  applyQueueKey,
+  useApplyQueue,
+  useChangeApplyQueue,
   jobResumeUrl,
   useDeleteJobResume,
   useJobInsights,

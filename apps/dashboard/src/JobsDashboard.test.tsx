@@ -395,4 +395,61 @@ describe('JobsDashboard', () => {
     });
     expect(screen.queryByRole('list', { name: 'Did you apply?' })).not.toBeInTheDocument();
   });
+
+  it('adds ticked jobs to the Apply queue and marks them all Applied', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    expect(screen.queryByRole('region', { name: /Apply queue/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: 'Select all jobs on this page' }));
+    const bar = screen.getByRole('region', { name: 'Selected jobs' });
+    await user.click(within(bar).getByRole('button', { name: 'Add to Apply queue' }));
+
+    expect(requests).toContainEqual({
+      operation: 'AddToApplyQueue',
+      variables: { jobIds: ['job-1', 'job-2'] },
+    });
+    const queue = await screen.findByRole('region', { name: 'Apply queue (2)' });
+    expect(queue).toHaveTextContent('2 jobs have no Claude reply saved yet');
+    expect(within(queue).getByRole('link', { name: 'Open queue page ↗' })).toHaveAttribute(
+      'href',
+      'http://localhost:3000/apply-queue',
+    );
+    await user.click(
+      within(queue).getByRole('button', { name: 'Copy prompt for Claude in Chrome' }),
+    );
+    expect(
+      within(queue).getByRole<HTMLTextAreaElement>('textbox', {
+        name: 'Prompt for the Apply queue',
+      }).value,
+    ).toContain('Never click Submit');
+
+    await user.click(
+      within(queue).getByRole('button', { name: 'Remove Backend Developer from the queue' }),
+    );
+    expect(await screen.findByRole('region', { name: 'Apply queue (1)' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mark all Applied' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('region', { name: /Apply queue/ })).not.toBeInTheDocument();
+    });
+    expect(requests).toContainEqual({
+      operation: 'UpdateJobStatus',
+      variables: { id: 'job-1', status: 'APPLIED' },
+    });
+  });
+
+  it('adds a job to the Apply queue from its popup', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+
+    await user.click(await within(dialog).findByRole('button', { name: 'Add to Apply queue' }));
+    expect(
+      await within(dialog).findByRole('button', { name: 'Remove from Apply queue' }),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('In your Apply queue.')).toBeInTheDocument();
+  });
 });

@@ -497,4 +497,71 @@ Why Acme: I like your product.
       expect(missing.errors?.[0]?.message).toBe('Job nope not found');
     });
   });
+
+  describe('Apply queue', () => {
+    const QUEUE_FIELDS = 'jobId title company url ready';
+    const QUEUE = `query { myApplyQueue { ${QUEUE_FIELDS} } }`;
+    const ADD = `mutation ($ids: [ID!]!) { addToApplyQueue(jobIds: $ids) { ${QUEUE_FIELDS} } }`;
+    const REMOVE = `mutation ($ids: [ID!]!) { removeFromApplyQueue(jobIds: $ids) { ${QUEUE_FIELDS} } }`;
+    const STATUS = `mutation ($id: ID!, $status: ApplicationStatus!) { updateJobStatus(id: $id, status: $status) { id } }`;
+    interface Item {
+      jobId: string;
+      title: string;
+      company: string;
+      url: string | null;
+      ready: boolean;
+    }
+
+    it('lines up jobs, marks the ones with a Claude reply ready, and lists them for Claude in Chrome', async () => {
+      const first = await addJob({ title: 'Backend Engineer', url: 'https://example.com/1' });
+      const second = await addJob({ title: 'Frontend Engineer', url: 'https://example.com/2' });
+      await t.prisma.profile.create({ data: { userId: 2, resumeText: 'NodeJS' } });
+      await t.asUser(SAVE_TEXT, {
+        jobId: second.id,
+        text: '=== RESUME ===\nReact\n=== COVER LETTER ===\nDear team',
+      });
+
+      const added = await t.asUser<{ addToApplyQueue: Item[] }>(ADD, {
+        ids: [first.id, second.id, 'nope'],
+      });
+      expect(added.errors).toBeUndefined();
+      // Adding again keeps the order; unknown jobs are ignored.
+      await t.asUser(ADD, { ids: [first.id] });
+      const queue = (await t.asUser<{ myApplyQueue: Item[] }>(QUEUE)).data!.myApplyQueue;
+      expect(queue.map((i) => [i.title, i.ready])).toEqual([
+        ['Backend Engineer', false],
+        ['Frontend Engineer', true],
+      ]);
+      // Only yours: the admin's queue is empty.
+      expect((await t.gql<{ myApplyQueue: Item[] }>(QUEUE)).data!.myApplyQueue).toEqual([]);
+
+      const page = await request(t.server)
+        .get('/apply-queue')
+        .set('Cookie', t.cookieFor('USER'))
+        .expect(200);
+      expect(page.headers['cache-control']).toBe('no-store');
+      expect(page.text).toContain('APPLY QUEUE: 2 jobs');
+      expect(page.text).toContain('Never click Submit');
+      expect(page.text).toContain('1. Backend Engineer at Acme\n   Posting: https://example.com/1');
+      expect(page.text).toContain(`/apply-kit/${second.id}`);
+      expect(page.text).toContain('no cover letter or form answers saved yet');
+      await request(t.server).get('/apply-queue').expect(401);
+    });
+
+    it('drops a job when you remove it or mark it Applied', async () => {
+      const first = await addJob({ title: 'Backend Engineer' });
+      const second = await addJob({ title: 'Frontend Engineer' });
+      await t.asUser(ADD, { ids: [first.id, second.id] });
+
+      // Saving it keeps it in the queue; applying takes it out.
+      await t.asUser(STATUS, { id: first.id, status: 'SAVED' });
+      await t.asUser(STATUS, { id: second.id, status: 'APPLIED' });
+      let queue = (await t.asUser<{ myApplyQueue: Item[] }>(QUEUE)).data!.myApplyQueue;
+      expect(queue.map((i) => i.title)).toEqual(['Backend Engineer']);
+
+      const removed = await t.asUser<{ removeFromApplyQueue: Item[] }>(REMOVE, { ids: [first.id] });
+      queue = removed.data!.removeFromApplyQueue;
+      expect(queue).toEqual([]);
+    });
+  });
 });

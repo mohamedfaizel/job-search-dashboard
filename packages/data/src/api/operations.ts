@@ -507,3 +507,36 @@ export const DELETE_JOB_RESUME = /* GraphQL */ `
     }
   }
 `;
+
+const APPLY_QUEUE_FIELDS = /* GraphQL */ `
+  jobId
+  title
+  company
+  url
+  ready
+  addedAt
+`;
+
+export const APPLY_QUEUE = /* GraphQL */ `
+  query ApplyQueue {
+    myApplyQueue {
+      ${APPLY_QUEUE_FIELDS}
+    }
+  }
+`;
+
+export const ADD_TO_APPLY_QUEUE = /* GraphQL */ `
+  mutation AddToApplyQueue($jobIds: [ID!]!) {
+    addToApplyQueue(jobIds: $jobIds) {
+      ${APPLY_QUEUE_FIELDS}
+    }
+  }
+`;
+
+export const REMOVE_FROM_APPLY_QUEUE = /* GraphQL */ `
+  mutation RemoveFromApplyQueue($jobIds: [ID!]!) {
+    removeFromApplyQueue(jobIds: $jobIds) {
+      ${APPLY_QUEUE_FIELDS}
+    }
+  }
+`;

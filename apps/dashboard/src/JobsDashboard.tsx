@@ -15,6 +15,7 @@ import {
   toJobsPageArgs,
   useAppDispatch,
   useAppSelector,
+  useChangeApplyQueue,
   useJobFilterOptions,
   useHiddenJobCount,
   useJobsPage,
@@ -23,6 +24,7 @@ import {
   useUpdateJobStatus,
 } from '@jobsearch/data';
 import { useCallback, useMemo, useState } from 'react';
+import { ApplyQueuePanel } from './components/ApplyQueuePanel';
 import { columns, DEFAULT_HIDDEN_COLUMNS } from './components/columns';
 import { ColumnsMenu } from './components/ColumnsMenu';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
@@ -61,6 +63,7 @@ export function JobsDashboard() {
   const filterOptions = useJobFilterOptions();
   const updateStatus = useUpdateJobStatus();
   const setHidden = useSetJobHidden();
+  const changeQueue = useChangeApplyQueue();
   const hiddenCount = useHiddenJobCount();
   const applications = useMyApplications();
   const columnVisibility = useColumnVisibility(DEFAULT_HIDDEN_COLUMNS);
@@ -252,6 +255,8 @@ export function JobsDashboard() {
         </ul>
       )}
 
+      {!showingHidden && <ApplyQueuePanel />}
+
       <Toolbar
         search={tableState.search}
         onSearch={handleSearch}
@@ -297,6 +302,18 @@ export function JobsDashboard() {
               Save
             </button>
           )}
+          {!showingHidden && (
+            <button
+              type="button"
+              onClick={() => {
+                changeQueue.mutate({ jobIds: selectedJobs.map((job) => job.id) });
+                setChecked(new Set());
+              }}
+              className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
+            >
+              Add to Apply queue
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -327,6 +344,11 @@ export function JobsDashboard() {
       {setHidden.isError && (
         <div role="alert" className={ERROR_BOX}>
           Could not change that: {getErrorMessage(setHidden.error)}
+        </div>
+      )}
+      {changeQueue.isError && (
+        <div role="alert" className={ERROR_BOX}>
+          Could not add to the Apply queue: {getErrorMessage(changeQueue.error)}
         </div>
       )}
       {updateStatus.isError && (
