@@ -1,5 +1,12 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
-import { applyKitUrl, getErrorMessage, useJobInsights, useMyProfile } from '@jobsearch/data';
+import {
+  applyKitUrl,
+  getErrorMessage,
+  useApplyQueue,
+  useChangeApplyQueue,
+  useJobInsights,
+  useMyProfile,
+} from '@jobsearch/data';
 import type { ReactNode } from 'react';
 import { CopyText } from './CopyText';
 import { JobResumePanel } from './JobResumePanel';
@@ -50,6 +57,9 @@ export function ApplyKitPanel({ job, onStatusChange, asking, onApplyStarted, onA
   const noAnswers =
     p && ![p.phone, p.address, p.workPermit, p.noticePeriod, p.salaryExpectation].some(Boolean);
   const applied = !['NONE', 'SAVED'].includes(job.applicationStatus);
+  const queue = useApplyQueue();
+  const changeQueue = useChangeApplyQueue();
+  const queued = queue.data?.some((item) => item.jobId === job.id) ?? false;
 
   return (
     <section
@@ -128,6 +138,21 @@ export function ApplyKitPanel({ job, onStatusChange, asking, onApplyStarted, onA
                 </a>
               )}
             </CopyText>
+            {!applied && (
+              <p className="flex flex-wrap items-center gap-2 text-slate-600">
+                {queued ? 'In your Apply queue.' : 'Applying to several jobs?'}
+                <button
+                  type="button"
+                  disabled={changeQueue.isPending}
+                  onClick={() => {
+                    changeQueue.mutate({ jobIds: [job.id], remove: queued });
+                  }}
+                  className="rounded-md px-2 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 disabled:opacity-50"
+                >
+                  {queued ? 'Remove from Apply queue' : 'Add to Apply queue'}
+                </button>
+              </p>
+            )}
           </Step>
           <Step n={4} title="Did you apply?">
             {applied ? (

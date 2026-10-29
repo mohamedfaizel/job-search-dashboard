@@ -54,6 +54,7 @@ model User {
   tailored      TailoredResume[]
   removedTerms  RemovedTerm[]
   jobResumes    JobResume[]
+  applyQueue    ApplyQueueItem[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 }
@@ -232,6 +233,7 @@ model Job {
   tailored        TailoredResume[]
   removedTerms    RemovedTerm[]
   jobResumes      JobResume[]
+  applyQueue      ApplyQueueItem[]
 
   @@index([postedAt])
   @@index([companyId])
@@ -360,6 +362,18 @@ model JobResume {
   coverLetter String   @default("")
   formAnswers String   @default("")
   updatedAt   DateTime @updatedAt
+
+  @@id([userId, jobId])
+}
+
+/// A job you lined up to apply for. Claude in Chrome works through the queue one posting at a
+/// time; a job leaves it when you mark it Applied (or anything after) or remove it.
+model ApplyQueueItem {
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+  job     Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId   String
+  addedAt DateTime @default(now())
 
   @@id([userId, jobId])
 }

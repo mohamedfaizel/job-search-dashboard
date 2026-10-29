@@ -19,12 +19,41 @@ export class ApplyKitController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<string> {
-    const resumeUrl = `${req.protocol}://${req.get('host') ?? 'localhost:3000'}/job-resume/${encodeURIComponent(jobId)}`;
-    res.set({
-      'Content-Type': 'text/plain; charset=utf-8',
-      // Personal details: never kept in a shared cache.
-      'Cache-Control': 'no-store',
-    });
-    return this.insights.applyKit(user.id, jobId, resumeUrl);
+    plainText(res);
+    return this.insights.applyKit(
+      user.id,
+      jobId,
+      `${origin(req)}/job-resume/${encodeURIComponent(jobId)}`,
+    );
   }
+}
+
+/** The Apply queue page: every job you lined up, each with its posting and Apply kit link. */
+@Controller('apply-queue')
+export class ApplyQueueController {
+  constructor(private readonly insights: InsightsService) {}
+
+  @Get()
+  async page(
+    @CurrentUser() user: SessionUser,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<string> {
+    plainText(res);
+    return this.insights.applyQueuePage(
+      user.id,
+      (jobId) => `${origin(req)}/apply-kit/${encodeURIComponent(jobId)}`,
+    );
+  }
+}
+
+/** This API's own address, as the browser reached it, for links on the pages. */
+const origin = (req: Request) => `${req.protocol}://${req.get('host') ?? 'localhost:3000'}`;
+
+function plainText(res: Response) {
+  res.set({
+    'Content-Type': 'text/plain; charset=utf-8',
+    // Personal details: never kept in a shared cache.
+    'Cache-Control': 'no-store',
+  });
 }

@@ -1,6 +1,7 @@
 import type {
   Application,
   ApplicationStatus,
+  ApplyQueueItem,
   JobInsights,
   JobMatch,
   JobResume,
@@ -25,6 +26,22 @@ export const hiddenIds = new Set<string>();
 
 /** The test user's tracker. Tests fill it; status changes update it like the real API. */
 export const applications: Application[] = [];
+
+/** The test user's Apply queue. Marking a job Applied takes it out, like the real API. */
+export const applyQueue: ApplyQueueItem[] = [];
+
+function queueItem(jobId: string): ApplyQueueItem | null {
+  const job = JOBS.find((j) => j.id === jobId);
+  if (!job) return null;
+  return {
+    jobId,
+    title: job.title,
+    company: job.company.name,
+    url: job.url,
+    ready: jobId === 'job-1' && jobResume.current !== null,
+    addedAt: '2026-10-29T12:00:00.000Z',
+  };
+}
 
 /** Insights for a job when the user has a resume: some skills found, some missing. */
 export const INSIGHTS: JobInsights = {
@@ -154,6 +171,22 @@ export const PROFILE: Profile = {
 };
 
 export const handlers = [
+  api.query('ApplyQueue', () => HttpResponse.json({ data: { myApplyQueue: applyQueue } })),
+  api.mutation('AddToApplyQueue', ({ variables }) => {
+    requests.push({ operation: 'AddToApplyQueue', variables });
+    for (const id of variables['jobIds'] as string[]) {
+      const item = queueItem(id);
+      if (item && !applyQueue.some((q) => q.jobId === id)) applyQueue.push(item);
+    }
+    return HttpResponse.json({ data: { addToApplyQueue: applyQueue } });
+  }),
+  api.mutation('RemoveFromApplyQueue', ({ variables }) => {
+    requests.push({ operation: 'RemoveFromApplyQueue', variables });
+    const ids = variables['jobIds'] as string[];
+    const kept = applyQueue.filter((q) => !ids.includes(q.jobId));
+    applyQueue.splice(0, applyQueue.length, ...kept);
+    return HttpResponse.json({ data: { removeFromApplyQueue: applyQueue } });
+  }),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
   // By default nothing has been tailored yet.
   api.query('TailoredResume', () => HttpResponse.json({ data: { tailoredResume: null } })),
@@ -258,6 +291,10 @@ export const handlers = [
     const index = applications.findIndex((app) => app.job.id === id);
     const job = JOBS.find((j) => j.id === id);
     if (index >= 0) applications.splice(index, 1);
+    if (!['NONE', 'SAVED'].includes(status)) {
+      const kept = applyQueue.filter((q) => q.jobId !== id);
+      applyQueue.splice(0, applyQueue.length, ...kept);
+    }
     if (status !== 'NONE' && job) {
       const updatedAt = '2026-10-27T12:00:00.000Z';
       applications.unshift({ status, updatedAt, job: { ...job, applicationStatus: status } });

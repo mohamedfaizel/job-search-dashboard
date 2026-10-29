@@ -193,6 +193,10 @@ export class JobsService {
         update: { status },
       });
     }
+    // Applied (or further along): it no longer waits in your Apply queue.
+    if (status !== ApplicationStatus.NONE && status !== ApplicationStatus.SAVED) {
+      await this.prisma.applyQueueItem.deleteMany({ where: { userId, jobId } });
+    }
     return this.findOne(userId, jobId);
   }
 

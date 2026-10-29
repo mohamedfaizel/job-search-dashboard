@@ -20,6 +20,22 @@ enum ApplicationStatus {
   SAVED
 }
 
+"""A job you lined up to apply for"""
+type ApplyQueueItem {
+  addedAt: DateTime!
+  company: String!
+  jobId: ID!
+
+  """
+  True once Claude's reply (resume, cover letter, form answers) is saved for this job
+  """
+  ready: Boolean!
+  title: String!
+
+  """The posting, where the form is"""
+  url: String
+}
+
 type Company {
   domain: String
   id: Int!
@@ -376,6 +392,9 @@ enum MatcherResumeState {
 }
 
 type Mutation {
+  """Adds jobs to your Apply queue. Jobs already in it keep their place."""
+  addToApplyQueue(jobIds: [ID!]!): [ApplyQueueItem!]!
+
   """Add a job by hand"""
   createJob(input: CreateJobInput!): Job!
   createSavedSearch(input: SavedSearchInput!): SavedSearch!
@@ -395,6 +414,9 @@ type Mutation {
   Score your resume against a job with Resume-Matcher. Returns at once as PENDING; poll jobMatch until READY or FAILED (a minute or two). Uses AI credits
   """
   matchJob(jobId: ID!): JobMatch!
+
+  """Takes jobs out of your Apply queue"""
+  removeFromApplyQueue(jobIds: [ID!]!): [ApplyQueueItem!]!
 
   """
   Removes a skill or keyword ("I don’t have it" or "not relevant") from this job, or from every job
@@ -545,6 +567,9 @@ type Query {
 
   """Your tracker: jobs you saved, applied to, etc."""
   myApplications: [Application!]!
+
+  """Jobs you lined up to apply for, oldest first"""
+  myApplyQueue: [ApplyQueueItem!]!
 
   """
   Your master resume's copy in Resume-Matcher, which jobs are matched against
