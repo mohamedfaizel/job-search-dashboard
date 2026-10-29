@@ -137,7 +137,7 @@ export function SyncPanel({ loaded = null }: Props) {
       >
         <input {...register('locations')} {...a11y('locations')} className={inputClass} />
       </Field>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Max age (days)" htmlFor="sync-maxAgeDays" error={errors.maxAgeDays?.message}>
           <input
             inputMode="numeric"
