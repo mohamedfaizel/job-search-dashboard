@@ -43,4 +43,19 @@ describe('Layout', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Log out' }));
     expect(onLogOut).toHaveBeenCalled();
   });
+
+  it('opens and closes the phone menu', async () => {
+    const onNavigate = vi.fn();
+    renderLayout({ onNavigate });
+    const menu = screen.getByRole('button', { name: 'Menu' });
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(menu);
+    expect(menu).toHaveAttribute('aria-expanded', 'true');
+
+    // Picking a page closes the menu again.
+    await userEvent.click(screen.getByRole('button', { name: 'Tracker' }));
+    expect(onNavigate).toHaveBeenCalledWith('tracker');
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+  });
 });
