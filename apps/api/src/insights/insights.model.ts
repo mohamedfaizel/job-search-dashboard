@@ -36,6 +36,12 @@ export class JobResumeModel {
   })
   fileName!: string | null;
 
+  @Field({ description: 'The cover letter from the Apply kit reply. Empty when there was none' })
+  coverLetter!: string;
+
+  @Field({ description: 'The form answers from the Apply kit reply. Empty when there were none' })
+  formAnswers!: string;
+
   @Field()
   updatedAt!: Date;
 
@@ -143,7 +149,7 @@ export class JobInsightsModel {
 
   @Field({
     description:
-      'A prompt to paste into Claude desktop or web that tailors your resume to this job',
+      'The Apply kit prompt for Claude desktop or web: your resume tailored to this job, a cover letter and form answers',
   })
   prompt!: string;
 }

@@ -1,6 +1,7 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
 import { useEffect, useRef, useState } from 'react';
 import { capitalize, formatDate, formatSalary, WORKPLACE_LABELS } from '../format';
+import { ApplyKitPanel } from './ApplyKitPanel';
 import { Badge } from './Badge';
 import { InsightsPanel } from './InsightsPanel';
 import { MatchPanel } from './MatchPanel';
@@ -11,13 +12,27 @@ interface Props {
   job: Job | null;
   onClose: () => void;
   onStatusChange: (status: ApplicationStatus) => void;
+  /** Jobs whose posting you opened from the Apply kit, waiting for "Did you apply?". */
+  asking?: ReadonlySet<string>;
+  onApplyStarted?: (job: Job) => void;
+  onApplyAnswered?: (job: Job) => void;
 }
+
+const NOBODY: ReadonlySet<string> = new Set();
+const noop = () => undefined;
 
 /**
  * The job description popup. Uses the native <dialog> element, which gives focus
  * trapping, Escape-to-close and a backdrop for free.
  */
-export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
+export function JobDetailsDialog({
+  job,
+  onClose,
+  onStatusChange,
+  asking = NOBODY,
+  onApplyStarted = noop,
+  onApplyAnswered = noop,
+}: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   // Stays as you left it for the next job you open.
   const [maximized, setMaximized] = useState(false);
@@ -106,6 +121,13 @@ export function JobDetailsDialog({ job, onClose, onStatusChange }: Props) {
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             <InsightsPanel jobId={job.id} />
+            <ApplyKitPanel
+              job={job}
+              onStatusChange={onStatusChange}
+              asking={asking.has(job.id)}
+              onApplyStarted={onApplyStarted}
+              onAnswered={onApplyAnswered}
+            />
             {job.description && (
               <>
                 <MatchPanel jobId={job.id} />

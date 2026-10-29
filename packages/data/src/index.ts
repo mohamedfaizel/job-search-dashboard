@@ -3,6 +3,7 @@ export { API_URL, getErrorMessage, isUnauthenticated } from './api/client';
 export { meKey, useLogIn, useLogOut, useMe, useSignUp } from './api/auth';
 export {
   jobInsightsKey,
+  applyKitUrl,
   jobResumeUrl,
   useDeleteJobResume,
   useJobInsights,

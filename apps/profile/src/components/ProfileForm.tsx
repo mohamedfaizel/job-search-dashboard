@@ -140,6 +140,91 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       </section>
 
       <section
+        aria-labelledby="answers-heading"
+        className="space-y-4 rounded-lg border border-slate-200 bg-white p-5"
+      >
+        <div>
+          <h2 id="answers-heading" className="text-lg font-semibold text-slate-900">
+            Application answers
+          </h2>
+          <p className="text-sm text-slate-600">
+            What every application form asks. The Apply kit gives these to Claude for the cover
+            letter and to Claude in Chrome to fill in forms, exactly as you write them here. Leave
+            out anything you don’t want shared.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Phone" htmlFor="phone" error={errors.phone?.message}>
+            <input
+              {...register('phone')}
+              {...a11y('phone')}
+              type="tel"
+              autoComplete="tel"
+              placeholder="+49 151 …"
+              className={inputClass}
+            />
+          </Field>
+          <Field
+            label="Address"
+            htmlFor="address"
+            error={errors.address?.message}
+            hint="City and country, or the full address forms ask for"
+          >
+            <input {...register('address')} {...a11y('address')} className={inputClass} />
+          </Field>
+          <Field
+            label="Work permit"
+            htmlFor="workPermit"
+            error={errors.workPermit?.message}
+            hint="e.g. EU Blue Card, or no visa needed in the EU"
+          >
+            <input {...register('workPermit')} {...a11y('workPermit')} className={inputClass} />
+          </Field>
+          <Field
+            label="Notice period / earliest start"
+            htmlFor="noticePeriod"
+            error={errors.noticePeriod?.message}
+            hint="e.g. 1 month, or immediately"
+          >
+            <input {...register('noticePeriod')} {...a11y('noticePeriod')} className={inputClass} />
+          </Field>
+          <Field
+            label="Salary expectation"
+            htmlFor="salaryExpectation"
+            error={errors.salaryExpectation?.message}
+            hint="e.g. €65,000 a year"
+          >
+            <input
+              {...register('salaryExpectation')}
+              {...a11y('salaryExpectation')}
+              className={inputClass}
+            />
+          </Field>
+          <Field
+            label="Willing to relocate"
+            htmlFor="relocation"
+            error={errors.relocation?.message}
+            hint="e.g. Yes, anywhere in Germany"
+          >
+            <input {...register('relocation')} {...a11y('relocation')} className={inputClass} />
+          </Field>
+        </div>
+        <Field
+          label="Saved answers"
+          htmlFor="applicationNotes"
+          error={errors.applicationNotes?.message}
+          hint="Short answers you reuse, like why you are looking for a new job. Claude adapts them to each job."
+        >
+          <textarea
+            {...register('applicationNotes')}
+            {...a11y('applicationNotes')}
+            rows={5}
+            className={inputClass}
+          />
+        </Field>
+      </section>
+
+      <section
         aria-labelledby="resume-heading"
         className="space-y-4 rounded-lg border border-slate-200 bg-white p-5"
       >

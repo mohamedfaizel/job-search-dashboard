@@ -283,6 +283,13 @@ const PROFILE_FIELDS = /* GraphQL */ `
   websiteUrl
   resumeText
   resumeFileName
+  phone
+  address
+  workPermit
+  noticePeriod
+  salaryExpectation
+  relocation
+  applicationNotes
   updatedAt
 `;
 
@@ -442,6 +449,8 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     score
     jobResume {
       fileName
+      coverLetter
+      formAnswers
       updatedAt
       skillsCoverage
       keywordsCoverage

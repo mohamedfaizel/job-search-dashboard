@@ -60,6 +60,30 @@ describe('profile page', () => {
     });
   });
 
+  it('saves the application answers the Apply kit uses', async () => {
+    const user = await renderProfile();
+    expect(screen.getByRole('textbox', { name: 'Work permit' })).toHaveValue('EU Blue Card');
+    await user.type(screen.getByRole('textbox', { name: 'Salary expectation' }), '€65,000 a year');
+    await user.type(
+      screen.getByRole('textbox', { name: 'Saved answers' }),
+      'I want to build products people use.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Save profile' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.');
+    expect(requests[0]).toMatchObject({
+      variables: {
+        input: {
+          phone: '+49 151 0000000',
+          workPermit: 'EU Blue Card',
+          salaryExpectation: '€65,000 a year',
+          applicationNotes: 'I want to build products people use.',
+        },
+      },
+    });
+  });
+
   it('shows what to fix before saving', async () => {
     const user = await renderProfile();
     await user.type(screen.getByRole('textbox', { name: 'Website' }), 'my site');

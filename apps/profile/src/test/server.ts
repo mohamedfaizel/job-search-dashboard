@@ -21,6 +21,13 @@ export const PROFILE: Profile = {
   websiteUrl: null,
   resumeText: 'Ada Lovelace\nFrontend engineer',
   resumeFileName: 'ada.pdf',
+  phone: '+49 151 0000000',
+  address: 'Berlin, Germany',
+  workPermit: 'EU Blue Card',
+  noticePeriod: '1 month',
+  salaryExpectation: '',
+  relocation: '',
+  applicationNotes: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
 };
 

@@ -47,6 +47,27 @@ export class ProfileModel {
   @Field(() => String, { nullable: true, description: 'Name of the last uploaded resume file' })
   resumeFileName!: string | null;
 
+  @Field({ description: 'Application answers: your phone number, as forms should get it' })
+  phone!: string;
+
+  @Field({ description: 'City and country, or the full address forms ask for' })
+  address!: string;
+
+  @Field({ description: 'Work permit or visa status, e.g. "EU Blue Card holder"' })
+  workPermit!: string;
+
+  @Field({ description: 'Notice period or earliest start, e.g. "1 month"' })
+  noticePeriod!: string;
+
+  @Field({ description: 'Salary expectation, e.g. "€65,000 a year"' })
+  salaryExpectation!: string;
+
+  @Field({ description: 'Willing to relocate, and where' })
+  relocation!: string;
+
+  @Field({ description: 'Short answers you reuse on applications, as free text' })
+  applicationNotes!: string;
+
   @Field(() => Date, { nullable: true, description: 'Null until the profile is first saved' })
   updatedAt!: Date | null;
 }
@@ -138,4 +159,46 @@ export class ProfileInput {
   @IsString()
   @MaxLength(50_000, { message: 'Keep the resume under 50,000 characters' })
   resumeText: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(40, { message: 'Keep phone under 40 characters' })
+  phone: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(200, { message: 'Keep address under 200 characters' })
+  address: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(200, { message: 'Keep work permit under 200 characters' })
+  workPermit: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(100, { message: 'Keep notice period under 100 characters' })
+  noticePeriod: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(100, { message: 'Keep salary expectation under 100 characters' })
+  salaryExpectation: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(200, { message: 'Keep relocation under 200 characters' })
+  relocation: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(5_000, { message: 'Keep your saved answers under 5,000 characters' })
+  applicationNotes: string = '';
 }

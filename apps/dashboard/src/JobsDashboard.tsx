@@ -33,6 +33,7 @@ import type { StatCardKey } from './components/StatCards';
 import { StatCards } from './components/StatCards';
 import { Toolbar } from './components/Toolbar';
 import { useColumnVisibility } from './useColumnVisibility';
+import { usePendingApplies } from './usePendingApplies';
 
 const NO_JOBS: Job[] = [];
 const STATUS_CARDS: StatCardKey[] = ['SAVED', 'APPLIED', 'INTERVIEWING'];
@@ -67,6 +68,8 @@ export function JobsDashboard() {
   // The last jobs hidden or brought back, for the "Undo" message.
   const [lastChange, setLastChange] = useState<{ jobs: Job[]; hidden: boolean } | null>(null);
   const [checked, setChecked] = useState<Set<string>>(() => new Set());
+  const applying = usePendingApplies();
+  const askingIds = useMemo(() => new Set(applying.pending.map((p) => p.id)), [applying.pending]);
   const showingHidden = tableState.showHidden;
 
   // "Jobs found" counts your search and column filters, whatever the status card picked.
@@ -215,6 +218,40 @@ export function JobsDashboard() {
         </p>
       )}
 
+      {applying.pending.length > 0 && (
+        <ul
+          aria-label="Did you apply?"
+          className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+        >
+          {applying.pending.map((p) => (
+            <li key={p.id} className="flex flex-wrap items-center gap-2">
+              <span className="mr-auto">
+                Did you apply to <span className="font-medium">{p.title}</span> at {p.company}?
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  updateStatus.mutate({ id: p.id, status: 'APPLIED' });
+                  applying.answer(p.id);
+                }}
+                className="rounded-md bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-700"
+              >
+                Yes, mark Applied
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  applying.answer(p.id);
+                }}
+                className="rounded-md px-3 py-1 text-emerald-800 hover:bg-emerald-100"
+              >
+                Not yet
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <Toolbar
         search={tableState.search}
         onSearch={handleSearch}
@@ -342,6 +379,11 @@ export function JobsDashboard() {
         }}
         onStatusChange={(status) => {
           if (openJob) handleSetStatus(openJob, status);
+        }}
+        asking={askingIds}
+        onApplyStarted={applying.start}
+        onApplyAnswered={(job) => {
+          applying.answer(job.id);
         }}
       />
     </section>

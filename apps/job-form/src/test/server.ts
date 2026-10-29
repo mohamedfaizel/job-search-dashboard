@@ -56,6 +56,13 @@ export const PROFILE: Profile = {
   websiteUrl: null,
   resumeText: '',
   resumeFileName: null,
+  phone: '',
+  address: '',
+  workPermit: '',
+  noticePeriod: '',
+  salaryExpectation: '',
+  relocation: '',
+  applicationNotes: '',
   updatedAt: null,
 };
 

@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
-const FIELDS = `headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName updatedAt`;
+const FIELDS = `headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName phone address workPermit noticePeriod salaryExpectation relocation applicationNotes updatedAt`;
 const MY_PROFILE = `query { myProfile { ${FIELDS} } }`;
 const UPDATE = `mutation ($input: ProfileInput!) { updateProfile(input: $input) { ${FIELDS} } }`;
 
@@ -22,6 +22,13 @@ const INPUT = {
   githubUrl: '',
   websiteUrl: null,
   resumeText: 'Ada Lovelace\nFrontend engineer',
+  phone: ' +49 151 0000000 ',
+  address: 'Berlin, Germany',
+  workPermit: 'EU Blue Card',
+  noticePeriod: '1 month',
+  salaryExpectation: '',
+  relocation: 'Yes, within Germany',
+  applicationNotes: 'I want to build products people use every day.',
 };
 
 describe('profile', () => {
@@ -69,6 +76,13 @@ describe('profile', () => {
         websiteUrl: null,
         resumeText: '',
         resumeFileName: null,
+        phone: '',
+        address: '',
+        workPermit: '',
+        noticePeriod: '',
+        salaryExpectation: '',
+        relocation: '',
+        applicationNotes: '',
         updatedAt: null,
       },
     });
@@ -90,6 +104,13 @@ describe('profile', () => {
       githubUrl: null,
       websiteUrl: null,
       resumeText: 'Ada Lovelace\nFrontend engineer',
+      phone: '+49 151 0000000',
+      address: 'Berlin, Germany',
+      workPermit: 'EU Blue Card',
+      noticePeriod: '1 month',
+      salaryExpectation: '',
+      relocation: 'Yes, within Germany',
+      applicationNotes: 'I want to build products people use every day.',
     });
     expect(res.data!.myProfile['updatedAt']).not.toBeNull();
   });

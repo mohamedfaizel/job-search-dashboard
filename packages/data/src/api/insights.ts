@@ -75,6 +75,14 @@ export function jobResumeUrl(jobId: string) {
   return `${API_URL.replace(/\/graphql\/?$/, '')}/job-resume/${encodeURIComponent(jobId)}`;
 }
 
+/**
+ * The Apply kit page for a job: plain text with your details, the form answers and the cover
+ * letter, for Claude in Chrome to read before it fills in the application form.
+ */
+export function applyKitUrl(jobId: string) {
+  return `${API_URL.replace(/\/graphql\/?$/, '')}/apply-kit/${encodeURIComponent(jobId)}`;
+}
+
 /** Uploads the resume you wrote for a job (PDF, Word, text or Markdown) and scores it. */
 export function useUploadJobResume() {
   const queryClient = useQueryClient();

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { tidy } from '../profile/resume-text';
+import { buildApplyKit } from './apply-kit';
 import { germanRequirement } from './german';
 import type {
   JobInsightsModel,
@@ -8,7 +9,7 @@ import type {
   RemovedTermModel,
   TermCheckModel,
 } from './insights.model';
-import { buildResumePrompt } from './prompt';
+import { applicationFacts, buildResumePrompt, splitReply } from './prompt';
 import type { ResumeCheck } from './score';
 import { checkResume } from './score';
 import { KNOWN_SKILLS, relatedTo } from './skills';
@@ -61,7 +62,18 @@ export class InsightsService {
       }),
       this.prisma.profile.findUnique({
         where: { userId },
-        select: { resumeText: true, skills: true, languages: true },
+        select: {
+          resumeText: true,
+          skills: true,
+          languages: true,
+          yearsExperience: true,
+          address: true,
+          workPermit: true,
+          noticePeriod: true,
+          salaryExpectation: true,
+          relocation: true,
+          applicationNotes: true,
+        },
       }),
       this.prisma.removedTerm.findMany({
         where: { userId, OR: [{ jobId }, { jobId: null }] },
@@ -69,7 +81,13 @@ export class InsightsService {
       }),
       this.prisma.jobResume.findUnique({
         where: { userId_jobId: { userId, jobId } },
-        select: { text: true, fileName: true, updatedAt: true },
+        select: {
+          text: true,
+          fileName: true,
+          coverLetter: true,
+          formAnswers: true,
+          updatedAt: true,
+        },
       }),
     ]);
     if (!job) throw new NotFoundException(`Job ${jobId} not found`);
@@ -153,6 +171,8 @@ export class InsightsService {
         otherSkills,
         resume,
         description: job.description,
+        facts: applicationFacts(profile),
+        savedAnswers: profile?.applicationNotes ?? '',
       }),
     };
   }
@@ -189,7 +209,10 @@ export class InsightsService {
    * file; an upload keeps its file so it can be downloaded again.
    */
   async saveJobResume(userId: number, jobId: string, text: string, file?: JobResumeFile) {
-    const clean = tidy(text);
+    // An Apply kit reply has the cover letter and form answers after the resume: keep them apart,
+    // so only the resume is scored and downloaded.
+    const reply = splitReply(text);
+    const clean = tidy(reply.resume);
     if (!clean) throw new BadRequestException('The resume is empty');
     if (clean.length > MAX_RESUME_CHARS) {
       throw new BadRequestException(`A resume is at most ${String(MAX_RESUME_CHARS)} characters`);
@@ -200,6 +223,8 @@ export class InsightsService {
       fileName: file?.name ?? null,
       file: file ? new Uint8Array(file.bytes) : null,
       fileType: file?.type ?? null,
+      coverLetter: reply.coverLetter,
+      formAnswers: reply.formAnswers,
     };
     await this.prisma.jobResume.upsert({
       where: { userId_jobId: { userId, jobId } },
@@ -236,6 +261,47 @@ export class InsightsService {
     };
   }
 
+  /** The Apply kit page for one job: your details, the form answers, cover letter and resume. */
+  async applyKit(userId: number, jobId: string, resumeUrl: string): Promise<string> {
+    const [job, user, jobResume] = await Promise.all([
+      this.prisma.job.findUnique({
+        where: { id: jobId },
+        select: { title: true, url: true, company: { select: { name: true } } },
+      }),
+      this.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { name: true, email: true, profile: { omit: { resumeFile: true } } },
+      }),
+      this.prisma.jobResume.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { text: true, coverLetter: true, formAnswers: true },
+      }),
+    ]);
+    if (!job) throw new NotFoundException(`Job ${jobId} not found`);
+    const p = user.profile;
+    return buildApplyKit({
+      job: { title: job.title, company: job.company.name, url: job.url },
+      me: {
+        name: user.name,
+        email: user.email,
+        phone: p?.phone ?? '',
+        address: p?.address ?? '',
+        linkedinUrl: p?.linkedinUrl ?? null,
+        githubUrl: p?.githubUrl ?? null,
+        websiteUrl: p?.websiteUrl ?? null,
+        yearsExperience: p?.yearsExperience ?? null,
+        languages: p?.languages ?? [],
+        workPermit: p?.workPermit ?? '',
+        noticePeriod: p?.noticePeriod ?? '',
+        salaryExpectation: p?.salaryExpectation ?? '',
+        relocation: p?.relocation ?? '',
+        applicationNotes: p?.applicationNotes ?? '',
+      },
+      jobResume,
+      resumeUrl,
+    });
+  }
+
   private async assertJob(jobId: string) {
     if (!(await this.prisma.job.findUnique({ where: { id: jobId }, select: { id: true } }))) {
       throw new NotFoundException(`Job ${jobId} not found`);
@@ -244,7 +310,13 @@ export class InsightsService {
 
   /** Scores the resume you wrote for the job, and what changed from your profile resume. */
   private afterScore(
-    jobResume: { text: string; fileName: string | null; updatedAt: Date },
+    jobResume: {
+      text: string;
+      fileName: string | null;
+      coverLetter: string;
+      formAnswers: string;
+      updatedAt: Date;
+    },
     terms: Parameters<typeof checkResume>[1],
     before: ResumeCheck,
   ): JobResumeModel {
@@ -253,6 +325,8 @@ export class InsightsService {
     const afterChecks = [...after.skillChecks, ...after.keywordChecks];
     return {
       fileName: jobResume.fileName,
+      coverLetter: jobResume.coverLetter,
+      formAnswers: jobResume.formAnswers,
       updatedAt: jobResume.updatedAt,
       skillsCoverage: after.skills,
       keywordsCoverage: after.keywords,
