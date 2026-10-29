@@ -24,6 +24,7 @@ const JOB_FIELDS = /* GraphQL */ `
     salaryEstimated
     provider
     workplace
+    visa
     industry
     description
     postingStatus

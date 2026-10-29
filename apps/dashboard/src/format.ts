@@ -1,4 +1,4 @@
-import type { ApplicationStatus, Workplace } from '@jobsearch/data';
+import type { ApplicationStatus, VisaSponsorship, Workplace } from '@jobsearch/data';
 
 const dateFormat = new Intl.DateTimeFormat('en-US', {
   month: 'short',
@@ -28,6 +28,13 @@ export const WORKPLACE_LABELS: Record<Workplace, string> = {
   ONSITE: 'On-site',
   HYBRID: 'Hybrid',
   REMOTE: 'Remote',
+};
+
+/** Short words for the Visa column and its filter. */
+export const VISA_LABELS: Record<VisaSponsorship, string> = {
+  OFFERS: 'Visa support',
+  NO: 'No sponsorship',
+  NOT_STATED: 'Not stated',
 };
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {

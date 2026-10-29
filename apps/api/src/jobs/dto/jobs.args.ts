@@ -18,6 +18,7 @@ import {
   JobSortField,
   JobSource,
   SortDirection,
+  VisaSponsorship,
   Workplace,
 } from '../models/enums';
 
@@ -89,6 +90,12 @@ export class JobFilterInput {
   @IsArray()
   @IsEnum(Workplace, { each: true })
   workplaces?: Workplace[];
+
+  @Field(() => [VisaSponsorship], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(VisaSponsorship, { each: true })
+  visas?: VisaSponsorship[];
 
   @Field(() => [JobSource], { nullable: true })
   @IsOptional()

@@ -16,6 +16,13 @@ enum JobSource {
   MANUAL
 }
 
+/// What a job ad says about visa sponsorship (or relocation help).
+enum VisaSponsorship {
+  OFFERS
+  NO
+  NOT_STATED
+}
+
 enum Workplace {
   ONSITE
   HYBRID
@@ -220,6 +227,8 @@ model Job {
   /// Job board the posting was found on, e.g. "indeed".
   provider        String?
   workplace       Workplace?
+  /// Read from the description when the job is saved. Null until it has been checked.
+  visa            VisaSponsorship?
   industry        String?
   description     String?
   postingStatus   String           @default("active")

@@ -137,6 +137,9 @@ type Job {
   title: String!
   updatedAt: DateTime!
   url: String
+
+  """What the ad says about visa sponsorship or relocation help"""
+  visa: VisaSponsorship
   workplace: Workplace
 }
 
@@ -164,6 +167,7 @@ input JobFilterInput {
   """Jobs requiring any of these skills"""
   skills: [String!]
   sources: [JobSource!]
+  visas: [VisaSponsorship!]
   workplaces: [Workplace!]
 }
 
@@ -910,6 +914,12 @@ type User {
   id: Int!
   name: String!
   role: Role!
+}
+
+enum VisaSponsorship {
+  NO
+  NOT_STATED
+  OFFERS
 }
 
 enum Workplace {

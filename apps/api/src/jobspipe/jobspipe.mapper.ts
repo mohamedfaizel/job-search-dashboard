@@ -1,6 +1,7 @@
 import type { Prisma } from '../generated/prisma/client';
 import { JobSource, Workplace } from '../generated/prisma/enums';
 import { detectLanguage } from '../insights/text';
+import { visaSponsorship } from '../jobs/visa';
 import type { JobsPipeJob } from './jobspipe.types';
 
 export interface MappedCompany {
@@ -68,6 +69,7 @@ export function mapJobsPipeJob(raw: JobsPipeJob): MappedJob {
       ...toSalary(raw),
       provider: raw.sources?.[0]?.provider ?? null,
       workplace: toWorkplace(raw),
+      visa: visaSponsorship(raw.description, raw.visa_sponsorship),
       industry: raw.isic_division_label,
       description: raw.description,
       postingStatus: raw.status ?? 'active',

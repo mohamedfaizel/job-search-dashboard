@@ -1,5 +1,5 @@
 import type { Job, JobFilterOptions, JobSortField, ListFilterKey } from '@jobsearch/data';
-import { APPLICATION_STATUSES, WORKPLACES } from '@jobsearch/data';
+import { APPLICATION_STATUSES, VISA_SPONSORSHIPS, WORKPLACES } from '@jobsearch/data';
 import { columnVisibilityFeature, createColumnHelper, tableFeatures } from '@tanstack/react-table';
 import { createContext, useContext } from 'react';
 import {
@@ -10,6 +10,7 @@ import {
   languageName,
   STATUS_LABELS,
   timeAgo,
+  VISA_LABELS,
   WORKPLACE_LABELS,
 } from '../format';
 import type { BadgeTone } from './Badge';
@@ -131,6 +132,22 @@ export function PostedCell({ job }: { job: Job }) {
       {timeAgo(job.postedAt)}
     </time>
   );
+}
+
+/**
+ * What the ad says about visa sponsorship, read from its text: a green badge when it offers help
+ * (visa, Blue Card, relocation), a grey one when it rules sponsorship out.
+ */
+export function VisaCell({
+  visa,
+  hideUnknown = false,
+}: {
+  visa: Job['visa'];
+  hideUnknown?: boolean;
+}) {
+  if (visa === 'OFFERS') return <Badge tone="green">{VISA_LABELS.OFFERS}</Badge>;
+  if (visa === 'NO') return <Badge tone="gray">{VISA_LABELS.NO}</Badge>;
+  return hideUnknown ? null : dash;
 }
 
 export function SalaryCell({ job }: { job: Job }) {
@@ -339,6 +356,10 @@ export const columns = helper.columns([
     header: 'Salary',
     cell: ({ row }) => <SalaryCell job={row.original} />,
   }),
+  helper.accessor('visa', {
+    header: 'Visa',
+    cell: (info) => <VisaCell visa={info.getValue()} />,
+  }),
   helper.accessor('skills', {
     header: 'Skills',
     cell: (info) => <SkillsCell skills={info.getValue()} />,
@@ -467,6 +488,12 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
     },
   },
   industry: { filter: { key: 'industries', options: (o) => plain(o?.industries) } },
+  visa: {
+    filter: {
+      key: 'visas',
+      options: () => VISA_SPONSORSHIPS.map((v) => ({ value: v, label: VISA_LABELS[v] })),
+    },
+  },
   // Matches and statuses are per user (separate tables), so the server can't sort by them.
   status: {
     filter: {
