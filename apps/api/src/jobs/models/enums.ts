@@ -3,6 +3,7 @@ import {
   ApplicationStatus,
   JobMatchStatus,
   JobSource,
+  VisaSponsorship,
   Workplace,
 } from '../../generated/prisma/enums';
 
@@ -11,6 +12,7 @@ registerEnumType(ApplicationStatus, { name: 'ApplicationStatus' });
 registerEnumType(JobMatchStatus, { name: 'JobMatchStatus' });
 registerEnumType(JobSource, { name: 'JobSource' });
 registerEnumType(Workplace, { name: 'Workplace' });
+registerEnumType(VisaSponsorship, { name: 'VisaSponsorship' });
 
 export enum JobSortField {
   POSTED_AT = 'postedAt',
@@ -29,4 +31,4 @@ export enum SortDirection {
 }
 registerEnumType(SortDirection, { name: 'SortDirection' });
 
-export { ApplicationStatus, JobMatchStatus, JobSource, Workplace };
+export { ApplicationStatus, JobMatchStatus, JobSource, VisaSponsorship, Workplace };

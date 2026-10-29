@@ -3,6 +3,10 @@
 export const WORKPLACES = ['ONSITE', 'HYBRID', 'REMOTE'] as const;
 export type Workplace = (typeof WORKPLACES)[number];
 
+/** What a job ad says about visa sponsorship or relocation help. */
+export const VISA_SPONSORSHIPS = ['OFFERS', 'NO', 'NOT_STATED'] as const;
+export type VisaSponsorship = (typeof VISA_SPONSORSHIPS)[number];
+
 export const APPLICATION_STATUSES = [
   'NONE',
   'SAVED',
@@ -45,6 +49,8 @@ export interface Job {
   salaryEstimated: boolean;
   provider: string | null;
   workplace: Workplace | null;
+  /** Read from the description; null for a job the API hasn't checked yet. */
+  visa: VisaSponsorship | null;
   industry: string | null;
   description: string | null;
   postingStatus: string;
@@ -75,6 +81,7 @@ export interface JobFilterInput {
   providers?: string[];
   industries?: string[];
   workplaces?: Workplace[];
+  visas?: VisaSponsorship[];
   applicationStatuses?: ApplicationStatus[];
   minSalaryUsd?: number;
   /** ISO date-time: only jobs posted after it. */

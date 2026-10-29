@@ -66,6 +66,8 @@ export interface JobsPipeJob {
   company_object: JobsPipeCompany | null;
   technology_slugs: string[] | null;
   isic_division_label: string | null;
+  /** "offers", "no" or "citizenship_required", read by JobsPipe from the text. Rarely set. */
+  visa_sponsorship?: string | null;
   description: string | null;
   sources: JobsPipeSource[] | null;
 }

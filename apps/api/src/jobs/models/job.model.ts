@@ -1,5 +1,5 @@
 import { Field, Float, GraphQLISODateTime, ID, Int, ObjectType } from '@nestjs/graphql';
-import { ApplicationStatus, JobMatchStatus, JobSource, Workplace } from './enums';
+import { ApplicationStatus, JobMatchStatus, JobSource, VisaSponsorship, Workplace } from './enums';
 
 @ObjectType()
 export class Company {
@@ -74,6 +74,12 @@ export class Job {
 
   @Field(() => Workplace, { nullable: true })
   workplace!: Workplace | null;
+
+  @Field(() => VisaSponsorship, {
+    nullable: true,
+    description: 'What the ad says about visa sponsorship or relocation help',
+  })
+  visa!: VisaSponsorship | null;
 
   @Field(() => String, { nullable: true })
   industry!: string | null;

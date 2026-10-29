@@ -8,6 +8,7 @@ import {
   SalaryCell,
   SelectCell,
   StatusCell,
+  VisaCell,
 } from './columns';
 
 /**
@@ -33,6 +34,7 @@ export function JobCards({ jobs, isFetching }: { jobs: Job[]; isFetching: boolea
             <LocationCell job={job} />
             <SalaryCell job={job} />
             <PostedCell job={job} />
+            <VisaCell visa={job.visa} hideUnknown />
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
             <StatusCell job={job} />

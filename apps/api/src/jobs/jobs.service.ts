@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import type { OnApplicationBootstrap } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client';
 import { ApplicationStatus, JobSource } from '../generated/prisma/enums';
 import { detectLanguage } from '../insights/text';
@@ -8,6 +9,7 @@ import type { CreateJobInput } from './dto/create-job.input';
 import type { JobFilterInput, JobsArgs, JobSortInput } from './dto/jobs.args';
 import { JobSortField } from './models/enums';
 import type { JobFilterOptions, JobPage } from './models/job.model';
+import { visaSponsorship } from './visa';
 
 /** Loads the company and this user's application and match, so those fields are theirs. */
 function forUser(userId: number) {
@@ -36,8 +38,39 @@ export interface UpsertResult {
 }
 
 @Injectable()
-export class JobsService {
+export class JobsService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(JobsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Jobs saved before the visa tag existed get it on the next start. */
+  async onApplicationBootstrap(): Promise<void> {
+    const checked = await this.backfillVisa();
+    if (checked > 0) this.logger.log(`Read the visa sponsorship of ${checked} saved jobs`);
+  }
+
+  /** Reads the visa tag of every job that has none yet, 200 at a time. Returns how many. */
+  async backfillVisa(): Promise<number> {
+    let total = 0;
+    for (;;) {
+      const jobs = await this.prisma.job.findMany({
+        where: { visa: null },
+        select: { id: true, description: true, raw: true },
+        take: 200,
+      });
+      if (jobs.length === 0) return total;
+      await this.prisma.$transaction(
+        jobs.map((job) => {
+          const raw = job.raw as { visa_sponsorship?: string | null } | null;
+          return this.prisma.job.update({
+            where: { id: job.id },
+            data: { visa: visaSponsorship(job.description, raw?.visa_sponsorship) },
+          });
+        }),
+      );
+      total += jobs.length;
+    }
+  }
 
   /** One page of jobs as `userId` sees them: their hidden jobs are left out, or only those. */
   async findPage(userId: number, { filter, sort, page, pageSize }: JobsArgs): Promise<JobPage> {
@@ -142,6 +175,7 @@ export class JobsService {
         countryCode: rest.countryCode?.toUpperCase() ?? null,
         // Hand-added jobs rarely say their language, so guess it from the description.
         language: rest.language?.toLowerCase() ?? detectLanguage(rest.description),
+        visa: visaSponsorship(rest.description ?? null),
         salaryMinUsd: salaryMinUsd ?? null,
         salaryMaxUsd: salaryMaxUsd ?? null,
         source: JobSource.MANUAL,
@@ -274,6 +308,7 @@ function buildWhere(filter: JobFilterInput | undefined, userId: number): Prisma.
     provider: inList(filter.providers),
     industry: inList(filter.industries),
     workplace: inList(filter.workplaces),
+    visa: inList(filter.visas),
     source: inList(filter.sources),
   };
   for (const [field, condition] of Object.entries(lists)) {

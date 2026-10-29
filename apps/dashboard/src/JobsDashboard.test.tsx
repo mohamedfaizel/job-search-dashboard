@@ -77,6 +77,21 @@ describe('JobsDashboard', () => {
     expect(screen.getByText('1 filter active')).toBeInTheDocument();
   });
 
+  it('shows what each ad says about visas and filters by it', async () => {
+    renderDashboard();
+    const table = await screen.findByRole('table');
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    expect(within(table).getByText('Visa support')).toBeInTheDocument();
+    expect(within(table).getByText('No sponsorship')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Filter Visa' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Visa support' }));
+
+    await waitFor(() => {
+      expect(lastJobsPageVariables()).toMatchObject({ filter: { visas: ['OFFERS'] } });
+    });
+  });
+
   it('opens the description in a popup', async () => {
     renderDashboard();
     await userEvent.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));

@@ -1,6 +1,6 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
 import { useEffect, useRef, useState } from 'react';
-import { capitalize, formatDate, formatSalary, WORKPLACE_LABELS } from '../format';
+import { capitalize, formatDate, formatSalary, VISA_LABELS, WORKPLACE_LABELS } from '../format';
 import { ApplyKitPanel } from './ApplyKitPanel';
 import { Badge } from './Badge';
 import { InsightsPanel } from './InsightsPanel';
@@ -108,6 +108,8 @@ export function JobDetailsDialog({
             {job.seniority && <Badge tone="orange">{capitalize(job.seniority)}</Badge>}
             {job.workplace && <Badge tone="red">{WORKPLACE_LABELS[job.workplace]}</Badge>}
             {job.jobFunction && <Badge tone="red">{job.jobFunction}</Badge>}
+            {job.visa === 'OFFERS' && <Badge tone="green">{VISA_LABELS.OFFERS}</Badge>}
+            {job.visa === 'NO' && <Badge tone="gray">{VISA_LABELS.NO}</Badge>}
             {salary && (
               <Badge tone="green">
                 {salary}

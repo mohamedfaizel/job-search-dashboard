@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { JobsService } from '../src/jobs/jobs.service';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
@@ -192,5 +193,41 @@ describe('Jobs GraphQL API', () => {
     });
     expect(res.errors).toBeUndefined();
     expect(res.data?.jobsPage.items.map((job) => job.title)).toEqual(['Berlin, English ad']);
+  });
+
+  it('tags visa sponsorship from the description and filters by it', async () => {
+    await addJob({
+      title: 'Sponsors',
+      companyName: 'Acme',
+      description: 'We offer visa sponsorship and relocation support.',
+    });
+    await addJob({
+      title: 'Says no',
+      companyName: 'Beta',
+      description: 'We cannot sponsor visas for this role.',
+    });
+    await addJob({ title: 'Silent', companyName: 'Gamma', description: 'Build React apps.' });
+
+    const res = await t.gql<{ jobsPage: { items: { title: string; visa: string }[] } }>(
+      `query { jobsPage(filter: { visas: [OFFERS, NOT_STATED] }, sort: { field: TITLE, direction: ASC }) { items { title visa } } }`,
+    );
+    expect(res.errors).toBeUndefined();
+    expect(res.data?.jobsPage.items).toEqual([
+      { title: 'Silent', visa: 'NOT_STATED' },
+      { title: 'Sponsors', visa: 'OFFERS' },
+    ]);
+  });
+
+  it('tags jobs saved before the visa tag existed', async () => {
+    const id = await addJob({
+      title: 'Old job',
+      companyName: 'Acme',
+      description: 'Visa sponsorship available.',
+    });
+    await t.prisma.job.update({ where: { id }, data: { visa: null } });
+
+    const jobs = t.app.get(JobsService);
+    expect(await jobs.backfillVisa()).toBe(1);
+    expect((await t.prisma.job.findUniqueOrThrow({ where: { id } })).visa).toBe('OFFERS');
   });
 });
