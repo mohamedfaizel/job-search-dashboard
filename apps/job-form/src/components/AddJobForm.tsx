@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { APPLICATION_STATUSES, getErrorMessage, useCreateJob, WORKPLACES } from '@jobsearch/data';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { COUNTRIES } from '../countries';
 import type { JobFormValues } from '../schema';
 import { emptyJobForm, jobFormSchema, SENIORITIES, toCreateJobInput } from '../schema';
 import { Field, inputClass } from './Field';
@@ -94,18 +95,15 @@ export function AddJobForm() {
         <Field label="City" htmlFor="city" error={errors.city?.message}>
           <input {...register('city')} {...a11y('city')} className={inputClass} />
         </Field>
-        <Field
-          label="Country code"
-          htmlFor="countryCode"
-          error={errors.countryCode?.message}
-          hint="e.g. US, DE, IN"
-        >
-          <input
-            maxLength={2}
-            {...register('countryCode')}
-            {...a11y('countryCode')}
-            className={inputClass}
-          />
+        <Field label="Country" htmlFor="countryCode" error={errors.countryCode?.message}>
+          <select {...register('countryCode')} {...a11y('countryCode')} className={inputClass}>
+            <option value="">Not specified</option>
+            {COUNTRIES.map(([code, name]) => (
+              <option key={code} value={code}>
+                {name} · {code}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Workplace" htmlFor="workplace">
           <select {...register('workplace')} {...a11y('workplace')} className={inputClass}>

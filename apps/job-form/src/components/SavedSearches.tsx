@@ -9,6 +9,7 @@ import {
   useSetSchedule,
 } from '@jobsearch/data';
 import { useState } from 'react';
+import { countryName } from '../countries';
 import { formatDateTime, plural } from '../format';
 
 interface Props {
@@ -57,7 +58,7 @@ export function SavedSearches({ onLoad }: Props) {
 }
 
 export function describeSearch(search: SavedSearch): string {
-  return [search.titles, search.skills, search.countryCodes, search.locations]
+  return [search.titles, search.skills, search.countryCodes.map(countryName), search.locations]
     .filter((part) => part.length > 0)
     .map((part) => part.join(', '))
     .join(' · ');
