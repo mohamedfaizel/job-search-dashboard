@@ -8,6 +8,7 @@ import {
   setPage,
   setPageSize,
   setFilterValues,
+  setPostedWithinDays,
   setSearch,
   setShowHidden,
   toggleFilterValue,
@@ -27,6 +28,7 @@ import { ColumnsMenu } from './components/ColumnsMenu';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { JobsTable } from './components/JobsTable';
 import { Pagination } from './components/Pagination';
+import { QuickFilters } from './components/QuickFilters';
 import type { StatCardKey } from './components/StatCards';
 import { StatCards } from './components/StatCards';
 import { Toolbar } from './components/Toolbar';
@@ -35,13 +37,18 @@ import { useColumnVisibility } from './useColumnVisibility';
 const NO_JOBS: Job[] = [];
 const STATUS_CARDS: StatCardKey[] = ['SAVED', 'APPLIED', 'INTERVIEWING'];
 
-/** Every column for the Columns menu, in table order. */
-const COLUMN_CHOICES = columns.map((column) => ({
-  // Accessor columns take their id from the field they read.
-  id: column.id ?? ('accessorKey' in column ? String(column.accessorKey) : ''),
-  label: String(column.header),
-  canHide: column.enableHiding !== false,
-}));
+/** Every column for the Columns menu, in table order. The tick boxes and the action icons
+ * have no name as a header (theirs is a component), and always show, so they aren't listed. */
+const COLUMN_CHOICES = columns
+  .filter((column) => typeof column.header === 'string')
+  .map((column) => ({
+    // Accessor columns take their id from the field they read.
+    id: column.id ?? ('accessorKey' in column ? String(column.accessorKey) : ''),
+    label: String(column.header),
+    canHide: column.enableHiding !== false,
+  }));
+
+const ERROR_BOX = 'rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800';
 
 /** Connects the table to Redux (what the user chose) and TanStack Query (the data). */
 export function JobsDashboard() {
@@ -57,8 +64,9 @@ export function JobsDashboard() {
   const applications = useMyApplications();
   const columnVisibility = useColumnVisibility(DEFAULT_HIDDEN_COLUMNS);
   const [openJobId, setOpenJobId] = useState<string | null>(null);
-  // The last job hidden or brought back, for the "Undo" message.
-  const [lastChange, setLastChange] = useState<{ job: Job; hidden: boolean } | null>(null);
+  // The last jobs hidden or brought back, for the "Undo" message.
+  const [lastChange, setLastChange] = useState<{ jobs: Job[]; hidden: boolean } | null>(null);
+  const [checked, setChecked] = useState<Set<string>>(() => new Set());
   const showingHidden = tableState.showHidden;
 
   // "Jobs found" counts your search and column filters, whatever the status card picked.
@@ -78,6 +86,9 @@ export function JobsDashboard() {
 
   const jobs = jobsQuery.data?.items ?? NO_JOBS;
   const openJob = jobs.find((job) => job.id === openJobId) ?? null;
+  // Only the ticked jobs still on screen count, so a new page or filter starts with none.
+  const selectedJobs = useMemo(() => jobs.filter((job) => checked.has(job.id)), [jobs, checked]);
+  const selected = useMemo(() => new Set(selectedJobs.map((job) => job.id)), [selectedJobs]);
 
   const handleSort = useCallback((field: JobSortField) => dispatch(cycleSort(field)), [dispatch]);
   const handleToggleFilter = useCallback(
@@ -99,19 +110,24 @@ export function JobsDashboard() {
     [updateStatus],
   );
 
-  const handleToggleHidden = useCallback(
-    (job: Job) => {
+  /** Hides the jobs (or brings them back, in Hidden jobs) and offers to undo it. */
+  const changeHidden = useCallback(
+    async (changed: Job[]) => {
       const hidden = !showingHidden;
-      setHidden.mutate(
-        { id: job.id, hidden },
-        {
-          onSuccess: () => {
-            setLastChange({ job, hidden });
-          },
-        },
-      );
+      try {
+        await Promise.all(changed.map((job) => setHidden.mutateAsync({ id: job.id, hidden })));
+        setLastChange({ jobs: changed, hidden });
+      } catch {
+        // The error message under the toolbar says what went wrong.
+      }
     },
     [setHidden, showingHidden],
+  );
+  const handleToggleHidden = useCallback(
+    (job: Job) => {
+      void changeHidden([job]);
+    },
+    [changeHidden],
   );
   // Which card matches what the table shows now: none when the Status column filter picks
   // something the cards don't cover, such as two statuses at once.
@@ -167,20 +183,34 @@ export function JobsDashboard() {
       {lastChange && (
         <p
           role="status"
-          className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700"
+          className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-lg items-center gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg"
         >
-          {lastChange.hidden ? 'Hid' : 'Brought back'} “{lastChange.job.title}” at{' '}
-          {lastChange.job.company.name}.
+          <span className="min-w-0 flex-1">
+            {lastChange.hidden ? 'Hid' : 'Brought back'}{' '}
+            {lastChange.jobs.length === 1 && lastChange.jobs[0]
+              ? `“${lastChange.jobs[0].title}” at ${lastChange.jobs[0].company.name}.`
+              : `${lastChange.jobs.length} jobs.`}
+          </span>
           <button
             type="button"
             onClick={() => {
-              const { job, hidden } = lastChange;
-              setHidden.mutate({ id: job.id, hidden: !hidden });
+              const { jobs: changed, hidden } = lastChange;
+              for (const job of changed) setHidden.mutate({ id: job.id, hidden: !hidden });
               setLastChange(null);
             }}
-            className="font-medium text-indigo-700 hover:underline"
+            className="font-semibold text-indigo-300 hover:text-indigo-200"
           >
             Undo
+          </button>
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={() => {
+              setLastChange(null);
+            }}
+            className="text-slate-400 hover:text-white"
+          >
+            ✕
           </button>
         </p>
       )}
@@ -198,28 +228,70 @@ export function JobsDashboard() {
           onShowAll={columnVisibility.showAll}
         />
       </Toolbar>
+      <QuickFilters
+        filters={tableState.filters}
+        filterOptions={filterOptions.data}
+        postedWithinDays={tableState.postedWithinDays}
+        onToggleFilter={handleToggleFilter}
+        onClearFilter={handleClearFilter}
+        onPostedWithin={(days) => dispatch(setPostedWithinDays(days))}
+      />
+
+      {selectedJobs.length > 0 && (
+        <div
+          role="region"
+          aria-label="Selected jobs"
+          className="flex flex-wrap items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm text-indigo-900"
+        >
+          <span className="mr-auto font-medium">{selectedJobs.length} selected</span>
+          {!showingHidden && (
+            <button
+              type="button"
+              onClick={() => {
+                for (const job of selectedJobs) {
+                  if (job.applicationStatus === 'NONE') handleSetStatus(job, 'SAVED');
+                }
+                setChecked(new Set());
+              }}
+              className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
+            >
+              Save
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              void changeHidden(selectedJobs);
+              setChecked(new Set());
+            }}
+            className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
+          >
+            {showingHidden ? 'Unhide' : 'Hide'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setChecked(new Set());
+            }}
+            className="px-2 py-1 text-indigo-700 hover:underline"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
 
       {jobsQuery.isError && (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-        >
+        <div role="alert" className={ERROR_BOX}>
           Could not load jobs: {getErrorMessage(jobsQuery.error)}
         </div>
       )}
       {setHidden.isError && (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-        >
+        <div role="alert" className={ERROR_BOX}>
           Could not change that: {getErrorMessage(setHidden.error)}
         </div>
       )}
       {updateStatus.isError && (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-        >
+        <div role="alert" className={ERROR_BOX}>
           Could not update the status: {getErrorMessage(updateStatus.error)}
         </div>
       )}
@@ -238,6 +310,8 @@ export function JobsDashboard() {
         showingHidden={showingHidden}
         isFetching={jobsQuery.isFetching && !jobsQuery.isPending}
         columnVisibility={columnVisibility.visibility}
+        selected={selected}
+        onSelectionChange={setChecked}
       />
 
       {jobsQuery.isPending && <p className="text-center text-sm text-slate-500">Loading jobs…</p>}

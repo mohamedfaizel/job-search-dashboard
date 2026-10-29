@@ -36,7 +36,7 @@ export function Toolbar({ search, onSearch, activeFilterCount, onClearAll, child
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="relative">
+      <div className="relative w-full sm:w-auto">
         <svg
           aria-hidden="true"
           viewBox="0 0 20 20"
@@ -52,7 +52,7 @@ export function Toolbar({ search, onSearch, activeFilterCount, onClearAll, child
           onChange={(e) => {
             setValue(e.target.value);
           }}
-          className="w-72 rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none"
+          className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none sm:w-72"
         />
       </div>
       {activeFilterCount > 0 && (
@@ -69,7 +69,7 @@ export function Toolbar({ search, onSearch, activeFilterCount, onClearAll, child
           Clear all
         </button>
       )}
-      {children && <div className="ml-auto flex items-center gap-2">{children}</div>}
+      {children && <div className="flex items-center gap-2 sm:ml-auto">{children}</div>}
     </div>
   );
 }

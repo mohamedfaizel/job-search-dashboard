@@ -8,6 +8,7 @@ import {
   setFilterValues,
   setSearch,
   toggleFilterValue,
+  setPostedWithinDays,
   setShowHidden,
   toJobsPageArgs,
 } from './jobsTableSlice';
@@ -83,5 +84,17 @@ describe('jobsTable slice', () => {
     state = reduce(state, toggleFilterValue({ key: 'skills', value: 'react' }));
     expect(countActiveFilters(state)).toBe(2);
     expect(reduce(state, clearAll()).filters).toEqual({});
+  });
+
+  it('asks for jobs posted in the last few days, counted from the start of the hour', () => {
+    vi.useFakeTimers({ now: new Date('2026-10-29T10:42:00.000Z') });
+    try {
+      const state = reduce(initialJobsTableState, setPostedWithinDays(3));
+      expect(toJobsPageArgs(state).filter).toEqual({ postedAfter: '2026-10-26T10:00:00.000Z' });
+      expect(countActiveFilters(state)).toBe(1);
+      expect(reduce(state, clearAll()).postedWithinDays).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

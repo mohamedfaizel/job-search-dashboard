@@ -19,6 +19,8 @@ export interface JobsTableState {
   pageSize: number;
   /** Show only the jobs you hid, instead of leaving them out. */
   showHidden: boolean;
+  /** Only jobs posted in the last this-many days ("Posted" quick filter); null for any time. */
+  postedWithinDays: number | null;
 }
 
 export const initialJobsTableState: JobsTableState = {
@@ -28,6 +30,7 @@ export const initialJobsTableState: JobsTableState = {
   page: 1,
   pageSize: 25,
   showHidden: false,
+  postedWithinDays: null,
 };
 
 export const jobsTableSlice = createSlice({
@@ -62,6 +65,11 @@ export const jobsTableSlice = createSlice({
     clearAll(state) {
       state.search = '';
       state.filters = {};
+      state.postedWithinDays = null;
+      state.page = 1;
+    },
+    setPostedWithinDays(state, action: PayloadAction<number | null>) {
+      state.postedWithinDays = action.payload;
       state.page = 1;
     },
     /** Clicking a column header cycles: ascending → descending → off. */
@@ -96,7 +104,10 @@ export const {
   setPage,
   setPageSize,
   setShowHidden,
+  setPostedWithinDays,
 } = jobsTableSlice.actions;
+
+const HOUR_MS = 60 * 60 * 1000;
 
 /** Converts table state into the arguments for the jobsPage GraphQL query. */
 export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
@@ -105,6 +116,12 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
   if (search) filter.search = search;
   Object.assign(filter, state.filters);
   if (state.showHidden) filter.hidden = true;
+  if (state.postedWithinDays !== null) {
+    // Counted from the start of this hour, so the query (and its cache entry) stays the same
+    // for an hour instead of changing every millisecond.
+    const hour = Math.floor(Date.now() / HOUR_MS) * HOUR_MS;
+    filter.postedAfter = new Date(hour - state.postedWithinDays * 24 * HOUR_MS).toISOString();
+  }
 
   return {
     page: state.page,
@@ -115,5 +132,6 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
 }
 
 export function countActiveFilters(state: JobsTableState): number {
-  return Object.values(state.filters).reduce((sum, values) => sum + values.length, 0);
+  const listed = Object.values(state.filters).reduce((sum, values) => sum + values.length, 0);
+  return listed + (state.postedWithinDays === null ? 0 : 1);
 }

@@ -12,10 +12,22 @@ interface Props {
   selected: string[];
   onToggle: (value: string) => void;
   onClear: () => void;
+  /** Shows a labelled chip (the quick filters above the table) instead of the funnel icon. */
+  chip?: boolean;
 }
 
-/** Funnel button in a column header that opens a checklist of values to filter by. */
-export function ColumnFilter({ column, options, selected, onToggle, onClear }: Props) {
+/**
+ * Funnel button in a column header that opens a checklist of values to filter by. With `chip`
+ * the same checklist opens from a "Country ▾" chip above the table.
+ */
+export function ColumnFilter({
+  column,
+  options,
+  selected,
+  onToggle,
+  onClear,
+  chip = false,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
@@ -43,21 +55,47 @@ export function ColumnFilter({ column, options, selected, onToggle, onClear }: P
 
   return (
     <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        aria-label={`Filter ${column}${active ? ` (${selected.length} selected)` : ''}`}
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => {
-          setOpen((o) => !o);
-        }}
-        className={`flex items-center gap-0.5 rounded px-1 py-0.5 text-xs hover:bg-slate-200 ${active ? 'bg-indigo-50 text-indigo-700' : 'text-slate-400'}`}
-      >
-        <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
-          <path d="M1.5 2h13l-5 6.2V13l-3 1.5V8.2z" />
-        </svg>
-        {active && <span>{selected.length}</span>}
-      </button>
+      {chip ? (
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => {
+            setOpen((o) => !o);
+          }}
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition ${
+            active
+              ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+          }`}
+        >
+          {column}
+          {active && (
+            <span className="rounded-full bg-indigo-600 px-1.5 text-xs font-semibold text-white">
+              {selected.length}
+            </span>
+          )}
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3 w-3 fill-current opacity-60">
+            <path d="M4 6l4 4 4-4z" />
+          </svg>
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-label={`Filter ${column}${active ? ` (${selected.length} selected)` : ''}`}
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => {
+            setOpen((o) => !o);
+          }}
+          className={`flex items-center gap-0.5 rounded px-1 py-0.5 text-xs hover:bg-slate-200 ${active ? 'bg-indigo-50 text-indigo-700' : 'text-slate-400'}`}
+        >
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
+            <path d="M1.5 2h13l-5 6.2V13l-3 1.5V8.2z" />
+          </svg>
+          {active && <span>{selected.length}</span>}
+        </button>
+      )}
 
       {open && (
         <div
