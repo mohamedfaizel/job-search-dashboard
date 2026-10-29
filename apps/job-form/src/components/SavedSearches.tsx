@@ -57,10 +57,27 @@ export function SavedSearches({ onLoad }: Props) {
   );
 }
 
+/** "en" → "English", for the search summary. */
+function languageName(code: string): string {
+  return (
+    ({ en: 'English', de: 'German' } as Record<string, string | undefined>)[code] ??
+    code.toUpperCase()
+  );
+}
+
 export function describeSearch(search: SavedSearch): string {
+  const extras = [
+    search.languages.length ? `in ${search.languages.map(languageName).join('/')}` : '',
+    search.remoteOnly ? 'remote' : '',
+    search.skipFluentGerman ? 'no fluent German' : '',
+    search.employmentTypes.join(', '),
+    search.excludeTitles.length ? `not ${search.excludeTitles.join(', ')}` : '',
+    search.minSalaryEur === null ? '' : `€${search.minSalaryEur.toLocaleString('en')}+`,
+  ];
   return [search.titles, search.skills, search.countryCodes.map(countryName), search.locations]
     .filter((part) => part.length > 0)
     .map((part) => part.join(', '))
+    .concat(extras.filter(Boolean))
     .join(' · ');
 }
 

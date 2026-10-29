@@ -13,6 +13,12 @@ const FIELDS = /* GraphQL */ `
   titles
   countryCodes
   locations
+  languages
+  skipFluentGerman
+  remoteOnly
+  excludeTitles
+  employmentTypes
+  minSalaryEur
   pageSize
   onlyNew
   lastRun {
@@ -117,6 +123,41 @@ describe('saved searches', () => {
       created: 3,
       savedSearchName: 'Frontend in Berlin',
       summary: 'frontend · DE · Berlin',
+    });
+  });
+
+  it('saves and runs the extra filters', async () => {
+    const saved = await create({
+      ...SEARCH,
+      languages: ['en'],
+      remoteOnly: true,
+      skipFluentGerman: true,
+      excludeTitles: ['Praktikum'],
+      employmentTypes: ['contract'],
+      minSalaryEur: 50000,
+    });
+    expect(saved).toMatchObject({
+      languages: ['en'],
+      remoteOnly: true,
+      skipFluentGerman: true,
+      excludeTitles: ['Praktikum'],
+      employmentTypes: ['contract'],
+      minSalaryEur: 50000,
+    });
+
+    await t.gql(RUN, { id: saved.id });
+
+    expect(requests[0]).toMatchObject({
+      language_or: ['en'],
+      remote: true,
+      job_title_not: ['Praktikum'],
+      employment_type_or: ['contract'],
+      min_salary_usd: 54000,
+    });
+    const list = await t.gql<{ savedSearches: Saved[] }>(LIST);
+    expect(list.data!.savedSearches[0]!.lastRun).toMatchObject({
+      summary:
+        'frontend · DE · Berlin · in English · remote · no fluent German · contract · not Praktikum · €50,000+',
     });
   });
 

@@ -7,6 +7,17 @@ export interface JobsPipeSearchRequest {
   /** City or region names, e.g. ["Seattle", "WA"]. */
   job_location_or?: string[];
   posted_at_max_age_days?: number;
+  /** ISO 639-1 codes of the language the posting is written in. */
+  language_or?: string[];
+  /** Drop postings whose description has every word of any of these phrases. */
+  description_not?: string[];
+  remote?: boolean;
+  job_title_not?: string[];
+  employment_type_or?: string[];
+  /** The top of the posted range, annualized, in US dollars. Unposted salaries never match. */
+  min_salary_usd?: number;
+  /** Keep postings whose value is unknown for these filtered fields. */
+  include_unknown?: string[];
   /** Only postings JobsPipe first found at or after this UTC time, "YYYY-MM-DD HH:mm:ss". */
   discovered_at_gte?: string;
   limit?: number;

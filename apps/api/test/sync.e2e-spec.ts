@@ -174,6 +174,55 @@ describe('syncJobs', () => {
     expect(requests[0]).toMatchObject({ job_location_or: ['Berlin', 'Bavaria'] });
   });
 
+  it('sends the extra filters, keeping postings with no language or job type', async () => {
+    await t.gql(SYNC, {
+      input: {
+        titles: ['frontend'],
+        languages: ['EN', 'de'],
+        skipFluentGerman: true,
+        remoteOnly: true,
+        excludeTitles: ['Werkstudent'],
+        employmentTypes: ['full-time'],
+        minSalaryEur: 60000,
+      },
+    });
+    expect(requests[0]).toMatchObject({
+      language_or: ['en', 'de'],
+      description_not: expect.arrayContaining(['fließende Deutschkenntnisse']) as unknown,
+      remote: true,
+      job_title_not: ['Werkstudent'],
+      employment_type_or: ['full-time'],
+      min_salary_usd: 64800,
+      include_unknown: ['language', 'employment_type'],
+    });
+  });
+
+  it('sends none of the extra filters when they are not set', async () => {
+    await t.gql(SYNC, { input: { titles: ['frontend'] } });
+    for (const key of [
+      'language_or',
+      'description_not',
+      'remote',
+      'job_title_not',
+      'include_unknown',
+    ]) {
+      expect(requests[0]).not.toHaveProperty(key);
+    }
+  });
+
+  it('refuses a job type JobsPipe does not know', async () => {
+    const res = await t.gql(SYNC, { input: { titles: ['frontend'], employmentTypes: ['gig'] } });
+    expect(res.errors?.[0]?.message).toBeDefined();
+    expect(requests).toHaveLength(0);
+  });
+
+  it('treats a search with different filters as new', async () => {
+    await t.gql(SYNC, { input: { titles: ['frontend'] } });
+    requests.length = 0;
+    await t.gql(SYNC, { input: { titles: ['frontend'], remoteOnly: true } });
+    expect(requests[0]).not.toHaveProperty('discovered_at_gte');
+  });
+
   describe('continue import', () => {
     it('picks up from the cursor where the last run stopped', async () => {
       const first = await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1 } });

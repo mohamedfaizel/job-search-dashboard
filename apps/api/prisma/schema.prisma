@@ -311,6 +311,14 @@ model SavedSearch {
   skills       String[]
   countryCodes String[]
   locations    String[]
+  /// ISO 639-1 codes of the posting's language, e.g. ["en", "de"].
+  languages        String[]      @default([])
+  skipFluentGerman Boolean       @default(false)
+  remoteOnly       Boolean       @default(false)
+  excludeTitles    String[]      @default([])
+  employmentTypes  String[]      @default([])
+  /// Euros a year; the import converts it to the US dollars JobsPipe filters in.
+  minSalaryEur     Int?
   maxAgeDays   Int               @default(7)
   pageSize     Int               @default(25)
   maxPages     Int               @default(1)

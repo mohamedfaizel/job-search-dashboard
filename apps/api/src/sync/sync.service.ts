@@ -13,17 +13,48 @@ import type { SyncJobsInput, SyncJobsResult } from './sync.input';
  */
 const OVERLAP_MS = 60 * 60 * 1000;
 
+/**
+ * Phrases a German ad uses when it needs fluent German. JobsPipe matches every word of a phrase,
+ * in any order, so each one names Deutschkenntnisse itself to avoid skipping English ads.
+ */
+export const FLUENT_GERMAN_PHRASES = [
+  'fließende Deutschkenntnisse',
+  'fließenden Deutschkenntnissen',
+  'fliessende Deutschkenntnisse',
+  'verhandlungssichere Deutschkenntnisse',
+  'verhandlungssicheren Deutschkenntnissen',
+  'sehr gute Deutschkenntnisse',
+  'sehr guten Deutschkenntnissen',
+  'Deutschkenntnisse C1',
+  'Deutschkenntnisse C2',
+];
+
+/**
+ * JobsPipe's salary filter is in US dollars. A rough rate is enough for a minimum; update it if
+ * the euro moves a lot.
+ */
+export const EUR_TO_USD = 1.08;
+
 /** The same search always gets the same key, whatever the order or case of its terms. */
 export function searchKey(input: SyncJobsInput): string {
   const norm = (list: string[] | undefined) =>
     [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort();
   const locations = norm(input.locations);
+  const languages = norm(input.languages);
+  const excludeTitles = norm(input.excludeTitles);
+  const employmentTypes = norm(input.employmentTypes);
+  // Each filter goes in only when set, so searches from before it existed keep their key.
   return JSON.stringify({
     titles: norm(input.titles),
     skills: norm(input.skills),
     countries: norm(input.countryCodes),
-    // Only when set, so searches saved before this filter existed keep their key.
     ...(locations.length ? { locations } : {}),
+    ...(languages.length ? { languages } : {}),
+    ...(input.skipFluentGerman ? { skipFluentGerman: true } : {}),
+    ...(input.remoteOnly ? { remoteOnly: true } : {}),
+    ...(excludeTitles.length ? { excludeTitles } : {}),
+    ...(employmentTypes.length ? { employmentTypes } : {}),
+    ...(input.minSalaryEur ? { minSalaryEur: input.minSalaryEur } : {}),
   });
 }
 
@@ -34,6 +65,10 @@ export function toJobsPipeTime(date: Date): string {
 
 /** The search filters, without paging. Every page of a run sends the same ones. */
 function toFilters(input: SyncJobsInput, discoveredAtGte: string | null): JobsPipeSearchRequest {
+  const unknown = [
+    ...(input.languages?.length ? ['language'] : []),
+    ...(input.employmentTypes?.length ? ['employment_type'] : []),
+  ];
   return {
     job_title_or: input.titles,
     posted_at_max_age_days: input.maxAgeDays,
@@ -42,6 +77,16 @@ function toFilters(input: SyncJobsInput, discoveredAtGte: string | null): JobsPi
       ? { job_country_code_or: input.countryCodes.map((c) => c.toUpperCase()) }
       : {}),
     ...(input.locations?.length ? { job_location_or: input.locations } : {}),
+    ...(input.languages?.length
+      ? { language_or: input.languages.map((l) => l.toLowerCase()) }
+      : {}),
+    ...(input.skipFluentGerman ? { description_not: FLUENT_GERMAN_PHRASES } : {}),
+    ...(input.remoteOnly ? { remote: true } : {}),
+    ...(input.excludeTitles?.length ? { job_title_not: input.excludeTitles } : {}),
+    ...(input.employmentTypes?.length ? { employment_type_or: input.employmentTypes } : {}),
+    ...(input.minSalaryEur ? { min_salary_usd: Math.round(input.minSalaryEur * EUR_TO_USD) } : {}),
+    // Most postings have no language or job type yet; dropping them all would hide good jobs.
+    ...(unknown.length ? { include_unknown: unknown } : {}),
     ...(discoveredAtGte ? { discovered_at_gte: discoveredAtGte } : {}),
     // Newest first is the only order JobsPipe supports; it keeps the cursor stable.
     order_by: [{ field: 'posted_at', desc: true }],
@@ -122,6 +167,12 @@ export class SyncService {
           skills: input.skills ?? [],
           countryCodes: input.countryCodes ?? [],
           locations: input.locations ?? [],
+          languages: input.languages ?? [],
+          skipFluentGerman: input.skipFluentGerman,
+          remoteOnly: input.remoteOnly,
+          excludeTitles: input.excludeTitles ?? [],
+          employmentTypes: input.employmentTypes ?? [],
+          minSalaryEur: input.minSalaryEur ?? null,
           maxAgeDays: input.maxAgeDays,
           pageSize: input.pageSize,
           maxPages: input.maxPages,

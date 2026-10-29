@@ -632,19 +632,26 @@ enum Role {
 type SavedSearch {
   countryCodes: [String!]!
   createdAt: DateTime!
+  employmentTypes: [String!]!
+  excludeTitles: [String!]!
   id: Int!
+  languages: [String!]!
 
   """The most recent import of this search"""
   lastRun: SyncRunModel
   locations: [String!]!
   maxAgeDays: Int!
   maxPages: Int!
+
+  """Euros a year"""
+  minSalaryEur: Int
   name: String!
 
   """When the scheduler runs it next"""
   nextRunAt: DateTime
   onlyNew: Boolean!
   pageSize: Int!
+  remoteOnly: Boolean!
 
   """Time of day for scheduled runs, "HH:mm" in the server's local time"""
   runAt: String!
@@ -655,12 +662,26 @@ type SavedSearch {
   """
   scheduleNote: String
   skills: [String!]!
+  skipFluentGerman: Boolean!
   titles: [String!]!
 }
 
 input SavedSearchInput {
   """ISO country codes, e.g. ["DE"]"""
   countryCodes: [String!]
+
+  """
+  Any of full-time, part-time, contract, internship. Postings with no type are kept.
+  """
+  employmentTypes: [String!]
+
+  """Skip postings whose title contains any of these, e.g. ["Werkstudent"]"""
+  excludeTitles: [String!]
+
+  """
+  Languages the posting is written in, ISO 639-1 codes, e.g. ["en", "de"]. Unlabelled postings are kept.
+  """
+  languages: [String!]
 
   """
   Cities or regions, e.g. ["Berlin", "Bavaria"]. Combine with countryCodes.
@@ -672,6 +693,9 @@ input SavedSearchInput {
 
   """Stop after this many pages to protect credits"""
   maxPages: Int! = 1
+
+  """Only postings whose posted salary reaches this many euros a year"""
+  minSalaryEur: Int
 
   """
   A name you will recognise, e.g. "Frontend in Berlin"
@@ -688,8 +712,16 @@ input SavedSearchInput {
   """
   pageSize: Int! = 25
 
+  """Only postings flagged remote"""
+  remoteOnly: Boolean! = false
+
   """Match any of these skills, e.g. ["react"]"""
   skills: [String!]
+
+  """
+  Skip postings that ask for fluent German (fließende Deutschkenntnisse and the like)
+  """
+  skipFluentGerman: Boolean! = false
 
   """Match any of these job titles, e.g. ["frontend"]"""
   titles: [String!]!
@@ -725,6 +757,19 @@ input SyncJobsInput {
   countryCodes: [String!]
 
   """
+  Any of full-time, part-time, contract, internship. Postings with no type are kept.
+  """
+  employmentTypes: [String!]
+
+  """Skip postings whose title contains any of these, e.g. ["Werkstudent"]"""
+  excludeTitles: [String!]
+
+  """
+  Languages the posting is written in, ISO 639-1 codes, e.g. ["en", "de"]. Unlabelled postings are kept.
+  """
+  languages: [String!]
+
+  """
   Cities or regions, e.g. ["Berlin", "Bavaria"]. Combine with countryCodes.
   """
   locations: [String!]
@@ -734,6 +779,9 @@ input SyncJobsInput {
 
   """Stop after this many pages to protect credits"""
   maxPages: Int! = 1
+
+  """Only postings whose posted salary reaches this many euros a year"""
+  minSalaryEur: Int
 
   """
   Only ask for postings JobsPipe found since the last complete run of this search
@@ -745,11 +793,19 @@ input SyncJobsInput {
   """
   pageSize: Int! = 25
 
+  """Only postings flagged remote"""
+  remoteOnly: Boolean! = false
+
   """Continue the last import of this search from the page where it stopped"""
   resume: Boolean! = false
 
   """Match any of these skills, e.g. ["react"]"""
   skills: [String!]
+
+  """
+  Skip postings that ask for fluent German (fließende Deutschkenntnisse and the like)
+  """
+  skipFluentGerman: Boolean! = false
 
   """Match any of these job titles, e.g. ["frontend"]"""
   titles: [String!]!

@@ -1,5 +1,5 @@
 import type { CreateJobInput, SavedSearch, SavedSearchInput, SyncJobsInput } from '@jobsearch/data';
-import { APPLICATION_STATUSES, WORKPLACES } from '@jobsearch/data';
+import { APPLICATION_STATUSES, EMPLOYMENT_TYPES, WORKPLACES } from '@jobsearch/data';
 import { z } from 'zod';
 
 /** Splits "react, node.js ,  " into ["react", "node.js"]. */
@@ -120,6 +120,17 @@ export const syncFormSchema = z.object({
       'Use 2-letter codes, like US, DE',
     ),
   locations: z.string(),
+  languages: z.array(z.string()),
+  skipFluentGerman: z.boolean(),
+  remoteOnly: z.boolean(),
+  excludeTitles: z.string(),
+  employmentTypes: z.array(z.enum(EMPLOYMENT_TYPES)),
+  minSalaryEur: z
+    .string()
+    .trim()
+    .refine((v) => v === '' || (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 1_000_000), {
+      message: 'Enter euros a year, like 60000, or leave it empty',
+    }),
   maxAgeDays: positiveInt(90),
   // JobsPipe caps the page size by plan (Free 25, Builder/Growth 100, Scale/Business 500).
   pageSize: positiveInt(500),
@@ -134,6 +145,12 @@ export const defaultSyncForm: SyncFormValues = {
   skills: 'react',
   countryCodes: '',
   locations: '',
+  languages: [],
+  skipFluentGerman: false,
+  remoteOnly: false,
+  excludeTitles: '',
+  employmentTypes: [],
+  minSalaryEur: '',
   maxAgeDays: '7',
   pageSize: '25',
   maxPages: '1',
@@ -144,11 +161,19 @@ export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
   const skills = splitList(values.skills);
   const countryCodes = splitList(values.countryCodes).map((c) => c.toUpperCase());
   const locations = splitList(values.locations);
+  const excludeTitles = splitList(values.excludeTitles);
+  const minSalary = values.minSalaryEur.trim();
   return {
     titles: splitList(values.titles),
     ...(skills.length ? { skills } : {}),
     ...(countryCodes.length ? { countryCodes } : {}),
     ...(locations.length ? { locations } : {}),
+    ...(values.languages.length ? { languages: values.languages } : {}),
+    ...(values.skipFluentGerman ? { skipFluentGerman: true } : {}),
+    ...(values.remoteOnly ? { remoteOnly: true } : {}),
+    ...(excludeTitles.length ? { excludeTitles } : {}),
+    ...(values.employmentTypes.length ? { employmentTypes: values.employmentTypes } : {}),
+    ...(minSalary ? { minSalaryEur: Number(minSalary) } : {}),
     maxAgeDays: Number(values.maxAgeDays),
     pageSize: Number(values.pageSize),
     maxPages: Number(values.maxPages),
@@ -163,6 +188,12 @@ export function savedSearchToForm(search: SavedSearch): SyncFormValues {
     skills: search.skills.join(', '),
     countryCodes: search.countryCodes.join(', '),
     locations: search.locations.join(', '),
+    languages: search.languages,
+    skipFluentGerman: search.skipFluentGerman,
+    remoteOnly: search.remoteOnly,
+    excludeTitles: search.excludeTitles.join(', '),
+    employmentTypes: search.employmentTypes,
+    minSalaryEur: search.minSalaryEur === null ? '' : String(search.minSalaryEur),
     maxAgeDays: String(search.maxAgeDays),
     pageSize: String(search.pageSize),
     maxPages: String(search.maxPages),
