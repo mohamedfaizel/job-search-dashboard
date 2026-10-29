@@ -4,6 +4,8 @@ import { useEffect, useId, useRef } from 'react';
 export interface Tab<Id extends string> {
   id: Id;
   label: ReactNode;
+  /** A shorter label for phones. Screen readers always hear the full label. */
+  short?: ReactNode;
   panel: ReactNode;
 }
 
@@ -68,13 +70,22 @@ export function Tabs<Id extends string>({ label, tabs, selected, onSelect }: Pro
               onClick={() => {
                 onSelect(tab.id);
               }}
-              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`-mb-px border-b-2 px-3 py-2 sm:px-4 text-sm font-medium whitespace-nowrap ${
                 active
                   ? 'border-indigo-600 text-indigo-700'
                   : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900'
               }`}
             >
-              {tab.label}
+              {tab.short === undefined ? (
+                tab.label
+              ) : (
+                <>
+                  <span aria-hidden="true" className="sm:hidden">
+                    {tab.short}
+                  </span>
+                  <span className="sr-only sm:not-sr-only">{tab.label}</span>
+                </>
+              )}
             </button>
           );
         })}

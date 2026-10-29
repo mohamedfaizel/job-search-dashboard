@@ -37,6 +37,7 @@ function AddJobs() {
           {
             id: 'saved',
             label: searches ? `Saved searches (${searches.length})` : 'Saved searches',
+            short: searches ? `Saved (${searches.length})` : 'Saved',
             panel: (
               <SavedSearches
                 onLoad={(search) => {
@@ -50,6 +51,7 @@ function AddJobs() {
           {
             id: 'import',
             label: 'Import from JobsPipe',
+            short: 'Import',
             panel: (
               <div className="max-w-2xl">
                 <SyncPanel key={formKey} loaded={loaded} />
@@ -59,6 +61,7 @@ function AddJobs() {
           {
             id: 'manual',
             label: 'Add a job by hand',
+            short: 'By hand',
             panel: (
               <div className="max-w-3xl">
                 <AddJobForm />
