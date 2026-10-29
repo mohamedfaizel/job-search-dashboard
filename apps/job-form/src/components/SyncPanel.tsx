@@ -42,8 +42,15 @@ export function SyncPanel({ loaded = null }: Props) {
     defaultValues: loaded ? savedSearchToForm(loaded) : defaultSyncForm,
   });
 
-  const [pageSize, maxPages] = useWatch({ control, name: ['pageSize', 'maxPages'] });
+  const [pageSize, maxPages, maxAgeDays] = useWatch({
+    control,
+    name: ['pageSize', 'maxPages', 'maxAgeDays'],
+  });
   const maxCredits = Number(pageSize) * Number(maxPages);
+
+  // The page settings sit in a fold to keep the form short; a mistake in them opens it.
+  const [pageSettingsOpen, setPageSettingsOpen] = useState(false);
+  const pageSettingsError = Boolean(errors.maxAgeDays ?? errors.pageSize ?? errors.maxPages);
 
   // "Continue import" repeats the last search from where it stopped, with the same page settings.
   const lastInput = sync.variables;
@@ -89,7 +96,7 @@ export function SyncPanel({ loaded = null }: Props) {
       }}
       noValidate
       aria-labelledby="sync-heading"
-      className="space-y-4 rounded-lg border border-slate-200 bg-white p-5"
+      className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 sm:p-5"
     >
       <div>
         <h2 id="sync-heading" className="text-lg font-semibold text-slate-900">
@@ -150,37 +157,56 @@ export function SyncPanel({ loaded = null }: Props) {
       >
         <input {...register('locations')} {...a11y('locations')} className={inputClass} />
       </Field>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Field label="Max age (days)" htmlFor="sync-maxAgeDays" error={errors.maxAgeDays?.message}>
-          <input
-            inputMode="numeric"
-            {...register('maxAgeDays')}
-            {...a11y('maxAgeDays')}
-            className={inputClass}
-          />
-        </Field>
-        <Field
-          label="Jobs per page"
-          htmlFor="sync-pageSize"
-          error={errors.pageSize?.message}
-          hint="Free plan: max 25"
-        >
-          <input
-            inputMode="numeric"
-            {...register('pageSize')}
-            {...a11y('pageSize')}
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Max pages" htmlFor="sync-maxPages" error={errors.maxPages?.message}>
-          <input
-            inputMode="numeric"
-            {...register('maxPages')}
-            {...a11y('maxPages')}
-            className={inputClass}
-          />
-        </Field>
-      </div>
+      <details
+        open={pageSettingsOpen || pageSettingsError}
+        onToggle={(e) => {
+          setPageSettingsOpen(e.currentTarget.open);
+        }}
+        className="rounded-md border border-slate-200 px-3 py-2"
+      >
+        <summary className="cursor-pointer text-sm font-medium text-slate-700">
+          Page settings{' '}
+          <span className="font-normal text-slate-500">
+            · {maxAgeDays} days old at most · {pageSize} per page · {maxPages}{' '}
+            {Number(maxPages) === 1 ? 'page' : 'pages'}
+          </span>
+        </summary>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <Field
+            label="Max age (days)"
+            htmlFor="sync-maxAgeDays"
+            error={errors.maxAgeDays?.message}
+          >
+            <input
+              inputMode="numeric"
+              {...register('maxAgeDays')}
+              {...a11y('maxAgeDays')}
+              className={inputClass}
+            />
+          </Field>
+          <Field
+            label="Jobs per page"
+            htmlFor="sync-pageSize"
+            error={errors.pageSize?.message}
+            hint="Free plan: max 25"
+          >
+            <input
+              inputMode="numeric"
+              {...register('pageSize')}
+              {...a11y('pageSize')}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Max pages" htmlFor="sync-maxPages" error={errors.maxPages?.message}>
+            <input
+              inputMode="numeric"
+              {...register('maxPages')}
+              {...a11y('maxPages')}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      </details>
 
       <div className="flex items-start gap-2">
         <input
@@ -270,7 +296,7 @@ export function SyncPanel({ loaded = null }: Props) {
           error={nameError ?? undefined}
           hint="Run it again in one click from Saved searches"
         >
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               id="save-name"
               value={name}

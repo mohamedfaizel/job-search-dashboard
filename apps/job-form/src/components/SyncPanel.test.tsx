@@ -95,6 +95,25 @@ describe('SyncPanel', () => {
     expect(requests).toHaveLength(0);
   });
 
+  it('folds the page settings away and opens them on a mistake', async () => {
+    renderWithData(<SyncPanel />);
+    const fold = screen.getByText('Page settings').closest('details');
+    expect(fold).not.toHaveAttribute('open');
+    expect(fold).toHaveTextContent('7 days old at most · 25 per page · 1 page');
+
+    await userEvent.click(screen.getByText('Page settings'));
+    const pageSize = screen.getByLabelText('Jobs per page');
+    await userEvent.clear(pageSize);
+    await userEvent.type(pageSize, '0');
+    await userEvent.click(screen.getByText('Page settings'));
+    expect(fold).not.toHaveAttribute('open');
+
+    await userEvent.click(screen.getByRole('button', { name: /^import/i }));
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(fold).toHaveAttribute('open');
+    expect(requests).toHaveLength(0);
+  });
+
   describe('saving the search', () => {
     it('saves the form as a named search', async () => {
       renderWithData(<SyncPanel />);
