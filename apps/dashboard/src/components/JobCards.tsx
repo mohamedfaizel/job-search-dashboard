@@ -26,7 +26,7 @@ export function JobCards({ jobs, isFetching }: { jobs: Job[]; isFetching: boolea
             <div className="min-w-0 flex-1 text-[13px]">
               <JobCell job={job} />
             </div>
-            <MatchCell job={job} />
+            {job.matchStatus && <MatchCell job={job} />}
             <SelectCell job={job} />
           </div>
           <div className="flex flex-wrap items-start gap-x-6 gap-y-2 text-[13px]">

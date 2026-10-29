@@ -102,7 +102,13 @@ export function ColumnFilter({
           id={panelId}
           role="dialog"
           aria-label={`Filter ${column}`}
-          className="absolute top-full left-0 z-20 mt-1 w-64 rounded-lg border border-slate-200 bg-white p-2 text-left font-normal shadow-lg"
+          className={`z-20 mt-1 rounded-lg ${
+            // A chip near the right edge of a phone would push the panel off screen, so on
+            // phones it spans the screen width just below the chip.
+            chip
+              ? 'fixed inset-x-4 sm:absolute sm:inset-x-auto sm:top-full sm:left-0 sm:w-64'
+              : 'absolute top-full left-0 w-64'
+          } border border-slate-200 bg-white p-2 text-left font-normal shadow-lg`}
         >
           {options.length > 8 && (
             <input

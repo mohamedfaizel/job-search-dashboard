@@ -220,6 +220,16 @@ export function JobsDashboard() {
         onSearch={handleSearch}
         activeFilterCount={countActiveFilters(tableState)}
         onClearAll={() => dispatch(clearAll())}
+        quickFilters={
+          <QuickFilters
+            filters={tableState.filters}
+            filterOptions={filterOptions.data}
+            postedWithinDays={tableState.postedWithinDays}
+            onToggleFilter={handleToggleFilter}
+            onClearFilter={handleClearFilter}
+            onPostedWithin={(days) => dispatch(setPostedWithinDays(days))}
+          />
+        }
       >
         <ColumnsMenu
           columns={COLUMN_CHOICES}
@@ -228,14 +238,6 @@ export function JobsDashboard() {
           onShowAll={columnVisibility.showAll}
         />
       </Toolbar>
-      <QuickFilters
-        filters={tableState.filters}
-        filterOptions={filterOptions.data}
-        postedWithinDays={tableState.postedWithinDays}
-        onToggleFilter={handleToggleFilter}
-        onClearFilter={handleClearFilter}
-        onPostedWithin={(days) => dispatch(setPostedWithinDays(days))}
-      />
 
       {selectedJobs.length > 0 && (
         <div
