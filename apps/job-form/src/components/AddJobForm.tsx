@@ -71,7 +71,7 @@ export function AddJobForm() {
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="Job title" htmlFor="title" error={errors.title?.message} required>
           <input {...register('title')} {...a11y('title')} className={inputClass} />
         </Field>
@@ -82,7 +82,7 @@ export function AddJobForm() {
           label="Link to the posting"
           htmlFor="url"
           error={errors.url?.message}
-          className="sm:col-span-2"
+          className="sm:col-span-2 lg:col-span-1"
         >
           <input
             type="url"
@@ -140,7 +140,7 @@ export function AddJobForm() {
           label="Skills"
           htmlFor="skills"
           hint="Separate with commas: react, typescript"
-          className="sm:col-span-2"
+          className="sm:col-span-2 lg:col-span-3"
         >
           <input {...register('skills')} {...a11y('skills')} className={inputClass} />
         </Field>
@@ -168,19 +168,6 @@ export function AddJobForm() {
             className={inputClass}
           />
         </Field>
-        <Field
-          label="Description"
-          htmlFor="description"
-          error={errors.description?.message}
-          className="sm:col-span-2"
-        >
-          <textarea
-            rows={6}
-            {...register('description')}
-            {...a11y('description')}
-            className={inputClass}
-          />
-        </Field>
         <Field label="Your status" htmlFor="applicationStatus">
           <select
             {...register('applicationStatus')}
@@ -193,6 +180,19 @@ export function AddJobForm() {
               </option>
             ))}
           </select>
+        </Field>
+        <Field
+          label="Description"
+          htmlFor="description"
+          error={errors.description?.message}
+          className="sm:col-span-2 lg:col-span-3"
+        >
+          <textarea
+            rows={6}
+            {...register('description')}
+            {...a11y('description')}
+            className={inputClass}
+          />
         </Field>
       </div>
 
