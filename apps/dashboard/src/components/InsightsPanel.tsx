@@ -5,10 +5,8 @@ import {
   useRemoveInsightTerm,
   useRestoreInsightTerm,
 } from '@jobsearch/data';
-import { useState } from 'react';
 import { languageName } from '../format';
 import { Badge } from './Badge';
-import { JobResumePanel } from './JobResumePanel';
 import { scoreTone } from './MatchPanel';
 
 const CHIP =
@@ -159,64 +157,6 @@ function RemovedTerms({
   );
 }
 
-/** Copies the ready-made prompt, so the resume is written in Claude desktop or web. */
-function CopyPrompt({ prompt }: { prompt: string }) {
-  const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(prompt);
-      setCopied('yes');
-    } catch {
-      // Clipboard access can be blocked; the prompt below can still be selected by hand.
-      setCopied('failed');
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            void copy();
-          }}
-          className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
-        >
-          Copy prompt for Claude
-        </button>
-        <a
-          href="https://claude.ai/new"
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm text-indigo-700 hover:underline"
-        >
-          Open Claude ↗
-        </a>
-        {copied && (
-          <span role="status" className="text-sm text-slate-600">
-            {copied === 'yes'
-              ? 'Copied. Paste it into Claude to write a resume for this job.'
-              : 'Could not copy. Select the prompt below instead.'}
-          </span>
-        )}
-      </div>
-      <details open={copied === 'failed'}>
-        <summary className="cursor-pointer text-xs text-slate-500">Show the prompt</summary>
-        <textarea
-          readOnly
-          value={prompt}
-          aria-label="Prompt for Claude"
-          rows={10}
-          className="mt-1 w-full rounded-md border border-slate-200 bg-white p-2 font-mono text-xs text-slate-700"
-          onFocus={(e) => {
-            e.currentTarget.select();
-          }}
-        />
-      </details>
-    </div>
-  );
-}
-
 /** The parts of our score, with the same weights as Resume-Matcher's ATS score. */
 function scoreParts(insights: JobInsights) {
   return [
@@ -254,7 +194,7 @@ function Score({ insights }: { insights: JobInsights }) {
 /**
  * Title, language, skills and keywords of the job, checked against your resume text. Worked out
  * on our server with plain word matching and TF-IDF, so it is instant and free (no AI). Remove
- * what doesn't apply with ×, copy a prompt to write the resume in Claude, then bring it back.
+ * what doesn't apply with × before you copy the Apply kit prompt.
  */
 export function InsightsPanel({ jobId }: { jobId: string }) {
   const insights = useJobInsights(jobId);
@@ -343,8 +283,6 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
           Could not change that: {getErrorMessage(changeError)}
         </p>
       )}
-      <CopyPrompt prompt={data.prompt} />
-      <JobResumePanel insights={data} />
     </section>
   );
 }

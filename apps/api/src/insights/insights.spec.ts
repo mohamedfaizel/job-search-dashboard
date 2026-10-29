@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { germanRequirement } from './german';
-import { buildResumePrompt } from './prompt';
+import { applicationFacts, buildResumePrompt, splitReply } from './prompt';
 import { checkResume, coverage, matchScore, titleMatch } from './score';
 import { KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
 import { detectLanguage, keywordTokens, stopwordsFor, tokenize } from './text';
@@ -178,6 +178,8 @@ describe('buildResumePrompt', () => {
     otherSkills: ['Apollo', 'Jest'],
     resume: 'React developer since 2019.',
     description: 'Wir suchen …',
+    facts: ['Work permit: EU Blue Card', 'Notice period / earliest start: 1 month'],
+    savedAnswers: 'I want to work on products people use every day.',
   };
 
   it('asks for the job’s language and lists what is missing', () => {
@@ -199,6 +201,22 @@ describe('buildResumePrompt', () => {
     );
     expect(prompt).toContain('2. Related:');
     expect(prompt).toContain('- Related: the terms you added under rule 2');
+  });
+
+  it('asks for a cover letter and form answers from your real facts, in marked parts', () => {
+    const prompt = buildResumePrompt(input);
+    expect(prompt).toContain('Then write, in German:');
+    expect(prompt).toContain(
+      'A cover letter for this job: 200 to 300 words, to the hiring team at Acme',
+    );
+    expect(prompt).toContain(
+      '- Work permit: EU Blue Card\n- Notice period / earliest start: 1 month',
+    );
+    expect(prompt).toContain('I want to work on products people use every day.');
+    for (const part of ['RESUME', 'COVER LETTER', 'FORM ANSWERS', 'CHECK']) {
+      expect(prompt).toContain(`=== ${part} ===`);
+    }
+    expect(buildResumePrompt({ ...input, savedAnswers: ' ' })).not.toContain('My saved answers');
     expect(prompt).toContain('- Skipped:');
   });
 
@@ -256,5 +274,53 @@ describe('germanRequirement', () => {
       germanRequirement('We are a German company. English is our office language.', 'en'),
     ).toEqual({ required: false, level: null });
     expect(germanRequirement(null, null).required).toBe(false);
+  });
+});
+
+describe('splitReply', () => {
+  it('splits the Apply kit reply at its marker lines, even in Markdown', () => {
+    const reply = `Here you go.
+=== RESUME ===
+Jane Doe
+React developer
+**=== COVER LETTER ===**
+Dear hiring team,
+## === FORM ANSWERS ===
+Notice period: 1 month
+=== CHECK ===
+- Related: apollo`;
+    expect(splitReply(reply)).toEqual({
+      resume: 'Jane Doe\nReact developer',
+      coverLetter: 'Dear hiring team,',
+      formAnswers: 'Notice period: 1 month',
+    });
+  });
+
+  it('keeps a plain resume whole', () => {
+    expect(splitReply(' Jane Doe\nReact developer ')).toEqual({
+      resume: 'Jane Doe\nReact developer',
+      coverLetter: '',
+      formAnswers: '',
+    });
+  });
+});
+
+describe('applicationFacts', () => {
+  it('lists only the answers you gave', () => {
+    expect(
+      applicationFacts({
+        address: 'Berlin, Germany',
+        workPermit: '',
+        noticePeriod: '1 month',
+        salaryExpectation: ' ',
+        relocation: '',
+        yearsExperience: 6,
+      }),
+    ).toEqual([
+      'Location: Berlin, Germany',
+      'Years of experience: 6',
+      'Notice period / earliest start: 1 month',
+    ]);
+    expect(applicationFacts(null)).toEqual([]);
   });
 });

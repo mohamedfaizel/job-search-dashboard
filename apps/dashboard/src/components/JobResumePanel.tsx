@@ -8,6 +8,7 @@ import {
 } from '@jobsearch/data';
 import { useState } from 'react';
 import { Badge } from './Badge';
+import { CopyText } from './CopyText';
 import { scoreTone } from './MatchPanel';
 
 const BUTTON =
@@ -75,7 +76,7 @@ function ResumeInput({ jobId, onSaved }: { jobId: string; onSaved: () => void })
               setText(e.target.value);
             }}
             aria-label="Resume text for this job"
-            placeholder="Paste the resume Claude wrote for you"
+            placeholder="Paste Claude’s whole reply: resume, cover letter and form answers"
             rows={8}
             className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm"
           />
@@ -154,6 +155,22 @@ export function JobResumePanel({ insights }: { insights: JobInsights }) {
           </div>
           <Terms label="Now covered" terms={jobResume.nowCovered} tone="green" />
           <Terms label="Still missing" terms={jobResume.stillMissing} tone="red" />
+          {jobResume.coverLetter && (
+            <CopyText
+              label="Copy cover letter"
+              text={jobResume.coverLetter}
+              copiedHint="Paste it where the form asks for one."
+              boxLabel="Cover letter"
+            />
+          )}
+          {jobResume.formAnswers && (
+            <CopyText
+              label="Copy form answers"
+              text={jobResume.formAnswers}
+              copiedHint="Claude in Chrome reads them from the Apply kit page too."
+              boxLabel="Form answers"
+            />
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <a href={jobResumeUrl(jobId)} download className={BUTTON}>
               Download
@@ -196,8 +213,8 @@ export function JobResumePanel({ insights }: { insights: JobInsights }) {
       ) : (
         <>
           <p className="text-slate-600">
-            Wrote a resume with the prompt? Upload or paste it here to see its score next to your
-            profile resume, and keep it with this job.
+            Paste Claude’s whole reply here, or upload the resume file. The resume is scored next to
+            your profile resume, and the cover letter and form answers are kept for step 3.
           </p>
           <ResumeInput jobId={jobId} onSaved={() => undefined} />
         </>

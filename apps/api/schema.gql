@@ -206,7 +206,7 @@ type JobInsights {
   normalizedTitle: String
 
   """
-  A prompt to paste into Claude desktop or web that tailors your resume to this job
+  The Apply kit prompt for Claude desktop or web: your resume tailored to this job, a cover letter and form answers
   """
   prompt: String!
 
@@ -305,8 +305,14 @@ type JobPage {
 The resume you wrote for this job, uploaded or pasted, scored the same way as your profile resume
 """
 type JobResume {
+  """The cover letter from the Apply kit reply. Empty when there was none"""
+  coverLetter: String!
+
   """Name of the uploaded file. Null when the text was pasted"""
   fileName: String
+
+  """The form answers from the Apply kit reply. Empty when there were none"""
+  formAnswers: String!
 
   """Percent of the keywords in this resume"""
   keywordsCoverage: Int
@@ -442,6 +448,11 @@ type Mutation {
 }
 
 type Profile {
+  """City and country, or the full address forms ask for"""
+  address: String!
+
+  """Short answers you reuse on applications, as free text"""
+  applicationNotes: String!
   githubUrl: String
   headline: String!
 
@@ -452,30 +463,58 @@ type Profile {
   linkedinUrl: String
   locations: [String!]!
 
+  """
+  Notice period or earliest start, e.g. "1 month"
+  """
+  noticePeriod: String!
+
+  """Application answers: your phone number, as forms should get it"""
+  phone: String!
+
+  """Willing to relocate, and where"""
+  relocation: String!
+
   """Name of the last uploaded resume file"""
   resumeFileName: String
 
   """Plain text of your master resume"""
   resumeText: String!
+
+  """
+  Salary expectation, e.g. "€65,000 a year"
+  """
+  salaryExpectation: String!
   skills: [String!]!
   targetRoles: [String!]!
 
   """Null until the profile is first saved"""
   updatedAt: DateTime
   websiteUrl: String
+
+  """
+  Work permit or visa status, e.g. "EU Blue Card holder"
+  """
+  workPermit: String!
   yearsExperience: Int
 }
 
 input ProfileInput {
+  address: String! = ""
+  applicationNotes: String! = ""
   githubUrl: String
   headline: String! = ""
   languages: [String!]! = []
   linkedinUrl: String
   locations: [String!]! = []
+  noticePeriod: String! = ""
+  phone: String! = ""
+  relocation: String! = ""
   resumeText: String! = ""
+  salaryExpectation: String! = ""
   skills: [String!]! = []
   targetRoles: [String!]! = []
   websiteUrl: String
+  workPermit: String! = ""
   yearsExperience: Int
 }
 

@@ -371,4 +371,28 @@ describe('JobsDashboard', () => {
       expect(requests.filter((r) => r.operation === 'UnhideJob')).toHaveLength(2);
     });
   });
+
+  it('asks "Did you apply?" after you open a posting from the Apply kit', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+
+    await user.click(await within(dialog).findByRole('link', { name: /Open posting/ }));
+    await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+
+    const ask = screen.getByRole('list', { name: 'Did you apply?' });
+    expect(ask).toHaveTextContent('Did you apply to Senior Frontend Engineer at Acme?');
+    // Kept in this browser, so the question is still there after a reload.
+    expect(localStorage.getItem('jobsearch.dashboard.applying')).toContain('job-1');
+
+    await user.click(within(ask).getByRole('button', { name: 'Yes, mark Applied' }));
+    await waitFor(() => {
+      expect(requests).toContainEqual({
+        operation: 'UpdateJobStatus',
+        variables: { id: 'job-1', status: 'APPLIED' },
+      });
+    });
+    expect(screen.queryByRole('list', { name: 'Did you apply?' })).not.toBeInTheDocument();
+  });
 });

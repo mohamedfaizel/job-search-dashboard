@@ -17,6 +17,8 @@ const CREATE_JOB = /* GraphQL */ `
 
 const JOB_RESUME = `jobResume {
   fileName
+  coverLetter
+  formAnswers
   skillsCoverage
   keywordsCoverage
   titleMatch
@@ -111,6 +113,8 @@ const DELETE_RESUME = /* GraphQL */ `
 
 interface JobResume {
   fileName: string | null;
+  coverLetter: string;
+  formAnswers: string;
   skillsCoverage: number | null;
   keywordsCoverage: number | null;
   titleMatch: number | null;
@@ -421,6 +425,62 @@ describe('job insights without AI', () => {
       });
       expect(deleted.data!.deleteJobResume.jobResume).toBeNull();
       await download(job.id).expect(404);
+    });
+
+    it('splits an Apply kit reply and builds the Apply kit page from it', async () => {
+      const job = await backendJob();
+      await t.prisma.profile.update({
+        where: { userId: 2 },
+        data: {
+          phone: '+49 151 0000000',
+          languages: ['German A2', 'English C1'],
+          workPermit: 'EU Blue Card',
+          noticePeriod: '1 month',
+        },
+      });
+      const reply = `=== RESUME ===
+Backend Engineer. Node.js, Kafka and microservices.
+=== COVER LETTER ===
+Dear Acme team, I build event streaming systems.
+=== FORM ANSWERS ===
+Why Acme: I like your product.
+=== CHECK ===
+- Related: none`;
+
+      const res = await t.asUser<{ saveJobResumeText: Insights }>(SAVE_TEXT, {
+        jobId: job.id,
+        text: reply,
+      });
+      expect(res.errors).toBeUndefined();
+      expect(res.data!.saveJobResumeText.jobResume).toMatchObject({
+        coverLetter: 'Dear Acme team, I build event streaming systems.',
+        formAnswers: 'Why Acme: I like your product.',
+        skillsCoverage: 100,
+      });
+      // Only the resume part is kept as the resume.
+      expect(((await download(job.id).expect(200)).body as Buffer).toString()).toBe(
+        'Backend Engineer. Node.js, Kafka and microservices.',
+      );
+
+      const kit = await request(t.server)
+        .get(`/apply-kit/${job.id}`)
+        .set('Cookie', t.cookieFor('USER'))
+        .expect(200);
+      expect(kit.headers['content-type']).toContain('text/plain');
+      expect(kit.headers['cache-control']).toBe('no-store');
+      expect(kit.text).toContain('APPLY KIT: Backend Engineer at Acme');
+      expect(kit.text).toContain('Never click Submit');
+      expect(kit.text).toContain('Phone: +49 151 0000000');
+      expect(kit.text).toContain('copy exactly): German A2, English C1');
+      expect(kit.text).toContain('Work permit: EU Blue Card');
+      expect(kit.text).toContain('Salary expectation: (not given: leave this field empty');
+      expect(kit.text).toContain('Why Acme: I like your product.');
+      expect(kit.text).toContain('Dear Acme team');
+      expect(kit.text).toContain(`/job-resume/${job.id}`);
+      expect(kit.text).not.toContain('Related: none');
+
+      await request(t.server).get(`/apply-kit/${job.id}`).expect(401);
+      await request(t.server).get('/apply-kit/nope').set('Cookie', t.cookieFor('USER')).expect(404);
     });
 
     it('refuses empty text, other file types and unknown jobs', async () => {

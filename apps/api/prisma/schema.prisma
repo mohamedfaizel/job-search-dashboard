@@ -60,26 +60,36 @@ model User {
 
 /// What you're looking for and your master resume. One per user, created on first save.
 model Profile {
-  userId           Int       @id
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  headline         String    @default("")
-  targetRoles      String[]  @default([])
-  locations        String[]  @default([])
-  skills           String[]  @default([])
+  userId            Int       @id
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline          String    @default("")
+  targetRoles       String[]  @default([])
+  locations         String[]  @default([])
+  skills            String[]  @default([])
   /// Languages you speak with your real level, e.g. "German A2". Copied into the resume prompt.
-  languages        String[]  @default([])
-  yearsExperience  Int?
-  linkedinUrl      String?
-  githubUrl        String?
-  websiteUrl       String?
+  languages         String[]  @default([])
+  yearsExperience   Int?
+  linkedinUrl       String?
+  githubUrl         String?
+  websiteUrl        String?
   /// Plain text of your master resume, from an uploaded PDF/DOCX or typed in.
-  resumeText       String    @default("")
-  resumeFileName   String?
+  resumeText        String    @default("")
+  resumeFileName    String?
   /// The uploaded PDF/DOCX itself, kept so it can be sent to Resume-Matcher (max 5 MB).
-  resumeFile       Bytes?
-  resumeFileType   String?
-  resumeUploadedAt DateTime?
-  updatedAt        DateTime  @updatedAt
+  resumeFile        Bytes?
+  resumeFileType    String?
+  resumeUploadedAt  DateTime?
+  // Application answers: the facts every application form asks for. The Apply kit copies them
+  // into the Claude prompt and the page Claude in Chrome fills forms from. Empty = not given.
+  phone             String    @default("")
+  address           String    @default("")
+  workPermit        String    @default("")
+  noticePeriod      String    @default("")
+  salaryExpectation String    @default("")
+  relocation        String    @default("")
+  /// Free text: short answers you reuse, like why you are looking for a new job.
+  applicationNotes  String    @default("")
+  updatedAt         DateTime  @updatedAt
 }
 
 enum MatcherResumeStatus {
@@ -336,17 +346,20 @@ model RemovedTerm {
 /// Scored against the job like your profile resume, so you see the before and after.
 /// One per user and job; saving again replaces it.
 model JobResume {
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  jobId     String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId       String
   /// Plain text, read out of the file or pasted. This is what gets scored.
-  text      String
+  text        String
   /// The uploaded file, kept so you can download it again. Null when the text was pasted.
-  fileName  String?
-  file      Bytes?
-  fileType  String?
-  updatedAt DateTime @updatedAt
+  fileName    String?
+  file        Bytes?
+  fileType    String?
+  /// From the Apply kit reply: the cover letter and answers Claude wrote next to the resume.
+  coverLetter String   @default("")
+  formAnswers String   @default("")
+  updatedAt   DateTime @updatedAt
 
   @@id([userId, jobId])
 }

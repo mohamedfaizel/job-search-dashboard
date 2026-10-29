@@ -4,6 +4,7 @@ import type {
   JobInsights,
   JobMatch,
   JobResume,
+  Profile,
   RemovedTerm,
   TailoredResume,
 } from '@jobsearch/data';
@@ -56,6 +57,8 @@ export const INSIGHTS: JobInsights = {
 /** The resume the test user saved for job-1, once they upload or paste one. */
 export const SAVED_RESUME: JobResume = {
   fileName: null,
+  coverLetter: 'Dear Acme team, I build dashboards.',
+  formAnswers: 'Why Acme: I like your product.',
   updatedAt: '2026-10-28T12:00:00.000Z',
   skillsCoverage: 100,
   keywordsCoverage: 50,
@@ -127,7 +130,31 @@ export const READY_TAILORED: TailoredResume = {
   outdated: false,
 };
 
+/** The test user's profile, with Application answers filled in. */
+export const PROFILE: Profile = {
+  headline: 'Frontend engineer',
+  targetRoles: [],
+  locations: [],
+  skills: [],
+  languages: ['German A2'],
+  yearsExperience: 4,
+  linkedinUrl: null,
+  githubUrl: null,
+  websiteUrl: null,
+  resumeText: 'Ada Lovelace',
+  resumeFileName: null,
+  phone: '+49 151 0000000',
+  address: 'Berlin, Germany',
+  workPermit: 'EU Blue Card',
+  noticePeriod: '1 month',
+  salaryExpectation: '',
+  relocation: '',
+  applicationNotes: '',
+  updatedAt: '2026-10-27T08:00:00.000Z',
+};
+
 export const handlers = [
+  api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
   // By default nothing has been tailored yet.
   api.query('TailoredResume', () => HttpResponse.json({ data: { tailoredResume: null } })),
   api.mutation('TailorResume', ({ variables }) => {

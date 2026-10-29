@@ -249,6 +249,15 @@ export interface Profile {
   websiteUrl: string | null;
   resumeText: string;
   resumeFileName: string | null;
+  // Application answers: what every application form asks for. Empty when not given.
+  phone: string;
+  address: string;
+  workPermit: string;
+  noticePeriod: string;
+  salaryExpectation: string;
+  relocation: string;
+  /** Short answers you reuse on applications, as free text. */
+  applicationNotes: string;
   /** Null until the profile is first saved. */
   updatedAt: string | null;
 }
@@ -370,7 +379,7 @@ export interface JobInsights {
   score: number | null;
   /** The resume you wrote for this job, if you uploaded or pasted one. */
   jobResume: JobResume | null;
-  /** Paste into Claude desktop or web to tailor your resume to this job. */
+  /** The Apply kit prompt: paste into Claude for the resume, cover letter and form answers. */
   prompt: string;
 }
 
@@ -378,6 +387,9 @@ export interface JobInsights {
 export interface JobResume {
   /** Name of the uploaded file. Null when the text was pasted. */
   fileName: string | null;
+  /** From the Apply kit reply. Empty when there was none. */
+  coverLetter: string;
+  formAnswers: string;
   updatedAt: string;
   skillsCoverage: number | null;
   keywordsCoverage: number | null;

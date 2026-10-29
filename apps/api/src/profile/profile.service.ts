@@ -16,6 +16,13 @@ const EMPTY: ProfileModel = {
   websiteUrl: null,
   resumeText: '',
   resumeFileName: null,
+  phone: '',
+  address: '',
+  workPermit: '',
+  noticePeriod: '',
+  salaryExpectation: '',
+  relocation: '',
+  applicationNotes: '',
   updatedAt: null,
 };
 
@@ -36,6 +43,13 @@ function toModel(profile: Omit<Profile, 'resumeFile'> | null): ProfileModel {
     websiteUrl: profile.websiteUrl,
     resumeText: profile.resumeText,
     resumeFileName: profile.resumeFileName,
+    phone: profile.phone,
+    address: profile.address,
+    workPermit: profile.workPermit,
+    noticePeriod: profile.noticePeriod,
+    salaryExpectation: profile.salaryExpectation,
+    relocation: profile.relocation,
+    applicationNotes: profile.applicationNotes,
     updatedAt: profile.updatedAt,
   };
 }
@@ -60,6 +74,13 @@ export class ProfileService {
       githubUrl: input.githubUrl ?? null,
       websiteUrl: input.websiteUrl ?? null,
       resumeText: input.resumeText,
+      phone: input.phone,
+      address: input.address,
+      workPermit: input.workPermit,
+      noticePeriod: input.noticePeriod,
+      salaryExpectation: input.salaryExpectation,
+      relocation: input.relocation,
+      applicationNotes: input.applicationNotes,
     };
     const profile = await this.prisma.profile.upsert({
       where: { userId },

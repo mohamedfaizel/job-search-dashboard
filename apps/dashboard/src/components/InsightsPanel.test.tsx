@@ -110,20 +110,6 @@ describe('InsightsPanel', () => {
     expect(screen.queryByText(/German required/)).not.toBeInTheDocument();
   });
 
-  it('copies the prompt for Claude', async () => {
-    const user = userEvent.setup();
-    renderPanel();
-
-    await user.click(await screen.findByRole('button', { name: 'Copy prompt for Claude' }));
-
-    expect(await screen.findByRole('status')).toHaveTextContent('Copied.');
-    expect(await navigator.clipboard.readText()).toBe(INSIGHTS.prompt);
-    expect(screen.getByRole('link', { name: /Open Claude/ })).toHaveAttribute(
-      'href',
-      'https://claude.ai/new',
-    );
-  });
-
   it('asks for a resume before saying what is missing', async () => {
     server.use(
       api.query('JobInsights', () =>

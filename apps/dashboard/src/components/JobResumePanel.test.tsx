@@ -1,15 +1,22 @@
 import { createQueryClient, DataProvider, jobResumeUrl, makeStore } from '@jobsearch/data';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { makeJob } from '../test/fixtures';
 import { jobResume, rejectJobResumeUpload, requests, SAVED_RESUME, server } from '../test/server';
-import { InsightsPanel } from './InsightsPanel';
+import { ApplyKitPanel } from './ApplyKitPanel';
 
 function renderPanel() {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   render(
     <DataProvider store={makeStore()} queryClient={queryClient}>
-      <InsightsPanel jobId="job-1" />
+      <ApplyKitPanel
+        job={makeJob()}
+        onStatusChange={() => undefined}
+        asking={false}
+        onApplyStarted={() => undefined}
+        onAnswered={() => undefined}
+      />
     </DataProvider>,
   );
 }
@@ -84,6 +91,6 @@ describe('JobResumePanel', () => {
       operation: 'DeleteJobResume',
       variables: { jobId: 'job-1' },
     });
-    expect(await screen.findByText(/Wrote a resume with the prompt/)).toBeInTheDocument();
+    expect(await screen.findByText(/Paste Claude’s whole reply here/)).toBeInTheDocument();
   });
 });

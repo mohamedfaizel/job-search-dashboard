@@ -24,6 +24,12 @@ const link = (site: string) =>
     z.url({ protocol: /^https?$/, message: `${site} must be a full link (https://…)` }),
   ]);
 
+const text = (max: number, name: string) =>
+  z
+    .string()
+    .trim()
+    .max(max, `Keep ${name} under ${max.toLocaleString('en-US')} characters`);
+
 /** The form works with strings (that's what inputs hold); toProfileInput converts them. */
 export const profileSchema = z.object({
   headline: z.string().trim().max(160, 'Keep the headline under 160 characters'),
@@ -41,6 +47,13 @@ export const profileSchema = z.object({
   githubUrl: link('GitHub'),
   websiteUrl: link('Website'),
   resumeText: z.string().max(50_000, 'Keep the resume under 50,000 characters'),
+  phone: text(40, 'the phone number'),
+  address: text(200, 'the address'),
+  workPermit: text(200, 'the work permit'),
+  noticePeriod: text(100, 'the notice period'),
+  salaryExpectation: text(100, 'the salary expectation'),
+  relocation: text(200, 'the relocation answer'),
+  applicationNotes: text(5_000, 'your saved answers'),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -57,6 +70,13 @@ export function profileToForm(profile: Profile): ProfileFormValues {
     githubUrl: profile.githubUrl ?? '',
     websiteUrl: profile.websiteUrl ?? '',
     resumeText: profile.resumeText,
+    phone: profile.phone,
+    address: profile.address,
+    workPermit: profile.workPermit,
+    noticePeriod: profile.noticePeriod,
+    salaryExpectation: profile.salaryExpectation,
+    relocation: profile.relocation,
+    applicationNotes: profile.applicationNotes,
   };
 }
 
@@ -73,5 +93,12 @@ export function toProfileInput(values: ProfileFormValues): ProfileInput {
     githubUrl: orNull(values.githubUrl),
     websiteUrl: orNull(values.websiteUrl),
     resumeText: values.resumeText,
+    phone: values.phone,
+    address: values.address,
+    workPermit: values.workPermit,
+    noticePeriod: values.noticePeriod,
+    salaryExpectation: values.salaryExpectation,
+    relocation: values.relocation,
+    applicationNotes: values.applicationNotes,
   };
 }
