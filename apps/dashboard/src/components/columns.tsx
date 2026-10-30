@@ -195,7 +195,33 @@ export function StatusCell({ job }: { job: Job }) {
   );
 }
 
-/** Your ATS score for the job; clicking it opens the popup with the breakdown. */
+/**
+ * Fit %: how much of the job's skills, keywords and title your profile resume covers, the same
+ * score as in the popup. Clicking it opens the popup with the breakdown.
+ */
+export function FitCell({ job }: { job: Job }) {
+  const { openJob } = useRowActions();
+  if (job.fitScore === null) {
+    return (
+      <span title="Add your resume on My profile to see how well you fit each job">{dash}</span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        openJob(job);
+      }}
+      aria-label={`Fit for ${job.title}: ${String(job.fitScore)}%`}
+      title="How much of the job's skills, keywords and title your resume covers. Click for details"
+      className="rounded"
+    >
+      <Badge tone={scoreTone(job.fitScore)}>{job.fitScore}%</Badge>
+    </button>
+  );
+}
+
+/** Resume-Matcher's ATS score for the job; clicking it opens the popup with the breakdown. */
 export function MatchCell({ job }: { job: Job }) {
   const { openJob } = useRowActions();
   const { matchStatus, matchScore } = job;
@@ -338,6 +364,12 @@ export const columns = helper.columns([
   }),
   // Next to the title, so the score is visible without scrolling the wide table sideways.
   helper.display({
+    id: 'fit',
+    header: 'Fit',
+    cell: ({ row }) => <FitCell job={row.original} />,
+  }),
+  // Resume-Matcher's score needs AI and one run per job, so it starts hidden (Columns menu).
+  helper.display({
     id: 'match',
     header: 'Match',
     cell: ({ row }) => <MatchCell job={row.original} />,
@@ -432,6 +464,7 @@ export const columns = helper.columns([
  * stay in the Columns menu, so you can turn them back on.
  */
 export const DEFAULT_HIDDEN_COLUMNS = [
+  'match',
   'skills',
   'seniority',
   'jobFunction',
@@ -465,6 +498,7 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
     sortField: 'CITY',
     filter: { key: 'cities', label: 'City', options: (o) => plain(o?.cities) },
   },
+  fit: { sortField: 'FIT' },
   postedAt: { sortField: 'POSTED_AT' },
   jobFunction: { filter: { key: 'jobFunctions', options: (o) => plain(o?.jobFunctions) } },
   seniority: {
@@ -494,7 +528,7 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
       options: () => VISA_SPONSORSHIPS.map((v) => ({ value: v, label: VISA_LABELS[v] })),
     },
   },
-  // Matches and statuses are per user (separate tables), so the server can't sort by them.
+  // Statuses are per user (a separate table), so the server doesn't sort by them.
   status: {
     filter: {
       key: 'applicationStatuses',

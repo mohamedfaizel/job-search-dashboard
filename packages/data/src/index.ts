@@ -12,6 +12,7 @@ export {
   useDeleteJobResume,
   useJobInsights,
   useRemoveInsightTerm,
+  useRecalculateFit,
   useRestoreInsightTerm,
   useSaveJobResumeText,
   useUploadJobResume,

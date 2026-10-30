@@ -2,33 +2,36 @@ import type { OnApplicationBootstrap } from '@nestjs/common';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client';
 import { ApplicationStatus, JobSource } from '../generated/prisma/enums';
+import { FitService } from '../insights/fit.service';
 import { detectLanguage } from '../insights/text';
 import type { MappedJob } from '../jobspipe/jobspipe.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateJobInput } from './dto/create-job.input';
 import type { JobFilterInput, JobsArgs, JobSortInput } from './dto/jobs.args';
-import { JobSortField } from './models/enums';
+import { JobSortField, SortDirection } from './models/enums';
 import type { JobFilterOptions, JobPage } from './models/job.model';
 import { visaSponsorship } from './visa';
 
-/** Loads the company and this user's application and match, so those fields are theirs. */
+/** Loads the company and this user's application, match and fit, so those fields are theirs. */
 function forUser(userId: number) {
   return {
     company: true,
     applications: { where: { userId }, select: { status: true } },
     matches: { where: { userId }, select: { status: true, score: true } },
+    fits: { where: { userId }, select: { score: true } },
   } satisfies Prisma.JobInclude;
 }
 type JobForUser = Prisma.JobGetPayload<{ include: ReturnType<typeof forUser> }>;
 
 /** The job as one user sees it: no application row means they haven't acted on it. */
-function withStatus({ applications, matches, ...job }: JobForUser) {
+function withStatus({ applications, matches, fits, ...job }: JobForUser) {
   const match = matches[0];
   return {
     ...job,
     applicationStatus: applications[0]?.status ?? ApplicationStatus.NONE,
     matchStatus: match?.status ?? null,
     matchScore: match?.score ?? null,
+    fitScore: fits[0]?.score ?? null,
   };
 }
 
@@ -41,7 +44,10 @@ export interface UpsertResult {
 export class JobsService implements OnApplicationBootstrap {
   private readonly logger = new Logger(JobsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly fit: FitService,
+  ) {}
 
   /** Jobs saved before the visa tag existed get it on the next start. */
   async onApplicationBootstrap(): Promise<void> {
@@ -78,6 +84,11 @@ export class JobsService implements OnApplicationBootstrap {
     const where: Prisma.JobWhereInput = {
       AND: [buildWhere(filter, userId), filter?.hidden ? hiddenByMe : { NOT: hiddenByMe }],
     };
+    // Fit scores are worked out again here when your resume, removed terms or the jobs changed.
+    await this.fit.ensureFresh(userId);
+    if (sort?.field === JobSortField.FIT) {
+      return this.findPageByFit(userId, where, sort.direction, page, pageSize);
+    }
     const [items, total] = await this.prisma.$transaction([
       this.prisma.job.findMany({
         where,
@@ -89,6 +100,45 @@ export class JobsService implements OnApplicationBootstrap {
       this.prisma.job.count({ where }),
     ]);
     return { items: items.map(withStatus), total, page, pageSize };
+  }
+
+  /**
+   * Fit is per user (the JobFit table), and Prisma can't order jobs by a filtered relation. So
+   * the matching jobs' ids and scores are sorted here, then only one page of jobs is loaded.
+   */
+  private async findPageByFit(
+    userId: number,
+    where: Prisma.JobWhereInput,
+    direction: SortDirection,
+    page: number,
+    pageSize: number,
+  ): Promise<JobPage> {
+    const all = await this.prisma.job.findMany({
+      where,
+      select: { id: true, postedAt: true, fits: { where: { userId }, select: { score: true } } },
+    });
+    const sign = direction === SortDirection.ASC ? 1 : -1;
+    const ranked = all
+      .map((job) => ({ id: job.id, postedAt: job.postedAt, score: job.fits[0]?.score ?? null }))
+      // No score goes last either way; ties show the newest first, then by id so pages are stable.
+      .sort(
+        (a, b) =>
+          (a.score === null ? 1 : 0) - (b.score === null ? 1 : 0) ||
+          sign * ((a.score ?? 0) - (b.score ?? 0)) ||
+          b.postedAt.getTime() - a.postedAt.getTime() ||
+          a.id.localeCompare(b.id),
+      );
+    const ids = ranked.slice((page - 1) * pageSize, page * pageSize).map((job) => job.id);
+    const rows = await this.prisma.job.findMany({
+      where: { id: { in: ids } },
+      include: forUser(userId),
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    const items = ids.flatMap((id) => {
+      const row = byId.get(id);
+      return row ? [withStatus(row)] : [];
+    });
+    return { items, total: all.length, page, pageSize };
   }
 
   async findOne(userId: number, id: string) {
@@ -298,6 +348,9 @@ function buildWhere(filter: JobFilterInput | undefined, userId: number): Prisma.
   if (filter.skills?.length) and.push({ skills: { hasSome: filter.skills } });
   if (filter.minSalaryUsd !== undefined) and.push({ salaryMaxUsd: { gte: filter.minSalaryUsd } });
   if (filter.postedAfter) and.push({ postedAt: { gte: filter.postedAfter } });
+  if (filter.minFit !== undefined) {
+    and.push({ fits: { some: { userId, score: { gte: filter.minFit } } } });
+  }
 
   const lists = {
     seniority: inList(filter.seniorities),
@@ -343,6 +396,8 @@ function buildOrderBy(sort: JobSortInput | undefined): Prisma.JobOrderByWithRela
     [JobSortField.CITY]: [{ city: nullsLast }],
     [JobSortField.SALARY]: [{ salaryMaxUsd: nullsLast }, { salaryMinUsd: nullsLast }],
     [JobSortField.WORKPLACE]: [{ workplace: nullsLast }],
+    // Sorted in findPageByFit instead; never reached.
+    [JobSortField.FIT]: [],
   };
   return [...bySort[sort.field], tieBreaker];
 }

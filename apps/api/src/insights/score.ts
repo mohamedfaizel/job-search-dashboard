@@ -46,8 +46,11 @@ export interface ScoreParts {
  * Our own match score (0-100), weighted like Resume-Matcher's. Sections and dates always count
  * as full: this check doesn't look at them, and tailoring a resume doesn't change them.
  * A part with nothing to check (null) is left out and the others share its weight.
+ * A job with no skills and no keywords (an ad without a description) gets no score: the title
+ * alone would make it look like a great fit.
  */
 export function matchScore(parts: ScoreParts): number | null {
+  if (parts.keywords === null && parts.skills === null) return null;
   const scored = [
     [parts.keywords, WEIGHTS.keywords],
     [parts.skills, WEIGHTS.skills],

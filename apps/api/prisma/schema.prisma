@@ -62,6 +62,7 @@ model User {
   removedTerms  RemovedTerm[]
   jobResumes    JobResume[]
   applyQueue    ApplyQueueItem[]
+  jobFits       JobFit[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 }
@@ -243,6 +244,7 @@ model Job {
   removedTerms    RemovedTerm[]
   jobResumes      JobResume[]
   applyQueue      ApplyQueueItem[]
+  fits            JobFit[]
 
   @@index([postedAt])
   @@index([companyId])
@@ -393,4 +395,17 @@ model ApplyQueueItem {
   addedAt DateTime @default(now())
 
   @@id([userId, jobId])
+}
+
+/// How well your profile resume fits a job (0-100): the job popup's score, worked out for every
+/// job so the table can sort by it. No row when you have no resume yet.
+model JobFit {
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId  String
+  score  Int
+
+  @@id([userId, jobId])
+  @@index([userId, score])
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Profile } from '../generated/prisma/client';
+import { FitService } from '../insights/fit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ProfileInput, ProfileModel } from './profile.model';
 
@@ -56,7 +57,10 @@ function toModel(profile: Omit<Profile, 'resumeFile'> | null): ProfileModel {
 
 @Injectable()
 export class ProfileService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly fit: FitService,
+  ) {}
 
   async get(userId: number): Promise<ProfileModel> {
     return toModel(await this.prisma.profile.findUnique({ where: { userId }, omit: WITHOUT_FILE }));
@@ -88,6 +92,8 @@ export class ProfileService {
       update: data,
       omit: WITHOUT_FILE,
     });
+    // Your Fit % for every job starts again now, so the table is ready when you open it.
+    this.fit.warm(userId);
     return toModel(profile);
   }
 
@@ -113,6 +119,8 @@ export class ProfileService {
       update: data,
       omit: WITHOUT_FILE,
     });
+    // Your Fit % for every job starts again now, so the table is ready when you open it.
+    this.fit.warm(userId);
     return toModel(profile);
   }
 }

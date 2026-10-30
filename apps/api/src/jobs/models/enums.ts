@@ -22,6 +22,8 @@ export enum JobSortField {
   CITY = 'city',
   SALARY = 'salary',
   WORKPLACE = 'workplace',
+  /** Your Fit %: best first when descending. Jobs without a score go last either way. */
+  FIT = 'fit',
 }
 registerEnumType(JobSortField, { name: 'JobSortField' });
 

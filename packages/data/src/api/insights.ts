@@ -1,11 +1,13 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_URL, graphqlClient } from './client';
+import { queryKeys } from './hooks';
 import {
   ADD_TO_APPLY_QUEUE,
   APPLY_QUEUE,
   DELETE_JOB_RESUME,
   JOB_INSIGHTS,
+  RECALCULATE_FIT,
   REMOVE_FROM_APPLY_QUEUE,
   REMOVE_INSIGHT_TERM,
   RESTORE_INSIGHT_TERM,
@@ -49,6 +51,8 @@ export function useRemoveInsightTerm() {
     onSuccess: (insights, vars) => {
       queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
       if (vars.everywhere) void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
+      // The job's Fit % in the table changes with it.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
     },
   });
 }
@@ -67,6 +71,24 @@ export function useRestoreInsightTerm() {
     onSuccess: (insights) => {
       queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
       void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+    },
+  });
+}
+
+/**
+ * Works out Fit % for every job again. The API already does this by itself whenever your resume,
+ * removed terms or the jobs change, so this is only a "just in case" button.
+ */
+export function useRecalculateFit() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const data = await graphqlClient.request<{ recalculateFit: number }>(RECALCULATE_FIT);
+      return data.recalculateFit;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
     },
   });
 }

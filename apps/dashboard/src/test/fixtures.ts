@@ -26,6 +26,7 @@ export function makeJob(overrides: Partial<Job> = {}): Job {
     applicationStatus: 'NONE',
     matchStatus: null,
     matchScore: null,
+    fitScore: null,
     ...overrides,
   };
 }

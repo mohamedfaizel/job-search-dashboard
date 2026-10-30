@@ -116,6 +116,8 @@ describe('matchScore', () => {
     // No skills: 40% × 0 + 15% × 0 + 25% × 100, out of 80%
     expect(matchScore({ keywords: 0, skills: null, title: 0 })).toBe(31);
     expect(matchScore({ keywords: null, skills: null, title: null })).toBeNull();
+    // A title alone says too little: an ad without a description gets no score.
+    expect(matchScore({ keywords: null, skills: null, title: 100 })).toBeNull();
   });
 
   it('turns found terms into a percent', () => {

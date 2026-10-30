@@ -4,6 +4,7 @@ import { tidy } from '../profile/resume-text';
 import { buildApplyKit } from './apply-kit';
 import type { ApplyQueueItemModel } from './apply-queue';
 import { buildQueuePage } from './apply-queue';
+import { CorpusService } from './corpus.service';
 import { germanRequirement } from './german';
 import type {
   JobInsightsModel,
@@ -14,22 +15,8 @@ import type {
 import { applicationFacts, buildResumePrompt, splitReply } from './prompt';
 import type { ResumeCheck } from './score';
 import { checkResume } from './score';
-import { KNOWN_SKILLS, relatedTo } from './skills';
-import { detectLanguage, keywordTokens } from './text';
-import type { DocumentFrequencies } from './tfidf';
-import { documentFrequencies, rankTerms } from './tfidf';
-
-/** How many TF-IDF keywords to show for a job. */
-const KEYWORD_COUNT = 15;
-
-/** What we learn from all saved jobs at once. */
-interface Corpus {
-  frequencies: DocumentFrequencies;
-  /** Every city a job is in: a place is never a keyword, for any job. */
-  cities: Set<string>;
-  /** Every skill tag JobsPipe gave any job, plus the skills we know: tools rank first. */
-  skills: Set<string>;
-}
+import { relatedTo } from './skills';
+import { jobTerms } from './terms';
 
 /** Longer than any real resume, short enough to keep junk out. */
 export const MAX_RESUME_CHARS = 50_000;
@@ -43,10 +30,10 @@ export interface JobResumeFile {
 
 @Injectable()
 export class InsightsService {
-  // Counting words in every description is the slow part, so it is kept until a job changes.
-  private cache: { key: string; corpus: Corpus } | null = null;
-
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly corpora: CorpusService,
+  ) {}
 
   async forJob(userId: number, jobId: string): Promise<JobInsightsModel> {
     const [job, profile, removedRows, jobResume] = await Promise.all([
@@ -94,11 +81,8 @@ export class InsightsService {
     ]);
     if (!job) throw new NotFoundException(`Job ${jobId} not found`);
 
-    const raw = (job.raw ?? {}) as { normalized_title?: string; keyword_slugs?: string[] };
     const resume = profile?.resumeText ?? '';
     const otherSkills = profile?.skills ?? [];
-    const language = job.language ?? detectLanguage(job.description);
-    const german = germanRequirement(job.description, language);
 
     // Terms you removed with × leave both lists. One removed everywhere wins over this job's.
     const removed = new Map<string, RemovedTermModel>();
@@ -107,29 +91,13 @@ export class InsightsService {
       removed.set(row.term, { term: row.term, everywhere });
     }
 
-    // JobsPipe's technology tags first, then its wider keyword tags ("mentoring", "ecommerce").
-    const tags = [
-      ...new Set([...job.skills, ...(raw.keyword_slugs ?? [])].map((s) => s.toLowerCase())),
-    ].filter((tag) => !removed.has(tag));
-
-    // The company's own name and the city say nothing about the skills the job needs.
-    const known = new Set([
-      ...tags,
-      ...keywordTokens(`${job.company.name} ${job.city ?? ''}`, null),
-    ]);
-    const corpus = await this.corpus();
-    const candidates = rankTerms(keywordTokens(job.description ?? '', language), corpus.frequencies)
-      .map((ranked) => ranked.term)
-      .filter((term) => !known.has(term) && !corpus.cities.has(term) && !removed.has(term));
-    // Tools and technologies first, then the other words, each group in TF-IDF order.
-    const keywords = [
-      ...candidates.filter((term) => corpus.skills.has(term)),
-      ...candidates.filter((term) => !corpus.skills.has(term)),
-    ].slice(0, KEYWORD_COUNT);
-
-    const normalizedTitle =
-      raw.normalized_title && raw.normalized_title !== job.title ? raw.normalized_title : null;
-    const terms = { skills: tags, keywords, title: normalizedTitle ?? job.title, language };
+    const { normalizedTitle, ...terms } = jobTerms(
+      job,
+      new Set(removed.keys()),
+      await this.corpora.corpus(),
+    );
+    const language = terms.language;
+    const german = germanRequirement(job.description, language);
     const before = checkResume(resume, terms);
     // A missing term next to a skill you have ("apollo" with "graphql") gets a hint.
     const yourSkills = [resume, ...otherSkills].join('\n');
@@ -402,30 +370,5 @@ export class InsightsService {
         .map((t) => t.term),
       stillMissing: afterChecks.filter((t) => !t.inResume).map((t) => t.term),
     };
-  }
-
-  /** Word counts, cities and skill tags over every job, rebuilt only when jobs change. */
-  private async corpus(): Promise<Corpus> {
-    const stats = await this.prisma.job.aggregate({ _count: true, _max: { updatedAt: true } });
-    const key = `${stats._count}:${stats._max.updatedAt?.toISOString() ?? ''}`;
-    if (this.cache?.key === key) return this.cache.corpus;
-
-    const jobs = await this.prisma.job.findMany({
-      select: { description: true, language: true, city: true, skills: true },
-    });
-    const corpus: Corpus = {
-      frequencies: documentFrequencies(
-        jobs
-          .filter((j) => j.description)
-          .map((j) => keywordTokens(j.description ?? '', j.language)),
-      ),
-      cities: new Set(jobs.flatMap((j) => (j.city ? keywordTokens(j.city, null) : []))),
-      skills: new Set([
-        ...KNOWN_SKILLS,
-        ...jobs.flatMap((j) => j.skills.map((s) => s.toLowerCase())),
-      ]),
-    };
-    this.cache = { key, corpus };
-    return corpus;
   }
 }
