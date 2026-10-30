@@ -9,6 +9,8 @@ import {
   setPageSize,
   setFilterValues,
   setMinFit,
+  setNewOnly,
+  setNewSince,
   setPostedWithinDays,
   setSearch,
   setShowHidden,
@@ -21,11 +23,12 @@ import {
   useJobFilterOptions,
   useHiddenJobCount,
   useJobsPage,
+  useJobsVisit,
   useMyApplications,
   useSetJobHidden,
   useUpdateJobStatus,
 } from '@jobsearch/data';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApplyQueuePanel } from './components/ApplyQueuePanel';
 import { columns, DEFAULT_HIDDEN_COLUMNS } from './components/columns';
 import { ColumnsMenu } from './components/ColumnsMenu';
@@ -92,6 +95,18 @@ export function JobsDashboard() {
     });
   }, [tableState]);
   const foundQuery = useJobsPage(foundArgs);
+
+  // Opening Job posts starts a visit; jobs imported since the last one are New.
+  const visit = useJobsVisit();
+  const newSince = tableState.newSince;
+  useEffect(() => {
+    if (visit.isSuccess) dispatch(setNewSince(visit.data));
+  }, [visit.isSuccess, visit.data, dispatch]);
+  // How many New jobs there are in all (not hidden), whatever else is filtered.
+  const newCountQuery = useJobsPage(
+    { page: 1, pageSize: 1, filter: { createdAfter: newSince ?? '' } },
+    { enabled: newSince !== null },
+  );
 
   const jobs = jobsQuery.data?.items ?? NO_JOBS;
   const openJob = jobs.find((job) => job.id === openJobId) ?? null;
@@ -181,6 +196,9 @@ export function JobsDashboard() {
         hiddenCount={hiddenCount.data}
         active={activeCard}
         onSelect={selectCard}
+        newCount={newSince === null ? 0 : newCountQuery.data?.total}
+        newOnly={tableState.newOnly}
+        onToggleNew={showingHidden ? undefined : () => dispatch(setNewOnly(!tableState.newOnly))}
       />
       {showingHidden && (
         <p className="text-sm text-slate-600">
@@ -386,6 +404,7 @@ export function JobsDashboard() {
         setStatus={handleSetStatus}
         toggleHidden={handleToggleHidden}
         showingHidden={showingHidden}
+        newSince={newSince}
         isFetching={jobsQuery.isFetching && !jobsQuery.isPending}
         columnVisibility={columnVisibility.visibility}
         selected={selected}

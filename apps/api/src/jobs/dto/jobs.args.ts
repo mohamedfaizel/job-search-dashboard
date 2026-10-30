@@ -120,6 +120,14 @@ export class JobFilterInput {
   @IsDate()
   postedAfter?: Date;
 
+  @Field(() => GraphQLISODateTime, {
+    nullable: true,
+    description: 'Jobs imported (or added) after this: the New chip',
+  })
+  @IsOptional()
+  @IsDate()
+  createdAfter?: Date;
+
   @Field(() => Int, { nullable: true, description: 'Jobs whose Fit % is at least this' })
   @IsOptional()
   @IsInt()

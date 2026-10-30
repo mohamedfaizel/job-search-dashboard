@@ -53,6 +53,7 @@ export function JobsTable({
   setStatus,
   toggleHidden,
   showingHidden = false,
+  newSince = null,
   isFetching = false,
   columnVisibility = NO_HIDDEN_COLUMNS,
   selected = NO_SELECTION,
@@ -73,6 +74,7 @@ export function JobsTable({
       setStatus,
       toggleHidden,
       showingHidden,
+      newSince,
       selected,
       allSelected,
       toggleSelected: (job: Job) => {
@@ -84,7 +86,16 @@ export function JobsTable({
         onSelectionChange(allSelected ? new Set() : new Set(jobs.map((job) => job.id)));
       },
     };
-  }, [jobs, openJob, setStatus, toggleHidden, showingHidden, selected, onSelectionChange]);
+  }, [
+    jobs,
+    openJob,
+    setStatus,
+    toggleHidden,
+    showingHidden,
+    newSince,
+    selected,
+    onSelectionChange,
+  ]);
 
   // Phones get a list of cards: a wide table is hard to read on a narrow screen.
   if (isPhone) {

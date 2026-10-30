@@ -23,6 +23,10 @@ export interface JobsTableState {
   postedWithinDays: number | null;
   /** Only jobs with at least this Fit % ("Fit ≥ 70%" quick filter); null for any. */
   minFit: number | null;
+  /** Jobs imported after this are New on this visit; null on a first visit or while loading. */
+  newSince: string | null;
+  /** Show only the New jobs (the New chip). */
+  newOnly: boolean;
 }
 
 /** The table opens with your best matches first. */
@@ -37,6 +41,8 @@ export const initialJobsTableState: JobsTableState = {
   showHidden: false,
   postedWithinDays: null,
   minFit: null,
+  newSince: null,
+  newOnly: false,
 };
 
 export const jobsTableSlice = createSlice({
@@ -73,10 +79,18 @@ export const jobsTableSlice = createSlice({
       state.filters = {};
       state.postedWithinDays = null;
       state.minFit = null;
+      state.newOnly = false;
       state.page = 1;
     },
     setPostedWithinDays(state, action: PayloadAction<number | null>) {
       state.postedWithinDays = action.payload;
+      state.page = 1;
+    },
+    setNewSince(state, action: PayloadAction<string | null>) {
+      state.newSince = action.payload;
+    },
+    setNewOnly(state, action: PayloadAction<boolean>) {
+      state.newOnly = action.payload;
       state.page = 1;
     },
     setMinFit(state, action: PayloadAction<number | null>) {
@@ -122,6 +136,8 @@ export const {
   setShowHidden,
   setPostedWithinDays,
   setMinFit,
+  setNewSince,
+  setNewOnly,
 } = jobsTableSlice.actions;
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -134,6 +150,7 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
   Object.assign(filter, state.filters);
   if (state.showHidden) filter.hidden = true;
   if (state.minFit !== null) filter.minFit = state.minFit;
+  if (state.newOnly && state.newSince) filter.createdAfter = state.newSince;
   if (state.postedWithinDays !== null) {
     // Counted from the start of this hour, so the query (and its cache entry) stays the same
     // for an hour instead of changing every millisecond.
@@ -151,5 +168,6 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
 
 export function countActiveFilters(state: JobsTableState): number {
   const listed = Object.values(state.filters).reduce((sum, values) => sum + values.length, 0);
-  return listed + (state.postedWithinDays === null ? 0 : 1) + (state.minFit === null ? 0 : 1);
+  const others = [state.postedWithinDays !== null, state.minFit !== null, state.newOnly];
+  return listed + others.filter(Boolean).length;
 }

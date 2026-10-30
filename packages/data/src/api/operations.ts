@@ -32,6 +32,7 @@ const JOB_FIELDS = /* GraphQL */ `
     matchStatus
     matchScore
     fitScore
+    createdAt
   }
 `;
 
@@ -552,5 +553,11 @@ export const REMOVE_FROM_APPLY_QUEUE = /* GraphQL */ `
 export const RECALCULATE_FIT = /* GraphQL */ `
   mutation RecalculateFit {
     recalculateFit
+  }
+`;
+
+export const START_JOBS_VISIT = /* GraphQL */ `
+  mutation StartJobsVisit {
+    startJobsVisit
   }
 `;

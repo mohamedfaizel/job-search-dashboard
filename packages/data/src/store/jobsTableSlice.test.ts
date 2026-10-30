@@ -10,6 +10,8 @@ import {
   toggleFilterValue,
   setPostedWithinDays,
   setMinFit,
+  setNewOnly,
+  setNewSince,
   setShowHidden,
   toJobsPageArgs,
 } from './jobsTableSlice';
@@ -61,6 +63,19 @@ describe('jobsTable slice', () => {
     expect(toJobsPageArgs(state).filter).toEqual({ minFit: 70 });
     expect(countActiveFilters(state)).toBe(1);
     expect(reduce(state, clearAll()).minFit).toBeNull();
+  });
+
+  it('asks for the New jobs only once the visit time is known', () => {
+    let state = reduce(initialJobsTableState, setNewOnly(true));
+    expect(toJobsPageArgs(state).filter).toBeUndefined();
+
+    state = reduce(state, setNewSince('2026-10-30T09:00:00.000Z'));
+    expect(toJobsPageArgs(state).filter).toEqual({ createdAfter: '2026-10-30T09:00:00.000Z' });
+    expect(countActiveFilters(state)).toBe(1);
+    state = reduce(state, clearAll());
+    expect(state.newOnly).toBe(false);
+    // The visit time stays: it isn't a filter you chose.
+    expect(state.newSince).toBe('2026-10-30T09:00:00.000Z');
   });
 
   it('goes back to page 1 when the filters change', () => {

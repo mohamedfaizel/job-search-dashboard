@@ -47,6 +47,7 @@ export {
   useImportBudget,
   useJobFilterOptions,
   useJobsPage,
+  useJobsVisit,
   useRunSavedSearch,
   useSavedSearches,
   useSaveSearch,
