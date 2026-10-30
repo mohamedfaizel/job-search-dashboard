@@ -9,6 +9,7 @@ import {
   setSearch,
   toggleFilterValue,
   setPostedWithinDays,
+  setMinFit,
   setShowHidden,
   toJobsPageArgs,
 } from './jobsTableSlice';
@@ -45,6 +46,23 @@ describe('jobsTable slice', () => {
     expect(state.sort).toBeNull();
   });
 
+  it('opens sorted by Fit, best first, and cycles Fit descending first', () => {
+    expect(initialJobsTableState.sort).toEqual({ field: 'FIT', direction: 'DESC' });
+    let state = reduce(initialJobsTableState, cycleSort('FIT'));
+    expect(state.sort).toEqual({ field: 'FIT', direction: 'ASC' });
+    state = reduce(state, cycleSort('FIT'));
+    expect(state.sort).toBeNull();
+    state = reduce(state, cycleSort('FIT'));
+    expect(state.sort).toEqual({ field: 'FIT', direction: 'DESC' });
+  });
+
+  it('asks for a minimum Fit, counted as a filter', () => {
+    const state = reduce(initialJobsTableState, setMinFit(70));
+    expect(toJobsPageArgs(state).filter).toEqual({ minFit: 70 });
+    expect(countActiveFilters(state)).toBe(1);
+    expect(reduce(state, clearAll()).minFit).toBeNull();
+  });
+
   it('goes back to page 1 when the filters change', () => {
     let state = reduce(initialJobsTableState, setPage(3));
     state = reduce(state, setSearch('react'));
@@ -52,7 +70,11 @@ describe('jobsTable slice', () => {
   });
 
   it('builds query arguments, leaving out empty parts', () => {
-    expect(toJobsPageArgs(initialJobsTableState)).toEqual({ page: 1, pageSize: 25 });
+    expect(toJobsPageArgs(initialJobsTableState)).toEqual({
+      page: 1,
+      pageSize: 25,
+      sort: { field: 'FIT', direction: 'DESC' },
+    });
 
     let state = reduce(initialJobsTableState, setSearch('  frontend '));
     state = reduce(state, toggleFilterValue({ key: 'workplaces', value: 'REMOTE' }));
@@ -69,11 +91,8 @@ describe('jobsTable slice', () => {
     let state = reduce(initialJobsTableState, setPage(3));
     state = reduce(state, setShowHidden(true));
 
-    expect(toJobsPageArgs(state)).toEqual({ page: 1, pageSize: 25, filter: { hidden: true } });
-    expect(toJobsPageArgs(reduce(state, setShowHidden(false)))).toEqual({
-      page: 1,
-      pageSize: 25,
-    });
+    expect(toJobsPageArgs(state)).toMatchObject({ page: 1, filter: { hidden: true } });
+    expect(toJobsPageArgs(reduce(state, setShowHidden(false))).filter).toBeUndefined();
   });
 
   it('counts active filter values and clears them all', () => {

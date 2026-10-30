@@ -1,6 +1,7 @@
 import type { Job } from '@jobsearch/data';
 import {
   ActionsCell,
+  FitCell,
   JobCell,
   LocationCell,
   MatchCell,
@@ -27,6 +28,7 @@ export function JobCards({ jobs, isFetching }: { jobs: Job[]; isFetching: boolea
             <div className="min-w-0 flex-1 text-[13px]">
               <JobCell job={job} />
             </div>
+            {job.fitScore !== null && <FitCell job={job} />}
             {job.matchStatus && <MatchCell job={job} />}
             <SelectCell job={job} />
           </div>

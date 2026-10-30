@@ -21,16 +21,22 @@ export interface JobsTableState {
   showHidden: boolean;
   /** Only jobs posted in the last this-many days ("Posted" quick filter); null for any time. */
   postedWithinDays: number | null;
+  /** Only jobs with at least this Fit % ("Fit ≥ 70%" quick filter); null for any. */
+  minFit: number | null;
 }
+
+/** The table opens with your best matches first. */
+export const DEFAULT_SORT: JobSortInput = { field: 'FIT', direction: 'DESC' };
 
 export const initialJobsTableState: JobsTableState = {
   search: '',
   filters: {},
-  sort: null,
+  sort: DEFAULT_SORT,
   page: 1,
   pageSize: 25,
   showHidden: false,
   postedWithinDays: null,
+  minFit: null,
 };
 
 export const jobsTableSlice = createSlice({
@@ -66,17 +72,27 @@ export const jobsTableSlice = createSlice({
       state.search = '';
       state.filters = {};
       state.postedWithinDays = null;
+      state.minFit = null;
       state.page = 1;
     },
     setPostedWithinDays(state, action: PayloadAction<number | null>) {
       state.postedWithinDays = action.payload;
       state.page = 1;
     },
-    /** Clicking a column header cycles: ascending → descending → off. */
+    setMinFit(state, action: PayloadAction<number | null>) {
+      state.minFit = action.payload;
+      state.page = 1;
+    },
+    /**
+     * Clicking a column header cycles: ascending → descending → off. Fit starts with descending,
+     * because the best match first is what you want from it.
+     */
     cycleSort(state, action: PayloadAction<JobSortField>) {
       const field = action.payload;
-      if (state.sort?.field !== field) state.sort = { field, direction: 'ASC' };
-      else if (state.sort.direction === 'ASC') state.sort = { field, direction: 'DESC' };
+      const [first, second] =
+        field === 'FIT' ? (['DESC', 'ASC'] as const) : (['ASC', 'DESC'] as const);
+      if (state.sort?.field !== field) state.sort = { field, direction: first };
+      else if (state.sort.direction === first) state.sort = { field, direction: second };
       else state.sort = null;
       state.page = 1;
     },
@@ -105,6 +121,7 @@ export const {
   setPageSize,
   setShowHidden,
   setPostedWithinDays,
+  setMinFit,
 } = jobsTableSlice.actions;
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -116,6 +133,7 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
   if (search) filter.search = search;
   Object.assign(filter, state.filters);
   if (state.showHidden) filter.hidden = true;
+  if (state.minFit !== null) filter.minFit = state.minFit;
   if (state.postedWithinDays !== null) {
     // Counted from the start of this hour, so the query (and its cache entry) stays the same
     // for an hour instead of changing every millisecond.
@@ -133,5 +151,5 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
 
 export function countActiveFilters(state: JobsTableState): number {
   const listed = Object.values(state.filters).reduce((sum, values) => sum + values.length, 0);
-  return listed + (state.postedWithinDays === null ? 0 : 1);
+  return listed + (state.postedWithinDays === null ? 0 : 1) + (state.minFit === null ? 0 : 1);
 }

@@ -98,6 +98,11 @@ type Job {
 
   """JobsPipe posting id; null for manual jobs"""
   externalId: String
+
+  """
+  Fit %: how well your profile resume covers the skills, keywords and title (0-100). No AI. Null without a resume
+  """
+  fitScore: Int
   id: ID!
   industry: String
   jobFunction: String
@@ -154,6 +159,9 @@ input JobFilterInput {
   industries: [String!]
   jobFunctions: [String!]
   languages: [String!]
+
+  """Jobs whose Fit % is at least this"""
+  minFit: Int
 
   """Jobs whose top salary reaches at least this"""
   minSalaryUsd: Int
@@ -355,6 +363,7 @@ type JobResume {
 enum JobSortField {
   CITY
   COMPANY
+  FIT
   POSTED_AT
   SALARY
   SENIORITY
@@ -418,6 +427,11 @@ type Mutation {
   Score your resume against a job with Resume-Matcher. Returns at once as PENDING; poll jobMatch until READY or FAILED (a minute or two). Uses AI credits
   """
   matchJob(jobId: ID!): JobMatch!
+
+  """
+  Works out Fit % for every job again, now. Normally it happens by itself. Returns how many jobs got a score
+  """
+  recalculateFit: Int!
 
   """Takes jobs out of your Apply queue"""
   removeFromApplyQueue(jobIds: [ID!]!): [ApplyQueueItem!]!

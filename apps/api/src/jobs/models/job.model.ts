@@ -107,6 +107,13 @@ export class Job {
   })
   matchScore!: number | null;
 
+  @Field(() => Int, {
+    nullable: true,
+    description:
+      'Fit %: how well your profile resume covers the skills, keywords and title (0-100). No AI. Null without a resume',
+  })
+  fitScore!: number | null;
+
   @Field(() => GraphQLISODateTime)
   createdAt!: Date;
 

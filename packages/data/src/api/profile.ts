@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_URL, graphqlClient } from './client';
+import { queryKeys } from './hooks';
 import { jobInsightsPrefix } from './insights';
 import { MY_PROFILE, UPDATE_PROFILE } from './operations';
 import { matcherResumeKey } from './resumeMatcher';
@@ -31,6 +32,8 @@ export function useUpdateProfile() {
       queryClient.setQueryData(profileKey, profile);
       // The resume text may have changed, and with it what each job says you're missing.
       void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
+      // ...and every job's Fit %.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
     },
   });
 }
@@ -64,6 +67,7 @@ export function useUploadResume() {
       // A new file makes Resume-Matcher's copy out of date.
       void queryClient.invalidateQueries({ queryKey: matcherResumeKey });
       void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
     },
   });
 }

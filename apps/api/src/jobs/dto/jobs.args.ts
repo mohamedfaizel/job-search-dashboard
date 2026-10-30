@@ -120,6 +120,13 @@ export class JobFilterInput {
   @IsDate()
   postedAfter?: Date;
 
+  @Field(() => Int, { nullable: true, description: 'Jobs whose Fit % is at least this' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  minFit?: number;
+
   @Field({
     nullable: true,
     description: 'True lists only the jobs you hid. Otherwise hidden jobs are left out.',

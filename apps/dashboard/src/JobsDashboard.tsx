@@ -8,6 +8,7 @@ import {
   setPage,
   setPageSize,
   setFilterValues,
+  setMinFit,
   setPostedWithinDays,
   setSearch,
   setShowHidden,
@@ -16,6 +17,7 @@ import {
   useAppDispatch,
   useAppSelector,
   useChangeApplyQueue,
+  useRecalculateFit,
   useJobFilterOptions,
   useHiddenJobCount,
   useJobsPage,
@@ -64,6 +66,7 @@ export function JobsDashboard() {
   const updateStatus = useUpdateJobStatus();
   const setHidden = useSetJobHidden();
   const changeQueue = useChangeApplyQueue();
+  const recalculateFit = useRecalculateFit();
   const hiddenCount = useHiddenJobCount();
   const applications = useMyApplications();
   const columnVisibility = useColumnVisibility(DEFAULT_HIDDEN_COLUMNS);
@@ -267,12 +270,26 @@ export function JobsDashboard() {
             filters={tableState.filters}
             filterOptions={filterOptions.data}
             postedWithinDays={tableState.postedWithinDays}
+            minFit={tableState.minFit}
             onToggleFilter={handleToggleFilter}
             onClearFilter={handleClearFilter}
             onPostedWithin={(days) => dispatch(setPostedWithinDays(days))}
+            onMinFit={(minFit) => dispatch(setMinFit(minFit))}
           />
         }
       >
+        {/* Fit % updates by itself; this is only a "just in case" button. */}
+        <button
+          type="button"
+          onClick={() => {
+            recalculateFit.mutate();
+          }}
+          disabled={recalculateFit.isPending}
+          title="Fit % updates by itself when your resume or the jobs change. Click to work it out again now"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
+        >
+          {recalculateFit.isPending ? 'Recalculating…' : 'Recalculate Fit'}
+        </button>
         <ColumnsMenu
           columns={COLUMN_CHOICES}
           visibility={columnVisibility.visibility}

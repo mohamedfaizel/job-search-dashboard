@@ -14,10 +14,15 @@ interface Props {
   filters: JobsTableState['filters'];
   filterOptions: JobFilterOptions | undefined;
   postedWithinDays: number | null;
+  minFit: number | null;
   onToggleFilter: (key: ListFilterKey, value: string) => void;
   onClearFilter: (key: ListFilterKey) => void;
   onPostedWithin: (days: number | null) => void;
+  onMinFit: (minFit: number | null) => void;
 }
+
+/** The "Fit ≥ 70%" chip: a strong match, worth a closer look. */
+export const GOOD_FIT = 70;
 
 /**
  * The filters you reach for most, as chips above the table: they work on phones too, where the
@@ -27,10 +32,13 @@ export function QuickFilters({
   filters,
   filterOptions,
   postedWithinDays,
+  minFit,
   onToggleFilter,
   onClearFilter,
   onPostedWithin,
+  onMinFit,
 }: Props) {
+  const goodFit = minFit === GOOD_FIT;
   const remote = filters.workplaces?.includes('REMOTE') ?? false;
   const chip = (on: boolean) =>
     `rounded-full border px-3 py-1 text-sm transition ${
@@ -41,6 +49,16 @@ export function QuickFilters({
 
   return (
     <div role="group" aria-label="Quick filters" className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        aria-pressed={goodFit}
+        onClick={() => {
+          onMinFit(goodFit ? null : GOOD_FIT);
+        }}
+        className={chip(goodFit)}
+      >
+        Fit ≥ {GOOD_FIT}%
+      </button>
       <ColumnFilter
         chip
         column="Country"

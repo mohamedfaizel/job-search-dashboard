@@ -109,7 +109,54 @@ describe('JobsDashboard', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('opens with the best Fit first and shows each job’s Fit %', async () => {
+    server.use(
+      api.query('JobsPage', ({ variables }) => {
+        requests.push({ operation: 'JobsPage', variables });
+        return HttpResponse.json({
+          data: {
+            jobsPage: {
+              items: [
+                makeJob({ fitScore: 82 }),
+                makeJob({ id: 'job-2', title: 'Backend Developer', fitScore: null }),
+              ],
+              total: 2,
+              page: 1,
+              pageSize: 25,
+            },
+          },
+        });
+      }),
+    );
+    renderDashboard();
+
+    const fit = await screen.findByRole('button', {
+      name: 'Fit for Senior Frontend Engineer: 82%',
+    });
+    expect(lastJobsPageVariables()).toMatchObject({ sort: { field: 'FIT', direction: 'DESC' } });
+    expect(screen.getByRole('columnheader', { name: /Fit/ })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    );
+    // Resume-Matcher's Match column waits in the Columns menu.
+    expect(screen.queryByRole('columnheader', { name: /Match/ })).not.toBeInTheDocument();
+
+    await userEvent.click(fit);
+    expect(screen.getByRole('dialog', { name: 'Senior Frontend Engineer' })).toBeInTheDocument();
+  });
+
+  it('recalculates Fit on request', async () => {
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate Fit' }));
+    await waitFor(() => {
+      expect(requests).toContainEqual({ operation: 'RecalculateFit', variables: {} });
+    });
+  });
+
   it('shows your match score in the Match column', async () => {
+    localStorage.setItem('jobsearch.dashboard.columns', '{"match":true}');
     server.use(
       api.query('JobsPage', () =>
         HttpResponse.json({
@@ -151,8 +198,8 @@ describe('JobsDashboard', () => {
 
     expect(screen.queryByRole('columnheader', { name: /Salary/ })).not.toBeInTheDocument();
     expect(screen.queryByText('$90k - $120k')).not.toBeInTheDocument();
-    // Salary plus the seven columns that start hidden.
-    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('8 hidden');
+    // Salary plus the eight columns that start hidden.
+    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('9 hidden');
     expect(localStorage.getItem('jobsearch.dashboard.columns')).toBe('{"salary":false}');
 
     await userEvent.click(within(menu).getByRole('button', { name: 'Show all columns' }));
@@ -170,10 +217,18 @@ describe('JobsDashboard', () => {
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
 
-    for (const name of [/Skills/, /Seniority/, /Language/, /Source/, /Workplace/, /Industry/]) {
+    for (const name of [
+      /Match/,
+      /Skills/,
+      /Seniority/,
+      /Language/,
+      /Source/,
+      /Workplace/,
+      /Industry/,
+    ]) {
       expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument();
     }
-    for (const name of [/^Job/, /Match/, /Location/, /Posted/, /Salary/, /Status/]) {
+    for (const name of [/^Job/, /Fit/, /Location/, /Posted/, /Salary/, /Status/]) {
       expect(screen.getByRole('columnheader', { name })).toBeInTheDocument();
     }
 
@@ -332,6 +387,7 @@ describe('JobsDashboard', () => {
     await user.click(screen.getByRole('button', { name: 'Country' }));
     await user.click(screen.getByRole('checkbox', { name: 'Germany' }));
     await user.selectOptions(screen.getByRole('combobox', { name: 'Posted' }), '3');
+    await user.click(screen.getByRole('button', { name: 'Fit ≥ 70%' }));
 
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({
@@ -339,14 +395,19 @@ describe('JobsDashboard', () => {
           workplaces: ['REMOTE'],
           countryCodes: ['DE'],
           postedAfter: expect.any(String) as unknown,
+          minFit: 70,
         },
       });
     });
-    expect(screen.getByText('3 filters active')).toBeInTheDocument();
+    expect(screen.getByText('4 filters active')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Clear all' }));
     expect(screen.getByRole('combobox', { name: 'Posted' })).toHaveValue('');
     expect(screen.getByRole('button', { name: 'Remote' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Fit ≥ 70%' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 
   it('saves a job with the bookmark icon', async () => {

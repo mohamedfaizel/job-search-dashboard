@@ -20,7 +20,7 @@ export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 export type JobSource = 'JOBSPIPE' | 'MANUAL';
 
 export type JobSortField =
-  'POSTED_AT' | 'TITLE' | 'COMPANY' | 'SENIORITY' | 'CITY' | 'SALARY' | 'WORKPLACE';
+  'POSTED_AT' | 'TITLE' | 'COMPANY' | 'SENIORITY' | 'CITY' | 'SALARY' | 'WORKPLACE' | 'FIT';
 
 export type SortDirection = 'ASC' | 'DESC';
 
@@ -59,6 +59,11 @@ export interface Job {
   matchStatus: JobMatchStatus | null;
   /** Resume-Matcher's ATS score (0-100). Null until the match is READY. */
   matchScore: number | null;
+  /**
+   * Fit %: how well your profile resume covers the job's skills, keywords and title (0-100),
+   * the same score as in the popup. No AI. Null until you add a resume.
+   */
+  fitScore: number | null;
 }
 
 /** A job on your tracker board: any status except NONE. */
@@ -84,6 +89,8 @@ export interface JobFilterInput {
   visas?: VisaSponsorship[];
   applicationStatuses?: ApplicationStatus[];
   minSalaryUsd?: number;
+  /** Only jobs whose Fit % is at least this. */
+  minFit?: number;
   /** ISO date-time: only jobs posted after it. */
   postedAfter?: string;
   /** True lists only the jobs you hid; otherwise they are left out. */

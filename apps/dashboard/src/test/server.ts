@@ -267,6 +267,10 @@ export const handlers = [
       data: { jobsPage: { items, total: items.length, page: 1, pageSize: 25 } },
     });
   }),
+  api.mutation('RecalculateFit', () => {
+    requests.push({ operation: 'RecalculateFit', variables: {} });
+    return HttpResponse.json({ data: { recalculateFit: JOBS.length } });
+  }),
   api.query('HiddenJobCount', () =>
     HttpResponse.json({ data: { hiddenJobCount: hiddenIds.size } }),
   ),

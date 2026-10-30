@@ -1,13 +1,25 @@
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
 import { ApplyQueueItemModel } from './apply-queue';
+import { FitService } from './fit.service';
 import { JobInsightsModel } from './insights.model';
 import { InsightsService } from './insights.service';
 
 @Resolver()
 export class InsightsResolver {
-  constructor(private readonly insights: InsightsService) {}
+  constructor(
+    private readonly insights: InsightsService,
+    private readonly fit: FitService,
+  ) {}
+
+  @Mutation(() => Int, {
+    description:
+      'Works out Fit % for every job again, now. Normally it happens by itself. Returns how many jobs got a score',
+  })
+  recalculateFit(@CurrentUser() user: SessionUser): Promise<number> {
+    return this.fit.forceRecalculate(user.id);
+  }
 
   @Query(() => JobInsightsModel, {
     description:
