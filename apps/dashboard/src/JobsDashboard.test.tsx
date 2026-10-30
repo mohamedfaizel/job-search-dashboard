@@ -350,7 +350,7 @@ describe('JobsDashboard', () => {
     const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
 
     await user.click(within(dialog).getByRole('button', { name: 'Apply →' }));
-    expect(within(dialog).getByRole('tab', { name: 'Apply' })).toHaveAttribute(
+    expect(within(dialog).getByRole('tab', { name: /^Apply/ })).toHaveAttribute(
       'aria-selected',
       'true',
     );
@@ -529,9 +529,13 @@ describe('JobsDashboard', () => {
     renderDashboard();
     await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
     const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
-    await user.click(within(dialog).getByRole('tab', { name: 'Apply' }));
+    await user.click(within(dialog).getByRole('tab', { name: /^Apply/ }));
 
-    await user.click(await within(dialog).findByRole('link', { name: /Open posting/ }));
+    vi.spyOn(window, 'open').mockReturnValue(null);
+    await user.click(await within(dialog).findByRole('button', { name: /Fill the form/ }));
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Copy prompt and open posting ↗' }),
+    );
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
 
     const ask = screen.getByRole('list', { name: 'Did you apply?' });
@@ -598,7 +602,7 @@ describe('JobsDashboard', () => {
     renderDashboard();
     await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
     const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
-    await user.click(within(dialog).getByRole('tab', { name: 'Apply' }));
+    await user.click(within(dialog).getByRole('tab', { name: /^Apply/ }));
 
     await user.click(await within(dialog).findByRole('button', { name: 'Add to Apply queue' }));
     expect(

@@ -462,6 +462,32 @@ Why Acme: I like your product.
         'Backend Engineer. Node.js, Kafka and microservices.',
       );
 
+      // Both come as PDFs named after you and the company, ready to attach.
+      for (const [path, name] of [
+        ['resume.pdf', 'Resume-Acme.pdf'],
+        ['cover-letter.pdf', 'Cover-letter-Acme.pdf'],
+      ] as const) {
+        const pdf = await request(t.server)
+          .get(`/job-resume/${job.id}/${path}`)
+          .set('Cookie', t.cookieFor('USER'))
+          .buffer(true)
+          .parse((r, done) => {
+            const chunks: Buffer[] = [];
+            r.on('data', (c: Buffer) => chunks.push(c));
+            r.on('end', () => {
+              done(null, Buffer.concat(chunks));
+            });
+          })
+          .expect(200);
+        expect(pdf.headers['content-type']).toBe('application/pdf');
+        expect(pdf.headers['content-disposition']).toContain(name);
+        expect((pdf.body as Buffer).subarray(0, 5).toString()).toBe('%PDF-');
+      }
+      await request(t.server)
+        .get(`/job-resume/${job.id}/resume.pdf`)
+        .set('Cookie', t.cookieFor('ADMIN'))
+        .expect(404);
+
       const kit = await request(t.server)
         .get(`/apply-kit/${job.id}`)
         .set('Cookie', t.cookieFor('USER'))

@@ -17,6 +17,7 @@ import { MAX_RESUME_BYTES } from '../profile/profile.controller';
 import type { UploadedResume } from '../profile/resume-text';
 import { extractResumeText } from '../profile/resume-text';
 import type { JobInsightsModel } from './insights.model';
+import type { JobResumeFile } from './insights.service';
 import { InsightsService } from './insights.service';
 
 /** Claude often answers in plain text or Markdown, so those are accepted next to PDF and Word. */
@@ -52,18 +53,41 @@ export class JobResumeController {
     });
   }
 
+  /** The saved resume as a clean PDF, named like "Mohamed-Faizel-Resume-ComputerFutures.pdf". */
+  @Get(':jobId/resume.pdf')
+  async resumePdf(
+    @CurrentUser() user: SessionUser,
+    @Param('jobId') jobId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    return send(res, await this.insights.jobResumePdf(user.id, jobId, 'resume'));
+  }
+
+  @Get(':jobId/cover-letter.pdf')
+  async coverLetterPdf(
+    @CurrentUser() user: SessionUser,
+    @Param('jobId') jobId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    return send(res, await this.insights.jobResumePdf(user.id, jobId, 'cover-letter'));
+  }
+
   @Get(':jobId')
   async download(
     @CurrentUser() user: SessionUser,
     @Param('jobId') jobId: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const file = await this.insights.jobResumeFile(user.id, jobId);
-    res.set({
-      'Content-Type': file.type,
-      // filename* carries names with accents or spaces; filename is the plain fallback.
-      'Content-Disposition': `attachment; filename="${file.name.replace(/[^\w.-]/g, '_')}"; filename*=UTF-8''${encodeURIComponent(file.name)}`,
-    });
-    return new StreamableFile(file.bytes);
+    return send(res, await this.insights.jobResumeFile(user.id, jobId));
   }
+}
+
+/** Sends a file as a download, keeping its name. */
+function send(res: Response, file: JobResumeFile): StreamableFile {
+  res.set({
+    'Content-Type': file.type,
+    // filename* carries names with accents or spaces; filename is the plain fallback.
+    'Content-Disposition': `attachment; filename="${file.name.replace(/[^\w.-]/g, '_')}"; filename*=UTF-8''${encodeURIComponent(file.name)}`,
+  });
+  return new StreamableFile(file.bytes);
 }

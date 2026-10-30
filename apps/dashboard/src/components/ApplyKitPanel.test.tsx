@@ -1,11 +1,17 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
-import { applyKitUrl, createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
-import { render, screen, within } from '@testing-library/react';
+import {
+  applyKitUrl,
+  createQueryClient,
+  DataProvider,
+  jobResumeUrl,
+  makeStore,
+} from '@jobsearch/data';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { makeJob } from '../test/fixtures';
-import { api, INSIGHTS, jobResume, PROFILE, SAVED_RESUME, server } from '../test/server';
-import { ApplyKitPanel, chromePrompt } from './ApplyKitPanel';
+import { api, INSIGHTS, jobResume, PROFILE, requests, SAVED_RESUME, server } from '../test/server';
+import { ApplyKitPanel, chromePrompt, CLAUDE_URL } from './ApplyKitPanel';
 
 function renderKit(job: Job = makeJob(), asking = false) {
   const calls: { status: ApplicationStatus[]; started: string[]; answered: string[] } = {
@@ -15,6 +21,8 @@ function renderKit(job: Job = makeJob(), asking = false) {
   };
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
+  const open = vi.spyOn(window, 'open').mockReturnValue(null);
+  const user = userEvent.setup();
   render(
     <DataProvider store={makeStore()} queryClient={queryClient}>
       <ApplyKitPanel
@@ -26,24 +34,67 @@ function renderKit(job: Job = makeJob(), asking = false) {
       />
     </DataProvider>,
   );
-  return { user: userEvent.setup(), calls };
+  return { user, calls, open };
 }
 
+const currentStep = () =>
+  within(screen.getByRole('list', { name: 'Apply steps' })).getByRole('button', {
+    current: 'step',
+  });
+
 describe('ApplyKitPanel', () => {
-  it('copies the one prompt for the resume, cover letter and form answers', async () => {
-    const { user } = renderKit();
+  it('step 1 copies the prompt, opens Claude and moves on to step 2', async () => {
+    const { user, open } = renderKit();
 
-    await user.click(await screen.findByRole('button', { name: 'Copy prompt for Claude' }));
+    expect(await screen.findByRole('list', { name: 'What the prompt uses' })).toHaveTextContent(
+      'Master resume',
+    );
+    expect(currentStep()).toHaveTextContent('Write with Claude');
+    await user.click(screen.getByRole('button', { name: 'Copy prompt and open Claude ↗' }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Copied.');
     expect(await navigator.clipboard.readText()).toBe(INSIGHTS.prompt);
-    expect(screen.getByRole('link', { name: /Open Claude/ })).toHaveAttribute(
+    expect(open).toHaveBeenCalledWith(CLAUDE_URL, '_blank', 'noopener');
+    expect(currentStep()).toHaveTextContent('Save the reply');
+    expect(screen.getByText(/✓ Prompt copied/)).toBeInTheDocument();
+  });
+
+  it('says the resume is written in German, with your real German level', async () => {
+    server.use(
+      api.query('MyProfile', () =>
+        HttpResponse.json({ data: { myProfile: { ...PROFILE, languages: ['German A2'] } } }),
+      ),
+    );
+    renderKit();
+
+    const used = await screen.findByRole('list', { name: 'What the prompt uses' });
+    expect(used).toHaveTextContent('Written in German (B2 required)');
+    expect(await within(used).findByText('German A2 on the resume')).toBeInTheDocument();
+  });
+
+  it('step 2 saves Claude’s reply straight from the clipboard', async () => {
+    const { user } = renderKit();
+    await user.click(await screen.findByRole('button', { name: /Save the reply/ }));
+
+    await navigator.clipboard.writeText('=== RESUME ===\nGraphQL');
+    await user.click(screen.getByRole('button', { name: 'Paste from clipboard' }));
+
+    await waitFor(() => {
+      expect(requests).toContainEqual({
+        operation: 'SaveJobResumeText',
+        variables: { jobId: 'job-1', text: '=== RESUME ===\nGraphQL' },
+      });
+    });
+    // Saved: on to step 3, with the score before and after and the PDFs.
+    const saved = await screen.findByRole('region', { name: 'Your resume for this job' });
+    expect(currentStep()).toHaveTextContent('Fill the form');
+    expect(within(saved).getByLabelText('Score before and after')).toHaveTextContent('was 50%');
+    expect(within(saved).getByRole('link', { name: 'Download PDF' })).toHaveAttribute(
       'href',
-      'https://claude.ai/new',
+      `${jobResumeUrl('job-1')}/resume.pdf`,
     );
   });
 
-  it('keeps the cover letter and form answers from Claude’s reply ready to copy', async () => {
+  it('step 3 keeps the cover letter and form answers ready to copy', async () => {
     jobResume.current = SAVED_RESUME;
     const { user } = renderKit();
 
@@ -51,35 +102,33 @@ describe('ApplyKitPanel', () => {
     expect(await navigator.clipboard.readText()).toBe(SAVED_RESUME.coverLetter);
     await user.click(screen.getByRole('button', { name: 'Copy form answers' }));
     expect(await navigator.clipboard.readText()).toBe(SAVED_RESUME.formAnswers);
+    expect(screen.getByRole('link', { name: 'PDF' })).toHaveAttribute(
+      'href',
+      `${jobResumeUrl('job-1')}/cover-letter.pdf`,
+    );
   });
 
-  it('gives Claude in Chrome a prompt that points at the Apply kit page and never submits', async () => {
-    const { user, calls } = renderKit();
+  it('step 3 copies the Claude in Chrome prompt and opens the posting', async () => {
+    jobResume.current = SAVED_RESUME;
+    const { user, calls, open } = renderKit();
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Copy prompt for Claude in Chrome' }),
-    );
+    await user.click(await screen.findByRole('button', { name: 'Copy prompt and open posting ↗' }));
+
     const prompt = await navigator.clipboard.readText();
     expect(prompt).toBe(chromePrompt(makeJob()));
     expect(prompt).toContain(applyKitUrl('job-1'));
     expect(prompt).toContain('Never click Submit');
-    expect(screen.getByRole('link', { name: 'Apply kit page' })).toHaveAttribute(
-      'href',
-      applyKitUrl('job-1'),
-    );
-
+    expect(open).toHaveBeenCalledWith('https://example.com/jobs/1', '_blank', 'noopener');
     // Opening the posting asks "Did you apply?" later.
-    await user.click(screen.getByRole('link', { name: /Open posting/ }));
     expect(calls.started).toEqual(['job-1']);
   });
 
   it('marks the job Applied, or asks again later', async () => {
     const { user, calls } = renderKit(makeJob(), true);
-    const step = (await screen.findByRole('heading', { name: 'Did you apply?' })).parentElement!;
 
-    await user.click(within(step).getByRole('button', { name: 'Not yet' }));
+    await user.click(await screen.findByRole('button', { name: 'Not yet' }));
     expect(calls.answered).toEqual(['job-1']);
-    await user.click(within(step).getByRole('button', { name: 'Yes, mark Applied' }));
+    await user.click(screen.getByRole('button', { name: 'Yes, mark Applied' }));
     expect(calls.status).toEqual(['APPLIED']);
   });
 
