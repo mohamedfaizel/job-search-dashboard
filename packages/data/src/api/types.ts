@@ -64,6 +64,8 @@ export interface Job {
    * the same score as in the popup. No AI. Null until you add a resume.
    */
   fitScore: number | null;
+  /** When the job was imported or added: after your last visit, it is New. */
+  createdAt: string;
 }
 
 /** A job on your tracker board: any status except NONE. */
@@ -89,6 +91,8 @@ export interface JobFilterInput {
   visas?: VisaSponsorship[];
   applicationStatuses?: ApplicationStatus[];
   minSalaryUsd?: number;
+  /** ISO date-time: only jobs imported or added after it (the New chip). */
+  createdAfter?: string;
   /** Only jobs whose Fit % is at least this. */
   minFit?: number;
   /** ISO date-time: only jobs posted after it. */

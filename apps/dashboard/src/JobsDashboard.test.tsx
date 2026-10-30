@@ -145,6 +145,44 @@ describe('JobsDashboard', () => {
     expect(screen.getByRole('dialog', { name: 'Senior Frontend Engineer' })).toBeInTheDocument();
   });
 
+  it('marks jobs imported since your last visit as New, with a chip to show only those', async () => {
+    server.use(
+      api.mutation('StartJobsVisit', () =>
+        HttpResponse.json({ data: { startJobsVisit: '2026-10-29T18:00:00.000Z' } }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderDashboard();
+
+    const chip = await screen.findByRole('button', { name: /^New\s*1$/ });
+    const backend = screen.getByRole('button', { name: 'Backend Developer' }).closest('tr')!;
+    expect(within(backend).getByText('New')).toBeInTheDocument();
+    const frontend = screen
+      .getByRole('button', { name: 'Senior Frontend Engineer' })
+      .closest('tr')!;
+    expect(within(frontend).queryByText('New')).not.toBeInTheDocument();
+
+    await user.click(chip);
+    await waitFor(() => {
+      expect(lastJobsPageVariables()).toMatchObject({
+        filter: { createdAfter: '2026-10-29T18:00:00.000Z' },
+      });
+    });
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByRole('button', { name: 'Backend Developer' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Senior Frontend Engineer' }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows no New chip on your first visit', async () => {
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    expect(screen.queryByRole('button', { name: /^New/ })).not.toBeInTheDocument();
+  });
+
   it('recalculates Fit on request', async () => {
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });

@@ -154,6 +154,9 @@ input JobFilterInput {
   companies: [String!]
   countryCodes: [String!]
 
+  """Jobs imported (or added) after this: the New chip"""
+  createdAfter: DateTime
+
   """True lists only the jobs you hid. Otherwise hidden jobs are left out."""
   hidden: Boolean
   industries: [String!]
@@ -462,6 +465,11 @@ type Mutation {
 
   """Create an account and log in"""
   signUp(input: SignUpInput!): User!
+
+  """
+  Call when you open Job posts. Returns the time after which jobs are New for this visit (null on your first visit)
+  """
+  startJobsVisit: DateTime
 
   """Fetch jobs from JobsPipe and save them"""
   syncJobs(input: SyncJobsInput!): SyncJobsResult!

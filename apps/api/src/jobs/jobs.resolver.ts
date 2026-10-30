@@ -1,4 +1,4 @@
-import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, GraphQLISODateTime, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser, Roles } from '../auth/auth.decorators';
 import { CreateJobInput } from './dto/create-job.input';
@@ -15,6 +15,15 @@ export class JobsResolver {
   @Query(() => JobPage, { description: 'Jobs for the dashboard table: filter, sort and paginate' })
   jobsPage(@CurrentUser() user: SessionUser, @Args() args: JobsArgs): Promise<JobPage> {
     return this.jobs.findPage(user.id, args);
+  }
+
+  @Mutation(() => GraphQLISODateTime, {
+    nullable: true,
+    description:
+      'Call when you open Job posts. Returns the time after which jobs are New for this visit (null on your first visit)',
+  })
+  startJobsVisit(@CurrentUser() user: SessionUser): Promise<Date | null> {
+    return this.jobs.startJobsVisit(user.id);
   }
 
   @Query(() => Int, { description: 'How many jobs you have hidden' })

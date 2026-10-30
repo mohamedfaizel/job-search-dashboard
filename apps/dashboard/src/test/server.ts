@@ -255,18 +255,23 @@ export const handlers = [
   api.query('JobsPage', ({ variables }) => {
     requests.push({ operation: 'JobsPage', variables });
     const filter = variables['filter'] as
-      { hidden?: boolean; applicationStatuses?: ApplicationStatus[] } | undefined;
+      | { hidden?: boolean; applicationStatuses?: ApplicationStatus[]; createdAfter?: string }
+      | undefined;
+    const createdAfter = filter?.createdAfter;
     const showHidden = filter?.hidden ?? false;
     const statuses = filter?.applicationStatuses ?? [];
     const items = JOBS.filter(
       (job) =>
         hiddenIds.has(job.id) === showHidden &&
-        (statuses.length === 0 || statuses.includes(job.applicationStatus)),
+        (statuses.length === 0 || statuses.includes(job.applicationStatus)) &&
+        (!createdAfter || job.createdAt > createdAfter),
     );
     return HttpResponse.json({
       data: { jobsPage: { items, total: items.length, page: 1, pageSize: 25 } },
     });
   }),
+  // By default this is your first visit, so nothing is New.
+  api.mutation('StartJobsVisit', () => HttpResponse.json({ data: { startJobsVisit: null } })),
   api.mutation('RecalculateFit', () => {
     requests.push({ operation: 'RecalculateFit', variables: {} });
     return HttpResponse.json({ data: { recalculateFit: JOBS.length } });

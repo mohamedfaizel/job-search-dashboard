@@ -35,6 +35,9 @@ function withStatus({ applications, matches, fits, ...job }: JobForUser) {
   };
 }
 
+/** Opening Job posts again within this long counts as the same visit, so the New badges stay. */
+export const VISIT_GAP_MS = 30 * 60 * 1000;
+
 export interface UpsertResult {
   created: number;
   updated: number;
@@ -76,6 +79,26 @@ export class JobsService implements OnApplicationBootstrap {
       );
       total += jobs.length;
     }
+  }
+
+  /**
+   * Called when you open Job posts. Returns the time after which jobs count as New on this visit:
+   * the end of your previous visit, or null on your very first one (then nothing is New).
+   * Opening it again within 30 minutes is the same visit, so the badges don't vanish on a reload.
+   */
+  async startJobsVisit(userId: number, now = new Date()): Promise<Date | null> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { jobsLastSeenAt: true, jobsNewSince: true },
+    });
+    const last = user.jobsLastSeenAt;
+    const sameVisit = last !== null && now.getTime() - last.getTime() < VISIT_GAP_MS;
+    const newSince = sameVisit ? user.jobsNewSince : last;
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { jobsLastSeenAt: now, jobsNewSince: newSince },
+    });
+    return newSince;
   }
 
   /** One page of jobs as `userId` sees them: their hidden jobs are left out, or only those. */
@@ -348,6 +371,7 @@ function buildWhere(filter: JobFilterInput | undefined, userId: number): Prisma.
   if (filter.skills?.length) and.push({ skills: { hasSome: filter.skills } });
   if (filter.minSalaryUsd !== undefined) and.push({ salaryMaxUsd: { gte: filter.minSalaryUsd } });
   if (filter.postedAfter) and.push({ postedAt: { gte: filter.postedAfter } });
+  if (filter.createdAfter) and.push({ createdAt: { gt: filter.createdAfter } });
   if (filter.minFit !== undefined) {
     and.push({ fits: { some: { userId, score: { gte: filter.minFit } } } });
   }

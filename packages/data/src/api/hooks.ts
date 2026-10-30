@@ -13,6 +13,7 @@ import {
   RUN_SAVED_SEARCH,
   SAVED_SEARCHES,
   SET_SAVED_SEARCH_SCHEDULE,
+  START_JOBS_VISIT,
   SYNC_JOBS,
   SYNC_RUNS,
   UNHIDE_JOB,
@@ -47,10 +48,13 @@ export const queryKeys = {
   savedSearches: ['savedSearches'] as const,
   syncRuns: ['syncRuns'] as const,
   importBudget: ['importBudget'] as const,
+  // Not under 'jobs': refreshing the jobs must not start a new visit.
+  jobsVisit: ['jobsVisit'] as const,
 };
 
-export function useJobsPage(args: JobsPageArgs) {
+export function useJobsPage(args: JobsPageArgs, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
+    enabled,
     // Every argument is part of the key, so each filter/sort/page combination is cached.
     queryKey: queryKeys.jobsPage(args),
     queryFn: async () => {
@@ -267,5 +271,23 @@ export function useRunSavedSearch() {
       return data.runSavedSearch;
     },
     onSuccess: () => refreshAfterImport(queryClient),
+  });
+}
+
+/**
+ * Tells the API you opened Job posts, once per page load, and returns the time after which jobs
+ * are New for this visit (null on your first visit). Kept for the whole page load, so the badges
+ * don't move while you look around.
+ */
+export function useJobsVisit() {
+  return useQuery({
+    queryKey: queryKeys.jobsVisit,
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ startJobsVisit: string | null }>(START_JOBS_VISIT);
+      return data.startJobsVisit;
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: false,
   });
 }

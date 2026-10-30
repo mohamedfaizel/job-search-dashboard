@@ -29,6 +29,8 @@ export interface RowActions {
   toggleHidden: (job: Job) => void;
   /** True while the table lists the jobs you hid. */
   showingHidden?: boolean;
+  /** Jobs imported after this get a New badge; null shows none. */
+  newSince?: string | null;
 }
 
 /** The ticked rows, for actions on several jobs at once. */
@@ -81,9 +83,15 @@ function CompanyLogo({ job }: { job: Job }) {
   );
 }
 
+/** Imported or added after your last visit. */
+export function isNew(job: Job, newSince: string | null | undefined): boolean {
+  return !!newSince && Date.parse(job.createdAt) > Date.parse(newSince);
+}
+
 /** Title (opens the popup) with the company under it: one cell instead of two columns. */
 export function JobCell({ job }: { job: Job }) {
-  const { openJob } = useRowActions();
+  const { openJob, newSince } = useRowActions();
+  const fresh = isNew(job, newSince);
   return (
     <div className="flex min-w-0 items-center gap-3">
       <CompanyLogo job={job} />
@@ -98,8 +106,15 @@ export function JobCell({ job }: { job: Job }) {
         >
           {job.title}
         </button>
-        <span className="block max-w-[22rem] truncate text-slate-500" title={job.company.name}>
-          {job.company.name}
+        <span className="flex max-w-[22rem] items-center gap-1.5 text-slate-500">
+          {fresh && (
+            <Badge tone="blue" title="Imported since your last visit">
+              New
+            </Badge>
+          )}
+          <span className="truncate" title={job.company.name}>
+            {job.company.name}
+          </span>
         </span>
       </div>
     </div>

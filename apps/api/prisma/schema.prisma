@@ -47,24 +47,28 @@ enum Role {
 }
 
 model User {
-  id            Int              @id @default(autoincrement())
-  email         String           @unique
-  name          String
+  id             Int              @id @default(autoincrement())
+  email          String           @unique
+  name           String
   /// argon2id hash. The password itself is never stored.
-  passwordHash  String
-  role          Role             @default(USER)
-  profile       Profile?
-  hiddenJobs    HiddenJob[]
-  applications  Application[]
-  matcherResume MatcherResume?
-  jobMatches    JobMatch[]
-  tailored      TailoredResume[]
-  removedTerms  RemovedTerm[]
-  jobResumes    JobResume[]
-  applyQueue    ApplyQueueItem[]
-  jobFits       JobFit[]
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  passwordHash   String
+  role           Role             @default(USER)
+  profile        Profile?
+  hiddenJobs     HiddenJob[]
+  applications   Application[]
+  matcherResume  MatcherResume?
+  jobMatches     JobMatch[]
+  tailored       TailoredResume[]
+  removedTerms   RemovedTerm[]
+  jobResumes     JobResume[]
+  applyQueue     ApplyQueueItem[]
+  jobFits        JobFit[]
+  /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
+  jobsLastSeenAt DateTime?
+  /// Jobs imported after this are "New" for this visit: the end of your previous visit.
+  jobsNewSince   DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 /// What you're looking for and your master resume. One per user, created on first save.
@@ -316,35 +320,35 @@ enum ScheduleFrequency {
 
 /// A JobsPipe search you gave a name, so it can be run again in one click (and on a schedule later).
 model SavedSearch {
-  id           Int               @id @default(autoincrement())
-  name         String            @unique
-  titles       String[]
-  skills       String[]
-  countryCodes String[]
-  locations    String[]
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  titles           String[]
+  skills           String[]
+  countryCodes     String[]
+  locations        String[]
   /// ISO 639-1 codes of the posting's language, e.g. ["en", "de"].
-  languages        String[]      @default([])
-  skipFluentGerman Boolean       @default(false)
-  remoteOnly       Boolean       @default(false)
-  excludeTitles    String[]      @default([])
-  employmentTypes  String[]      @default([])
+  languages        String[]          @default([])
+  skipFluentGerman Boolean           @default(false)
+  remoteOnly       Boolean           @default(false)
+  excludeTitles    String[]          @default([])
+  employmentTypes  String[]          @default([])
   /// Euros a year; the import converts it to the US dollars JobsPipe filters in.
   minSalaryEur     Int?
-  maxAgeDays   Int               @default(7)
-  pageSize     Int               @default(25)
-  maxPages     Int               @default(1)
-  onlyNew      Boolean           @default(true)
+  maxAgeDays       Int               @default(7)
+  pageSize         Int               @default(25)
+  maxPages         Int               @default(1)
+  onlyNew          Boolean           @default(true)
   /// How often the scheduler runs this search by itself.
-  schedule     ScheduleFrequency @default(OFF)
+  schedule         ScheduleFrequency @default(OFF)
   /// Time of day for scheduled runs, "HH:mm" in the API server's local time.
-  runAt        String            @default("07:00")
+  runAt            String            @default("07:00")
   /// When the scheduler will run it next. Null when the schedule is off.
-  nextRunAt    DateTime?
+  nextRunAt        DateTime?
   /// What happened at the last scheduled time, e.g. a skip because of the credit cap.
-  scheduleNote String?
-  runs         SyncRun[]
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  scheduleNote     String?
+  runs             SyncRun[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 }
 
 /// A skill or keyword you removed from a job's insights ("I don't have it" or "not relevant").

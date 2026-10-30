@@ -10,6 +10,11 @@ interface Props {
   /** The card whose jobs the table shows now, if any. */
   active: StatCardKey | null;
   onSelect: (key: StatCardKey) => void;
+  /** Jobs imported since your last visit. The New chip shows only when there are some. */
+  newCount?: number | undefined;
+  /** True while the table shows only the New jobs. */
+  newOnly?: boolean;
+  onToggleNew?: (() => void) | undefined;
 }
 
 const CARDS: { key: StatCardKey; label: string; dot: string }[] = [
@@ -24,12 +29,44 @@ const CARDS: { key: StatCardKey; label: string; dot: string }[] = [
  * A slim strip of counts above the table, like tabs. Each one is a button that shows its jobs
  * in the table. On a phone the strip scrolls sideways instead of wrapping.
  */
-export function StatCards({ total, applications, hiddenCount, active, onSelect }: Props) {
+export function StatCards({
+  total,
+  applications,
+  hiddenCount,
+  active,
+  onSelect,
+  newCount = 0,
+  newOnly = false,
+  onToggleNew,
+}: Props) {
   const value = (key: StatCardKey) => {
     if (key === 'total') return total;
     if (key === 'hidden') return hiddenCount;
     return applications?.filter((a) => a.status === key).length;
   };
+
+  const pill = (pressed: boolean) =>
+    `flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none ${
+      pressed
+        ? 'border-slate-900 bg-slate-900 text-white'
+        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+    }`;
+  const newChip = onToggleNew && (newCount > 0 || newOnly) && (
+    <button
+      key="new"
+      type="button"
+      aria-pressed={newOnly}
+      title="Jobs imported since your last visit"
+      onClick={onToggleNew}
+      className={pill(newOnly)}
+    >
+      <span aria-hidden="true" className="h-2 w-2 rounded-full bg-blue-500" />
+      New
+      <span className={`font-semibold tabular-nums ${newOnly ? 'text-white' : 'text-slate-900'}`}>
+        {newCount}
+      </span>
+    </button>
+  );
 
   return (
     <div
@@ -37,9 +74,9 @@ export function StatCards({ total, applications, hiddenCount, active, onSelect }
       aria-label="Show jobs by status"
       className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
     >
-      {CARDS.map(({ key, label, dot }) => {
+      {CARDS.flatMap(({ key, label, dot }) => {
         const pressed = active === key;
-        return (
+        const card = (
           <button
             key={key}
             type="button"
@@ -47,11 +84,7 @@ export function StatCards({ total, applications, hiddenCount, active, onSelect }
             onClick={() => {
               onSelect(key);
             }}
-            className={`flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none ${
-              pressed
-                ? 'border-slate-900 bg-slate-900 text-white'
-                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
-            }`}
+            className={pill(pressed)}
           >
             <span aria-hidden="true" className={`h-2 w-2 rounded-full ${dot}`} />
             {label}
@@ -62,6 +95,8 @@ export function StatCards({ total, applications, hiddenCount, active, onSelect }
             </span>
           </button>
         );
+        // The New chip sits right after "Jobs found": a part of them.
+        return key === 'total' && newChip ? [card, newChip] : [card];
       })}
     </div>
   );

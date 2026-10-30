@@ -27,6 +27,7 @@ export function makeJob(overrides: Partial<Job> = {}): Job {
     matchStatus: null,
     matchScore: null,
     fitScore: null,
+    createdAt: '2026-10-24T12:00:00.000Z',
     ...overrides,
   };
 }
@@ -47,6 +48,7 @@ export const JOBS: Job[] = [
     visa: 'NO',
     provider: 'linkedin',
     applicationStatus: 'APPLIED',
+    createdAt: '2026-10-30T08:00:00.000Z',
   }),
 ];
 
