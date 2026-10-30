@@ -23,8 +23,8 @@ describe('InsightsPanel', () => {
     expect(screen.getByText('German')).toBeInTheDocument();
     expect(screen.getByText('German required (B2)')).toBeInTheDocument();
     expect(screen.getByText('· resume in German')).toBeInTheDocument();
-    expect(screen.getByText('50%')).toBeInTheDocument();
-    expect(screen.getByText('Skills: 1 of 2 in your resume (50%)')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '50 percent fit' })).toBeInTheDocument();
+    expect(screen.getByText(/Skills 1\/2/)).toBeInTheDocument();
     // Weighted like Resume-Matcher's ATS score.
     const parts = screen.getByRole('list', { name: 'Score parts' });
     expect(parts).toHaveTextContent('Keywords 40%: 50%');
@@ -34,7 +34,7 @@ describe('InsightsPanel', () => {
     const missingSkills = screen.getByRole('list', { name: 'Missing skills' });
     expect(within(missingSkills).getByText('graphql')).toBeInTheDocument();
     expect(
-      within(screen.getByRole('list', { name: 'Skills in your resume' })).getByText(/react/),
+      within(screen.getByRole('list', { name: 'In your resume' })).getByText(/react/),
     ).toBeInTheDocument();
     const missingKeywords = screen.getByRole('list', { name: 'Missing keywords' });
     expect(within(missingKeywords).getByText('microfrontends')).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe('InsightsPanel', () => {
     });
     const removed = await screen.findByRole('list', { name: 'Removed terms' });
     expect(within(removed).getByText('graphql')).toBeInTheDocument();
-    expect(screen.getByText('80%')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '80 percent fit' })).toBeInTheDocument();
     expect(screen.queryByRole('list', { name: 'Missing skills' })).not.toBeInTheDocument();
 
     await user.click(within(removed).getByRole('button', { name: 'Remove graphql from all jobs' }));
@@ -106,7 +106,7 @@ describe('InsightsPanel', () => {
     );
     renderPanel();
 
-    expect(await screen.findByText('Resume in English')).toBeInTheDocument();
+    expect(await screen.findByText('· Resume in English')).toBeInTheDocument();
     expect(screen.queryByText(/German required/)).not.toBeInTheDocument();
   });
 
@@ -134,7 +134,7 @@ describe('InsightsPanel', () => {
     expect(await screen.findByText(/Add your resume on “My profile”/)).toBeInTheDocument();
     expect(screen.getByText('English')).toBeInTheDocument();
     expect(screen.getByText('(detected)')).toBeInTheDocument();
-    expect(screen.queryByText(/Your resume covers/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /percent fit/ })).not.toBeInTheDocument();
     // Without a resume every term is still listed, and can still be removed.
     expect(screen.getByRole('list', { name: 'Missing skills' })).toHaveTextContent('react');
   });

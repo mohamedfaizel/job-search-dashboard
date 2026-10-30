@@ -438,6 +438,8 @@ export function JobsDashboard() {
         onStatusChange={(status) => {
           if (openJob) handleSetStatus(openJob, status);
         }}
+        onToggleHidden={handleToggleHidden}
+        showingHidden={showingHidden}
         asking={askingIds}
         onApplyStarted={applying.start}
         onApplyAnswered={(job) => {

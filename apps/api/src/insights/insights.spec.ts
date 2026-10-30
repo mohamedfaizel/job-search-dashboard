@@ -46,6 +46,15 @@ describe('keywordTokens', () => {
     ).toEqual(['kafka', 'c++', 'entwickler']);
   });
 
+  it('drops ad boilerplate, language levels and the recruiter’s name', () => {
+    expect(
+      keywordTokens(
+        'Ort: Berlin. Anstellungsart: Festanstellung. Deutsch auf C1-Niveau, Englisch B2. Kafka. Ihr Ansprechpartner Andreas',
+        'de',
+      ),
+    ).toEqual(['deutsch', 'englisch', 'kafka']);
+  });
+
   it('keeps every word in English', () => {
     expect(keywordTokens('You will design scalable microservices', 'en')).toEqual([
       'design',
