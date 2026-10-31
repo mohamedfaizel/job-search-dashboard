@@ -477,6 +477,11 @@ type Mutation {
   """
   saveJobResumeText(jobId: ID!, text: String!): JobInsights!
 
+  """
+  "I have this": adds a missing skill or keyword to the Skills list of My profile (have: true), or takes it off (have: false). It then counts as covered for every job
+  """
+  setHaveTerm(have: Boolean! = true, jobId: ID!, term: String!): JobInsights!
+
   """Turn scheduled runs of a saved search on or off"""
   setSavedSearchSchedule(id: Int!, input: ScheduleInput!): SavedSearch!
 
@@ -949,6 +954,11 @@ type TermCheck {
   A skill tag or keyword, e.g. "kafka"
   """
   term: String!
+
+  """
+  Not in your resume text, but on the Skills list of My profile ("I have this"). It counts as covered, and the prompt tells Claude it must be in the resume
+  """
+  youHave: Boolean!
 }
 
 type User {

@@ -3,8 +3,8 @@ import { highlight } from './JobAdPanel';
 
 describe('highlight', () => {
   const terms = [
-    { term: 'react', inResume: true, relatedTo: null },
-    { term: 'java', inResume: false, relatedTo: null },
+    { term: 'react', inResume: true, youHave: false, relatedTo: null },
+    { term: 'java', inResume: false, youHave: false, relatedTo: null },
   ];
 
   it('marks whole words: green for what you have, red for what you miss', () => {

@@ -14,6 +14,7 @@ import {
   RESTORE_INSIGHT_TERM,
   SAVE_APPLY_QUEUE_REPLY,
   SAVE_JOB_RESUME_TEXT,
+  SET_HAVE_TERM,
 } from './operations';
 import type { ApplyQueueItem, ApplyQueuePrompt, JobInsights } from './types';
 
@@ -55,6 +56,29 @@ export function useRemoveInsightTerm() {
       if (vars.everywhere) void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
       // The job's Fit % in the table changes with it.
       void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+    },
+  });
+}
+
+/**
+ * "I have this": puts a missing skill or keyword on the Skills list of My profile (or takes it
+ * off with have: false). It then counts as covered for every job, so all insights, the Fit %
+ * column and the profile are refreshed.
+ */
+export function useSetHaveTerm() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { jobId: string; term: string; have: boolean }) => {
+      const data = await graphqlClient.request<{ setHaveTerm: JobInsights }>(SET_HAVE_TERM, vars);
+      return data.setHaveTerm;
+    },
+    onSuccess: (insights) => {
+      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+      void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+      // The profile's Skills list changed too. (Its key is ['profile']: importing profileKey from
+      // ./profile would make an import cycle, since profile.ts imports from this file.)
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
 }

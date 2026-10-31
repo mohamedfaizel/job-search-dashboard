@@ -51,6 +51,26 @@ describe('JobResumePanel', () => {
     expect(screen.queryByRole('textbox', { name: 'Resume text for this job' })).toBeNull();
   });
 
+  it('"I have it" on a still-missing term offers the updated prompt', async () => {
+    const user = userEvent.setup();
+    jobResume.current = SAVED_RESUME;
+    renderPanel();
+
+    const missing = await screen.findByRole('list', { name: 'Still missing' });
+    expect(screen.queryByRole('button', { name: 'Copy updated prompt' })).toBeNull();
+    await user.click(within(missing).getByRole('button', { name: 'I have microfrontends' }));
+
+    expect(requests).toContainEqual({
+      operation: 'SetHaveTerm',
+      variables: { jobId: 'job-1', term: 'microfrontends', have: true },
+    });
+    expect(await screen.findByRole('button', { name: 'Copy updated prompt' })).toBeInTheDocument();
+    expect(screen.getByText(/leaves out microfrontends, which you have/)).toBeInTheDocument();
+    expect(
+      screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Updated prompt' }).value,
+    ).toContain('MUST: microfrontends');
+  });
+
   it('uploads a file and offers it for download', async () => {
     const user = userEvent.setup();
     renderPanel();

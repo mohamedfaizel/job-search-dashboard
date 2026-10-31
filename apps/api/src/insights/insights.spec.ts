@@ -44,6 +44,15 @@ describe('tokenize', () => {
       'experten',
     ]);
   });
+
+  it('drops German ad boilerplate like "Arbeitsort" and "Ballungsräumen"', () => {
+    expect(
+      tokenize(
+        'Arbeitsort Hamburg. Bedarfsverkehre und Bedienformen in Ballungsräumen: Ihr Beitrag mit Figma',
+        stopwordsFor('de'),
+      ),
+    ).toEqual(['figma']);
+  });
 });
 
 describe('keywordTokens', () => {
@@ -139,9 +148,9 @@ describe('matchScore', () => {
   it('turns found terms into a percent', () => {
     expect(
       coverage([
-        { term: 'a', inResume: true, relatedTo: null },
-        { term: 'b', inResume: false, relatedTo: null },
-        { term: 'c', inResume: false, relatedTo: null },
+        { term: 'a', inResume: true, youHave: false, relatedTo: null },
+        { term: 'b', inResume: false, youHave: false, relatedTo: null },
+        { term: 'c', inResume: false, youHave: false, relatedTo: null },
       ]),
     ).toBe(33);
     expect(coverage([])).toBeNull();
@@ -159,11 +168,27 @@ describe('checkResume', () => {
   it('scores any resume text the same way', () => {
     const check = checkResume('Backend Engineer: Kafka and microservices', job);
     expect(check.skillChecks).toEqual([
-      { term: 'kafka', inResume: true, relatedTo: null },
-      { term: 'react', inResume: false, relatedTo: null },
+      { term: 'kafka', inResume: true, youHave: false, relatedTo: null },
+      { term: 'react', inResume: false, youHave: false, relatedTo: null },
     ]);
     expect(check).toMatchObject({ skills: 50, keywords: 100, title: 100 });
     expect(check.score).toBe(matchScore({ skills: 50, keywords: 100, title: 100 }));
+  });
+
+  it('counts a skill you said you have ("I have this") as covered', () => {
+    const check = checkResume('Backend Engineer: Kafka and microservices', job, ['React', 'Figma']);
+    expect(check.skillChecks[1]).toEqual({
+      term: 'react',
+      inResume: false,
+      youHave: true,
+      relatedTo: null,
+    });
+    expect(check).toMatchObject({ skills: 100, score: 100 });
+    // Already in the resume: it is "in your resume", not "you have it".
+    expect(checkResume('Kafka', job, ['Kafka']).skillChecks[0]).toMatchObject({
+      inResume: true,
+      youHave: false,
+    });
   });
 
   it('gives no percentages without a resume', () => {
@@ -193,6 +218,7 @@ describe('buildResumePrompt', () => {
     languages: ['German A2', 'English C1'],
     missingSkills: ['kafka'],
     missingKeywords: ['microfrontends'],
+    mustAdd: [] as string[],
     otherSkills: ['Apollo', 'Jest'],
     resume: 'React developer since 2019.',
     description: 'Wir suchen …',
@@ -236,6 +262,13 @@ describe('buildResumePrompt', () => {
     }
     expect(buildResumePrompt({ ...input, savedAnswers: ' ' })).not.toContain('My saved answers');
     expect(prompt).toContain('- Skipped:');
+  });
+
+  it('tells Claude the skills you said you have must be in the resume', () => {
+    expect(buildResumePrompt(input)).not.toContain('MUST');
+    expect(buildResumePrompt({ ...input, mustAdd: ['figma', 'kanban'] })).toContain(
+      'They MUST be in the new resume: in the Skills section, and next to the experience where I used them when that is clear from my resume:\n- figma\n- kanban',
+    );
   });
 
   it('keeps your real language levels', () => {
@@ -391,6 +424,7 @@ describe('queue prompt', () => {
     languages: ['German A2'],
     missingSkills: ['kafka'],
     missingKeywords: [],
+    mustAdd: jobId === 'a' ? ['figma'] : [],
     otherSkills: [],
     resume: 'My resume.',
     description: 'x'.repeat(6000),
@@ -404,6 +438,9 @@ describe('queue prompt', () => {
     expect(prompt).toContain('--- JOB 2 of 2: Frontend at Acme (id b) ---');
     expect(prompt).toContain('in German: it asks for German (C1)');
     expect(prompt).toContain('=== JOB 1: a ===');
+    // "I have this" skills go with their own job.
+    expect(prompt.split('MUST')).toHaveLength(2);
+    expect(prompt).toContain('when that is clear from my resume:\n- figma');
     // Long ads are cut, so five jobs fit.
     expect(prompt).toContain(`${'x'.repeat(5000)} […]`);
     expect(buildQueuePrompt([])).toBe('');

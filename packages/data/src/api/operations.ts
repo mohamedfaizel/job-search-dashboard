@@ -441,11 +441,13 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     skills {
       term
       inResume
+      youHave
       relatedTo
     }
     keywords {
       term
       inResume
+      youHave
       relatedTo
     }
     removed {
@@ -485,6 +487,15 @@ export const REMOVE_INSIGHT_TERM = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation RemoveInsightTerm($jobId: ID!, $term: String!, $everywhere: Boolean) {
     removeInsightTerm(jobId: $jobId, term: $term, everywhere: $everywhere) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const SET_HAVE_TERM = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation SetHaveTerm($jobId: ID!, $term: String!, $have: Boolean) {
+    setHaveTerm(jobId: $jobId, term: $term, have: $have) {
       ...JobInsightsFields
     }
   }

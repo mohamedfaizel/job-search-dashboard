@@ -55,12 +55,12 @@ export const INSIGHTS: JobInsights = {
   resumeLanguage: 'de',
   hasResume: true,
   skills: [
-    { term: 'react', inResume: true, relatedTo: null },
-    { term: 'graphql', inResume: false, relatedTo: null },
+    { term: 'react', inResume: true, youHave: false, relatedTo: null },
+    { term: 'graphql', inResume: false, youHave: false, relatedTo: null },
   ],
   keywords: [
-    { term: 'microfrontends', inResume: false, relatedTo: null },
-    { term: 'storybook', inResume: true, relatedTo: null },
+    { term: 'microfrontends', inResume: false, youHave: false, relatedTo: null },
+    { term: 'storybook', inResume: true, youHave: false, relatedTo: null },
   ],
   removed: [],
   skillsCoverage: 50,
@@ -90,18 +90,30 @@ export const jobResume: { current: JobResume | null } = { current: null };
 
 /** Terms the test user removed with ×. Tests start with none. */
 export const removedTerms: RemovedTerm[] = [];
+/** Terms the user said they have ("I have it"), like the Skills list on My profile. */
+export const haveTerms: string[] = [];
 
 /** INSIGHTS minus the removed terms, like the real API (score fixed at 80 once any is gone). */
 function insightsNow(): JobInsights {
   const kept = (t: { term: string }) => !removedTerms.some((r) => r.term === t.term);
-  if (removedTerms.length === 0) return { ...INSIGHTS, jobResume: jobResume.current };
+  const mark = <T extends { term: string; inResume: boolean }>(t: T) => ({
+    ...t,
+    youHave: !t.inResume && haveTerms.includes(t.term),
+  });
+  const skills = INSIGHTS.skills.map(mark);
+  const keywords = INSIGHTS.keywords.map(mark);
+  if (removedTerms.length === 0 && haveTerms.length === 0)
+    return { ...INSIGHTS, jobResume: jobResume.current };
   return {
     ...INSIGHTS,
     jobResume: jobResume.current,
-    skills: INSIGHTS.skills.filter(kept),
-    keywords: INSIGHTS.keywords.filter(kept),
+    skills: skills.filter(kept),
+    keywords: keywords.filter(kept),
     removed: [...removedTerms],
     score: 80,
+    prompt: haveTerms.length
+      ? `${INSIGHTS.prompt}\nMUST: ${haveTerms.join(', ')}`
+      : INSIGHTS.prompt,
   };
 }
 
@@ -252,6 +264,13 @@ export const handlers = [
     requests.push({ operation: 'UploadJobResume', variables: { sent } });
     jobResume.current = { ...SAVED_RESUME, fileName: 'resume-acme.pdf' };
     return HttpResponse.json(insightsNow(), { status: 201 });
+  }),
+  api.mutation('SetHaveTerm', ({ variables }) => {
+    requests.push({ operation: 'SetHaveTerm', variables });
+    const term = variables['term'] as string;
+    const others = haveTerms.filter((t) => t !== term);
+    haveTerms.splice(0, haveTerms.length, ...others, ...(variables['have'] ? [term] : []));
+    return HttpResponse.json({ data: { setHaveTerm: insightsNow() } });
   }),
   api.mutation('RestoreInsightTerm', ({ variables }) => {
     requests.push({ operation: 'RestoreInsightTerm', variables });

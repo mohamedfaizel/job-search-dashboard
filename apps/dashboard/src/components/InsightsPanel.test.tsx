@@ -69,6 +69,30 @@ describe('InsightsPanel', () => {
     expect(await screen.findByRole('list', { name: 'Missing skills' })).toBeInTheDocument();
   });
 
+  it('"I have it" moves a missing skill to "You have these", and Undo moves it back', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(await screen.findByRole('button', { name: 'I have graphql' }));
+
+    expect(requests).toContainEqual({
+      operation: 'SetHaveTerm',
+      variables: { jobId: 'job-1', term: 'graphql', have: true },
+    });
+    const yours = await screen.findByRole('list', { name: 'You have these' });
+    expect(within(yours).getByText(/graphql/)).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Missing skills' })).not.toBeInTheDocument();
+    // Counted as covered.
+    expect(screen.getByText(/Skills 2\/2/)).toBeInTheDocument();
+
+    await user.click(within(yours).getByRole('button', { name: 'I don’t have graphql' }));
+    expect(requests).toContainEqual({
+      operation: 'SetHaveTerm',
+      variables: { jobId: 'job-1', term: 'graphql', have: false },
+    });
+    expect(await screen.findByRole('list', { name: 'Missing skills' })).toBeInTheDocument();
+  });
+
   it('says which skill you have that a missing term goes with', async () => {
     server.use(
       api.query('JobInsights', () =>
@@ -76,7 +100,7 @@ describe('InsightsPanel', () => {
           data: {
             jobInsights: {
               ...INSIGHTS,
-              skills: [{ term: 'apollo', inResume: false, relatedTo: 'graphql' }],
+              skills: [{ term: 'apollo', inResume: false, youHave: false, relatedTo: 'graphql' }],
             },
           },
         }),

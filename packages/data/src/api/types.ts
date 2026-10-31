@@ -380,6 +380,8 @@ export interface TailoredResume {
 export interface TermCheck {
   term: string;
   inResume: boolean;
+  /** Not in the resume text, but on the Skills list of My profile ("I have this"). Counts as covered. */
+  youHave: boolean;
   /** For a missing term: the skill you have that it goes with, e.g. "graphql" for "apollo". */
   relatedTo: string | null;
 }

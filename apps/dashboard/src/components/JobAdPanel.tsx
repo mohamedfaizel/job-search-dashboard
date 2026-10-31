@@ -21,11 +21,22 @@ export function highlight(text: string, terms: TermCheck[], hasResume: boolean):
     const term = i % 2 === 1 ? byTerm.get(part.toLowerCase()) : undefined;
     if (!term) return part;
     const have = hasResume && term.inResume;
+    const color = have
+      ? 'bg-emerald-100 text-emerald-900'
+      : term.youHave
+        ? 'bg-sky-100 text-sky-900'
+        : 'bg-red-100 text-red-900';
     return (
       <mark
         key={i}
-        title={have ? 'In your resume' : 'Missing from your resume'}
-        className={`rounded px-0.5 ${have ? 'bg-emerald-100 text-emerald-900' : 'bg-red-100 text-red-900'}`}
+        title={
+          have
+            ? 'In your resume'
+            : term.youHave
+              ? 'You have it: on your profile’s Skills list'
+              : 'Missing from your resume'
+        }
+        className={`rounded px-0.5 ${color}`}
       >
         {part}
       </mark>

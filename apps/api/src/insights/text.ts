@@ -46,6 +46,9 @@ const JOB_AD_WORDS = [
   'ort anstellungsart festanstellung unbefristet unbefristete unbefristeter vollzeit teilzeit',
   'jahresgehalt bruttojahresgehalt gehaltsvorstellung mandant mandanten kunden ausstattung',
   'benefits startdatum eintrittstermin kündigungsfrist ansprechpartner ansprechpartnerin niveau',
+  'arbeitsort einsatzort ballungsraum ballungsräumen beitrag beiträge leisten',
+  // Words of a mobility company's ad that say what the company does, not what you do
+  'bedarfsverkehr bedarfsverkehre bedienform bedienformen',
   // First names of recruiters who sign the ad ("Ihr Ansprechpartner: Andreas …")
   'andreas thomas michael stefan christian markus daniel alexander sebastian tobias julia anna',
   'sarah laura lisa katharina sandra nicole jennifer maria sophie lena david peter jan tim',
