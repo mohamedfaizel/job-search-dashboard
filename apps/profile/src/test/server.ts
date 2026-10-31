@@ -1,4 +1,4 @@
-import type { MatcherResume, Profile, ResumeMatcherStatus } from '@jobsearch/data';
+import type { LanguageResume, MatcherResume, Profile, ResumeMatcherStatus } from '@jobsearch/data';
 import { API_URL, RESUME_UPLOAD_URL } from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -21,6 +21,8 @@ export const PROFILE: Profile = {
   websiteUrl: null,
   resumeText: 'Ada Lovelace\nFrontend engineer',
   resumeFileName: 'ada.pdf',
+  resumeLanguage: 'en',
+  otherResumes: [],
   phone: '+49 151 0000000',
   address: 'Berlin, Germany',
   workPermit: 'EU Blue Card',
@@ -30,6 +32,10 @@ export const PROFILE: Profile = {
   applicationNotes: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
 };
+
+/** Resumes in other languages saved in the current test. */
+export const otherResumes: LanguageResume[] = [];
+const withOthers = (): Profile => ({ ...PROFILE, otherResumes: [...otherResumes] });
 
 /** What the API answers for a file it can't read. */
 export const rejectUpload = http.post(RESUME_UPLOAD_URL, () => {
@@ -89,7 +95,33 @@ export const server = setupServer(
       : RM_RUNNING;
     return HttpResponse.json({ data: { resumeMatcherStatus: status } });
   }),
-  api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
+  api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: withOthers() } })),
+  api.mutation('SaveLanguageResume', ({ variables }) => {
+    requests.push({ operation: 'SaveLanguageResume', variables });
+    const language = variables['language'] as string;
+    const kept = otherResumes.filter((r) => r.language !== language);
+    otherResumes.splice(0, otherResumes.length, ...kept, {
+      language,
+      text: variables['text'] as string,
+      fileName: null,
+      updatedAt: '2026-10-31T10:00:00.000Z',
+    });
+    return HttpResponse.json({ data: { saveLanguageResume: withOthers() } });
+  }),
+  api.mutation('DeleteLanguageResume', ({ variables }) => {
+    requests.push({ operation: 'DeleteLanguageResume', variables });
+    const kept = otherResumes.filter((r) => r.language !== variables['language']);
+    otherResumes.splice(0, otherResumes.length, ...kept);
+    return HttpResponse.json({ data: { deleteLanguageResume: withOthers() } });
+  }),
+  api.query('TranslationPrompt', ({ variables }) => {
+    requests.push({ operation: 'TranslationPrompt', variables });
+    return HttpResponse.json({
+      data: {
+        translationPrompt: `Please translate my resume into ${String(variables['language'])}`,
+      },
+    });
+  }),
   api.mutation('UpdateProfile', ({ variables }) => {
     requests.push({ operation: 'UpdateProfile', variables });
     const input = variables['input'] as Partial<Profile>;

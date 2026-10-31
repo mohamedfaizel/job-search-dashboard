@@ -23,9 +23,14 @@ export {
 } from './api/insights';
 export {
   profileKey,
+  RESUME_LANGUAGES,
   RESUME_UPLOAD_URL,
+  useDeleteLanguageResume,
   useMyProfile,
+  useSaveLanguageResume,
+  useTranslationPrompt,
   useUpdateProfile,
+  useUploadLanguageResume,
   useUploadResume,
 } from './api/profile';
 export {

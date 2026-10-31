@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  Param,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -36,5 +37,22 @@ export class ProfileController {
       { name: file.originalname, type: file.mimetype, bytes: file.buffer },
       text,
     );
+  }
+
+  /** Your master resume in another language, e.g. POST /profile/resume/de. */
+  @Post('resume/:language')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_RESUME_BYTES } }))
+  async uploadLanguageResume(
+    @CurrentUser() user: SessionUser,
+    @Param('language') language: string,
+    @UploadedFile() file: UploadedResume | undefined,
+  ): Promise<ProfileModel> {
+    if (!file) throw new BadRequestException('Choose a file to upload');
+    const text = await extractResumeText(file);
+    return this.profiles.saveLanguageResume(user.id, language, text, {
+      name: file.originalname,
+      type: file.mimetype,
+      bytes: file.buffer,
+    });
   }
 }

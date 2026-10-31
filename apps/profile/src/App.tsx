@@ -1,4 +1,5 @@
 import { DataProvider, getErrorMessage, useMyProfile } from '@jobsearch/data';
+import { OtherResumes } from './components/OtherResumes';
 import { ProfileForm } from './components/ProfileForm';
 import { ResumeMatcherStatus } from './components/ResumeMatcherStatus';
 
@@ -26,7 +27,10 @@ function ProfilePage() {
         </p>
       ) : (
         // The form starts from the saved profile, so it waits until that has loaded.
-        <ProfileForm profile={profile} />
+        <>
+          <ProfileForm profile={profile} />
+          <OtherResumes profile={profile} />
+        </>
       )}
       <ResumeMatcherStatus />
     </section>

@@ -286,7 +286,28 @@ function Language({ insights }: { insights: JobInsights }) {
       ) : (
         <span>· Resume in English</span>
       )}
+      {insights.hasResume && <CheckedAgainst insights={insights} />}
     </p>
+  );
+}
+
+/**
+ * Which of your master resumes the Fit was checked against. When the ad is in another language
+ * than that resume, most of its keywords can't be found, so it says how to fix that.
+ */
+function CheckedAgainst({ insights }: { insights: JobInsights }) {
+  const { language, checkedAgainst } = insights;
+  const mismatch = language !== null && language !== checkedAgainst;
+  return (
+    <span className="basis-full">
+      Fit checked against your {languageName(checkedAgainst)} resume
+      {mismatch && (
+        <>
+          . Add your resume in {languageName(language)} on “My profile” so its keywords can be
+          found.
+        </>
+      )}
+    </span>
   );
 }
 

@@ -287,6 +287,10 @@ export interface Profile {
   websiteUrl: string | null;
   resumeText: string;
   resumeFileName: string | null;
+  /** The language the master resume is written in (ISO 639-1), e.g. "en". */
+  resumeLanguage: string;
+  /** The master resume in other languages, used for jobs in those languages. */
+  otherResumes: LanguageResume[];
   // Application answers: what every application form asks for. Empty when not given.
   phone: string;
   address: string;
@@ -300,7 +304,16 @@ export interface Profile {
   updatedAt: string | null;
 }
 
-export type ProfileInput = Omit<Profile, 'resumeFileName' | 'updatedAt'>;
+/** Your master resume in another language, e.g. German next to the English one. */
+export interface LanguageResume {
+  language: string;
+  text: string;
+  /** The uploaded file, null when pasted. */
+  fileName: string | null;
+  updatedAt: string;
+}
+
+export type ProfileInput = Omit<Profile, 'resumeFileName' | 'otherResumes' | 'updatedAt'>;
 
 /** Whether Resume-Matcher (resume tailoring and ATS scores) is running and can reach its AI. */
 export interface ResumeMatcherStatus {
@@ -402,6 +415,8 @@ export interface JobInsights {
   germanLevel: string | null;
   /** The language the prompt asks for: "de" when German is required, else "en". */
   resumeLanguage: string;
+  /** The language of the master resume this job was checked against. */
+  checkedAgainst: string;
   hasResume: boolean;
   skills: TermCheck[];
   keywords: TermCheck[];

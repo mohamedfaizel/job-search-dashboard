@@ -3,6 +3,7 @@ import { Transform } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -11,6 +12,22 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { RESUME_LANGUAGES } from './resumes';
+
+@ObjectType('LanguageResume')
+export class LanguageResumeModel {
+  @Field({ description: 'ISO 639-1 code, e.g. "de"' })
+  language!: string;
+
+  @Field()
+  text!: string;
+
+  @Field(() => String, { nullable: true, description: 'The uploaded file, null when pasted' })
+  fileName!: string | null;
+
+  @Field()
+  updatedAt!: Date;
+}
 
 @ObjectType('Profile')
 export class ProfileModel {
@@ -46,6 +63,14 @@ export class ProfileModel {
 
   @Field(() => String, { nullable: true, description: 'Name of the last uploaded resume file' })
   resumeFileName!: string | null;
+
+  @Field({ description: 'The language your master resume is in, e.g. "en"' })
+  resumeLanguage!: string;
+
+  @Field(() => [LanguageResumeModel], {
+    description: 'Your master resume in other languages, used for jobs in those languages',
+  })
+  otherResumes!: LanguageResumeModel[];
 
   @Field({ description: 'Application answers: your phone number, as forms should get it' })
   phone!: string;
@@ -159,6 +184,14 @@ export class ProfileInput {
   @IsString()
   @MaxLength(50_000, { message: 'Keep the resume under 50,000 characters' })
   resumeText: string = '';
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'The language your master resume is in. Left out = unchanged',
+  })
+  @IsOptional()
+  @IsIn(Object.keys(RESUME_LANGUAGES), { message: 'Pick a language from the list' })
+  resumeLanguage?: string | null;
 
   @Field({ defaultValue: '' })
   @Transform(trim)

@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { tidy } from '../profile/resume-text';
+import type { MasterResumes } from '../profile/resumes';
+import { resumeFor } from '../profile/resumes';
 import { buildApplyKit } from './apply-kit';
 import type { ApplyQueueItemModel, ApplyQueuePromptModel } from './apply-queue';
 import { buildQueuePage } from './apply-queue';
@@ -53,7 +55,7 @@ export class InsightsService {
     userId: number,
     jobId: string,
   ): Promise<{ insights: JobInsightsModel; promptInput: PromptInput }> {
-    const [job, profile, removedRows, jobResume] = await Promise.all([
+    const [job, profile, removedRows, jobResume, languageResumes] = await Promise.all([
       this.prisma.job.findUnique({
         where: { id: jobId },
         select: {
@@ -70,6 +72,7 @@ export class InsightsService {
         where: { userId },
         select: {
           resumeText: true,
+          resumeLanguage: true,
           skills: true,
           languages: true,
           yearsExperience: true,
@@ -95,10 +98,18 @@ export class InsightsService {
           updatedAt: true,
         },
       }),
+      this.prisma.languageResume.findMany({
+        where: { userId },
+        select: { language: true, text: true },
+      }),
     ]);
     if (!job) throw new NotFoundException(`Job ${jobId} not found`);
 
-    const resume = profile?.resumeText ?? '';
+    const resumes: MasterResumes = {
+      language: profile?.resumeLanguage ?? 'en',
+      text: profile?.resumeText ?? '',
+      others: new Map(languageResumes.map((r) => [r.language, r.text])),
+    };
     const otherSkills = profile?.skills ?? [];
 
     // Terms you removed with × leave both lists. One removed everywhere wins over this job's.
@@ -115,6 +126,12 @@ export class InsightsService {
     );
     const language = terms.language;
     const german = germanRequirement(job.description, language);
+    const resumeLanguage = german.required ? 'de' : 'en';
+    // The ad is checked against your resume in its own language when you have one, so German
+    // words in a German ad can be found. Claude starts from the resume in the language to write.
+    const scored = resumeFor(resumes, language);
+    const forPrompt = resumeFor(resumes, resumeLanguage);
+    const resume = scored.text;
     const before = checkResume(resume, terms, otherSkills);
     // A missing term next to a skill you have ("apollo" with "graphql") gets a hint.
     const yourSkills = [resume, ...otherSkills].join('\n');
@@ -133,7 +150,7 @@ export class InsightsService {
       title: job.title,
       company: job.company.name,
       city: job.city,
-      resumeLanguage: german.required ? 'de' : 'en',
+      resumeLanguage,
       germanLevel: german.level,
       languages: profile?.languages ?? [],
       missingSkills: missing(before.skillChecks),
@@ -142,7 +159,8 @@ export class InsightsService {
         .filter((t) => t.youHave)
         .map((t) => t.term),
       otherSkills,
-      resume,
+      resume: forPrompt.text,
+      resumeIn: forPrompt.language,
       description: job.description,
       facts: applicationFacts(profile),
       savedAnswers: profile?.applicationNotes ?? '',
@@ -155,7 +173,8 @@ export class InsightsService {
       languageDetected: !job.language && !!language,
       germanRequired: german.required,
       germanLevel: german.level,
-      resumeLanguage: german.required ? 'de' : 'en',
+      resumeLanguage,
+      checkedAgainst: scored.language,
       hasResume,
       skills: withHint(before.skillChecks),
       keywords: withHint(before.keywordChecks),
