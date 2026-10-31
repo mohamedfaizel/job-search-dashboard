@@ -1,4 +1,5 @@
 import { DataProvider, getErrorMessage, useMyProfile } from '@jobsearch/data';
+import { DocumentDesign } from './components/DocumentDesign';
 import { OtherResumes } from './components/OtherResumes';
 import { ProfileForm } from './components/ProfileForm';
 import { ResumeMatcherStatus } from './components/ResumeMatcherStatus';
@@ -30,6 +31,7 @@ function ProfilePage() {
         <>
           <ProfileForm profile={profile} />
           <OtherResumes profile={profile} />
+          <DocumentDesign />
         </>
       )}
       <ResumeMatcherStatus />

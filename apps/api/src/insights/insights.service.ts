@@ -14,7 +14,6 @@ import type {
   RemovedTermModel,
   TermCheckModel,
 } from './insights.model';
-import { pdfFileName, textToPdf } from './pdf';
 import type { PromptInput } from './prompt';
 import {
   applicationFacts,
@@ -302,39 +301,6 @@ export class InsightsService {
       type: 'text/plain; charset=utf-8',
       bytes: Buffer.from(row.text, 'utf8'),
     };
-  }
-
-  /**
-   * The resume (or cover letter) you saved for a job as a clean PDF, named after you and the
-   * company, ready to attach to the application form.
-   */
-  async jobResumePdf(
-    userId: number,
-    jobId: string,
-    kind: 'resume' | 'cover-letter',
-  ): Promise<JobResumeFile> {
-    const [row, user, job] = await Promise.all([
-      this.prisma.jobResume.findUnique({
-        where: { userId_jobId: { userId, jobId } },
-        select: { text: true, coverLetter: true },
-      }),
-      this.prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
-      this.prisma.job.findUnique({
-        where: { id: jobId },
-        select: { company: { select: { name: true } } },
-      }),
-    ]);
-    const text = kind === 'resume' ? row?.text : row?.coverLetter;
-    if (!text?.trim()) {
-      throw new NotFoundException(
-        kind === 'resume' ? 'No resume saved for this job' : 'No cover letter saved for this job',
-      );
-    }
-    const company = job?.company.name ?? '';
-    const label = kind === 'resume' ? 'Resume' : 'Cover-letter';
-    const name = pdfFileName(user?.name ?? null, label, company);
-    const bytes = await textToPdf(text, name.replace(/\.pdf$/, '').replace(/-/g, ' '));
-    return { name, type: 'application/pdf', bytes: Buffer.from(bytes) };
   }
 
   /** The Apply kit page for one job: your details, the form answers, cover letter and resume. */

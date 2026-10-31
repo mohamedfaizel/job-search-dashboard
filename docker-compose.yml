@@ -42,6 +42,18 @@ services:
       - 'host.docker.internal:host-gateway'
     restart: unless-stopped
 
+  # Optional: turns resumes and cover letters into PDFs in the template you pick (LaTeX).
+  # Only starts with `pnpm pdf:up`. Without it, downloads fall back to a plain PDF.
+  pdf-renderer:
+    build: ./docker/pdf-renderer
+    image: jobsearch-pdf-renderer
+    container_name: jobsearch-pdf-renderer
+    profiles: ['tools']
+    ports:
+      # 127.0.0.1: only programs on this PC (our API) can reach it.
+      - '127.0.0.1:8090:8090'
+    restart: unless-stopped
+
 volumes:
   pgdata:
   resume-data:

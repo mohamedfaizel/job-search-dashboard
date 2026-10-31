@@ -42,8 +42,28 @@ const TERM_RULES = `How to handle each skill or keyword:
 
 Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.`;
 
-const LAYOUT =
-  'Layout: ATS-friendly, plain headings (Summary, Skills, Experience, Education), no tables, columns, icons or images. Up to three pages, most relevant experience first.';
+/**
+ * The resume comes back in one Markdown shape, so the download can put it into the PDF
+ * template you picked (apps/api/src/documents/resume-doc.ts reads it).
+ */
+const LAYOUT = `Layout: ATS-friendly. Up to three pages, most relevant experience first. Write the resume in Markdown in exactly this shape (section headings in the resume's language), so my job tracker can put it into my PDF template:
+# Full Name
+Headline: the job title I am applying as
+City, Country | phone | email | LinkedIn or website
+## Summary
+Two to four sentences.
+## Skills
+- **Group:** skill, skill, skill
+## Experience
+### Job title | Company
+City | MM/YYYY – MM/YYYY
+- What I did, with a result
+## Education
+### Degree | School
+MM/YYYY – MM/YYYY
+## Languages
+- Language: level
+No tables, columns, icons or images, and no styling other than **bold**.`;
 
 const CHECK_PART = `- Related: the terms you added under rule 2, each with the experience it is tied to.
 - Skipped: the terms you left out, each with one line why.`;
@@ -60,7 +80,7 @@ const languagesRule = (languages: string[]) =>
     : 'Keep any language levels from my resume exactly as they are. Never raise them.';
 
 const coverAndAnswers = (company: string) =>
-  `- A cover letter for this job: 200 to 300 words, to the hiring team at ${company}. Three short paragraphs: why this role, what I bring (two or three real examples from my resume), and a short close. Same honesty rules as the resume.
+  `- A cover letter for this job: 200 to 300 words, to the hiring team at ${company}. Three short paragraphs: why this role, what I bring (two or three real examples from my resume), and a short close. Same honesty rules as the resume. Start with the greeting and end with the sign-off and my name: my tracker adds my address, the date, the company and the subject line.
 - Answers to the questions application forms usually ask, 1 to 3 sentences each: why ${company}, why I fit this role, why I am looking for a new job, salary expectation, notice period or earliest start, work permit, willingness to relocate. Take the facts from my list below and never change them. When a fact is missing, write "(fill in)".`;
 
 /** Which language to write in, and whether my resume needs translating first. */

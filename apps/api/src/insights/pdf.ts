@@ -71,7 +71,6 @@ function wrap(text: string, font: PDFFont, size: number, width: number): string[
 export async function textToPdf(text: string, title: string): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   doc.setTitle(title);
-  doc.setCreator('Job Search Dashboard');
   const fonts = {
     regular: await doc.embedFont(StandardFonts.Helvetica),
     bold: await doc.embedFont(StandardFonts.HelveticaBold),
@@ -120,7 +119,7 @@ export async function textToPdf(text: string, title: string): Promise<Uint8Array
 }
 
 /** "Mohamed Faizel" and "Computer Futures GmbH" → "Mohamed-Faizel-Resume-ComputerFutures.pdf". */
-export function pdfFileName(name: string | null, kind: 'Resume' | 'Cover-letter', company: string) {
+export function pdfFileName(name: string | null, kind: string, company: string) {
   const person = (name ?? '').trim().split(/\s+/).filter(Boolean).join('-');
   const firm = company
     .replace(/\b(gmbh|ag|se|kg|ltd|inc|llc|co)\b\.?/gi, '')

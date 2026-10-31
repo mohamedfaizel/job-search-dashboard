@@ -17,6 +17,8 @@
     "db:down": "docker compose down",
     "rm:up": "docker compose --profile tools up -d resume-matcher",
     "rm:down": "docker compose --profile tools stop resume-matcher",
+    "pdf:up": "docker compose --profile tools up -d --build pdf-renderer",
+    "pdf:down": "docker compose --profile tools stop pdf-renderer",
     "prepare": "husky",
     "test:e2e": "turbo run test:e2e"
   },
