@@ -6,6 +6,8 @@ import {
   useRestoreInsightTerm,
   useSetHaveTerm,
 } from '@jobsearch/data';
+import type { ReactNode } from 'react';
+import { useId } from 'react';
 import { languageName } from '../format';
 import { Badge } from './Badge';
 import { scoreTone } from './MatchPanel';
@@ -58,9 +60,49 @@ export function ScoreRing({ score, size = 56 }: { score: number; size?: number }
 }
 
 /**
- * A missing term with "I have it" (you know it, the resume just doesn't say so) and × to remove
- * it ("I don't have it" or "not relevant"). When you have a skill it goes with, the chip says
- * so: a fair term for Claude to add next to that experience.
+ * A small icon button with a tooltip that shows on hover and on keyboard focus (a plain `title`
+ * waits a second and never shows for keyboard users). The tooltip is also its description for
+ * screen readers.
+ */
+function IconButton({
+  label,
+  tooltip,
+  onClick,
+  className,
+  children,
+}: {
+  label: string;
+  tooltip: string;
+  onClick: () => void;
+  className: string;
+  children: ReactNode;
+}) {
+  const tipId = useId();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-describedby={tipId}
+      className={`group relative ${CHIP_BUTTON} ${className}`}
+    >
+      <span aria-hidden="true">{children}</span>
+      <span
+        id={tipId}
+        role="tooltip"
+        className="pointer-events-none absolute top-full left-0 z-10 mt-1 rounded bg-slate-900 px-2 py-1 text-xs font-normal whitespace-nowrap text-white opacity-0 shadow transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+      >
+        {tooltip}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * A missing term. Skills get ✓ (you have it: the resume just doesn't say so) and ✕ (you don't,
+ * or it isn't relevant). Keywords get no buttons: the prompt asks Claude to work in as many as
+ * honestly fit. When you have a skill it goes with, the chip says so: a fair term for Claude to
+ * add next to that experience.
  */
 export function MissingChip({
   term,
@@ -70,39 +112,36 @@ export function MissingChip({
 }: {
   term: string;
   relatedTo: string | null;
-  onHave: () => void;
-  onRemove?: () => void;
+  onHave?: (() => void) | undefined;
+  onRemove?: (() => void) | undefined;
 }) {
   const related = relatedTo !== null;
+  const buttons = onHave !== undefined || onRemove !== undefined;
   return (
     <span
-      className={`${CHIP} pr-0.5 ${related ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-red-50 text-red-700 ring-red-200'}`}
-      title={
-        related
-          ? `Not in your resume, but it goes with ${relatedTo}, which you have`
-          : 'Not in your resume'
-      }
+      className={`${CHIP} ${buttons ? 'pr-0.5' : 'pr-2'} ${related ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-red-50 text-red-700 ring-red-200'}`}
     >
       {term}
       {related && <span className="font-normal opacity-75">(you have {relatedTo})</span>}
-      <button
-        type="button"
-        onClick={onHave}
-        aria-label={`I have ${term}`}
-        title="I have this: add it to my skills, count it, and ask Claude to put it in the resume"
-        className={`${CHIP_BUTTON} ml-0.5 font-semibold text-sky-700`}
-      >
-        ✓ I have it
-      </button>
-      {onRemove && (
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={`Remove ${term}`}
-          className={CHIP_BUTTON}
+      {onHave && (
+        <IconButton
+          label={`I have ${term}`}
+          tooltip="I have this skill: add it to my resume"
+          onClick={onHave}
+          className="ml-0.5 font-semibold text-emerald-700 hover:bg-emerald-100"
         >
-          ×
-        </button>
+          ✓
+        </IconButton>
+      )}
+      {onRemove && (
+        <IconButton
+          label={`Remove ${term}`}
+          tooltip="I don’t have it: remove from this job"
+          onClick={onRemove}
+          className="text-red-700 hover:bg-red-100"
+        >
+          ✕
+        </IconButton>
       )}
     </span>
   );
@@ -136,8 +175,9 @@ function MissingList({
 }: {
   label: string;
   terms: TermCheck[];
-  onHave: (term: string) => void;
-  onRemove: (term: string) => void;
+  /** Left out for keywords: they get no buttons. */
+  onHave?: (term: string) => void;
+  onRemove?: (term: string) => void;
 }) {
   if (terms.length === 0) return null;
   return (
@@ -147,12 +187,18 @@ function MissingList({
           <MissingChip
             term={t.term}
             relatedTo={t.relatedTo}
-            onHave={() => {
-              onHave(t.term);
-            }}
-            onRemove={() => {
-              onRemove(t.term);
-            }}
+            onHave={
+              onHave &&
+              (() => {
+                onHave(t.term);
+              })
+            }
+            onRemove={
+              onRemove &&
+              (() => {
+                onRemove(t.term);
+              })
+            }
           />
         </li>
       ))}
@@ -347,7 +393,6 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
   const missingKeywords = data.keywords.filter(isMissing);
   const youHave = [...data.skills, ...data.keywords].filter((t) => t.youHave);
   const found = hasResume ? [...data.skills, ...data.keywords].filter((t) => t.inResume) : [];
-  const missingCount = missingSkills.length + missingKeywords.length;
   const changeError = remove.error ?? restore.error ?? have.error;
 
   return (
@@ -360,10 +405,10 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
         </p>
       )}
 
-      {missingCount > 0 && (
+      {missingSkills.length > 0 && (
         <div className="space-y-2">
           <h4 className={LABEL}>
-            {hasResume ? 'Missing from your resume' : 'Skills and keywords'} · {missingCount}
+            {hasResume ? 'Skills missing from your resume' : 'Skills'} · {missingSkills.length}
           </h4>
           <MissingList
             label="Missing skills"
@@ -373,14 +418,20 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
             }}
             onRemove={removeTerm}
           />
-          <MissingList
-            label="Missing keywords"
-            terms={missingKeywords}
-            onHave={(term) => {
-              setHave(term, true);
-            }}
-            onRemove={removeTerm}
-          />
+        </div>
+      )}
+
+      {missingKeywords.length > 0 && (
+        <div className="space-y-2">
+          <h4 className={LABEL}>
+            {hasResume ? 'Keywords missing from your resume' : 'Keywords'} ·{' '}
+            {missingKeywords.length}
+          </h4>
+          <p className="text-xs text-slate-500">
+            Nothing to pick here: the prompt asks Claude to use as many of these as honestly fit, as
+            natural words in your resume, so ATS keyword checks find them.
+          </p>
+          <MissingList label="Missing keywords" terms={missingKeywords} />
         </div>
       )}
 

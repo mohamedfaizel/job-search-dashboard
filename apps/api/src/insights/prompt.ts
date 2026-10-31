@@ -37,8 +37,8 @@ const list = (items: string[]) =>
 const TERM_RULES = `How to handle each skill or keyword:
 1. Supported: my resume or my other skills show it. Use it, in the job ad's own words.
 2. Related: it is closely tied to something I have done (same ecosystem, or the usual tool for it), for example Apollo with GraphQL, Next.js with React, Jest with unit testing, Kubernetes with Docker. Add it next to that experience, e.g. "GraphQL APIs with Apollo Client".
-3. General job-ad words (teamwork, efficiency, platforms, business impact): work them naturally into the summary and bullet points.
-4. No connection to my experience: leave it out.
+3. Keywords from the job ad (teamwork, efficiency, platforms, business impact, and the ad's own phrases): use as many as you honestly can, in the ad's exact wording, so ATS keyword matching finds them. Work them naturally into the summary, the bullet points and the skills, as normal words in real sentences. Never stuff them into a list, repeat them, or hide them.
+4. A skill with no connection to my experience: leave it out.
 
 Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.`;
 
@@ -126,7 +126,7 @@ ${writeIn}
 Skills the job asks for that my resume does not show yet:
 ${list(input.missingSkills)}
 
-Keywords from the job ad that my resume does not use yet:
+Keywords from the job ad that my resume does not use yet (use as many as you honestly can, as natural words, see rule 3):
 ${list(input.missingKeywords)}${mustAddPart(input.mustAdd)}
 
 Other skills I have (not all of them are in my resume):
@@ -268,7 +268,7 @@ ${language}${start}
 Skills it asks for that my resume does not show yet:
 ${list(job.missingSkills)}
 
-Keywords from its ad that my resume does not use yet:
+Keywords from its ad that my resume does not use yet (use as many as you honestly can, as natural words, see rule 3):
 ${list(job.missingKeywords)}${mustAddPart(job.mustAdd)}
 
 The job ad:

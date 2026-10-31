@@ -266,6 +266,15 @@ describe('buildResumePrompt', () => {
     expect(prompt).toContain('- Skipped:');
   });
 
+  it('asks for as many job-ad keywords as possible, as natural words', () => {
+    const prompt = buildResumePrompt(input);
+    expect(prompt).toContain(
+      'Keywords from the job ad that my resume does not use yet (use as many as you honestly can, as natural words, see rule 3):',
+    );
+    expect(prompt).toContain("in the ad's exact wording");
+    expect(prompt).toContain('Never stuff them into a list');
+  });
+
   it('tells Claude the skills you said you have must be in the resume', () => {
     expect(buildResumePrompt(input)).not.toContain('MUST');
     expect(buildResumePrompt({ ...input, mustAdd: ['figma', 'kanban'] })).toContain(
