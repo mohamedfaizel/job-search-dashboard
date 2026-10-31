@@ -16,7 +16,8 @@ function ProfilePage() {
   const { data: profile, isPending, error } = useMyProfile();
 
   return (
-    <section aria-labelledby="profile-title" className="max-w-3xl space-y-6">
+    // One column on phones and tablets; two side by side on wide screens.
+    <section aria-labelledby="profile-title" className="mx-auto max-w-screen-2xl space-y-6">
       <h1 id="profile-title" className="text-xl font-semibold text-slate-900">
         My profile
       </h1>
@@ -30,11 +31,16 @@ function ProfilePage() {
         // The form starts from the saved profile, so it waits until that has loaded.
         <>
           <ProfileForm profile={profile} />
-          <OtherResumes profile={profile} />
-          <DocumentDesign />
+          <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+            <div className="space-y-6">
+              <OtherResumes profile={profile} />
+              <ResumeMatcherStatus />
+            </div>
+            <DocumentDesign />
+          </div>
         </>
       )}
-      <ResumeMatcherStatus />
+      {(isPending || error) && <ResumeMatcherStatus />}
     </section>
   );
 }

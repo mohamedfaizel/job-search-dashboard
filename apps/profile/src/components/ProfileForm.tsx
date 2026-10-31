@@ -51,7 +51,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         setSaved(false);
       }}
       noValidate
-      className="space-y-6"
+      className="grid gap-6 xl:grid-cols-2 xl:items-start"
     >
       <section
         aria-labelledby="about-heading"
@@ -226,7 +226,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
       <section
         aria-labelledby="resume-heading"
-        className="space-y-4 rounded-lg border border-slate-200 bg-white p-5"
+        className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 xl:col-span-2"
       >
         <div>
           <h2 id="resume-heading" className="text-lg font-semibold text-slate-900">
@@ -271,7 +271,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         </Field>
       </section>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 xl:col-span-2">
         <button
           type="submit"
           disabled={isSubmitting}
