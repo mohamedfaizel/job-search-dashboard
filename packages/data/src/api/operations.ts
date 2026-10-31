@@ -659,6 +659,13 @@ export const DOCUMENT_TEMPLATES = /* GraphQL */ `
         name
         description
       }
+      wordTemplate {
+        language
+        fileName
+        usable
+        sections
+        warnings
+      }
       rendererConfigured
       rendererAvailable
     }

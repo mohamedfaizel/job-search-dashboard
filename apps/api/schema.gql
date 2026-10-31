@@ -107,7 +107,7 @@ type DocumentStyle {
   """A photo is uploaded (GET /documents/photo shows it)"""
   hasPhoto: Boolean!
 
-  """classic, modern or compact"""
+  """classic, modern, compact, or mine (your own Word file)"""
   resumeTemplate: String!
   showPhoto: Boolean!
 }
@@ -138,6 +138,11 @@ type DocumentTemplates {
   """False when PDF_RENDERER_URL is empty in .env"""
   rendererConfigured: Boolean!
   resumeTemplates: [DocumentTemplate!]!
+
+  """
+  Your own Word file: the template "mine". Null without a .docx master resume
+  """
+  wordTemplate: WordTemplate
 }
 
 type ImportBudget {
@@ -1069,6 +1074,25 @@ enum VisaSponsorship {
   NO
   NOT_STATED
   OFFERS
+}
+
+"""
+A master resume you uploaded as Word (.docx), and whether it works as a template
+"""
+type WordTemplate {
+  fileName: String!
+
+  """The language of that resume (ISO 639-1)"""
+  language: String!
+
+  """The section headings found, in order"""
+  sections: [String!]!
+
+  """Its section headings were found, so it can be filled in"""
+  usable: Boolean!
+
+  """What won’t carry over, in plain words"""
+  warnings: [String!]!
 }
 
 enum Workplace {

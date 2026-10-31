@@ -243,6 +243,14 @@ The resume and cover letter you save for a job download as PDFs in the design yo
 - **Cover letters:** DIN 5008 (the German business letter: address field, date on the right,
   bold subject) for German letters, Modern otherwise, or one of them always.
 - **Preview PDF** shows a sample in each template with your name and colour.
+- **My own Word file:** upload your master resume as a `.docx` and it becomes a template too.
+  Everything above your first section heading (name, contact, photo) stays exactly as in your
+  file; each heading, job, bullet and paragraph below copies the formatting of the matching
+  paragraph in your file, with the tailored words in it. Step 3 of the Apply kit then also offers
+  a **Word** download you can edit. Its PDF is made with LibreOffice in the same container (with
+  fonts that have the same widths as Calibri, Cambria, Arial and Times New Roman); for an exact
+  PDF, open the Word file and save it as PDF. Section headings must be their own lines, not in
+  a table or text box.
 
 The PDFs are typeset with XeLaTeX in a small Docker container beside the project:
 

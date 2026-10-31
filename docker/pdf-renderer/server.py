@@ -1,13 +1,18 @@
 """
-pdf-renderer: turns a .tex file into a PDF with XeLaTeX.
+pdf-renderer: turns a .tex file into a PDF with XeLaTeX, and a Word file into a PDF with
+LibreOffice.
 
 Our API is the only caller. It sends JSON:
     POST /render  {"tex": "<the .tex file>", "files": {"photo.jpg": "<base64>"}}
-and gets the PDF back (application/pdf), or a 422 with the end of the LaTeX log.
+and gets the PDF back (application/pdf), or a 422 with the end of the LaTeX log. Or it sends
+a .docx file as the request body:
+    POST /convert  (Content-Type: application/vnd.openxmlformats-officedocument...)
+and gets the PDF back.
 GET /health answers {"ok": true} when it is running.
 
 Safety: LaTeX runs with shell escape off (no programs can be started from a .tex file), in a
-fresh temporary folder per request, with a time limit. Docker publishes the port on
+fresh temporary folder per request, with a time limit. LibreOffice gets its own fresh profile
+per request too; a .docx file cannot contain macros. Docker publishes the port on
 127.0.0.1 only, so nothing outside your PC can reach it.
 """
 
@@ -41,16 +46,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/health":
-            self._send(200, b'{"ok":true,"engine":"xelatex"}')
+            self._send(200, b'{"ok":true,"engine":"xelatex","convert":"libreoffice"}')
         else:
             self._error(404, "Not found")
 
     def do_POST(self):
-        if self.path != "/render":
+        if self.path not in ("/render", "/convert"):
             return self._error(404, "Not found")
         length = int(self.headers.get("Content-Length") or 0)
         if length <= 0 or length > MAX_BODY:
             return self._error(413, "Send 1 byte to 10 MB")
+        if self.path == "/convert":
+            return self._convert(self.rfile.read(length))
         try:
             payload = json.loads(self.rfile.read(length))
             tex = payload["tex"]
@@ -86,6 +93,38 @@ class Handler(BaseHTTPRequestHandler):
             if result.returncode != 0 or not os.path.exists(pdf_path):
                 log = result.stdout.decode("utf-8", "replace")[-2000:]
                 return self._error(422, f"LaTeX failed:\n{log}")
+            with open(pdf_path, "rb") as f:
+                self._send(200, f.read(), "application/pdf")
+
+    def _convert(self, docx):
+        # A .docx file is a zip: it starts with "PK".
+        if not docx.startswith(b"PK"):
+            return self._error(400, "Send a Word (.docx) file")
+        with tempfile.TemporaryDirectory() as work:
+            with open(os.path.join(work, "resume.docx"), "wb") as f:
+                f.write(docx)
+            try:
+                subprocess.run(
+                    [
+                        "soffice",
+                        "--headless",
+                        "--norestore",
+                        f"-env:UserInstallation=file://{work}/profile",
+                        "--convert-to",
+                        "pdf",
+                        "--outdir",
+                        work,
+                        os.path.join(work, "resume.docx"),
+                    ],
+                    cwd=work,
+                    capture_output=True,
+                    timeout=TIMEOUT_SECONDS,
+                )
+            except subprocess.TimeoutExpired:
+                return self._error(422, "Word to PDF took too long")
+            pdf_path = os.path.join(work, "resume.pdf")
+            if not os.path.exists(pdf_path):
+                return self._error(422, "LibreOffice could not open this Word file")
             with open(pdf_path, "rb") as f:
                 self._send(200, f.read(), "application/pdf")
 

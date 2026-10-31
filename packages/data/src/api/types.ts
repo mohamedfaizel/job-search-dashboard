@@ -506,9 +506,22 @@ export interface DocumentTemplate {
   description: string;
 }
 
+/** Your Word master resume, used as the template "mine". */
+export interface WordTemplate {
+  language: string;
+  fileName: string;
+  /** Its section headings were found, so it can be filled in. */
+  usable: boolean;
+  sections: string[];
+  /** What won't carry over, in plain words. */
+  warnings: string[];
+}
+
 export interface DocumentTemplates {
   resumeTemplates: DocumentTemplate[];
   coverLetterLayouts: DocumentTemplate[];
+  /** Null without a Word (.docx) master resume. */
+  wordTemplate: WordTemplate | null;
   rendererConfigured: boolean;
   /** The pdf-renderer container answers. Without it, PDFs are plain. */
   rendererAvailable: boolean;

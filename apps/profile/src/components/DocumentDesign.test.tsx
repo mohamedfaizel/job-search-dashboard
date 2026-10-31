@@ -2,7 +2,8 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
 import { renderWithData } from '../test/render';
-import { requests } from '../test/server';
+import { requests, wordTemplate } from '../test/server';
+import { DocumentDesign } from './DocumentDesign';
 
 async function renderPage() {
   const user = userEvent.setup();
@@ -59,5 +60,36 @@ describe('resume and cover letter design', () => {
     expect(
       within(section()).getByRole('checkbox', { name: 'Show my photo on the resume' }),
     ).toBeDisabled();
+  });
+
+  it('offers your own Word resume as a template, and says what it found', async () => {
+    wordTemplate.current = {
+      language: 'en',
+      fileName: 'Ada-CV.docx',
+      usable: true,
+      sections: ['PROFILE', 'EXPERIENCE'],
+      warnings: ['Tables and text boxes below your header become normal paragraphs.'],
+    };
+    // On its own, with a fresh query cache: the App's cache already has the templates.
+    const user = userEvent.setup();
+    renderWithData(<DocumentDesign />);
+    await screen.findByRole('radio', { name: /My own Word file/ });
+    const design = section();
+    expect(await within(design).findByText(/found: PROFILE, EXPERIENCE/)).toBeInTheDocument();
+    expect(design).toHaveTextContent('Tables and text boxes');
+    await user.click(within(design).getByRole('radio', { name: /My own Word file/ }));
+    expect(design).toHaveTextContent('these are for the cover letter');
+    await user.click(within(design).getByRole('button', { name: 'Save design' }));
+    expect(requests).toContainEqual(
+      expect.objectContaining({
+        operation: 'UpdateDocumentStyle',
+        variables: { input: expect.objectContaining({ resumeTemplate: 'mine' }) as unknown },
+      }),
+    );
+  });
+
+  it('says how to use your own Word file when there is none', async () => {
+    await renderPage();
+    expect(section()).toHaveTextContent('Upload your master resume as a Word (.docx) file');
   });
 });

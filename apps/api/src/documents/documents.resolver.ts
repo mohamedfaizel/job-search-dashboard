@@ -15,8 +15,8 @@ export class DocumentsResolver {
   }
 
   @Query(() => DocumentTemplatesModel)
-  documentTemplates(): Promise<DocumentTemplatesModel> {
-    return this.documents.templates();
+  documentTemplates(@CurrentUser() user: SessionUser): Promise<DocumentTemplatesModel> {
+    return this.documents.templates(user.id);
   }
 
   @Mutation(() => DocumentStyleModel)

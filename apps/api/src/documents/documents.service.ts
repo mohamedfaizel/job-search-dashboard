@@ -7,17 +7,27 @@ import type {
   DocumentStyleInput,
   DocumentStyleModel,
   DocumentTemplatesModel,
+  WordTemplateModel,
 } from './documents.model';
+import { analyseDocx, DocxTemplateError, fillDocx } from './docx-template';
 import { cleanPdf } from './pdf-metadata';
-import { PdfRendererClient, RenderError } from './pdf-renderer.client';
+import { DOCX_TYPE, PdfRendererClient, RenderError } from './pdf-renderer.client';
+import type { ResumeDoc } from './resume-doc';
 import { letterParagraphs, parseResume } from './resume-doc';
-import type { DocumentLook, FontChoice, LetterLayoutId, ResumeTemplateId } from './templates';
+import type {
+  DocumentLook,
+  FontChoice,
+  LetterLayoutId,
+  ResumeChoice,
+  ResumeTemplateId,
+} from './templates';
 import {
   coverLetterTex,
   hexColor,
   isLetterLayout,
-  isResumeTemplate,
+  isResumeChoice,
   LETTER_LAYOUTS,
+  MY_WORD_FILE,
   RESUME_TEMPLATES,
   resumeTex,
 } from './templates';
@@ -30,6 +40,19 @@ export interface DocumentFile {
 }
 
 export type DocumentKind = 'resume' | 'cover-letter';
+
+/** Your master resume as a Word file, to use as the template. */
+interface WordFile {
+  language: string;
+  fileName: string;
+  bytes: Buffer;
+  /** The text of that resume and your profile headline, to find the headline in the file. */
+  text: string;
+  headline: string;
+}
+
+const isDocx = (fileName: string | null, type: string | null) =>
+  type === DOCX_TYPE || /\.docx$/i.test(fileName ?? '');
 
 /** What the PDF looks like before anything is saved. */
 const DEFAULT_STYLE = {
@@ -140,12 +163,115 @@ export class DocumentsService {
     return this.style(userId);
   }
 
-  async templates(): Promise<DocumentTemplatesModel> {
+  async templates(userId: number): Promise<DocumentTemplatesModel> {
+    const [rendererAvailable, wordTemplate] = await Promise.all([
+      this.renderer.isReachable(),
+      this.wordTemplate(userId),
+    ]);
     return {
-      resumeTemplates: RESUME_TEMPLATES.map((t) => ({ ...t })),
+      resumeTemplates: [
+        ...RESUME_TEMPLATES.map((t) => ({ ...t })),
+        ...(wordTemplate?.usable ? [{ ...MY_WORD_FILE }] : []),
+      ],
       coverLetterLayouts: LETTER_LAYOUTS.map((l) => ({ ...l })),
+      wordTemplate,
       rendererConfigured: this.renderer.isConfigured,
-      rendererAvailable: await this.renderer.isReachable(),
+      rendererAvailable,
+    };
+  }
+
+  /** What in your Word master resume can be used as a template; null without one. */
+  async wordTemplate(userId: number): Promise<WordTemplateModel | null> {
+    const file = await this.wordFile(userId, null);
+    if (!file) return null;
+    return { language: file.language, fileName: file.fileName, ...(await analyseDocx(file.bytes)) };
+  }
+
+  /**
+   * Your Word master resume for a language: the one in that language, else your main resume,
+   * else any. The layout carries over to every language; the words come from Claude.
+   */
+  private async wordFile(userId: number, language: string | null): Promise<WordFile | null> {
+    const [profile, others] = await Promise.all([
+      this.prisma.profile.findUnique({
+        where: { userId },
+        select: {
+          headline: true,
+          resumeText: true,
+          resumeLanguage: true,
+          resumeFileName: true,
+          resumeFileType: true,
+          resumeFile: true,
+        },
+      }),
+      this.prisma.languageResume.findMany({
+        where: { userId, file: { not: null } },
+        select: { language: true, text: true, fileName: true, fileType: true, file: true },
+        orderBy: { language: 'asc' },
+      }),
+    ]);
+    const files: WordFile[] = [];
+    if (profile?.resumeFile && isDocx(profile.resumeFileName, profile.resumeFileType)) {
+      files.push({
+        language: profile.resumeLanguage,
+        fileName: profile.resumeFileName ?? 'resume.docx',
+        bytes: Buffer.from(profile.resumeFile),
+        text: profile.resumeText,
+        headline: profile.headline,
+      });
+    }
+    for (const r of others) {
+      if (r.file && isDocx(r.fileName, r.fileType)) {
+        files.push({
+          language: r.language,
+          fileName: r.fileName ?? 'resume.docx',
+          bytes: Buffer.from(r.file),
+          text: r.text,
+          headline: profile?.headline ?? '',
+        });
+      }
+    }
+    return files.find((f) => f.language === language) ?? files[0] ?? null;
+  }
+
+  /** The tailored resume in your own Word file. */
+  private async fillWordFile(
+    userId: number,
+    resume: ResumeDoc,
+    props: { title: string; author: string; language: string },
+  ): Promise<Buffer> {
+    const file = await this.wordFile(userId, props.language);
+    if (!file) {
+      throw new BadRequestException(
+        'Upload your master resume as a Word (.docx) file on “My profile” to use it as the template',
+      );
+    }
+    try {
+      return await fillDocx(file.bytes, resume, {
+        ...props,
+        knownHeadlines: [file.headline, parseResume(file.text, '').headline ?? ''],
+      });
+    } catch (error) {
+      if (error instanceof DocxTemplateError) throw new BadRequestException(error.message);
+      throw error;
+    }
+  }
+
+  /** The tailored resume for a job as an editable Word file, in your own Word layout. */
+  async jobDocx(userId: number, jobId: string): Promise<DocumentFile> {
+    const { text, language, company, me } = await this.jobText(userId, jobId, 'resume');
+    const name = me.name.trim() || 'Resume';
+    const label = language === 'de' ? 'Lebenslauf' : 'Resume';
+    const resume = parseResume(text, name);
+    if (!resume.contact.length) resume.contact = me.contact;
+    return {
+      name: pdfFileName(me.name, label, company).replace(/\.pdf$/, '.docx'),
+      type: DOCX_TYPE,
+      bytes: await this.fillWordFile(userId, resume, {
+        title: `${name} – ${label}`,
+        author: name,
+        language,
+      }),
     };
   }
 
@@ -193,6 +319,20 @@ export class DocumentsService {
     kind: DocumentKind,
     template?: string,
   ): Promise<DocumentFile> {
+    const { text, language, company, me, job } = await this.jobText(userId, jobId, kind);
+    return this.makePdf(userId, me, {
+      kind,
+      text,
+      language,
+      template,
+      company,
+      companyCity: job.city,
+      jobTitle: job.title,
+    });
+  }
+
+  /** The resume or cover letter saved for a job, and the language it is written in. */
+  private async jobText(userId: number, jobId: string, kind: DocumentKind) {
     const [row, me, job] = await Promise.all([
       this.prisma.jobResume.findUnique({
         where: { userId_jobId: { userId, jobId } },
@@ -221,15 +361,7 @@ export class DocumentsService {
     const language =
       detectLanguage(text) ??
       (germanRequirement(job.description, jobLanguage).required ? 'de' : 'en');
-    return this.makePdf(userId, me, {
-      kind,
-      text,
-      language,
-      template,
-      company: job.company.name,
-      companyCity: job.city,
-      jobTitle: job.title,
-    });
+    return { text, language, company: job.company.name, me, job };
   }
 
   /** A sample resume or cover letter in a template, with your name, to compare templates. */
@@ -318,11 +450,13 @@ export class DocumentsService {
     const props = { title: `${name} – ${label}`, author: name, language: doc.language };
 
     const style = await this.prisma.documentStyle.findUnique({ where: { userId } });
-    const template = (
-      doc.template && isResumeTemplate(doc.template)
+    const choice = (
+      doc.template && isResumeChoice(doc.template)
         ? doc.template
         : (style?.resumeTemplate ?? DEFAULT_STYLE.resumeTemplate)
-    ) as ResumeTemplateId;
+    ) as ResumeChoice;
+    // Your Word file sets the resume's look; the cover letter then uses Classic.
+    const template: ResumeTemplateId = choice === MY_WORD_FILE.id ? 'classic' : choice;
     const photoType = style?.showPhoto && style.photoType ? PHOTO_TYPES[style.photoType] : null;
     const look: DocumentLook = {
       template,
@@ -340,9 +474,17 @@ export class DocumentsService {
         if (doc.kind === 'resume') {
           const resume = parseResume(doc.text, name);
           if (!resume.contact.length) resume.contact = me.contact;
+          if (choice === MY_WORD_FILE.id) {
+            try {
+              pdf = await this.renderer.convert(await this.fillWordFile(userId, resume, props));
+            } catch (error) {
+              // No usable Word file (any more), or LibreOffice failed: Classic instead.
+              this.logger.warn(`Word template failed, using Classic: ${String(error)}`);
+            }
+          }
           const files: Record<string, Buffer> =
             look.photo && style?.photo ? { [look.photo]: Buffer.from(style.photo) } : {};
-          pdf = await this.renderer.render(resumeTex(resume, look), files);
+          pdf ??= await this.renderer.render(resumeTex(resume, look), files);
         } else {
           const chosen = (
             doc.layout && isLetterLayout(doc.layout)

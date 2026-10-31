@@ -103,6 +103,12 @@ describe('ApplyKitPanel', () => {
       'href',
       `${jobResumeUrl('job-1')}/resume.pdf?template=compact`,
     );
+    // Your own Word resume is a template too, and the resume downloads as Word to edit.
+    expect(within(saved).getByRole('option', { name: 'My own Word file' })).toBeInTheDocument();
+    expect(within(saved).getByRole('link', { name: 'Word' })).toHaveAttribute(
+      'href',
+      `${jobResumeUrl('job-1')}/resume.docx`,
+    );
   });
 
   it('step 3 keeps the cover letter and form answers ready to copy', async () => {

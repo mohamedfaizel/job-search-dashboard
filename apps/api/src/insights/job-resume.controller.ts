@@ -73,6 +73,16 @@ export class JobResumeController {
     return send(res, await this.documents.jobPdf(user.id, jobId, 'resume', template));
   }
 
+  /** The saved resume as an editable Word file, in the layout of your own Word resume. */
+  @Get(':jobId/resume.docx')
+  async resumeDocx(
+    @CurrentUser() user: SessionUser,
+    @Param('jobId') jobId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    return send(res, await this.documents.jobDocx(user.id, jobId));
+  }
+
   @Get(':jobId/cover-letter.pdf')
   async coverLetterPdf(
     @CurrentUser() user: SessionUser,
