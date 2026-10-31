@@ -568,7 +568,29 @@ describe('JobsDashboard', () => {
       variables: { jobIds: ['job-1', 'job-2'] },
     });
     const queue = await screen.findByRole('region', { name: 'Apply queue (2)' });
-    expect(queue).toHaveTextContent('2 jobs have no Claude reply saved yet');
+    expect(queue).toHaveTextContent('2 jobs have no Claude reply yet');
+
+    // One Claude chat writes the replies for both, and pasting it back saves each.
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    await user.click(
+      await within(queue).findByRole('button', {
+        name: '1. Copy prompt for 2 jobs and open Claude ↗',
+      }),
+    );
+    expect(await navigator.clipboard.readText()).toBe('QUEUE PROMPT for job-1, job-2');
+    expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
+    await navigator.clipboard.writeText('=== JOB 1: job-1 === … === JOB 2: job-2 === …');
+    await user.click(
+      within(queue).getByRole('button', { name: '2. Paste Claude’s reply from clipboard' }),
+    );
+    expect(await within(queue).findByRole('status')).toHaveTextContent(
+      'Saved Claude’s replies for 2 of 2 jobs.',
+    );
+    expect(requests).toContainEqual({
+      operation: 'SaveApplyQueueReply',
+      variables: { text: '=== JOB 1: job-1 === … === JOB 2: job-2 === …' },
+    });
+    expect(within(queue).getAllByText('Ready')).toHaveLength(2);
     expect(within(queue).getByRole('link', { name: 'Open queue page ↗' })).toHaveAttribute(
       'href',
       'http://localhost:3000/apply-queue',

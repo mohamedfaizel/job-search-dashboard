@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType('ApplyQueueItem', { description: 'A job you lined up to apply for' })
 export class ApplyQueueItemModel {
@@ -22,6 +22,20 @@ export class ApplyQueueItemModel {
 
   @Field()
   addedAt!: Date;
+}
+
+@ObjectType('ApplyQueuePrompt', {
+  description: 'One Claude prompt that writes the replies for several queued jobs at once',
+})
+export class ApplyQueuePromptModel {
+  @Field({ description: 'Empty when every queued job already has a reply' })
+  prompt!: string;
+
+  @Field(() => [ID], { description: 'The jobs in this prompt, oldest first' })
+  jobIds!: string[];
+
+  @Field(() => Int, { description: 'Queued jobs with no reply yet, in this prompt or not' })
+  waiting!: number;
 }
 
 /** What the queue page lists for each job. */

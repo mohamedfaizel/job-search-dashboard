@@ -550,6 +550,24 @@ export const REMOVE_FROM_APPLY_QUEUE = /* GraphQL */ `
   }
 `;
 
+export const APPLY_QUEUE_PROMPT = /* GraphQL */ `
+  query ApplyQueuePrompt {
+    applyQueuePrompt {
+      prompt
+      jobIds
+      waiting
+    }
+  }
+`;
+
+export const SAVE_APPLY_QUEUE_REPLY = /* GraphQL */ `
+  mutation SaveApplyQueueReply($text: String!) {
+    saveApplyQueueReply(text: $text) {
+      ${APPLY_QUEUE_FIELDS}
+    }
+  }
+`;
+
 export const RECALCULATE_FIT = /* GraphQL */ `
   mutation RecalculateFit {
     recalculateFit
