@@ -8,7 +8,9 @@ import { DocumentDesign } from './DocumentDesign';
 async function renderPage() {
   const user = userEvent.setup();
   renderWithData(<App />);
-  await screen.findByRole('radio', { name: /Modern/ });
+  // The whole profile page loads first (profile, then style and templates): on a cold CI
+  // runner the first render in this file can take longer than the default second.
+  await screen.findByRole('radio', { name: /Modern/ }, { timeout: 5000 });
   return user;
 }
 
