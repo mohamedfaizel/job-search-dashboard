@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import type { LanguageResume, Profile } from '../generated/prisma/client';
 import { FitService } from '../insights/fit.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { customFieldsOf } from './custom-fields';
 import type { LanguageResumeModel, ProfileInput, ProfileModel } from './profile.model';
 import { tidy } from './resume-text';
 import { buildTranslationPrompt, languageName, RESUME_LANGUAGES } from './resumes';
@@ -11,6 +12,11 @@ const MAX_RESUME_CHARS = 50_000;
 
 /** What a user who never saved a profile sees (they may still have saved other resumes). */
 const empty = (otherResumes: LanguageResumeModel[]): ProfileModel => ({
+  firstName: '',
+  lastName: '',
+  gender: '',
+  dateOfBirth: '',
+  nationality: '',
   headline: '',
   targetRoles: [],
   locations: [],
@@ -30,7 +36,11 @@ const empty = (otherResumes: LanguageResumeModel[]): ProfileModel => ({
   noticePeriod: '',
   salaryExpectation: '',
   relocation: '',
+  employmentType: '',
+  workplacePreference: '',
+  drivingLicence: '',
   applicationNotes: '',
+  customFields: [],
   updatedAt: null,
 });
 
@@ -52,6 +62,11 @@ function toModel(
   }));
   if (!profile) return empty(otherResumes);
   return {
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    gender: profile.gender,
+    dateOfBirth: profile.dateOfBirth,
+    nationality: profile.nationality,
     headline: profile.headline,
     targetRoles: profile.targetRoles,
     locations: profile.locations,
@@ -71,7 +86,11 @@ function toModel(
     noticePeriod: profile.noticePeriod,
     salaryExpectation: profile.salaryExpectation,
     relocation: profile.relocation,
+    employmentType: profile.employmentType,
+    workplacePreference: profile.workplacePreference,
+    drivingLicence: profile.drivingLicence,
     applicationNotes: profile.applicationNotes,
+    customFields: customFieldsOf(profile.customFields),
     updatedAt: profile.updatedAt,
   };
 }
@@ -101,6 +120,11 @@ export class ProfileService {
 
   async update(userId: number, input: ProfileInput): Promise<ProfileModel> {
     const data = {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      gender: input.gender,
+      dateOfBirth: input.dateOfBirth,
+      nationality: input.nationality,
       headline: input.headline,
       targetRoles: input.targetRoles,
       locations: input.locations,
@@ -118,8 +142,20 @@ export class ProfileService {
       noticePeriod: input.noticePeriod,
       salaryExpectation: input.salaryExpectation,
       relocation: input.relocation,
+      employmentType: input.employmentType,
+      workplacePreference: input.workplacePreference,
+      drivingLicence: input.drivingLicence,
       applicationNotes: input.applicationNotes,
+      // Empty rows from the form are dropped.
+      customFields: input.customFields
+        .filter((f) => f.label || f.value)
+        .map((f) => ({ label: f.label, value: f.value })),
     };
+    // Your account name follows your first and last name, so resumes and letters use it.
+    const fullName = [input.firstName, input.lastName].filter(Boolean).join(' ');
+    if (fullName) {
+      await this.prisma.user.update({ where: { id: userId }, data: { name: fullName } });
+    }
     const profile = await this.prisma.profile.upsert({
       where: { userId },
       create: { userId, ...data },

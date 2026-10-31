@@ -51,6 +51,15 @@ export const SAVED: SavedSearch = {
 };
 
 export const PROFILE: Profile = {
+  firstName: '',
+  lastName: '',
+  gender: '',
+  dateOfBirth: '',
+  nationality: '',
+  employmentType: '',
+  workplacePreference: '',
+  drivingLicence: '',
+  customFields: [],
   headline: '',
   targetRoles: ['Frontend Engineer', 'React Developer'],
   locations: ['Berlin'],

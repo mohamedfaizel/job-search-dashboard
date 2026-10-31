@@ -603,6 +603,28 @@ type Profile {
 
   """Short answers you reuse on applications, as free text"""
   applicationNotes: String!
+
+  """Your own fields, in your order"""
+  customFields: [ProfileField!]!
+
+  """ISO date "YYYY-MM-DD"; empty = not given"""
+  dateOfBirth: String!
+
+  """
+  e.g. "Class B"
+  """
+  drivingLicence: String!
+
+  """
+  e.g. "Full-time"
+  """
+  employmentType: String!
+
+  """Empty until saved; the form suggests it from your account name"""
+  firstName: String!
+
+  """female, male, diverse or not_specified; empty = not given"""
+  gender: String!
   githubUrl: String
   headline: String!
 
@@ -610,8 +632,10 @@ type Profile {
   Languages with your real level, e.g. "German A2"
   """
   languages: [String!]!
+  lastName: String!
   linkedinUrl: String
   locations: [String!]!
+  nationality: String!
 
   """
   Notice period or earliest start, e.g. "1 month"
@@ -655,17 +679,43 @@ type Profile {
   Work permit or visa status, e.g. "EU Blue Card holder"
   """
   workPermit: String!
+
+  """
+  e.g. "Remote or hybrid"
+  """
+  workplacePreference: String!
   yearsExperience: Int
+}
+
+"""
+A field of your own, like "Xing" or "Pronouns"
+"""
+type ProfileField {
+  label: String!
+  value: String!
+}
+
+input ProfileFieldInput {
+  label: String!
+  value: String!
 }
 
 input ProfileInput {
   address: String! = ""
   applicationNotes: String! = ""
+  customFields: [ProfileFieldInput!]! = []
+  dateOfBirth: String! = ""
+  drivingLicence: String! = ""
+  employmentType: String! = ""
+  firstName: String! = ""
+  gender: String! = ""
   githubUrl: String
   headline: String! = ""
   languages: [String!]! = []
+  lastName: String! = ""
   linkedinUrl: String
   locations: [String!]! = []
+  nationality: String! = ""
   noticePeriod: String! = ""
   phone: String! = ""
   relocation: String! = ""
@@ -678,6 +728,7 @@ input ProfileInput {
   targetRoles: [String!]! = []
   websiteUrl: String
   workPermit: String! = ""
+  workplacePreference: String! = ""
   yearsExperience: Int
 }
 

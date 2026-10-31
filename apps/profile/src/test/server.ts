@@ -25,6 +25,15 @@ export const STYLE = {
 };
 
 export const PROFILE: Profile = {
+  firstName: '',
+  lastName: '',
+  gender: '',
+  dateOfBirth: '',
+  nationality: '',
+  employmentType: '',
+  workplacePreference: '',
+  drivingLicence: '',
+  customFields: [],
   headline: 'Frontend engineer',
   targetRoles: ['Frontend Engineer', 'React Developer'],
   locations: ['Berlin', 'Remote'],
@@ -86,6 +95,11 @@ export const MATCHER_RESUME: MatcherResume = {
 export const syncs: number[] = [];
 
 export const server = setupServer(
+  api.query('Me', () =>
+    HttpResponse.json({
+      data: { me: { id: 'u1', email: 'ada@example.com', name: 'Ada King Lovelace', role: 'USER' } },
+    }),
+  ),
   api.query('MyMatcherResume', () =>
     HttpResponse.json({ data: { myMatcherResume: MATCHER_RESUME } }),
   ),

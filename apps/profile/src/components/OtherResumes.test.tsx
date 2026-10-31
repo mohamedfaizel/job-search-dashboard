@@ -8,6 +8,7 @@ async function renderPage() {
   const user = userEvent.setup();
   renderWithData(<App />);
   await screen.findByRole('textbox', { name: 'Headline' });
+  await user.click(screen.getByRole('tab', { name: 'Resume' }));
   return user;
 }
 
