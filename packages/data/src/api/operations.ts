@@ -50,6 +50,16 @@ export const JOBS_PAGE = /* GraphQL */ `
   ${JOB_FIELDS}
 `;
 
+/** One job by id, for opening a job that isn't on the current page (e.g. from the Apply queue). */
+export const JOB = /* GraphQL */ `
+  query Job($id: ID!) {
+    job(id: $id) {
+      ...JobFields
+    }
+  }
+  ${JOB_FIELDS}
+`;
+
 export const MY_APPLICATIONS = /* GraphQL */ `
   query MyApplications {
     myApplications {

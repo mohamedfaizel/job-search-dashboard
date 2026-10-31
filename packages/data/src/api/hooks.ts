@@ -7,6 +7,7 @@ import {
   HIDDEN_JOB_COUNT,
   HIDE_JOB,
   IMPORT_BUDGET,
+  JOB,
   JOBS_PAGE,
   JOB_FILTER_OPTIONS,
   MY_APPLICATIONS,
@@ -42,6 +43,7 @@ export const queryKeys = {
   jobs: ['jobs'] as const,
   jobsPage: (args: JobsPageArgs) => ['jobs', 'page', args] as const,
   filterOptions: ['jobs', 'filterOptions'] as const,
+  job: (id: string) => ['jobs', 'one', id] as const,
   // Under 'jobs', so anything that refreshes the jobs refreshes the count too.
   hiddenJobCount: ['jobs', 'hiddenCount'] as const,
   applications: ['jobs', 'applications'] as const,
@@ -63,6 +65,18 @@ export function useJobsPage(args: JobsPageArgs, { enabled = true }: { enabled?: 
     },
     // Keep showing the current page while the next one loads, instead of flashing empty.
     placeholderData: keepPreviousData,
+  });
+}
+
+/** One job by id. Pass null (or enabled: false) to fetch nothing. */
+export function useJob(id: string | null, { enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({
+    enabled: enabled && id !== null,
+    queryKey: queryKeys.job(id ?? ''),
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ job: Job }>(JOB, { id });
+      return data.job;
+    },
   });
 }
 
