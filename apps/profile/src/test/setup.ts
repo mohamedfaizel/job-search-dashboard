@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { otherResumes, requests, server, syncs } from './server';
+import { otherResumes, requests, server, syncs, wordTemplate } from './server';
 
 beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
@@ -9,6 +9,7 @@ afterEach(() => {
   requests.length = 0;
   syncs.length = 0;
   otherResumes.length = 0;
+  wordTemplate.current = null;
 });
 afterAll(() => {
   server.close();

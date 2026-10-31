@@ -1,8 +1,10 @@
+import JSZip from 'jszip';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { PDFDocument } from 'pdf-lib';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { makeDocx } from './docx-fixture';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
@@ -12,7 +14,8 @@ const SAVE_TEXT = `mutation ($jobId: ID!, $text: String!) { saveJobResumeText(jo
 const STYLE_FIELDS = 'resumeTemplate coverLetterLayout accentColor font showPhoto hasPhoto';
 const STYLE = `query { documentStyle { ${STYLE_FIELDS} } }`;
 const UPDATE = `mutation ($input: DocumentStyleInput!) { updateDocumentStyle(input: $input) { ${STYLE_FIELDS} } }`;
-const TEMPLATES = `query { documentTemplates { resumeTemplates { id name } coverLetterLayouts { id } rendererConfigured rendererAvailable } }`;
+const TEMPLATES = `query { documentTemplates { resumeTemplates { id name } coverLetterLayouts { id } wordTemplate { fileName usable sections warnings } rendererConfigured rendererAvailable } }`;
+const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 const REPLY = `=== RESUME ===
 # User Example
@@ -36,6 +39,7 @@ Why Acme: the product.`;
 // Fake pdf-renderer: remembers each .tex it got and answers with a PDF stamped by "xdvipdfmx",
 // like the real one, so the test can see the API cleans that off.
 let rendered: { tex: string; files: string[] }[];
+let converted: Buffer[];
 let renderFails = false;
 const server = setupServer(
   http.get(`${RENDERER}/health`, () => HttpResponse.json({ ok: true })),
@@ -47,6 +51,13 @@ const server = setupServer(
     doc.addPage();
     doc.setCreator('LaTeX with hyperref');
     doc.setProducer('xdvipdfmx (20240305)');
+    return new HttpResponse(await doc.save(), { headers: { 'Content-Type': 'application/pdf' } });
+  }),
+  http.post(`${RENDERER}/convert`, async ({ request: req }) => {
+    converted.push(Buffer.from(await req.arrayBuffer()));
+    const doc = await PDFDocument.create();
+    doc.addPage();
+    doc.setProducer('LibreOffice 24.2');
     return new HttpResponse(await doc.save(), { headers: { 'Content-Type': 'application/pdf' } });
   }),
 );
@@ -80,6 +91,7 @@ describe('resume and cover letter templates', () => {
   });
   beforeEach(async () => {
     rendered = [];
+    converted = [];
     renderFails = false;
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
@@ -223,6 +235,65 @@ describe('resume and cover letter templates', () => {
     const doc = await PDFDocument.load(res.body as Buffer, { updateMetadata: false });
     expect(doc.getTitle()).toBe('User – Resume');
     expect(doc.getProducer()).toBeUndefined();
+  });
+
+  it('fills your own Word resume, as Word and as PDF', async () => {
+    // No Word master resume yet: no "mine" template and no Word download.
+    const before = await t.asUser<{
+      documentTemplates: { resumeTemplates: { id: string }[]; wordTemplate: unknown };
+    }>(TEMPLATES);
+    expect(before.data!.documentTemplates.wordTemplate).toBeNull();
+    expect(before.data!.documentTemplates.resumeTemplates.map((r) => r.id)).not.toContain('mine');
+    await pdf(`/job-resume/${jobId}/resume.docx`).expect(400);
+
+    await request(t.server)
+      .post('/profile/resume')
+      .set('Cookie', t.cookieFor('USER'))
+      .attach('file', await makeDocx(), { filename: 'Ada-CV.docx', contentType: DOCX })
+      .expect(201);
+    const after = await t.asUser<{
+      documentTemplates: {
+        resumeTemplates: { id: string }[];
+        wordTemplate: { fileName: string; usable: boolean; sections: string[] };
+      };
+    }>(TEMPLATES);
+    expect(after.data!.documentTemplates.wordTemplate).toMatchObject({
+      fileName: 'Ada-CV.docx',
+      usable: true,
+      sections: ['PROFILE', 'EXPERIENCE', 'SKILLS'],
+    });
+    expect(after.data!.documentTemplates.resumeTemplates.map((r) => r.id)).toContain('mine');
+
+    const word = await pdf(`/job-resume/${jobId}/resume.docx`).expect(200);
+    expect(word.headers['content-type']).toBe(DOCX);
+    expect(word.headers['content-disposition']).toContain('User-Resume-Acme.docx');
+    const xml =
+      (await JSZip.loadAsync(word.body as Buffer).then((z) =>
+        z.file('word/document.xml')?.async('string'),
+      )) ?? '';
+    expect(xml).toContain('Ada Lovelace'); // your own header
+    expect(xml).toContain('Built things.'); // the tailored words
+    expect(xml).not.toContain('Built a dashboard used by 40 teams.'); // not your old ones
+
+    // As PDF: the Word file goes through LibreOffice, and the PDF properties are cleaned.
+    const res = await pdf(`/job-resume/${jobId}/resume.pdf?template=mine`).expect(200);
+    expect(converted).toHaveLength(1);
+    expect(rendered).toHaveLength(0);
+    const doc = await PDFDocument.load(res.body as Buffer, { updateMetadata: false });
+    expect(doc.getTitle()).toBe('User – Resume');
+    expect(doc.getProducer()).toBeUndefined();
+
+    // "mine" can be saved as your choice now.
+    const saved = await t.asUser(UPDATE, {
+      input: {
+        resumeTemplate: 'mine',
+        coverLetterLayout: 'auto',
+        accentColor: '1F4E79',
+        font: 'auto',
+        showPhoto: false,
+      },
+    });
+    expect(saved.errors).toBeUndefined();
   });
 
   it('shows a sample in any template, to compare them', async () => {

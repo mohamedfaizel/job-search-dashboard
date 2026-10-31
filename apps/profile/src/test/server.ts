@@ -1,4 +1,10 @@
-import type { LanguageResume, MatcherResume, Profile, ResumeMatcherStatus } from '@jobsearch/data';
+import type {
+  LanguageResume,
+  MatcherResume,
+  Profile,
+  ResumeMatcherStatus,
+  WordTemplate,
+} from '@jobsearch/data';
 import { API_URL, RESUME_UPLOAD_URL } from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -44,6 +50,9 @@ export const PROFILE: Profile = {
 
 /** Resumes in other languages saved in the current test. */
 export const otherResumes: LanguageResume[] = [];
+
+/** Your Word master resume as a template; null until a test sets one. */
+export const wordTemplate: { current: WordTemplate | null } = { current: null };
 const withOthers = (): Profile => ({ ...PROFILE, otherResumes: [...otherResumes] });
 
 /** What the API answers for a file it can't read. */
@@ -113,12 +122,16 @@ export const server = setupServer(
             { id: 'classic', name: 'Classic', description: 'Serif.' },
             { id: 'modern', name: 'Modern', description: 'Sans.' },
             { id: 'compact', name: 'Compact', description: 'Small.' },
+            ...(wordTemplate.current?.usable
+              ? [{ id: 'mine', name: 'My own Word file', description: 'Your .docx.' }]
+              : []),
           ],
           coverLetterLayouts: [
             { id: 'auto', name: 'Automatic', description: 'DIN for German.' },
             { id: 'din', name: 'DIN 5008', description: 'German standard.' },
             { id: 'modern', name: 'Modern', description: 'Header.' },
           ],
+          wordTemplate: wordTemplate.current,
           rendererConfigured: true,
           rendererAvailable: false,
         },

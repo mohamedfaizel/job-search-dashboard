@@ -352,6 +352,16 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
           >
             Download PDF
           </a>
+          {templates.data?.wordTemplate?.usable && (
+            <a
+              href={`${base}/resume.docx`}
+              download
+              className={LINK}
+              title={`In the layout of ${templates.data.wordTemplate.fileName}, to edit in Word`}
+            >
+              Word
+            </a>
+          )}
           {jobResume.fileName && (
             <a href={base} download className={LINK} title={jobResume.fileName}>
               Original

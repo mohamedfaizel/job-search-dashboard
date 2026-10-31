@@ -26,6 +26,18 @@ export type ResumeTemplateId = (typeof RESUME_TEMPLATES)[number]['id'];
 export const isResumeTemplate = (id: string): id is ResumeTemplateId =>
   RESUME_TEMPLATES.some((t) => t.id === id);
 
+/** Your own Word resume as the template (see docx-template.ts). */
+export const MY_WORD_FILE = {
+  id: 'mine',
+  name: 'My own Word file',
+  description:
+    'The .docx you uploaded on this page: your layout, fonts and colours, with the tailored words.',
+} as const;
+/** A built-in template or your own Word file. */
+export type ResumeChoice = ResumeTemplateId | typeof MY_WORD_FILE.id;
+export const isResumeChoice = (id: string): id is ResumeChoice =>
+  id === MY_WORD_FILE.id || isResumeTemplate(id);
+
 /** How a cover letter is laid out: DIN 5008 is the German business letter standard. */
 export const LETTER_LAYOUTS = [
   { id: 'auto', name: 'Automatic', description: 'DIN 5008 for German letters, Modern otherwise.' },

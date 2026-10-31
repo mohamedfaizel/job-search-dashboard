@@ -92,9 +92,16 @@ export function useUploadResume() {
       void queryClient.invalidateQueries({ queryKey: matcherResumeKey });
       void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+      void queryClient.invalidateQueries({ queryKey: WORD_TEMPLATE_KEY });
     },
   });
 }
+
+/**
+ * A Word master resume can be your resume template, so the template list changes with it.
+ * Same as documentTemplatesKey in documents.ts, written out to avoid an import cycle.
+ */
+const WORD_TEMPLATE_KEY = ['documentTemplates'];
 
 /** What changes when a resume in another language is saved or deleted. */
 function refreshAfterLanguageResume(queryClient: ReturnType<typeof useQueryClient>) {
@@ -103,6 +110,7 @@ function refreshAfterLanguageResume(queryClient: ReturnType<typeof useQueryClien
     // Jobs in that language are now checked against it.
     void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
     void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+    void queryClient.invalidateQueries({ queryKey: WORD_TEMPLATE_KEY });
   };
 }
 

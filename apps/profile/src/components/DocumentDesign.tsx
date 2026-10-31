@@ -1,4 +1,9 @@
-import type { DocumentStyle, DocumentStyleInput, DocumentTemplate } from '@jobsearch/data';
+import type {
+  DocumentStyle,
+  DocumentStyleInput,
+  DocumentTemplate,
+  WordTemplate,
+} from '@jobsearch/data';
 import {
   documentPreviewUrl,
   getErrorMessage,
@@ -137,6 +142,54 @@ function Photo({ style }: { style: DocumentStyle }) {
   );
 }
 
+/**
+ * Your Word master resume as a template: what was found in it, or how to get there.
+ */
+function WordFileNote({ word }: { word: WordTemplate | null }) {
+  if (!word) {
+    return (
+      <p className="text-xs text-slate-500">
+        Want your own layout? Upload your master resume as a Word (.docx) file above, and “My own
+        Word file” appears here.
+      </p>
+    );
+  }
+  if (!word.usable) {
+    return (
+      <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <p>
+          <span className="font-medium">{word.fileName}</span> can’t be used as a template yet.
+        </p>
+        <ul className="mt-1 list-disc pl-5">
+          {word.warnings.map((w) => (
+            <li key={w}>{w}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+      <p>
+        <span className="font-medium text-slate-800">My own Word file</span> uses{' '}
+        <span className="font-medium text-slate-800">{word.fileName}</span>: everything above your
+        first heading stays as it is, and each section is written in the style of yours (found:{' '}
+        {word.sections.join(', ')}).
+      </p>
+      {word.warnings.map((w) => (
+        <p key={w} className="text-amber-800">
+          {w}
+        </p>
+      ))}
+      <p>
+        Step 3 of the Apply kit then offers a Word download you can edit. The PDF is made with
+        LibreOffice, which may swap a font it doesn’t have; for an exact PDF, open the Word file and
+        save it as PDF.
+      </p>
+    </div>
+  );
+}
+
 /** Edits a copy of the saved style; Save sends it. */
 function DesignForm({ saved }: { saved: DocumentStyle }) {
   const templates = useDocumentTemplates();
@@ -192,6 +245,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
             />
           ))}
         </div>
+        {data && <WordFileNote word={data.wordTemplate} />}
       </fieldset>
 
       <div className="flex flex-wrap items-end gap-6">
@@ -225,6 +279,11 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
               className="h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white"
             />
           </div>
+          {draft.resumeTemplate === 'mine' && (
+            <p className="text-xs text-slate-500">
+              Your Word file keeps its own colours and fonts; these are for the cover letter.
+            </p>
+          )}
         </div>
         <div className="space-y-1">
           <label htmlFor={fontId} className="block text-sm font-medium text-slate-700">
