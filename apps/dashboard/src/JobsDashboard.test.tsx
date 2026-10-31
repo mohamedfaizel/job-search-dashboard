@@ -97,6 +97,12 @@ describe('JobsDashboard', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
 
     const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+    // Opens on the Fit tab; the ad has its own tab.
+    expect(within(dialog).getByRole('tab', { name: 'Fit' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'Job ad' }));
     expect(within(dialog).getByText(/build the dashboard of the future/i)).toBeInTheDocument();
     expect(within(dialog).getByRole('link', { name: /open original posting/i })).toHaveAttribute(
       'href',
@@ -325,6 +331,38 @@ describe('JobsDashboard', () => {
     expect(lastJobsPageVariables()).not.toHaveProperty('filter');
   });
 
+  it('hides a job from its popup, with Undo', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+
+    await user.click(within(dialog).getByRole('button', { name: 'Hide this job' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(/Hid/);
+    expect(requests).toContainEqual({ operation: 'HideJob', variables: { id: 'job-1' } });
+  });
+
+  it('goes to the Apply tab from the footer and marks the job Applied', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+
+    await user.click(within(dialog).getByRole('button', { name: 'Apply →' }));
+    expect(within(dialog).getByRole('tab', { name: 'Apply' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await user.click(within(dialog).getByRole('button', { name: '✓ Mark Applied' }));
+    await waitFor(() => {
+      expect(requests).toContainEqual({
+        operation: 'UpdateJobStatus',
+        variables: { id: 'job-1', status: 'APPLIED' },
+      });
+    });
+  });
+
   it('maximizes the job popup and restores it', async () => {
     renderDashboard();
     await userEvent.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
@@ -491,6 +529,7 @@ describe('JobsDashboard', () => {
     renderDashboard();
     await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
     const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+    await user.click(within(dialog).getByRole('tab', { name: 'Apply' }));
 
     await user.click(await within(dialog).findByRole('link', { name: /Open posting/ }));
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
@@ -559,6 +598,7 @@ describe('JobsDashboard', () => {
     renderDashboard();
     await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
     const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+    await user.click(within(dialog).getByRole('tab', { name: 'Apply' }));
 
     await user.click(await within(dialog).findByRole('button', { name: 'Add to Apply queue' }));
     expect(

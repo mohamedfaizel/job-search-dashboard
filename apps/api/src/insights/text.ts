@@ -31,7 +31,7 @@ const JOB_AD_WORDS = [
   'experience team work working role job position company candidate skills knowledge ability',
   'strong good great years year plus etc including within new opportunity looking join offer',
   'benefits apply responsibilities requirements about us well help make across use using',
-  'will would can could must should also may get like',
+  'will would can could must should also may get like ll ve re',
   'business case cases teams outcome outcomes impact agency efficiency product products project',
   'projects platform platforms technology technologies solutions solution customers customer',
   'clients client environment culture growth success values mission goals tasks area areas',
@@ -42,6 +42,13 @@ const JOB_AD_WORDS = [
   'umsatz effizienz selbstzweck produkte produkt projekte projekt plattform plattformen',
   'technologie technologien lösungen kunden kunde team teams agentur standort gehalt urlaub',
   'arbeitsplatz zukunft wachstum erfolg werte ziele bereiche möglichkeit möglichkeiten rolle',
+  // Ad boilerplate: "Ort", "Anstellungsart: Festanstellung, unbefristet", "Jahresgehalt"
+  'ort anstellungsart festanstellung unbefristet unbefristete unbefristeter vollzeit teilzeit',
+  'jahresgehalt bruttojahresgehalt gehaltsvorstellung mandant mandanten kunden ausstattung',
+  'benefits startdatum eintrittstermin kündigungsfrist ansprechpartner ansprechpartnerin niveau',
+  // First names of recruiters who sign the ad ("Ihr Ansprechpartner: Andreas …")
+  'andreas thomas michael stefan christian markus daniel alexander sebastian tobias julia anna',
+  'sarah laura lisa katharina sandra nicole jennifer maria sophie lena david peter jan tim',
   // Big cities, so an office mentioned in the ad isn't a keyword. Cities of your saved jobs are
   // dropped too (see InsightsService), this list covers the ones you have no job in yet.
   'berlin hamburg münchen munich köln cologne frankfurt stuttgart düsseldorf leipzig dresden',
@@ -63,10 +70,14 @@ export function stopwordsFor(language: string | null): Set<string> {
 // sentence's final full stop is not part of it.
 const WORD = /[\p{L}\p{N}](?:[\p{L}\p{N}+#.-]*[\p{L}\p{N}+#])?/gu;
 
-/** Lower-cased words of a text, without stopwords, numbers or single letters. */
+// Language levels ("C1", "B2-Niveau") say how well you must speak, not what you do.
+const LANGUAGE_LEVEL = /^[abc][12](?:-niveau|-level)?$/;
+
+/** Lower-cased words of a text, without stopwords, numbers, language levels or single letters. */
 export function tokenize(text: string, stopwords: Set<string>): string[] {
   return (text.toLowerCase().match(WORD) ?? []).filter(
-    (word) => word.length > 1 && !/^\d+$/.test(word) && !stopwords.has(word),
+    (word) =>
+      word.length > 1 && !/^\d+$/.test(word) && !LANGUAGE_LEVEL.test(word) && !stopwords.has(word),
   );
 }
 
