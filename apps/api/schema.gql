@@ -213,6 +213,11 @@ What the job asks for, worked out without AI: JobsPipe tags, TF-IDF and word mat
 """
 type JobInsights {
   """
+  The language of the master resume this job was checked against: your resume in the ad's language when you have one, else your main one
+  """
+  checkedAgainst: String!
+
+  """
   The German level the ad names, e.g. "B2"
   """
   germanLevel: String
@@ -398,6 +403,18 @@ enum JobSource {
   MANUAL
 }
 
+type LanguageResume {
+  """The uploaded file, null when pasted"""
+  fileName: String
+
+  """
+  ISO 639-1 code, e.g. "de"
+  """
+  language: String!
+  text: String!
+  updatedAt: DateTime!
+}
+
 input LogInInput {
   email: String!
   password: String!
@@ -431,6 +448,9 @@ type Mutation {
 
   """Deletes the resume you wrote for this job"""
   deleteJobResume(jobId: ID!): JobInsights!
+
+  """Deletes your master resume in a language"""
+  deleteLanguageResume(language: String!): Profile!
 
   """Delete a saved search. Its past imports stay."""
   deleteSavedSearch(id: Int!): Boolean!
@@ -476,6 +496,11 @@ type Mutation {
   Saves pasted text as the resume you wrote for this job (replacing the one before), and scores it
   """
   saveJobResumeText(jobId: ID!, text: String!): JobInsights!
+
+  """
+  Saves your master resume in another language (e.g. "de"), replacing the one before
+  """
+  saveLanguageResume(language: String!, text: String!): Profile!
 
   """
   "I have this": adds a missing skill or keyword to the Skills list of My profile (have: true), or takes it off (have: false). It then counts as covered for every job
@@ -538,6 +563,11 @@ type Profile {
   """
   noticePeriod: String!
 
+  """
+  Your master resume in other languages, used for jobs in those languages
+  """
+  otherResumes: [LanguageResume!]!
+
   """Application answers: your phone number, as forms should get it"""
   phone: String!
 
@@ -546,6 +576,11 @@ type Profile {
 
   """Name of the last uploaded resume file"""
   resumeFileName: String
+
+  """
+  The language your master resume is in, e.g. "en"
+  """
+  resumeLanguage: String!
 
   """Plain text of your master resume"""
   resumeText: String!
@@ -579,6 +614,9 @@ input ProfileInput {
   noticePeriod: String! = ""
   phone: String! = ""
   relocation: String! = ""
+
+  """The language your master resume is in. Left out = unchanged"""
+  resumeLanguage: String
   resumeText: String! = ""
   salaryExpectation: String! = ""
   skills: [String!]! = []
@@ -642,6 +680,11 @@ type Query {
 
   """Your tailored resume for one job. Null if you never tailored it"""
   tailoredResume(jobId: ID!): TailoredResume
+
+  """
+  A prompt for Claude that translates your master resume into a language, keeping every fact
+  """
+  translationPrompt(language: String!): String!
 }
 
 type RemovedTerm {

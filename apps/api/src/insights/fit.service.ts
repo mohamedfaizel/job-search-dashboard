@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { resumeFor } from '../profile/resumes';
 import { CorpusService } from './corpus.service';
 import { checkResume } from './score';
 import { jobTerms } from './terms';
@@ -62,8 +63,13 @@ export class FitService {
 
   /** Changes whenever anything the scores depend on changes. */
   private async stamp(userId: number): Promise<string> {
-    const [profile, removed, jobs] = await Promise.all([
+    const [profile, others, removed, jobs] = await Promise.all([
       this.prisma.profile.findUnique({ where: { userId }, select: { updatedAt: true } }),
+      this.prisma.languageResume.aggregate({
+        where: { userId },
+        _count: true,
+        _max: { updatedAt: true },
+      }),
       this.prisma.removedTerm.aggregate({
         where: { userId },
         _count: true,
@@ -73,6 +79,8 @@ export class FitService {
     ]);
     return [
       profile?.updatedAt.toISOString() ?? '',
+      others._count,
+      others._max.updatedAt?.toISOString() ?? '',
       removed._count,
       removed._max.createdAt?.toISOString() ?? '',
       jobs._count,
@@ -80,17 +88,30 @@ export class FitService {
     ].join('|');
   }
 
-  /** Scores every job against the user's profile resume and skills, and replaces their JobFit rows. */
+  /**
+   * Scores every job against the user's master resume (in the ad's language when they have it)
+   * and skills, and replaces their JobFit rows.
+   */
   private async recalculate(userId: number): Promise<void> {
     const started = Date.now();
-    const [profile, removedRows] = await Promise.all([
+    const [profile, others, removedRows] = await Promise.all([
       this.prisma.profile.findUnique({
         where: { userId },
-        select: { resumeText: true, skills: true },
+        select: { resumeText: true, resumeLanguage: true, skills: true },
+      }),
+      this.prisma.languageResume.findMany({
+        where: { userId },
+        select: { language: true, text: true },
       }),
       this.prisma.removedTerm.findMany({ where: { userId }, select: { jobId: true, term: true } }),
     ]);
     const resume = profile?.resumeText ?? '';
+    // Each job is scored against your resume in its ad's language when you have one.
+    const resumes = {
+      language: profile?.resumeLanguage ?? 'en',
+      text: resume,
+      others: new Map(others.map((r) => [r.language, r.text])),
+    };
     // Skills you said you have ("I have this") count as covered, like in the job popup.
     const skills = profile?.skills ?? [];
     if (!resume.trim()) {
@@ -124,7 +145,8 @@ export class FitService {
     const rows: { userId: number; jobId: string; score: number }[] = [];
     for (const job of jobs) {
       const removed = new Set([...everywhere, ...(perJob.get(job.id) ?? [])]);
-      const { score } = checkResume(resume, jobTerms(job, removed, corpus), skills);
+      const terms = jobTerms(job, removed, corpus);
+      const { score } = checkResume(resumeFor(resumes, terms.language).text, terms, skills);
       if (score !== null) rows.push({ userId, jobId: job.id, score });
     }
     await this.prisma.$transaction([

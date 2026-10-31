@@ -292,6 +292,13 @@ const PROFILE_FIELDS = /* GraphQL */ `
   websiteUrl
   resumeText
   resumeFileName
+  resumeLanguage
+  otherResumes {
+    language
+    text
+    fileName
+    updatedAt
+  }
   phone
   address
   workPermit
@@ -307,6 +314,28 @@ export const MY_PROFILE = /* GraphQL */ `
     myProfile {
       ${PROFILE_FIELDS}
     }
+  }
+`;
+
+export const SAVE_LANGUAGE_RESUME = /* GraphQL */ `
+  mutation SaveLanguageResume($language: String!, $text: String!) {
+    saveLanguageResume(language: $language, text: $text) {
+      ${PROFILE_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_LANGUAGE_RESUME = /* GraphQL */ `
+  mutation DeleteLanguageResume($language: String!) {
+    deleteLanguageResume(language: $language) {
+      ${PROFILE_FIELDS}
+    }
+  }
+`;
+
+export const TRANSLATION_PROMPT = /* GraphQL */ `
+  query TranslationPrompt($language: String!) {
+    translationPrompt(language: $language)
   }
 `;
 
@@ -437,6 +466,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     germanRequired
     germanLevel
     resumeLanguage
+    checkedAgainst
     hasResume
     skills {
       term

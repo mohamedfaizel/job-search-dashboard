@@ -163,4 +163,84 @@ describe('profile', () => {
     expect(none.status).toBe(400);
     expect(none.body).toMatchObject({ message: 'Choose a file to upload' });
   });
+
+  describe('master resume in another language', () => {
+    const OTHER = `language text fileName`;
+    const SAVE = `mutation ($language: String!, $text: String!) { saveLanguageResume(language: $language, text: $text) { resumeLanguage otherResumes { ${OTHER} } } }`;
+    const DELETE = `mutation ($language: String!) { deleteLanguageResume(language: $language) { otherResumes { ${OTHER} } } }`;
+    const TRANSLATE = `query ($language: String!) { translationPrompt(language: $language) }`;
+    type Saved = {
+      saveLanguageResume: {
+        resumeLanguage: string;
+        otherResumes: { language: string; text: string; fileName: string | null }[];
+      };
+    };
+
+    it('saves, replaces and deletes your German resume', async () => {
+      await t.asUser(UPDATE, { input: INPUT });
+      const saved = await t.asUser<Saved>(SAVE, {
+        language: 'de',
+        text: '  Ada Lovelace\r\nEntwicklerin ',
+      });
+      expect(saved.errors).toBeUndefined();
+      expect(saved.data!.saveLanguageResume).toEqual({
+        resumeLanguage: 'en',
+        otherResumes: [{ language: 'de', text: 'Ada Lovelace\nEntwicklerin', fileName: null }],
+      });
+      await t.asUser(SAVE, { language: 'de', text: 'Neu' });
+      const mine = await t.asUser<{ myProfile: { otherResumes: { text: string }[] } }>(
+        `query { myProfile { otherResumes { ${OTHER} } } }`,
+      );
+      expect(mine.data!.myProfile.otherResumes).toEqual([
+        { language: 'de', text: 'Neu', fileName: null },
+      ]);
+      // Your own, not the admin's.
+      const admin = await t.gql<{ myProfile: { otherResumes: unknown[] } }>(
+        `query { myProfile { otherResumes { language } } }`,
+      );
+      expect(admin.data!.myProfile.otherResumes).toEqual([]);
+
+      const deleted = await t.asUser<{ deleteLanguageResume: { otherResumes: unknown[] } }>(
+        DELETE,
+        { language: 'de' },
+      );
+      expect(deleted.data!.deleteLanguageResume.otherResumes).toEqual([]);
+    });
+
+    it('refuses the master resume’s own language, unknown languages and empty text', async () => {
+      await t.asUser(UPDATE, { input: { ...INPUT, resumeLanguage: 'de' } });
+      const same = await t.asUser(SAVE, { language: 'de', text: 'x' });
+      expect(same.errors?.[0]?.message).toBe(
+        'Your master resume is already in German. Pick another language.',
+      );
+      expect((await t.asUser(SAVE, { language: 'xx', text: 'x' })).errors?.[0]?.message).toBe(
+        'Pick a language from the list',
+      );
+      expect((await t.asUser(SAVE, { language: 'en', text: '  ' })).errors?.[0]?.message).toBe(
+        'The resume is empty',
+      );
+    });
+
+    it('builds a translation prompt from your master resume and real levels', async () => {
+      const none = await t.asUser(TRANSLATE, { language: 'de' });
+      expect(none.errors?.[0]?.message).toBe('Add your master resume first');
+
+      await t.asUser(UPDATE, { input: INPUT });
+      const res = await t.asUser<{ translationPrompt: string }>(TRANSLATE, { language: 'de' });
+      expect(res.data!.translationPrompt).toContain('from English into German');
+      expect(res.data!.translationPrompt).toContain('Ada Lovelace\nFrontend engineer');
+      expect(res.data!.translationPrompt).toContain('- German A2\n- English C1');
+    });
+
+    it('reads an uploaded German resume file', async () => {
+      const res = await request(t.server)
+        .post('/profile/resume/de')
+        .set('Cookie', t.cookieFor('USER'))
+        .attach('file', fixture('resume.docx'), 'lebenslauf.docx');
+      expect(res.status).toBe(201);
+      expect((res.body as { otherResumes: unknown[] }).otherResumes).toEqual([
+        expect.objectContaining({ language: 'de', fileName: 'lebenslauf.docx' }),
+      ]);
+    });
+  });
 });

@@ -1,3 +1,5 @@
+import { languageName } from '../profile/resumes';
+
 export interface PromptInput {
   title: string;
   company: string;
@@ -10,6 +12,8 @@ export interface PromptInput {
   languages: string[];
   missingSkills: string[];
   missingKeywords: string[];
+  /** The language `resume` is written in (ISO 639-1), e.g. "de" for your German master resume. */
+  resumeIn: string;
   /** Missing terms you said you have ("I have this"): Claude must put them in the resume. */
   mustAdd: string[];
   /** The Skills list on My profile: tools you have that may not be in the resume. */
@@ -59,6 +63,21 @@ const coverAndAnswers = (company: string) =>
   `- A cover letter for this job: 200 to 300 words, to the hiring team at ${company}. Three short paragraphs: why this role, what I bring (two or three real examples from my resume), and a short close. Same honesty rules as the resume.
 - Answers to the questions application forms usually ask, 1 to 3 sentences each: why ${company}, why I fit this role, why I am looking for a new job, salary expectation, notice period or earliest start, work permit, willingness to relocate. Take the facts from my list below and never change them. When a fact is missing, write "(fill in)".`;
 
+/** Which language to write in, and whether my resume needs translating first. */
+function writeInLine(input: PromptInput): string {
+  const translate =
+    input.resumeIn === input.resumeLanguage
+      ? ''
+      : ` My resume below is in ${languageName(input.resumeIn)}: translate it.`;
+  if (input.resumeLanguage === 'de') {
+    const level = input.germanLevel ? ` (${input.germanLevel})` : '';
+    return translate
+      ? `Write the whole resume in German: the job asks for German${level}. Translate my resume and use the job ad's own German words.`
+      : `Write the whole resume in German: the job asks for German${level}. My resume below is already in German: keep its wording and use the job ad's own German words.`;
+  }
+  return `Write the resume in English: the job doesn't ask for German.${translate}`;
+}
+
 /**
  * The Apply kit prompt: paste it into Claude (desktop or web) and one reply brings the resume
  * tailored to the job, a cover letter and answers to the usual form questions. Writing it there
@@ -68,10 +87,7 @@ const coverAndAnswers = (company: string) =>
  * between marker lines, so pasting it into the job splits it into its parts.
  */
 export function buildResumePrompt(input: PromptInput): string {
-  const writeIn =
-    input.resumeLanguage === 'de'
-      ? `Write the whole resume in German: the job asks for German${input.germanLevel ? ` (${input.germanLevel})` : ''}. Translate my resume and use the job ad's own German words.`
-      : "Write the resume in English: the job doesn't ask for German.";
+  const writeIn = writeInLine(input);
   const where = input.city ? ` in ${input.city}` : '';
   const resume = input.resume.trim()
     ? input.resume.trim()
@@ -198,9 +214,21 @@ export function buildQueuePrompt(jobs: (PromptInput & { jobId: string })[]): str
   const [first] = jobs;
   if (!first) return '';
   const count = `${String(jobs.length)} job${jobs.length === 1 ? '' : 's'}`;
-  const resume = first.resume.trim()
-    ? first.resume.trim()
-    : '(I have not added my resume here yet. Ask me for it before you start.)';
+  // Each master resume once: jobs in German may start from your German one.
+  const resumes = new Map<string, string>();
+  for (const job of jobs) if (!resumes.has(job.resumeIn)) resumes.set(job.resumeIn, job.resume);
+  const several = resumes.size > 1;
+  const resumeBlocks = [...resumes]
+    .map(([language, text]) => {
+      const body = text.trim()
+        ? text.trim()
+        : '(I have not added my resume here yet. Ask me for it before you start.)';
+      const label = several
+        ? `My current resume in ${languageName(language)}:`
+        : 'My current resume:';
+      return `${label}\n"""\n${body}\n"""`;
+    })
+    .join('\n\n');
   const savedAnswers = first.savedAnswers.trim()
     ? `\n\nMy saved answers (reuse their wording where they fit):\n"""\n${first.savedAnswers.trim()}\n"""`
     : '';
@@ -212,9 +240,10 @@ export function buildQueuePrompt(jobs: (PromptInput & { jobId: string })[]): str
         job.resumeLanguage === 'de'
           ? `Write everything for this job in German: it asks for German${job.germanLevel ? ` (${job.germanLevel})` : ''}. Use the ad's own German words.`
           : 'Write everything for this job in English.';
+      const start = several ? ` Start from my resume in ${languageName(job.resumeIn)}.` : '';
       const ad = job.description?.trim() || '(No description saved.)';
       return `--- JOB ${String(i + 1)} of ${String(jobs.length)}: ${job.title} at ${job.company}${where} (id ${job.jobId}) ---
-${language}
+${language}${start}
 
 Skills it asks for that my resume does not show yet:
 ${list(job.missingSkills)}
@@ -240,10 +269,7 @@ ${LAYOUT}
 For each job, also write, in that job's language:
 ${coverAndAnswers('the company')}
 
-My current resume:
-"""
-${resume}
-"""
+${resumeBlocks}
 
 Other skills I have (not all of them are in my resume):
 ${list(first.otherSkills)}

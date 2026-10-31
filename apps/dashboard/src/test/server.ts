@@ -53,6 +53,7 @@ export const INSIGHTS: JobInsights = {
   germanRequired: true,
   germanLevel: 'B2',
   resumeLanguage: 'de',
+  checkedAgainst: 'en',
   hasResume: true,
   skills: [
     { term: 'react', inResume: true, youHave: false, relatedTo: null },
@@ -172,6 +173,8 @@ export const PROFILE: Profile = {
   websiteUrl: null,
   resumeText: 'Ada Lovelace',
   resumeFileName: null,
+  resumeLanguage: 'en',
+  otherResumes: [],
   phone: '+49 151 0000000',
   address: 'Berlin, Germany',
   workPermit: 'EU Blue Card',
