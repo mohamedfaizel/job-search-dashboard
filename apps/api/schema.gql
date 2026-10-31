@@ -91,6 +91,60 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+"""How your resume and cover letter PDFs look"""
+type DocumentStyle {
+  """
+  Six hex digits, e.g. "1F4E79"
+  """
+  accentColor: String!
+
+  """auto (DIN 5008 for German letters), din or modern"""
+  coverLetterLayout: String!
+
+  """auto (the template’s own), sans or serif"""
+  font: String!
+
+  """A photo is uploaded (GET /documents/photo shows it)"""
+  hasPhoto: Boolean!
+
+  """classic, modern, compact, or mine (your own Word file)"""
+  resumeTemplate: String!
+  showPhoto: Boolean!
+}
+
+input DocumentStyleInput {
+  accentColor: String!
+  coverLetterLayout: String!
+  font: String!
+  resumeTemplate: String!
+  showPhoto: Boolean!
+}
+
+type DocumentTemplate {
+  description: String!
+  id: String!
+  name: String!
+}
+
+"""The templates to choose from, and whether the PDF renderer is running"""
+type DocumentTemplates {
+  coverLetterLayouts: [DocumentTemplate!]!
+
+  """
+  The pdf-renderer container answers. Without it, PDFs are plain, not templated
+  """
+  rendererAvailable: Boolean!
+
+  """False when PDF_RENDERER_URL is empty in .env"""
+  rendererConfigured: Boolean!
+  resumeTemplates: [DocumentTemplate!]!
+
+  """
+  Your own Word file: the template "mine". Null without a .docx master resume
+  """
+  wordTemplate: WordTemplate
+}
+
 type ImportBudget {
   """DAILY_CREDIT_CAP: scheduled runs stop before going over it"""
   cap: Int!
@@ -212,6 +266,11 @@ type JobFilterOptions {
 What the job asks for, worked out without AI: JobsPipe tags, TF-IDF and word matching against your resume text.
 """
 type JobInsights {
+  """
+  The language of the master resume this job was checked against: your resume in the ad's language when you have one, else your main one
+  """
+  checkedAgainst: String!
+
   """
   The German level the ad names, e.g. "B2"
   """
@@ -398,6 +457,18 @@ enum JobSource {
   MANUAL
 }
 
+type LanguageResume {
+  """The uploaded file, null when pasted"""
+  fileName: String
+
+  """
+  ISO 639-1 code, e.g. "de"
+  """
+  language: String!
+  text: String!
+  updatedAt: DateTime!
+}
+
 input LogInInput {
   email: String!
   password: String!
@@ -431,6 +502,9 @@ type Mutation {
 
   """Deletes the resume you wrote for this job"""
   deleteJobResume(jobId: ID!): JobInsights!
+
+  """Deletes your master resume in a language"""
+  deleteLanguageResume(language: String!): Profile!
 
   """Delete a saved search. Its past imports stay."""
   deleteSavedSearch(id: Int!): Boolean!
@@ -478,6 +552,11 @@ type Mutation {
   saveJobResumeText(jobId: ID!, text: String!): JobInsights!
 
   """
+  Saves your master resume in another language (e.g. "de"), replacing the one before
+  """
+  saveLanguageResume(language: String!, text: String!): Profile!
+
+  """
   "I have this": adds a missing skill or keyword to the Skills list of My profile (have: true), or takes it off (have: false). It then counts as covered for every job
   """
   setHaveTerm(have: Boolean! = true, jobId: ID!, term: String!): JobInsights!
@@ -508,6 +587,7 @@ type Mutation {
 
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
+  updateDocumentStyle(input: DocumentStyleInput!): DocumentStyle!
 
   """
   Track your progress: Saved, Applied, Interviewing… Only you see your status.
@@ -538,6 +618,11 @@ type Profile {
   """
   noticePeriod: String!
 
+  """
+  Your master resume in other languages, used for jobs in those languages
+  """
+  otherResumes: [LanguageResume!]!
+
   """Application answers: your phone number, as forms should get it"""
   phone: String!
 
@@ -546,6 +631,11 @@ type Profile {
 
   """Name of the last uploaded resume file"""
   resumeFileName: String
+
+  """
+  The language your master resume is in, e.g. "en"
+  """
+  resumeLanguage: String!
 
   """Plain text of your master resume"""
   resumeText: String!
@@ -579,6 +669,9 @@ input ProfileInput {
   noticePeriod: String! = ""
   phone: String! = ""
   relocation: String! = ""
+
+  """The language your master resume is in. Left out = unchanged"""
+  resumeLanguage: String
   resumeText: String! = ""
   salaryExpectation: String! = ""
   skills: [String!]! = []
@@ -591,6 +684,10 @@ input ProfileInput {
 type Query {
   """One Claude prompt for the queued jobs that have no reply yet (up to 5)"""
   applyQueuePrompt: ApplyQueuePrompt!
+
+  """How your resume and cover letter PDFs look"""
+  documentStyle: DocumentStyle!
+  documentTemplates: DocumentTemplates!
 
   """How many jobs you have hidden"""
   hiddenJobCount: Int!
@@ -642,6 +739,11 @@ type Query {
 
   """Your tailored resume for one job. Null if you never tailored it"""
   tailoredResume(jobId: ID!): TailoredResume
+
+  """
+  A prompt for Claude that translates your master resume into a language, keeping every fact
+  """
+  translationPrompt(language: String!): String!
 }
 
 type RemovedTerm {
@@ -972,6 +1074,25 @@ enum VisaSponsorship {
   NO
   NOT_STATED
   OFFERS
+}
+
+"""
+A master resume you uploaded as Word (.docx), and whether it works as a template
+"""
+type WordTemplate {
+  fileName: String!
+
+  """The language of that resume (ISO 639-1)"""
+  language: String!
+
+  """The section headings found, in order"""
+  sections: [String!]!
+
+  """Its section headings were found, so it can be filled in"""
+  usable: Boolean!
+
+  """What won’t carry over, in plain words"""
+  warnings: [String!]!
 }
 
 enum Workplace {

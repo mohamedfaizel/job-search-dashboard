@@ -53,6 +53,7 @@ export const INSIGHTS: JobInsights = {
   germanRequired: true,
   germanLevel: 'B2',
   resumeLanguage: 'de',
+  checkedAgainst: 'en',
   hasResume: true,
   skills: [
     { term: 'react', inResume: true, youHave: false, relatedTo: null },
@@ -172,6 +173,8 @@ export const PROFILE: Profile = {
   websiteUrl: null,
   resumeText: 'Ada Lovelace',
   resumeFileName: null,
+  resumeLanguage: 'en',
+  otherResumes: [],
   phone: '+49 151 0000000',
   address: 'Berlin, Germany',
   workPermit: 'EU Blue Card',
@@ -234,6 +237,44 @@ export const handlers = [
     };
     return HttpResponse.json({ data: { tailorResume: pending } });
   }),
+  api.query('DocumentStyle', () =>
+    HttpResponse.json({
+      data: {
+        documentStyle: {
+          resumeTemplate: 'modern',
+          coverLetterLayout: 'auto',
+          accentColor: '1F4E79',
+          font: 'auto',
+          showPhoto: false,
+          hasPhoto: false,
+        },
+      },
+    }),
+  ),
+  api.query('DocumentTemplates', () =>
+    HttpResponse.json({
+      data: {
+        documentTemplates: {
+          resumeTemplates: [
+            { id: 'classic', name: 'Classic', description: '' },
+            { id: 'modern', name: 'Modern', description: '' },
+            { id: 'compact', name: 'Compact', description: '' },
+            { id: 'mine', name: 'My own Word file', description: '' },
+          ],
+          coverLetterLayouts: [],
+          wordTemplate: {
+            language: 'en',
+            fileName: 'My-CV.docx',
+            usable: true,
+            sections: ['PROFILE', 'EXPERIENCE'],
+            warnings: [],
+          },
+          rendererConfigured: true,
+          rendererAvailable: true,
+        },
+      },
+    }),
+  ),
   api.query('JobInsights', ({ variables }) =>
     HttpResponse.json({ data: { jobInsights: { ...insightsNow(), jobId: variables['jobId'] } } }),
   ),

@@ -4,6 +4,8 @@ import {
   jobResumeUrl,
   useDeleteJobResume,
   useSaveJobResumeText,
+  useDocumentStyle,
+  useDocumentTemplates,
   useSetHaveTerm,
   useUploadJobResume,
 } from '@jobsearch/data';
@@ -224,7 +226,11 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
   const { jobId, jobResume, score: before } = insights;
   const remove = useDeleteJobResume();
   const have = useSetHaveTerm();
+  const templates = useDocumentTemplates();
+  const style = useDocumentStyle();
   const [replacing, setReplacing] = useState(false);
+  const [template, setTemplate] = useState<string | null>(null);
+  const chosen = template ?? style.data?.resumeTemplate ?? 'classic';
   if (!jobResume) return null;
   const base = jobResumeUrl(jobId);
   // Terms you said you have ("I have it") that Claude's resume still leaves out.
@@ -323,9 +329,39 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
 
       <div className="grid gap-2 sm:grid-cols-2">
         <FileRow name="Resume (PDF)">
-          <a href={`${base}/resume.pdf`} download className={LINK}>
+          {templates.data?.rendererAvailable && (
+            <select
+              aria-label="Resume template"
+              value={chosen}
+              onChange={(e) => {
+                setTemplate(e.target.value);
+              }}
+              className="h-7 rounded border border-slate-300 bg-white px-1 text-xs"
+            >
+              {templates.data.resumeTemplates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <a
+            href={`${base}/resume.pdf?template=${encodeURIComponent(chosen)}`}
+            download
+            className={LINK}
+          >
             Download PDF
           </a>
+          {templates.data?.wordTemplate?.usable && (
+            <a
+              href={`${base}/resume.docx`}
+              download
+              className={LINK}
+              title={`In the layout of ${templates.data.wordTemplate.fileName}, to edit in Word`}
+            >
+              Word
+            </a>
+          )}
           {jobResume.fileName && (
             <a href={base} download className={LINK} title={jobResume.fileName}>
               Original

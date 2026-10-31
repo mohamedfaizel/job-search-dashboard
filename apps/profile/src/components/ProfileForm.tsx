@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Profile } from '@jobsearch/data';
-import { getErrorMessage, useUpdateProfile } from '@jobsearch/data';
+import { getErrorMessage, RESUME_LANGUAGES, useUpdateProfile } from '@jobsearch/data';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { ProfileFormValues } from '../schema';
@@ -244,6 +244,23 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             resetField('resumeText', { defaultValue: uploaded.resumeText });
           }}
         />
+        <Field
+          label="Language of this resume"
+          htmlFor="resumeLanguage"
+          hint="Jobs in this language are checked against it. Add other languages below."
+        >
+          <select
+            {...register('resumeLanguage')}
+            {...a11y('resumeLanguage')}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
+          >
+            {Object.entries(RESUME_LANGUAGES).map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </Field>
         <Field label="Resume text" htmlFor="resumeText" error={errors.resumeText?.message}>
           <textarea
             {...register('resumeText')}

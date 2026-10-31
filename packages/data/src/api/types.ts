@@ -287,6 +287,10 @@ export interface Profile {
   websiteUrl: string | null;
   resumeText: string;
   resumeFileName: string | null;
+  /** The language the master resume is written in (ISO 639-1), e.g. "en". */
+  resumeLanguage: string;
+  /** The master resume in other languages, used for jobs in those languages. */
+  otherResumes: LanguageResume[];
   // Application answers: what every application form asks for. Empty when not given.
   phone: string;
   address: string;
@@ -300,7 +304,16 @@ export interface Profile {
   updatedAt: string | null;
 }
 
-export type ProfileInput = Omit<Profile, 'resumeFileName' | 'updatedAt'>;
+/** Your master resume in another language, e.g. German next to the English one. */
+export interface LanguageResume {
+  language: string;
+  text: string;
+  /** The uploaded file, null when pasted. */
+  fileName: string | null;
+  updatedAt: string;
+}
+
+export type ProfileInput = Omit<Profile, 'resumeFileName' | 'otherResumes' | 'updatedAt'>;
 
 /** Whether Resume-Matcher (resume tailoring and ATS scores) is running and can reach its AI. */
 export interface ResumeMatcherStatus {
@@ -402,6 +415,8 @@ export interface JobInsights {
   germanLevel: string | null;
   /** The language the prompt asks for: "de" when German is required, else "en". */
   resumeLanguage: string;
+  /** The language of the master resume this job was checked against. */
+  checkedAgainst: string;
   hasResume: boolean;
   skills: TermCheck[];
   keywords: TermCheck[];
@@ -467,4 +482,47 @@ export interface ApplyQueueItem {
   /** True once Claude's reply (resume, cover letter, form answers) is saved for the job. */
   ready: boolean;
   addedAt: string;
+}
+
+/** How your resume and cover letter PDFs look. */
+export interface DocumentStyle {
+  /** classic, modern or compact */
+  resumeTemplate: string;
+  /** auto (DIN 5008 for German letters), din or modern */
+  coverLetterLayout: string;
+  /** Six hex digits, e.g. "1F4E79". */
+  accentColor: string;
+  /** auto, sans or serif */
+  font: string;
+  showPhoto: boolean;
+  hasPhoto: boolean;
+}
+
+export type DocumentStyleInput = Omit<DocumentStyle, 'hasPhoto'>;
+
+export interface DocumentTemplate {
+  id: string;
+  name: string;
+  description: string;
+}
+
+/** Your Word master resume, used as the template "mine". */
+export interface WordTemplate {
+  language: string;
+  fileName: string;
+  /** Its section headings were found, so it can be filled in. */
+  usable: boolean;
+  sections: string[];
+  /** What won't carry over, in plain words. */
+  warnings: string[];
+}
+
+export interface DocumentTemplates {
+  resumeTemplates: DocumentTemplate[];
+  coverLetterLayouts: DocumentTemplate[];
+  /** Null without a Word (.docx) master resume. */
+  wordTemplate: WordTemplate | null;
+  rendererConfigured: boolean;
+  /** The pdf-renderer container answers. Without it, PDFs are plain. */
+  rendererAvailable: boolean;
 }

@@ -232,6 +232,43 @@ pick Anthropic in <http://localhost:3100/settings>, or reset its saved settings 
 `docker compose --profile tools down` and `docker volume rm job-search-dashboard_resume-data`
 (this deletes Resume-Matcher's data), then `pnpm rm:up`.
 
+### Resume and cover letter templates (optional)
+
+The resume and cover letter you save for a job download as PDFs in the design you pick on
+**My profile → Resume and cover letter design**:
+
+- **Resume templates:** Classic (serif, centred), Modern (accent colour, sans-serif) and Compact
+  (tighter, for long careers). All are one column with real text, so applicant tracking systems
+  read them. Pick an accent colour, the type and, if you like, a photo.
+- **Cover letters:** DIN 5008 (the German business letter: address field, date on the right,
+  bold subject) for German letters, Modern otherwise, or one of them always.
+- **Preview PDF** shows a sample in each template with your name and colour.
+- **My own Word file:** upload your master resume as a `.docx` and it becomes a template too.
+  Everything above your first section heading (name, contact, photo) stays exactly as in your
+  file; each heading, job, bullet and paragraph below copies the formatting of the matching
+  paragraph in your file, with the tailored words in it. Step 3 of the Apply kit then also offers
+  a **Word** download you can edit. Its PDF is made with LibreOffice in the same container (with
+  fonts that have the same widths as Calibri, Cambria, Arial and Times New Roman); for an exact
+  PDF, open the Word file and save it as PDF. Section headings must be their own lines, not in
+  a table or text box.
+
+The PDFs are typeset with XeLaTeX in a small Docker container beside the project:
+
+```bash
+pnpm pdf:up     # builds the image the first time (a few minutes), then starts it
+pnpm pdf:down   # stop it
+```
+
+Our API sends it the `.tex` file at `PDF_RENDERER_URL` (default `http://localhost:8090`, bound to
+`127.0.0.1`) and gets the PDF back. Then it rewrites the PDF properties: the title (“Mohamed
+Faizel – Lebenslauf”) and your name as author, and nothing else. The typesetting program's
+Creator and Producer entries and the XMP metadata are removed, and the templates never add hidden
+or white text. Without the container, downloads still work as plain PDFs.
+
+For a template, Claude's reply needs a fixed Markdown shape (`# Name`, `## Section`,
+`### Job title | Company`, then a `City | dates` line and bullets). The Apply kit prompt asks for
+exactly that.
+
 ### Skills and keywords without AI
 
 Every job popup starts with a free, instant check that needs no AI and no Resume-Matcher:
@@ -381,17 +418,18 @@ itself.
 
 ## Scripts
 
-| Command             | What it does                     |
-| ------------------- | -------------------------------- |
-| `pnpm dev`          | Run every app in watch mode      |
-| `pnpm build`        | Build every app                  |
-| `pnpm test`         | Run all unit and component tests |
-| `pnpm test:e2e`     | API tests against PostgreSQL     |
-| `pnpm lint`         | Lint the whole repo              |
-| `pnpm typecheck`    | Type-check every app             |
-| `pnpm format`       | Format all files with Prettier   |
-| `pnpm db:up`/`down` | Start or stop PostgreSQL         |
-| `pnpm rm:up`/`down` | Start or stop Resume-Matcher     |
+| Command              | What it does                     |
+| -------------------- | -------------------------------- |
+| `pnpm dev`           | Run every app in watch mode      |
+| `pnpm build`         | Build every app                  |
+| `pnpm test`          | Run all unit and component tests |
+| `pnpm test:e2e`      | API tests against PostgreSQL     |
+| `pnpm lint`          | Lint the whole repo              |
+| `pnpm typecheck`     | Type-check every app             |
+| `pnpm format`        | Format all files with Prettier   |
+| `pnpm db:up`/`down`  | Start or stop PostgreSQL         |
+| `pnpm rm:up`/`down`  | Start or stop Resume-Matcher     |
+| `pnpm pdf:up`/`down` | Start or stop the PDF renderer   |
 
 Run a script for one app with a filter, for example `pnpm --filter @jobsearch/dashboard test`.
 

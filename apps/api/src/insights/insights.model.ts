@@ -112,6 +112,12 @@ export class JobInsightsModel {
   })
   resumeLanguage!: string;
 
+  @Field({
+    description:
+      "The language of the master resume this job was checked against: your resume in the ad's language when you have one, else your main one",
+  })
+  checkedAgainst!: string;
+
   @Field({ description: 'False until you upload a resume or type it on your profile' })
   hasResume!: boolean;
 

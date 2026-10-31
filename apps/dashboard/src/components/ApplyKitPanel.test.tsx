@@ -88,9 +88,26 @@ describe('ApplyKitPanel', () => {
     const saved = await screen.findByRole('region', { name: 'Your resume for this job' });
     expect(currentStep()).toHaveTextContent('Fill the form');
     expect(within(saved).getByLabelText('Score before and after')).toHaveTextContent('was 50%');
+    // In your template (Modern); another one can be picked for this download.
+    await waitFor(() => {
+      expect(within(saved).getByRole('link', { name: 'Download PDF' })).toHaveAttribute(
+        'href',
+        `${jobResumeUrl('job-1')}/resume.pdf?template=modern`,
+      );
+    });
+    await user.selectOptions(
+      within(saved).getByRole('combobox', { name: 'Resume template' }),
+      'compact',
+    );
     expect(within(saved).getByRole('link', { name: 'Download PDF' })).toHaveAttribute(
       'href',
-      `${jobResumeUrl('job-1')}/resume.pdf`,
+      `${jobResumeUrl('job-1')}/resume.pdf?template=compact`,
+    );
+    // Your own Word resume is a template too, and the resume downloads as Word to edit.
+    expect(within(saved).getByRole('option', { name: 'My own Word file' })).toBeInTheDocument();
+    expect(within(saved).getByRole('link', { name: 'Word' })).toHaveAttribute(
+      'href',
+      `${jobResumeUrl('job-1')}/resume.docx`,
     );
   });
 

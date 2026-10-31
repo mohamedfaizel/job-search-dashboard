@@ -47,28 +47,30 @@ enum Role {
 }
 
 model User {
-  id             Int              @id @default(autoincrement())
-  email          String           @unique
-  name           String
+  id              Int              @id @default(autoincrement())
+  email           String           @unique
+  name            String
   /// argon2id hash. The password itself is never stored.
-  passwordHash   String
-  role           Role             @default(USER)
-  profile        Profile?
-  hiddenJobs     HiddenJob[]
-  applications   Application[]
-  matcherResume  MatcherResume?
-  jobMatches     JobMatch[]
-  tailored       TailoredResume[]
-  removedTerms   RemovedTerm[]
-  jobResumes     JobResume[]
-  applyQueue     ApplyQueueItem[]
-  jobFits        JobFit[]
+  passwordHash    String
+  role            Role             @default(USER)
+  profile         Profile?
+  languageResumes LanguageResume[]
+  documentStyle   DocumentStyle?
+  hiddenJobs      HiddenJob[]
+  applications    Application[]
+  matcherResume   MatcherResume?
+  jobMatches      JobMatch[]
+  tailored        TailoredResume[]
+  removedTerms    RemovedTerm[]
+  jobResumes      JobResume[]
+  applyQueue      ApplyQueueItem[]
+  jobFits         JobFit[]
   /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
-  jobsLastSeenAt DateTime?
+  jobsLastSeenAt  DateTime?
   /// Jobs imported after this are "New" for this visit: the end of your previous visit.
-  jobsNewSince   DateTime?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  jobsNewSince    DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 /// What you're looking for and your master resume. One per user, created on first save.
@@ -87,6 +89,9 @@ model Profile {
   websiteUrl        String?
   /// Plain text of your master resume, from an uploaded PDF/DOCX or typed in.
   resumeText        String    @default("")
+  /// The language your master resume is written in (ISO 639-1, e.g. "en"). Resumes in other
+  /// languages are in LanguageResume.
+  resumeLanguage    String    @default("en")
   resumeFileName    String?
   /// The uploaded PDF/DOCX itself, kept so it can be sent to Resume-Matcher (max 5 MB).
   resumeFile        Bytes?
@@ -103,6 +108,43 @@ model Profile {
   /// Free text: short answers you reuse, like why you are looking for a new job.
   applicationNotes  String    @default("")
   updatedAt         DateTime  @updatedAt
+}
+
+/// How your resume and cover letter PDFs look: the template, accent colour, type and photo.
+/// One per user, created on first save; until then the defaults below apply.
+model DocumentStyle {
+  userId            Int      @id
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// classic, modern or compact (see apps/api/src/documents/templates.ts).
+  resumeTemplate    String   @default("classic")
+  /// auto (DIN 5008 for German letters), din or modern.
+  coverLetterLayout String   @default("auto")
+  /// Six hex digits, e.g. "1F4E79".
+  accentColor       String   @default("1F4E79")
+  /// auto (the template's own), sans or serif.
+  font              String   @default("auto")
+  showPhoto         Boolean  @default(false)
+  /// JPEG or PNG, at most 2 MB.
+  photo             Bytes?
+  photoType         String?
+  updatedAt         DateTime @updatedAt
+}
+
+/// Your master resume in another language, e.g. German next to the English one. A job whose ad
+/// is in that language is scored against it, and its Claude prompt starts from it.
+model LanguageResume {
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// ISO 639-1 code, e.g. "de".
+  language  String
+  text      String
+  /// The uploaded PDF/DOCX's name, null when the text was pasted.
+  fileName  String?
+  file      Bytes?
+  fileType  String?
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, language])
 }
 
 enum MatcherResumeStatus {

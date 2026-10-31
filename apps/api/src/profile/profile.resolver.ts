@@ -14,6 +14,37 @@ export class ProfileResolver {
     return this.profiles.get(user.id);
   }
 
+  @Mutation(() => ProfileModel, {
+    description:
+      'Saves your master resume in another language (e.g. "de"), replacing the one before',
+  })
+  saveLanguageResume(
+    @CurrentUser() user: SessionUser,
+    @Args('language') language: string,
+    @Args('text') text: string,
+  ): Promise<ProfileModel> {
+    return this.profiles.saveLanguageResume(user.id, language, text);
+  }
+
+  @Mutation(() => ProfileModel, { description: 'Deletes your master resume in a language' })
+  deleteLanguageResume(
+    @CurrentUser() user: SessionUser,
+    @Args('language') language: string,
+  ): Promise<ProfileModel> {
+    return this.profiles.deleteLanguageResume(user.id, language);
+  }
+
+  @Query(() => String, {
+    description:
+      'A prompt for Claude that translates your master resume into a language, keeping every fact',
+  })
+  translationPrompt(
+    @CurrentUser() user: SessionUser,
+    @Args('language') language: string,
+  ): Promise<string> {
+    return this.profiles.translationPrompt(user.id, language);
+  }
+
   @Mutation(() => ProfileModel)
   updateProfile(
     @CurrentUser() user: SessionUser,

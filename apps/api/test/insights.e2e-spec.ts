@@ -37,6 +37,7 @@ const INSIGHTS = /* GraphQL */ `
       germanRequired
       germanLevel
       resumeLanguage
+      checkedAgainst
       hasResume
       skills {
         term
@@ -145,6 +146,7 @@ interface Insights {
   germanRequired: boolean;
   germanLevel: string | null;
   resumeLanguage: string;
+  checkedAgainst: string;
   hasResume: boolean;
   skills: { term: string; inResume: boolean; relatedTo?: string | null }[];
   keywords: { term: string; inResume: boolean; relatedTo?: string | null }[];
@@ -383,6 +385,36 @@ describe('job insights without AI', () => {
     expect((await t.prisma.profile.findUniqueOrThrow({ where: { userId: 2 } })).skills).toEqual([
       'TypeScript',
     ]);
+  });
+
+  it('checks a German ad against your German resume and starts the prompt from it', async () => {
+    const job = await addJob({
+      title: 'Frontend Entwickler',
+      skills: ['react'],
+      description:
+        'Wir suchen einen Frontend Entwickler mit sehr guten Deutschkenntnissen (C1). Du entwickelst Benutzeroberflächen und betreust Barrierefreiheit.',
+    });
+    await t.prisma.profile.create({
+      data: { userId: 2, resumeText: 'Frontend developer. React, accessibility, user interfaces.' },
+    });
+    const english = await insights(job.id);
+    expect(english.checkedAgainst).toBe('en');
+
+    await t.prisma.languageResume.create({
+      data: {
+        userId: 2,
+        language: 'de',
+        text: 'Frontend Entwickler. React, Barrierefreiheit, Benutzeroberflächen.',
+      },
+    });
+    const german = await insights(job.id);
+    expect(german.checkedAgainst).toBe('de');
+    expect(german.score!).toBeGreaterThan(english.score!);
+    expect(german.keywords.find((k) => k.term === 'barrierefreiheit')).toMatchObject({
+      inResume: true,
+    });
+    expect(german.prompt).toContain('My resume below is already in German');
+    expect(german.prompt).toContain('Frontend Entwickler. React, Barrierefreiheit');
   });
 
   it('says when a job does not exist', async () => {

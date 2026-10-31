@@ -23,11 +23,27 @@ export {
 } from './api/insights';
 export {
   profileKey,
+  RESUME_LANGUAGES,
   RESUME_UPLOAD_URL,
+  useDeleteLanguageResume,
   useMyProfile,
+  useSaveLanguageResume,
+  useTranslationPrompt,
   useUpdateProfile,
+  useUploadLanguageResume,
   useUploadResume,
 } from './api/profile';
+export {
+  documentPreviewUrl,
+  documentStyleKey,
+  documentTemplatesKey,
+  PHOTO_URL,
+  useDeletePhoto,
+  useDocumentStyle,
+  useDocumentTemplates,
+  useUpdateDocumentStyle,
+  useUploadPhoto,
+} from './api/documents';
 export {
   jobMatchKey,
   matcherResumeKey,

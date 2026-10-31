@@ -1,4 +1,10 @@
-import type { MatcherResume, Profile, ResumeMatcherStatus } from '@jobsearch/data';
+import type {
+  LanguageResume,
+  MatcherResume,
+  Profile,
+  ResumeMatcherStatus,
+  WordTemplate,
+} from '@jobsearch/data';
 import { API_URL, RESUME_UPLOAD_URL } from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -8,6 +14,15 @@ export const api = graphql.link(API_URL);
 
 /** Requests made in the current test, so tests can check what was sent. */
 export const requests: { operation: string; variables: Record<string, unknown> }[] = [];
+
+export const STYLE = {
+  resumeTemplate: 'classic',
+  coverLetterLayout: 'auto',
+  accentColor: '1F4E79',
+  font: 'auto',
+  showPhoto: false,
+  hasPhoto: false,
+};
 
 export const PROFILE: Profile = {
   headline: 'Frontend engineer',
@@ -21,6 +36,8 @@ export const PROFILE: Profile = {
   websiteUrl: null,
   resumeText: 'Ada Lovelace\nFrontend engineer',
   resumeFileName: 'ada.pdf',
+  resumeLanguage: 'en',
+  otherResumes: [],
   phone: '+49 151 0000000',
   address: 'Berlin, Germany',
   workPermit: 'EU Blue Card',
@@ -30,6 +47,13 @@ export const PROFILE: Profile = {
   applicationNotes: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
 };
+
+/** Resumes in other languages saved in the current test. */
+export const otherResumes: LanguageResume[] = [];
+
+/** Your Word master resume as a template; null until a test sets one. */
+export const wordTemplate: { current: WordTemplate | null } = { current: null };
+const withOthers = (): Profile => ({ ...PROFILE, otherResumes: [...otherResumes] });
 
 /** What the API answers for a file it can't read. */
 export const rejectUpload = http.post(RESUME_UPLOAD_URL, () => {
@@ -89,7 +113,64 @@ export const server = setupServer(
       : RM_RUNNING;
     return HttpResponse.json({ data: { resumeMatcherStatus: status } });
   }),
-  api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
+  api.query('DocumentStyle', () => HttpResponse.json({ data: { documentStyle: STYLE } })),
+  api.query('DocumentTemplates', () =>
+    HttpResponse.json({
+      data: {
+        documentTemplates: {
+          resumeTemplates: [
+            { id: 'classic', name: 'Classic', description: 'Serif.' },
+            { id: 'modern', name: 'Modern', description: 'Sans.' },
+            { id: 'compact', name: 'Compact', description: 'Small.' },
+            ...(wordTemplate.current?.usable
+              ? [{ id: 'mine', name: 'My own Word file', description: 'Your .docx.' }]
+              : []),
+          ],
+          coverLetterLayouts: [
+            { id: 'auto', name: 'Automatic', description: 'DIN for German.' },
+            { id: 'din', name: 'DIN 5008', description: 'German standard.' },
+            { id: 'modern', name: 'Modern', description: 'Header.' },
+          ],
+          wordTemplate: wordTemplate.current,
+          rendererConfigured: true,
+          rendererAvailable: false,
+        },
+      },
+    }),
+  ),
+  api.mutation('UpdateDocumentStyle', ({ variables }) => {
+    requests.push({ operation: 'UpdateDocumentStyle', variables });
+    return HttpResponse.json({
+      data: { updateDocumentStyle: { ...STYLE, ...(variables['input'] as object) } },
+    });
+  }),
+  api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: withOthers() } })),
+  api.mutation('SaveLanguageResume', ({ variables }) => {
+    requests.push({ operation: 'SaveLanguageResume', variables });
+    const language = variables['language'] as string;
+    const kept = otherResumes.filter((r) => r.language !== language);
+    otherResumes.splice(0, otherResumes.length, ...kept, {
+      language,
+      text: variables['text'] as string,
+      fileName: null,
+      updatedAt: '2026-10-31T10:00:00.000Z',
+    });
+    return HttpResponse.json({ data: { saveLanguageResume: withOthers() } });
+  }),
+  api.mutation('DeleteLanguageResume', ({ variables }) => {
+    requests.push({ operation: 'DeleteLanguageResume', variables });
+    const kept = otherResumes.filter((r) => r.language !== variables['language']);
+    otherResumes.splice(0, otherResumes.length, ...kept);
+    return HttpResponse.json({ data: { deleteLanguageResume: withOthers() } });
+  }),
+  api.query('TranslationPrompt', ({ variables }) => {
+    requests.push({ operation: 'TranslationPrompt', variables });
+    return HttpResponse.json({
+      data: {
+        translationPrompt: `Please translate my resume into ${String(variables['language'])}`,
+      },
+    });
+  }),
   api.mutation('UpdateProfile', ({ variables }) => {
     requests.push({ operation: 'UpdateProfile', variables });
     const input = variables['input'] as Partial<Profile>;

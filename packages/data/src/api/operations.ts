@@ -292,6 +292,13 @@ const PROFILE_FIELDS = /* GraphQL */ `
   websiteUrl
   resumeText
   resumeFileName
+  resumeLanguage
+  otherResumes {
+    language
+    text
+    fileName
+    updatedAt
+  }
   phone
   address
   workPermit
@@ -307,6 +314,28 @@ export const MY_PROFILE = /* GraphQL */ `
     myProfile {
       ${PROFILE_FIELDS}
     }
+  }
+`;
+
+export const SAVE_LANGUAGE_RESUME = /* GraphQL */ `
+  mutation SaveLanguageResume($language: String!, $text: String!) {
+    saveLanguageResume(language: $language, text: $text) {
+      ${PROFILE_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_LANGUAGE_RESUME = /* GraphQL */ `
+  mutation DeleteLanguageResume($language: String!) {
+    deleteLanguageResume(language: $language) {
+      ${PROFILE_FIELDS}
+    }
+  }
+`;
+
+export const TRANSLATION_PROMPT = /* GraphQL */ `
+  query TranslationPrompt($language: String!) {
+    translationPrompt(language: $language)
   }
 `;
 
@@ -437,6 +466,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     germanRequired
     germanLevel
     resumeLanguage
+    checkedAgainst
     hasResume
     skills {
       term
@@ -588,5 +618,56 @@ export const RECALCULATE_FIT = /* GraphQL */ `
 export const START_JOBS_VISIT = /* GraphQL */ `
   mutation StartJobsVisit {
     startJobsVisit
+  }
+`;
+
+const DOCUMENT_STYLE_FIELDS = /* GraphQL */ `
+  resumeTemplate
+  coverLetterLayout
+  accentColor
+  font
+  showPhoto
+  hasPhoto
+`;
+
+export const DOCUMENT_STYLE = /* GraphQL */ `
+  query DocumentStyle {
+    documentStyle {
+      ${DOCUMENT_STYLE_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_DOCUMENT_STYLE = /* GraphQL */ `
+  mutation UpdateDocumentStyle($input: DocumentStyleInput!) {
+    updateDocumentStyle(input: $input) {
+      ${DOCUMENT_STYLE_FIELDS}
+    }
+  }
+`;
+
+export const DOCUMENT_TEMPLATES = /* GraphQL */ `
+  query DocumentTemplates {
+    documentTemplates {
+      resumeTemplates {
+        id
+        name
+        description
+      }
+      coverLetterLayouts {
+        id
+        name
+        description
+      }
+      wordTemplate {
+        language
+        fileName
+        usable
+        sections
+        warnings
+      }
+      rendererConfigured
+      rendererAvailable
+    }
   }
 `;

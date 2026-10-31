@@ -23,6 +23,10 @@ describe('InsightsPanel', () => {
     expect(screen.getByText('German')).toBeInTheDocument();
     expect(screen.getByText('German required (B2)')).toBeInTheDocument();
     expect(screen.getByText('· resume in German')).toBeInTheDocument();
+    // The German ad was checked against the English resume: say how to do better.
+    expect(screen.getByText(/Fit checked against your English resume/)).toHaveTextContent(
+      'Add your resume in German on “My profile”',
+    );
     expect(screen.getByRole('img', { name: '50 percent fit' })).toBeInTheDocument();
     expect(screen.getByText(/Skills 1\/2/)).toBeInTheDocument();
     // Weighted like Resume-Matcher's ATS score.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { buildTranslationPrompt, resumeFor } from '../profile/resumes';
 import { germanRequirement } from './german';
 import { parseLine, pdfFileName, textToPdf, toWinAnsi } from './pdf';
 import {
@@ -219,6 +220,7 @@ describe('buildResumePrompt', () => {
     missingSkills: ['kafka'],
     missingKeywords: ['microfrontends'],
     mustAdd: [] as string[],
+    resumeIn: 'en',
     otherSkills: ['Apollo', 'Jest'],
     resume: 'React developer since 2019.',
     description: 'Wir suchen …',
@@ -269,6 +271,16 @@ describe('buildResumePrompt', () => {
     expect(buildResumePrompt({ ...input, mustAdd: ['figma', 'kanban'] })).toContain(
       'They MUST be in the new resume: in the Skills section, and next to the experience where I used them when that is clear from my resume:\n- figma\n- kanban',
     );
+  });
+
+  it('starts from your German resume when you have one', () => {
+    expect(buildResumePrompt({ ...input, resumeIn: 'de' })).toContain(
+      'My resume below is already in German: keep its wording',
+    );
+    expect(buildResumePrompt(input)).toContain('Translate my resume');
+    expect(
+      buildResumePrompt({ ...input, resumeLanguage: 'en', germanLevel: null, resumeIn: 'de' }),
+    ).toContain('My resume below is in German: translate it.');
   });
 
   it('keeps your real language levels', () => {
@@ -425,6 +437,7 @@ describe('queue prompt', () => {
     missingSkills: ['kafka'],
     missingKeywords: [],
     mustAdd: jobId === 'a' ? ['figma'] : [],
+    resumeIn: 'en',
     otherSkills: [],
     resume: 'My resume.',
     description: 'x'.repeat(6000),
@@ -446,6 +459,15 @@ describe('queue prompt', () => {
     expect(buildQueuePrompt([])).toBe('');
   });
 
+  it('puts each master resume in once when jobs start from different ones', () => {
+    const german = { ...job('b', 'Frontend', 'de'), resumeIn: 'de', resume: 'Mein Lebenslauf.' };
+    const prompt = buildQueuePrompt([job('a', 'Backend'), german]);
+    expect(prompt).toContain('My current resume in English:\n"""\nMy resume.');
+    expect(prompt).toContain('My current resume in German:\n"""\nMein Lebenslauf.');
+    expect(prompt).toContain('Start from my resume in German.');
+    expect(buildQueuePrompt([job('a', 'Backend')])).not.toContain('Start from');
+  });
+
   it('splits a reply by job id, or by number when the id is garbled', () => {
     const replies = splitQueueReply(
       'Intro\n=== JOB 1: a ===\nfirst\n## === JOB 2: zzz ===\nsecond\n=== JOB 3: c ===\n',
@@ -455,5 +477,30 @@ describe('queue prompt', () => {
       ['a', 'first'],
       ['b', 'second'],
     ]);
+  });
+});
+
+describe('master resumes in more languages', () => {
+  const resumes = { language: 'en', text: 'English CV', others: new Map([['de', 'Deutscher CV']]) };
+
+  it('picks the resume in the job’s language, else the main one', () => {
+    expect(resumeFor(resumes, 'de')).toEqual({ text: 'Deutscher CV', language: 'de' });
+    expect(resumeFor(resumes, 'en')).toEqual({ text: 'English CV', language: 'en' });
+    expect(resumeFor(resumes, 'fr')).toEqual({ text: 'English CV', language: 'en' });
+    expect(resumeFor(resumes, null)).toEqual({ text: 'English CV', language: 'en' });
+  });
+
+  it('asks Claude to translate without changing facts or language levels', () => {
+    const prompt = buildTranslationPrompt({
+      resume: 'Frontend Engineer at Acme, 2019-2024.',
+      from: 'en',
+      to: 'de',
+      languages: ['German A2', 'English C1'],
+    });
+    expect(prompt).toContain('translate my resume from English into German');
+    expect(prompt).toContain('Keep every employer, job title, date');
+    expect(prompt).toContain('Berufserfahrung');
+    expect(prompt).toContain('never higher:\n- German A2\n- English C1');
+    expect(prompt).toContain('Frontend Engineer at Acme, 2019-2024.');
   });
 });
