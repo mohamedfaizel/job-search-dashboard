@@ -281,6 +281,11 @@ export const LOG_OUT = /* GraphQL */ `
 `;
 
 const PROFILE_FIELDS = /* GraphQL */ `
+  firstName
+  lastName
+  gender
+  dateOfBirth
+  nationality
   headline
   targetRoles
   locations
@@ -305,7 +310,14 @@ const PROFILE_FIELDS = /* GraphQL */ `
   noticePeriod
   salaryExpectation
   relocation
+  employmentType
+  workplacePreference
+  drivingLicence
   applicationNotes
+  customFields {
+    label
+    value
+  }
   updatedAt
 `;
 

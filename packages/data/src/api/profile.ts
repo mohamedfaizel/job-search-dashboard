@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { meKey } from './auth';
 import { API_URL, graphqlClient } from './client';
 import { queryKeys } from './hooks';
 import { jobInsightsPrefix } from './insights';
@@ -51,6 +52,8 @@ export function useUpdateProfile() {
     },
     onSuccess: (profile) => {
       queryClient.setQueryData(profileKey, profile);
+      // A first and last name rename your account, which the header shows.
+      void queryClient.invalidateQueries({ queryKey: meKey });
       // The resume text may have changed, and with it what each job says you're missing.
       void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
       // ...and every job's Fit %.

@@ -274,7 +274,24 @@ export interface SignUpInput extends LogInInput {
 }
 
 /** What the user tells us about themselves, plus the text of their master resume. */
+/** Genders a form may ask for, as codes; the page shows words for them. */
+export const GENDERS = ['female', 'male', 'diverse', 'not_specified'] as const;
+
+/** A field of your own, like "Xing" or "Pronouns". */
+export interface ProfileField {
+  label: string;
+  value: string;
+}
+
 export interface Profile {
+  /** Empty until saved; the form suggests it from your account name. */
+  firstName: string;
+  lastName: string;
+  /** One of GENDERS, or empty = not given. */
+  gender: string;
+  /** "YYYY-MM-DD", or empty. */
+  dateOfBirth: string;
+  nationality: string;
   headline: string;
   targetRoles: string[];
   locations: string[];
@@ -298,8 +315,16 @@ export interface Profile {
   noticePeriod: string;
   salaryExpectation: string;
   relocation: string;
+  /** e.g. "Full-time". */
+  employmentType: string;
+  /** e.g. "Remote or hybrid". */
+  workplacePreference: string;
+  /** e.g. "Class B". */
+  drivingLicence: string;
   /** Short answers you reuse on applications, as free text. */
   applicationNotes: string;
+  /** Your own fields for anything else forms ask. */
+  customFields: ProfileField[];
   /** Null until the profile is first saved. */
   updatedAt: string | null;
 }

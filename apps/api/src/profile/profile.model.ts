@@ -1,5 +1,5 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -8,9 +8,11 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   Max,
   MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { RESUME_LANGUAGES } from './resumes';
 
@@ -29,8 +31,35 @@ export class LanguageResumeModel {
   updatedAt!: Date;
 }
 
+/** Genders a form may ask for, as codes; each language shows its own words. */
+export const GENDERS = ['female', 'male', 'diverse', 'not_specified'] as const;
+
+@ObjectType('ProfileField', { description: 'A field of your own, like "Xing" or "Pronouns"' })
+export class ProfileFieldModel {
+  @Field()
+  label!: string;
+
+  @Field()
+  value!: string;
+}
+
 @ObjectType('Profile')
 export class ProfileModel {
+  @Field({ description: 'Empty until saved; the form suggests it from your account name' })
+  firstName!: string;
+
+  @Field()
+  lastName!: string;
+
+  @Field({ description: 'female, male, diverse or not_specified; empty = not given' })
+  gender!: string;
+
+  @Field({ description: 'ISO date "YYYY-MM-DD"; empty = not given' })
+  dateOfBirth!: string;
+
+  @Field()
+  nationality!: string;
+
   @Field()
   headline!: string;
 
@@ -90,8 +119,20 @@ export class ProfileModel {
   @Field({ description: 'Willing to relocate, and where' })
   relocation!: string;
 
+  @Field({ description: 'e.g. "Full-time"' })
+  employmentType!: string;
+
+  @Field({ description: 'e.g. "Remote or hybrid"' })
+  workplacePreference!: string;
+
+  @Field({ description: 'e.g. "Class B"' })
+  drivingLicence!: string;
+
   @Field({ description: 'Short answers you reuse on applications, as free text' })
   applicationNotes!: string;
+
+  @Field(() => [ProfileFieldModel], { description: 'Your own fields, in your order' })
+  customFields!: ProfileFieldModel[];
 
   @Field(() => Date, { nullable: true, description: 'Null until the profile is first saved' })
   updatedAt!: Date | null;
@@ -120,7 +161,48 @@ const emptyToNull = ({ value }: { value: unknown }) =>
 const LIST_RULES = { each: true, message: 'Keep each entry under 80 characters' };
 
 @InputType()
+export class ProfileFieldInput {
+  @Field()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(60, { message: 'Keep each field name under 60 characters' })
+  label!: string;
+
+  @Field()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(500, { message: 'Keep each field value under 500 characters' })
+  value!: string;
+}
+
+@InputType()
 export class ProfileInput {
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(80, { message: 'Keep the first name under 80 characters' })
+  firstName: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(80, { message: 'Keep the last name under 80 characters' })
+  lastName: string = '';
+
+  @Field({ defaultValue: '' })
+  @IsIn(['', ...GENDERS], { message: 'Pick a gender from the list' })
+  gender: string = '';
+
+  @Field({ defaultValue: '' })
+  @Matches(/^(\d{4}-\d{2}-\d{2})?$/, { message: 'Date of birth must be a date like 1990-05-31' })
+  dateOfBirth: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(80, { message: 'Keep nationality under 80 characters' })
+  nationality: string = '';
+
   @Field({ defaultValue: '' })
   @Transform(trim)
   @IsString()
@@ -234,4 +316,29 @@ export class ProfileInput {
   @IsString()
   @MaxLength(5_000, { message: 'Keep your saved answers under 5,000 characters' })
   applicationNotes: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(100, { message: 'Keep employment type under 100 characters' })
+  employmentType: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(100, { message: 'Keep workplace preference under 100 characters' })
+  workplacePreference: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(100, { message: 'Keep driving licence under 100 characters' })
+  drivingLicence: string = '';
+
+  @Field(() => [ProfileFieldInput], { defaultValue: [] })
+  @IsArray()
+  @ArrayMaxSize(30, { message: 'Add at most 30 fields of your own' })
+  @ValidateNested({ each: true })
+  @Type(() => ProfileFieldInput)
+  customFields: ProfileFieldInput[] = [];
 }

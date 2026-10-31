@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
-const FIELDS = `headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName phone address workPermit noticePeriod salaryExpectation relocation applicationNotes updatedAt`;
+const FIELDS = `firstName lastName gender dateOfBirth nationality employmentType workplacePreference drivingLicence customFields { label value } headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName phone address workPermit noticePeriod salaryExpectation relocation applicationNotes updatedAt`;
 const MY_PROFILE = `query { myProfile { ${FIELDS} } }`;
 const UPDATE = `mutation ($input: ProfileInput!) { updateProfile(input: $input) { ${FIELDS} } }`;
 
@@ -65,6 +65,15 @@ describe('profile', () => {
     const res = await t.asUser(MY_PROFILE);
     expect(res.data).toEqual({
       myProfile: {
+        firstName: '',
+        lastName: '',
+        gender: '',
+        dateOfBirth: '',
+        nationality: '',
+        employmentType: '',
+        workplacePreference: '',
+        drivingLicence: '',
+        customFields: [],
         headline: '',
         targetRoles: [],
         locations: [],
@@ -113,6 +122,42 @@ describe('profile', () => {
       applicationNotes: 'I want to build products people use every day.',
     });
     expect(res.data!.myProfile['updatedAt']).not.toBeNull();
+  });
+
+  it('saves your personal details and own fields, and renames your account', async () => {
+    const res = await t.asUser<{ updateProfile: Record<string, unknown> }>(UPDATE, {
+      input: {
+        ...INPUT,
+        firstName: ' Ada ',
+        lastName: 'Lovelace',
+        gender: 'female',
+        dateOfBirth: '1990-12-10',
+        nationality: 'British',
+        employmentType: 'Full-time',
+        workplacePreference: 'Remote or hybrid',
+        drivingLicence: 'Class B',
+        customFields: [
+          { label: 'Xing', value: 'https://xing.com/ada' },
+          { label: '', value: '' },
+        ],
+      },
+    });
+    expect(res.errors).toBeUndefined();
+    expect(res.data!.updateProfile).toMatchObject({
+      firstName: 'Ada',
+      gender: 'female',
+      dateOfBirth: '1990-12-10',
+      drivingLicence: 'Class B',
+      // The empty row is dropped.
+      customFields: [{ label: 'Xing', value: 'https://xing.com/ada' }],
+    });
+    const me = await t.asUser<{ me: { name: string } }>('query { me { name } }');
+    expect(me.data!.me.name).toBe('Ada Lovelace');
+
+    const bad = await t.asUser(UPDATE, {
+      input: { ...INPUT, gender: 'robot', dateOfBirth: '10.12.1990' },
+    });
+    expect(bad.errors?.[0]?.message).toMatch(/gender|Date of birth/);
   });
 
   it('refuses bad links and impossible experience', async () => {

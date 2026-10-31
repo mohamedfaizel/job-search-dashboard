@@ -3,6 +3,13 @@ export interface ApplyKitInput {
   job: { title: string; company: string; url: string | null };
   me: {
     name: string;
+    firstName: string;
+    lastName: string;
+    /** female, male, diverse, not_specified or empty. */
+    gender: string;
+    /** "YYYY-MM-DD" or empty. */
+    dateOfBirth: string;
+    nationality: string;
     email: string;
     phone: string;
     address: string;
@@ -15,7 +22,11 @@ export interface ApplyKitInput {
     noticePeriod: string;
     salaryExpectation: string;
     relocation: string;
+    employmentType: string;
+    workplacePreference: string;
+    drivingLicence: string;
     applicationNotes: string;
+    customFields: { label: string; value: string }[];
   };
   /** The resume you saved for this job, with the cover letter and answers from Claude's reply. */
   jobResume: { text: string; coverLetter: string; formAnswers: string } | null;
@@ -25,6 +36,13 @@ export interface ApplyKitInput {
 
 const NOT_GIVEN = '(not given: leave this field empty and tell me)';
 const value = (text: string | null | undefined) => (text?.trim() ? text.trim() : NOT_GIVEN);
+const GENDER_WORDS: Record<string, string> = {
+  female: 'Female',
+  male: 'Male',
+  diverse: 'Diverse',
+  not_specified: 'Prefer not to say',
+};
+
 const block = (text: string | undefined, missing: string) => (text?.trim() ? text.trim() : missing);
 
 /**
@@ -47,6 +65,11 @@ INSTRUCTIONS FOR CLAUDE IN CHROME
 
 MY DETAILS
 Name: ${value(me.name)}
+First name: ${value(me.firstName)}
+Last name: ${value(me.lastName)}
+Gender: ${value(GENDER_WORDS[me.gender])}
+Date of birth (YYYY-MM-DD): ${value(me.dateOfBirth)}
+Nationality: ${value(me.nationality)}
 Email: ${value(me.email)}
 Phone: ${value(me.phone)}
 Address / location: ${value(me.address)}
@@ -59,6 +82,10 @@ Work permit: ${value(me.workPermit)}
 Notice period / earliest start: ${value(me.noticePeriod)}
 Salary expectation: ${value(me.salaryExpectation)}
 Willing to relocate: ${value(me.relocation)}
+Employment type: ${value(me.employmentType)}
+Remote / hybrid / on-site: ${value(me.workplacePreference)}
+Driving licence: ${value(me.drivingLicence)}
+${me.customFields.map((f) => `${f.label}: ${value(f.value)}`).join('\n')}
 
 FORM ANSWERS FOR THIS JOB
 ${block(jobResume?.formAnswers, noReply)}

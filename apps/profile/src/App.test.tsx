@@ -14,12 +14,16 @@ async function renderProfile() {
   return user;
 }
 
+const openTab = (user: ReturnType<typeof userEvent.setup>, name: string) =>
+  user.click(screen.getByRole('tab', { name }));
+
 const pdf = (name = 'cv.pdf', bytes = 10) =>
   new File(['x'.repeat(bytes)], name, { type: 'application/pdf' });
 
 describe('profile page', () => {
   it('fills the form from the saved profile', async () => {
-    await renderProfile();
+    const user = await renderProfile();
+    await screen.findByDisplayValue('Ada King');
 
     expect(screen.getByRole('textbox', { name: 'Headline' })).toHaveValue('Frontend engineer');
     expect(screen.getByRole('textbox', { name: 'Roles you want' })).toHaveValue(
@@ -27,6 +31,12 @@ describe('profile page', () => {
     );
     expect(screen.getByRole('textbox', { name: 'Years of experience' })).toHaveValue('4');
     expect(screen.getByRole('textbox', { name: 'GitHub' })).toHaveValue('');
+    // No name saved yet: it is suggested from your account name.
+    expect(screen.getByRole('textbox', { name: 'First name' })).toHaveValue('Ada King');
+    expect(screen.getByRole('textbox', { name: 'Last name' })).toHaveValue('Lovelace');
+    // The resume is on its own tab.
+    expect(screen.queryByRole('textbox', { name: 'Resume text' })).not.toBeInTheDocument();
+    await openTab(user, 'Resume');
     expect(screen.getByRole('textbox', { name: 'Resume text' })).toHaveValue(
       'Ada Lovelace\nFrontend engineer',
     );
@@ -62,6 +72,7 @@ describe('profile page', () => {
 
   it('saves the application answers the Apply kit uses', async () => {
     const user = await renderProfile();
+    await openTab(user, 'Applications');
     expect(screen.getByRole('textbox', { name: 'Work permit' })).toHaveValue('EU Blue Card');
     await user.type(screen.getByRole('textbox', { name: 'Salary expectation' }), '€65,000 a year');
     await user.type(
@@ -116,6 +127,7 @@ describe('profile page', () => {
     const headline = screen.getByRole('textbox', { name: 'Headline' });
     await user.clear(headline);
     await user.type(headline, 'Not saved yet');
+    await openTab(user, 'Resume');
 
     await user.upload(screen.getByLabelText('Upload a PDF or Word file'), pdf('new cv.pdf'));
 
@@ -134,6 +146,7 @@ describe('profile page', () => {
   it('explains when a file can’t be used', async () => {
     server.use(rejectUpload);
     const user = await renderProfile();
+    await openTab(user, 'Resume');
     const input = screen.getByLabelText('Upload a PDF or Word file');
 
     await user.upload(input, new File(['hi'], 'notes.txt', { type: 'text/plain' }));
@@ -145,5 +158,72 @@ describe('profile page', () => {
     });
     // Only the text file was sent: the big one never left the browser.
     expect(requests).toHaveLength(1);
+  });
+
+  it('saves your personal details and your own fields', async () => {
+    const user = await renderProfile();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Gender' }), 'female');
+    await user.type(screen.getByLabelText('Date of birth'), '1990-12-10');
+    await user.type(screen.getByRole('textbox', { name: 'Nationality' }), 'British');
+
+    await openTab(user, 'Applications');
+    await user.type(screen.getByRole('textbox', { name: 'Driving licence' }), 'Class B');
+    await user.click(screen.getByRole('button', { name: '+ Add a field' }));
+    await user.type(screen.getByRole('textbox', { name: 'Field 1 name' }), 'Xing');
+    await user.type(screen.getByRole('textbox', { name: 'Field 1 value' }), 'https://xing.com/ada');
+    // An empty row is fine: it is left out when saving.
+    await user.click(screen.getByRole('button', { name: '+ Add a field' }));
+
+    await user.click(screen.getByRole('button', { name: 'Save profile' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.');
+    expect(requests[0]).toMatchObject({
+      variables: {
+        input: {
+          firstName: 'Ada King',
+          lastName: 'Lovelace',
+          gender: 'female',
+          dateOfBirth: '1990-12-10',
+          nationality: 'British',
+          drivingLicence: 'Class B',
+          customFields: [{ label: 'Xing', value: 'https://xing.com/ada' }],
+        },
+      },
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Remove field 1' }));
+    expect(screen.queryByRole('textbox', { name: 'Field 2 name' })).not.toBeInTheDocument();
+  });
+
+  it('opens the tab with the mistake when you save', async () => {
+    const user = await renderProfile();
+    await openTab(user, 'Applications');
+    await user.click(screen.getByRole('button', { name: '+ Add a field' }));
+    // The new row is the last one (the shared cache may hold fields saved by another test).
+    const values = screen.getAllByRole('textbox', { name: /^Field \d+ value$/ });
+    await user.type(values[values.length - 1]!, 'no name');
+    await openTab(user, 'Personal');
+
+    await user.click(screen.getByRole('button', { name: 'Save profile' }));
+
+    expect(await screen.findByText(/Give the field a name/)).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Applications' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(requests).toHaveLength(0);
+  });
+
+  it('moves between tabs with the arrow keys and remembers the last one', async () => {
+    const user = await renderProfile();
+    screen.getByRole('tab', { name: 'Personal' }).focus();
+    await user.keyboard('{ArrowRight}');
+    expect(screen.getByRole('tab', { name: 'Applications' })).toHaveFocus();
+    await user.keyboard('{End}');
+    expect(screen.getByRole('tab', { name: 'Resume-Matcher' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(localStorage.getItem('jobsearch.profile.tab')).toBe('matcher');
   });
 });

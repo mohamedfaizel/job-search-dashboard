@@ -521,6 +521,9 @@ describe('job insights without AI', () => {
           phone: '+49 151 0000000',
           languages: ['German A2', 'English C1'],
           workPermit: 'EU Blue Card',
+          gender: 'female',
+          drivingLicence: 'Class B',
+          customFields: [{ label: 'Xing', value: 'https://xing.com/ada' }],
           noticePeriod: '1 month',
         },
       });
@@ -585,6 +588,10 @@ Why Acme: I like your product.
       expect(kit.text).toContain('Phone: +49 151 0000000');
       expect(kit.text).toContain('copy exactly): German A2, English C1');
       expect(kit.text).toContain('Work permit: EU Blue Card');
+      expect(kit.text).toContain('Gender: Female');
+      expect(kit.text).toContain('Driving licence: Class B');
+      expect(kit.text).toContain('Xing: https://xing.com/ada');
+      expect(kit.text).toContain('Date of birth (YYYY-MM-DD): (not given');
       expect(kit.text).toContain('Salary expectation: (not given: leave this field empty');
       expect(kit.text).toContain('Why Acme: I like your product.');
       expect(kit.text).toContain('Dear Acme team');

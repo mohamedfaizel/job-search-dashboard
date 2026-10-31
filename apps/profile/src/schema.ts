@@ -32,6 +32,13 @@ const text = (max: number, name: string) =>
 
 /** The form works with strings (that's what inputs hold); toProfileInput converts them. */
 export const profileSchema = z.object({
+  firstName: text(80, 'the first name'),
+  lastName: text(80, 'the last name'),
+  gender: z.enum(['', 'female', 'male', 'diverse', 'not_specified']),
+  dateOfBirth: z
+    .string()
+    .refine((v) => v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v), 'Enter a date like 1990-05-31'),
+  nationality: text(80, 'nationality'),
   headline: z.string().trim().max(160, 'Keep the headline under 160 characters'),
   targetRoles: list(20, 'roles'),
   locations: list(20, 'locations'),
@@ -54,13 +61,47 @@ export const profileSchema = z.object({
   noticePeriod: text(100, 'the notice period'),
   salaryExpectation: text(100, 'the salary expectation'),
   relocation: text(200, 'the relocation answer'),
+  employmentType: text(100, 'the employment type'),
+  workplacePreference: text(100, 'the workplace preference'),
+  drivingLicence: text(100, 'the driving licence'),
   applicationNotes: text(5_000, 'your saved answers'),
+  customFields: z
+    .array(
+      z
+        .object({
+          label: text(60, 'each field name'),
+          value: text(500, 'each field value'),
+        })
+        // A value with no name can't be read back later, on forms or in the Apply kit.
+        .refine((f) => f.label.trim() !== '' || f.value.trim() === '', {
+          message: 'Give the field a name',
+          path: ['label'],
+        }),
+    )
+    .max(30, 'Add at most 30 fields of your own'),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
 
-export function profileToForm(profile: Profile): ProfileFormValues {
+const GENDER_CODES = ['female', 'male', 'diverse', 'not_specified'] as const;
+const genderOf = (code: string): ProfileFormValues['gender'] =>
+  GENDER_CODES.find((g) => g === code) ?? '';
+
+/**
+ * The form's starting values. Before you save a first and last name, they are suggested from
+ * your account name ("Ada King Lovelace" → "Ada King" + "Lovelace").
+ */
+export function profileToForm(profile: Profile, accountName = ''): ProfileFormValues {
+  const words = accountName.trim().split(/\s+/).filter(Boolean);
+  const suggest = !profile.firstName && !profile.lastName && words.length > 0;
   return {
+    firstName: suggest
+      ? words.slice(0, Math.max(1, words.length - 1)).join(' ')
+      : profile.firstName,
+    lastName: suggest ? (words.length > 1 ? (words.at(-1) ?? '') : '') : profile.lastName,
+    gender: genderOf(profile.gender),
+    dateOfBirth: profile.dateOfBirth,
+    nationality: profile.nationality,
     headline: profile.headline,
     targetRoles: profile.targetRoles.join(', '),
     locations: profile.locations.join(', '),
@@ -78,13 +119,22 @@ export function profileToForm(profile: Profile): ProfileFormValues {
     noticePeriod: profile.noticePeriod,
     salaryExpectation: profile.salaryExpectation,
     relocation: profile.relocation,
+    employmentType: profile.employmentType,
+    workplacePreference: profile.workplacePreference,
+    drivingLicence: profile.drivingLicence,
     applicationNotes: profile.applicationNotes,
+    customFields: profile.customFields.map((f) => ({ label: f.label, value: f.value })),
   };
 }
 
 export function toProfileInput(values: ProfileFormValues): ProfileInput {
   const orNull = (v: string) => (v.trim() === '' ? null : v.trim());
   return {
+    firstName: values.firstName,
+    lastName: values.lastName,
+    gender: values.gender,
+    dateOfBirth: values.dateOfBirth,
+    nationality: values.nationality,
     headline: values.headline,
     targetRoles: splitList(values.targetRoles),
     locations: splitList(values.locations),
@@ -102,6 +152,11 @@ export function toProfileInput(values: ProfileFormValues): ProfileInput {
     noticePeriod: values.noticePeriod,
     salaryExpectation: values.salaryExpectation,
     relocation: values.relocation,
+    employmentType: values.employmentType,
+    workplacePreference: values.workplacePreference,
+    drivingLicence: values.drivingLicence,
     applicationNotes: values.applicationNotes,
+    // Rows left empty are dropped.
+    customFields: values.customFields.filter((f) => f.label.trim() || f.value.trim()),
   };
 }

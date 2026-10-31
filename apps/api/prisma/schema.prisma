@@ -97,6 +97,16 @@ model Profile {
   resumeFile        Bytes?
   resumeFileType    String?
   resumeUploadedAt  DateTime?
+  // Personal details forms ask for. Empty = not given. User.name stays the display name;
+  // saving a first and last name updates it.
+  firstName         String    @default("")
+  lastName          String    @default("")
+  /// female, male, diverse or not_specified; empty = not given. Codes, so any language can
+  /// show its own words.
+  gender            String    @default("")
+  /// ISO date "YYYY-MM-DD", empty = not given.
+  dateOfBirth       String    @default("")
+  nationality       String    @default("")
   // Application answers: the facts every application form asks for. The Apply kit copies them
   // into the Claude prompt and the page Claude in Chrome fills forms from. Empty = not given.
   phone             String    @default("")
@@ -105,8 +115,16 @@ model Profile {
   noticePeriod      String    @default("")
   salaryExpectation String    @default("")
   relocation        String    @default("")
+  /// e.g. "Full-time".
+  employmentType    String    @default("")
+  /// e.g. "Remote or hybrid".
+  workplacePreference String  @default("")
+  /// e.g. "Class B".
+  drivingLicence    String    @default("")
   /// Free text: short answers you reuse, like why you are looking for a new job.
   applicationNotes  String    @default("")
+  /// Your own fields for anything else forms ask: [{ "label": "Xing", "value": "…" }].
+  customFields      Json      @default("[]")
   updatedAt         DateTime  @updatedAt
 }
 

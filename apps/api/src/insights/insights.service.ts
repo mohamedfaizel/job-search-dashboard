@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { customFieldsOf } from '../profile/custom-fields';
 import { tidy } from '../profile/resume-text';
 import type { MasterResumes } from '../profile/resumes';
 import { resumeFor } from '../profile/resumes';
@@ -325,6 +326,11 @@ export class InsightsService {
       job: { title: job.title, company: job.company.name, url: job.url },
       me: {
         name: user.name,
+        firstName: p?.firstName ?? '',
+        lastName: p?.lastName ?? '',
+        gender: p?.gender ?? '',
+        dateOfBirth: p?.dateOfBirth ?? '',
+        nationality: p?.nationality ?? '',
         email: user.email,
         phone: p?.phone ?? '',
         address: p?.address ?? '',
@@ -337,7 +343,11 @@ export class InsightsService {
         noticePeriod: p?.noticePeriod ?? '',
         salaryExpectation: p?.salaryExpectation ?? '',
         relocation: p?.relocation ?? '',
+        employmentType: p?.employmentType ?? '',
+        workplacePreference: p?.workplacePreference ?? '',
+        drivingLicence: p?.drivingLicence ?? '',
         applicationNotes: p?.applicationNotes ?? '',
+        customFields: customFieldsOf(p?.customFields),
       },
       jobResume,
       resumeUrl,

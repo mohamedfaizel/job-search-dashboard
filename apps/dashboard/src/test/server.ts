@@ -162,6 +162,15 @@ export const READY_TAILORED: TailoredResume = {
 
 /** The test user's profile, with Application answers filled in. */
 export const PROFILE: Profile = {
+  firstName: '',
+  lastName: '',
+  gender: '',
+  dateOfBirth: '',
+  nationality: '',
+  employmentType: '',
+  workplacePreference: '',
+  drivingLicence: '',
+  customFields: [],
   headline: 'Frontend engineer',
   targetRoles: [],
   locations: [],
