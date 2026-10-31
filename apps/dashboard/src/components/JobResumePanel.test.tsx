@@ -51,24 +51,32 @@ describe('JobResumePanel', () => {
     expect(screen.queryByRole('textbox', { name: 'Resume text for this job' })).toBeNull();
   });
 
-  it('"I have it" on a still-missing term offers the updated prompt', async () => {
+  it('✓ on a still-missing skill offers the updated prompt; keywords get no buttons', async () => {
     const user = userEvent.setup();
-    jobResume.current = SAVED_RESUME;
+    jobResume.current = {
+      ...SAVED_RESUME,
+      nowCovered: [],
+      stillMissing: ['graphql', 'microfrontends'],
+    };
     renderPanel();
 
     const missing = await screen.findByRole('list', { name: 'Still missing' });
     expect(screen.queryByRole('button', { name: 'Copy updated prompt' })).toBeNull();
-    await user.click(within(missing).getByRole('button', { name: 'I have microfrontends' }));
+    // microfrontends is a keyword: Claude works it in, so there is nothing to pick.
+    expect(within(missing).queryByRole('button', { name: 'I have microfrontends' })).toBeNull();
+    const tick = within(missing).getByRole('button', { name: 'I have graphql' });
+    expect(tick).toHaveAccessibleDescription('I have this skill: add it to my resume');
+    await user.click(tick);
 
     expect(requests).toContainEqual({
       operation: 'SetHaveTerm',
-      variables: { jobId: 'job-1', term: 'microfrontends', have: true },
+      variables: { jobId: 'job-1', term: 'graphql', have: true },
     });
     expect(await screen.findByRole('button', { name: 'Copy updated prompt' })).toBeInTheDocument();
-    expect(screen.getByText(/leaves out microfrontends, which you have/)).toBeInTheDocument();
+    expect(screen.getByText(/leaves out graphql, which you have/)).toBeInTheDocument();
     expect(
       screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Updated prompt' }).value,
-    ).toContain('MUST: microfrontends');
+    ).toContain('MUST: graphql');
   });
 
   it('uploads a file and offers it for download', async () => {

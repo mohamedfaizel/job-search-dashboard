@@ -42,6 +42,15 @@ describe('InsightsPanel', () => {
     ).toBeInTheDocument();
     const missingKeywords = screen.getByRole('list', { name: 'Missing keywords' });
     expect(within(missingKeywords).getByText('microfrontends')).toBeInTheDocument();
+    // ✓ and ✕ are for skills only; Claude works the keywords in.
+    expect(within(missingSkills).getByRole('button', { name: 'I have graphql' })).toHaveTextContent(
+      '✓',
+    );
+    expect(
+      within(missingSkills).getByRole('button', { name: 'Remove graphql' }),
+    ).toHaveAccessibleDescription('I don’t have it: remove from this job');
+    expect(within(missingKeywords).queryByRole('button')).toBeNull();
+    expect(screen.getByText(/use as many of these as honestly fit/)).toBeInTheDocument();
   });
 
   it('removes a term with × and puts it back', async () => {

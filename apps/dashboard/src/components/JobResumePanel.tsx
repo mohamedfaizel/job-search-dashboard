@@ -238,6 +238,8 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
     [...insights.skills, ...insights.keywords].filter((t) => t.youHave).map((t) => t.term),
   );
   const leftOut = jobResume.stillMissing.filter((term) => yours.has(term));
+  // ✓ is for skills only: keywords are Claude's to work in.
+  const skills = new Set(insights.skills.map((t) => t.term));
 
   return (
     <section aria-label="Your resume for this job" className="space-y-3">
@@ -290,9 +292,13 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
                         <MissingChip
                           term={term}
                           relatedTo={null}
-                          onHave={() => {
-                            have.mutate({ jobId, term, have: true });
-                          }}
+                          onHave={
+                            skills.has(term)
+                              ? () => {
+                                  have.mutate({ jobId, term, have: true });
+                                }
+                              : undefined
+                          }
                         />
                       )}
                     </li>
