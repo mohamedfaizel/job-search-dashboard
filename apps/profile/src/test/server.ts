@@ -9,6 +9,15 @@ export const api = graphql.link(API_URL);
 /** Requests made in the current test, so tests can check what was sent. */
 export const requests: { operation: string; variables: Record<string, unknown> }[] = [];
 
+export const STYLE = {
+  resumeTemplate: 'classic',
+  coverLetterLayout: 'auto',
+  accentColor: '1F4E79',
+  font: 'auto',
+  showPhoto: false,
+  hasPhoto: false,
+};
+
 export const PROFILE: Profile = {
   headline: 'Frontend engineer',
   targetRoles: ['Frontend Engineer', 'React Developer'],
@@ -94,6 +103,33 @@ export const server = setupServer(
         }
       : RM_RUNNING;
     return HttpResponse.json({ data: { resumeMatcherStatus: status } });
+  }),
+  api.query('DocumentStyle', () => HttpResponse.json({ data: { documentStyle: STYLE } })),
+  api.query('DocumentTemplates', () =>
+    HttpResponse.json({
+      data: {
+        documentTemplates: {
+          resumeTemplates: [
+            { id: 'classic', name: 'Classic', description: 'Serif.' },
+            { id: 'modern', name: 'Modern', description: 'Sans.' },
+            { id: 'compact', name: 'Compact', description: 'Small.' },
+          ],
+          coverLetterLayouts: [
+            { id: 'auto', name: 'Automatic', description: 'DIN for German.' },
+            { id: 'din', name: 'DIN 5008', description: 'German standard.' },
+            { id: 'modern', name: 'Modern', description: 'Header.' },
+          ],
+          rendererConfigured: true,
+          rendererAvailable: false,
+        },
+      },
+    }),
+  ),
+  api.mutation('UpdateDocumentStyle', ({ variables }) => {
+    requests.push({ operation: 'UpdateDocumentStyle', variables });
+    return HttpResponse.json({
+      data: { updateDocumentStyle: { ...STYLE, ...(variables['input'] as object) } },
+    });
   }),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: withOthers() } })),
   api.mutation('SaveLanguageResume', ({ variables }) => {

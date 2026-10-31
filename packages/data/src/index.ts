@@ -34,6 +34,17 @@ export {
   useUploadResume,
 } from './api/profile';
 export {
+  documentPreviewUrl,
+  documentStyleKey,
+  documentTemplatesKey,
+  PHOTO_URL,
+  useDeletePhoto,
+  useDocumentStyle,
+  useDocumentTemplates,
+  useUpdateDocumentStyle,
+  useUploadPhoto,
+} from './api/documents';
+export {
   jobMatchKey,
   matcherResumeKey,
   resumeMatcherStatusKey,

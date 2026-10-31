@@ -237,6 +237,36 @@ export const handlers = [
     };
     return HttpResponse.json({ data: { tailorResume: pending } });
   }),
+  api.query('DocumentStyle', () =>
+    HttpResponse.json({
+      data: {
+        documentStyle: {
+          resumeTemplate: 'modern',
+          coverLetterLayout: 'auto',
+          accentColor: '1F4E79',
+          font: 'auto',
+          showPhoto: false,
+          hasPhoto: false,
+        },
+      },
+    }),
+  ),
+  api.query('DocumentTemplates', () =>
+    HttpResponse.json({
+      data: {
+        documentTemplates: {
+          resumeTemplates: [
+            { id: 'classic', name: 'Classic', description: '' },
+            { id: 'modern', name: 'Modern', description: '' },
+            { id: 'compact', name: 'Compact', description: '' },
+          ],
+          coverLetterLayouts: [],
+          rendererConfigured: true,
+          rendererAvailable: true,
+        },
+      },
+    }),
+  ),
   api.query('JobInsights', ({ variables }) =>
     HttpResponse.json({ data: { jobInsights: { ...insightsNow(), jobId: variables['jobId'] } } }),
   ),

@@ -91,6 +91,55 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+"""How your resume and cover letter PDFs look"""
+type DocumentStyle {
+  """
+  Six hex digits, e.g. "1F4E79"
+  """
+  accentColor: String!
+
+  """auto (DIN 5008 for German letters), din or modern"""
+  coverLetterLayout: String!
+
+  """auto (the template’s own), sans or serif"""
+  font: String!
+
+  """A photo is uploaded (GET /documents/photo shows it)"""
+  hasPhoto: Boolean!
+
+  """classic, modern or compact"""
+  resumeTemplate: String!
+  showPhoto: Boolean!
+}
+
+input DocumentStyleInput {
+  accentColor: String!
+  coverLetterLayout: String!
+  font: String!
+  resumeTemplate: String!
+  showPhoto: Boolean!
+}
+
+type DocumentTemplate {
+  description: String!
+  id: String!
+  name: String!
+}
+
+"""The templates to choose from, and whether the PDF renderer is running"""
+type DocumentTemplates {
+  coverLetterLayouts: [DocumentTemplate!]!
+
+  """
+  The pdf-renderer container answers. Without it, PDFs are plain, not templated
+  """
+  rendererAvailable: Boolean!
+
+  """False when PDF_RENDERER_URL is empty in .env"""
+  rendererConfigured: Boolean!
+  resumeTemplates: [DocumentTemplate!]!
+}
+
 type ImportBudget {
   """DAILY_CREDIT_CAP: scheduled runs stop before going over it"""
   cap: Int!
@@ -533,6 +582,7 @@ type Mutation {
 
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
+  updateDocumentStyle(input: DocumentStyleInput!): DocumentStyle!
 
   """
   Track your progress: Saved, Applied, Interviewing… Only you see your status.
@@ -629,6 +679,10 @@ input ProfileInput {
 type Query {
   """One Claude prompt for the queued jobs that have no reply yet (up to 5)"""
   applyQueuePrompt: ApplyQueuePrompt!
+
+  """How your resume and cover letter PDFs look"""
+  documentStyle: DocumentStyle!
+  documentTemplates: DocumentTemplates!
 
   """How many jobs you have hidden"""
   hiddenJobCount: Int!

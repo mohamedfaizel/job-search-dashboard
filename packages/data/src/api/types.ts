@@ -483,3 +483,33 @@ export interface ApplyQueueItem {
   ready: boolean;
   addedAt: string;
 }
+
+/** How your resume and cover letter PDFs look. */
+export interface DocumentStyle {
+  /** classic, modern or compact */
+  resumeTemplate: string;
+  /** auto (DIN 5008 for German letters), din or modern */
+  coverLetterLayout: string;
+  /** Six hex digits, e.g. "1F4E79". */
+  accentColor: string;
+  /** auto, sans or serif */
+  font: string;
+  showPhoto: boolean;
+  hasPhoto: boolean;
+}
+
+export type DocumentStyleInput = Omit<DocumentStyle, 'hasPhoto'>;
+
+export interface DocumentTemplate {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface DocumentTemplates {
+  resumeTemplates: DocumentTemplate[];
+  coverLetterLayouts: DocumentTemplate[];
+  rendererConfigured: boolean;
+  /** The pdf-renderer container answers. Without it, PDFs are plain. */
+  rendererAvailable: boolean;
+}

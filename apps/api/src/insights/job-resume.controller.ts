@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Res,
   StreamableFile,
   UploadedFile,
@@ -13,11 +14,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
+import { DocumentsService } from '../documents/documents.service';
+import type { DocumentFile } from '../documents/documents.service';
 import { MAX_RESUME_BYTES } from '../profile/profile.controller';
 import type { UploadedResume } from '../profile/resume-text';
 import { extractResumeText } from '../profile/resume-text';
 import type { JobInsightsModel } from './insights.model';
-import type { JobResumeFile } from './insights.service';
 import { InsightsService } from './insights.service';
 
 /** Claude often answers in plain text or Markdown, so those are accepted next to PDF and Word. */
@@ -32,7 +34,10 @@ const isDocument = (file: UploadedResume) => /\.(pdf|docx)$/i.test(file.original
  */
 @Controller('job-resume')
 export class JobResumeController {
-  constructor(private readonly insights: InsightsService) {}
+  constructor(
+    private readonly insights: InsightsService,
+    private readonly documents: DocumentsService,
+  ) {}
 
   @Post(':jobId')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_RESUME_BYTES } }))
@@ -53,23 +58,29 @@ export class JobResumeController {
     });
   }
 
-  /** The saved resume as a clean PDF, named like "Mohamed-Faizel-Resume-ComputerFutures.pdf". */
+  /**
+   * The saved resume as a PDF in your template, named like
+   * "Mohamed-Faizel-Resume-ComputerFutures.pdf". ?template=modern picks another template for
+   * this download.
+   */
   @Get(':jobId/resume.pdf')
   async resumePdf(
     @CurrentUser() user: SessionUser,
     @Param('jobId') jobId: string,
+    @Query('template') template: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    return send(res, await this.insights.jobResumePdf(user.id, jobId, 'resume'));
+    return send(res, await this.documents.jobPdf(user.id, jobId, 'resume', template));
   }
 
   @Get(':jobId/cover-letter.pdf')
   async coverLetterPdf(
     @CurrentUser() user: SessionUser,
     @Param('jobId') jobId: string,
+    @Query('template') template: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    return send(res, await this.insights.jobResumePdf(user.id, jobId, 'cover-letter'));
+    return send(res, await this.documents.jobPdf(user.id, jobId, 'cover-letter', template));
   }
 
   @Get(':jobId')
@@ -83,11 +94,15 @@ export class JobResumeController {
 }
 
 /** Sends a file as a download, keeping its name. */
-function send(res: Response, file: JobResumeFile): StreamableFile {
+export function send(
+  res: Response,
+  file: DocumentFile,
+  disposition = 'attachment',
+): StreamableFile {
   res.set({
     'Content-Type': file.type,
     // filename* carries names with accents or spaces; filename is the plain fallback.
-    'Content-Disposition': `attachment; filename="${file.name.replace(/[^\w.-]/g, '_')}"; filename*=UTF-8''${encodeURIComponent(file.name)}`,
+    'Content-Disposition': `${disposition}; filename="${file.name.replace(/[^\w.-]/g, '_')}"; filename*=UTF-8''${encodeURIComponent(file.name)}`,
   });
   return new StreamableFile(file.bytes);
 }

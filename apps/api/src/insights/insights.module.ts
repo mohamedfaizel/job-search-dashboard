@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DocumentsModule } from '../documents/documents.module';
 import { ApplyKitController, ApplyQueueController } from './apply-kit.controller';
 import { CorpusService } from './corpus.service';
 import { FitService } from './fit.service';
@@ -8,6 +9,7 @@ import { JobResumeController } from './job-resume.controller';
 
 /** Job insights without AI: skill tags, TF-IDF keywords, language detection and Fit %. */
 @Module({
+  imports: [DocumentsModule],
   controllers: [JobResumeController, ApplyKitController, ApplyQueueController],
   providers: [InsightsService, InsightsResolver, CorpusService, FitService],
   exports: [FitService],

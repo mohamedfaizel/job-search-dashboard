@@ -620,3 +620,47 @@ export const START_JOBS_VISIT = /* GraphQL */ `
     startJobsVisit
   }
 `;
+
+const DOCUMENT_STYLE_FIELDS = /* GraphQL */ `
+  resumeTemplate
+  coverLetterLayout
+  accentColor
+  font
+  showPhoto
+  hasPhoto
+`;
+
+export const DOCUMENT_STYLE = /* GraphQL */ `
+  query DocumentStyle {
+    documentStyle {
+      ${DOCUMENT_STYLE_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_DOCUMENT_STYLE = /* GraphQL */ `
+  mutation UpdateDocumentStyle($input: DocumentStyleInput!) {
+    updateDocumentStyle(input: $input) {
+      ${DOCUMENT_STYLE_FIELDS}
+    }
+  }
+`;
+
+export const DOCUMENT_TEMPLATES = /* GraphQL */ `
+  query DocumentTemplates {
+    documentTemplates {
+      resumeTemplates {
+        id
+        name
+        description
+      }
+      coverLetterLayouts {
+        id
+        name
+        description
+      }
+      rendererConfigured
+      rendererAvailable
+    }
+  }
+`;
