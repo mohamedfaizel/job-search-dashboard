@@ -232,7 +232,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-slate-700">Resume template</legend>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
           {data?.resumeTemplates.map((t) => (
             <TemplateCard
               key={t.id}
