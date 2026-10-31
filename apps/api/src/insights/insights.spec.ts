@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { germanRequirement } from './german';
+import { parseLine, pdfFileName, textToPdf, toWinAnsi } from './pdf';
 import { applicationFacts, buildResumePrompt, splitReply } from './prompt';
 import { checkResume, coverage, matchScore, titleMatch } from './score';
 import { KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
@@ -333,5 +334,42 @@ describe('applicationFacts', () => {
       'Notice period / earliest start: 1 month',
     ]);
     expect(applicationFacts(null)).toEqual([]);
+  });
+});
+
+describe('resume PDF', () => {
+  it('names the file after you and the company', () => {
+    expect(pdfFileName('Mohamed Faizel', 'Resume', 'Computer Futures GmbH')).toBe(
+      'Mohamed-Faizel-Resume-ComputerFutures.pdf',
+    );
+    expect(pdfFileName(null, 'Cover-letter', 'Acme')).toBe('Cover-letter-Acme.pdf');
+  });
+
+  it('reads Markdown headings, bold headings and bullets', () => {
+    expect(parseLine('# Mohamed Faizel', true)).toEqual({
+      style: 'name',
+      text: 'Mohamed Faizel',
+      bullet: false,
+    });
+    expect(parseLine('## Berufserfahrung', false).style).toBe('heading');
+    expect(parseLine('**SKILLS**', false)).toEqual({
+      style: 'heading',
+      text: 'SKILLS',
+      bullet: false,
+    });
+    expect(parseLine('- Built **React** apps', false)).toEqual({
+      style: 'body',
+      text: 'Built React apps',
+      bullet: true,
+    });
+  });
+
+  it('keeps German letters and swaps what the PDF font lacks', () => {
+    expect(toWinAnsi('Größe – „gut“ → ok ✓')).toBe('Größe - "gut" -> ok ');
+  });
+
+  it('makes a PDF, also for a long resume', async () => {
+    const bytes = await textToPdf(`# Ada\n${'- Line of work\n'.repeat(200)}`, 'Ada');
+    expect(Buffer.from(bytes).subarray(0, 5).toString()).toBe('%PDF-');
   });
 });
