@@ -4,6 +4,7 @@ import {
   useJobInsights,
   useRemoveInsightTerm,
   useRestoreInsightTerm,
+  useSetHaveTerm,
 } from '@jobsearch/data';
 import { languageName } from '../format';
 import { Badge } from './Badge';
@@ -57,22 +58,25 @@ export function ScoreRing({ score, size = 56 }: { score: number; size?: number }
 }
 
 /**
- * A missing term with × to remove it ("I don't have it" or "not relevant"). When you have a
- * skill it goes with, the chip says so: a fair term for Claude to add next to that experience.
+ * A missing term with "I have it" (you know it, the resume just doesn't say so) and × to remove
+ * it ("I don't have it" or "not relevant"). When you have a skill it goes with, the chip says
+ * so: a fair term for Claude to add next to that experience.
  */
-function MissingChip({
+export function MissingChip({
   term,
   relatedTo,
+  onHave,
   onRemove,
 }: {
   term: string;
   relatedTo: string | null;
-  onRemove: () => void;
+  onHave: () => void;
+  onRemove?: () => void;
 }) {
   const related = relatedTo !== null;
   return (
     <span
-      className={`${CHIP} ${related ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-red-50 text-red-700 ring-red-200'}`}
+      className={`${CHIP} pr-0.5 ${related ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-red-50 text-red-700 ring-red-200'}`}
       title={
         related
           ? `Not in your resume, but it goes with ${relatedTo}, which you have`
@@ -83,11 +87,42 @@ function MissingChip({
       {related && <span className="font-normal opacity-75">(you have {relatedTo})</span>}
       <button
         type="button"
-        onClick={onRemove}
-        aria-label={`Remove ${term}`}
-        className={CHIP_BUTTON}
+        onClick={onHave}
+        aria-label={`I have ${term}`}
+        title="I have this: add it to my skills, count it, and ask Claude to put it in the resume"
+        className={`${CHIP_BUTTON} ml-0.5 font-semibold text-sky-700`}
       >
-        ×
+        ✓ I have it
+      </button>
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove ${term}`}
+          className={CHIP_BUTTON}
+        >
+          ×
+        </button>
+      )}
+    </span>
+  );
+}
+
+/** A term you said you have: blue, counted as covered, with Undo. */
+export function HaveChip({ term, onUndo }: { term: string; onUndo: () => void }) {
+  return (
+    <span
+      className={`${CHIP} bg-sky-50 pr-0.5 text-sky-800 ring-sky-200`}
+      title="On your profile’s Skills list: counted as covered, and the prompt asks Claude to add it"
+    >
+      ✓ {term}
+      <button
+        type="button"
+        onClick={onUndo}
+        aria-label={`I don’t have ${term}`}
+        className={`${CHIP_BUTTON} text-sky-700`}
+      >
+        Undo
       </button>
     </span>
   );
@@ -96,10 +131,12 @@ function MissingChip({
 function MissingList({
   label,
   terms,
+  onHave,
   onRemove,
 }: {
   label: string;
   terms: TermCheck[];
+  onHave: (term: string) => void;
   onRemove: (term: string) => void;
 }) {
   if (terms.length === 0) return null;
@@ -110,6 +147,9 @@ function MissingList({
           <MissingChip
             term={t.term}
             relatedTo={t.relatedTo}
+            onHave={() => {
+              onHave(t.term);
+            }}
             onRemove={() => {
               onRemove(t.term);
             }}
@@ -186,7 +226,7 @@ function scoreParts(insights: JobInsights) {
 }
 
 function count(terms: TermCheck[]) {
-  return `${String(terms.filter((t) => t.inResume).length)}/${String(terms.length)}`;
+  return `${String(terms.filter((t) => t.inResume || t.youHave).length)}/${String(terms.length)}`;
 }
 
 /** Ring, short summary and "How is this worked out?" with the weighted parts. */
@@ -259,6 +299,7 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
   const insights = useJobInsights(jobId);
   const remove = useRemoveInsightTerm();
   const restore = useRestoreInsightTerm();
+  const have = useSetHaveTerm();
 
   if (insights.isPending) {
     return <p className="text-sm text-slate-500">Reading the job…</p>;
@@ -276,12 +317,17 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
   const removeTerm = (term: string, everywhere = false) => {
     remove.mutate({ jobId, term, everywhere });
   };
+  const setHave = (term: string, value: boolean) => {
+    have.mutate({ jobId, term, have: value });
+  };
   // Without a resume nothing is "found", so every term counts as missing.
-  const missingSkills = data.skills.filter((t) => !hasResume || !t.inResume);
-  const missingKeywords = data.keywords.filter((t) => !hasResume || !t.inResume);
+  const isMissing = (t: TermCheck) => !t.youHave && (!hasResume || !t.inResume);
+  const missingSkills = data.skills.filter(isMissing);
+  const missingKeywords = data.keywords.filter(isMissing);
+  const youHave = [...data.skills, ...data.keywords].filter((t) => t.youHave);
   const found = hasResume ? [...data.skills, ...data.keywords].filter((t) => t.inResume) : [];
   const missingCount = missingSkills.length + missingKeywords.length;
-  const changeError = remove.error ?? restore.error;
+  const changeError = remove.error ?? restore.error ?? have.error;
 
   return (
     <section aria-label="Skills and keywords" className="space-y-5 text-sm">
@@ -298,8 +344,44 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
           <h4 className={LABEL}>
             {hasResume ? 'Missing from your resume' : 'Skills and keywords'} · {missingCount}
           </h4>
-          <MissingList label="Missing skills" terms={missingSkills} onRemove={removeTerm} />
-          <MissingList label="Missing keywords" terms={missingKeywords} onRemove={removeTerm} />
+          <MissingList
+            label="Missing skills"
+            terms={missingSkills}
+            onHave={(term) => {
+              setHave(term, true);
+            }}
+            onRemove={removeTerm}
+          />
+          <MissingList
+            label="Missing keywords"
+            terms={missingKeywords}
+            onHave={(term) => {
+              setHave(term, true);
+            }}
+            onRemove={removeTerm}
+          />
+        </div>
+      )}
+
+      {youHave.length > 0 && (
+        <div className="space-y-2">
+          <h4 className={LABEL}>You have these · {youHave.length}</h4>
+          <p className="text-xs text-slate-500">
+            On your profile’s Skills list, so they count for every job. Your resume doesn’t name
+            them yet: the prompt asks Claude to add them.
+          </p>
+          <ul className="flex flex-wrap gap-1.5" aria-label="You have these">
+            {youHave.map((t) => (
+              <li key={t.term}>
+                <HaveChip
+                  term={t.term}
+                  onUndo={() => {
+                    setHave(t.term, false);
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

@@ -156,7 +156,10 @@ const COPY_ICON = (
 
 /** What the prompt is built from, so you know what Claude will get before you copy it. */
 function facts(insights: JobInsights, profile: Profile | undefined) {
-  const missing = [...insights.skills, ...insights.keywords].filter((t) => !t.inResume).length;
+  const missing = [...insights.skills, ...insights.keywords].filter(
+    (t) => !t.inResume && !t.youHave,
+  ).length;
+  const mustAdd = [...insights.skills, ...insights.keywords].filter((t) => t.youHave).length;
   const german = profile?.languages.find((l) => /german|deutsch/i.test(l));
   const answers =
     profile &&
@@ -166,6 +169,7 @@ function facts(insights: JobInsights, profile: Profile | undefined) {
   return [
     { text: 'Master resume' },
     insights.hasResume && missing > 0 && { text: `${String(missing)} missing terms to cover` },
+    mustAdd > 0 && { text: `${String(mustAdd)} skills you have to add` },
     insights.germanRequired
       ? {
           text: `Written in German${insights.germanLevel ? ` (${insights.germanLevel} required)` : ''}`,

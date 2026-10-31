@@ -17,7 +17,7 @@ export const WEIGHTS = {
 /** Percent of the terms your resume mentions, or null when there is nothing to check. */
 export function coverage(terms: TermCheckModel[]): number | null {
   if (terms.length === 0) return null;
-  return Math.round((terms.filter((t) => t.inResume).length / terms.length) * 100);
+  return Math.round((terms.filter((t) => t.inResume || t.youHave).length / terms.length) * 100);
 }
 
 /**
@@ -77,16 +77,21 @@ export interface ResumeCheck extends ScoreParts {
  * Checks one resume text against a job's skills, keywords and title. Used for your profile
  * resume (the "before") and for the resume you wrote for the job (the "after"), so both are
  * scored exactly the same way. An empty resume gets no percentages.
+ *
+ * `youHave` is the Skills list of My profile: a term on it counts as covered even when the
+ * resume text doesn't name it yet. The "after" check leaves it out, so it shows whether Claude
+ * really put the skill into the resume.
  */
 export function checkResume(
   resume: string,
   job: { skills: string[]; keywords: string[]; title: string; language: string | null },
+  youHave: string[] = [],
 ): ResumeCheck {
-  const check = (term: string): TermCheckModel => ({
-    term,
-    inResume: mentions(resume, term),
-    relatedTo: null,
-  });
+  const have = youHave.join('\n');
+  const check = (term: string): TermCheckModel => {
+    const inResume = mentions(resume, term);
+    return { term, inResume, youHave: !inResume && mentions(have, term), relatedTo: null };
+  };
   const skillChecks = job.skills.map(check);
   const keywordChecks = job.keywords.map(check);
   if (!resume.trim()) {

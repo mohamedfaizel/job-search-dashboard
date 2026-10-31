@@ -4,12 +4,13 @@ import {
   jobResumeUrl,
   useDeleteJobResume,
   useSaveJobResumeText,
+  useSetHaveTerm,
   useUploadJobResume,
 } from '@jobsearch/data';
 import type { DragEvent } from 'react';
 import { useState } from 'react';
 import { CopyText } from './CopyText';
-import { ScoreRing } from './InsightsPanel';
+import { HaveChip, MissingChip, ScoreRing } from './InsightsPanel';
 
 export const BUTTON =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
@@ -222,9 +223,15 @@ function FileRow({ name, children }: { name: string; children: React.ReactNode }
 export function SavedReply({ insights }: { insights: JobInsights }) {
   const { jobId, jobResume, score: before } = insights;
   const remove = useDeleteJobResume();
+  const have = useSetHaveTerm();
   const [replacing, setReplacing] = useState(false);
   if (!jobResume) return null;
   const base = jobResumeUrl(jobId);
+  // Terms you said you have ("I have it") that Claude's resume still leaves out.
+  const yours = new Set(
+    [...insights.skills, ...insights.keywords].filter((t) => t.youHave).map((t) => t.term),
+  );
+  const leftOut = jobResume.stillMissing.filter((term) => yours.has(term));
 
   return (
     <section aria-label="Your resume for this job" className="space-y-3">
@@ -261,12 +268,56 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
               </>
             )}
             {jobResume.stillMissing.length > 0 && (
-              <p className="text-xs text-slate-600">
-                Still missing:{' '}
-                <span aria-label="Still missing">{jobResume.stillMissing.join(', ')}</span>
-              </p>
+              <div className="space-y-1">
+                <p className="text-xs text-slate-600">Still missing</p>
+                <ul className="flex flex-wrap gap-1.5" aria-label="Still missing">
+                  {jobResume.stillMissing.map((term) => (
+                    <li key={term}>
+                      {yours.has(term) ? (
+                        <HaveChip
+                          term={term}
+                          onUndo={() => {
+                            have.mutate({ jobId, term, have: false });
+                          }}
+                        />
+                      ) : (
+                        <MissingChip
+                          term={term}
+                          relatedTo={null}
+                          onHave={() => {
+                            have.mutate({ jobId, term, have: true });
+                          }}
+                        />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
+        </div>
+      )}
+
+      {have.error && (
+        <p role="alert" className="text-red-700">
+          Could not change that: {getErrorMessage(have.error)}
+        </p>
+      )}
+
+      {leftOut.length > 0 && (
+        <div className="rounded-xl border border-sky-200 bg-sky-50/70 px-4 py-3">
+          <CopyText
+            label="Copy updated prompt"
+            text={insights.prompt}
+            copiedHint="Paste it into Claude, then Replace this reply with the new one."
+            boxLabel="Updated prompt"
+            primary
+          >
+            <span className="text-sm text-sky-900">
+              Claude’s resume leaves out {leftOut.join(', ')}, which you have. The updated prompt
+              says {leftOut.length === 1 ? 'it' : 'they'} must be in.
+            </span>
+          </CopyText>
         </div>
       )}
 

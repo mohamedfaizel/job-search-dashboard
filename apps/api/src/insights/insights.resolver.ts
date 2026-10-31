@@ -45,6 +45,22 @@ export class InsightsResolver {
     return this.insights.removeTerm(user.id, jobId, term, everywhere);
   }
 
+  @Mutation(() => JobInsightsModel, {
+    description:
+      '"I have this": adds a missing skill or keyword to the Skills list of My profile (have: true), or takes it off (have: false). It then counts as covered for every job',
+  })
+  async setHaveTerm(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('term') term: string,
+    @Args('have', { defaultValue: true }) have: boolean,
+  ): Promise<JobInsightsModel> {
+    const insights = await this.insights.setHaveTerm(user.id, jobId, term, have);
+    // Every job's Fit % changes with your skills: start working it out now.
+    this.fit.warm(user.id);
+    return insights;
+  }
+
   @Mutation(() => JobInsightsModel, { description: 'Puts a removed skill or keyword back' })
   restoreInsightTerm(
     @CurrentUser() user: SessionUser,

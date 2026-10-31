@@ -5,6 +5,7 @@ import {
   applyQueue,
   hiddenIds,
   jobResume,
+  haveTerms,
   removedTerms,
   requests,
   server,
@@ -25,6 +26,7 @@ afterEach(() => {
   applications.length = 0;
   applyQueue.length = 0;
   removedTerms.length = 0;
+  haveTerms.length = 0;
   jobResume.current = null;
   localStorage.clear();
 });

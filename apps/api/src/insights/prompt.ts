@@ -10,6 +10,8 @@ export interface PromptInput {
   languages: string[];
   missingSkills: string[];
   missingKeywords: string[];
+  /** Missing terms you said you have ("I have this"): Claude must put them in the resume. */
+  mustAdd: string[];
   /** The Skills list on My profile: tools you have that may not be in the resume. */
   otherSkills: string[];
   resume: string;
@@ -41,6 +43,12 @@ const LAYOUT =
 
 const CHECK_PART = `- Related: the terms you added under rule 2, each with the experience it is tied to.
 - Skipped: the terms you left out, each with one line why.`;
+
+/** The "I have this" terms, or nothing when there are none (so the prompt stays short). */
+const mustAddPart = (terms: string[], resume = 'my resume') =>
+  terms.length
+    ? `\n\nSkills I really have that ${resume} does not show yet. They MUST be in the new resume: in the Skills section, and next to the experience where I used them when that is clear from my resume:\n${list(terms)}`
+    : '';
 
 const languagesRule = (languages: string[]) =>
   languages.length
@@ -83,7 +91,7 @@ Skills the job asks for that my resume does not show yet:
 ${list(input.missingSkills)}
 
 Keywords from the job ad that my resume does not use yet:
-${list(input.missingKeywords)}
+${list(input.missingKeywords)}${mustAddPart(input.mustAdd)}
 
 Other skills I have (not all of them are in my resume):
 ${list(input.otherSkills)}
@@ -212,7 +220,7 @@ Skills it asks for that my resume does not show yet:
 ${list(job.missingSkills)}
 
 Keywords from its ad that my resume does not use yet:
-${list(job.missingKeywords)}
+${list(job.missingKeywords)}${mustAddPart(job.mustAdd)}
 
 The job ad:
 """

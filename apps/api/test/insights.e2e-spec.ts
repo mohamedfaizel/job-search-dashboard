@@ -62,6 +62,21 @@ const INSIGHTS = /* GraphQL */ `
   }
 `;
 
+const SET_HAVE = /* GraphQL */ `
+  mutation SetHave($jobId: ID!, $term: String!, $have: Boolean) {
+    setHaveTerm(jobId: $jobId, term: $term, have: $have) {
+      skills {
+        term
+        inResume
+        youHave
+      }
+      skillsCoverage
+      score
+      prompt
+    }
+  }
+`;
+
 const REMOVE = /* GraphQL */ `
   mutation Remove($jobId: ID!, $term: String!, $everywhere: Boolean) {
     removeInsightTerm(jobId: $jobId, term: $term, everywhere: $everywhere) {
@@ -329,6 +344,45 @@ describe('job insights without AI', () => {
     // Other users are not affected.
     const admin = await t.gql<{ jobInsights: Insights }>(INSIGHTS, { jobId: second.id });
     expect(admin.data!.jobInsights.removed).toEqual([]);
+  });
+
+  it('"I have this" adds a missing skill to your profile, counts it and tells Claude to add it', async () => {
+    const job = await addJob({ title: 'Designer', skills: ['figma', 'react'], description: '' });
+    await t.prisma.profile.create({
+      data: { userId: 2, resumeText: 'React.', skills: ['TypeScript'] },
+    });
+    const before = await insights(job.id);
+    expect(before.skillsCoverage).toBe(50);
+
+    type Have = {
+      setHaveTerm: Insights & { skills: { term: string; inResume: boolean; youHave: boolean }[] };
+    };
+    const res = await t.asUser<Have>(SET_HAVE, { jobId: job.id, term: 'figma' });
+    expect(res.errors).toBeUndefined();
+    const after = res.data!.setHaveTerm;
+    expect(after.skills).toEqual([
+      { term: 'figma', inResume: false, youHave: true },
+      { term: 'react', inResume: true, youHave: false },
+    ]);
+    expect(after.skillsCoverage).toBe(100);
+    expect(after.score).toBeGreaterThan(before.score!);
+    expect(after.prompt).toContain('They MUST be in the new resume');
+    expect(after.prompt).toContain('- figma');
+    // Saved on your profile, once, next to the skills you had.
+    await t.asUser(SET_HAVE, { jobId: job.id, term: 'Figma' });
+    const profile = await t.prisma.profile.findUniqueOrThrow({ where: { userId: 2 } });
+    expect(profile.skills).toEqual(['TypeScript', 'figma']);
+
+    // Undo takes it off again.
+    const undone = await t.asUser<Have>(SET_HAVE, { jobId: job.id, term: 'figma', have: false });
+    expect(undone.data!.setHaveTerm.skills[0]).toMatchObject({ youHave: false });
+    expect(undone.data!.setHaveTerm.prompt).not.toContain('MUST');
+    // Another user's skills are their own.
+    const admin = await t.gql<Have>(SET_HAVE, { jobId: job.id, term: 'react' });
+    expect(admin.errors).toBeUndefined();
+    expect((await t.prisma.profile.findUniqueOrThrow({ where: { userId: 2 } })).skills).toEqual([
+      'TypeScript',
+    ]);
   });
 
   it('says when a job does not exist', async () => {

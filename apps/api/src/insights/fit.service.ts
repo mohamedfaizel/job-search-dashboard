@@ -80,14 +80,19 @@ export class FitService {
     ].join('|');
   }
 
-  /** Scores every job against the user's profile resume and replaces their JobFit rows. */
+  /** Scores every job against the user's profile resume and skills, and replaces their JobFit rows. */
   private async recalculate(userId: number): Promise<void> {
     const started = Date.now();
     const [profile, removedRows] = await Promise.all([
-      this.prisma.profile.findUnique({ where: { userId }, select: { resumeText: true } }),
+      this.prisma.profile.findUnique({
+        where: { userId },
+        select: { resumeText: true, skills: true },
+      }),
       this.prisma.removedTerm.findMany({ where: { userId }, select: { jobId: true, term: true } }),
     ]);
     const resume = profile?.resumeText ?? '';
+    // Skills you said you have ("I have this") count as covered, like in the job popup.
+    const skills = profile?.skills ?? [];
     if (!resume.trim()) {
       // No resume, nothing to score: the Fit column shows a dash.
       await this.prisma.jobFit.deleteMany({ where: { userId } });
@@ -119,7 +124,7 @@ export class FitService {
     const rows: { userId: number; jobId: string; score: number }[] = [];
     for (const job of jobs) {
       const removed = new Set([...everywhere, ...(perJob.get(job.id) ?? [])]);
-      const { score } = checkResume(resume, jobTerms(job, removed, corpus));
+      const { score } = checkResume(resume, jobTerms(job, removed, corpus), skills);
       if (score !== null) rows.push({ userId, jobId: job.id, score });
     }
     await this.prisma.$transaction([

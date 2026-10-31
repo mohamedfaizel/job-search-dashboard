@@ -8,6 +8,12 @@ export class TermCheckModel {
   @Field({ description: 'Your resume text mentions it' })
   inResume!: boolean;
 
+  @Field({
+    description:
+      'Not in your resume text, but on the Skills list of My profile ("I have this"). It counts as covered, and the prompt tells Claude it must be in the resume',
+  })
+  youHave!: boolean;
+
   @Field(() => String, {
     nullable: true,
     description:
