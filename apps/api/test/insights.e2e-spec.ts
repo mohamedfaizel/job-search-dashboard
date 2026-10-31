@@ -589,5 +589,62 @@ Why Acme: I like your product.
       queue = removed.data!.removeFromApplyQueue;
       expect(queue).toEqual([]);
     });
+
+    it('writes the replies for the waiting jobs with one prompt, and saves each part to its job', async () => {
+      const PROMPT = 'query { applyQueuePrompt { prompt jobIds waiting } }';
+      const SAVE = `mutation ($text: String!) { saveApplyQueueReply(text: $text) { ${QUEUE_FIELDS} } }`;
+      const first = await addJob({ title: 'Backend Engineer', description: 'Kafka and Node.js.' });
+      const second = await addJob({ title: 'Frontend Engineer', description: 'React.' });
+      await t.prisma.profile.create({
+        data: { userId: 2, resumeText: 'NodeJS microservices.', languages: ['German A2'] },
+      });
+      await t.asUser(ADD, { ids: [first.id, second.id] });
+
+      const res = await t.asUser<{
+        applyQueuePrompt: { prompt: string; jobIds: string[]; waiting: number };
+      }>(PROMPT);
+      expect(res.errors).toBeUndefined();
+      const { prompt, jobIds, waiting } = res.data!.applyQueuePrompt;
+      expect(jobIds).toEqual([first.id, second.id]);
+      expect(waiting).toBe(2);
+      expect(prompt).toContain('for each of the 2 jobs below');
+      expect(prompt).toContain(`--- JOB 2 of 2: Frontend Engineer at Acme (id ${second.id}) ---`);
+      expect(prompt).toContain('- German A2');
+      // Your resume goes in once, not once per job.
+      expect(prompt.split('NodeJS microservices.')).toHaveLength(2);
+
+      const reply = `Here you go.
+=== JOB 1: ${first.id} ===
+=== RESUME ===
+Backend Engineer. Node.js and Kafka.
+=== COVER LETTER ===
+Dear Acme team.
+=== FORM ANSWERS ===
+Why Acme: streaming.
+=== CHECK ===
+- Related: none
+**=== JOB 2: garbled ===**
+=== RESUME ===
+Frontend Engineer. React.
+=== COVER LETTER ===
+Hello Acme.`;
+      const saved = await t.asUser<{ saveApplyQueueReply: Item[] }>(SAVE, { text: reply });
+      expect(saved.errors).toBeUndefined();
+      expect(saved.data!.saveApplyQueueReply.map((i) => i.ready)).toEqual([true, true]);
+      const stored = await t.prisma.jobResume.findMany({ orderBy: { text: 'asc' } });
+      expect(stored.map((r) => [r.jobId, r.text, r.coverLetter])).toEqual([
+        [first.id, 'Backend Engineer. Node.js and Kafka.', 'Dear Acme team.'],
+        [second.id, 'Frontend Engineer. React.', 'Hello Acme.'],
+      ]);
+
+      // Nothing left to write.
+      const after = await t.asUser<{
+        applyQueuePrompt: { prompt: string; jobIds: string[]; waiting: number };
+      }>(PROMPT);
+      expect(after.data!.applyQueuePrompt).toEqual({ prompt: '', jobIds: [], waiting: 0 });
+
+      const wrong = await t.asUser(SAVE, { text: 'just a resume' });
+      expect(wrong.errors?.[0]?.message).toMatch(/No "=== JOB 1/);
+    });
   });
 });

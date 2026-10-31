@@ -36,6 +36,20 @@ type ApplyQueueItem {
   url: String
 }
 
+"""
+One Claude prompt that writes the replies for several queued jobs at once
+"""
+type ApplyQueuePrompt {
+  """The jobs in this prompt, oldest first"""
+  jobIds: [ID!]!
+
+  """Empty when every queued job already has a reply"""
+  prompt: String!
+
+  """Queued jobs with no reply yet, in this prompt or not"""
+  waiting: Int!
+}
+
 type Company {
   domain: String
   id: Int!
@@ -455,6 +469,9 @@ type Mutation {
     resume: Boolean! = false
   ): SyncJobsResult!
 
+  """Saves Claude's reply to the queue prompt, each part to its own job"""
+  saveApplyQueueReply(text: String!): [ApplyQueueItem!]!
+
   """
   Saves pasted text as the resume you wrote for this job (replacing the one before), and scores it
   """
@@ -567,6 +584,9 @@ input ProfileInput {
 }
 
 type Query {
+  """One Claude prompt for the queued jobs that have no reply yet (up to 5)"""
+  applyQueuePrompt: ApplyQueuePrompt!
+
   """How many jobs you have hidden"""
   hiddenJobCount: Int!
 

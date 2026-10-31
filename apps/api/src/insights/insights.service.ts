@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { tidy } from '../profile/resume-text';
 import { buildApplyKit } from './apply-kit';
-import type { ApplyQueueItemModel } from './apply-queue';
+import type { ApplyQueueItemModel, ApplyQueuePromptModel } from './apply-queue';
 import { buildQueuePage } from './apply-queue';
 import { CorpusService } from './corpus.service';
 import { germanRequirement } from './german';
@@ -13,7 +13,15 @@ import type {
   TermCheckModel,
 } from './insights.model';
 import { pdfFileName, textToPdf } from './pdf';
-import { applicationFacts, buildResumePrompt, splitReply } from './prompt';
+import type { PromptInput } from './prompt';
+import {
+  applicationFacts,
+  buildQueuePrompt,
+  buildResumePrompt,
+  QUEUE_PROMPT_MAX,
+  splitQueueReply,
+  splitReply,
+} from './prompt';
 import type { ResumeCheck } from './score';
 import { checkResume } from './score';
 import { relatedTo } from './skills';
@@ -37,6 +45,14 @@ export class InsightsService {
   ) {}
 
   async forJob(userId: number, jobId: string): Promise<JobInsightsModel> {
+    return (await this.analyse(userId, jobId)).insights;
+  }
+
+  /** The job's insights, and what its Apply kit prompt is built from. */
+  private async analyse(
+    userId: number,
+    jobId: string,
+  ): Promise<{ insights: JobInsightsModel; promptInput: PromptInput }> {
     const [job, profile, removedRows, jobResume] = await Promise.all([
       this.prisma.job.findUnique({
         where: { id: jobId },
@@ -112,7 +128,22 @@ export class InsightsService {
     const missing = (checks: TermCheckModel[]) =>
       checks.filter((t) => !hasResume || !t.inResume).map((t) => t.term);
 
-    return {
+    const promptInput: PromptInput = {
+      title: job.title,
+      company: job.company.name,
+      city: job.city,
+      resumeLanguage: german.required ? 'de' : 'en',
+      germanLevel: german.level,
+      languages: profile?.languages ?? [],
+      missingSkills: missing(before.skillChecks),
+      missingKeywords: missing(before.keywordChecks),
+      otherSkills,
+      resume,
+      description: job.description,
+      facts: applicationFacts(profile),
+      savedAnswers: profile?.applicationNotes ?? '',
+    };
+    const insights: JobInsightsModel = {
       jobId,
       title: job.title,
       normalizedTitle,
@@ -130,22 +161,9 @@ export class InsightsService {
       titleMatch: before.title,
       score: before.score,
       jobResume: jobResume && this.afterScore(jobResume, terms, before),
-      prompt: buildResumePrompt({
-        title: job.title,
-        company: job.company.name,
-        city: job.city,
-        resumeLanguage: german.required ? 'de' : 'en',
-        germanLevel: german.level,
-        languages: profile?.languages ?? [],
-        missingSkills: missing(before.skillChecks),
-        missingKeywords: missing(before.keywordChecks),
-        otherSkills,
-        resume,
-        description: job.description,
-        facts: applicationFacts(profile),
-        savedAnswers: profile?.applicationNotes ?? '',
-      }),
+      prompt: buildResumePrompt(promptInput),
     };
+    return { insights, promptInput };
   }
 
   /**
@@ -352,6 +370,35 @@ export class InsightsService {
 
   async removeFromApplyQueue(userId: number, jobIds: string[]): Promise<ApplyQueueItemModel[]> {
     await this.prisma.applyQueueItem.deleteMany({ where: { userId, jobId: { in: jobIds } } });
+    return this.applyQueue(userId);
+  }
+
+  /**
+   * One Claude prompt for the queued jobs that have no reply yet (the oldest few), so a single
+   * chat writes all their resumes, cover letters and form answers.
+   */
+  async applyQueuePrompt(userId: number): Promise<ApplyQueuePromptModel> {
+    const waiting = (await this.applyQueue(userId)).filter((item) => !item.ready);
+    const jobIds = waiting.slice(0, QUEUE_PROMPT_MAX).map((item) => item.jobId);
+    const inputs = await Promise.all(
+      jobIds.map(async (jobId) => ({ jobId, ...(await this.analyse(userId, jobId)).promptInput })),
+    );
+    return { prompt: buildQueuePrompt(inputs), jobIds, waiting: waiting.length };
+  }
+
+  /**
+   * Saves Claude's reply to the queue prompt: each job's part goes to that job, as if pasted in
+   * its own Apply kit. Returns the queue, now with those jobs ready.
+   */
+  async saveApplyQueueReply(userId: number, text: string): Promise<ApplyQueueItemModel[]> {
+    const queued = (await this.applyQueue(userId)).map((item) => item.jobId);
+    const replies = splitQueueReply(text, queued);
+    if (replies.size === 0) {
+      throw new BadRequestException(
+        'No "=== JOB 1: … ===" lines found. Paste Claude’s whole reply to the queue prompt.',
+      );
+    }
+    for (const [jobId, reply] of replies) await this.saveJobResume(userId, jobId, reply);
     return this.applyQueue(userId);
   }
 

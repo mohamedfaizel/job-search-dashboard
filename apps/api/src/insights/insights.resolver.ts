@@ -1,7 +1,7 @@
 import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
-import { ApplyQueueItemModel } from './apply-queue';
+import { ApplyQueueItemModel, ApplyQueuePromptModel } from './apply-queue';
 import { FitService } from './fit.service';
 import { JobInsightsModel } from './insights.model';
 import { InsightsService } from './insights.service';
@@ -97,5 +97,22 @@ export class InsightsResolver {
     @Args('jobIds', { type: () => [ID] }) jobIds: string[],
   ): Promise<ApplyQueueItemModel[]> {
     return this.insights.removeFromApplyQueue(user.id, jobIds);
+  }
+
+  @Query(() => ApplyQueuePromptModel, {
+    description: 'One Claude prompt for the queued jobs that have no reply yet (up to 5)',
+  })
+  applyQueuePrompt(@CurrentUser() user: SessionUser): Promise<ApplyQueuePromptModel> {
+    return this.insights.applyQueuePrompt(user.id);
+  }
+
+  @Mutation(() => [ApplyQueueItemModel], {
+    description: "Saves Claude's reply to the queue prompt, each part to its own job",
+  })
+  saveApplyQueueReply(
+    @CurrentUser() user: SessionUser,
+    @Args('text') text: string,
+  ): Promise<ApplyQueueItemModel[]> {
+    return this.insights.saveApplyQueueReply(user.id, text);
   }
 }

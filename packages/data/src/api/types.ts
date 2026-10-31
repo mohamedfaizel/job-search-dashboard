@@ -447,6 +447,16 @@ export interface RemovedTerm {
 }
 
 /** A job you lined up to apply for. */
+/** One Claude prompt that writes the replies for several queued jobs at once. */
+export interface ApplyQueuePrompt {
+  /** Empty when every queued job already has a reply. */
+  prompt: string;
+  /** The jobs in this prompt (at most 5), oldest first. */
+  jobIds: string[];
+  /** Queued jobs with no reply yet, in this prompt or not. */
+  waiting: number;
+}
+
 export interface ApplyQueueItem {
   jobId: string;
   title: string;

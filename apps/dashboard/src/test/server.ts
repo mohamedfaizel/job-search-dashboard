@@ -187,6 +187,26 @@ export const handlers = [
     applyQueue.splice(0, applyQueue.length, ...kept);
     return HttpResponse.json({ data: { removeFromApplyQueue: applyQueue } });
   }),
+  api.query('ApplyQueuePrompt', () => {
+    const waiting = applyQueue.filter((q) => !q.ready);
+    return HttpResponse.json({
+      data: {
+        applyQueuePrompt: {
+          prompt: waiting.length
+            ? `QUEUE PROMPT for ${waiting.map((q) => q.jobId).join(', ')}`
+            : '',
+          jobIds: waiting.map((q) => q.jobId),
+          waiting: waiting.length,
+        },
+      },
+    });
+  }),
+  api.mutation('SaveApplyQueueReply', ({ variables }) => {
+    requests.push({ operation: 'SaveApplyQueueReply', variables });
+    const text = variables['text'] as string;
+    for (const q of applyQueue) if (text.includes(`JOB`) && text.includes(q.jobId)) q.ready = true;
+    return HttpResponse.json({ data: { saveApplyQueueReply: applyQueue } });
+  }),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
   // By default nothing has been tailored yet.
   api.query('TailoredResume', () => HttpResponse.json({ data: { tailoredResume: null } })),

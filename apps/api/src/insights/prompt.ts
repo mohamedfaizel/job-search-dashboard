@@ -28,6 +28,29 @@ const marker = (part: ReplyPart) => `=== ${part} ===`;
 const list = (items: string[]) =>
   items.length ? items.map((item) => `- ${item}`).join('\n') : '- (none)';
 
+const TERM_RULES = `How to handle each skill or keyword:
+1. Supported: my resume or my other skills show it. Use it, in the job ad's own words.
+2. Related: it is closely tied to something I have done (same ecosystem, or the usual tool for it), for example Apollo with GraphQL, Next.js with React, Jest with unit testing, Kubernetes with Docker. Add it next to that experience, e.g. "GraphQL APIs with Apollo Client".
+3. General job-ad words (teamwork, efficiency, platforms, business impact): work them naturally into the summary and bullet points.
+4. No connection to my experience: leave it out.
+
+Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.`;
+
+const LAYOUT =
+  'Layout: ATS-friendly, plain headings (Summary, Skills, Experience, Education), no tables, columns, icons or images. Up to three pages, most relevant experience first.';
+
+const CHECK_PART = `- Related: the terms you added under rule 2, each with the experience it is tied to.
+- Skipped: the terms you left out, each with one line why.`;
+
+const languagesRule = (languages: string[]) =>
+  languages.length
+    ? `My languages, with my real levels. List them in a Languages section exactly like this, never higher:\n${list(languages)}`
+    : 'Keep any language levels from my resume exactly as they are. Never raise them.';
+
+const coverAndAnswers = (company: string) =>
+  `- A cover letter for this job: 200 to 300 words, to the hiring team at ${company}. Three short paragraphs: why this role, what I bring (two or three real examples from my resume), and a short close. Same honesty rules as the resume.
+- Answers to the questions application forms usually ask, 1 to 3 sentences each: why ${company}, why I fit this role, why I am looking for a new job, salary expectation, notice period or earliest start, work permit, willingness to relocate. Take the facts from my list below and never change them. When a fact is missing, write "(fill in)".`;
+
 /**
  * The Apply kit prompt: paste it into Claude (desktop or web) and one reply brings the resume
  * tailored to the job, a cover letter and answers to the usual form questions. Writing it there
@@ -41,9 +64,6 @@ export function buildResumePrompt(input: PromptInput): string {
     input.resumeLanguage === 'de'
       ? `Write the whole resume in German: the job asks for German${input.germanLevel ? ` (${input.germanLevel})` : ''}. Translate my resume and use the job ad's own German words.`
       : "Write the resume in English: the job doesn't ask for German.";
-  const languages = input.languages.length
-    ? `My languages, with my real levels. List them in a Languages section exactly like this, never higher:\n${list(input.languages)}`
-    : 'Keep any language levels from my resume exactly as they are. Never raise them.';
   const where = input.city ? ` in ${input.city}` : '';
   const resume = input.resume.trim()
     ? input.resume.trim()
@@ -68,17 +88,11 @@ ${list(input.missingKeywords)}
 Other skills I have (not all of them are in my resume):
 ${list(input.otherSkills)}
 
-How to handle each skill or keyword:
-1. Supported: my resume or my other skills show it. Use it, in the job ad's own words.
-2. Related: it is closely tied to something I have done (same ecosystem, or the usual tool for it), for example Apollo with GraphQL, Next.js with React, Jest with unit testing, Kubernetes with Docker. Add it next to that experience, e.g. "GraphQL APIs with Apollo Client".
-3. General job-ad words (teamwork, efficiency, platforms, business impact): work them naturally into the summary and bullet points.
-4. No connection to my experience: leave it out.
+${TERM_RULES}
 
-Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.
+${languagesRule(input.languages)}
 
-${languages}
-
-Layout: ATS-friendly, plain headings (Summary, Skills, Experience, Education), no tables, columns, icons or images. Up to three pages, most relevant experience first.
+${LAYOUT}
 
 My current resume:
 """
@@ -91,8 +105,7 @@ ${input.description?.trim() || '(No description saved.)'}
 """
 
 Then write, ${sameLanguage}:
-- A cover letter for this job: 200 to 300 words, to the hiring team at ${input.company}. Three short paragraphs: why this role, what I bring (two or three real examples from my resume), and a short close. Same honesty rules as the resume.
-- Answers to the questions application forms usually ask, 1 to 3 sentences each: why ${input.company}, why I fit this role, why I am looking for a new job, salary expectation, notice period or earliest start, work permit, willingness to relocate. Take the facts from my list below and never change them. When a fact is missing, write "(fill in)".
+${coverAndAnswers(input.company)}
 
 My application facts:
 ${list(input.facts)}${savedAnswers}
@@ -105,8 +118,7 @@ ${marker('COVER LETTER')}
 ${marker('FORM ANSWERS')}
 (one "Question: answer" per line)
 ${marker('CHECK')}
-- Related: the terms you added under rule 2, each with the experience it is tied to.
-- Skipped: the terms you left out, each with one line why.`;
+${CHECK_PART}`;
 }
 
 const MARKER_LINE = /^[ \t#*_>]*=+\s*(RESUME|COVER LETTER|FORM ANSWERS|CHECK)\s*=+[ \t*_]*$/gim;
@@ -160,4 +172,111 @@ export function applicationFacts(
   return facts
     .filter(([, value]) => value.trim())
     .map(([label, value]) => `${label}: ${value.trim()}`);
+}
+
+/** At most this many jobs go into one queue prompt, so Claude's reply stays within one answer. */
+export const QUEUE_PROMPT_MAX = 5;
+// Long ads are cut, so five of them still fit in one prompt.
+const QUEUE_AD_CHARS = 5000;
+
+const jobMarker = (n: number, jobId: string) => `=== JOB ${String(n)}: ${jobId} ===`;
+
+/**
+ * One prompt for several queued jobs: your resume, rules and facts once, then each job with its
+ * missing terms and ad. Claude replies with a JOB marker line before each job's usual four parts,
+ * so the whole reply can be pasted back at once and saved to every job.
+ */
+export function buildQueuePrompt(jobs: (PromptInput & { jobId: string })[]): string {
+  const [first] = jobs;
+  if (!first) return '';
+  const count = `${String(jobs.length)} job${jobs.length === 1 ? '' : 's'}`;
+  const resume = first.resume.trim()
+    ? first.resume.trim()
+    : '(I have not added my resume here yet. Ask me for it before you start.)';
+  const savedAnswers = first.savedAnswers.trim()
+    ? `\n\nMy saved answers (reuse their wording where they fit):\n"""\n${first.savedAnswers.trim()}\n"""`
+    : '';
+
+  const jobBlocks = jobs
+    .map((job, i) => {
+      const where = job.city ? ` in ${job.city}` : '';
+      const language =
+        job.resumeLanguage === 'de'
+          ? `Write everything for this job in German: it asks for German${job.germanLevel ? ` (${job.germanLevel})` : ''}. Use the ad's own German words.`
+          : 'Write everything for this job in English.';
+      const ad = job.description?.trim() || '(No description saved.)';
+      return `--- JOB ${String(i + 1)} of ${String(jobs.length)}: ${job.title} at ${job.company}${where} (id ${job.jobId}) ---
+${language}
+
+Skills it asks for that my resume does not show yet:
+${list(job.missingSkills)}
+
+Keywords from its ad that my resume does not use yet:
+${list(job.missingKeywords)}
+
+The job ad:
+"""
+${ad.length > QUEUE_AD_CHARS ? `${ad.slice(0, QUEUE_AD_CHARS)} […]` : ad}
+"""`;
+    })
+    .join('\n\n');
+
+  return `Please do this for each of the ${count} below: tailor my resume for the job, then write a cover letter and the answers for its application form. Goal for each job: use at least 85% of its skills and keywords, as long as each one is honest for me.
+
+${TERM_RULES}
+
+${languagesRule(first.languages)}
+
+${LAYOUT}
+
+For each job, also write, in that job's language:
+${coverAndAnswers('the company')}
+
+My current resume:
+"""
+${resume}
+"""
+
+Other skills I have (not all of them are in my resume):
+${list(first.otherSkills)}
+
+My application facts:
+${list(first.facts)}${savedAnswers}
+
+THE JOBS
+
+${jobBlocks}
+
+Reply with every job in order, each in exactly this format, with the marker lines in English as written, so my job tracker can split your reply and save each job:
+${jobMarker(1, first.jobId)}
+${marker('RESUME')}
+(the resume)
+${marker('COVER LETTER')}
+(the cover letter)
+${marker('FORM ANSWERS')}
+(one "Question: answer" per line)
+${marker('CHECK')}
+${CHECK_PART}
+
+Then ${jobs.length > 1 ? `the same for the next job, starting with its own line "=== JOB 2: <its id> ===", and so on` : 'nothing else'}. If the reply gets too long, stop after a whole job and tell me which jobs are left, and I will ask you to continue.`;
+}
+
+const JOB_MARKER_LINE = /^[ \t#*_>]*=+\s*JOB\s+(\d+)\s*:\s*([^\s=]+)\s*=+[ \t*_]*$/gim;
+
+/**
+ * Splits a queue reply at its JOB marker lines into each job's reply, keyed by job id. A job
+ * whose marker has a garbled id is matched by its number instead.
+ */
+export function splitQueueReply(text: string, jobIds: string[]): Map<string, string> {
+  const found = [...text.matchAll(JOB_MARKER_LINE)];
+  const replies = new Map<string, string>();
+  found.forEach((match, i) => {
+    const byId = jobIds.includes(match[2] ?? '') ? match[2] : undefined;
+    const jobId = byId ?? jobIds[Number(match[1]) - 1];
+    const start = match.index + match[0].length;
+    const end = found[i + 1]?.index ?? text.length;
+    const part = text.slice(start, end).trim();
+    if (jobId && part) replies.set(jobId, part);
+  });
+  return replies;
 }

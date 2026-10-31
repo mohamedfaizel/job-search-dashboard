@@ -5,15 +5,17 @@ import { queryKeys } from './hooks';
 import {
   ADD_TO_APPLY_QUEUE,
   APPLY_QUEUE,
+  APPLY_QUEUE_PROMPT,
   DELETE_JOB_RESUME,
   JOB_INSIGHTS,
   RECALCULATE_FIT,
   REMOVE_FROM_APPLY_QUEUE,
   REMOVE_INSIGHT_TERM,
   RESTORE_INSIGHT_TERM,
+  SAVE_APPLY_QUEUE_REPLY,
   SAVE_JOB_RESUME_TEXT,
 } from './operations';
-import type { ApplyQueueItem, JobInsights } from './types';
+import type { ApplyQueueItem, ApplyQueuePrompt, JobInsights } from './types';
 
 /** All insights share this prefix, so a new resume can refresh every job's at once. */
 export const jobInsightsPrefix = ['insights'] as const;
@@ -148,6 +150,43 @@ export function useChangeApplyQueue() {
     },
     onSuccess: (queue) => {
       queryClient.setQueryData(applyQueueKey, queue);
+      void queryClient.invalidateQueries({ queryKey: applyQueuePromptKey });
+    },
+  });
+}
+
+export const applyQueuePromptKey = [...applyQueueKey, 'prompt'] as const;
+
+/** One Claude prompt for the queued jobs that have no reply yet (up to 5). */
+export function useApplyQueuePrompt({ enabled = true } = {}) {
+  return useQuery({
+    queryKey: applyQueuePromptKey,
+    enabled,
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ applyQueuePrompt: ApplyQueuePrompt }>(
+        APPLY_QUEUE_PROMPT,
+      );
+      return data.applyQueuePrompt;
+    },
+  });
+}
+
+/** Saves Claude's reply to the queue prompt: each job's part to that job. */
+export function useSaveApplyQueueReply() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (text: string) => {
+      const data = await graphqlClient.request<{ saveApplyQueueReply: ApplyQueueItem[] }>(
+        SAVE_APPLY_QUEUE_REPLY,
+        { text },
+      );
+      return data.saveApplyQueueReply;
+    },
+    onSuccess: (queue) => {
+      queryClient.setQueryData(applyQueueKey, queue);
+      void queryClient.invalidateQueries({ queryKey: applyQueuePromptKey });
+      // Each saved job has a new resume, cover letter and score.
+      void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
     },
   });
 }

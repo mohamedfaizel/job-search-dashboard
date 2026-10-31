@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { germanRequirement } from './german';
 import { parseLine, pdfFileName, textToPdf, toWinAnsi } from './pdf';
-import { applicationFacts, buildResumePrompt, splitReply } from './prompt';
+import {
+  applicationFacts,
+  buildResumePrompt,
+  splitReply,
+  buildQueuePrompt,
+  splitQueueReply,
+} from './prompt';
 import { checkResume, coverage, matchScore, titleMatch } from './score';
 import { KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
 import { detectLanguage, keywordTokens, stopwordsFor, tokenize } from './text';
@@ -371,5 +377,46 @@ describe('resume PDF', () => {
   it('makes a PDF, also for a long resume', async () => {
     const bytes = await textToPdf(`# Ada\n${'- Line of work\n'.repeat(200)}`, 'Ada');
     expect(Buffer.from(bytes).subarray(0, 5).toString()).toBe('%PDF-');
+  });
+});
+
+describe('queue prompt', () => {
+  const job = (jobId: string, title: string, resumeLanguage: 'de' | 'en' = 'en') => ({
+    jobId,
+    title,
+    company: 'Acme',
+    city: null,
+    resumeLanguage,
+    germanLevel: resumeLanguage === 'de' ? 'C1' : null,
+    languages: ['German A2'],
+    missingSkills: ['kafka'],
+    missingKeywords: [],
+    otherSkills: [],
+    resume: 'My resume.',
+    description: 'x'.repeat(6000),
+    facts: [],
+    savedAnswers: '',
+  });
+
+  it('puts the resume in once and each job with its own language and markers', () => {
+    const prompt = buildQueuePrompt([job('a', 'Backend'), job('b', 'Frontend', 'de')]);
+    expect(prompt.split('My resume.')).toHaveLength(2);
+    expect(prompt).toContain('--- JOB 2 of 2: Frontend at Acme (id b) ---');
+    expect(prompt).toContain('in German: it asks for German (C1)');
+    expect(prompt).toContain('=== JOB 1: a ===');
+    // Long ads are cut, so five jobs fit.
+    expect(prompt).toContain(`${'x'.repeat(5000)} […]`);
+    expect(buildQueuePrompt([])).toBe('');
+  });
+
+  it('splits a reply by job id, or by number when the id is garbled', () => {
+    const replies = splitQueueReply(
+      'Intro\n=== JOB 1: a ===\nfirst\n## === JOB 2: zzz ===\nsecond\n=== JOB 3: c ===\n',
+      ['a', 'b', 'c'],
+    );
+    expect([...replies]).toEqual([
+      ['a', 'first'],
+      ['b', 'second'],
+    ]);
   });
 });
