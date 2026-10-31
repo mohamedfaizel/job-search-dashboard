@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { JobsDashboard } from './JobsDashboard';
 import { makeJob } from './test/fixtures';
-import { api, requests, server } from './test/server';
+import { api, applyQueue, OFF_PAGE_JOB_ID, requests, server } from './test/server';
 
 function renderDashboard() {
   const queryClient = createQueryClient();
@@ -631,5 +631,39 @@ describe('JobsDashboard', () => {
       await within(dialog).findByRole('button', { name: 'Remove from Apply queue' }),
     ).toBeInTheDocument();
     expect(within(dialog).getByText('In your Apply queue.')).toBeInTheDocument();
+  });
+
+  it('opens the job popup from its title in the Apply queue, even when it is on another page', async () => {
+    applyQueue.push(
+      {
+        jobId: 'job-1',
+        title: 'Senior Frontend Engineer',
+        company: 'Acme',
+        url: null,
+        ready: false,
+        addedAt: '2026-10-29T12:00:00.000Z',
+      },
+      {
+        jobId: OFF_PAGE_JOB_ID,
+        title: 'Platform Engineer',
+        company: 'Acme',
+        url: null,
+        ready: false,
+        addedAt: '2026-10-29T12:00:00.000Z',
+      },
+    );
+    const user = userEvent.setup();
+    renderDashboard();
+    const queue = await screen.findByRole('region', { name: 'Apply queue (2)' });
+
+    await user.click(within(queue).getByRole('button', { name: 'Senior Frontend Engineer' }));
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+    // Already on the page: no extra request.
+    expect(requests.some((r) => r.operation === 'Job')).toBe(false);
+    await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+
+    await user.click(within(queue).getByRole('button', { name: 'Platform Engineer' }));
+    expect(await screen.findByRole('dialog', { name: 'Platform Engineer' })).toBeInTheDocument();
+    expect(requests).toContainEqual({ operation: 'Job', variables: { id: OFF_PAGE_JOB_ID } });
   });
 });

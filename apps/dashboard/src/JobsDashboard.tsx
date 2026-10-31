@@ -22,6 +22,7 @@ import {
   useRecalculateFit,
   useJobFilterOptions,
   useHiddenJobCount,
+  useJob,
   useJobsPage,
   useJobsVisit,
   useMyApplications,
@@ -109,7 +110,10 @@ export function JobsDashboard() {
   );
 
   const jobs = jobsQuery.data?.items ?? NO_JOBS;
-  const openJob = jobs.find((job) => job.id === openJobId) ?? null;
+  const openOnPage = jobs.find((job) => job.id === openJobId);
+  // A job opened from the Apply queue may be on another page or filtered out: fetch it.
+  const openFetched = useJob(openJobId, { enabled: openJobId !== null && !openOnPage });
+  const openJob = openOnPage ?? (openFetched.data?.id === openJobId ? openFetched.data : null);
   // Only the ticked jobs still on screen count, so a new page or filter starts with none.
   const selectedJobs = useMemo(() => jobs.filter((job) => checked.has(job.id)), [jobs, checked]);
   const selected = useMemo(() => new Set(selectedJobs.map((job) => job.id)), [selectedJobs]);
@@ -276,7 +280,7 @@ export function JobsDashboard() {
         </ul>
       )}
 
-      {!showingHidden && <ApplyQueuePanel />}
+      {!showingHidden && <ApplyQueuePanel onOpenJob={setOpenJobId} />}
 
       <Toolbar
         search={tableState.search}

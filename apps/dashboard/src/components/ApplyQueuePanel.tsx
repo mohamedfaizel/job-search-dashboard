@@ -168,7 +168,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
  * The jobs you lined up to apply for. One Claude in Chrome prompt fills in every form (it stops
  * before Submit on each), then you check each tab, send it and mark the job Applied here.
  */
-export function ApplyQueuePanel() {
+export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => void }) {
   const queue = useApplyQueue();
   const change = useChangeApplyQueue();
   const updateStatus = useUpdateJobStatus();
@@ -214,7 +214,16 @@ export function ApplyQueuePanel() {
         {items.map((item) => (
           <li key={item.jobId} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
             <span className="min-w-0 basis-full sm:basis-0 sm:flex-1">
-              <span className="font-medium text-slate-900">{item.title}</span>{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenJob(item.jobId);
+                }}
+                title="Open the job description"
+                className="text-left font-medium text-slate-900 hover:text-indigo-700 hover:underline"
+              >
+                {item.title}
+              </button>{' '}
               <span className="text-slate-500">at {item.company}</span>
             </span>
             <span

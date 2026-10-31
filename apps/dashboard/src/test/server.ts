@@ -185,7 +185,21 @@ export const PROFILE: Profile = {
   updatedAt: '2026-10-27T08:00:00.000Z',
 };
 
+/** A queued job that isn't on the dashboard's page, so the popup has to fetch it. */
+export const OFF_PAGE_JOB_ID = 'job-elsewhere';
+
 export const handlers = [
+  api.query('Job', ({ variables }) => {
+    requests.push({ operation: 'Job', variables });
+    const id = variables['id'] as string;
+    const job =
+      id === OFF_PAGE_JOB_ID
+        ? { ...JOBS[0]!, id, title: 'Platform Engineer' }
+        : JOBS.find((j) => j.id === id);
+    return HttpResponse.json(
+      job ? { data: { job } } : { errors: [{ message: 'Job not found' }], data: null },
+    );
+  }),
   api.query('ApplyQueue', () => HttpResponse.json({ data: { myApplyQueue: applyQueue } })),
   api.mutation('AddToApplyQueue', ({ variables }) => {
     requests.push({ operation: 'AddToApplyQueue', variables });
