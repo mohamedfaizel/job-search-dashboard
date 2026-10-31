@@ -3,7 +3,7 @@ import { useJobInsights } from '@jobsearch/data';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { capitalize, formatDate, formatSalary, VISA_LABELS, WORKPLACE_LABELS } from '../format';
-import { ApplyKitPanel } from './ApplyKitPanel';
+import { ApplyKitPanel, useApplyStep } from './ApplyKitPanel';
 import { BookmarkIcon, EyeIcon, EyeSlashIcon } from './icons';
 import { InsightsPanel } from './InsightsPanel';
 import { JobAdPanel } from './JobAdPanel';
@@ -101,6 +101,7 @@ function JobDetails({
   onToggleMaximized: () => void;
 }) {
   const [tab, setTab] = useState<Tab>('fit');
+  const applySteps = useApplyStep(job.id);
   const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
   const saved = job.applicationStatus !== 'NONE';
   const sent = SENT.has(job.applicationStatus);
@@ -235,6 +236,11 @@ function JobDetails({
               }`}
             >
               {label}
+              {id === 'apply' && !SENT.has(job.applicationStatus) && (
+                <span className="ml-1.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-700 max-sm:hidden">
+                  step {applySteps.step} of 3
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -247,6 +253,7 @@ function JobDetails({
         </TabPanel>
         <TabPanel id="apply" active={tab}>
           <ApplyKitPanel
+            steps={applySteps}
             job={job}
             onStatusChange={onStatusChange}
             asking={asking}
@@ -284,7 +291,16 @@ function JobDetails({
         )}
         <span className="flex-1" />
         {job.url && (
-          <a href={job.url} target="_blank" rel="noreferrer" className={BUTTON}>
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => {
+              // You may apply there, so the dashboard asks "Did you apply?" later.
+              if (!SENT.has(job.applicationStatus)) onApplyStarted(job);
+            }}
+            className={BUTTON}
+          >
             Open original posting ↗
           </a>
         )}
@@ -304,6 +320,7 @@ function JobDetails({
               type="button"
               onClick={() => {
                 onStatusChange('APPLIED');
+                onApplyAnswered(job);
               }}
               className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 sm:w-auto"
             >
