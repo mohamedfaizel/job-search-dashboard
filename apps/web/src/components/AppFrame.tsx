@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { APP_NAME } from '@/lib/app-name';
+import { Logo } from './Logo';
 
 interface NavItem {
   href: string;
@@ -92,7 +93,8 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
-          <Link href="/jobs" className="font-semibold text-slate-900">
+          <Link href="/jobs" className="flex items-center gap-2 font-semibold text-slate-900">
+            <Logo />
             {APP_NAME}
           </Link>
           <button
