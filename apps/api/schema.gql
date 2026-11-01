@@ -277,6 +277,11 @@ type JobInsights {
   germanLevel: String
 
   """
+  True when germanLevel is read from words like "fließend" (fluent) instead of a named level
+  """
+  germanLevelEstimated: Boolean!
+
+  """
   The ad is written in German or asks for German skills (not just as a plus)
   """
   germanRequired: Boolean!

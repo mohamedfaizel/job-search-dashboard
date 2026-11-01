@@ -9,6 +9,7 @@ import {
 } from '@jobsearch/data';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { germanLevelText } from '../format';
 import { PRIMARY, ReplyInput, SavedReply } from './JobResumePanel';
 
 /** The short prompt for Claude in Chrome. The Apply kit page it opens holds the rules and facts. */
@@ -172,7 +173,7 @@ function facts(insights: JobInsights, profile: Profile | undefined) {
     mustAdd > 0 && { text: `${String(mustAdd)} skills you have to add` },
     insights.germanRequired
       ? {
-          text: `Written in German${insights.germanLevel ? ` (${insights.germanLevel} required)` : ''}`,
+          text: `Written in German${insights.germanLevel ? ` (${germanLevelText(insights)} required)` : ''}`,
           warn: true,
         }
       : { text: 'Written in English' },

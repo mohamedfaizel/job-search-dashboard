@@ -151,7 +151,8 @@ export class InsightsService {
       company: job.company.name,
       city: job.city,
       resumeLanguage,
-      germanLevel: german.level,
+      // "about C1" when the ad only says "fluent": Claude should know it is a reading.
+      germanLevel: german.level && german.levelEstimated ? `about ${german.level}` : german.level,
       languages: profile?.languages ?? [],
       missingSkills: missing(before.skillChecks),
       missingKeywords: missing(before.keywordChecks),
@@ -173,6 +174,7 @@ export class InsightsService {
       languageDetected: !job.language && !!language,
       germanRequired: german.required,
       germanLevel: german.level,
+      germanLevelEstimated: german.levelEstimated,
       resumeLanguage,
       checkedAgainst: scored.language,
       hasResume,

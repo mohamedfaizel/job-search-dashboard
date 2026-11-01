@@ -23,7 +23,15 @@ const SELECT = 'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm'
 const nameOf = (code: string) => RESUME_LANGUAGES[code] ?? code;
 
 /** "Upload a PDF or Word file" for one language. */
-function UploadButton({ language, onDone }: { language: string; onDone?: () => void }) {
+function UploadButton({
+  language,
+  label = 'Upload a file (PDF, Word)',
+  onDone,
+}: {
+  language: string;
+  label?: string;
+  onDone?: () => void;
+}) {
   const upload = useUploadLanguageResume();
   const id = useId();
   const [tooBig, setTooBig] = useState(false);
@@ -33,7 +41,7 @@ function UploadButton({ language, onDone }: { language: string; onDone?: () => v
         htmlFor={id}
         className={`${BUTTON} cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-indigo-500`}
       >
-        {upload.isPending ? 'Reading it…' : 'Upload a file (PDF, Word)'}
+        {upload.isPending ? 'Reading it…' : label}
         <input
           id={id}
           type="file"
@@ -60,8 +68,19 @@ function UploadButton({ language, onDone }: { language: string; onDone?: () => v
   );
 }
 
+/** Called after a resume is saved, so the page can say so even though the form starts again. */
+type OnSaved = (language: string) => void;
+
 /** One saved resume in another language: edit the text, replace it with a file, or delete it. */
-function SavedResume({ resume }: { resume: LanguageResume }) {
+function SavedResume({
+  resume,
+  justSaved,
+  onSaved,
+}: {
+  resume: LanguageResume;
+  justSaved: boolean;
+  onSaved: OnSaved;
+}) {
   const save = useSaveLanguageResume();
   const remove = useDeleteLanguageResume();
   const [text, setText] = useState(resume.text);
@@ -89,18 +108,40 @@ function SavedResume({ resume }: { resume: LanguageResume }) {
         rows={10}
         className={`${inputClass} font-mono`}
       />
+      {justSaved && text === resume.text && (
+        <p role="status" className="text-sm text-emerald-700">
+          ✓ Your {name} resume is saved
+          {resume.fileName ? ` (read from ${resume.fileName})` : ''}. Jobs in {name} now use it.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          className={PRIMARY}
-          disabled={save.isPending || text === resume.text || !text.trim()}
-          onClick={() => {
-            save.mutate({ language: resume.language, text });
+        {/* Only when there is something to save: a grey button next to a saved resume looks broken. */}
+        {text !== resume.text && (
+          <button
+            type="button"
+            className={PRIMARY}
+            disabled={save.isPending || !text.trim()}
+            onClick={() => {
+              save.mutate(
+                { language: resume.language, text },
+                {
+                  onSuccess: () => {
+                    onSaved(resume.language);
+                  },
+                },
+              );
+            }}
+          >
+            {save.isPending ? 'Saving…' : 'Save changes'}
+          </button>
+        )}
+        <UploadButton
+          language={resume.language}
+          label="Replace with a file (PDF, Word)"
+          onDone={() => {
+            onSaved(resume.language);
           }}
-        >
-          {save.isPending ? 'Saving…' : `Save ${name} resume`}
-        </button>
-        <UploadButton language={resume.language} />
+        />
         <button
           type="button"
           className="text-sm text-red-700 hover:underline disabled:opacity-50"
@@ -125,7 +166,7 @@ function SavedResume({ resume }: { resume: LanguageResume }) {
  * Adds your resume in one more language: translate the master resume with Claude (one prompt,
  * facts and language levels kept), then paste the answer or upload a file you already have.
  */
-function AddResume({ languages }: { languages: string[] }) {
+function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSaved }) {
   const [language, setLanguage] = useState(languages.includes('de') ? 'de' : (languages[0] ?? ''));
   const [text, setText] = useState('');
   const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
@@ -239,6 +280,7 @@ function AddResume({ languages }: { languages: string[] }) {
                     onSuccess: () => {
                       setText('');
                       setCopied(null);
+                      onSaved(language);
                     },
                   },
                 );
@@ -247,8 +289,16 @@ function AddResume({ languages }: { languages: string[] }) {
               {save.isPending ? 'Saving…' : `Save ${name} resume`}
             </button>
             <span className="text-slate-500">or</span>
-            <UploadButton language={language} />
+            <UploadButton
+              language={language}
+              onDone={() => {
+                onSaved(language);
+              }}
+            />
           </div>
+          <p className="text-xs text-slate-500">
+            Uploading a file saves it straight away: no need to click Save.
+          </p>
           {save.isError && (
             <p role="alert" className="text-red-700">
               {getErrorMessage(save.error)}
@@ -266,6 +316,8 @@ function AddResume({ languages }: { languages: string[] }) {
  * from it. Resume-Matcher keeps using the main master resume.
  */
 export function OtherResumes({ profile }: { profile: Profile }) {
+  // The language saved last, to confirm it: the saved resume's form starts again after a save.
+  const [justSaved, setJustSaved] = useState<string | null>(null);
   const taken = new Set([profile.resumeLanguage, ...profile.otherResumes.map((r) => r.language)]);
   const free = Object.keys(RESUME_LANGUAGES).filter((code) => !taken.has(code));
 
@@ -285,18 +337,23 @@ export function OtherResumes({ profile }: { profile: Profile }) {
       </div>
       {profile.otherResumes.map((resume) => (
         // key includes the save time, so the text box starts again from a newly saved version.
-        <SavedResume key={`${resume.language}-${resume.updatedAt}`} resume={resume} />
+        <SavedResume
+          key={`${resume.language}-${resume.updatedAt}`}
+          resume={resume}
+          justSaved={justSaved === resume.language}
+          onSaved={setJustSaved}
+        />
       ))}
       {free.length > 0 &&
         (profile.otherResumes.length === 0 ? (
-          <AddResume key={free.join()} languages={free} />
+          <AddResume key={free.join()} languages={free} onSaved={setJustSaved} />
         ) : (
           <details>
             <summary className="cursor-pointer text-sm font-medium text-indigo-700">
               Add another language
             </summary>
             <div className="mt-3">
-              <AddResume key={free.join()} languages={free} />
+              <AddResume key={free.join()} languages={free} onSaved={setJustSaved} />
             </div>
           </details>
         ))}

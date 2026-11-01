@@ -85,3 +85,19 @@ export function timeAgo(iso: string, now = Date.now()): string {
   if (days < 365) return `${Math.floor(days / 30)} mo ago`;
   return `${Math.floor(days / 365)} y ago`;
 }
+
+/**
+ * The German level a job asks for, as shown: "B2" when the ad names it, "about C1" when it is
+ * read from words like "fließend", "" when the ad says nothing about the level.
+ */
+export function germanLevelText(insights: {
+  germanLevel: string | null;
+  germanLevelEstimated: boolean;
+}): string {
+  if (!insights.germanLevel) return '';
+  return insights.germanLevelEstimated ? `about ${insights.germanLevel}` : insights.germanLevel;
+}
+
+/** Tooltip for an estimated level. */
+export const ESTIMATED_LEVEL_HINT =
+  'Estimated from the ad’s words: Grundkenntnisse ≈ A2, gut ≈ B2, fließend or verhandlungssicher ≈ C1, Muttersprache ≈ C2';

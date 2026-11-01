@@ -438,6 +438,8 @@ export interface JobInsights {
   germanRequired: boolean;
   /** The German level the ad names, e.g. "B2". */
   germanLevel: string | null;
+  /** True when the level is read from words like "fließend" (fluent), not named in the ad. */
+  germanLevelEstimated: boolean;
   /** The language the prompt asks for: "de" when German is required, else "en". */
   resumeLanguage: string;
   /** The language of the master resume this job was checked against. */

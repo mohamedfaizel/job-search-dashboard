@@ -2,8 +2,10 @@
 export interface GermanRequirement {
   /** True when the ad is written in German or asks for German skills. */
   required: boolean;
-  /** The level the ad names, e.g. "C1". Null when it names none. */
+  /** The level the ad names, e.g. "C1", or one read from its words. Null when it says nothing. */
   level: string | null;
+  /** True when the level comes from words like "fließend" rather than a named level. */
+  levelEstimated: boolean;
 }
 
 const GERMAN = /deutsch|german/i;
@@ -23,6 +25,21 @@ const ASKS = new RegExp(
   ].join('|'),
   'i',
 );
+/**
+ * Words that describe a level instead of naming it, strongest first: "sehr gut" must be read
+ * before "gut". Roughly how German employers use them (CEFR: A1 lowest, C2 native-like).
+ */
+const LEVEL_WORDS: [RegExp, string][] = [
+  [/mutterspra|native|muttersprachlich/i, 'C2'],
+  [
+    /verhandlungssicher|business[- ]fluent|business[- ]level|fluent|fließend|fliessend|excellent|hervorragend/i,
+    'C1',
+  ],
+  [/sehr gute?|very good|proficient|proficiency/i, 'C1'],
+  [/\bgute?\b|\bgood\b|solide|sicher/i, 'B2'],
+  [/grundkenntnisse|erste kenntnisse|basic|basis/i, 'A2'],
+];
+
 /** "German is a plus" asks for nothing. */
 const OPTIONAL =
   /\b(?:plus|nice[- ]to[- ]have|bonus|advantage|von vorteil|wünschenswert|wuenschenswert|optional)\b/i;
@@ -38,13 +55,18 @@ export function germanRequirement(
 ): GermanRequirement {
   const sentences = (description ?? '').split(/(?<=[.!?;\n])\s+|\n/);
   const asking = sentences.filter((s) => ASKS.test(s));
-  const level =
+  const named =
     asking.map((s) => LEVEL.exec(s)?.[1]).find(Boolean) ??
     sentences
       .filter((s) => GERMAN.test(s))
       .map((s) => LEVEL.exec(s)?.[1])
       .find(Boolean) ??
     null;
+  // No level named: read it from how the ad describes the German it wants.
+  const estimated = named
+    ? null
+    : (LEVEL_WORDS.find(([words]) => asking.some((s) => words.test(s)))?.[1] ?? null);
   const required = language === 'de' || asking.some((s) => !OPTIONAL.test(s));
-  return { required, level: required ? level : null };
+  if (!required) return { required, level: null, levelEstimated: false };
+  return { required, level: named ?? estimated, levelEstimated: !named && estimated !== null };
 }

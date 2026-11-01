@@ -67,6 +67,32 @@ describe('resume in other languages', () => {
     ).toBeInTheDocument();
   });
 
+  it('saves an uploaded German resume straight away and says so', async () => {
+    const user = await renderPage();
+    await user.upload(
+      within(section()).getByLabelText('Upload your German resume'),
+      new File(['%PDF'], 'lebenslauf.pdf', { type: 'application/pdf' }),
+    );
+
+    expect(await within(section()).findByRole('status')).toHaveTextContent(
+      '✓ Your German resume is saved (read from lebenslauf.pdf).',
+    );
+    expect(requests).toContainEqual({
+      operation: 'UploadLanguageResume',
+      variables: { language: 'de' },
+    });
+    // Nothing to save yet, so no (grey) Save button.
+    expect(within(section()).queryByRole('button', { name: 'Save changes' })).toBeNull();
+
+    const text = within(section()).getByRole('textbox', { name: 'German resume text' });
+    await user.type(text, ' Berlin');
+    await user.click(within(section()).getByRole('button', { name: 'Save changes' }));
+    expect(requests).toContainEqual({
+      operation: 'SaveLanguageResume',
+      variables: { language: 'de', text: 'Ada Lovelace\nEntwicklerin Berlin' },
+    });
+  });
+
   it('lets you say which language the master resume is in', async () => {
     const user = await renderPage();
     await user.selectOptions(

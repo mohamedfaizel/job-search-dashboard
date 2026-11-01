@@ -2,7 +2,15 @@ import type { ApplicationStatus, Job } from '@jobsearch/data';
 import { useJobInsights } from '@jobsearch/data';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { capitalize, formatDate, formatSalary, VISA_LABELS, WORKPLACE_LABELS } from '../format';
+import {
+  capitalize,
+  ESTIMATED_LEVEL_HINT,
+  formatDate,
+  formatSalary,
+  germanLevelText,
+  VISA_LABELS,
+  WORKPLACE_LABELS,
+} from '../format';
 import { ApplyKitPanel, useApplyStep } from './ApplyKitPanel';
 import { BookmarkIcon, EyeIcon, EyeSlashIcon } from './icons';
 import { InsightsPanel } from './InsightsPanel';
@@ -58,7 +66,7 @@ const SENT: ReadonlySet<ApplicationStatus> = new Set([
 function MetaLine({ job }: { job: Job }) {
   const insights = useJobInsights(job.id);
   const salary = formatSalary(job.salaryMinUsd, job.salaryMaxUsd);
-  const german = insights.data?.germanRequired ? `German ${insights.data.germanLevel ?? ''}` : '';
+  const german = insights.data?.germanRequired ? `German ${germanLevelText(insights.data)}` : '';
   const parts: ReactNode[] = [
     job.company.name,
     [job.city, job.countryCode].filter(Boolean).join(', '),
@@ -67,7 +75,14 @@ function MetaLine({ job }: { job: Job }) {
     job.workplace && WORKPLACE_LABELS[job.workplace],
     job.visa === 'OFFERS' && VISA_LABELS.OFFERS,
     salary && `${salary}${job.salaryEstimated ? ' (est.)' : ''}`,
-    german && <span className="font-medium text-amber-700">{german.trim()} required</span>,
+    german && (
+      <span
+        className="font-medium text-amber-700"
+        title={insights.data?.germanLevelEstimated ? ESTIMATED_LEVEL_HINT : undefined}
+      >
+        {german.trim()} required
+      </span>
+    ),
   ].filter(Boolean);
   return (
     <p className="text-sm text-slate-600">
