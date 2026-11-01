@@ -583,9 +583,12 @@ describe('JobsDashboard', () => {
     await user.click(
       within(queue).getByRole('button', { name: '2. Paste Claude’s reply from clipboard' }),
     );
-    expect(await within(queue).findByRole('status')).toHaveTextContent(
-      'Saved Claude’s replies for 2 of 2 jobs.',
-    );
+    // The status already shows the "prompt copied" note, so wait for its text to change.
+    await vi.waitFor(() => {
+      expect(within(queue).getByRole('status')).toHaveTextContent(
+        'Saved Claude’s replies for 2 of 2 jobs.',
+      );
+    });
     expect(requests).toContainEqual({
       operation: 'SaveApplyQueueReply',
       variables: { text: '=== JOB 1: job-1 === … === JOB 2: job-2 === …' },

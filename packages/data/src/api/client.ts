@@ -2,9 +2,27 @@ import { ClientError, GraphQLClient } from 'graphql-request';
 
 const DEFAULT_API_URL = 'http://localhost:3000/graphql';
 
-/** Set VITE_API_URL to point the frontends at a deployed API. */
-export const API_URL: string =
-  (import.meta.env['VITE_API_URL'] as string | undefined) ?? DEFAULT_API_URL;
+/**
+ * Where the API runs. The Vite apps read VITE_API_URL and the Next.js app reads
+ * NEXT_PUBLIC_API_URL; both bundlers write the value into the code at build time.
+ */
+export const API_URL: string = viteApiUrl() ?? nextApiUrl() ?? DEFAULT_API_URL;
+
+function viteApiUrl(): string | undefined {
+  // Next.js has no import.meta.env, so read it carefully.
+  const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
+  return env?.['VITE_API_URL'];
+}
+
+// Typed here because the Vite apps don't load Node's types.
+declare const process: { env: { NEXT_PUBLIC_API_URL?: string } } | undefined;
+
+function nextApiUrl(): string | undefined {
+  // Vite has no `process` in the browser. Next.js needs the exact text
+  // `process.env.NEXT_PUBLIC_API_URL` to put the value in.
+  if (typeof process === 'undefined') return undefined;
+  return process.env.NEXT_PUBLIC_API_URL;
+}
 
 // credentials: 'include' sends the httpOnly session cookie with every request, even though
 // the API runs on another port (a different origin) than the page.

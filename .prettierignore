@@ -4,3 +4,5 @@ coverage
 .turbo
 apps/api/schema.gql
 apps/api/src/generated
+.next
+next-env.d.ts

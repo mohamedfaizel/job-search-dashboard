@@ -1,0 +1,7 @@
+/*
+ * source('../') makes Tailwind look for class names only in apps/web/src. Without it, Tailwind
+ * scans from the folder the dev server started in, which in this monorepo includes every
+ * node_modules folder. On Windows, pnpm links those folders to each other, and the scan crashed
+ * the CSS step ("Node.js process exited with code 0xc0000409").
+ */
+@import 'tailwindcss' source('../');

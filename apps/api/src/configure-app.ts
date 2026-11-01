@@ -8,6 +8,8 @@ const DEV_ORIGINS = [
   'http://localhost:5175',
   'http://localhost:5176',
   'http://localhost:6006',
+  // The Next.js app (apps/web).
+  'http://localhost:3001',
 ];
 
 /** Shared by main.ts and the tests, so both run the API the same way. */

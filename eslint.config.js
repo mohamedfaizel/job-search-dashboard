@@ -16,6 +16,8 @@ export default tseslint.config(
       '**/.turbo/**',
       '**/.__mf__temp/**',
       '**/storybook-static/**',
+      '**/.next/**',
+      '**/next-env.d.ts',
       'apps/api/src/generated/**',
     ],
   },
@@ -57,7 +59,7 @@ export default tseslint.config(
   // React apps: hooks rules and accessibility checks.
   {
     files: [
-      'apps/{shell,dashboard,job-form,profile}/src/**/*.{ts,tsx}',
+      'apps/{shell,dashboard,job-form,profile,web}/src/**/*.{ts,tsx}',
       'apps/storybook/{stories,.storybook}/**/*.{ts,tsx}',
     ],
     plugins: { 'react-hooks': reactHooks },
@@ -68,7 +70,7 @@ export default tseslint.config(
   },
   {
     files: [
-      'apps/{shell,dashboard,job-form,profile}/src/**/*.tsx',
+      'apps/{shell,dashboard,job-form,profile,web}/src/**/*.tsx',
       'apps/storybook/stories/**/*.tsx',
     ],
     ...jsxA11y.flatConfigs.strict,
@@ -107,11 +109,11 @@ export default tseslint.config(
 
   // Config files and scripts are not part of any app's tsconfig, so skip type-aware rules there.
   {
-    files: ['**/*.config.{js,ts,mts}', 'apps/api/scripts/**/*.mjs'],
+    files: ['**/*.config.{js,ts,mts,mjs}', 'apps/api/scripts/**/*.mjs'],
     ...tseslint.configs.disableTypeChecked,
   },
   {
-    files: ['**/*.config.{js,ts,mts}'],
+    files: ['**/*.config.{js,ts,mts,mjs}'],
     rules: {
       'import-x/no-named-as-default': 'off',
       'import-x/no-named-as-default-member': 'off',

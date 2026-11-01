@@ -11,6 +11,8 @@ coverage/
 .vite/
 .__mf__temp/
 storybook-static/
+.next/
+next-env.d.ts
 playwright-report/
 test-results/
 
