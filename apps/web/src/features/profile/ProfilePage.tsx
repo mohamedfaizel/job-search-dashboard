@@ -1,4 +1,6 @@
-import { DataProvider, getErrorMessage, useMe, useMyProfile } from '@jobsearch/data';
+'use client';
+
+import { getErrorMessage, useMe, useMyProfile } from '@jobsearch/data';
 import { useState } from 'react';
 import { DocumentDesign } from './components/DocumentDesign';
 import { OtherResumes } from './components/OtherResumes';
@@ -7,14 +9,6 @@ import { ProfileForm } from './components/ProfileForm';
 import { ResumeMatcherStatus } from './components/ResumeMatcherStatus';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
-
-export default function App() {
-  return (
-    <DataProvider>
-      <ProfilePage />
-    </DataProvider>
-  );
-}
 
 const TABS: TabItem<ProfileTab>[] = [
   { id: 'personal', label: 'Personal' },
@@ -26,7 +20,11 @@ const TABS: TabItem<ProfileTab>[] = [
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
-/** The tab you had open last time (only a convenience, so storage may be missing). */
+/**
+ * The tab you had open last time (only a convenience, so storage may be missing). On the
+ * server there is no localStorage, but the tabs only show once the profile has loaded in the
+ * browser, so the server and the browser never disagree about the tab.
+ */
 function savedTab(): ProfileTab {
   try {
     const tab = localStorage.getItem(TAB_KEY);
@@ -36,7 +34,8 @@ function savedTab(): ProfileTab {
   }
 }
 
-function ProfilePage() {
+/** The My profile screen: your details, resumes, document design and Resume-Matcher. */
+export function ProfilePage() {
   const { data: profile, isPending, error } = useMyProfile();
   const { data: me } = useMe();
   const [tab, setTab] = useState<ProfileTab>(savedTab);

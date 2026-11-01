@@ -8,7 +8,6 @@ import { RemoteBoundary } from './components/RemoteBoundary';
 const DashboardApp = lazy(() => import('dashboard/App'));
 const TrackerApp = lazy(() => import('dashboard/Tracker'));
 const JobFormApp = lazy(() => import('jobForm/App'));
-const ProfileApp = lazy(() => import('profile/App'));
 
 export default function App() {
   return (
@@ -62,11 +61,6 @@ export function Shell() {
       {current === 'add-job' && (
         <RemoteBoundary key="job-form" name="job form">
           <JobFormApp />
-        </RemoteBoundary>
-      )}
-      {current === 'profile' && (
-        <RemoteBoundary key="profile" name="profile">
-          <ProfileApp />
         </RemoteBoundary>
       )}
     </Layout>

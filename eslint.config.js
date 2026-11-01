@@ -59,7 +59,7 @@ export default tseslint.config(
   // React apps: hooks rules and accessibility checks.
   {
     files: [
-      'apps/{shell,dashboard,job-form,profile,web}/src/**/*.{ts,tsx}',
+      'apps/{shell,dashboard,job-form,web}/src/**/*.{ts,tsx}',
       'apps/storybook/{stories,.storybook}/**/*.{ts,tsx}',
     ],
     plugins: { 'react-hooks': reactHooks },
@@ -69,10 +69,7 @@ export default tseslint.config(
     },
   },
   {
-    files: [
-      'apps/{shell,dashboard,job-form,profile,web}/src/**/*.tsx',
-      'apps/storybook/stories/**/*.tsx',
-    ],
+    files: ['apps/{shell,dashboard,job-form,web}/src/**/*.tsx', 'apps/storybook/stories/**/*.tsx'],
     ...jsxA11y.flatConfigs.strict,
   },
 

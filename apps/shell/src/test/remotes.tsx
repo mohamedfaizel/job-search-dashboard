@@ -10,7 +10,3 @@ export function TrackerStub() {
 export function JobFormStub() {
   return <p>Job form microfrontend</p>;
 }
-
-export function ProfileStub() {
-  return <p>Profile microfrontend</p>;
-}

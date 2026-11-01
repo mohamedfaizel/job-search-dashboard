@@ -1,13 +1,13 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import App from '../App';
+import { ProfilePage } from '../ProfilePage';
 import { renderWithData } from '../test/render';
 import { requests, wordTemplate } from '../test/server';
 import { DocumentDesign } from './DocumentDesign';
 
 async function renderPage() {
   const user = userEvent.setup();
-  renderWithData(<App />);
+  renderWithData(<ProfilePage />);
   await user.click(await screen.findByRole('tab', { name: 'Design' }));
   // The whole profile page loads first (profile, then style and templates): on a cold CI
   // runner the first render in this file can take longer than the default second.

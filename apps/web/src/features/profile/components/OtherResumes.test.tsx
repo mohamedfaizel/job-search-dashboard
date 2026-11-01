@@ -1,12 +1,12 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import App from '../App';
+import { ProfilePage } from '../ProfilePage';
 import { renderWithData } from '../test/render';
 import { requests } from '../test/server';
 
 async function renderPage() {
   const user = userEvent.setup();
-  renderWithData(<App />);
+  renderWithData(<ProfilePage />);
   await screen.findByRole('textbox', { name: 'Headline' });
   await user.click(screen.getByRole('tab', { name: 'Resume' }));
   return user;
