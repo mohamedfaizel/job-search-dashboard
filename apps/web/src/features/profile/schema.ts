@@ -9,79 +9,71 @@ export function splitList(value: string): string[] {
     .filter(Boolean);
 }
 
-/** A comma-separated box, with the same limits the API checks. */
-const list = (max: number, name: string) =>
-  z
-    .string()
-    .refine((v) => splitList(v).length <= max, { message: `Add at most ${max} ${name}` })
-    .refine((v) => splitList(v).every((item) => item.length <= 80), {
-      message: 'Keep each entry under 80 characters',
-    });
+/** Turns an error key from messages/<locale>.json ("Profile.errors") into text. */
+export type ErrorText = (key: string, values?: Record<string, string | number>) => string;
 
-const link = (site: string) =>
-  z.union([
-    z.literal(''),
-    z.url({ protocol: /^https?$/, message: `${site} must be a full link (https://…)` }),
-  ]);
+/**
+ * The form's rules, with error messages in your language. The form works with strings (that's
+ * what inputs hold); toProfileInput converts them.
+ */
+export function profileSchema(t: ErrorText) {
+  /** A comma-separated box, with the same limits the API checks. */
+  const list = (max: number) =>
+    z
+      .string()
+      .refine((v) => splitList(v).length <= max, { message: t('listMax', { max }) })
+      .refine((v) => splitList(v).every((item) => item.length <= 80), {
+        message: t('entryLength'),
+      });
+  const link = (site: string) =>
+    z.union([z.literal(''), z.url({ protocol: /^https?$/, message: t('link', { site }) })]);
+  const text = (max: number) => z.string().trim().max(max, t('tooLong', { max }));
 
-const text = (max: number, name: string) =>
-  z
-    .string()
-    .trim()
-    .max(max, `Keep ${name} under ${max.toLocaleString('en-US')} characters`);
+  return z.object({
+    firstName: text(80),
+    lastName: text(80),
+    gender: z.enum(['', 'female', 'male', 'diverse', 'not_specified']),
+    dateOfBirth: z.string().refine((v) => v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v), t('date')),
+    nationality: text(80),
+    headline: text(160),
+    targetRoles: list(20),
+    locations: list(20),
+    skills: list(60),
+    languages: list(10),
+    yearsExperience: z
+      .string()
+      .trim()
+      .refine((v) => v === '' || (/^\d+$/.test(v) && Number(v) <= 60), { message: t('years') }),
+    linkedinUrl: link('LinkedIn'),
+    githubUrl: link('GitHub'),
+    websiteUrl: link('Website'),
+    resumeText: z.string().max(50_000, t('tooLong', { max: 50_000 })),
+    resumeLanguage: z.string(),
+    phone: text(40),
+    address: text(200),
+    workPermit: text(200),
+    noticePeriod: text(100),
+    salaryExpectation: text(100),
+    relocation: text(200),
+    employmentType: text(100),
+    workplacePreference: text(100),
+    drivingLicence: text(100),
+    applicationNotes: text(5_000),
+    customFields: z
+      .array(
+        z
+          .object({ label: text(60), value: text(500) })
+          // A value with no name can't be read back later, on forms or in the Apply kit.
+          .refine((f) => f.label.trim() !== '' || f.value.trim() === '', {
+            message: t('fieldName'),
+            path: ['label'],
+          }),
+      )
+      .max(30, t('fieldsMax')),
+  });
+}
 
-/** The form works with strings (that's what inputs hold); toProfileInput converts them. */
-export const profileSchema = z.object({
-  firstName: text(80, 'the first name'),
-  lastName: text(80, 'the last name'),
-  gender: z.enum(['', 'female', 'male', 'diverse', 'not_specified']),
-  dateOfBirth: z
-    .string()
-    .refine((v) => v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v), 'Enter a date like 1990-05-31'),
-  nationality: text(80, 'nationality'),
-  headline: z.string().trim().max(160, 'Keep the headline under 160 characters'),
-  targetRoles: list(20, 'roles'),
-  locations: list(20, 'locations'),
-  skills: list(60, 'skills'),
-  languages: list(10, 'languages'),
-  yearsExperience: z
-    .string()
-    .trim()
-    .refine((v) => v === '' || (/^\d+$/.test(v) && Number(v) <= 60), {
-      message: 'Years of experience must be between 0 and 60',
-    }),
-  linkedinUrl: link('LinkedIn'),
-  githubUrl: link('GitHub'),
-  websiteUrl: link('Website'),
-  resumeText: z.string().max(50_000, 'Keep the resume under 50,000 characters'),
-  resumeLanguage: z.string(),
-  phone: text(40, 'the phone number'),
-  address: text(200, 'the address'),
-  workPermit: text(200, 'the work permit'),
-  noticePeriod: text(100, 'the notice period'),
-  salaryExpectation: text(100, 'the salary expectation'),
-  relocation: text(200, 'the relocation answer'),
-  employmentType: text(100, 'the employment type'),
-  workplacePreference: text(100, 'the workplace preference'),
-  drivingLicence: text(100, 'the driving licence'),
-  applicationNotes: text(5_000, 'your saved answers'),
-  customFields: z
-    .array(
-      z
-        .object({
-          label: text(60, 'each field name'),
-          value: text(500, 'each field value'),
-        })
-        // A value with no name can't be read back later, on forms or in the Apply kit.
-        .refine((f) => f.label.trim() !== '' || f.value.trim() === '', {
-          message: 'Give the field a name',
-          path: ['label'],
-        }),
-    )
-    .max(30, 'Add at most 30 fields of your own'),
-});
-
-export type ProfileFormValues = z.infer<typeof profileSchema>;
+export type ProfileFormValues = z.infer<ReturnType<typeof profileSchema>>;
 
 const GENDER_CODES = ['female', 'male', 'diverse', 'not_specified'] as const;
 const genderOf = (code: string): ProfileFormValues['gender'] =>

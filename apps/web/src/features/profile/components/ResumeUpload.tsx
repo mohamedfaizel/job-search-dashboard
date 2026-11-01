@@ -5,6 +5,7 @@ import {
   useSyncResumeToMatcher,
   useUploadResume,
 } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -18,6 +19,7 @@ interface Props {
 
 /** Picks a PDF or Word file and sends it straight away; the API turns it into text. */
 export function ResumeUpload({ fileName, onUploaded }: Props) {
+  const t = useTranslations('Profile.resume');
   const upload = useUploadResume();
   const matcher = useResumeMatcherStatus();
   const syncToMatcher = useSyncResumeToMatcher();
@@ -31,7 +33,7 @@ export function ResumeUpload({ fileName, onUploaded }: Props) {
           htmlFor={inputId}
           className="cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-indigo-500"
         >
-          {upload.isPending ? 'Reading your resume…' : 'Upload a PDF or Word file'}
+          {upload.isPending ? t('reading') : t('upload')}
           <input
             id={inputId}
             type="file"
@@ -58,17 +60,17 @@ export function ResumeUpload({ fileName, onUploaded }: Props) {
           />
         </label>
         <span className="text-xs text-slate-500">
-          {fileName ? `Last upload: ${fileName}` : 'Up to 5 MB. Scanned images can’t be read.'}
+          {fileName ? t('lastUpload', { file: fileName }) : t('uploadHint')}
         </span>
       </div>
       {upload.isSuccess && (
         <p role="status" className="text-sm text-emerald-700">
-          Resume read. The text below is what we’ll use; fix anything that came out wrong.
+          {t('read')}
         </p>
       )}
       {(tooBig || upload.isError) && (
         <p role="alert" className="text-sm text-red-700">
-          {tooBig ? 'That file is over 5 MB.' : getErrorMessage(upload.error)}
+          {tooBig ? t('tooBig') : getErrorMessage(upload.error)}
         </p>
       )}
     </div>

@@ -1,4 +1,3 @@
-import type { MatcherResumeState } from '@jobsearch/data';
 import {
   getErrorMessage,
   useIsSyncingResume,
@@ -7,9 +6,11 @@ import {
   useSyncResumeToMatcher,
   useTestAiConnection,
 } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 
 /** Shows whether Resume-Matcher, which scores jobs against this resume, is ready to use. */
 export function ResumeMatcherStatus() {
+  const t = useTranslations('Profile.matcher');
   const status = useResumeMatcherStatus();
   const testAi = useTestAiConnection();
   // The test result lives on the mutation, so the regular status refresh doesn't hide it.
@@ -30,38 +31,36 @@ export function ResumeMatcherStatus() {
             ready ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'
           }`}
         >
-          {status.isPending ? 'Checking…' : ready ? 'Running' : 'Not running'}
+          {status.isPending ? t('checking') : ready ? t('running') : t('notRunning')}
         </span>
       </div>
-      <p className="text-sm text-slate-600">
-        Scores each job against your resume (ATS score) and writes a tailored version.
-      </p>
+      <p className="text-sm text-slate-600">{t('intro')}</p>
       {status.isError ? (
         <p role="alert" className="text-sm text-red-700">
-          Could not check Resume-Matcher: {getErrorMessage(status.error)}
+          {t('checkFailed', { error: getErrorMessage(status.error) })}
         </p>
       ) : (
         status.data && <p className="text-sm text-slate-700">{status.data.message}</p>
       )}
       {status.data?.aiProvider && (
         <p className="text-xs text-slate-500">
-          AI: <span className="font-medium text-slate-700">{status.data.aiProvider}</span>
+          {t('ai')} <span className="font-medium text-slate-700">{status.data.aiProvider}</span>
           {status.data.aiModel && (
             <>
               {' · '}
               <span className="font-medium text-slate-700">{status.data.aiModel}</span>
             </>
           )}
-          . To change it, set RM_LLM_MODEL in .env, or pick one in{' '}
+          {t('changeAi')}{' '}
           <a
             href="http://localhost:3100/settings"
             target="_blank"
             rel="noreferrer"
             className="text-indigo-700 underline"
           >
-            Resume-Matcher&apos;s Settings
+            {t('settings')}
           </a>{' '}
-          (a choice saved there beats .env).
+          {t('settingsWins')}
         </p>
       )}
 
@@ -75,9 +74,9 @@ export function ResumeMatcherStatus() {
             disabled={testAi.isPending}
             className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
           >
-            {testAi.isPending ? 'Testing…' : 'Test AI connection'}
+            {testAi.isPending ? t('testing') : t('test')}
           </button>
-          <span className="text-xs text-slate-500">Sends one tiny message to the AI provider.</span>
+          <span className="text-xs text-slate-500">{t('testHint')}</span>
         </div>
       )}
       {ready && <MatcherResumePanel />}
@@ -94,16 +93,9 @@ export function ResumeMatcherStatus() {
   );
 }
 
-const STATE_LABEL: Record<MatcherResumeState, string> = {
-  NO_FILE: 'No file yet',
-  NOT_SENT: 'Not sent',
-  OUTDATED: 'Out of date',
-  READY: 'Ready',
-  FAILED: 'Failed',
-};
-
 /** Your resume's copy inside Resume-Matcher: what it has, and a button to send it again. */
 function MatcherResumePanel() {
+  const t = useTranslations('Profile.matcher');
   const resume = useMyMatcherResume();
   const sync = useSyncResumeToMatcher();
   // Also true when the upload above started the send.
@@ -113,7 +105,7 @@ function MatcherResumePanel() {
   return (
     <div className="space-y-2 border-t border-slate-100 pt-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-medium text-slate-900">Your resume in Resume-Matcher</h3>
+        <h3 className="text-sm font-medium text-slate-900">{t('yourResume')}</h3>
         {state && (
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -124,15 +116,13 @@ function MatcherResumePanel() {
                   : 'bg-amber-50 text-amber-800'
             }`}
           >
-            {STATE_LABEL[state]}
+            {t(`states.${state}`)}
           </span>
         )}
       </div>
       <div aria-live="polite">
         {syncing ? (
-          <p className="text-sm text-slate-700">
-            Sending… Resume-Matcher’s AI is reading your resume, which can take a minute.
-          </p>
+          <p className="text-sm text-slate-700">{t('sending')}</p>
         ) : resume.isError ? (
           <p className="text-sm text-red-700">{getErrorMessage(resume.error)}</p>
         ) : (
@@ -155,7 +145,7 @@ function MatcherResumePanel() {
           disabled={syncing}
           className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
         >
-          {state === 'NOT_SENT' ? 'Send resume' : 'Send again'}
+          {state === 'NOT_SENT' ? t('send') : t('sendAgain')}
         </button>
       )}
     </div>

@@ -14,6 +14,8 @@ import {
   useUpdateDocumentStyle,
   useUploadPhoto,
 } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
 
 const BUTTON =
@@ -23,13 +25,16 @@ const LINK = 'text-sm text-indigo-700 hover:underline';
 
 /** Colours that print well and look calm on a resume. */
 const SWATCHES = [
-  { hex: '1F4E79', name: 'Navy' },
-  { hex: '0E7C66', name: 'Teal' },
-  { hex: '374151', name: 'Graphite' },
-  { hex: '7C2D12', name: 'Burgundy' },
-  { hex: '4338CA', name: 'Indigo' },
-  { hex: '9A6B00', name: 'Ochre' },
-];
+  { hex: '1F4E79', name: 'navy' },
+  { hex: '0E7C66', name: 'teal' },
+  { hex: '374151', name: 'graphite' },
+  { hex: '7C2D12', name: 'burgundy' },
+  { hex: '4338CA', name: 'indigo' },
+  { hex: '9A6B00', name: 'ochre' },
+] as const;
+
+/** <b> in a message: a name to stand out. */
+const bold = (chunks: ReactNode) => <span className="font-medium text-slate-800">{chunks}</span>;
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
@@ -45,6 +50,7 @@ function TemplateCard({
   previewUrl: string;
   onChoose: () => void;
 }) {
+  const t = useTranslations('Profile.design');
   const id = useId();
   return (
     <div
@@ -69,15 +75,16 @@ function TemplateCard({
         target="_blank"
         rel="noreferrer"
         className={`${LINK} mt-2 inline-block pl-6`}
-        aria-label={`Preview ${template.name} (PDF)`}
+        aria-label={t('previewLabel', { name: template.name })}
       >
-        Preview PDF ↗
+        {t('preview')}
       </a>
     </div>
   );
 }
 
 function Photo({ style }: { style: DocumentStyle }) {
+  const t = useTranslations('Profile.design');
   const upload = useUploadPhoto();
   const remove = useDeletePhoto();
   const inputId = useId();
@@ -91,18 +98,18 @@ function Photo({ style }: { style: DocumentStyle }) {
       {style.hasPhoto && (
         <img
           src={`${PHOTO_URL}?v=${String(version)}`}
-          alt="You, as on your resume"
+          alt={t('photoAlt')}
           className="h-20 w-16 rounded border border-slate-200 object-cover"
         />
       )}
       <label htmlFor={inputId} className={`${BUTTON} cursor-pointer`}>
-        {upload.isPending ? 'Uploading…' : style.hasPhoto ? 'Change photo' : 'Upload a photo'}
+        {upload.isPending ? t('uploading') : style.hasPhoto ? t('changePhoto') : t('uploadPhoto')}
         <input
           id={inputId}
           type="file"
           accept="image/jpeg,image/png"
           className="sr-only"
-          aria-label="Upload a photo (JPEG or PNG)"
+          aria-label={t('uploadPhotoLabel')}
           disabled={upload.isPending}
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -127,15 +134,13 @@ function Photo({ style }: { style: DocumentStyle }) {
             remove.mutate();
           }}
         >
-          Remove photo
+          {t('removePhoto')}
         </button>
       )}
-      <span className="text-xs text-slate-500">
-        JPEG or PNG, up to 2 MB. Common in Germany, optional elsewhere.
-      </span>
+      <span className="text-xs text-slate-500">{t('photoHint')}</span>
       {(tooBig || error) && (
         <p role="alert" className="basis-full text-sm text-red-700">
-          {tooBig ? 'That photo is over 2 MB.' : getErrorMessage(error)}
+          {tooBig ? t('photoTooBig') : getErrorMessage(error)}
         </p>
       )}
     </div>
@@ -146,20 +151,14 @@ function Photo({ style }: { style: DocumentStyle }) {
  * Your Word master resume as a template: what was found in it, or how to get there.
  */
 function WordFileNote({ word }: { word: WordTemplate | null }) {
+  const t = useTranslations('Profile.design');
   if (!word) {
-    return (
-      <p className="text-xs text-slate-500">
-        Want your own layout? Upload your master resume as a Word (.docx) file above, and “My own
-        Word file” appears here.
-      </p>
-    );
+    return <p className="text-xs text-slate-500">{t('wordNone')}</p>;
   }
   if (!word.usable) {
     return (
       <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-        <p>
-          <span className="font-medium">{word.fileName}</span> can’t be used as a template yet.
-        </p>
+        <p>{t.rich('wordUnusable', { file: word.fileName, b: bold })}</p>
         <ul className="mt-1 list-disc pl-5">
           {word.warnings.map((w) => (
             <li key={w}>{w}</li>
@@ -171,27 +170,21 @@ function WordFileNote({ word }: { word: WordTemplate | null }) {
   return (
     <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
       <p>
-        <span className="font-medium text-slate-800">My own Word file</span> uses{' '}
-        <span className="font-medium text-slate-800">{word.fileName}</span>: everything above your
-        first heading stays as it is, and each section is written in the style of yours (found:{' '}
-        {word.sections.join(', ')}).
+        {t.rich('wordUses', { file: word.fileName, sections: word.sections.join(', '), b: bold })}
       </p>
       {word.warnings.map((w) => (
         <p key={w} className="text-amber-800">
           {w}
         </p>
       ))}
-      <p>
-        Step 3 of the Apply kit then offers a Word download you can edit. The PDF is made with
-        LibreOffice, which may swap a font it doesn’t have; for an exact PDF, open the Word file and
-        save it as PDF.
-      </p>
+      <p>{t('wordPdf')}</p>
     </div>
   );
 }
 
 /** Edits a copy of the saved style; Save sends it. */
 function DesignForm({ saved }: { saved: DocumentStyle }) {
+  const t = useTranslations('Profile.design');
   const templates = useDocumentTemplates();
   const update = useUpdateDocumentStyle();
   const [draft, setDraft] = useState<DocumentStyleInput>({
@@ -223,24 +216,22 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
     <div className="space-y-5">
       {data && !data.rendererAvailable && (
         <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          {data.rendererConfigured
-            ? 'The PDF renderer isn’t running, so downloads are plain PDFs for now. Start it with '
-            : 'PDF templates are switched off: set PDF_RENDERER_URL in .env, then start the renderer with '}
+          {data.rendererConfigured ? t('rendererOff') : t('rendererMissing')}{' '}
           <code className="rounded bg-amber-100 px-1">pnpm pdf:up</code>.
         </p>
       )}
 
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-slate-700">Resume template</legend>
+        <legend className="text-sm font-medium text-slate-700">{t('template')}</legend>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
-          {data?.resumeTemplates.map((t) => (
+          {data?.resumeTemplates.map((template) => (
             <TemplateCard
-              key={t.id}
-              template={t}
-              checked={draft.resumeTemplate === t.id}
-              previewUrl={documentPreviewUrl('resume', { template: t.id, ...look })}
+              key={template.id}
+              template={template}
+              checked={draft.resumeTemplate === template.id}
+              previewUrl={documentPreviewUrl('resume', { template: template.id, ...look })}
               onChoose={() => {
-                change({ resumeTemplate: t.id });
+                change({ resumeTemplate: template.id });
               }}
             />
           ))}
@@ -251,7 +242,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
       <div className="flex flex-wrap items-end gap-6">
         <div className="space-y-1">
           <span id={colourId} className="block text-sm font-medium text-slate-700">
-            Accent colour
+            {t('colour')}
           </span>
           <div role="radiogroup" aria-labelledby={colourId} className="flex items-center gap-2">
             {SWATCHES.map((s) => (
@@ -260,8 +251,8 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
                 type="button"
                 role="radio"
                 aria-checked={draft.accentColor.toUpperCase() === s.hex}
-                aria-label={s.name}
-                title={s.name}
+                aria-label={t(`swatches.${s.name}`)}
+                title={t(`swatches.${s.name}`)}
                 onClick={() => {
                   change({ accentColor: s.hex });
                 }}
@@ -271,7 +262,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
             ))}
             <input
               type="color"
-              aria-label="Your own colour"
+              aria-label={t('ownColour')}
               value={`#${draft.accentColor.replace(/^#/, '')}`}
               onChange={(e) => {
                 change({ accentColor: e.target.value.replace(/^#/, '').toUpperCase() });
@@ -280,14 +271,12 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
             />
           </div>
           {draft.resumeTemplate === 'mine' && (
-            <p className="text-xs text-slate-500">
-              Your Word file keeps its own colours and fonts; these are for the cover letter.
-            </p>
+            <p className="text-xs text-slate-500">{t('wordColours')}</p>
           )}
         </div>
         <div className="space-y-1">
           <label htmlFor={fontId} className="block text-sm font-medium text-slate-700">
-            Type
+            {t('type')}
           </label>
           <select
             id={fontId}
@@ -297,9 +286,9 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
             }}
             className={SELECT}
           >
-            <option value="auto">The template’s own</option>
-            <option value="sans">Sans-serif (Heros)</option>
-            <option value="serif">Serif (Pagella)</option>
+            <option value="auto">{t('fontAuto')}</option>
+            <option value="sans">{t('fontSans')}</option>
+            <option value="serif">{t('fontSerif')}</option>
           </select>
         </div>
       </div>
@@ -316,7 +305,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
             }}
           />
           <label htmlFor={photoId} className="text-sm font-medium text-slate-700">
-            Show my photo on the resume
+            {t('showPhoto')}
           </label>
         </div>
         <Photo style={saved} />
@@ -324,7 +313,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
 
       <div className="space-y-1">
         <label htmlFor={layoutId} className="block text-sm font-medium text-slate-700">
-          Cover letter layout
+          {t('layout')}
         </label>
         <div className="flex flex-wrap items-center gap-3">
           <select
@@ -351,7 +340,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
             rel="noreferrer"
             className={LINK}
           >
-            Preview cover letter ↗
+            {t('previewLetter')}
           </a>
         </div>
         <p className="text-xs text-slate-500">
@@ -372,16 +361,16 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
           }}
           className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
         >
-          {update.isPending ? 'Saving…' : 'Save design'}
+          {update.isPending ? t('saving') : t('save')}
         </button>
         {done && !changed && (
           <p role="status" className="text-sm text-emerald-700">
-            Design saved. Your next PDF downloads use it.
+            {t('saved')}
           </p>
         )}
         {update.isError && (
           <p role="alert" className="text-sm text-red-700">
-            Could not save: {getErrorMessage(update.error)}
+            {t('saveFailed', { error: getErrorMessage(update.error) })}
           </p>
         )}
       </div>
@@ -395,6 +384,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
  * PDF properties name only you.
  */
 export function DocumentDesign() {
+  const t = useTranslations('Profile.design');
   const style = useDocumentStyle();
   return (
     <section
@@ -403,15 +393,12 @@ export function DocumentDesign() {
     >
       <div>
         <h2 id="design-heading" className="text-lg font-semibold text-slate-900">
-          Resume and cover letter design
+          {t('heading')}
         </h2>
-        <p className="text-sm text-slate-600">
-          How the PDFs you download for a job look. Every template is one column with real text, so
-          applicant tracking systems read it.
-        </p>
+        <p className="text-sm text-slate-600">{t('intro')}</p>
       </div>
       {style.isPending ? (
-        <p className="text-sm text-slate-500">Loading…</p>
+        <p className="text-sm text-slate-500">{t('loading')}</p>
       ) : style.isError ? (
         <p role="alert" className="text-sm text-red-700">
           {getErrorMessage(style.error)}

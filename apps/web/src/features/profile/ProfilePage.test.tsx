@@ -109,6 +109,36 @@ describe('profile page', () => {
     expect(requests).toHaveLength(0);
   });
 
+  it('shows the page and its error messages in German', async () => {
+    const user = userEvent.setup();
+    renderWithData(<ProfilePage />, 'de');
+    const headline = await screen.findByRole('textbox', { name: 'Kurzprofil' });
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Mein Profil');
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Persönlich',
+      'Bewerbungsangaben',
+      'Lebenslauf',
+      'Design',
+      'Resume-Matcher',
+    ]);
+    expect(headline).toHaveValue('Frontend engineer');
+    const years = screen.getByRole('textbox', { name: 'Jahre Berufserfahrung' });
+    await user.clear(years);
+    await user.type(years, '99');
+    await user.click(screen.getByRole('button', { name: 'Profil speichern' }));
+
+    expect(
+      await screen.findByText('Die Berufserfahrung muss zwischen 0 und 60 Jahren liegen'),
+    ).toBeInTheDocument();
+    // Language names come from the browser, in German.
+    await user.click(screen.getByRole('tab', { name: 'Lebenslauf' }));
+    expect(screen.getByRole('combobox', { name: 'Sprache dieses Lebenslaufs' })).toHaveDisplayValue(
+      'Englisch',
+    );
+    expect(requests).toHaveLength(0);
+  });
+
   it('shows the API error when saving fails', async () => {
     server.use(
       api.mutation('UpdateProfile', () =>
