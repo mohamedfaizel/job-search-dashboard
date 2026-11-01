@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { configure } from '@testing-library/react';
 import {
   applications,
+  downloads,
   applyQueue,
   hiddenIds,
   jobResume,
@@ -28,6 +29,7 @@ afterEach(() => {
   removedTerms.length = 0;
   haveTerms.length = 0;
   jobResume.current = null;
+  downloads.length = 0;
   localStorage.clear();
 });
 afterAll(() => {
@@ -44,3 +46,11 @@ Object.assign(HTMLDialogElement.prototype, {
     this.dispatchEvent(new Event('close'));
   },
 });
+
+// jsdom can't download files: record the links the app clicks to download instead.
+const realClick = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'click')?.value as
+  ((this: HTMLElement) => void) | undefined;
+HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
+  if (this.hasAttribute('download')) downloads.push(this.href);
+  else realClick?.call(this);
+};

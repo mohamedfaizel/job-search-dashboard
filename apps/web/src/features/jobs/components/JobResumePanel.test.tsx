@@ -2,7 +2,14 @@ import { createQueryClient, DataProvider, jobResumeUrl, makeStore } from '@jobse
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { makeJob } from '../test/fixtures';
-import { jobResume, rejectJobResumeUpload, requests, SAVED_RESUME, server } from '../test/server';
+import {
+  downloads,
+  jobResume,
+  rejectJobResumeUpload,
+  requests,
+  SAVED_RESUME,
+  server,
+} from '../test/server';
 import { ApplyKitPanel } from './ApplyKitPanel';
 
 function renderPanel() {
@@ -32,9 +39,13 @@ describe('JobResumePanel', () => {
     renderPanel();
 
     await toStep2();
-    await user.click(screen.getByRole('button', { name: 'paste it yourself' }));
-    await user.type(screen.getByRole('textbox', { name: 'Resume text for this job' }), 'GraphQL');
-    await user.click(screen.getByRole('button', { name: 'Save and score' }));
+    const box = screen.getByRole('textbox', { name: 'Claude’s reply' });
+    await user.type(box, 'GraphQL');
+    // Text without marker lines is all resume.
+    expect(screen.getByRole('list', { name: 'Found in the reply' })).toHaveTextContent(
+      '✓ Resume found– Cover letter not found– Form answers not found',
+    );
+    await user.click(screen.getByRole('button', { name: 'Save and download PDF' }));
 
     expect(requests).toContainEqual({
       operation: 'SaveJobResumeText',
@@ -48,7 +59,10 @@ describe('JobResumePanel', () => {
       within(screen.getByRole('list', { name: 'Now covered' })).getByText('graphql'),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Still missing')).toHaveTextContent('microfrontends');
-    expect(screen.queryByRole('textbox', { name: 'Resume text for this job' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'Claude’s reply' })).toBeNull();
+    // The resume PDF downloads straight away.
+    expect(downloads).toEqual([`${jobResumeUrl('job-1')}/resume.pdf`]);
+    expect(screen.getByRole('status')).toHaveTextContent('Your resume PDF is downloading');
   });
 
   it('✓ on a still-missing skill offers the updated prompt; keywords get no buttons', async () => {
@@ -93,6 +107,8 @@ describe('JobResumePanel', () => {
       'href',
       jobResumeUrl('job-1'),
     );
+    // You already have that file, so nothing downloads.
+    expect(downloads).toEqual([]);
   });
 
   it('says why an upload failed', async () => {
