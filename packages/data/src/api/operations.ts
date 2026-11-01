@@ -258,6 +258,15 @@ const USER_FIELDS = /* GraphQL */ `
   email
   name
   role
+  locale
+`;
+
+export const SET_LOCALE = /* GraphQL */ `
+  mutation SetLocale($locale: String!) {
+    setLocale(locale: $locale) {
+      ${USER_FIELDS}
+    }
+  }
 `;
 
 export const ME = /* GraphQL */ `

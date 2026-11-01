@@ -1,0 +1,40 @@
+{
+  "Metadata": {
+    "description": "Behalte Jobs, deine Bewerbungen und dein Profil im Blick."
+  },
+  "Language": {
+    "label": "Sprache",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "Nav": {
+    "main": "Hauptmenü",
+    "menu": "Menü",
+    "jobs": "Stellenanzeigen",
+    "tracker": "Bewerbungen",
+    "addJobs": "Jobs hinzufügen",
+    "profile": "Mein Profil",
+    "admin": "Admin",
+    "logOut": "Abmelden",
+    "loading": "Wird geladen…"
+  },
+  "Auth": {
+    "logInTitle": "Anmelden",
+    "signUpTitle": "Registrieren",
+    "logInHeading": "Bei {app} anmelden",
+    "signUpHeading": "Konto erstellen",
+    "logInIntro": "Behalte Jobs, deine Bewerbungen und dein Profil im Blick.",
+    "signUpIntro": "Das erste Konto auf einem neuen Server wird Admin.",
+    "name": "Name",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "passwordHint": "Mindestens 8 Zeichen",
+    "logIn": "Anmelden",
+    "loggingIn": "Anmeldung läuft…",
+    "createAccount": "Konto erstellen",
+    "creatingAccount": "Konto wird erstellt…",
+    "newHere": "Neu hier?",
+    "createAnAccount": "Konto erstellen",
+    "haveAccount": "Schon ein Konto?"
+  }
+}

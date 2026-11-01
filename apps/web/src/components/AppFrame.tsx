@@ -1,26 +1,30 @@
 'use client';
 
 import type { User } from '@jobsearch/data';
-import { getErrorMessage, useLogOut, useMe } from '@jobsearch/data';
+import { getErrorMessage, useLogOut, useMe, useSetLocale } from '@jobsearch/data';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { isLocale, writeLocaleCookie } from '@/i18n/config';
 import { APP_NAME } from '@/lib/app-name';
+import { LanguageSwitch } from './LanguageSwitch';
 import { Logo } from './Logo';
 
 interface NavItem {
   href: string;
-  label: string;
+  /** The key of its text in messages/<locale>.json, under "Nav". */
+  label: 'jobs' | 'tracker' | 'addJobs' | 'profile';
   adminOnly?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: '/jobs', label: 'Job posts' },
-  { href: '/tracker', label: 'Tracker' },
+  { href: '/jobs', label: 'jobs' },
+  { href: '/tracker', label: 'tracker' },
   // Imports spend the server's JobsPipe credits, so only the admin sees this page.
-  { href: '/jobs/add', label: 'Add jobs', adminOnly: true },
-  { href: '/profile', label: 'My profile' },
+  { href: '/jobs/add', label: 'addJobs', adminOnly: true },
+  { href: '/profile', label: 'profile' },
 ];
 
 /** The link for the page you are on: the longest one that matches (/jobs/add, not /jobs). */
@@ -42,6 +46,15 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const logOut = useLogOut();
   // Set when you click "Log out", so you land on a plain /login (no ?next=).
   const loggingOut = useRef(false);
+  const locale = useLocale();
+  const t = useTranslations('Nav');
+
+  // Your account remembers your language: on another device (or after logging in), switch to it.
+  useEffect(() => {
+    if (!user || user.locale === locale || !isLocale(user.locale)) return;
+    writeLocaleCookie(user.locale);
+    router.refresh();
+  }, [user, locale, router]);
 
   useEffect(() => {
     if (isPending || error || user) return;
@@ -55,7 +68,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
       </p>
     );
   }
-  if (!user) return <p className="p-6 text-sm text-slate-500">Loading…</p>;
+  if (!user) return <p className="p-6 text-sm text-slate-500">{t('loading')}</p>;
 
   return (
     <TopBar
@@ -85,6 +98,8 @@ interface TopBarProps {
  * the header never makes the page scroll sideways.
  */
 export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps) {
+  const t = useTranslations('Nav');
+  const setLocale = useSetLocale();
   const items = NAV_ITEMS.filter((item) => !item.adminOnly || user.role === 'ADMIN');
   const current = currentHref(pathname, items);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -101,7 +116,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
             type="button"
             aria-expanded={menuOpen}
             aria-controls="main-menu"
-            aria-label="Menu"
+            aria-label={t('menu')}
             onClick={() => {
               setMenuOpen((open) => !open);
             }}
@@ -113,7 +128,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
             id="main-menu"
             className={`${menuOpen ? 'flex' : 'hidden'} w-full flex-col gap-2 md:flex md:w-auto md:flex-row md:items-center md:gap-4`}
           >
-            <nav aria-label="Main">
+            <nav aria-label={t('main')}>
               <ul className="flex flex-col gap-1 md:flex-row md:gap-2">
                 {items.map(({ href, label }) => (
                   <li key={href}>
@@ -125,7 +140,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
                       }}
                       className="block w-full rounded-md px-3 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-100 aria-[current=page]:bg-indigo-50 aria-[current=page]:text-indigo-700 md:w-auto md:py-1.5"
                     >
-                      {label}
+                      {t(label)}
                     </Link>
                   </li>
                 ))}
@@ -136,18 +151,25 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
                 {user.name}
                 {user.role === 'ADMIN' && (
                   <span className="ml-1.5 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
-                    admin
+                    {t('admin')}
                   </span>
                 )}
               </span>
-              <button
-                type="button"
-                disabled={loggingOut}
-                onClick={onLogOut}
-                className="rounded-md px-2 py-2.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50 md:py-1.5"
-              >
-                Log out
-              </button>
+              <span className="flex items-center gap-2">
+                <LanguageSwitch
+                  onPick={(picked) => {
+                    setLocale.mutate(picked);
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={loggingOut}
+                  onClick={onLogOut}
+                  className="rounded-md px-2 py-2.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50 md:py-1.5"
+                >
+                  {t('logOut')}
+                </button>
+              </span>
             </div>
           </div>
         </div>

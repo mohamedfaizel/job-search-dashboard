@@ -264,6 +264,8 @@ export interface User {
   name: string;
   /** ADMIN can import jobs and manage saved searches; the first account to sign up gets it. */
   role: Role;
+  /** The language the app is shown in: "en" or "de". */
+  locale: string;
 }
 
 export interface LogInInput {

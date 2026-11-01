@@ -97,7 +97,15 @@ export const syncs: number[] = [];
 export const server = setupServer(
   api.query('Me', () =>
     HttpResponse.json({
-      data: { me: { id: 'u1', email: 'ada@example.com', name: 'Ada King Lovelace', role: 'USER' } },
+      data: {
+        me: {
+          id: 'u1',
+          email: 'ada@example.com',
+          name: 'Ada King Lovelace',
+          role: 'USER',
+          locale: 'en',
+        },
+      },
     }),
   ),
   api.query('MyMatcherResume', () =>

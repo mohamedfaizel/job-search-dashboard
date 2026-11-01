@@ -7,5 +7,6 @@ export const location = { pathname: '/jobs', search: new URLSearchParams() };
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
   usePathname: () => location.pathname,
+  useParams: () => ({}),
   useSearchParams: () => location.search,
 }));

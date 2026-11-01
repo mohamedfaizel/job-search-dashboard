@@ -11,6 +11,7 @@ import type { User } from '../generated/prisma/client';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { LogInInput, SignUpInput, UserModel } from './auth.model';
+import { LOCALES } from './auth.model';
 import { SESSION_DAYS } from './session';
 
 /** A real hash to compare against when the email is unknown, so both cases take as long. */
@@ -58,6 +59,14 @@ export class AuthService {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
+  /** Saves the language you picked, so the app shows it on every device. */
+  setLocale(id: number, locale: string): Promise<User> {
+    if (!(LOCALES as readonly string[]).includes(locale)) {
+      throw new BadRequestException(`Pick one of: ${LOCALES.join(', ')}`);
+    }
+    return this.prisma.user.update({ where: { id }, data: { locale } });
+  }
+
   /** The signed token that goes in the session cookie. */
   sessionToken(user: Pick<User, 'id' | 'role'>): Promise<string> {
     return this.jwt.signAsync({ sub: user.id, role: user.role }, { expiresIn: `${SESSION_DAYS}d` });
@@ -65,5 +74,5 @@ export class AuthService {
 }
 
 export function toUserModel(user: User): UserModel {
-  return { id: user.id, email: user.email, name: user.name, role: user.role };
+  return { id: user.id, email: user.email, name: user.name, role: user.role, locale: user.locale };
 }

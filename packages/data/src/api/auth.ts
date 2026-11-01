@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
-import { LOG_IN, LOG_OUT, ME, SIGN_UP } from './operations';
+import { LOG_IN, LOG_OUT, ME, SET_LOCALE, SIGN_UP } from './operations';
 import type { LogInInput, SignUpInput, User } from './types';
 
 export const meKey = ['me'] as const;
@@ -59,6 +59,29 @@ export function useLogOut() {
     mutationFn: () => graphqlClient.request(LOG_OUT),
     onSuccess: () => {
       startSession(queryClient, null);
+    },
+  });
+}
+
+/** Saves the language you picked on your account, so it follows you to other devices. */
+export function useSetLocale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (locale: string) => {
+      const data = await graphqlClient.request<{ setLocale: User }>(SET_LOCALE, { locale });
+      return data.setLocale;
+    },
+    // Change it in the cache at once, so the page doesn't switch back while the save runs.
+    onMutate: (locale) => {
+      const before = queryClient.getQueryData<User | null>(meKey);
+      if (before) queryClient.setQueryData(meKey, { ...before, locale });
+      return { before };
+    },
+    onError: (_error, _locale, context) => {
+      if (context?.before) queryClient.setQueryData(meKey, context.before);
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(meKey, user);
     },
   });
 }
