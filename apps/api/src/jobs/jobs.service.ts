@@ -372,6 +372,7 @@ function buildWhere(filter: JobFilterInput | undefined, userId: number): Prisma.
   if (filter.minSalaryUsd !== undefined) and.push({ salaryMaxUsd: { gte: filter.minSalaryUsd } });
   if (filter.postedAfter) and.push({ postedAt: { gte: filter.postedAfter } });
   if (filter.createdAfter) and.push({ createdAt: { gt: filter.createdAfter } });
+  if (filter.inApplyQueue) and.push({ applyQueue: { some: { userId } } });
   if (filter.minFit !== undefined) {
     and.push({ fits: { some: { userId, score: { gte: filter.minFit } } } });
   }

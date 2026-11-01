@@ -151,7 +151,8 @@ export class InsightsService {
       company: job.company.name,
       city: job.city,
       resumeLanguage,
-      germanLevel: german.level,
+      // "about C1" when the ad only says "fluent": Claude should know it is a reading.
+      germanLevel: german.level && german.levelEstimated ? `about ${german.level}` : german.level,
       languages: profile?.languages ?? [],
       missingSkills: missing(before.skillChecks),
       missingKeywords: missing(before.keywordChecks),
@@ -173,6 +174,7 @@ export class InsightsService {
       languageDetected: !job.language && !!language,
       germanRequired: german.required,
       germanLevel: german.level,
+      germanLevelEstimated: german.levelEstimated,
       resumeLanguage,
       checkedAgainst: scored.language,
       hasResume,
@@ -354,11 +356,11 @@ export class InsightsService {
     });
   }
 
-  /** Your Apply queue, oldest first. */
+  /** Your Apply queue in your order (oldest first until you move a job), numbered from 1. */
   async applyQueue(userId: number): Promise<ApplyQueueItemModel[]> {
     const rows = await this.prisma.applyQueueItem.findMany({
       where: { userId },
-      orderBy: { addedAt: 'asc' },
+      orderBy: [{ position: 'asc' }, { addedAt: 'asc' }],
       select: {
         addedAt: true,
         job: {
@@ -372,9 +374,10 @@ export class InsightsService {
         },
       },
     });
-    return rows.map(({ addedAt, job }) => {
+    return rows.map(({ addedAt, job }, index) => {
       const reply = job.jobResumes[0];
       return {
+        number: index + 1,
         jobId: job.id,
         title: job.title,
         company: job.company.name,
@@ -385,15 +388,58 @@ export class InsightsService {
     });
   }
 
-  /** Adds jobs to your Apply queue. Jobs already in it keep their place. */
+  /** Adds jobs to the end of your Apply queue. Jobs already in it keep their place. */
   async addToApplyQueue(userId: number, jobIds: string[]): Promise<ApplyQueueItemModel[]> {
     const jobs = await this.prisma.job.findMany({
       where: { id: { in: jobIds } },
       select: { id: true },
     });
+    const last = await this.prisma.applyQueueItem.aggregate({
+      where: { userId },
+      _max: { position: true },
+    });
+    const start = (last._max.position ?? 0) + 1;
     await this.prisma.applyQueueItem.createMany({
-      data: jobs.map((job) => ({ userId, jobId: job.id })),
+      // In the order you picked them.
+      data: jobIds
+        .filter((id) => jobs.some((job) => job.id === id))
+        .map((jobId, i) => ({ userId, jobId, position: start + i })),
       skipDuplicates: true,
+    });
+    return this.applyQueue(userId);
+  }
+
+  /**
+   * Moves a job one place up (earlier) or down (later) in your queue by swapping it with its
+   * neighbour. The whole queue is renumbered 1, 2, 3… in the same transaction, so old gaps and
+   * equal positions can't make a move do nothing.
+   */
+  async moveInApplyQueue(
+    userId: number,
+    jobId: string,
+    direction: 'UP' | 'DOWN',
+  ): Promise<ApplyQueueItemModel[]> {
+    await this.prisma.$transaction(async (tx) => {
+      const order = (
+        await tx.applyQueueItem.findMany({
+          where: { userId },
+          orderBy: [{ position: 'asc' }, { addedAt: 'asc' }],
+          select: { jobId: true },
+        })
+      ).map((row) => row.jobId);
+      const from = order.indexOf(jobId);
+      if (from === -1) throw new NotFoundException('That job is not in your Apply queue');
+      const to = direction === 'UP' ? from - 1 : from + 1;
+      if (to < 0 || to >= order.length) return;
+      order.splice(to, 0, ...order.splice(from, 1));
+      await Promise.all(
+        order.map((id, i) =>
+          tx.applyQueueItem.update({
+            where: { userId_jobId: { userId, jobId: id } },
+            data: { position: i + 1 },
+          }),
+        ),
+      );
     });
     return this.applyQueue(userId);
   }

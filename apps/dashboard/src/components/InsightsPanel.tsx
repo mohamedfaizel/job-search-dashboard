@@ -8,7 +8,7 @@ import {
 } from '@jobsearch/data';
 import type { ReactNode } from 'react';
 import { useId } from 'react';
-import { languageName } from '../format';
+import { ESTIMATED_LEVEL_HINT, germanLevelText, languageName } from '../format';
 import { Badge } from './Badge';
 import { scoreTone } from './MatchPanel';
 
@@ -314,7 +314,8 @@ function Summary({ insights }: { insights: JobInsights }) {
 
 /** Which language to write the resume in, and why. */
 function Language({ insights }: { insights: JobInsights }) {
-  const { language, languageDetected, germanRequired, germanLevel } = insights;
+  const { language, languageDetected, germanRequired, germanLevelEstimated } = insights;
+  const germanLevel = germanLevelText(insights);
   return (
     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
       <span>
@@ -326,7 +327,9 @@ function Language({ insights }: { insights: JobInsights }) {
       </span>
       {germanRequired ? (
         <span title="The ad is in German or asks for German, so the prompt asks for a German resume">
-          <Badge tone="orange">German required{germanLevel ? ` (${germanLevel})` : ''}</Badge>{' '}
+          <span title={germanLevelEstimated ? ESTIMATED_LEVEL_HINT : undefined}>
+            <Badge tone="orange">German required{germanLevel ? ` (${germanLevel})` : ''}</Badge>
+          </span>{' '}
           <span>· resume in German</span>
         </span>
       ) : (

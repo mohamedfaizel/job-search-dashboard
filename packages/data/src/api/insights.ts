@@ -9,6 +9,7 @@ import {
   DELETE_JOB_RESUME,
   JOB_INSIGHTS,
   RECALCULATE_FIT,
+  MOVE_IN_APPLY_QUEUE,
   REMOVE_FROM_APPLY_QUEUE,
   REMOVE_INSIGHT_TERM,
   RESTORE_INSIGHT_TERM,
@@ -174,6 +175,25 @@ export function useChangeApplyQueue() {
     },
     onSuccess: (queue) => {
       queryClient.setQueryData(applyQueueKey, queue);
+      void queryClient.invalidateQueries({ queryKey: applyQueuePromptKey });
+    },
+  });
+}
+
+/** Moves a job one place earlier (UP) or later (DOWN) in your Apply queue. */
+export function useMoveInApplyQueue() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ jobId, direction }: { jobId: string; direction: 'UP' | 'DOWN' }) => {
+      const data = await graphqlClient.request<{ moveInApplyQueue: ApplyQueueItem[] }>(
+        MOVE_IN_APPLY_QUEUE,
+        { jobId, direction },
+      );
+      return data.moveInApplyQueue;
+    },
+    onSuccess: (queue) => {
+      queryClient.setQueryData(applyQueueKey, queue);
+      // The one Claude prompt lists the jobs in queue order.
       void queryClient.invalidateQueries({ queryKey: applyQueuePromptKey });
     },
   });

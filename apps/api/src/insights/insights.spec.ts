@@ -10,7 +10,8 @@ import {
   splitQueueReply,
 } from './prompt';
 import { checkResume, coverage, matchScore, titleMatch } from './score';
-import { KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
+import { compact, KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
+import { buildCorpus, jobTerms } from './terms';
 import { detectLanguage, keywordTokens, stopwordsFor, tokenize } from './text';
 import { documentFrequencies, rankTerms } from './tfidf';
 
@@ -94,6 +95,17 @@ describe('mentions', () => {
     expect(mentions('JavaScript developer', 'java')).toBe(false);
     expect(mentions('C++ developer', 'c')).toBe(false);
     expect(mentions(resume, 'kafka')).toBe(false);
+  });
+
+  it('treats front-end, front end and frontend as the same skill', () => {
+    expect(mentions('Senior Frontend developer', 'front-end')).toBe(true);
+    expect(mentions('Senior front-end developer', 'frontend')).toBe(true);
+    expect(mentions('Front End engineer', 'frontend')).toBe(true);
+    expect(mentions('Built micro-frontends', 'microfrontends')).toBe(true);
+    expect(mentions('Shipped an e-commerce site', 'ecommerce')).toBe(true);
+    // Short terms only as written: "go" must not match "g-o".
+    expect(mentions('g-o', 'go')).toBe(false);
+    expect(mentions('frontend', 'backend')).toBe(false);
   });
 
   it('lists the spellings of a tag', () => {
@@ -322,6 +334,7 @@ describe('germanRequirement', () => {
     expect(germanRequirement('Wir suchen einen Entwickler.', 'de')).toEqual({
       required: true,
       level: null,
+      levelEstimated: false,
     });
   });
 
@@ -329,14 +342,17 @@ describe('germanRequirement', () => {
     expect(germanRequirement('You speak fluent German (C1) and English.', 'en')).toEqual({
       required: true,
       level: 'C1',
+      levelEstimated: false,
     });
     expect(germanRequirement('Requirements:\n- German B2 or better', 'en')).toEqual({
       required: true,
       level: 'B2',
+      levelEstimated: false,
     });
     expect(germanRequirement('Sehr gute Deutschkenntnisse (B2) are a must.', 'en')).toEqual({
       required: true,
       level: 'B2',
+      levelEstimated: false,
     });
   });
 
@@ -344,7 +360,7 @@ describe('germanRequirement', () => {
     expect(germanRequirement('German skills are a plus.', 'en').required).toBe(false);
     expect(
       germanRequirement('We are a German company. English is our office language.', 'en'),
-    ).toEqual({ required: false, level: null });
+    ).toEqual({ required: false, level: null, levelEstimated: false });
     expect(germanRequirement(null, null).required).toBe(false);
   });
 });
@@ -511,5 +527,49 @@ describe('master resumes in more languages', () => {
     expect(prompt).toContain('Berufserfahrung');
     expect(prompt).toContain('never higher:\n- German A2\n- English C1');
     expect(prompt).toContain('Frontend Engineer at Acme, 2019-2024.');
+  });
+});
+
+describe('jobTerms', () => {
+  it('counts front-end and frontend once, and not again as a keyword when it is a skill', () => {
+    const job = {
+      title: 'Frontend Engineer',
+      description:
+        'We build front-end apps. Our frontend team loves front-end testing and accessibility. Accessibility matters.',
+      language: 'en',
+      skills: ['Frontend', 'front-end', 'React'],
+      city: null,
+      raw: null,
+      company: { name: 'Acme' },
+    };
+    const terms = jobTerms(job, new Set(), buildCorpus([job]));
+    expect(terms.skills).toEqual(['frontend', 'react']);
+    expect(terms.keywords.map(compact)).not.toContain('frontend');
+    expect(terms.keywords).toContain('accessibility');
+  });
+});
+
+describe('germanRequirement levels', () => {
+  const level = (ad: string) => {
+    const g = germanRequirement(ad, 'en');
+    return [g.level, g.levelEstimated];
+  };
+  it('uses the level the ad names', () => {
+    expect(level('You speak German at B2 level.')).toEqual(['B2', false]);
+  });
+  it('estimates the level from how the ad describes it', () => {
+    expect(level('Fluent German is required.')).toEqual(['C1', true]);
+    expect(level('Verhandlungssichere Deutschkenntnisse.')).toEqual(['C1', true]);
+    expect(level('Sehr gute Deutschkenntnisse in Wort und Schrift.')).toEqual(['C1', true]);
+    expect(level('Gute Deutschkenntnisse.')).toEqual(['B2', true]);
+    expect(level('Deutschkenntnisse: Grundkenntnisse.')).toEqual(['A2', true]);
+    expect(level('Native German speaker.')).toEqual(['C2', true]);
+  });
+  it('says nothing about the level when the ad says nothing', () => {
+    expect(germanRequirement('Wir suchen eine Entwicklerin.', 'de')).toEqual({
+      required: true,
+      level: null,
+      levelEstimated: false,
+    });
   });
 });

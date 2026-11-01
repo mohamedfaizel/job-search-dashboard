@@ -15,6 +15,11 @@ interface Props {
   /** True while the table shows only the New jobs. */
   newOnly?: boolean;
   onToggleNew?: (() => void) | undefined;
+  /** Jobs in your Apply queue. The chip shows only when there are some. */
+  queueCount?: number | undefined;
+  /** True while the table shows only the jobs in your Apply queue. */
+  queueOnly?: boolean;
+  onToggleQueue?: (() => void) | undefined;
 }
 
 const CARDS: { key: StatCardKey; label: string; dot: string }[] = [
@@ -38,6 +43,9 @@ export function StatCards({
   newCount = 0,
   newOnly = false,
   onToggleNew,
+  queueCount = 0,
+  queueOnly = false,
+  onToggleQueue,
 }: Props) {
   const value = (key: StatCardKey) => {
     if (key === 'total') return total;
@@ -64,6 +72,23 @@ export function StatCards({
       New
       <span className={`font-semibold tabular-nums ${newOnly ? 'text-white' : 'text-slate-900'}`}>
         {newCount}
+      </span>
+    </button>
+  );
+
+  const queueChip = onToggleQueue && (queueCount > 0 || queueOnly) && (
+    <button
+      key="queue"
+      type="button"
+      aria-pressed={queueOnly}
+      title="Jobs in your Apply queue"
+      onClick={onToggleQueue}
+      className={pill(queueOnly)}
+    >
+      <span aria-hidden="true" className="h-2 w-2 rounded-full bg-violet-500" />
+      In Apply queue
+      <span className={`font-semibold tabular-nums ${queueOnly ? 'text-white' : 'text-slate-900'}`}>
+        {queueCount}
       </span>
     </button>
   );
@@ -95,8 +120,8 @@ export function StatCards({
             </span>
           </button>
         );
-        // The New chip sits right after "Jobs found": a part of them.
-        return key === 'total' && newChip ? [card, newChip] : [card];
+        // The New and Apply queue chips sit right after "Jobs found": parts of them.
+        return key === 'total' ? [card, newChip, queueChip].filter(Boolean) : [card];
       })}
     </div>
   );

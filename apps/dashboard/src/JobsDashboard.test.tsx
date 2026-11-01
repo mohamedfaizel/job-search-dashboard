@@ -645,6 +645,7 @@ describe('JobsDashboard', () => {
         url: null,
         ready: false,
         addedAt: '2026-10-29T12:00:00.000Z',
+        number: 0,
       },
       {
         jobId: OFF_PAGE_JOB_ID,
@@ -653,6 +654,7 @@ describe('JobsDashboard', () => {
         url: null,
         ready: false,
         addedAt: '2026-10-29T12:00:00.000Z',
+        number: 0,
       },
     );
     const user = userEvent.setup();
@@ -668,5 +670,42 @@ describe('JobsDashboard', () => {
     await user.click(within(queue).getByRole('button', { name: 'Platform Engineer' }));
     expect(await screen.findByRole('dialog', { name: 'Platform Engineer' })).toBeInTheDocument();
     expect(requests).toContainEqual({ operation: 'Job', variables: { id: OFF_PAGE_JOB_ID } });
+  });
+
+  it('numbers the Apply queue, moves jobs, and marks queued jobs in the table', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    // Queue two jobs from the table: tick them, then "Add to Apply queue".
+    for (const name of ['Senior Frontend Engineer', 'Backend Developer']) {
+      const row = screen.getByRole('button', { name }).closest('tr')!;
+      await user.click(within(row).getByRole('checkbox'));
+    }
+    await user.click(screen.getByRole('button', { name: 'Add to Apply queue' }));
+    const queue = await screen.findByRole('region', { name: 'Apply queue (2)' });
+
+    const items = within(queue).getAllByRole('listitem');
+    expect(items[0]).toHaveTextContent(/^1/);
+    expect(
+      within(queue).getByRole('button', { name: 'Move Senior Frontend Engineer up' }),
+    ).toBeDisabled();
+    const backendRow = () =>
+      within(screen.getByRole('table'))
+        .getByRole('button', { name: 'Backend Developer' })
+        .closest('tr')!;
+    expect(within(backendRow()).getByText('Queue #2')).toBeInTheDocument();
+
+    await user.click(within(queue).getByRole('button', { name: 'Move Backend Developer up' }));
+    expect(requests).toContainEqual({
+      operation: 'MoveInApplyQueue',
+      variables: { jobId: 'job-2', direction: 'UP' },
+    });
+    expect(await within(backendRow()).findByText('Queue #1')).toBeInTheDocument();
+
+    // The chip shows only the queued jobs.
+    await user.click(screen.getByRole('button', { name: /^In Apply queue\s*2$/ }));
+    await waitFor(() => {
+      expect(lastJobsPageVariables()).toMatchObject({ filter: { inApplyQueue: true } });
+    });
   });
 });

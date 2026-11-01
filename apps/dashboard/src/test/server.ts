@@ -40,8 +40,12 @@ function queueItem(jobId: string): ApplyQueueItem | null {
     url: job.url,
     ready: jobId === 'job-1' && jobResume.current !== null,
     addedAt: '2026-10-29T12:00:00.000Z',
+    number: 0,
   };
 }
+
+/** The queue as the API returns it: numbered 1, 2, 3 in its order. */
+const numbered = () => applyQueue.map((item, i) => ({ ...item, number: i + 1 }));
 
 /** Insights for a job when the user has a resume: some skills found, some missing. */
 export const INSIGHTS: JobInsights = {
@@ -52,6 +56,7 @@ export const INSIGHTS: JobInsights = {
   languageDetected: false,
   germanRequired: true,
   germanLevel: 'B2',
+  germanLevelEstimated: false,
   resumeLanguage: 'de',
   checkedAgainst: 'en',
   hasResume: true,
@@ -209,21 +214,30 @@ export const handlers = [
       job ? { data: { job } } : { errors: [{ message: 'Job not found' }], data: null },
     );
   }),
-  api.query('ApplyQueue', () => HttpResponse.json({ data: { myApplyQueue: applyQueue } })),
+  api.query('ApplyQueue', () => HttpResponse.json({ data: { myApplyQueue: numbered() } })),
   api.mutation('AddToApplyQueue', ({ variables }) => {
     requests.push({ operation: 'AddToApplyQueue', variables });
     for (const id of variables['jobIds'] as string[]) {
       const item = queueItem(id);
       if (item && !applyQueue.some((q) => q.jobId === id)) applyQueue.push(item);
     }
-    return HttpResponse.json({ data: { addToApplyQueue: applyQueue } });
+    return HttpResponse.json({ data: { addToApplyQueue: numbered() } });
+  }),
+  api.mutation('MoveInApplyQueue', ({ variables }) => {
+    requests.push({ operation: 'MoveInApplyQueue', variables });
+    const from = applyQueue.findIndex((q) => q.jobId === variables['jobId']);
+    const to = variables['direction'] === 'UP' ? from - 1 : from + 1;
+    if (from >= 0 && to >= 0 && to < applyQueue.length) {
+      applyQueue.splice(to, 0, ...applyQueue.splice(from, 1));
+    }
+    return HttpResponse.json({ data: { moveInApplyQueue: numbered() } });
   }),
   api.mutation('RemoveFromApplyQueue', ({ variables }) => {
     requests.push({ operation: 'RemoveFromApplyQueue', variables });
     const ids = variables['jobIds'] as string[];
     const kept = applyQueue.filter((q) => !ids.includes(q.jobId));
     applyQueue.splice(0, applyQueue.length, ...kept);
-    return HttpResponse.json({ data: { removeFromApplyQueue: applyQueue } });
+    return HttpResponse.json({ data: { removeFromApplyQueue: numbered() } });
   }),
   api.query('ApplyQueuePrompt', () => {
     const waiting = applyQueue.filter((q) => !q.ready);
@@ -243,7 +257,7 @@ export const handlers = [
     requests.push({ operation: 'SaveApplyQueueReply', variables });
     const text = variables['text'] as string;
     for (const q of applyQueue) if (text.includes(`JOB`) && text.includes(q.jobId)) q.ready = true;
-    return HttpResponse.json({ data: { saveApplyQueueReply: applyQueue } });
+    return HttpResponse.json({ data: { saveApplyQueueReply: numbered() } });
   }),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
   // By default nothing has been tailored yet.

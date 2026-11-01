@@ -1,4 +1,14 @@
-import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
+
+/** Which way to move a job in the Apply queue: UP = one place earlier. */
+export enum QueueDirection {
+  UP = 'UP',
+  DOWN = 'DOWN',
+}
+registerEnumType(QueueDirection, {
+  name: 'QueueDirection',
+  description: 'UP moves a job one place earlier in the Apply queue, DOWN one place later',
+});
 
 @ObjectType('ApplyQueueItem', { description: 'A job you lined up to apply for' })
 export class ApplyQueueItemModel {
@@ -22,6 +32,9 @@ export class ApplyQueueItemModel {
 
   @Field()
   addedAt!: Date;
+
+  @Field(() => Int, { description: 'Its number in your queue: 1 is applied for first' })
+  number!: number;
 }
 
 @ObjectType('ApplyQueuePrompt', {

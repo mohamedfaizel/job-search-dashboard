@@ -31,6 +31,8 @@ export interface RowActions {
   showingHidden?: boolean;
   /** Jobs imported after this get a New badge; null shows none. */
   newSince?: string | null;
+  /** Each queued job's number in your Apply queue, for its "Queue #2" badge. */
+  queueNumbers?: ReadonlyMap<string, number> | undefined;
 }
 
 /** The ticked rows, for actions on several jobs at once. */
@@ -90,8 +92,9 @@ export function isNew(job: Job, newSince: string | null | undefined): boolean {
 
 /** Title (opens the popup) with the company under it: one cell instead of two columns. */
 export function JobCell({ job }: { job: Job }) {
-  const { openJob, newSince } = useRowActions();
+  const { openJob, newSince, queueNumbers } = useRowActions();
   const fresh = isNew(job, newSince);
+  const queued = queueNumbers?.get(job.id);
   return (
     <div className="flex min-w-0 items-center gap-3">
       <CompanyLogo job={job} />
@@ -110,6 +113,11 @@ export function JobCell({ job }: { job: Job }) {
           {fresh && (
             <Badge tone="blue" title="Imported since your last visit">
               New
+            </Badge>
+          )}
+          {queued !== undefined && (
+            <Badge tone="purple" title={`Number ${String(queued)} in your Apply queue`}>
+              Queue #{queued}
             </Badge>
           )}
           <span className="truncate" title={job.company.name}>

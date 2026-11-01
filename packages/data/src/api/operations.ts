@@ -487,6 +487,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     languageDetected
     germanRequired
     germanLevel
+    germanLevelEstimated
     resumeLanguage
     checkedAgainst
     hasResume
@@ -587,6 +588,7 @@ const APPLY_QUEUE_FIELDS = /* GraphQL */ `
   url
   ready
   addedAt
+  number
 `;
 
 export const APPLY_QUEUE = /* GraphQL */ `
@@ -600,6 +602,14 @@ export const APPLY_QUEUE = /* GraphQL */ `
 export const ADD_TO_APPLY_QUEUE = /* GraphQL */ `
   mutation AddToApplyQueue($jobIds: [ID!]!) {
     addToApplyQueue(jobIds: $jobIds) {
+      ${APPLY_QUEUE_FIELDS}
+    }
+  }
+`;
+
+export const MOVE_IN_APPLY_QUEUE = /* GraphQL */ `
+  mutation MoveInApplyQueue($jobId: ID!, $direction: QueueDirection!) {
+    moveInApplyQueue(jobId: $jobId, direction: $direction) {
       ${APPLY_QUEUE_FIELDS}
     }
   }
