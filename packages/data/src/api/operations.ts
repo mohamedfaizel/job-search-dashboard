@@ -487,6 +487,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     languageDetected
     germanRequired
     germanLevel
+    germanLevelEstimated
     resumeLanguage
     checkedAgainst
     hasResume

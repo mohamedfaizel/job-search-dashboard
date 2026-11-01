@@ -190,6 +190,19 @@ export const server = setupServer(
     const input = variables['input'] as Partial<Profile>;
     return HttpResponse.json({ data: { updateProfile: { ...PROFILE, ...input } } });
   }),
+  // A resume file in another language, e.g. /profile/resume/de. Saved straight away.
+  http.post(`${RESUME_UPLOAD_URL}/:language`, ({ params }) => {
+    const language = params['language'] as string;
+    requests.push({ operation: 'UploadLanguageResume', variables: { language } });
+    const kept = otherResumes.filter((r) => r.language !== language);
+    otherResumes.splice(0, otherResumes.length, ...kept, {
+      language,
+      text: 'Ada Lovelace\nEntwicklerin',
+      fileName: 'lebenslauf.pdf',
+      updatedAt: '2026-11-01T10:00:00.000Z',
+    });
+    return HttpResponse.json(withOthers(), { status: 201 });
+  }),
   http.post(RESUME_UPLOAD_URL, ({ request }) => {
     // jsdom's File and FormData don't survive Node's fetch intact (the name is lost, and on
     // Node 24 reading the body aborts), so check the request is multipart without parsing it.

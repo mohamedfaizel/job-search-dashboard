@@ -20,7 +20,23 @@ const ALIASES: Record<string, string[]> = {
   graphql: ['graph ql'],
   aws: ['amazon web services'],
   gcp: ['google cloud'],
+  ux: ['user experience'],
+  ui: ['user interface'],
+  'machine learning': ['ml'],
+  'artificial intelligence': ['ai'],
 };
+
+/**
+ * A skill without case, hyphens, dots, slashes or spaces: "Front-End", "front end" and
+ * "frontend" all become "frontend"; "Node.js" becomes "nodejs"; "CI/CD" becomes "cicd".
+ * Two terms with the same compact form are the same term.
+ */
+export function compact(term: string): string {
+  return term.toLowerCase().replace(/[-./\s_]/g, '');
+}
+
+/** Shorter than this, a split spelling is too likely to be a coincidence ("go" in "g-o"). */
+const MIN_SPLIT_LENGTH = 5;
 
 /** Every spelling we accept for a skill tag: "ci-cd" → "ci-cd", "ci cd", "ci/cd", … */
 export function spellings(skill: string): string[] {
@@ -37,9 +53,13 @@ const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  */
 export function mentions(text: string, skill: string): boolean {
   const lower = text.toLowerCase();
-  return spellings(skill).some((spelling) =>
-    new RegExp(`(?<![\\p{L}\\p{N}])${escape(spelling)}(?![\\p{L}\\p{N}+#])`, 'u').test(lower),
-  );
+  const whole = (pattern: string) =>
+    new RegExp(`(?<![\\p{L}\\p{N}])${pattern}(?![\\p{L}\\p{N}+#])`, 'u').test(lower);
+  if (spellings(skill).some((spelling) => whole(escape(spelling)))) return true;
+  // Written with or without a hyphen, dot, slash or space anywhere: "frontend" in the job,
+  // "front-end" in the resume (or the other way round) is the same skill.
+  const letters = Array.from(compact(skill));
+  return letters.length >= MIN_SPLIT_LENGTH && whole(letters.map(escape).join('[-./ ]?'));
 }
 
 /**

@@ -108,6 +108,12 @@ export class JobInsightsModel {
 
   @Field({
     description:
+      'True when germanLevel is read from words like "fließend" (fluent) instead of a named level',
+  })
+  germanLevelEstimated!: boolean;
+
+  @Field({
+    description:
       'The language the prompt asks Claude to write the resume in: "de" when German is required, else "en"',
   })
   resumeLanguage!: string;

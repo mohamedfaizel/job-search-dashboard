@@ -126,6 +126,23 @@ describe('InsightsPanel', () => {
     expect(within(missing).getByRole('button', { name: 'Remove apollo' })).toBeInTheDocument();
   });
 
+  it('marks a German level read from the ad’s words as an estimate', async () => {
+    server.use(
+      api.query('JobInsights', () =>
+        HttpResponse.json({
+          data: { jobInsights: { ...INSIGHTS, germanLevel: 'C1', germanLevelEstimated: true } },
+        }),
+      ),
+    );
+    renderPanel();
+
+    const badge = await screen.findByText('German required (about C1)');
+    expect(badge.closest('[title]')).toHaveAttribute(
+      'title',
+      expect.stringContaining('fließend or verhandlungssicher ≈ C1'),
+    );
+  });
+
   it('says an English resume is fine when the job does not need German', async () => {
     server.use(
       api.query('JobInsights', () =>

@@ -52,6 +52,7 @@ export const INSIGHTS: JobInsights = {
   languageDetected: false,
   germanRequired: true,
   germanLevel: 'B2',
+  germanLevelEstimated: false,
   resumeLanguage: 'de',
   checkedAgainst: 'en',
   hasResume: true,

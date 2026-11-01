@@ -1,4 +1,4 @@
-import { KNOWN_SKILLS } from './skills';
+import { compact, KNOWN_SKILLS } from './skills';
 import { detectLanguage, keywordTokens } from './text';
 import type { DocumentFrequencies } from './tfidf';
 import { documentFrequencies, rankTerms } from './tfidf';
@@ -56,6 +56,17 @@ export interface JobTerms {
   language: string | null;
 }
 
+/** The terms in order, keeping only the first of each spelling ("frontend" and "front-end"). */
+function uniqueByCompact(terms: string[]): string[] {
+  const seen = new Set<string>();
+  return terms.filter((term) => {
+    const key = compact(term);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /**
  * The skills, keywords and title a resume is checked against, for one job. The job popup and the
  * Fit column both use this, so they always show the same score. Terms in `removed` (taken out
@@ -66,18 +77,24 @@ export function jobTerms(job: TermsJob, removed: ReadonlySet<string>, corpus: Co
   const language = job.language ?? detectLanguage(job.description);
 
   // JobsPipe's technology tags first, then its wider keyword tags ("mentoring", "ecommerce").
-  const skills = [
-    ...new Set([...job.skills, ...(raw.keyword_slugs ?? [])].map((s) => s.toLowerCase())),
-  ].filter((tag) => !removed.has(tag));
+  const skills = uniqueByCompact(
+    [...job.skills, ...(raw.keyword_slugs ?? [])].map((s) => s.toLowerCase()),
+  ).filter((tag) => !removed.has(tag));
 
   // The company's own name and the city say nothing about the skills the job needs.
   const known = new Set([
     ...skills,
     ...keywordTokens(`${job.company.name} ${job.city ?? ''}`, null),
   ]);
-  const candidates = rankTerms(keywordTokens(job.description ?? '', language), corpus.frequencies)
-    .map((ranked) => ranked.term)
-    .filter((term) => !known.has(term) && !corpus.cities.has(term) && !removed.has(term));
+  // "front-end" is the same as the skill "frontend": compare compact forms.
+  const knownCompact = new Set([...known].map(compact));
+  const candidates = uniqueByCompact(
+    rankTerms(keywordTokens(job.description ?? '', language), corpus.frequencies).map(
+      (ranked) => ranked.term,
+    ),
+  ).filter(
+    (term) => !knownCompact.has(compact(term)) && !corpus.cities.has(term) && !removed.has(term),
+  );
   // Tools and technologies first, then the other words, each group in TF-IDF order.
   const keywords = [
     ...candidates.filter((term) => corpus.skills.has(term)),
