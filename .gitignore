@@ -6,6 +6,7 @@ node_modules/
 dist/
 build/
 coverage/
+coverage-e2e/
 .turbo/
 *.tsbuildinfo
 .vite/

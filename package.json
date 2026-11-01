@@ -21,7 +21,8 @@
     "pdf:up": "docker compose --profile tools up -d --build pdf-renderer",
     "pdf:down": "docker compose --profile tools stop pdf-renderer",
     "prepare": "husky",
-    "test:e2e": "turbo run test:e2e"
+    "test:e2e": "turbo run test:e2e",
+    "test:e2e:coverage": "turbo run test:e2e:coverage"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
