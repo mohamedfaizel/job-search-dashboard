@@ -93,6 +93,8 @@ export interface JobFilterInput {
   minSalaryUsd?: number;
   /** ISO date-time: only jobs imported or added after it (the New chip). */
   createdAfter?: string;
+  /** Only the jobs in your Apply queue. */
+  inApplyQueue?: boolean;
   /** Only jobs whose Fit % is at least this. */
   minFit?: number;
   /** ISO date-time: only jobs posted after it. */
@@ -509,6 +511,8 @@ export interface ApplyQueueItem {
   /** True once Claude's reply (resume, cover letter, form answers) is saved for the job. */
   ready: boolean;
   addedAt: string;
+  /** Its number in your queue: 1 is applied for first. */
+  number: number;
 }
 
 /** How your resume and cover letter PDFs look. */

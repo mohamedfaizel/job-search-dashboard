@@ -667,6 +667,47 @@ Why Acme: I like your product.
       await request(t.server).get('/apply-queue').expect(401);
     });
 
+    it('numbers the queue and moves a job up or down; the job list can show only queued jobs', async () => {
+      const a = await addJob({ title: 'Job A' });
+      const b = await addJob({ title: 'Job B' });
+      const c = await addJob({ title: 'Job C' });
+      await t.asUser(ADD, { ids: [a.id, b.id] });
+      await t.asUser(ADD, { ids: [c.id] });
+      const MOVE = `mutation ($id: ID!, $dir: QueueDirection!) { moveInApplyQueue(jobId: $id, direction: $dir) { title number } }`;
+      type Moved = { moveInApplyQueue: { title: string; number: number }[] };
+
+      const up = await t.asUser<Moved>(MOVE, { id: c.id, dir: 'UP' });
+      expect(up.errors).toBeUndefined();
+      expect(up.data!.moveInApplyQueue).toEqual([
+        { title: 'Job A', number: 1 },
+        { title: 'Job C', number: 2 },
+        { title: 'Job B', number: 3 },
+      ]);
+      // Already first: nothing changes.
+      const top = await t.asUser<Moved>(MOVE, { id: a.id, dir: 'UP' });
+      expect(top.data!.moveInApplyQueue.map((i) => i.title)).toEqual(['Job A', 'Job C', 'Job B']);
+      const down = await t.asUser<Moved>(MOVE, { id: a.id, dir: 'DOWN' });
+      expect(down.data!.moveInApplyQueue.map((i) => i.title)).toEqual(['Job C', 'Job A', 'Job B']);
+      // A removed job leaves no gap in the numbers.
+      const left = await t.asUser<{ removeFromApplyQueue: { title: string; number: number }[] }>(
+        `mutation ($ids: [ID!]!) { removeFromApplyQueue(jobIds: $ids) { title number } }`,
+        { ids: [c.id] },
+      );
+      expect(left.data!.removeFromApplyQueue).toEqual([
+        { title: 'Job A', number: 1 },
+        { title: 'Job B', number: 2 },
+      ]);
+      // Not yours: refused.
+      expect((await t.gql(MOVE, { id: a.id, dir: 'UP' })).errors?.[0]?.message).toBe(
+        'That job is not in your Apply queue',
+      );
+
+      const page = await t.asUser<{ jobsPage: { items: { title: string }[] } }>(
+        `query { jobsPage(page: 1, pageSize: 50, filter: { inApplyQueue: true }) { items { title } } }`,
+      );
+      expect(page.data!.jobsPage.items.map((j) => j.title).sort()).toEqual(['Job A', 'Job B']);
+    });
+
     it('drops a job when you remove it or mark it Applied', async () => {
       const first = await addJob({ title: 'Backend Engineer' });
       const second = await addJob({ title: 'Frontend Engineer' });

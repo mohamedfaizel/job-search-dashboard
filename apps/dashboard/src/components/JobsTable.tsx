@@ -54,6 +54,7 @@ export function JobsTable({
   toggleHidden,
   showingHidden = false,
   newSince = null,
+  queueNumbers,
   isFetching = false,
   columnVisibility = NO_HIDDEN_COLUMNS,
   selected = NO_SELECTION,
@@ -75,6 +76,7 @@ export function JobsTable({
       toggleHidden,
       showingHidden,
       newSince,
+      queueNumbers,
       selected,
       allSelected,
       toggleSelected: (job: Job) => {
@@ -93,6 +95,7 @@ export function JobsTable({
     toggleHidden,
     showingHidden,
     newSince,
+    queueNumbers,
     selected,
     onSelectionChange,
   ]);

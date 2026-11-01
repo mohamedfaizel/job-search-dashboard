@@ -6,6 +6,7 @@ import {
   useApplyQueue,
   useApplyQueuePrompt,
   useChangeApplyQueue,
+  useMoveInApplyQueue,
   useSaveApplyQueueReply,
   useUpdateJobStatus,
 } from '@jobsearch/data';
@@ -171,6 +172,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
 export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => void }) {
   const queue = useApplyQueue();
   const change = useChangeApplyQueue();
+  const move = useMoveInApplyQueue();
   const updateStatus = useUpdateJobStatus();
   const [savedNote, setSavedNote] = useState<string | null>(null);
   const items = queue.data ?? [];
@@ -210,10 +212,42 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
           ✓ {savedNote}
         </p>
       )}
-      <ul className="divide-y divide-slate-100">
-        {items.map((item) => (
+      <ol className="divide-y divide-slate-100">
+        {items.map((item, index) => (
           <li key={item.jobId} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
-            <span className="min-w-0 basis-full sm:basis-0 sm:flex-1">
+            <span
+              aria-hidden="true"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-semibold text-indigo-700 tabular-nums"
+            >
+              {item.number}
+            </span>
+            <span className="flex flex-col">
+              <button
+                type="button"
+                disabled={index === 0 || move.isPending}
+                onClick={() => {
+                  move.mutate({ jobId: item.jobId, direction: 'UP' });
+                }}
+                aria-label={`Move ${item.title} up`}
+                title="Move up: apply for it sooner"
+                className="h-3.5 px-1 text-[10px] leading-none text-slate-500 hover:text-slate-900 disabled:opacity-25"
+              >
+                ▲
+              </button>
+              <button
+                type="button"
+                disabled={index === items.length - 1 || move.isPending}
+                onClick={() => {
+                  move.mutate({ jobId: item.jobId, direction: 'DOWN' });
+                }}
+                aria-label={`Move ${item.title} down`}
+                title="Move down: apply for it later"
+                className="h-3.5 px-1 text-[10px] leading-none text-slate-500 hover:text-slate-900 disabled:opacity-25"
+              >
+                ▼
+              </button>
+            </span>
+            <span className="min-w-0 flex-1 basis-40">
               <button
                 type="button"
                 onClick={() => {
@@ -277,7 +311,7 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
             </button>
           </li>
         ))}
-      </ul>
+      </ol>
       <CopyText
         primary
         label="Copy prompt for Claude in Chrome"
@@ -285,9 +319,10 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
         copiedHint="Paste it into Claude in Chrome. It fills in each form on its own tab and stops before Submit: check each one and send it yourself."
         boxLabel="Prompt for the Apply queue"
       />
-      {(change.isError || updateStatus.isError) && (
+      {(change.isError || move.isError || updateStatus.isError) && (
         <p role="alert" className="text-red-700">
-          Could not change the queue: {getErrorMessage(change.error ?? updateStatus.error)}
+          Could not change the queue:{' '}
+          {getErrorMessage(change.error ?? move.error ?? updateStatus.error)}
         </p>
       )}
     </section>

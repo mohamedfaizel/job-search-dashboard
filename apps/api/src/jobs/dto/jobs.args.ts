@@ -135,6 +135,11 @@ export class JobFilterInput {
   @Max(100)
   minFit?: number;
 
+  @Field({ nullable: true, description: 'True lists only the jobs in your Apply queue' })
+  @IsOptional()
+  @IsBoolean()
+  inApplyQueue?: boolean;
+
   @Field({
     nullable: true,
     description: 'True lists only the jobs you hid. Otherwise hidden jobs are left out.',
