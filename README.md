@@ -35,9 +35,14 @@ flowchart LR
 | `apps/dashboard` | Microfrontend: the job posts table.                               | 5174 |
 | `apps/job-form`  | Microfrontend: form for adding a job by hand.                     | 5175 |
 | `apps/profile`   | Microfrontend: your profile and master resume (PDF/Word upload).  | 5176 |
+| `apps/web`       | The new Next.js app. Screens move here one by one (see below).    | 3001 |
 | `apps/api`       | NestJS backend. Holds the JobsPipe token so it never hits the UI. | 3000 |
 | `apps/storybook` | Storybook: a catalogue of the UI components, used by Chromatic.   | 6006 |
 | `packages/data`  | Shared data layer: GraphQL client, TanStack Query hooks, Redux.   |      |
+
+**Moving to Next.js:** `apps/web` is the new app (Next.js App Router). It runs next to the
+old one, and each screen moves over in its own PR. When all of them have moved, the shell and
+the microfrontends are deleted. Open it at http://localhost:3001 after `pnpm dev`.
 
 The microfrontends are separate Vite apps joined with
 [Module Federation](https://module-federation.io/). Each can also run on its own,
