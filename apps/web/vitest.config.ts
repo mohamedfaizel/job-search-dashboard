@@ -19,6 +19,12 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias },
   test: {
+    // `pnpm test:coverage` writes coverage/lcov.info for SonarCloud, with paths from the repo root.
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', ['lcov', { projectRoot: '../..' }]],
+      include: ['src/**'],
+    },
     projects: [
       {
         extends: true,

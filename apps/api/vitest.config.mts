@@ -7,6 +7,14 @@ export default defineConfig({
   plugins: [swc.vite({ module: { type: 'es6' } })],
   test: {
     environment: 'node',
+    // `pnpm test:coverage` writes coverage/lcov.info for SonarCloud, with paths from the repo root.
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', ['lcov', { projectRoot: '../..' }]],
+      include: ['src/**'],
+      exclude: ['src/generated/**'],
+    },
+
     projects: [
       {
         extends: true,
