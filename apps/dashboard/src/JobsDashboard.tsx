@@ -10,6 +10,7 @@ import {
   setFilterValues,
   setMinFit,
   setNewOnly,
+  setQueueOnly,
   setNewSince,
   setPostedWithinDays,
   setSearch,
@@ -18,6 +19,7 @@ import {
   toJobsPageArgs,
   useAppDispatch,
   useAppSelector,
+  useApplyQueue,
   useChangeApplyQueue,
   useRecalculateFit,
   useJobFilterOptions,
@@ -110,6 +112,12 @@ export function JobsDashboard() {
   );
 
   const jobs = jobsQuery.data?.items ?? NO_JOBS;
+  // Each queued job's number, for the "Queue #2" badge in the table.
+  const applyQueue = useApplyQueue();
+  const queueNumbers = useMemo(
+    () => new Map((applyQueue.data ?? []).map((item) => [item.jobId, item.number])),
+    [applyQueue.data],
+  );
   const openOnPage = jobs.find((job) => job.id === openJobId);
   // A job opened from the Apply queue may be on another page or filtered out: fetch it.
   const openFetched = useJob(openJobId, { enabled: openJobId !== null && !openOnPage });
@@ -203,6 +211,11 @@ export function JobsDashboard() {
         newCount={newSince === null ? 0 : newCountQuery.data?.total}
         newOnly={tableState.newOnly}
         onToggleNew={showingHidden ? undefined : () => dispatch(setNewOnly(!tableState.newOnly))}
+        queueCount={applyQueue.data?.length}
+        queueOnly={tableState.queueOnly}
+        onToggleQueue={
+          showingHidden ? undefined : () => dispatch(setQueueOnly(!tableState.queueOnly))
+        }
       />
       {showingHidden && (
         <p className="text-sm text-slate-600">
@@ -409,6 +422,7 @@ export function JobsDashboard() {
         toggleHidden={handleToggleHidden}
         showingHidden={showingHidden}
         newSince={newSince}
+        queueNumbers={queueNumbers}
         isFetching={jobsQuery.isFetching && !jobsQuery.isPending}
         columnVisibility={columnVisibility.visibility}
         selected={selected}

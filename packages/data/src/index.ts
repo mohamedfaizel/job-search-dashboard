@@ -10,6 +10,7 @@ export {
   useApplyQueue,
   useApplyQueuePrompt,
   useChangeApplyQueue,
+  useMoveInApplyQueue,
   useSaveApplyQueueReply,
   jobResumeUrl,
   useDeleteJobResume,

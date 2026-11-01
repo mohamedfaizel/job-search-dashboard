@@ -1,7 +1,7 @@
 import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
-import { ApplyQueueItemModel, ApplyQueuePromptModel } from './apply-queue';
+import { ApplyQueueItemModel, ApplyQueuePromptModel, QueueDirection } from './apply-queue';
 import { FitService } from './fit.service';
 import { JobInsightsModel } from './insights.model';
 import { InsightsService } from './insights.service';
@@ -105,6 +105,17 @@ export class InsightsResolver {
     @Args('jobIds', { type: () => [ID] }) jobIds: string[],
   ): Promise<ApplyQueueItemModel[]> {
     return this.insights.addToApplyQueue(user.id, jobIds);
+  }
+
+  @Mutation(() => [ApplyQueueItemModel], {
+    description: 'Moves a job one place up or down in your Apply queue',
+  })
+  moveInApplyQueue(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('direction', { type: () => QueueDirection }) direction: QueueDirection,
+  ): Promise<ApplyQueueItemModel[]> {
+    return this.insights.moveInApplyQueue(user.id, jobId, direction);
   }
 
   @Mutation(() => [ApplyQueueItemModel], { description: 'Takes jobs out of your Apply queue' })

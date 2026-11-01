@@ -27,6 +27,8 @@ export interface JobsTableState {
   newSince: string | null;
   /** Show only the New jobs (the New chip). */
   newOnly: boolean;
+  /** Show only the jobs in your Apply queue (the Apply queue chip). */
+  queueOnly: boolean;
 }
 
 /** The table opens with your best matches first. */
@@ -43,6 +45,7 @@ export const initialJobsTableState: JobsTableState = {
   minFit: null,
   newSince: null,
   newOnly: false,
+  queueOnly: false,
 };
 
 export const jobsTableSlice = createSlice({
@@ -80,6 +83,7 @@ export const jobsTableSlice = createSlice({
       state.postedWithinDays = null;
       state.minFit = null;
       state.newOnly = false;
+      state.queueOnly = false;
       state.page = 1;
     },
     setPostedWithinDays(state, action: PayloadAction<number | null>) {
@@ -91,6 +95,10 @@ export const jobsTableSlice = createSlice({
     },
     setNewOnly(state, action: PayloadAction<boolean>) {
       state.newOnly = action.payload;
+      state.page = 1;
+    },
+    setQueueOnly(state, action: PayloadAction<boolean>) {
+      state.queueOnly = action.payload;
       state.page = 1;
     },
     setMinFit(state, action: PayloadAction<number | null>) {
@@ -138,6 +146,7 @@ export const {
   setMinFit,
   setNewSince,
   setNewOnly,
+  setQueueOnly,
 } = jobsTableSlice.actions;
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -151,6 +160,7 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
   if (state.showHidden) filter.hidden = true;
   if (state.minFit !== null) filter.minFit = state.minFit;
   if (state.newOnly && state.newSince) filter.createdAfter = state.newSince;
+  if (state.queueOnly) filter.inApplyQueue = true;
   if (state.postedWithinDays !== null) {
     // Counted from the start of this hour, so the query (and its cache entry) stays the same
     // for an hour instead of changing every millisecond.
@@ -168,6 +178,11 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
 
 export function countActiveFilters(state: JobsTableState): number {
   const listed = Object.values(state.filters).reduce((sum, values) => sum + values.length, 0);
-  const others = [state.postedWithinDays !== null, state.minFit !== null, state.newOnly];
+  const others = [
+    state.postedWithinDays !== null,
+    state.minFit !== null,
+    state.newOnly,
+    state.queueOnly,
+  ];
   return listed + others.filter(Boolean).length;
 }

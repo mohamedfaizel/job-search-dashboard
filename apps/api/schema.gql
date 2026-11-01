@@ -26,6 +26,9 @@ type ApplyQueueItem {
   company: String!
   jobId: ID!
 
+  """Its number in your queue: 1 is applied for first"""
+  number: Int!
+
   """
   True once Claude's reply (resume, cover letter, form answers) is saved for this job
   """
@@ -227,6 +230,9 @@ input JobFilterInput {
 
   """True lists only the jobs you hid. Otherwise hidden jobs are left out."""
   hidden: Boolean
+
+  """True lists only the jobs in your Apply queue"""
+  inApplyQueue: Boolean
   industries: [String!]
   jobFunctions: [String!]
   languages: [String!]
@@ -519,6 +525,9 @@ type Mutation {
   """
   matchJob(jobId: ID!): JobMatch!
 
+  """Moves a job one place up or down in your Apply queue"""
+  moveInApplyQueue(direction: QueueDirection!, jobId: ID!): [ApplyQueueItem!]!
+
   """
   Works out Fit % for every job again, now. Normally it happens by itself. Returns how many jobs got a score
   """
@@ -795,6 +804,14 @@ type Query {
   A prompt for Claude that translates your master resume into a language, keeping every fact
   """
   translationPrompt(language: String!): String!
+}
+
+"""
+UP moves a job one place earlier in the Apply queue, DOWN one place later
+"""
+enum QueueDirection {
+  DOWN
+  UP
 }
 
 type RemovedTerm {
