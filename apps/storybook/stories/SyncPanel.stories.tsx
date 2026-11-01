@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SyncPanel } from '../../job-form/src/components/SyncPanel';
+import { SyncPanel } from '../../web/src/features/add-jobs/components/SyncPanel';
 
 const meta = {
   title: 'Job form/SyncPanel',

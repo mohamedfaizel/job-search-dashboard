@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { configure } from '@testing-library/react';
-import { requests, server } from './server';
+import { requests, server, session } from './server';
 
 // Turbo runs every package's tests at once, so on a busy CI runner a query can take longer than
 // findBy*'s 1 s default. Same setting as the dashboard's tests.
@@ -15,6 +15,7 @@ beforeAll(() => {
 afterEach(() => {
   server.resetHandlers();
   requests.length = 0;
+  session.user = { ...session.user, role: 'ADMIN' };
 });
 afterAll(() => {
   server.close();

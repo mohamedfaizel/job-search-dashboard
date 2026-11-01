@@ -58,10 +58,7 @@ export default tseslint.config(
 
   // React apps: hooks rules and accessibility checks.
   {
-    files: [
-      'apps/{shell,dashboard,job-form,web}/src/**/*.{ts,tsx}',
-      'apps/storybook/{stories,.storybook}/**/*.{ts,tsx}',
-    ],
+    files: ['apps/web/src/**/*.{ts,tsx}', 'apps/storybook/{stories,.storybook}/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     languageOptions: { globals: globals.browser },
     rules: {
@@ -69,7 +66,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/{shell,dashboard,job-form,web}/src/**/*.tsx', 'apps/storybook/stories/**/*.tsx'],
+    files: ['apps/web/src/**/*.tsx', 'apps/storybook/stories/**/*.tsx'],
     ...jsxA11y.flatConfigs.strict,
   },
 
@@ -82,20 +79,13 @@ export default tseslint.config(
     },
   },
 
-  // Remote modules like 'dashboard/App' only exist at runtime via Module Federation.
-  {
-    files: ['apps/shell/src/**/*.tsx'],
-    rules: {
-      'import-x/no-unresolved': ['error', { ignore: ['^dashboard/', '^jobForm/', '^profile/'] }],
-    },
-  },
-
   // Tests trade some strictness for readability (expect.any(), known-present results).
   {
     files: [
       '**/*.{spec,e2e-spec,test}.{ts,tsx}',
       'apps/api/test/**/*.ts',
       'apps/*/src/test/**/*.{ts,tsx}',
+      'apps/web/src/features/*/test/**/*.{ts,tsx}',
     ],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',

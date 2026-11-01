@@ -116,4 +116,4 @@ for (let i = 0; i < 36; i++) {
   }
   created++;
 }
-console.log(`Added ${created} demo jobs. Open http://localhost:5173 to see them.`);
+console.log(`Added ${created} demo jobs. Open http://localhost:3001 to see them.`);

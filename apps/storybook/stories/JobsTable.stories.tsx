@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { JobsTable } from '../../dashboard/src/components/JobsTable';
-import { FILTER_OPTIONS, JOBS, makeJob } from '../../dashboard/src/test/fixtures';
+import { JobsTable } from '../../web/src/features/jobs/components/JobsTable';
+import { FILTER_OPTIONS, JOBS, makeJob } from '../../web/src/features/jobs/test/fixtures';
 
 const meta = {
   title: 'Dashboard/JobsTable',
