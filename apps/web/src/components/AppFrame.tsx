@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { APP_NAME } from '@/lib/app-name';
 
 interface NavItem {
   href: string;
@@ -92,7 +93,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
       <header className="border-b border-slate-200 bg-white">
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
           <Link href="/jobs" className="font-semibold text-slate-900">
-            Job Search
+            {APP_NAME}
           </Link>
           <button
             type="button"

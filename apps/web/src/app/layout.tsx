@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { APP_NAME } from '@/lib/app-name';
 import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: { default: 'Job Search', template: '%s · Job Search' },
+  title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
   description: 'Track jobs, your applications and your profile.',
 };
 

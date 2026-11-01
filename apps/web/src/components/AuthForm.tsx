@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { SubmitEvent } from 'react';
 import { useId } from 'react';
+import { APP_NAME } from '@/lib/app-name';
 import { safeNextPath } from '@/lib/safe-next';
 
 export type AuthMode = 'log-in' | 'sign-up';
@@ -50,7 +51,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     <div className="flex min-h-screen items-center justify-center px-4">
       <main className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold text-slate-900">
-          {mode === 'log-in' ? 'Log in to Job Search' : 'Create your account'}
+          {mode === 'log-in' ? `Log in to ${APP_NAME}` : 'Create your account'}
         </h1>
         <p className="mt-1 text-sm text-slate-600">
           {mode === 'log-in'
