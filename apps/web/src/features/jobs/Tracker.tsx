@@ -1,22 +1,8 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
-import {
-  DataProvider,
-  getErrorMessage,
-  useMyApplications,
-  useUpdateJobStatus,
-} from '@jobsearch/data';
+import { getErrorMessage, useMyApplications, useUpdateJobStatus } from '@jobsearch/data';
 import { useState } from 'react';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { TrackerBoard } from './components/TrackerBoard';
-
-/** Exposed to the shell as "dashboard/Tracker", next to "dashboard/App". */
-export default function Tracker() {
-  return (
-    <DataProvider>
-      <TrackerPage />
-    </DataProvider>
-  );
-}
 
 export function TrackerPage() {
   const applications = useMyApplications();

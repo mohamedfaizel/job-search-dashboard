@@ -1,5 +1,0 @@
-@import 'tailwindcss';
-
-/* Tailwind only generates classes it can see, so also scan the microfrontends' sources. */
-@source '../../dashboard/src';
-@source '../../job-form/src';

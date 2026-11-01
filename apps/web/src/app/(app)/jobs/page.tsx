@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { MovingSoon } from '@/components/MovingSoon';
+import { JobsScreen } from '@/features/jobs/screens';
 
 export const metadata: Metadata = { title: 'Job posts' };
 
 export default function JobsPage() {
-  return <MovingSoon title="Job posts" />;
+  return <JobsScreen />;
 }

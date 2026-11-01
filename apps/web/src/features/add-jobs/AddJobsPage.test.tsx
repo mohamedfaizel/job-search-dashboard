@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import App from './App';
+import { AddJobsPage as App } from './AddJobsPage';
 import { renderWithData } from './test/render';
+import { session } from './test/server';
 
-// App brings its own DataProvider; the outer one from renderWithData sets up the MSW-backed client.
 describe('App tabs', () => {
   it('opens on saved searches and switches tabs on click', async () => {
     renderWithData(<App />);
@@ -69,5 +69,13 @@ describe('App tabs', () => {
       await userEvent.click(await screen.findByRole('tab', { name }));
       expect(screen.getByRole('heading', { name: 'Import history' })).toBeVisible();
     }
+  });
+
+  it('tells a regular user that only the admin can add jobs', async () => {
+    session.user = { ...session.user, role: 'USER' };
+    renderWithData(<App />);
+
+    expect(await screen.findByText('Only the admin can add or import jobs.')).toBeInTheDocument();
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
   });
 });

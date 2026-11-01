@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
-import { AddJobForm } from '../../job-form/src/components/AddJobForm';
+import { AddJobForm } from '../../web/src/features/add-jobs/components/AddJobForm';
 
 const meta = {
   title: 'Job form/AddJobForm',

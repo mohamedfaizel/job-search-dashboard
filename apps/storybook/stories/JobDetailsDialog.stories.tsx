@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { JobDetailsDialog } from '../../dashboard/src/components/JobDetailsDialog';
-import { makeJob } from '../../dashboard/src/test/fixtures';
+import { JobDetailsDialog } from '../../web/src/features/jobs/components/JobDetailsDialog';
+import { makeJob } from '../../web/src/features/jobs/test/fixtures';
 
 const DESCRIPTION = `About the role
 We are looking for a Senior Frontend Engineer to build our customer dashboard.

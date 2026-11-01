@@ -1,4 +1,4 @@
-import type { Profile, SavedSearch, SyncRun } from '@jobsearch/data';
+import type { Profile, SavedSearch, SyncRun, User } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -83,7 +83,13 @@ export const PROFILE: Profile = {
   updatedAt: null,
 };
 
+/** Who the fake API says is logged in. Add jobs is for the admin only. */
+export const session: { user: User } = {
+  user: { id: 1, email: 'admin@example.com', name: 'Admin', role: 'ADMIN' },
+};
+
 export const server = setupServer(
+  api.query('Me', () => HttpResponse.json({ data: { me: session.user } })),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
   api.mutation('CreateJob', ({ variables }) => {
     requests.push({ operation: 'CreateJob', variables });

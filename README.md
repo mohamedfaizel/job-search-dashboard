@@ -11,58 +11,47 @@ sortable, filterable table. You can also add jobs by hand.
 ```mermaid
 flowchart LR
   subgraph Browser
-    shell["shell (host app)<br/>:5173"]
-    dashboard["dashboard (microfrontend)<br/>:5174"]
-    jobForm["job-form (microfrontend)<br/>:5175"]
-    web["web (Next.js)<br/>:3001<br/>My profile"]
-    shell -- loads at runtime --> dashboard
-    shell -- loads at runtime --> jobForm
-    shell -- "My profile" link --> web
+    web["web (Next.js)<br/>:3001"]
   end
   api["api (NestJS)<br/>:3000"]
   db[(PostgreSQL<br/>:5432)]
   jobspipe[[JobsPipe API]]
-  dashboard -- GraphQL --> api
-  jobForm -- GraphQL --> api
-  web -- GraphQL + resume upload --> api
+  web -- GraphQL + uploads --> api
   api -- Prisma --> db
   api -- sync --> jobspipe
 ```
 
-| App              | What it is                                                        | Port |
-| ---------------- | ----------------------------------------------------------------- | ---- |
-| `apps/shell`     | Host app: page layout and navigation. Loads the microfrontends.   | 5173 |
-| `apps/dashboard` | Microfrontend: the job posts table.                               | 5174 |
-| `apps/job-form`  | Microfrontend: form for adding a job by hand.                     | 5175 |
-| `apps/web`       | The new Next.js app. Screens move here one by one (see below).    | 3001 |
-| `apps/api`       | NestJS backend. Holds the JobsPipe token so it never hits the UI. | 3000 |
-| `apps/storybook` | Storybook: a catalogue of the UI components, used by Chromatic.   | 6006 |
-| `packages/data`  | Shared data layer: GraphQL client, TanStack Query hooks, Redux.   |      |
+| App              | What it is                                                               | Port |
+| ---------------- | ------------------------------------------------------------------------ | ---- |
+| `apps/web`       | The app: Next.js (App Router). Job posts, Tracker, Add jobs, My profile. | 3001 |
+| `apps/api`       | NestJS backend. Holds the JobsPipe token so it never hits the UI.        | 3000 |
+| `apps/storybook` | Storybook: a catalogue of the UI components, used by Chromatic.          | 6006 |
+| `packages/data`  | Shared data layer: GraphQL client, TanStack Query hooks, Redux.          |      |
 
-**Moving to Next.js:** `apps/web` is the new app (Next.js App Router). It runs next to the
-old one, and each screen moves over in its own PR. When all of them have moved, the shell and
-the microfrontends are deleted. Open it at http://localhost:3001 after `pnpm dev`.
+Each screen lives in its own folder under `apps/web/src/features` (`jobs`, `add-jobs`,
+`profile`), and `apps/web/src/app` holds the routes: `/jobs`, `/tracker`, `/jobs/add`,
+`/profile`, `/login` and `/signup`. `proxy.ts` sends anyone who isn't logged in to `/login`.
 
-The microfrontends are separate Vite apps joined with
-[Module Federation](https://module-federation.io/). Each can also run on its own,
-which is handy while developing.
+**History:** the frontend started as a Vite shell with microfrontends joined by
+[Module Federation](https://module-federation.io/). It moved to Next.js screen by screen
+(PRs #52 to #55), and the shell and microfrontends were then deleted.
 
 ### How the frontend handles data
 
 - **TanStack Query** owns _server_ state: it fetches jobs over GraphQL, caches them, and
   refetches after a change (adding a job, updating a status).
-- **Redux Toolkit** owns _UI_ state that more than one microfrontend cares about: the table's
+- **Redux Toolkit** owns _UI_ state that more than one screen cares about: the table's
   search, column filters, sort and page.
-- Both live in `packages/data` and are shared as Module Federation **singletons**, so the
-  dashboard and the form use the same store and cache. Add a job in the form, go back to the
-  table, and it is already there with your filters still applied.
+- Both live in `packages/data`, and the app makes one store and one cache for the browser
+  tab, so every screen shares them. Add a job, go back to the table, and it is already there
+  with your filters still applied.
 
 Sorting, filtering and paging happen in PostgreSQL (through the API), not in the browser, so
 the table stays fast with thousands of jobs.
 
 ## Tech stack
 
-- **Frontend:** React 19, Vite, TypeScript (strict), Tailwind CSS 4, Module Federation,
+- **Frontend:** Next.js 16 (App Router), React 19, TypeScript (strict), Tailwind CSS 4,
   TanStack Query + Table, Redux Toolkit, React Hook Form + Zod
 - **Backend:** NestJS, GraphQL (Apollo, code-first), Prisma 7, PostgreSQL (Docker)
 - **Quality:** ESLint (typescript-eslint, react-hooks, jsx-a11y, import-x), Prettier,
@@ -111,10 +100,10 @@ cp .env.example .env      # Windows PowerShell: Copy-Item .env.example .env
 ```bash
 pnpm db:up                                 # start PostgreSQL in Docker
 pnpm --filter @jobsearch/api db:deploy     # create the tables (first time, and after pulling new migrations)
-pnpm dev                                   # start the api and all four frontends
+pnpm dev                                   # start the api and the web app
 ```
 
-Open <http://localhost:5173>. Check the API at <http://localhost:3000/health>.
+Open <http://localhost:3001>. Check the API at <http://localhost:3000/health>.
 
 **Log in:** the first time, click _Create an account_. The first account on a server becomes the
 **admin**: only the admin sees **Add jobs**, because imports and saved searches spend the server's
@@ -435,7 +424,7 @@ itself.
 | `pnpm rm:up`/`down`  | Start or stop Resume-Matcher     |
 | `pnpm pdf:up`/`down` | Start or stop the PDF renderer   |
 
-Run a script for one app with a filter, for example `pnpm --filter @jobsearch/dashboard test`.
+Run a script for one app with a filter, for example `pnpm --filter @jobsearch/web test`.
 
 A pre-commit hook (Husky + lint-staged) lints and formats the files you commit, so
 unformatted code never lands in the repo.
