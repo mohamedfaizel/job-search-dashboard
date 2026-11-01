@@ -10,7 +10,16 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { makeJob } from '../test/fixtures';
-import { api, INSIGHTS, jobResume, PROFILE, requests, SAVED_RESUME, server } from '../test/server';
+import {
+  api,
+  downloads,
+  INSIGHTS,
+  jobResume,
+  PROFILE,
+  requests,
+  SAVED_RESUME,
+  server,
+} from '../test/server';
 import { ApplyKitPanel, chromePrompt, CLAUDE_URL } from './ApplyKitPanel';
 
 function renderKit(job: Job = makeJob(), asking = false) {
@@ -76,7 +85,7 @@ describe('ApplyKitPanel', () => {
     await user.click(await screen.findByRole('button', { name: /Save the reply/ }));
 
     await navigator.clipboard.writeText('=== RESUME ===\nGraphQL');
-    await user.click(screen.getByRole('button', { name: 'Paste from clipboard' }));
+    await user.click(screen.getByRole('button', { name: 'Paste reply and get PDF' }));
 
     await waitFor(() => {
       expect(requests).toContainEqual({
@@ -88,6 +97,9 @@ describe('ApplyKitPanel', () => {
     const saved = await screen.findByRole('region', { name: 'Your resume for this job' });
     expect(currentStep()).toHaveTextContent('Fill the form');
     expect(within(saved).getByLabelText('Score before and after')).toHaveTextContent('was 50%');
+    // Pasting once gives you the file: the resume PDF downloads straight away.
+    expect(downloads).toEqual([`${jobResumeUrl('job-1')}/resume.pdf`]);
+    expect(screen.getByRole('status')).toHaveTextContent('Your resume PDF is downloading');
     // In your template (Modern); another one can be picked for this download.
     await waitFor(() => {
       expect(within(saved).getByRole('link', { name: 'Download PDF' })).toHaveAttribute(

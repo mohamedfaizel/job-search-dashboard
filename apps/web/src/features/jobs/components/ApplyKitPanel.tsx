@@ -10,6 +10,7 @@ import {
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { germanLevelText } from '../format';
+import { promptSections } from '../reply';
 import { PRIMARY, ReplyInput, SavedReply } from './JobResumePanel';
 
 /** The short prompt for Claude in Chrome. The Apply kit page it opens holds the rules and facts. */
@@ -31,17 +32,21 @@ export function useApplyStep(jobId: string) {
   const insights = useJobInsights(jobId);
   const [copied, setCopied] = useState(false);
   const [chosen, setChosen] = useState<ApplyStep | null>(null);
+  const [pdfStarted, setPdfStarted] = useState(false);
   const suggested: ApplyStep = insights.data?.jobResume ? 3 : copied ? 2 : 1;
   return {
     step: chosen ?? suggested,
     copied,
+    /** The resume PDF started downloading when the reply was saved. */
+    pdfStarted,
     choose: setChosen,
     markCopied: () => {
       setCopied(true);
       setChosen(null);
     },
     /** A reply was saved: go on to step 3. */
-    saved: () => {
+    saved: ({ pdf }: { pdf: boolean }) => {
+      setPdfStarted(pdf);
       setChosen(null);
     },
   };
@@ -138,6 +143,42 @@ function ShowText({ label, text }: { label: string; text: string }) {
           e.currentTarget.select();
         }}
       />
+    </details>
+  );
+}
+
+/**
+ * The Claude prompt, folded away, in readable sections. Long ones (your resume, the job ad)
+ * stay folded inside too.
+ */
+function PromptView({ text }: { text: string }) {
+  return (
+    <details className="w-full text-sm">
+      <summary className={`cursor-pointer list-none ${LINK}`}>Show the prompt</summary>
+      <div
+        aria-label="Prompt for Claude"
+        role="group"
+        className="mt-2 max-h-96 space-y-3 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3"
+      >
+        {promptSections(text).map((part, i) => {
+          const body = <p className="whitespace-pre-wrap text-slate-700">{part.body}</p>;
+          if (!part.title) return <div key={i}>{body}</div>;
+          const long = part.body.split('\n').length > 12;
+          return long ? (
+            <details key={i}>
+              <summary className="cursor-pointer font-semibold text-slate-900">
+                {part.title}
+              </summary>
+              <div className="mt-1">{body}</div>
+            </details>
+          ) : (
+            <div key={i} className="space-y-0.5">
+              <h5 className="font-semibold text-slate-900">{part.title}</h5>
+              {body}
+            </div>
+          );
+        })}
+      </div>
     </details>
   );
 }
@@ -317,8 +358,8 @@ function ApplyKit({
                 {COPY_ICON}
                 Copy prompt and open Claude ↗
               </button>
-              <ShowText label="Prompt for Claude" text={data.prompt} />
             </div>
+            <PromptView text={data.prompt} />
             <p className="text-slate-600">
               Claude opens in a new tab with the prompt on your clipboard: paste it and send. When
               Claude answers, copy its whole reply and come back for step 2.
@@ -342,16 +383,10 @@ function ApplyKit({
       {steps.step === 2 && (
         <>
           <Card
-            title="Bring Claude’s reply back"
-            intro="In Claude, copy the whole reply (the copy button under it). Then one click here saves it."
+            title="Paste Claude’s reply, get your PDF"
+            intro="In Claude, copy the whole reply (the copy button under it). One click here saves it, scores it and downloads the resume PDF."
           >
             <ReplyInput jobId={job.id} onSaved={steps.saved} />
-            <div className="space-y-1.5 border-t border-slate-100 pt-3">
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                We keep these from the reply
-              </p>
-              <p className="text-slate-700">Resume (scored) · Cover letter · Form answers</p>
-            </div>
           </Card>
           <p className="text-slate-600">
             {steps.copied && (copyFailed ? 'Could not copy the prompt. ' : '✓ Prompt copied · ')}
@@ -372,12 +407,18 @@ function ApplyKit({
               Open Claude ↗
             </a>
           </p>
-          {copyFailed && <ShowText label="Prompt for Claude" text={data.prompt} />}
+          {copyFailed && <PromptView text={data.prompt} />}
         </>
       )}
 
       {steps.step === 3 && (
         <>
+          {steps.pdfStarted && data.jobResume && (
+            <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">
+              ✓ Your resume PDF is downloading. Find it in your Downloads folder and attach it to
+              the application.
+            </p>
+          )}
           {data.jobResume ? (
             <SavedReply insights={data} />
           ) : (

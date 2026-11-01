@@ -19,6 +19,9 @@ import { FILTER_OPTIONS, JOBS } from './fixtures';
 export const api = graphql.link(API_URL);
 
 /** Every request the dashboard made in the current test, so tests can check the variables. */
+/** Files the app started downloading (see setup.ts). */
+export const downloads: string[] = [];
+
 export const requests: { operation: string; variables: Record<string, unknown> }[] = [];
 
 /** Ids of the jobs the test user has hidden, so hiding works like the real API. */
