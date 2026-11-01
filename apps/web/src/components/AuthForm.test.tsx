@@ -1,15 +1,20 @@
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { Locale } from '@/i18n/config';
+import { Intl } from '../test/intl';
 import { location, router } from '../test/navigation';
+import { savedLocales } from '../test/server';
 import { AuthForm } from './AuthForm';
 import type { AuthMode } from './AuthForm';
 
 function renderForm(mode: AuthMode) {
   render(
-    <DataProvider store={makeStore()} queryClient={createQueryClient()}>
-      <AuthForm mode={mode} />
-    </DataProvider>,
+    <Intl>
+      <DataProvider store={makeStore()} queryClient={createQueryClient()}>
+        <AuthForm mode={mode} />
+      </DataProvider>
+    </Intl>,
   );
 }
 
@@ -58,5 +63,34 @@ describe('AuthForm', () => {
       expect(router.replace).toHaveBeenCalledWith('/jobs');
     });
     expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
+  });
+
+  it('saves the language you picked here on your account when you log in', async () => {
+    const user = userEvent.setup();
+    const queryClient = createQueryClient();
+    const page = (locale: Locale) => (
+      <Intl locale={locale}>
+        <DataProvider store={makeStore()} queryClient={queryClient}>
+          <AuthForm mode="log-in" />
+        </DataProvider>
+      </Intl>
+    );
+    const { rerender } = render(page('en'));
+
+    await user.click(screen.getByRole('button', { name: 'Deutsch' }));
+    expect(document.cookie).toContain('locale=de');
+    expect(router.refresh).toHaveBeenCalled();
+    // The refresh brings the page back in German; the form keeps its state.
+    rerender(page('de'));
+    expect(screen.getByRole('heading')).toHaveTextContent('Bei Job search anmelden');
+
+    await user.type(screen.getByLabelText('E-Mail'), 'mohamed@example.com');
+    await user.type(screen.getByLabelText('Passwort'), 'correct horse');
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
+
+    // Your account said English: it now says German.
+    await vi.waitFor(() => {
+      expect(savedLocales).toEqual(['de']);
+    });
   });
 });

@@ -1,12 +1,15 @@
 'use client';
 
-import { getErrorMessage, useLogIn, useSignUp } from '@jobsearch/data';
+import type { User } from '@jobsearch/data';
+import { getErrorMessage, useLogIn, useSetLocale, useSignUp } from '@jobsearch/data';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import type { SubmitEvent } from 'react';
-import { useId } from 'react';
+import { useId, useRef } from 'react';
 import { APP_NAME } from '@/lib/app-name';
 import { safeNextPath } from '@/lib/safe-next';
+import { LanguageSwitch } from './LanguageSwitch';
 import { Logo } from './Logo';
 
 export type AuthMode = 'log-in' | 'sign-up';
@@ -31,13 +34,19 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const signUp = useSignUp();
   const active = mode === 'log-in' ? logIn : signUp;
   const id = useId();
+  const t = useTranslations('Auth');
+  const locale = useLocale();
+  const setLocale = useSetLocale();
+  // True when you picked a language on this page: it's then saved on your account.
+  const picked = useRef(false);
 
   function onSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const email = text(form, 'email');
     const password = text(form, 'password');
-    const onSuccess = () => {
+    const onSuccess = (user: User) => {
+      if (picked.current && user.locale !== locale) setLocale.mutate(locale);
       // replace, not push: Back shouldn't return to the login form.
       router.replace(next);
     };
@@ -51,20 +60,25 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <main className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <Logo className="mb-4 h-10 w-10" />
+        <div className="mb-4 flex items-start justify-between">
+          <Logo className="h-10 w-10" />
+          <LanguageSwitch
+            onPick={() => {
+              picked.current = true;
+            }}
+          />
+        </div>
         <h1 className="text-xl font-semibold text-slate-900">
-          {mode === 'log-in' ? `Log in to ${APP_NAME}` : 'Create your account'}
+          {mode === 'log-in' ? t('logInHeading', { app: APP_NAME }) : t('signUpHeading')}
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          {mode === 'log-in'
-            ? 'Track jobs, your applications and your profile.'
-            : 'The first account on a new server becomes its admin.'}
+          {mode === 'log-in' ? t('logInIntro') : t('signUpIntro')}
         </p>
 
         <form
           onSubmit={onSubmit}
           className="mt-6 space-y-4"
-          aria-label={mode === 'log-in' ? 'Log in' : 'Sign up'}
+          aria-label={mode === 'log-in' ? t('logInTitle') : t('signUpTitle')}
         >
           {active.isError && (
             <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
@@ -73,7 +87,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           )}
           {mode === 'sign-up' && (
             <label htmlFor={`${id}-name`} className="block text-sm font-medium text-slate-700">
-              Name
+              {t('name')}
               <input
                 id={`${id}-name`}
                 name="name"
@@ -85,7 +99,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </label>
           )}
           <label htmlFor={`${id}-email`} className="block text-sm font-medium text-slate-700">
-            Email
+            {t('email')}
             <input
               id={`${id}-email`}
               name="email"
@@ -96,7 +110,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             />
           </label>
           <label htmlFor={`${id}-password`} className="block text-sm font-medium text-slate-700">
-            Password
+            {t('password')}
             <input
               id={`${id}-password`}
               name="password"
@@ -108,7 +122,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             />
             {mode === 'sign-up' && (
               <span className="mt-1 block text-xs font-normal text-slate-500">
-                At least 8 characters
+                {t('passwordHint')}
               </span>
             )}
           </label>
@@ -118,22 +132,18 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             {mode === 'log-in'
-              ? logIn.isPending
-                ? 'Logging in…'
-                : 'Log in'
-              : signUp.isPending
-                ? 'Creating account…'
-                : 'Create account'}
+              ? t(logIn.isPending ? 'loggingIn' : 'logIn')
+              : t(signUp.isPending ? 'creatingAccount' : 'createAccount')}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-600">
-          {mode === 'log-in' ? 'New here? ' : 'Already have an account? '}
+          {mode === 'log-in' ? t('newHere') : t('haveAccount')}{' '}
           <Link
             href={{ pathname: mode === 'log-in' ? '/signup' : '/login', query: otherQuery }}
             className="font-medium text-indigo-700 hover:underline"
           >
-            {mode === 'log-in' ? 'Create an account' : 'Log in'}
+            {mode === 'log-in' ? t('createAnAccount') : t('logIn')}
           </Link>
         </p>
       </main>

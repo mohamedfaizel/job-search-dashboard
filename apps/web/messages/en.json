@@ -1,0 +1,40 @@
+{
+  "Metadata": {
+    "description": "Track jobs, your applications and your profile."
+  },
+  "Language": {
+    "label": "Language",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "Nav": {
+    "main": "Main",
+    "menu": "Menu",
+    "jobs": "Job posts",
+    "tracker": "Tracker",
+    "addJobs": "Add jobs",
+    "profile": "My profile",
+    "admin": "admin",
+    "logOut": "Log out",
+    "loading": "Loading…"
+  },
+  "Auth": {
+    "logInTitle": "Log in",
+    "signUpTitle": "Sign up",
+    "logInHeading": "Log in to {app}",
+    "signUpHeading": "Create your account",
+    "logInIntro": "Track jobs, your applications and your profile.",
+    "signUpIntro": "The first account on a new server becomes its admin.",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 8 characters",
+    "logIn": "Log in",
+    "loggingIn": "Logging in…",
+    "createAccount": "Create account",
+    "creatingAccount": "Creating account…",
+    "newHere": "New here?",
+    "createAnAccount": "Create an account",
+    "haveAccount": "Already have an account?"
+  }
+}

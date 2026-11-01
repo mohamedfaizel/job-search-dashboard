@@ -7,6 +7,7 @@ const ME = `query { me { id email name role } }`;
 const SIGN_UP = `mutation ($input: SignUpInput!) { signUp(input: $input) { id email name role } }`;
 const LOG_IN = `mutation ($input: LogInInput!) { logIn(input: $input) { email role } }`;
 const LOG_OUT = `mutation { logOut }`;
+const SET_LOCALE = `mutation ($locale: String!) { setLocale(locale: $locale) { locale } }`;
 const JOBS = `query { jobsPage { total } }`;
 const SYNC = `mutation { syncJobs(input: { titles: ["frontend"] }) { fetched } }`;
 const SAVED = `query { savedSearches { id } }`;
@@ -133,6 +134,30 @@ describe('auth', () => {
     expect(String(out.cookies)).toMatch(/^session=; Path=\/; Expires=Thu, 01 Jan 1970/);
     expect((await gql<{ me: null }>(ME)).body.data?.me).toBeNull();
     expect((await gql(JOBS)).body.errors?.[0]?.message).toBe('Please log in');
+  });
+
+  it('saves the language you pick, and only languages the app has', async () => {
+    const gql = browser();
+    await gql(SIGN_UP, { input: MOHAMED });
+    expect(
+      (await gql<{ me: { locale: string } }>(`query { me { locale } }`)).body.data?.me,
+    ).toEqual({
+      locale: 'en',
+    });
+
+    const set = await gql<{ setLocale: { locale: string } }>(SET_LOCALE, { locale: 'de' });
+    expect(set.body.data?.setLocale).toEqual({ locale: 'de' });
+    expect(
+      (await gql<{ me: { locale: string } }>(`query { me { locale } }`)).body.data?.me,
+    ).toEqual({
+      locale: 'de',
+    });
+
+    const wrong = await gql(SET_LOCALE, { locale: 'xx' });
+    expect(wrong.body.errors?.[0]?.message).toBe('Pick one of: en, de');
+    expect((await t.anonymous(SET_LOCALE, { locale: 'de' })).errors?.[0]?.message).toBe(
+      'Please log in',
+    );
   });
 
   it('ignores a forged session cookie', async () => {

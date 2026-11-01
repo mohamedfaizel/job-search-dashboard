@@ -575,6 +575,11 @@ type Mutation {
   """
   setHaveTerm(have: Boolean! = true, jobId: ID!, term: String!): JobInsights!
 
+  """
+  Show the app in this language: "en" or "de"
+  """
+  setLocale(locale: String!): User!
+
   """Turn scheduled runs of a saved search on or off"""
   setSavedSearchSchedule(id: Int!, input: ScheduleInput!): SavedSearch!
 
@@ -1139,6 +1144,11 @@ type TermCheck {
 type User {
   email: String!
   id: Int!
+
+  """
+  The language the app is shown in: "en" or "de"
+  """
+  locale: String!
   name: String!
   role: Role!
 }

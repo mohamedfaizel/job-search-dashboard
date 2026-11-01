@@ -69,6 +69,8 @@ model User {
   jobsLastSeenAt  DateTime?
   /// Jobs imported after this are "New" for this visit: the end of your previous visit.
   jobsNewSince    DateTime?
+  /// The language the app is shown in ("en" or "de"), so it follows you to other devices.
+  locale          String           @default("en")
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 }

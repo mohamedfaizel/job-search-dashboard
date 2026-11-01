@@ -1,3 +1,4 @@
+import { UnauthorizedException } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { Response } from 'express';
 import type { SessionUser } from './auth.decorators';
@@ -34,6 +35,15 @@ export class AuthResolver {
     const user = await this.auth.logIn(input);
     ctx.res.cookie(SESSION_COOKIE, await this.auth.sessionToken(user), sessionCookieOptions());
     return toUserModel(user);
+  }
+
+  @Mutation(() => UserModel, { description: 'Show the app in this language: "en" or "de"' })
+  async setLocale(
+    @CurrentUser() session: SessionUser | undefined,
+    @Args('locale') locale: string,
+  ): Promise<UserModel> {
+    if (!session) throw new UnauthorizedException('Please log in');
+    return toUserModel(await this.auth.setLocale(session.id, locale));
   }
 
   @Mutation(() => Boolean)

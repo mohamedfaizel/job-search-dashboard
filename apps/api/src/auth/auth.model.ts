@@ -18,7 +18,13 @@ export class UserModel {
 
   @Field(() => Role)
   role!: Role;
+
+  @Field({ description: 'The language the app is shown in: "en" or "de"' })
+  locale!: string;
 }
+
+/** The languages the app is translated into. The first is the default. */
+export const LOCALES = ['en', 'de'] as const;
 
 const normalizeEmail = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim().toLowerCase() : value;
