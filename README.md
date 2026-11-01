@@ -1,5 +1,7 @@
 # Job Search Dashboard
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mohamedfaizel_job-search-dashboard&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=mohamedfaizel_job-search-dashboard)
+
 A full-stack job search dashboard. It pulls live job postings from the
 [JobsPipe](https://jobspipe.dev) API, stores them in PostgreSQL, and shows them in a
 sortable, filterable table. You can also add jobs by hand.
@@ -409,6 +411,23 @@ this repo, then add its project token as a repository secret named `CHROMATIC_PR
 (GitHub → Settings → Secrets and variables → Actions). Until then the Chromatic workflow skips
 itself.
 
+## Code quality (SonarCloud)
+
+[SonarCloud](https://sonarcloud.io/) checks every pull request for bugs, security hotspots,
+duplicated code and untested new code, and comments with the result (the "quality gate").
+CI runs the tests with coverage (`pnpm test:coverage`), then the scan reads
+[`sonar-project.properties`](sonar-project.properties).
+
+To turn it on (free for public repos):
+
+1. Sign in at sonarcloud.io with GitHub and import this repository.
+2. In the project, go to Administration → Analysis Method and turn **Automatic Analysis off**
+   (CI does the analysis, so it can include test coverage).
+3. Copy the token it shows into GitHub → Settings → Secrets and variables → Actions, as a
+   secret named `SONAR_TOKEN`. Never commit it.
+
+Until the secret exists, the scan step skips itself.
+
 ## Scripts
 
 | Command              | What it does                     |
@@ -416,6 +435,7 @@ itself.
 | `pnpm dev`           | Run every app in watch mode      |
 | `pnpm build`         | Build every app                  |
 | `pnpm test`          | Run all unit and component tests |
+| `pnpm test:coverage` | Tests plus a coverage report     |
 | `pnpm test:e2e`      | API tests against PostgreSQL     |
 | `pnpm lint`          | Lint the whole repo              |
 | `pnpm typecheck`     | Type-check every app             |
