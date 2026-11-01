@@ -54,8 +54,11 @@ describe('Shell', () => {
 
     await userEvent.click(within(nav).getByRole('button', { name: 'Tracker' }));
     expect(await screen.findByText('Tracker microfrontend')).toBeInTheDocument();
-    await userEvent.click(within(nav).getByRole('button', { name: 'My profile' }));
-    expect(await screen.findByText('Profile microfrontend')).toBeInTheDocument();
+    // My profile has moved to the new Next.js app.
+    expect(within(nav).getByRole('link', { name: 'My profile' })).toHaveAttribute(
+      'href',
+      'http://localhost:3001/profile',
+    );
   });
 
   it('logs out back to the login page', async () => {

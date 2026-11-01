@@ -14,17 +14,17 @@ flowchart LR
     shell["shell (host app)<br/>:5173"]
     dashboard["dashboard (microfrontend)<br/>:5174"]
     jobForm["job-form (microfrontend)<br/>:5175"]
-    profile["profile (microfrontend)<br/>:5176"]
+    web["web (Next.js)<br/>:3001<br/>My profile"]
     shell -- loads at runtime --> dashboard
     shell -- loads at runtime --> jobForm
-    shell -- loads at runtime --> profile
+    shell -- "My profile" link --> web
   end
   api["api (NestJS)<br/>:3000"]
   db[(PostgreSQL<br/>:5432)]
   jobspipe[[JobsPipe API]]
   dashboard -- GraphQL --> api
   jobForm -- GraphQL --> api
-  profile -- GraphQL + resume upload --> api
+  web -- GraphQL + resume upload --> api
   api -- Prisma --> db
   api -- sync --> jobspipe
 ```
@@ -34,7 +34,6 @@ flowchart LR
 | `apps/shell`     | Host app: page layout and navigation. Loads the microfrontends.   | 5173 |
 | `apps/dashboard` | Microfrontend: the job posts table.                               | 5174 |
 | `apps/job-form`  | Microfrontend: form for adding a job by hand.                     | 5175 |
-| `apps/profile`   | Microfrontend: your profile and master resume (PDF/Word upload).  | 5176 |
 | `apps/web`       | The new Next.js app. Screens move here one by one (see below).    | 3001 |
 | `apps/api`       | NestJS backend. Holds the JobsPipe token so it never hits the UI. | 3000 |
 | `apps/storybook` | Storybook: a catalogue of the UI components, used by Chromatic.   | 6006 |

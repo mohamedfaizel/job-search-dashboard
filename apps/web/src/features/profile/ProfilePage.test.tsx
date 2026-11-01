@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
-import App from './App';
+import { ProfilePage } from './ProfilePage';
 import { renderWithData } from './test/render';
 import { api, rejectUpload, requests, server, syncs } from './test/server';
 
@@ -9,7 +9,7 @@ async function renderProfile() {
   // applyAccept: false lets tests pick a file the input's `accept` would hide, like a user
   // choosing "All files" in the picker.
   const user = userEvent.setup({ applyAccept: false });
-  renderWithData(<App />);
+  renderWithData(<ProfilePage />);
   await screen.findByRole('textbox', { name: 'Headline' });
   return user;
 }

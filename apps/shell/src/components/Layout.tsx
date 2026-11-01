@@ -2,15 +2,18 @@ import type { User } from '@jobsearch/data';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
-export type View = 'dashboard' | 'tracker' | 'add-job' | 'profile';
+export type View = 'dashboard' | 'tracker' | 'add-job';
 
 const NAV_ITEMS: { view: View; label: string; adminOnly?: boolean }[] = [
   { view: 'dashboard', label: 'Job posts' },
   { view: 'tracker', label: 'Tracker' },
   // Imports spend the server's JobsPipe credits, so only the admin sees this page.
   { view: 'add-job', label: 'Add jobs', adminOnly: true },
-  { view: 'profile', label: 'My profile' },
 ];
+
+/** Screens that have moved to the new Next.js app (apps/web) open there instead. */
+const WEB_URL = (import.meta.env['VITE_WEB_URL'] as string | undefined) ?? 'http://localhost:3001';
+const MOVED_ITEMS = [{ href: `${WEB_URL}/profile`, label: 'My profile' }];
 
 interface Props {
   user: User;
@@ -64,6 +67,16 @@ export function Layout({ user, current, onNavigate, onLogOut, children }: Props)
                     >
                       {label}
                     </button>
+                  </li>
+                ))}
+                {MOVED_ITEMS.map(({ href, label }) => (
+                  <li key={href}>
+                    <a
+                      href={href}
+                      className="block w-full rounded-md px-3 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-100 md:w-auto md:py-1.5"
+                    >
+                      {label}
+                    </a>
                   </li>
                 ))}
               </ul>

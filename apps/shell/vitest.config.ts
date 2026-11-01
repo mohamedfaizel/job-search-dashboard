@@ -10,7 +10,6 @@ export default defineConfig({
       'dashboard/App': fileURLToPath(new URL('./src/test/dashboard-app.tsx', import.meta.url)),
       'dashboard/Tracker': fileURLToPath(new URL('./src/test/tracker-app.tsx', import.meta.url)),
       'jobForm/App': fileURLToPath(new URL('./src/test/job-form-app.tsx', import.meta.url)),
-      'profile/App': fileURLToPath(new URL('./src/test/profile-app.tsx', import.meta.url)),
     },
   },
   test: {
