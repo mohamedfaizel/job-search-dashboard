@@ -1,6 +1,7 @@
 import { createQueryClient, DataProvider, jobResumeUrl, makeStore } from '@jobsearch/data';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Intl } from '@/test/intl';
 import { makeJob } from '../test/fixtures';
 import {
   downloads,
@@ -16,15 +17,17 @@ function renderPanel() {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   render(
-    <DataProvider store={makeStore()} queryClient={queryClient}>
-      <ApplyKitPanel
-        job={makeJob()}
-        onStatusChange={() => undefined}
-        asking={false}
-        onApplyStarted={() => undefined}
-        onAnswered={() => undefined}
-      />
-    </DataProvider>,
+    <Intl>
+      <DataProvider store={makeStore()} queryClient={queryClient}>
+        <ApplyKitPanel
+          job={makeJob()}
+          onStatusChange={() => undefined}
+          asking={false}
+          onApplyStarted={() => undefined}
+          onAnswered={() => undefined}
+        />
+      </DataProvider>
+    </Intl>,
   );
 }
 

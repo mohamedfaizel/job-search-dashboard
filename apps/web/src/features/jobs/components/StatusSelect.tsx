@@ -1,6 +1,6 @@
 import type { ApplicationStatus } from '@jobsearch/data';
 import { APPLICATION_STATUSES } from '@jobsearch/data';
-import { STATUS_LABELS } from '../format';
+import { useJobFormat } from '../useJobFormat';
 
 const TONE: Record<ApplicationStatus, string> = {
   NONE: 'text-slate-500',
@@ -21,6 +21,7 @@ interface Props {
 
 /** The manual "update status" control: track where you are with each job. */
 export function StatusSelect({ value, onChange, label, disabled = false }: Props) {
+  const f = useJobFormat();
   return (
     <select
       aria-label={label}
@@ -36,7 +37,7 @@ export function StatusSelect({ value, onChange, label, disabled = false }: Props
     >
       {APPLICATION_STATUSES.map((status) => (
         <option key={status} value={status}>
-          {STATUS_LABELS[status]}
+          {f.status(status)}
         </option>
       ))}
     </select>

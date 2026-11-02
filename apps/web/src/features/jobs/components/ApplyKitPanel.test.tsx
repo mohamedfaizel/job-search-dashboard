@@ -9,6 +9,7 @@ import {
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
+import { Intl } from '@/test/intl';
 import { makeJob } from '../test/fixtures';
 import {
   api,
@@ -33,15 +34,17 @@ function renderKit(job: Job = makeJob(), asking = false) {
   const open = vi.spyOn(window, 'open').mockReturnValue(null);
   const user = userEvent.setup();
   render(
-    <DataProvider store={makeStore()} queryClient={queryClient}>
-      <ApplyKitPanel
-        job={job}
-        asking={asking}
-        onStatusChange={(status) => calls.status.push(status)}
-        onApplyStarted={(j) => calls.started.push(j.id)}
-        onAnswered={(j) => calls.answered.push(j.id)}
-      />
-    </DataProvider>,
+    <Intl>
+      <DataProvider store={makeStore()} queryClient={queryClient}>
+        <ApplyKitPanel
+          job={job}
+          asking={asking}
+          onStatusChange={(status) => calls.status.push(status)}
+          onApplyStarted={(j) => calls.started.push(j.id)}
+          onAnswered={(j) => calls.answered.push(j.id)}
+        />
+      </DataProvider>
+    </Intl>,
   );
   return { user, calls, open };
 }

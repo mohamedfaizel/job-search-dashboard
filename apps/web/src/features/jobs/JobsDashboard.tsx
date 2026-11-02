@@ -31,9 +31,10 @@ import {
   useSetJobHidden,
   useUpdateJobStatus,
 } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApplyQueuePanel } from './components/ApplyQueuePanel';
-import { columns, DEFAULT_HIDDEN_COLUMNS } from './components/columns';
+import { DEFAULT_HIDDEN_COLUMNS, MENU_COLUMNS } from './components/columns';
 import { ColumnsMenu } from './components/ColumnsMenu';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { JobsTable } from './components/JobsTable';
@@ -48,21 +49,11 @@ import { usePendingApplies } from './usePendingApplies';
 const NO_JOBS: Job[] = [];
 const STATUS_CARDS: StatCardKey[] = ['SAVED', 'APPLIED', 'INTERVIEWING'];
 
-/** Every column for the Columns menu, in table order. The tick boxes and the action icons
- * have no name as a header (theirs is a component), and always show, so they aren't listed. */
-const COLUMN_CHOICES = columns
-  .filter((column) => typeof column.header === 'string')
-  .map((column) => ({
-    // Accessor columns take their id from the field they read.
-    id: column.id ?? ('accessorKey' in column ? String(column.accessorKey) : ''),
-    label: String(column.header),
-    canHide: column.enableHiding !== false,
-  }));
-
 const ERROR_BOX = 'rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800';
 
 /** Connects the table to Redux (what the user chose) and TanStack Query (the data). */
 export function JobsDashboard() {
+  const t = useTranslations('Jobs');
   const dispatch = useAppDispatch();
   const tableState = useAppSelector((state) => state.jobsTable);
   const args = useMemo(() => toJobsPageArgs(tableState), [tableState]);
@@ -83,6 +74,10 @@ export function JobsDashboard() {
   const applying = usePendingApplies();
   const askingIds = useMemo(() => new Set(applying.pending.map((p) => p.id)), [applying.pending]);
   const showingHidden = tableState.showHidden;
+  const columnChoices = useMemo(
+    () => MENU_COLUMNS.map((column) => ({ ...column, label: t(`columns.${column.id}`) })),
+    [t],
+  );
 
   // "Jobs found" counts your search and column filters, whatever the status card picked.
   const foundArgs = useMemo(() => {
@@ -193,13 +188,9 @@ export function JobsDashboard() {
             id="job-posts-heading"
             className="text-2xl font-semibold tracking-tight text-slate-900"
           >
-            {showingHidden ? 'Hidden jobs' : 'Job posts'}
+            {showingHidden ? t('hiddenTitle') : t('title')}
           </h1>
-          {!showingHidden && (
-            <p className="text-sm text-slate-500">
-              Search, filter and track the jobs you imported. Click a title for details.
-            </p>
-          )}
+          {!showingHidden && <p className="text-sm text-slate-500">{t('intro')}</p>}
         </div>
       </div>
       <StatCards
@@ -217,12 +208,7 @@ export function JobsDashboard() {
           showingHidden ? undefined : () => dispatch(setQueueOnly(!tableState.queueOnly))
         }
       />
-      {showingHidden && (
-        <p className="text-sm text-slate-600">
-          Only you don’t see these. Unhide a job to put it back in your table, or click “Jobs found”
-          to go back.
-        </p>
-      )}
+      {showingHidden && <p className="text-sm text-slate-600">{t('hiddenIntro')}</p>}
 
       {lastChange && (
         <p
@@ -230,10 +216,14 @@ export function JobsDashboard() {
           className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-lg items-center gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg"
         >
           <span className="min-w-0 flex-1">
-            {lastChange.hidden ? 'Hid' : 'Brought back'}{' '}
             {lastChange.jobs.length === 1 && lastChange.jobs[0]
-              ? `“${lastChange.jobs[0].title}” at ${lastChange.jobs[0].company.name}.`
-              : `${lastChange.jobs.length} jobs.`}
+              ? t(lastChange.hidden ? 'undo.hidOne' : 'undo.backOne', {
+                  title: lastChange.jobs[0].title,
+                  company: lastChange.jobs[0].company.name,
+                })
+              : t(lastChange.hidden ? 'undo.hidMany' : 'undo.backMany', {
+                  count: lastChange.jobs.length,
+                })}
           </span>
           <button
             type="button"
@@ -244,11 +234,11 @@ export function JobsDashboard() {
             }}
             className="font-semibold text-indigo-300 hover:text-indigo-200"
           >
-            Undo
+            {t('undo.undo')}
           </button>
           <button
             type="button"
-            aria-label="Dismiss"
+            aria-label={t('undo.dismiss')}
             onClick={() => {
               setLastChange(null);
             }}
@@ -261,13 +251,17 @@ export function JobsDashboard() {
 
       {applying.pending.length > 0 && (
         <ul
-          aria-label="Did you apply?"
+          aria-label={t('pending.label')}
           className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
         >
           {applying.pending.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center gap-2">
               <span className="mr-auto">
-                Did you apply to <span className="font-medium">{p.title}</span> at {p.company}?
+                {t.rich('pending.question', {
+                  title: p.title,
+                  company: p.company,
+                  b: (chunks) => <span className="font-medium">{chunks}</span>,
+                })}
               </span>
               <button
                 type="button"
@@ -277,7 +271,7 @@ export function JobsDashboard() {
                 }}
                 className="rounded-md bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-700"
               >
-                Yes, mark Applied
+                {t('pending.yes')}
               </button>
               <button
                 type="button"
@@ -286,7 +280,7 @@ export function JobsDashboard() {
                 }}
                 className="rounded-md px-3 py-1 text-emerald-800 hover:bg-emerald-100"
               >
-                Not yet
+                {t('pending.notYet')}
               </button>
             </li>
           ))}
@@ -320,13 +314,13 @@ export function JobsDashboard() {
             recalculateFit.mutate();
           }}
           disabled={recalculateFit.isPending}
-          title="Fit % updates by itself when your resume or the jobs change. Click to work it out again now"
+          title={t('recalculate.hint')}
           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
         >
-          {recalculateFit.isPending ? 'Recalculating…' : 'Recalculate Fit'}
+          {recalculateFit.isPending ? t('recalculate.busy') : t('recalculate.button')}
         </button>
         <ColumnsMenu
-          columns={COLUMN_CHOICES}
+          columns={columnChoices}
           visibility={columnVisibility.visibility}
           onToggle={columnVisibility.toggle}
           onShowAll={columnVisibility.showAll}
@@ -336,10 +330,12 @@ export function JobsDashboard() {
       {selectedJobs.length > 0 && (
         <div
           role="region"
-          aria-label="Selected jobs"
+          aria-label={t('selection.label')}
           className="flex flex-wrap items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm text-indigo-900"
         >
-          <span className="mr-auto font-medium">{selectedJobs.length} selected</span>
+          <span className="mr-auto font-medium">
+            {t('selection.count', { count: selectedJobs.length })}
+          </span>
           {!showingHidden && (
             <button
               type="button"
@@ -351,7 +347,7 @@ export function JobsDashboard() {
               }}
               className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
             >
-              Save
+              {t('selection.save')}
             </button>
           )}
           {!showingHidden && (
@@ -363,7 +359,7 @@ export function JobsDashboard() {
               }}
               className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
             >
-              Add to Apply queue
+              {t('selection.addToQueue')}
             </button>
           )}
           <button
@@ -374,7 +370,7 @@ export function JobsDashboard() {
             }}
             className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
           >
-            {showingHidden ? 'Unhide' : 'Hide'}
+            {showingHidden ? t('selection.unhide') : t('selection.hide')}
           </button>
           <button
             type="button"
@@ -383,29 +379,29 @@ export function JobsDashboard() {
             }}
             className="px-2 py-1 text-indigo-700 hover:underline"
           >
-            Clear selection
+            {t('selection.clear')}
           </button>
         </div>
       )}
 
       {jobsQuery.isError && (
         <div role="alert" className={ERROR_BOX}>
-          Could not load jobs: {getErrorMessage(jobsQuery.error)}
+          {t('errors.load', { error: getErrorMessage(jobsQuery.error) })}
         </div>
       )}
       {setHidden.isError && (
         <div role="alert" className={ERROR_BOX}>
-          Could not change that: {getErrorMessage(setHidden.error)}
+          {t('errors.hide', { error: getErrorMessage(setHidden.error) })}
         </div>
       )}
       {changeQueue.isError && (
         <div role="alert" className={ERROR_BOX}>
-          Could not add to the Apply queue: {getErrorMessage(changeQueue.error)}
+          {t('errors.queue', { error: getErrorMessage(changeQueue.error) })}
         </div>
       )}
       {updateStatus.isError && (
         <div role="alert" className={ERROR_BOX}>
-          Could not update the status: {getErrorMessage(updateStatus.error)}
+          {t('errors.status', { error: getErrorMessage(updateStatus.error) })}
         </div>
       )}
 
@@ -429,12 +425,10 @@ export function JobsDashboard() {
         onSelectionChange={setChecked}
       />
 
-      {jobsQuery.isPending && <p className="text-center text-sm text-slate-500">Loading jobs…</p>}
+      {jobsQuery.isPending && <p className="text-center text-sm text-slate-500">{t('loading')}</p>}
       {jobsQuery.isSuccess && jobs.length === 0 && (
         <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
-          {showingHidden
-            ? 'No hidden jobs match.'
-            : 'No jobs match. Try clearing some filters, or add jobs from the “Add jobs” page.'}
+          {showingHidden ? t('noHidden') : t('noJobs')}
         </p>
       )}
 

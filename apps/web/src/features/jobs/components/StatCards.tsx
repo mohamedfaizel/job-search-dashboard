@@ -1,4 +1,5 @@
 import type { Application } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 
 export type StatCardKey = 'total' | 'SAVED' | 'APPLIED' | 'INTERVIEWING' | 'hidden';
 
@@ -22,12 +23,12 @@ interface Props {
   onToggleQueue?: (() => void) | undefined;
 }
 
-const CARDS: { key: StatCardKey; label: string; dot: string }[] = [
-  { key: 'total', label: 'Jobs found', dot: 'bg-indigo-500' },
-  { key: 'SAVED', label: 'Saved', dot: 'bg-sky-500' },
-  { key: 'APPLIED', label: 'Applied', dot: 'bg-amber-500' },
-  { key: 'INTERVIEWING', label: 'Interviewing', dot: 'bg-emerald-500' },
-  { key: 'hidden', label: 'Hidden', dot: 'bg-slate-400' },
+const CARDS: { key: StatCardKey; dot: string }[] = [
+  { key: 'total', dot: 'bg-indigo-500' },
+  { key: 'SAVED', dot: 'bg-sky-500' },
+  { key: 'APPLIED', dot: 'bg-amber-500' },
+  { key: 'INTERVIEWING', dot: 'bg-emerald-500' },
+  { key: 'hidden', dot: 'bg-slate-400' },
 ];
 
 /**
@@ -47,6 +48,7 @@ export function StatCards({
   queueOnly = false,
   onToggleQueue,
 }: Props) {
+  const t = useTranslations('Jobs.cards');
   const value = (key: StatCardKey) => {
     if (key === 'total') return total;
     if (key === 'hidden') return hiddenCount;
@@ -64,12 +66,12 @@ export function StatCards({
       key="new"
       type="button"
       aria-pressed={newOnly}
-      title="Jobs imported since your last visit"
+      title={t('newHint')}
       onClick={onToggleNew}
       className={pill(newOnly)}
     >
       <span aria-hidden="true" className="h-2 w-2 rounded-full bg-blue-500" />
-      New
+      {t('new')}
       <span className={`font-semibold tabular-nums ${newOnly ? 'text-white' : 'text-slate-900'}`}>
         {newCount}
       </span>
@@ -81,12 +83,12 @@ export function StatCards({
       key="queue"
       type="button"
       aria-pressed={queueOnly}
-      title="Jobs in your Apply queue"
+      title={t('queueHint')}
       onClick={onToggleQueue}
       className={pill(queueOnly)}
     >
       <span aria-hidden="true" className="h-2 w-2 rounded-full bg-violet-500" />
-      In Apply queue
+      {t('queue')}
       <span className={`font-semibold tabular-nums ${queueOnly ? 'text-white' : 'text-slate-900'}`}>
         {queueCount}
       </span>
@@ -96,10 +98,10 @@ export function StatCards({
   return (
     <div
       role="group"
-      aria-label="Show jobs by status"
+      aria-label={t('label')}
       className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
     >
-      {CARDS.flatMap(({ key, label, dot }) => {
+      {CARDS.flatMap(({ key, dot }) => {
         const pressed = active === key;
         const card = (
           <button
@@ -112,7 +114,7 @@ export function StatCards({
             className={pill(pressed)}
           >
             <span aria-hidden="true" className={`h-2 w-2 rounded-full ${dot}`} />
-            {label}
+            {t(key)}
             <span
               className={`font-semibold tabular-nums ${pressed ? 'text-white' : 'text-slate-900'}`}
             >

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 
 export interface ColumnChoice {
@@ -17,6 +18,7 @@ interface Props {
 
 /** "Columns" button with a checklist to show or hide each table column. */
 export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props) {
+  const t = useTranslations('Jobs.columns');
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
@@ -53,10 +55,10 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
         <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 fill-current text-slate-500">
           <path d="M1 2h4v12H1zM6 2h4v12H6zM11 2h4v12h-4z" />
         </svg>
-        Columns
+        {t('menu')}
         {hiddenCount > 0 && (
           <span className="rounded-full bg-indigo-100 px-1.5 text-xs text-indigo-700">
-            {hiddenCount} hidden
+            {t('hiddenCount', { count: hiddenCount })}
           </span>
         )}
       </button>
@@ -65,7 +67,7 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
         <div
           id={panelId}
           role="dialog"
-          aria-label="Show or hide columns"
+          aria-label={t('menuLabel')}
           className="absolute top-full right-0 z-30 mt-1 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-lg"
         >
           <ul className="max-h-80 overflow-y-auto">
@@ -87,7 +89,7 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
                     }}
                   />
                   {column.label}
-                  {!column.canHide && <span className="text-xs">(always shown)</span>}
+                  {!column.canHide && <span className="text-xs">{t('alwaysShown')}</span>}
                 </label>
               </li>
             ))}
@@ -98,7 +100,7 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
               onClick={onShowAll}
               className="mt-2 w-full rounded px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-50"
             >
-              Show all columns
+              {t('showAll')}
             </button>
           )}
         </div>

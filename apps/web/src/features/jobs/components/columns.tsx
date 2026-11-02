@@ -1,18 +1,11 @@
 import type { Job, JobFilterOptions, JobSortField, ListFilterKey } from '@jobsearch/data';
 import { APPLICATION_STATUSES, VISA_SPONSORSHIPS, WORKPLACES } from '@jobsearch/data';
 import { columnVisibilityFeature, createColumnHelper, tableFeatures } from '@tanstack/react-table';
+import { useTranslations } from 'next-intl';
 import { createContext, useContext } from 'react';
-import {
-  capitalize,
-  countryName,
-  formatDate,
-  formatSalary,
-  languageName,
-  STATUS_LABELS,
-  timeAgo,
-  VISA_LABELS,
-  WORKPLACE_LABELS,
-} from '../format';
+import { capitalize } from '../format';
+import type { JobFormat } from '../useJobFormat';
+import { useJobFormat } from '../useJobFormat';
 import type { BadgeTone } from './Badge';
 import { Badge } from './Badge';
 import { BookmarkIcon, ExternalLinkIcon, EyeIcon, EyeSlashIcon } from './icons';
@@ -64,8 +57,45 @@ function toneFor(text: string): BadgeTone {
   return INDUSTRY_TONES[Math.abs(hash) % INDUSTRY_TONES.length] ?? 'gray';
 }
 
-/** "at Acme" names in labels, so a screen reader knows which row a button belongs to. */
-const jobName = (job: Job) => `${job.title} at ${job.company.name}`;
+/** Every column name and filter name the table translates. */
+export type ColumnNameKey =
+  | 'title'
+  | 'fit'
+  | 'match'
+  | 'location'
+  | 'postedAt'
+  | 'salary'
+  | 'visa'
+  | 'skills'
+  | 'seniority'
+  | 'jobFunction'
+  | 'language'
+  | 'workplace'
+  | 'industry'
+  | 'provider'
+  | 'status'
+  | 'actions'
+  | 'company'
+  | 'city';
+
+/**
+ * A column's header in your language. Headers are components, not strings, because the
+ * columns are defined once at module scope, before anyone has picked a language.
+ */
+function ColumnName({ id, srOnly = false }: { id: ColumnNameKey; srOnly?: boolean }) {
+  const t = useTranslations('Jobs.columns');
+  return srOnly ? <span className="sr-only">{t(id)}</span> : t(id);
+}
+
+function LanguageBadge({ code }: { code: string }) {
+  const f = useJobFormat();
+  return <Badge tone="purple">{f.language(code)}</Badge>;
+}
+
+function WorkplaceBadge({ workplace }: { workplace: NonNullable<Job['workplace']> }) {
+  const f = useJobFormat();
+  return <Badge tone={workplace === 'HYBRID' ? 'blue' : 'red'}>{f.workplace(workplace)}</Badge>;
+}
 
 function CompanyLogo({ job }: { job: Job }) {
   const { name, logoUrl } = job.company;
@@ -93,6 +123,7 @@ export function isNew(job: Job, newSince: string | null | undefined): boolean {
 /** Title (opens the popup) with the company under it: one cell instead of two columns. */
 export function JobCell({ job }: { job: Job }) {
   const { openJob, newSince, queueNumbers } = useRowActions();
+  const t = useTranslations('Jobs.row');
   const fresh = isNew(job, newSince);
   const queued = queueNumbers?.get(job.id);
   return (
@@ -111,13 +142,13 @@ export function JobCell({ job }: { job: Job }) {
         </button>
         <span className="flex max-w-[22rem] items-center gap-1.5 text-slate-500">
           {fresh && (
-            <Badge tone="blue" title="Imported since your last visit">
-              New
+            <Badge tone="blue" title={t('newHint')}>
+              {t('new')}
             </Badge>
           )}
           {queued !== undefined && (
-            <Badge tone="purple" title={`Number ${String(queued)} in your Apply queue`}>
-              Queue #{queued}
+            <Badge tone="purple" title={t('queueHint', { n: queued })}>
+              {t('queue', { n: queued })}
             </Badge>
           )}
           <span className="truncate" title={job.company.name}>
@@ -131,28 +162,30 @@ export function JobCell({ job }: { job: Job }) {
 
 /** City on top; country and Remote/Hybrid under it. */
 export function LocationCell({ job }: { job: Job }) {
-  const country = job.countryCode ? countryName(job.countryCode) : null;
+  const f = useJobFormat();
+  const country = job.countryCode ? f.country(job.countryCode) : null;
   const top = job.city ?? country;
-  const below = [job.city ? country : null, job.workplace && WORKPLACE_LABELS[job.workplace]]
+  const below = [job.city ? country : null, job.workplace && f.workplace(job.workplace)]
     .filter(Boolean)
     .join(' · ');
   if (!top && !below) return dash;
   return (
     <div className="whitespace-nowrap">
-      <span className="block text-slate-700">{top ?? WORKPLACE_LABELS.REMOTE}</span>
+      <span className="block text-slate-700">{top ?? f.workplace('REMOTE')}</span>
       {below && top && <span className="block text-xs text-slate-500">{below}</span>}
     </div>
   );
 }
 
 export function PostedCell({ job }: { job: Job }) {
+  const f = useJobFormat();
   return (
     <time
       dateTime={job.postedAt}
-      title={formatDate(job.postedAt)}
+      title={f.date(job.postedAt)}
       className="whitespace-nowrap text-slate-500"
     >
-      {timeAgo(job.postedAt)}
+      {f.timeAgo(job.postedAt)}
     </time>
   );
 }
@@ -168,21 +201,24 @@ export function VisaCell({
   visa: Job['visa'];
   hideUnknown?: boolean;
 }) {
-  if (visa === 'OFFERS') return <Badge tone="green">{VISA_LABELS.OFFERS}</Badge>;
-  if (visa === 'NO') return <Badge tone="gray">{VISA_LABELS.NO}</Badge>;
+  const f = useJobFormat();
+  if (visa === 'OFFERS') return <Badge tone="green">{f.visa('OFFERS')}</Badge>;
+  if (visa === 'NO') return <Badge tone="gray">{f.visa('NO')}</Badge>;
   return hideUnknown ? null : dash;
 }
 
 export function SalaryCell({ job }: { job: Job }) {
-  const salary = formatSalary(job.salaryMinUsd, job.salaryMaxUsd);
+  const f = useJobFormat();
+  const t = useTranslations('Jobs.row');
+  const salary = f.salary(job.salaryMinUsd, job.salaryMaxUsd);
   if (!salary) return dash;
   return (
     <span
       className="whitespace-nowrap text-slate-700 tabular-nums"
-      title={job.salaryEstimated ? 'Estimated by JobsPipe' : 'Stated in the posting'}
+      title={job.salaryEstimated ? t('salaryEstimated') : t('salaryStated')}
     >
       {salary}
-      {job.salaryEstimated && <span className="text-slate-400"> est.</span>}
+      {job.salaryEstimated && <span className="text-slate-400"> {t('estimated')}</span>}
     </span>
   );
 }
@@ -207,9 +243,11 @@ function SkillsCell({ skills }: { skills: string[] }) {
 
 export function StatusCell({ job }: { job: Job }) {
   const { setStatus } = useRowActions();
+  const f = useJobFormat();
+  const t = useTranslations('Jobs.row');
   return (
     <StatusSelect
-      label={`Status for ${jobName(job)}`}
+      label={t('statusFor', { job: f.jobName(job) })}
       value={job.applicationStatus}
       onChange={(status) => {
         setStatus(job, status);
@@ -224,10 +262,9 @@ export function StatusCell({ job }: { job: Job }) {
  */
 export function FitCell({ job }: { job: Job }) {
   const { openJob } = useRowActions();
+  const t = useTranslations('Jobs.row');
   if (job.fitScore === null) {
-    return (
-      <span title="Add your resume on My profile to see how well you fit each job">{dash}</span>
-    );
+    return <span title={t('fitEmpty')}>{dash}</span>;
   }
   return (
     <button
@@ -235,8 +272,8 @@ export function FitCell({ job }: { job: Job }) {
       onClick={() => {
         openJob(job);
       }}
-      aria-label={`Fit for ${job.title}: ${String(job.fitScore)}%`}
-      title="How much of the job's skills, keywords and title your resume covers. Click for details"
+      aria-label={t('fitLabel', { title: job.title, score: job.fitScore })}
+      title={t('fitHint')}
       className="rounded"
     >
       <Badge tone={scoreTone(job.fitScore)}>{job.fitScore}%</Badge>
@@ -247,13 +284,14 @@ export function FitCell({ job }: { job: Job }) {
 /** Resume-Matcher's ATS score for the job; clicking it opens the popup with the breakdown. */
 export function MatchCell({ job }: { job: Job }) {
   const { openJob } = useRowActions();
+  const t = useTranslations('Jobs.row');
   const { matchStatus, matchScore } = job;
   if (!matchStatus) return dash;
   const label =
     matchStatus === 'PENDING'
-      ? 'Matching…'
+      ? t('matching')
       : matchStatus === 'FAILED' || matchScore === null
-        ? 'Failed'
+        ? t('matchFailed')
         : String(Math.round(matchScore));
   const tone: BadgeTone =
     matchStatus === 'READY' && matchScore !== null ? scoreTone(matchScore) : 'gray';
@@ -263,7 +301,7 @@ export function MatchCell({ job }: { job: Job }) {
       onClick={() => {
         openJob(job);
       }}
-      aria-label={`Resume match for ${job.title}: ${label}`}
+      aria-label={t('matchLabel', { title: job.title, label })}
       className="rounded"
     >
       <Badge tone={tone}>{label}</Badge>
@@ -273,10 +311,12 @@ export function MatchCell({ job }: { job: Job }) {
 
 export function SelectCell({ job }: { job: Job }) {
   const { selected, toggleSelected } = useRowActions();
+  const f = useJobFormat();
+  const t = useTranslations('Jobs.row');
   return (
     <input
       type="checkbox"
-      aria-label={`Select ${jobName(job)}`}
+      aria-label={t('select', { job: f.jobName(job) })}
       checked={selected.has(job.id)}
       onChange={() => {
         toggleSelected(job);
@@ -288,10 +328,11 @@ export function SelectCell({ job }: { job: Job }) {
 
 function SelectAllHeader() {
   const { selected, toggleAll, allSelected } = useRowActions();
+  const t = useTranslations('Jobs.row');
   return (
     <input
       type="checkbox"
-      aria-label="Select all jobs on this page"
+      aria-label={t('selectAll')}
       checked={allSelected}
       // "Some but not all" shows a dash in the box.
       ref={(box) => {
@@ -312,22 +353,24 @@ const ICON_BUTTON =
  */
 export function ActionsCell({ job, withText = false }: { job: Job; withText?: boolean }) {
   const { setStatus, toggleHidden, showingHidden = false } = useRowActions();
+  const f = useJobFormat();
+  const t = useTranslations('Jobs.row');
+  const name = f.jobName(job);
   const saved = job.applicationStatus === 'SAVED';
   // Applied, Interviewing and so on are already tracked, so there is nothing to save.
   const tracked = job.applicationStatus !== 'NONE' && !saved;
   const saveTip = tracked
-    ? `Already on your tracker (${STATUS_LABELS[job.applicationStatus]})`
+    ? t('tracked', { status: f.status(job.applicationStatus) })
     : saved
-      ? 'Saved. Click to unsave'
-      : 'Save to your tracker';
-  const hideAction = showingHidden ? 'Unhide' : 'Hide';
+      ? t('savedHint')
+      : t('saveHint');
   const wide = withText ? 'w-auto gap-1.5 px-2 text-xs font-medium text-slate-600' : '';
 
   return (
     <div className="flex items-center justify-end gap-0.5">
       <button
         type="button"
-        aria-label={`${saved ? 'Unsave' : 'Save'} ${jobName(job)}`}
+        aria-label={t(saved ? 'unsaveLabel' : 'saveLabel', { job: name })}
         aria-pressed={saved || tracked}
         title={saveTip}
         disabled={tracked}
@@ -337,31 +380,31 @@ export function ActionsCell({ job, withText = false }: { job: Job; withText?: bo
         className={`${ICON_BUTTON} ${wide} ${saved || tracked ? 'text-indigo-600' : ''}`}
       >
         <BookmarkIcon filled={saved || tracked} />
-        {withText && (saved ? 'Saved' : 'Save')}
+        {withText && t(saved ? 'saved' : 'save')}
       </button>
       <button
         type="button"
-        aria-label={`${hideAction} ${jobName(job)}`}
-        title={showingHidden ? 'Put back in your table' : 'Hide from your table'}
+        aria-label={t(showingHidden ? 'unhideLabel' : 'hideLabel', { job: name })}
+        title={t(showingHidden ? 'unhideHint' : 'hideHint')}
         onClick={() => {
           toggleHidden(job);
         }}
         className={`${ICON_BUTTON} ${wide} hover:text-red-600`}
       >
         {showingHidden ? <EyeIcon /> : <EyeSlashIcon />}
-        {withText && hideAction}
+        {withText && t(showingHidden ? 'unhide' : 'hide')}
       </button>
       {job.url ? (
         <a
           href={job.url}
           target="_blank"
           rel="noreferrer"
-          aria-label={`Open posting for ${jobName(job)}`}
-          title="Open the original posting"
+          aria-label={t('postingLabel', { job: name })}
+          title={t('postingHint')}
           className={`${ICON_BUTTON} ${wide}`}
         >
           <ExternalLinkIcon />
-          {withText && 'Posting'}
+          {withText && t('posting')}
         </a>
       ) : (
         // Keeps the icons lined up in rows without a link.
@@ -380,7 +423,7 @@ export const columns = helper.columns([
   }),
   helper.display({
     id: 'title',
-    header: 'Job',
+    header: () => <ColumnName id="title" />,
     // Every row needs something to click to open the job, so this column can't be hidden.
     enableHiding: false,
     cell: ({ row }) => <JobCell job={row.original} />,
@@ -388,69 +431,68 @@ export const columns = helper.columns([
   // Next to the title, so the score is visible without scrolling the wide table sideways.
   helper.display({
     id: 'fit',
-    header: 'Fit',
+    header: () => <ColumnName id="fit" />,
     cell: ({ row }) => <FitCell job={row.original} />,
   }),
   // Resume-Matcher's score needs AI and one run per job, so it starts hidden (Columns menu).
   helper.display({
     id: 'match',
-    header: 'Match',
+    header: () => <ColumnName id="match" />,
     cell: ({ row }) => <MatchCell job={row.original} />,
   }),
   helper.display({
     id: 'location',
-    header: 'Location',
+    header: () => <ColumnName id="location" />,
     cell: ({ row }) => <LocationCell job={row.original} />,
   }),
   helper.accessor('postedAt', {
-    header: 'Posted',
+    header: () => <ColumnName id="postedAt" />,
     cell: ({ row }) => <PostedCell job={row.original} />,
   }),
   helper.display({
     id: 'salary',
-    header: 'Salary',
+    header: () => <ColumnName id="salary" />,
     cell: ({ row }) => <SalaryCell job={row.original} />,
   }),
   helper.accessor('visa', {
-    header: 'Visa',
+    header: () => <ColumnName id="visa" />,
     cell: (info) => <VisaCell visa={info.getValue()} />,
   }),
   helper.accessor('skills', {
-    header: 'Skills',
+    header: () => <ColumnName id="skills" />,
     cell: (info) => <SkillsCell skills={info.getValue()} />,
   }),
   helper.accessor('seniority', {
-    header: 'Seniority',
+    header: () => <ColumnName id="seniority" />,
     cell: (info) => {
       const value = info.getValue();
       return value ? <Badge tone="orange">{capitalize(value)}</Badge> : dash;
     },
   }),
   helper.accessor('jobFunction', {
-    header: 'Function',
+    header: () => <ColumnName id="jobFunction" />,
     cell: (info) => {
       const value = info.getValue();
       return value ? <Badge tone="red">{value}</Badge> : dash;
     },
   }),
   helper.accessor('language', {
-    header: 'Language',
+    header: () => <ColumnName id="language" />,
     cell: (info) => {
       const value = info.getValue();
-      return value ? <Badge tone="purple">{languageName(value)}</Badge> : dash;
+      return value ? <LanguageBadge code={value} /> : dash;
     },
   }),
   helper.accessor('workplace', {
-    header: 'Workplace',
+    header: () => <ColumnName id="workplace" />,
     cell: (info) => {
       const value = info.getValue();
       if (!value) return dash;
-      const tone: BadgeTone = value === 'HYBRID' ? 'blue' : 'red';
-      return <Badge tone={tone}>{WORKPLACE_LABELS[value]}</Badge>;
+      return <WorkplaceBadge workplace={value} />;
     },
   }),
   helper.accessor('industry', {
-    header: 'Industry',
+    header: () => <ColumnName id="industry" />,
     cell: (info) => {
       const value = info.getValue();
       return value ? (
@@ -463,7 +505,7 @@ export const columns = helper.columns([
     },
   }),
   helper.accessor('provider', {
-    header: 'Source',
+    header: () => <ColumnName id="provider" />,
     cell: (info) => {
       const value = info.getValue();
       return value ? <span className="whitespace-nowrap">{capitalize(value)}</span> : dash;
@@ -471,12 +513,12 @@ export const columns = helper.columns([
   }),
   helper.display({
     id: 'status',
-    header: 'Status',
+    header: () => <ColumnName id="status" />,
     cell: ({ row }) => <StatusCell job={row.original} />,
   }),
   helper.display({
     id: 'actions',
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <ColumnName id="actions" srOnly />,
     enableHiding: false,
     cell: ({ row }) => <ActionsCell job={row.original} />,
   }),
@@ -497,14 +539,28 @@ export const DEFAULT_HIDDEN_COLUMNS = [
   'provider',
 ];
 
+/**
+ * Every column for the Columns menu, in table order. The tick boxes and the action icons always
+ * show, so they aren't listed.
+ */
+export const MENU_COLUMNS = columns.flatMap((column) => {
+  // Accessor columns take their id from the field they read.
+  const id = column.id ?? ('accessorKey' in column ? String(column.accessorKey) : '');
+  if (id === 'select' || id === 'actions') return [];
+  return [{ id: id as ColumnNameKey, canHide: column.enableHiding !== false }];
+});
+
 /** How each column header sorts and filters. Columns not listed here do neither. */
 export interface ColumnControls {
   sortField?: JobSortField;
   filter?: {
     key: ListFilterKey;
     /** What the filter picks, when it isn't the column's name: the Job column filters companies. */
-    label?: string;
-    options: (opts: JobFilterOptions | undefined) => { value: string; label: string }[];
+    name?: ColumnNameKey;
+    options: (
+      opts: JobFilterOptions | undefined,
+      format: JobFormat,
+    ) => { value: string; label: string }[];
   };
 }
 
@@ -515,11 +571,11 @@ const capitalized = (values: string[] | undefined) =>
 export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
   title: {
     sortField: 'TITLE',
-    filter: { key: 'companies', label: 'Company', options: (o) => plain(o?.companies) },
+    filter: { key: 'companies', name: 'company', options: (o) => plain(o?.companies) },
   },
   location: {
     sortField: 'CITY',
-    filter: { key: 'cities', label: 'City', options: (o) => plain(o?.cities) },
+    filter: { key: 'cities', name: 'city', options: (o) => plain(o?.cities) },
   },
   fit: { sortField: 'FIT' },
   postedAt: { sortField: 'POSTED_AT' },
@@ -532,7 +588,7 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
   language: {
     filter: {
       key: 'languages',
-      options: (o) => (o?.languages ?? []).map((v) => ({ value: v, label: languageName(v) })),
+      options: (o, f) => (o?.languages ?? []).map((v) => ({ value: v, label: f.language(v) })),
     },
   },
   salary: { sortField: 'SALARY' },
@@ -541,21 +597,21 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
     sortField: 'WORKPLACE',
     filter: {
       key: 'workplaces',
-      options: () => WORKPLACES.map((w) => ({ value: w, label: WORKPLACE_LABELS[w] })),
+      options: (_, f) => WORKPLACES.map((w) => ({ value: w, label: f.workplace(w) })),
     },
   },
   industry: { filter: { key: 'industries', options: (o) => plain(o?.industries) } },
   visa: {
     filter: {
       key: 'visas',
-      options: () => VISA_SPONSORSHIPS.map((v) => ({ value: v, label: VISA_LABELS[v] })),
+      options: (_, f) => VISA_SPONSORSHIPS.map((v) => ({ value: v, label: f.visa(v) })),
     },
   },
   // Statuses are per user (a separate table), so the server doesn't sort by them.
   status: {
     filter: {
       key: 'applicationStatuses',
-      options: () => APPLICATION_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] })),
+      options: (_, f) => APPLICATION_STATUSES.map((s) => ({ value: s, label: f.status(s) })),
     },
   },
 };

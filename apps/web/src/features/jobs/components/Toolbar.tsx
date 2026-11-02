@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
@@ -21,6 +22,7 @@ export function Toolbar({
   quickFilters,
   children,
 }: Props) {
+  const t = useTranslations('Jobs.toolbar');
   const [value, setValue] = useState(search);
 
   // Keep the box in sync when the search is cleared from elsewhere (e.g. "Clear all").
@@ -55,8 +57,8 @@ export function Toolbar({
         </svg>
         <input
           type="search"
-          aria-label="Search jobs"
-          placeholder="Search title or company…"
+          aria-label={t('search')}
+          placeholder={t('placeholder')}
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
@@ -67,7 +69,7 @@ export function Toolbar({
       {quickFilters}
       {activeFilterCount > 0 && (
         <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
-          {activeFilterCount} filter{activeFilterCount === 1 ? '' : 's'} active
+          {t('active', { count: activeFilterCount })}
         </span>
       )}
       {hasAnything && (
@@ -76,7 +78,7 @@ export function Toolbar({
           onClick={onClearAll}
           className="text-sm text-indigo-700 hover:underline"
         >
-          Clear all
+          {t('clearAll')}
         </button>
       )}
       {children && <div className="hidden items-center gap-2 md:ml-auto md:flex">{children}</div>}

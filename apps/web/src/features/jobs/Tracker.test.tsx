@@ -2,6 +2,7 @@ import type { Application } from '@jobsearch/data';
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Intl } from '@/test/intl';
 import { JOBS } from './test/fixtures';
 import { applications, requests } from './test/server';
 import { TrackerPage } from './Tracker';
@@ -11,9 +12,11 @@ function renderTracker(start: Application[] = []) {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   render(
-    <DataProvider store={makeStore()} queryClient={queryClient}>
-      <TrackerPage />
-    </DataProvider>,
+    <Intl>
+      <DataProvider store={makeStore()} queryClient={queryClient}>
+        <TrackerPage />
+      </DataProvider>
+    </Intl>,
   );
 }
 

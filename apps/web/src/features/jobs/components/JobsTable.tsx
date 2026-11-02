@@ -7,10 +7,12 @@ import type {
   ListFilterKey,
 } from '@jobsearch/data';
 import { useTable } from '@tanstack/react-table';
+import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { useIsPhone } from '../useIsPhone';
+import { useJobFormat } from '../useJobFormat';
 import { ColumnFilter } from './ColumnFilter';
-import type { RowActions } from './columns';
+import type { ColumnNameKey, RowActions } from './columns';
 import { COLUMN_CONTROLS, columns, features, RowActionsContext } from './columns';
 import { JobCards } from './JobCards';
 import { SortButton } from './SortButton';
@@ -61,6 +63,8 @@ export function JobsTable({
   onSelectionChange = noop,
 }: JobsTableProps) {
   const isPhone = useIsPhone();
+  const f = useJobFormat();
+  const t = useTranslations('Jobs.columns');
   const table = useTable({
     features,
     columns,
@@ -124,7 +128,6 @@ export function JobsTable({
                       ? sort.direction
                       : null;
                   const label = <table.FlexRender header={header} />;
-                  const name = controls.filter?.label ?? String(header.column.columnDef.header);
 
                   return (
                     <th
@@ -154,8 +157,8 @@ export function JobsTable({
                         )}
                         {controls.filter && (
                           <ColumnFilter
-                            column={name}
-                            options={controls.filter.options(filterOptions)}
+                            column={t(controls.filter.name ?? (header.column.id as ColumnNameKey))}
+                            options={controls.filter.options(filterOptions, f)}
                             selected={filters[controls.filter.key] ?? []}
                             onToggle={(value) => {
                               if (controls.filter) onToggleFilter(controls.filter.key, value);

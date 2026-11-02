@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl';
+
 const PAGE_SIZES = [10, 25, 50, 100];
 
 interface Props {
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChange }: Props) {
+  const t = useTranslations('Jobs.pagination');
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const last = Math.min(page * pageSize, total);
@@ -17,15 +20,13 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t('label')}
       className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600"
     >
-      <p>
-        Showing {first}–{last} of {total.toLocaleString()}
-      </p>
+      <p>{t('showing', { first, last, total })}</p>
       <div className="flex items-center gap-3">
         <label className="flex items-center gap-2">
-          Rows per page
+          {t('rowsPerPage')}
           <select
             value={pageSize}
             onChange={(e) => {
@@ -40,9 +41,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
             ))}
           </select>
         </label>
-        <span>
-          Page {page} of {pageCount}
-        </span>
+        <span>{t('page', { page, pageCount })}</span>
         <button
           type="button"
           className={button}
@@ -51,7 +50,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
             onPageChange(page - 1);
           }}
         >
-          Previous
+          {t('previous')}
         </button>
         <button
           type="button"
@@ -61,7 +60,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
             onPageChange(page + 1);
           }}
         >
-          Next
+          {t('next')}
         </button>
       </div>
     </nav>
