@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import { MatcherResumeStatus } from '../generated/prisma/enums';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { ResumeMatcherClient } from './resume-matcher.client';
@@ -28,12 +29,17 @@ export async function loadRmJobInput(
     }),
     prisma.matcherResume.findUnique({ where: { userId } }),
   ]);
-  if (!job) throw new NotFoundException(`Job ${jobId} not found`);
+  if (!job)
+    throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
   if (!job.description?.trim()) {
-    throw new BadRequestException('This job has no description to compare your resume with.');
+    throw apiError(
+      BadRequestException,
+      'JOB_NO_DESCRIPTION',
+      'This job has no description to compare your resume with.',
+    );
   }
   if (resume?.status !== MatcherResumeStatus.READY || !resume.rmResumeId) {
-    throw new BadRequestException(NO_RESUME_MESSAGE);
+    throw apiError(BadRequestException, 'MATCHER_RESUME_FIRST', NO_RESUME_MESSAGE);
   }
   return {
     rmResumeId: resume.rmResumeId,

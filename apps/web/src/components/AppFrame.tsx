@@ -1,7 +1,7 @@
 'use client';
 
 import type { User } from '@jobsearch/data';
-import { getErrorMessage, useLogOut, useMe, useSetLocale } from '@jobsearch/data';
+import { useLogOut, useMe, useSetLocale } from '@jobsearch/data';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { isLocale, writeLocaleCookie } from '@/i18n/config';
 import { APP_NAME } from '@/lib/app-name';
+import { useErrorText } from '../i18n/useErrorText';
 import { LanguageSwitch } from './LanguageSwitch';
 import { Logo } from './Logo';
 
@@ -40,6 +41,7 @@ function currentHref(pathname: string, items: NavItem[]): string | undefined {
  * expired, the API says nobody, and you go to /login.
  */
 export function AppFrame({ children }: { children: ReactNode }) {
+  const errorText = useErrorText();
   const { data: user, isPending, error } = useMe();
   const router = useRouter();
   const pathname = usePathname();
@@ -64,7 +66,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   if (error) {
     return (
       <p role="alert" className="p-6 text-sm text-red-700">
-        {getErrorMessage(error)}
+        {errorText(error)}
       </p>
     );
   }

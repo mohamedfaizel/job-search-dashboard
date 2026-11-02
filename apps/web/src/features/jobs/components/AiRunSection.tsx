@@ -1,6 +1,6 @@
-import { getErrorMessage } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 
 const BUTTON =
   'rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-60';
@@ -36,6 +36,7 @@ export function AiRunSection<T extends Run>({
   start,
   children,
 }: Props<T>) {
+  const errorText = useErrorText();
   const t = useTranslations(namespace);
   const pending = start.isPending || data?.status === 'PENDING';
 
@@ -75,7 +76,7 @@ export function AiRunSection<T extends Run>({
         )}
         {start.isError && (
           <p role="alert" className="text-sm text-red-700">
-            {getErrorMessage(start.error)}
+            {errorText(start.error)}
           </p>
         )}
       </div>

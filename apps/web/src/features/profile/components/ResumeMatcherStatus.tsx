@@ -1,5 +1,4 @@
 import {
-  getErrorMessage,
   useIsSyncingResume,
   useMyMatcherResume,
   useResumeMatcherStatus,
@@ -7,9 +6,11 @@ import {
   useTestAiConnection,
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
+import { useErrorText } from '../../../i18n/useErrorText';
 
 /** Shows whether Resume-Matcher, which scores jobs against this resume, is ready to use. */
 export function ResumeMatcherStatus() {
+  const errorText = useErrorText();
   const t = useTranslations('Profile.matcher');
   const status = useResumeMatcherStatus();
   const testAi = useTestAiConnection();
@@ -37,7 +38,7 @@ export function ResumeMatcherStatus() {
       <p className="text-sm text-slate-600">{t('intro')}</p>
       {status.isError ? (
         <p role="alert" className="text-sm text-red-700">
-          {t('checkFailed', { error: getErrorMessage(status.error) })}
+          {t('checkFailed', { error: errorText(status.error) })}
         </p>
       ) : (
         status.data && <p className="text-sm text-slate-700">{status.data.message}</p>
@@ -87,7 +88,7 @@ export function ResumeMatcherStatus() {
             {aiResult.message}
           </p>
         )}
-        {testAi.isError && <p className="text-sm text-red-700">{getErrorMessage(testAi.error)}</p>}
+        {testAi.isError && <p className="text-sm text-red-700">{errorText(testAi.error)}</p>}
       </div>
     </section>
   );
@@ -95,6 +96,7 @@ export function ResumeMatcherStatus() {
 
 /** Your resume's copy inside Resume-Matcher: what it has, and a button to send it again. */
 function MatcherResumePanel() {
+  const errorText = useErrorText();
   const t = useTranslations('Profile.matcher');
   const resume = useMyMatcherResume();
   const sync = useSyncResumeToMatcher();
@@ -124,7 +126,7 @@ function MatcherResumePanel() {
         {syncing ? (
           <p className="text-sm text-slate-700">{t('sending')}</p>
         ) : resume.isError ? (
-          <p className="text-sm text-red-700">{getErrorMessage(resume.error)}</p>
+          <p className="text-sm text-red-700">{errorText(resume.error)}</p>
         ) : (
           resume.data && (
             <p className={`text-sm ${state === 'FAILED' ? 'text-red-700' : 'text-slate-700'}`}>
@@ -133,7 +135,7 @@ function MatcherResumePanel() {
           )
         )}
         {sync.isError && !syncing && (
-          <p className="text-sm text-red-700">{getErrorMessage(sync.error)}</p>
+          <p className="text-sm text-red-700">{errorText(sync.error)}</p>
         )}
       </div>
       {state && state !== 'NO_FILE' && (

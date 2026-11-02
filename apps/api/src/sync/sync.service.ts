@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import { JobsService } from '../jobs/jobs.service';
 import { JobsPipeClient } from '../jobspipe/jobspipe.client';
 import { mapJobsPipeJob } from '../jobspipe/jobspipe.mapper';
@@ -216,7 +217,9 @@ export class SyncService {
       orderBy: { id: 'desc' },
     });
     if (!last || last.complete || !last.nextCursor) {
-      throw new BadRequestException(
+      throw apiError(
+        BadRequestException,
+        'NOTHING_TO_CONTINUE',
         'Nothing to continue: the last import of this search already fetched every page.',
       );
     }

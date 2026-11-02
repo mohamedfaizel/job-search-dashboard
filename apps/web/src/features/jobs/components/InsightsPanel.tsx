@@ -1,6 +1,5 @@
 import type { JobInsights, RemovedTerm, TermCheck } from '@jobsearch/data';
 import {
-  getErrorMessage,
   useJobInsights,
   useRemoveInsightTerm,
   useRestoreInsightTerm,
@@ -9,6 +8,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useId } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../useJobFormat';
 import { Badge } from './Badge';
 import { scoreTone } from './MatchPanel';
@@ -375,6 +375,7 @@ function CheckedAgainst({ insights }: { insights: JobInsights }) {
  * doesn't apply with × before you copy the Apply kit prompt.
  */
 export function InsightsPanel({ jobId }: { jobId: string }) {
+  const errorText = useErrorText();
   const insights = useJobInsights(jobId);
   const remove = useRemoveInsightTerm();
   const restore = useRestoreInsightTerm();
@@ -387,7 +388,7 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
   if (insights.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
-        {t('readError', { error: getErrorMessage(insights.error) })}
+        {t('readError', { error: errorText(insights.error) })}
       </p>
     );
   }
@@ -505,7 +506,7 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
 
       {changeError && (
         <p role="alert" className="text-red-700">
-          {t('changeError', { error: getErrorMessage(changeError) })}
+          {t('changeError', { error: errorText(changeError) })}
         </p>
       )}
     </section>

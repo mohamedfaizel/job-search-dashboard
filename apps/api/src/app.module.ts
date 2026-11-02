@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
+import { withApiError } from './common/api-error';
 import { HealthModule } from './health/health.module';
 import { InsightsModule } from './insights/insights.module';
 import { JobsModule } from './jobs/jobs.module';
@@ -27,6 +28,8 @@ import { SyncModule } from './sync/sync.module';
       sortSchema: true,
       // Resolvers get the request (to read the session cookie) and response (to set it).
       context: ({ req, res }: { req: unknown; res: unknown }) => ({ req, res }),
+      // Puts an error's code and values (see common/api-error.ts) where the web app reads them.
+      formatError: withApiError,
     }),
     // Runs @Cron jobs, like the saved-search scheduler.
     ScheduleModule.forRoot(),

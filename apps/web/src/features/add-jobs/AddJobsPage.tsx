@@ -1,9 +1,10 @@
 'use client';
 
 import type { SavedSearch } from '@jobsearch/data';
-import { getErrorMessage, useMe, useSavedSearches } from '@jobsearch/data';
+import { useMe, useSavedSearches } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useErrorText } from '../../i18n/useErrorText';
 import { AddJobForm } from './components/AddJobForm';
 import { ImportHistory } from './components/ImportHistory';
 import { SavedSearches } from './components/SavedSearches';
@@ -14,13 +15,14 @@ type TabId = 'saved' | 'import' | 'manual';
 
 /** Add jobs: saved searches, imports from JobsPipe and adding a job by hand. */
 export function AddJobsPage() {
+  const errorText = useErrorText();
   const { data: me, isPending, error } = useMe();
   const t = useTranslations('AddJobs');
   if (isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
   if (error) {
     return (
       <p role="alert" className="text-sm text-red-700">
-        {getErrorMessage(error)}
+        {errorText(error)}
       </p>
     );
   }

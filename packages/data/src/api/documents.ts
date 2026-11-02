@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { API_URL, graphqlClient } from './client';
+import { API_URL, apiErrorFrom, graphqlClient } from './client';
 import { DOCUMENT_STYLE, DOCUMENT_TEMPLATES, UPDATE_DOCUMENT_STYLE } from './operations';
 import type { DocumentStyle, DocumentStyleInput, DocumentTemplates } from './types';
 
@@ -64,12 +64,8 @@ async function photoRequest(method: 'POST' | 'DELETE', file?: File): Promise<Doc
     init.body = body;
   }
   const res = await fetch(PHOTO_URL, init);
-  const json = (await res.json().catch(() => null)) as
-    (DocumentStyle & { message?: unknown }) | null;
-  if (!res.ok) {
-    const message = json?.message;
-    throw new Error(typeof message === 'string' ? message : `Failed (${String(res.status)})`);
-  }
+  const json = (await res.json().catch(() => null)) as DocumentStyle | null;
+  if (!res.ok) throw apiErrorFrom(json, `Failed (${String(res.status)})`);
   return json as DocumentStyle;
 }
 

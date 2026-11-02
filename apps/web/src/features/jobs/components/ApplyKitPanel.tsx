@@ -1,7 +1,6 @@
 import type { ApplicationStatus, Job, JobInsights, Profile } from '@jobsearch/data';
 import {
   applyKitUrl,
-  getErrorMessage,
   useApplyQueue,
   useChangeApplyQueue,
   useJobInsights,
@@ -10,6 +9,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { promptSections } from '../reply';
 import type { JobFormat } from '../useJobFormat';
 import { useJobFormat } from '../useJobFormat';
@@ -264,6 +264,7 @@ function ApplyKit({
   onAnswered,
   steps,
 }: Props & { steps: ApplyStepState }) {
+  const errorText = useErrorText();
   const insights = useJobInsights(job.id);
   const profile = useMyProfile();
   const t = useTranslations('Jobs.apply');
@@ -281,7 +282,7 @@ function ApplyKit({
   if (insights.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
-        {t('loadError', { error: getErrorMessage(insights.error) })}
+        {t('loadError', { error: errorText(insights.error) })}
       </p>
     );
   }

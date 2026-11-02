@@ -1,5 +1,6 @@
-import { getErrorMessage, useSyncRuns } from '@jobsearch/data';
+import { useSyncRuns } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { useDateTime } from '../format';
 
 /**
@@ -12,6 +13,7 @@ const COUNT =
 
 /** Every import, newest first: what was searched and what it brought in. */
 export function ImportHistory() {
+  const errorText = useErrorText();
   const { data: runs, isPending, error } = useSyncRuns(20);
   const t = useTranslations('AddJobs.history');
   const dateTime = useDateTime();
@@ -24,7 +26,7 @@ export function ImportHistory() {
       {isPending && <p className="text-sm text-slate-500">{t('loading')}</p>}
       {error && (
         <p role="alert" className="text-sm text-red-700">
-          {t('loadError', { error: getErrorMessage(error) })}
+          {t('loadError', { error: errorText(error) })}
         </p>
       )}
       {runs?.length === 0 && <p className="text-sm text-slate-500">{t('none')}</p>}

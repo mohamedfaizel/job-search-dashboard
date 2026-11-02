@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import { MatcherResumeStatus } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -76,14 +77,18 @@ export class ResumeSyncService {
    */
   async sync(userId: number): Promise<MatcherResumeModel> {
     if (this.sending.has(userId)) {
-      throw new ConflictException('Your resume is already being sent. Wait for it to finish.');
+      throw apiError(
+        ConflictException,
+        'MATCHER_BUSY',
+        'Your resume is already being sent. Wait for it to finish.',
+      );
     }
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
       select: { resumeFile: true, resumeFileName: true, resumeFileType: true },
     });
     if (!profile?.resumeFile || !profile.resumeFileName) {
-      throw new BadRequestException(NO_FILE_MESSAGE);
+      throw apiError(BadRequestException, 'MATCHER_FILE_FIRST', NO_FILE_MESSAGE);
     }
     const file = {
       name: profile.resumeFileName,

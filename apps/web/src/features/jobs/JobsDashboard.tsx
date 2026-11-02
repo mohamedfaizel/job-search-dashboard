@@ -4,7 +4,6 @@ import {
   clearFilter,
   countActiveFilters,
   cycleSort,
-  getErrorMessage,
   setPage,
   setPageSize,
   setFilterValues,
@@ -33,6 +32,7 @@ import {
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useErrorText } from '../../i18n/useErrorText';
 import { ApplyQueuePanel } from './components/ApplyQueuePanel';
 import { DEFAULT_HIDDEN_COLUMNS, MENU_COLUMNS } from './components/columns';
 import { ColumnsMenu } from './components/ColumnsMenu';
@@ -53,6 +53,7 @@ const ERROR_BOX = 'rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-r
 
 /** Connects the table to Redux (what the user chose) and TanStack Query (the data). */
 export function JobsDashboard() {
+  const errorText = useErrorText();
   const t = useTranslations('Jobs');
   const dispatch = useAppDispatch();
   const tableState = useAppSelector((state) => state.jobsTable);
@@ -386,22 +387,22 @@ export function JobsDashboard() {
 
       {jobsQuery.isError && (
         <div role="alert" className={ERROR_BOX}>
-          {t('errors.load', { error: getErrorMessage(jobsQuery.error) })}
+          {t('errors.load', { error: errorText(jobsQuery.error) })}
         </div>
       )}
       {setHidden.isError && (
         <div role="alert" className={ERROR_BOX}>
-          {t('errors.hide', { error: getErrorMessage(setHidden.error) })}
+          {t('errors.hide', { error: errorText(setHidden.error) })}
         </div>
       )}
       {changeQueue.isError && (
         <div role="alert" className={ERROR_BOX}>
-          {t('errors.queue', { error: getErrorMessage(changeQueue.error) })}
+          {t('errors.queue', { error: errorText(changeQueue.error) })}
         </div>
       )}
       {updateStatus.isError && (
         <div role="alert" className={ERROR_BOX}>
-          {t('errors.status', { error: getErrorMessage(updateStatus.error) })}
+          {t('errors.status', { error: errorText(updateStatus.error) })}
         </div>
       )}
 

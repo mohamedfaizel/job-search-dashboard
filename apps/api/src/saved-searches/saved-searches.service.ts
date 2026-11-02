@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import type { Prisma, SavedSearch as SavedSearchRow } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { SyncJobsInput, SyncJobsResult } from '../sync/sync.input';
@@ -98,7 +99,10 @@ export class SavedSearchesService {
       this.prisma.savedSearch.update({ where: { id }, data: toData(input) }),
     );
     const updated = (await this.list()).find((s) => s.id === id);
-    if (!updated) throw new NotFoundException(`Saved search ${id} not found`);
+    if (!updated)
+      throw apiError(NotFoundException, 'SAVED_SEARCH_NOT_FOUND', `Saved search ${id} not found`, {
+        id,
+      });
     return updated;
   }
 
@@ -114,7 +118,10 @@ export class SavedSearchesService {
       },
     });
     const updated = (await this.list()).find((s) => s.id === id);
-    if (!updated) throw new NotFoundException(`Saved search ${id} not found`);
+    if (!updated)
+      throw apiError(NotFoundException, 'SAVED_SEARCH_NOT_FOUND', `Saved search ${id} not found`, {
+        id,
+      });
     return updated;
   }
 
@@ -153,7 +160,10 @@ export class SavedSearchesService {
 
   private async findRow(id: number): Promise<SavedSearchRow> {
     const row = await this.prisma.savedSearch.findUnique({ where: { id } });
-    if (!row) throw new NotFoundException(`Saved search ${id} not found`);
+    if (!row)
+      throw apiError(NotFoundException, 'SAVED_SEARCH_NOT_FOUND', `Saved search ${id} not found`, {
+        id,
+      });
     return row;
   }
 
@@ -163,7 +173,12 @@ export class SavedSearchesService {
     } catch (error) {
       // P2002 = unique constraint failed: another search already has this name.
       if ((error as { code?: string }).code === 'P2002') {
-        throw new BadRequestException(`A saved search named "${name}" already exists`);
+        throw apiError(
+          BadRequestException,
+          'SAVED_SEARCH_NAME_TAKEN',
+          `A saved search named "${name}" already exists`,
+          { name },
+        );
       }
       throw error;
     }

@@ -1,6 +1,5 @@
 import type { SavedSearch, ScheduleFrequency, SyncJobsResult } from '@jobsearch/data';
 import {
-  getErrorMessage,
   SCHEDULE_FREQUENCIES,
   useDeleteSavedSearch,
   useImportBudget,
@@ -10,6 +9,7 @@ import {
 } from '@jobsearch/data';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
 import { countryName } from '../countries';
 import { useDateTime } from '../format';
@@ -21,6 +21,7 @@ interface Props {
 
 /** Your saved searches as cards: what they look for, how the last import went, and actions. */
 export function SavedSearches({ onLoad }: Props) {
+  const errorText = useErrorText();
   const { data: searches, isPending, error } = useSavedSearches();
   const { data: budget } = useImportBudget();
   const t = useTranslations('AddJobs');
@@ -43,7 +44,7 @@ export function SavedSearches({ onLoad }: Props) {
       {isPending && <p className="text-sm text-slate-500">{t('saved.loading')}</p>}
       {error && (
         <p role="alert" className="text-sm text-red-700">
-          {t('saved.loadError', { error: getErrorMessage(error) })}
+          {t('saved.loadError', { error: errorText(error) })}
         </p>
       )}
       {searches?.length === 0 && <p className="text-sm text-slate-500">{t('saved.none')}</p>}
@@ -93,6 +94,7 @@ export function describeSearch(
 }
 
 function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Props['onLoad'] }) {
+  const errorText = useErrorText();
   const run = useRunSavedSearch();
   const remove = useDeleteSavedSearch();
   const t = useTranslations('AddJobs');
@@ -136,12 +138,12 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
       {run.data && <RunResult result={run.data} />}
       {run.isError && (
         <p role="alert" className="text-sm text-red-700">
-          {t('importFailed', { error: getErrorMessage(run.error) })}
+          {t('importFailed', { error: errorText(run.error) })}
         </p>
       )}
       {remove.isError && (
         <p role="alert" className="text-sm text-red-700">
-          {t('saved.deleteError', { error: getErrorMessage(remove.error) })}
+          {t('saved.deleteError', { error: errorText(remove.error) })}
         </p>
       )}
 
@@ -231,6 +233,7 @@ function RunResult({ result }: { result: SyncJobsResult }) {
 
 /** Pick how often the API imports this search by itself, and see what happened last time. */
 function ScheduleControls({ search }: { search: SavedSearch }) {
+  const errorText = useErrorText();
   const setSchedule = useSetSchedule();
   const t = useTranslations('AddJobs.saved');
   const dateTime = useDateTime();
@@ -300,7 +303,7 @@ function ScheduleControls({ search }: { search: SavedSearch }) {
       {search.scheduleNote && <p className="text-xs text-slate-600">{search.scheduleNote}</p>}
       {setSchedule.isError && (
         <p role="alert" className="text-sm text-red-700">
-          {t('scheduleError', { error: getErrorMessage(setSchedule.error) })}
+          {t('scheduleError', { error: errorText(setSchedule.error) })}
         </p>
       )}
     </fieldset>

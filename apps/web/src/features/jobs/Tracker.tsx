@@ -1,11 +1,13 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
-import { getErrorMessage, useMyApplications, useUpdateJobStatus } from '@jobsearch/data';
+import { useMyApplications, useUpdateJobStatus } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useErrorText } from '../../i18n/useErrorText';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { TrackerBoard } from './components/TrackerBoard';
 
 export function TrackerPage() {
+  const errorText = useErrorText();
   const t = useTranslations('Tracker');
   const applications = useMyApplications();
   const updateStatus = useUpdateJobStatus();
@@ -31,7 +33,7 @@ export function TrackerPage() {
           role="alert"
           className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
         >
-          {t('loadError', { error: getErrorMessage(applications.error) })}
+          {t('loadError', { error: errorText(applications.error) })}
         </p>
       )}
       {updateStatus.isError && (
@@ -39,7 +41,7 @@ export function TrackerPage() {
           role="alert"
           className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
         >
-          {t('moveError', { error: getErrorMessage(updateStatus.error) })}
+          {t('moveError', { error: errorText(updateStatus.error) })}
         </p>
       )}
 

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from '../profile/custom-fields';
 import { tidy } from '../profile/resume-text';
@@ -103,7 +104,8 @@ export class InsightsService {
         select: { language: true, text: true },
       }),
     ]);
-    if (!job) throw new NotFoundException(`Job ${jobId} not found`);
+    if (!job)
+      throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
 
     const resumes: MasterResumes = {
       language: profile?.resumeLanguage ?? 'en',
@@ -197,8 +199,9 @@ export class InsightsService {
    */
   async removeTerm(userId: number, jobId: string, term: string, everywhere: boolean) {
     const clean = term.trim().toLowerCase();
-    if (!clean || clean.length > 100)
-      throw new BadRequestException('A term is 1 to 100 characters');
+    if (!clean || clean.length > 100) {
+      throw apiError(BadRequestException, 'TERM_LENGTH', 'A term is 1 to 100 characters');
+    }
     const scope = everywhere ? null : jobId;
     await this.assertJob(jobId);
     const existing = await this.prisma.removedTerm.findFirst({
@@ -217,8 +220,9 @@ export class InsightsService {
    */
   async setHaveTerm(userId: number, jobId: string, term: string, have: boolean) {
     const clean = term.trim();
-    if (!clean || clean.length > 100)
-      throw new BadRequestException('A term is 1 to 100 characters');
+    if (!clean || clean.length > 100) {
+      throw apiError(BadRequestException, 'TERM_LENGTH', 'A term is 1 to 100 characters');
+    }
     await this.assertJob(jobId);
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
@@ -258,9 +262,14 @@ export class InsightsService {
     // so only the resume is scored and downloaded.
     const reply = splitReply(text);
     const clean = tidy(reply.resume);
-    if (!clean) throw new BadRequestException('The resume is empty');
+    if (!clean) throw apiError(BadRequestException, 'RESUME_EMPTY', 'The resume is empty');
     if (clean.length > MAX_RESUME_CHARS) {
-      throw new BadRequestException(`A resume is at most ${String(MAX_RESUME_CHARS)} characters`);
+      throw apiError(
+        BadRequestException,
+        'RESUME_TOO_LONG',
+        `A resume is at most ${String(MAX_RESUME_CHARS)} characters`,
+        { max: MAX_RESUME_CHARS },
+      );
     }
     await this.assertJob(jobId);
     const data = {
@@ -291,7 +300,8 @@ export class InsightsService {
       where: { userId_jobId: { userId, jobId } },
       select: { text: true, fileName: true, file: true, fileType: true },
     });
-    if (!row) throw new NotFoundException('No resume saved for this job');
+    if (!row)
+      throw apiError(NotFoundException, 'JOB_RESUME_MISSING', 'No resume saved for this job');
     if (row.file && row.fileName) {
       return {
         name: row.fileName,
@@ -322,7 +332,8 @@ export class InsightsService {
         select: { text: true, coverLetter: true, formAnswers: true },
       }),
     ]);
-    if (!job) throw new NotFoundException(`Job ${jobId} not found`);
+    if (!job)
+      throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
     const p = user.profile;
     return buildApplyKit({
       job: { title: job.title, company: job.company.name, url: job.url },
@@ -428,7 +439,8 @@ export class InsightsService {
         })
       ).map((row) => row.jobId);
       const from = order.indexOf(jobId);
-      if (from === -1) throw new NotFoundException('That job is not in your Apply queue');
+      if (from === -1)
+        throw apiError(NotFoundException, 'NOT_IN_QUEUE', 'That job is not in your Apply queue');
       const to = direction === 'UP' ? from - 1 : from + 1;
       if (to < 0 || to >= order.length) return;
       order.splice(to, 0, ...order.splice(from, 1));
@@ -470,7 +482,9 @@ export class InsightsService {
     const queued = (await this.applyQueue(userId)).map((item) => item.jobId);
     const replies = splitQueueReply(text, queued);
     if (replies.size === 0) {
-      throw new BadRequestException(
+      throw apiError(
+        BadRequestException,
+        'QUEUE_REPLY_EMPTY',
         'No "=== JOB 1: … ===" lines found. Paste Claude’s whole reply to the queue prompt.',
       );
     }
@@ -494,7 +508,7 @@ export class InsightsService {
 
   private async assertJob(jobId: string) {
     if (!(await this.prisma.job.findUnique({ where: { id: jobId }, select: { id: true } }))) {
-      throw new NotFoundException(`Job ${jobId} not found`);
+      throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
     }
   }
 

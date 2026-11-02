@@ -1,7 +1,7 @@
 'use client';
 
 import type { User } from '@jobsearch/data';
-import { getErrorMessage, useLogIn, useSetLocale, useSignUp } from '@jobsearch/data';
+import { useLogIn, useSetLocale, useSignUp } from '@jobsearch/data';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -9,6 +9,7 @@ import type { SubmitEvent } from 'react';
 import { useId, useRef } from 'react';
 import { APP_NAME } from '@/lib/app-name';
 import { safeNextPath } from '@/lib/safe-next';
+import { useErrorText } from '../i18n/useErrorText';
 import { LanguageSwitch } from './LanguageSwitch';
 import { Logo } from './Logo';
 
@@ -28,6 +29,7 @@ const field =
  * either one. After success you go back to the page you wanted (?next=/tracker).
  */
 export function AuthForm({ mode }: { mode: AuthMode }) {
+  const errorText = useErrorText();
   const router = useRouter();
   const next = safeNextPath(useSearchParams().get('next'));
   const logIn = useLogIn();
@@ -82,7 +84,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         >
           {active.isError && (
             <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-              {getErrorMessage(active.error)}
+              {errorText(active.error)}
             </p>
           )}
           {mode === 'sign-up' && (

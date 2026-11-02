@@ -1,6 +1,7 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { Response } from 'express';
+import { apiError } from '../common/api-error';
 import type { SessionUser } from './auth.decorators';
 import { CurrentUser, Public } from './auth.decorators';
 import { LogInInput, SignUpInput, UserModel } from './auth.model';
@@ -42,7 +43,7 @@ export class AuthResolver {
     @CurrentUser() session: SessionUser | undefined,
     @Args('locale') locale: string,
   ): Promise<UserModel> {
-    if (!session) throw new UnauthorizedException('Please log in');
+    if (!session) throw apiError(UnauthorizedException, 'LOGIN_REQUIRED', 'Please log in');
     return toUserModel(await this.auth.setLocale(session.id, locale));
   }
 
