@@ -258,6 +258,16 @@ describe('profile', () => {
       expect(same.errors?.[0]?.message).toBe(
         'Your master resume is already in German. Pick another language.',
       );
+      expect(same.errors?.[0]?.extensions).toMatchObject({
+        apiCode: 'LANGUAGE_IS_MASTER',
+        apiParams: { language: 'de' },
+      });
+      // A resume that is too long says how long it may be, so the web app can write the sentence.
+      const long = await t.asUser(SAVE, { language: 'en', text: 'x'.repeat(100_000) });
+      expect(long.errors?.[0]?.extensions).toMatchObject({
+        apiCode: 'RESUME_TOO_LONG',
+        apiParams: { max: expect.any(Number) as number },
+      });
       expect((await t.asUser(SAVE, { language: 'xx', text: 'x' })).errors?.[0]?.message).toBe(
         'Pick a language from the list',
       );

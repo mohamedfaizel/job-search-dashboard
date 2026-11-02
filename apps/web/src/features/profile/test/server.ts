@@ -68,7 +68,12 @@ const withOthers = (): Profile => ({ ...PROFILE, otherResumes: [...otherResumes]
 export const rejectUpload = http.post(RESUME_UPLOAD_URL, () => {
   requests.push({ operation: 'UploadResume', variables: { sent: true } });
   return HttpResponse.json(
-    { statusCode: 400, message: 'Upload a PDF or Word (.docx) file' },
+    {
+      statusCode: 400,
+      message: 'Upload a PDF or Word (.docx) file',
+      code: 'RESUME_FILE_TYPE',
+      params: {},
+    },
     { status: 400 },
   );
 });

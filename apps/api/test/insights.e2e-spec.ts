@@ -348,6 +348,18 @@ describe('job insights without AI', () => {
     expect(admin.data!.jobInsights.removed).toEqual([]);
   });
 
+  it('refuses terms that are too long and an empty resume, with codes the web app can translate', async () => {
+    const job = await addJob({ title: 'Designer', skills: ['figma'], description: '' });
+    const tooLong = 'x'.repeat(101);
+    const removed = await t.asUser(REMOVE, { jobId: job.id, term: tooLong });
+    const have = await t.asUser(SET_HAVE, { jobId: job.id, term: tooLong });
+    const empty = await t.asUser(SAVE_TEXT, { jobId: job.id, text: '   ' });
+
+    expect(removed.errors?.[0]?.extensions).toMatchObject({ apiCode: 'TERM_LENGTH' });
+    expect(have.errors?.[0]?.extensions).toMatchObject({ apiCode: 'TERM_LENGTH' });
+    expect(empty.errors?.[0]?.extensions).toMatchObject({ apiCode: 'RESUME_EMPTY' });
+  });
+
   it('"I have this" adds a missing skill to your profile, counts it and tells Claude to add it', async () => {
     const job = await addJob({ title: 'Designer', skills: ['figma', 'react'], description: '' });
     await t.prisma.profile.create({
