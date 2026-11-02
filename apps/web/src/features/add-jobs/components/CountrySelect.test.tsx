@@ -1,17 +1,18 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
+import { Intl } from '@/test/intl';
 import { CountrySelect } from './CountrySelect';
 
 /** The select inside a tiny form, so we can read the value it hands back. */
 function Harness({ initial = '' }: { initial?: string }) {
   const [value, setValue] = useState(initial);
   return (
-    <>
+    <Intl>
       <label htmlFor="countries">Countries</label>
       <CountrySelect id="countries" value={value} onChange={setValue} />
       <output aria-label="Value">{value}</output>
-    </>
+    </Intl>
   );
 }
 

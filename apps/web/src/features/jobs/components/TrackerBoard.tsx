@@ -1,6 +1,7 @@
 import type { Application, ApplicationStatus, Job } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { formatDate, STATUS_LABELS } from '../format';
+import { useJobFormat } from '../useJobFormat';
 import { StatusSelect } from './StatusSelect';
 
 /** The board's columns, in the order a job moves through them. */
@@ -28,6 +29,9 @@ interface Props {
  * with a keyboard and screen readers (dragging alone would leave those users out).
  */
 export function TrackerBoard({ applications, onMove, onOpen }: Props) {
+  const t = useTranslations('Tracker');
+  const row = useTranslations('Jobs.row');
+  const f = useJobFormat();
   const [dropTarget, setDropTarget] = useState<ApplicationStatus | null>(null);
 
   return (
@@ -62,7 +66,7 @@ export function TrackerBoard({ applications, onMove, onOpen }: Props) {
             }`}
           >
             <h2 id={headingId} className="text-sm font-semibold text-slate-700">
-              {STATUS_LABELS[status]}{' '}
+              {f.status(status)}{' '}
               <span className="font-normal text-slate-500">({cards.length})</span>
             </h2>
             <ul className="flex flex-col gap-2">
@@ -93,9 +97,11 @@ export function TrackerBoard({ applications, onMove, onOpen }: Props) {
                     </p>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-slate-500">Moved {formatDate(updatedAt)}</span>
+                    <span className="text-xs text-slate-500">
+                      {t('moved', { date: f.date(updatedAt) })}
+                    </span>
                     <StatusSelect
-                      label={`Status for ${job.title} at ${job.company.name}`}
+                      label={row('statusFor', { job: f.jobName(job) })}
                       value={status}
                       onChange={(next) => {
                         onMove(job, next);

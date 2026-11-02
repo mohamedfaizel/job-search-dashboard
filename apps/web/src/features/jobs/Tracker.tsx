@@ -1,10 +1,12 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
 import { getErrorMessage, useMyApplications, useUpdateJobStatus } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { TrackerBoard } from './components/TrackerBoard';
 
 export function TrackerPage() {
+  const t = useTranslations('Tracker');
   const applications = useMyApplications();
   const updateStatus = useUpdateJobStatus();
   const [openJobId, setOpenJobId] = useState<string | null>(null);
@@ -19,11 +21,9 @@ export function TrackerPage() {
     <section aria-labelledby="tracker-heading" className="space-y-4">
       <div>
         <h1 id="tracker-heading" className="text-xl font-semibold text-slate-900">
-          Application tracker
+          {t('title')}
         </h1>
-        <p className="text-sm text-slate-600">
-          Drag a card to another column, or change its status. Only you see your board.
-        </p>
+        <p className="text-sm text-slate-600">{t('intro')}</p>
       </div>
 
       {applications.isError && (
@@ -31,7 +31,7 @@ export function TrackerPage() {
           role="alert"
           className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
         >
-          Could not load your tracker: {getErrorMessage(applications.error)}
+          {t('loadError', { error: getErrorMessage(applications.error) })}
         </p>
       )}
       {updateStatus.isError && (
@@ -39,16 +39,15 @@ export function TrackerPage() {
           role="alert"
           className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
         >
-          Could not move that job: {getErrorMessage(updateStatus.error)}
+          {t('moveError', { error: getErrorMessage(updateStatus.error) })}
         </p>
       )}
 
       {applications.isPending ? (
-        <p className="text-sm text-slate-500">Loading your tracker…</p>
+        <p className="text-sm text-slate-500">{t('loading')}</p>
       ) : list.length === 0 && applications.isSuccess ? (
         <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
-          Nothing on your tracker yet. Set a status on a job in Job posts (Saved, Applied…) and it
-          shows up here.
+          {t('empty')}
         </p>
       ) : (
         <TrackerBoard

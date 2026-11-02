@@ -7,12 +7,12 @@ import { JOBS } from './test/fixtures';
 import { applications, requests } from './test/server';
 import { TrackerPage } from './Tracker';
 
-function renderTracker(start: Application[] = []) {
+function renderTracker(start: Application[] = [], locale: 'en' | 'de' = 'en') {
   applications.push(...start);
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   render(
-    <Intl>
+    <Intl locale={locale}>
       <DataProvider store={makeStore()} queryClient={queryClient}>
         <TrackerPage />
       </DataProvider>
@@ -110,5 +110,15 @@ describe('Tracker board', () => {
     await user.click(await screen.findByRole('button', { name: FRONTEND.title }));
 
     expect(screen.getByRole('dialog', { name: FRONTEND.title })).toBeInTheDocument();
+  });
+
+  it('speaks German when you pick Deutsch', async () => {
+    renderTracker([tracked(FRONTEND, 'APPLIED')], 'de');
+
+    expect(await screen.findByRole('button', { name: FRONTEND.title })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bewerbungen' })).toBeInTheDocument();
+    expect(within(column(/^Beworben/)).getByText(FRONTEND.title)).toBeInTheDocument();
+    expect(column(/^Im Gespräch/)).toHaveTextContent('Im Gespräch (0)');
+    expect(screen.getByText('Verschoben am 26. Okt. 2026')).toBeInTheDocument();
   });
 });

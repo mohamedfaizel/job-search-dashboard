@@ -1,24 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { APPLICATION_STATUSES, getErrorMessage, useCreateJob, WORKPLACES } from '@jobsearch/data';
-import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { COUNTRIES } from '../countries';
+import { useJobFormat } from '@/features/jobs/useJobFormat';
+import { countriesIn } from '../countries';
 import type { JobFormValues } from '../schema';
 import { emptyJobForm, jobFormSchema, SENIORITIES, toCreateJobInput } from '../schema';
 import { Field, inputClass } from './Field';
 
-const WORKPLACE_LABELS = { ONSITE: 'On-site', HYBRID: 'Hybrid', REMOTE: 'Remote' } as const;
-const STATUS_LABELS = {
-  NONE: 'Not applied',
-  SAVED: 'Saved',
-  APPLIED: 'Applied',
-  INTERVIEWING: 'Interviewing',
-  OFFER: 'Offer',
-  REJECTED: 'Rejected',
-} as const;
-
 /** Add a job by hand: React Hook Form manages the inputs, Zod validates them. */
 export function AddJobForm() {
+  const t = useTranslations('AddJobs');
+  const locale = useLocale();
+  const f = useJobFormat();
+  const schema = useMemo(() => jobFormSchema((key, values) => t(`errors.${key}`, values)), [t]);
   const createJob = useCreateJob();
   const [savedTitle, setSavedTitle] = useState<string | null>(null);
   const {
@@ -27,7 +23,7 @@ export function AddJobForm() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<JobFormValues>({
-    resolver: zodResolver(jobFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: emptyJobForm,
   });
 
@@ -35,7 +31,7 @@ export function AddJobForm() {
     setSavedTitle(null);
     const job = await createJob.mutateAsync(toCreateJobInput(values)).catch(() => null);
     if (job) {
-      setSavedTitle(`${job.title} at ${job.company.name}`);
+      setSavedTitle(f.jobName(job));
       reset(emptyJobForm);
     }
   });
@@ -57,29 +53,34 @@ export function AddJobForm() {
       className="space-y-4 rounded-lg border border-slate-200 bg-white p-5"
     >
       <h2 id="add-job-heading" className="text-lg font-semibold text-slate-900">
-        Add a job by hand
+        {t('form.heading')}
       </h2>
 
       {savedTitle && (
         <p role="status" className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">
-          Saved “{savedTitle}”. It’s now in the Job posts table.
+          {t('form.saved', { title: savedTitle })}
         </p>
       )}
       {createJob.isError && (
         <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-          Could not save the job: {getErrorMessage(createJob.error)}
+          {t('form.saveError', { error: getErrorMessage(createJob.error) })}
         </p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Field label="Job title" htmlFor="title" error={errors.title?.message} required>
+        <Field label={t('form.title')} htmlFor="title" error={errors.title?.message} required>
           <input {...register('title')} {...a11y('title')} className={inputClass} />
         </Field>
-        <Field label="Company" htmlFor="companyName" error={errors.companyName?.message} required>
+        <Field
+          label={t('form.company')}
+          htmlFor="companyName"
+          error={errors.companyName?.message}
+          required
+        >
           <input {...register('companyName')} {...a11y('companyName')} className={inputClass} />
         </Field>
         <Field
-          label="Link to the posting"
+          label={t('form.url')}
           htmlFor="url"
           error={errors.url?.message}
           className="sm:col-span-2 lg:col-span-1"
@@ -92,32 +93,32 @@ export function AddJobForm() {
             className={inputClass}
           />
         </Field>
-        <Field label="City" htmlFor="city" error={errors.city?.message}>
+        <Field label={t('form.city')} htmlFor="city" error={errors.city?.message}>
           <input {...register('city')} {...a11y('city')} className={inputClass} />
         </Field>
-        <Field label="Country" htmlFor="countryCode" error={errors.countryCode?.message}>
+        <Field label={t('form.country')} htmlFor="countryCode" error={errors.countryCode?.message}>
           <select {...register('countryCode')} {...a11y('countryCode')} className={inputClass}>
-            <option value="">Not specified</option>
-            {COUNTRIES.map(([code, name]) => (
+            <option value="">{t('notSpecified')}</option>
+            {countriesIn(locale).map(([code, name]) => (
               <option key={code} value={code}>
                 {name} · {code}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Workplace" htmlFor="workplace">
+        <Field label={t('form.workplace')} htmlFor="workplace">
           <select {...register('workplace')} {...a11y('workplace')} className={inputClass}>
-            <option value="">Not specified</option>
+            <option value="">{t('notSpecified')}</option>
             {WORKPLACES.map((w) => (
               <option key={w} value={w}>
-                {WORKPLACE_LABELS[w]}
+                {f.workplace(w)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Seniority" htmlFor="seniority">
+        <Field label={t('form.seniority')} htmlFor="seniority">
           <select {...register('seniority')} {...a11y('seniority')} className={inputClass}>
-            <option value="">Not specified</option>
+            <option value="">{t('notSpecified')}</option>
             {SENIORITIES.map((s) => (
               <option key={s} value={s}>
                 {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -126,26 +127,26 @@ export function AddJobForm() {
           </select>
         </Field>
         <Field
-          label="Function"
+          label={t('form.jobFunction')}
           htmlFor="jobFunction"
           error={errors.jobFunction?.message}
-          hint="e.g. Engineering"
+          hint={t('form.functionHint')}
         >
           <input {...register('jobFunction')} {...a11y('jobFunction')} className={inputClass} />
         </Field>
-        <Field label="Industry" htmlFor="industry" error={errors.industry?.message}>
+        <Field label={t('form.industry')} htmlFor="industry" error={errors.industry?.message}>
           <input {...register('industry')} {...a11y('industry')} className={inputClass} />
         </Field>
         <Field
-          label="Skills"
+          label={t('form.skills')}
           htmlFor="skills"
-          hint="Separate with commas: react, typescript"
+          hint={t('form.skillsHint')}
           className="sm:col-span-2 lg:col-span-3"
         >
           <input {...register('skills')} {...a11y('skills')} className={inputClass} />
         </Field>
         <Field
-          label="Minimum salary (USD / year)"
+          label={t('form.salaryMin')}
           htmlFor="salaryMinUsd"
           error={errors.salaryMinUsd?.message}
         >
@@ -157,7 +158,7 @@ export function AddJobForm() {
           />
         </Field>
         <Field
-          label="Maximum salary (USD / year)"
+          label={t('form.salaryMax')}
           htmlFor="salaryMaxUsd"
           error={errors.salaryMaxUsd?.message}
         >
@@ -168,7 +169,7 @@ export function AddJobForm() {
             className={inputClass}
           />
         </Field>
-        <Field label="Your status" htmlFor="applicationStatus">
+        <Field label={t('form.status')} htmlFor="applicationStatus">
           <select
             {...register('applicationStatus')}
             {...a11y('applicationStatus')}
@@ -176,13 +177,13 @@ export function AddJobForm() {
           >
             {APPLICATION_STATUSES.map((s) => (
               <option key={s} value={s}>
-                {STATUS_LABELS[s]}
+                {f.status(s)}
               </option>
             ))}
           </select>
         </Field>
         <Field
-          label="Description"
+          label={t('form.description')}
           htmlFor="description"
           error={errors.description?.message}
           className="sm:col-span-2 lg:col-span-3"
@@ -202,7 +203,7 @@ export function AddJobForm() {
           disabled={isSubmitting}
           className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
         >
-          {isSubmitting ? 'Saving…' : 'Save job'}
+          {isSubmitting ? t('form.saving') : t('form.save')}
         </button>
         <button
           type="button"
@@ -211,7 +212,7 @@ export function AddJobForm() {
           }}
           className="rounded-md px-4 py-2 text-sm text-slate-600 hover:bg-slate-100"
         >
-          Clear
+          {t('form.clear')}
         </button>
       </div>
     </form>

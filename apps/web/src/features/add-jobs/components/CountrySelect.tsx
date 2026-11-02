@@ -1,5 +1,6 @@
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
-import { COUNTRIES, countryName } from '../countries';
+import { countriesIn, countryName } from '../countries';
 import { splitList } from '../schema';
 import { inputClass } from './Field';
 
@@ -13,13 +14,15 @@ interface Props {
   describedBy?: string | undefined;
 }
 
-const WORLDWIDE = 'Worldwide (any country)';
-
 /**
  * Pick several countries from JobsPipe's list, or Worldwide. Type to filter by name or code;
  * a 2-letter code that isn't in the list can still be added. Chips show what's picked.
  */
 export function CountrySelect({ id, value, onChange, invalid, describedBy }: Props) {
+  const t = useTranslations('AddJobs.country');
+  const locale = useLocale();
+  const countries = countriesIn(locale);
+  const name = (code: string) => countryName(code, locale);
   const listId = useId();
   const box = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -46,13 +49,15 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
     return name.toLowerCase().includes(query) ? 2 : 3;
   };
   const matches = query
-    ? COUNTRIES.filter((c) => rank(c) < 3).sort((a, b) => rank(a) - rank(b))
-    : COUNTRIES;
+    ? countries.filter((c) => rank(c) < 3).sort((a, b) => rank(a) - rank(b))
+    : countries;
   const typedCode = /^[a-z]{2}$/.test(query) && !matches.some(([c]) => c.toLowerCase() === query);
   const options: { code: string | null; label: string }[] = [
-    ...(query ? [] : [{ code: null, label: WORLDWIDE }]),
-    ...matches.map(([code, name]) => ({ code, label: `${name} · ${code}` })),
-    ...(typedCode ? [{ code: query.toUpperCase(), label: `Use code ${query.toUpperCase()}` }] : []),
+    ...(query ? [] : [{ code: null, label: t('worldwide') }]),
+    ...matches.map(([code, label]) => ({ code, label: `${label} · ${code}` })),
+    ...(typedCode
+      ? [{ code: query.toUpperCase(), label: t('useCode', { code: query.toUpperCase() }) }]
+      : []),
   ];
 
   const set = (codes: string[]) => {
@@ -68,16 +73,16 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
   return (
     <div ref={box} className="relative">
       <div className={`${inputClass} flex min-h-[38px] flex-wrap items-center gap-1 py-1`}>
-        <ul className="contents" aria-label="Picked countries">
+        <ul className="contents" aria-label={t('picked')}>
           {picked.map((code) => (
             <li
               key={code}
               className="inline-flex items-center gap-1 rounded bg-indigo-50 py-0.5 pr-0.5 pl-1.5 text-xs font-medium text-indigo-800 ring-1 ring-indigo-200 ring-inset"
             >
-              {countryName(code)} · {code}
+              {name(code)} · {code}
               <button
                 type="button"
-                aria-label={`Remove ${countryName(code)}`}
+                aria-label={t('remove', { country: name(code) })}
                 className="rounded px-1 leading-none hover:bg-indigo-100"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -99,7 +104,7 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy}
           value={filter}
-          placeholder={picked.length ? 'Add a country…' : WORLDWIDE}
+          placeholder={picked.length ? t('add') : t('worldwide')}
           className="min-w-32 flex-1 border-0 p-0.5 text-sm outline-none focus:ring-0"
           onFocus={() => {
             setOpen(true);
@@ -135,11 +140,11 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
         <div
           id={listId}
           role="listbox"
-          aria-label="Countries"
+          aria-label={t('list')}
           aria-multiselectable
           className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
         >
-          {options.length === 0 && <p className="px-3 py-2 text-slate-500">No country found</p>}
+          {options.length === 0 && <p className="px-3 py-2 text-slate-500">{t('none')}</p>}
           {options.map((option, i) => {
             const selected =
               option.code === null ? picked.length === 0 : picked.includes(option.code);
