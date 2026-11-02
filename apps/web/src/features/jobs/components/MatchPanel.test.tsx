@@ -35,7 +35,7 @@ describe('MatchPanel', () => {
 
     expect(await screen.findByText('72')).toBeInTheDocument();
     expect(screen.getByText('Partial fit')).toBeInTheDocument();
-    expect(screen.getByText(/it has 55% of the job's keywords/)).toBeInTheDocument();
+    expect(screen.getByText(/it has 55% of the job’s keywords/)).toBeInTheDocument();
     const keywords = screen.getByText('Keywords').closest('div')!;
     expect(within(keywords).getByText('70%')).toBeInTheDocument();
     // Dates can't be scored with fewer than two dates on the resume.

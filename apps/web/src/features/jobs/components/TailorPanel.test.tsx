@@ -62,7 +62,7 @@ describe('TailorPanel', () => {
     expect(
       screen.queryByRole('link', { name: 'Download cover letter PDF' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText(/cover letter couldn't be written/)).toBeInTheDocument();
+    expect(screen.getByText(/cover letter couldn’t be written/)).toBeInTheDocument();
   });
 
   it('shows why tailoring failed', async () => {

@@ -1,16 +1,10 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
 import { useJobInsights } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import {
-  capitalize,
-  ESTIMATED_LEVEL_HINT,
-  formatDate,
-  formatSalary,
-  germanLevelText,
-  VISA_LABELS,
-  WORKPLACE_LABELS,
-} from '../format';
+import { capitalize } from '../format';
+import { useJobFormat } from '../useJobFormat';
 import { ApplyKitPanel, useApplyStep } from './ApplyKitPanel';
 import { BookmarkIcon, EyeIcon, EyeSlashIcon } from './icons';
 import { InsightsPanel } from './InsightsPanel';
@@ -36,13 +30,8 @@ interface Props {
 const NOBODY: ReadonlySet<string> = new Set();
 const noop = () => undefined;
 
-const TABS = [
-  { id: 'fit', label: 'Fit' },
-  { id: 'apply', label: 'Apply' },
-  { id: 'ad', label: 'Job ad' },
-  { id: 'match', label: 'AI match' },
-] as const;
-type Tab = (typeof TABS)[number]['id'];
+const TABS = ['fit', 'apply', 'ad', 'match'] as const;
+type Tab = (typeof TABS)[number];
 
 const ICON_BUTTON =
   'h-11 w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 sm:h-9 sm:w-9';
@@ -65,22 +54,24 @@ const SENT: ReadonlySet<ApplicationStatus> = new Set([
 /** Company · place · posted · seniority · workplace · visa · salary · German, on one line. */
 function MetaLine({ job }: { job: Job }) {
   const insights = useJobInsights(job.id);
-  const salary = formatSalary(job.salaryMinUsd, job.salaryMaxUsd);
-  const german = insights.data?.germanRequired ? `German ${germanLevelText(insights.data)}` : '';
+  const f = useJobFormat();
+  const t = useTranslations('Jobs.popup');
+  const salary = f.salary(job.salaryMinUsd, job.salaryMaxUsd);
+  const level = insights.data ? f.germanLevel(insights.data) : '';
   const parts: ReactNode[] = [
     job.company.name,
     [job.city, job.countryCode].filter(Boolean).join(', '),
-    `Posted ${formatDate(job.postedAt)}`,
+    t('posted', { date: f.date(job.postedAt) }),
     job.seniority && capitalize(job.seniority),
-    job.workplace && WORKPLACE_LABELS[job.workplace],
-    job.visa === 'OFFERS' && VISA_LABELS.OFFERS,
-    salary && `${salary}${job.salaryEstimated ? ' (est.)' : ''}`,
-    german && (
+    job.workplace && f.workplace(job.workplace),
+    job.visa === 'OFFERS' && f.visa('OFFERS'),
+    salary && (job.salaryEstimated ? t('estimated', { salary }) : salary),
+    insights.data?.germanRequired && (
       <span
         className="font-medium text-amber-700"
-        title={insights.data?.germanLevelEstimated ? ESTIMATED_LEVEL_HINT : undefined}
+        title={insights.data.germanLevelEstimated ? f.estimatedLevelHint : undefined}
       >
-        {german.trim()} required
+        {level ? t('germanLevelRequired', { level }) : t('germanRequired')}
       </span>
     ),
   ].filter(Boolean);
@@ -115,6 +106,7 @@ function JobDetails({
   maximized: boolean;
   onToggleMaximized: () => void;
 }) {
+  const t = useTranslations('Jobs.popup');
   const [tab, setTab] = useState<Tab>('fit');
   const applySteps = useApplyStep(job.id);
   const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
@@ -126,8 +118,8 @@ function JobDetails({
     const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
     if (!step) return;
     e.preventDefault();
-    const index = TABS.findIndex((t) => t.id === tab);
-    const next = TABS[(index + step + TABS.length) % TABS.length]?.id ?? 'fit';
+    const index = TABS.indexOf(tab);
+    const next = TABS[(index + step + TABS.length) % TABS.length] ?? 'fit';
     setTab(next);
     tabRefs.current[next]?.focus();
   };
@@ -148,7 +140,7 @@ function JobDetails({
                 <span
                   className={`inline-flex h-6 items-center rounded-full px-2 text-xs font-medium ring-1 ring-inset ${FIT_PILL[scoreTone(job.fitScore) as keyof typeof FIT_PILL]}`}
                 >
-                  {job.fitScore}% fit
+                  {t('fitPill', { score: job.fitScore })}
                 </span>
               )}
             </div>
@@ -162,8 +154,8 @@ function JobDetails({
               }}
               disabled={sent}
               aria-pressed={saved}
-              aria-label="Save to tracker"
-              title={sent ? 'On your tracker' : saved ? 'Remove from tracker' : 'Save to tracker'}
+              aria-label={t('saveLabel')}
+              title={sent ? t('onTracker') : saved ? t('removeFromTracker') : t('saveLabel')}
               className={`${ICON_BUTTON} hidden disabled:opacity-60 sm:inline-flex ${saved ? 'text-indigo-600' : ''}`}
             >
               <BookmarkIcon filled={saved} className="h-[18px] w-[18px]" />
@@ -174,8 +166,8 @@ function JobDetails({
                 onClick={() => {
                   onToggleHidden(job);
                 }}
-                aria-label={showingHidden ? 'Bring back this job' : 'Hide this job'}
-                title={showingHidden ? 'Bring back' : 'Hide: not for me'}
+                aria-label={showingHidden ? t('bringBackLabel') : t('hideLabel')}
+                title={showingHidden ? t('bringBack') : t('hideHint')}
                 className={`${ICON_BUTTON} hidden sm:inline-flex`}
               >
                 {showingHidden ? (
@@ -189,8 +181,8 @@ function JobDetails({
             <button
               type="button"
               onClick={onToggleMaximized}
-              aria-label={maximized ? 'Restore size' : 'Maximize'}
-              title={maximized ? 'Restore size' : 'Maximize'}
+              aria-label={maximized ? t('restore') : t('maximize')}
+              title={maximized ? t('restore') : t('maximize')}
               className={`${ICON_BUTTON} hidden sm:inline-flex`}
             >
               <svg
@@ -208,7 +200,7 @@ function JobDetails({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={t('close')}
               className={`${ICON_BUTTON} inline-flex`}
             >
               <svg
@@ -225,10 +217,10 @@ function JobDetails({
 
         <div
           role="tablist"
-          aria-label="Job details sections"
+          aria-label={t('tabsLabel')}
           className="flex justify-between gap-5 sm:justify-start sm:gap-6"
         >
-          {TABS.map(({ id, label }) => (
+          {TABS.map((id) => (
             <button
               key={id}
               ref={(el) => {
@@ -250,10 +242,10 @@ function JobDetails({
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              {label}
+              {t(`tabs.${id}`)}
               {id === 'apply' && !SENT.has(job.applicationStatus) && (
                 <span className="ml-1.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-700 max-sm:hidden">
-                  step {applySteps.step} of 3
+                  {t('stepOf', { step: applySteps.step })}
                 </span>
               )}
             </button>
@@ -286,9 +278,9 @@ function JobDetails({
 
       <footer className="flex flex-wrap items-center gap-2 border-t border-slate-200 px-4 py-3 sm:px-5">
         <span className="flex items-center gap-2 text-sm text-slate-600">
-          <span aria-hidden="true">Status</span>
+          <span aria-hidden="true">{t('status')}</span>
           <StatusSelect
-            label="Application status"
+            label={t('statusLabel')}
             value={job.applicationStatus}
             onChange={onStatusChange}
           />
@@ -301,7 +293,7 @@ function JobDetails({
             }}
             className={`${BUTTON} sm:hidden`}
           >
-            {showingHidden ? 'Bring back' : 'Hide'}
+            {showingHidden ? t('bringBack') : t('hide')}
           </button>
         )}
         <span className="flex-1" />
@@ -316,7 +308,7 @@ function JobDetails({
             }}
             className={BUTTON}
           >
-            Open original posting ↗
+            {t('openPosting')}
           </a>
         )}
         {tab !== 'apply' ? (
@@ -327,7 +319,7 @@ function JobDetails({
             }}
             className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 sm:w-auto"
           >
-            Apply →
+            {t('apply')}
           </button>
         ) : (
           !sent && (
@@ -339,7 +331,7 @@ function JobDetails({
               }}
               className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 sm:w-auto"
             >
-              ✓ Mark Applied
+              {t('markApplied')}
             </button>
           )
         )}
@@ -364,13 +356,11 @@ function TabPanel({ id, active, children }: { id: Tab; active: Tab; children: Re
 
 /** The AI match tab: Resume-Matcher's score and tailoring, with what they read and cost. */
 function AiMatch({ jobId, hasDescription }: { jobId: string; hasDescription: boolean }) {
+  const t = useTranslations('Jobs.popup');
   return (
     <div className="space-y-4">
       <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-700">
-        Scores your <strong>master resume</strong> (the one on My profile) with Resume-Matcher. It
-        does not use the resume Claude wrote in the Apply tab.{' '}
-        <strong>Each run uses your Claude API credits.</strong> The Fit tab gives the same kind of
-        score for free.
+        {t.rich('aiIntro', { b: (chunks) => <strong>{chunks}</strong> })}
       </p>
       {hasDescription ? (
         <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -378,9 +368,7 @@ function AiMatch({ jobId, hasDescription }: { jobId: string; hasDescription: boo
           <TailorPanel jobId={jobId} />
         </div>
       ) : (
-        <p className="text-sm text-slate-500">
-          This job has no description, so there is nothing to match.
-        </p>
+        <p className="text-sm text-slate-500">{t('noDescription')}</p>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import type { TermCheck } from '@jobsearch/data';
 import { useJobInsights } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 
@@ -9,7 +10,19 @@ const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  * Splits the description into text and marked terms: green for what your resume has, red for
  * what it is missing. A term only counts as a whole word, so "java" doesn't mark "javascript".
  */
-export function highlight(text: string, terms: TermCheck[], hasResume: boolean): ReactNode[] {
+/** The tooltips on the marked terms, in your language. */
+export interface HighlightTitles {
+  inResume: string;
+  youHave: string;
+  missing: string;
+}
+
+export function highlight(
+  text: string,
+  terms: TermCheck[],
+  hasResume: boolean,
+  titles: HighlightTitles,
+): ReactNode[] {
   if (terms.length === 0) return [text];
   const byTerm = new Map(terms.map((t) => [t.term.toLowerCase(), t]));
   // Longest first, so "react native" wins over "react".
@@ -29,13 +42,7 @@ export function highlight(text: string, terms: TermCheck[], hasResume: boolean):
     return (
       <mark
         key={i}
-        title={
-          have
-            ? 'In your resume'
-            : term.youHave
-              ? 'You have it: on your profile’s Skills list'
-              : 'Missing from your resume'
-        }
+        title={have ? titles.inResume : term.youHave ? titles.youHave : titles.missing}
         className={`rounded px-0.5 ${color}`}
       >
         {part}
@@ -47,16 +54,21 @@ export function highlight(text: string, terms: TermCheck[], hasResume: boolean):
 /** The Job ad tab: the description, with the skills and keywords marked. */
 export function JobAdPanel({ jobId, description }: { jobId: string; description: string | null }) {
   const insights = useJobInsights(jobId);
+  const t = useTranslations('Jobs.ad');
   const [marked, setMarked] = useState(true);
   const data = insights.data;
 
   const parts = useMemo(() => {
     if (!description) return null;
     if (!marked || !data) return [description];
-    return highlight(description, [...data.skills, ...data.keywords], data.hasResume);
-  }, [description, marked, data]);
+    return highlight(description, [...data.skills, ...data.keywords], data.hasResume, {
+      inResume: t('inResume'),
+      youHave: t('youHave'),
+      missing: t('missing'),
+    });
+  }, [description, marked, data, t]);
 
-  if (!parts) return <p className="text-sm text-slate-500">No description available.</p>;
+  if (!parts) return <p className="text-sm text-slate-500">{t('none')}</p>;
 
   return (
     <div className="space-y-3">
@@ -71,15 +83,15 @@ export function JobAdPanel({ jobId, description }: { jobId: string; description:
               }}
               className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
             />
-            Highlight skills and keywords
+            {t('highlight')}
           </label>
           {marked && data.hasResume && (
             <span className="flex items-center gap-3" aria-hidden="true">
               <span className="flex items-center gap-1">
-                <span className="h-2.5 w-2.5 rounded-sm bg-emerald-200" /> in your resume
+                <span className="h-2.5 w-2.5 rounded-sm bg-emerald-200" /> {t('legendIn')}
               </span>
               <span className="flex items-center gap-1">
-                <span className="h-2.5 w-2.5 rounded-sm bg-red-200" /> missing
+                <span className="h-2.5 w-2.5 rounded-sm bg-red-200" /> {t('legendMissing')}
               </span>
             </span>
           )}

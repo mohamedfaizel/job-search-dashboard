@@ -1,6 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { highlight } from './JobAdPanel';
 
+const TITLES = {
+  inResume: 'In your resume',
+  youHave: 'You have it',
+  missing: 'Missing from your resume',
+};
+
 describe('highlight', () => {
   const terms = [
     { term: 'react', inResume: true, youHave: false, relatedTo: null },
@@ -8,7 +14,7 @@ describe('highlight', () => {
   ];
 
   it('marks whole words: green for what you have, red for what you miss', () => {
-    render(<p>{highlight('React and Java, but not JavaScript.', terms, true)}</p>);
+    render(<p>{highlight('React and Java, but not JavaScript.', terms, true, TITLES)}</p>);
 
     const marks = screen.getAllByTitle(/resume/);
     expect(marks.map((m) => [m.textContent, m.title])).toEqual([
@@ -18,7 +24,7 @@ describe('highlight', () => {
   });
 
   it('counts everything as missing without a resume', () => {
-    render(<p>{highlight('React', terms, false)}</p>);
+    render(<p>{highlight('React', terms, false, TITLES)}</p>);
     expect(screen.getByTitle('Missing from your resume')).toHaveTextContent('React');
   });
 });

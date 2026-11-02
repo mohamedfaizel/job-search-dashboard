@@ -134,6 +134,41 @@ describe('JobsDashboard', () => {
     });
   });
 
+  it('shows the job popup in German', async () => {
+    renderDashboard('de');
+    await userEvent.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+    expect(within(dialog).getByText(/Veröffentlicht am 24\. Okt\. 2026/)).toBeInTheDocument();
+    expect(within(dialog).getByRole('combobox', { name: 'Bewerbungsstatus' })).toHaveDisplayValue(
+      'Nicht beworben',
+    );
+    expect(
+      await within(dialog).findByRole('region', { name: 'Fähigkeiten und Schlagwörter' }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(within(dialog).getByRole('tab', { name: /Bewerben/ }));
+    expect(within(dialog).getByRole('list', { name: 'Bewerbungsschritte' })).toHaveTextContent(
+      'Mit Claude schreiben',
+    );
+    expect(
+      await within(dialog).findByRole('button', { name: /Prompt kopieren und Claude öffnen/ }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'Anzeige' }));
+    expect(
+      within(dialog).getByRole('link', { name: 'Original-Anzeige öffnen ↗' }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'KI-Match' }));
+    expect(within(dialog).getByText(/Jeder Lauf verbraucht/)).toBeInTheDocument();
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Schließen' }));
+    expect(
+      screen.queryByRole('dialog', { name: 'Senior Frontend Engineer' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('opens the description in a popup', async () => {
     renderDashboard();
     await userEvent.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));

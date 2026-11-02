@@ -1,4 +1,4 @@
-import type { ApplicationStatus, VisaSponsorship, Workplace } from '@jobsearch/data';
+import type { ApplicationStatus, Workplace } from '@jobsearch/data';
 
 const dateFormat = new Intl.DateTimeFormat('en-US', {
   month: 'short',
@@ -10,31 +10,10 @@ export function formatDate(iso: string): string {
   return dateFormat.format(new Date(iso));
 }
 
-function thousands(value: number): string {
-  return `$${Math.round(value / 1000)}k`;
-}
-
-/** "$215k - $290k", "$90k+", "Up to $120k", or "" when unknown. */
-export function formatSalary(min: number | null, max: number | null): string {
-  if (min !== null && max !== null) {
-    return min === max ? thousands(min) : `${thousands(min)} - ${thousands(max)}`;
-  }
-  if (min !== null) return `${thousands(min)}+`;
-  if (max !== null) return `Up to ${thousands(max)}`;
-  return '';
-}
-
 export const WORKPLACE_LABELS: Record<Workplace, string> = {
   ONSITE: 'On-site',
   HYBRID: 'Hybrid',
   REMOTE: 'Remote',
-};
-
-/** Short words for the Visa column and its filter. */
-export const VISA_LABELS: Record<VisaSponsorship, string> = {
-  OFFERS: 'Visa support',
-  NO: 'No sponsorship',
-  NOT_STATED: 'Not stated',
 };
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
@@ -73,31 +52,3 @@ export function countryName(code: string): string {
 export function languageName(code: string): string {
   return displayName(languageNames, code.toLowerCase());
 }
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** "Today", "1 d ago", "3 w ago", "5 mo ago": how long ago a job was posted. */
-export function timeAgo(iso: string, now = Date.now()): string {
-  const days = Math.floor((now - new Date(iso).getTime()) / DAY_MS);
-  if (days < 1) return 'Today';
-  if (days < 14) return `${days} d ago`;
-  if (days < 60) return `${Math.floor(days / 7)} w ago`;
-  if (days < 365) return `${Math.floor(days / 30)} mo ago`;
-  return `${Math.floor(days / 365)} y ago`;
-}
-
-/**
- * The German level a job asks for, as shown: "B2" when the ad names it, "about C1" when it is
- * read from words like "fließend", "" when the ad says nothing about the level.
- */
-export function germanLevelText(insights: {
-  germanLevel: string | null;
-  germanLevelEstimated: boolean;
-}): string {
-  if (!insights.germanLevel) return '';
-  return insights.germanLevelEstimated ? `about ${insights.germanLevel}` : insights.germanLevel;
-}
-
-/** Tooltip for an estimated level. */
-export const ESTIMATED_LEVEL_HINT =
-  'Estimated from the ad’s words: Grundkenntnisse ≈ A2, gut ≈ B2, fließend or verhandlungssicher ≈ C1, Muttersprache ≈ C2';

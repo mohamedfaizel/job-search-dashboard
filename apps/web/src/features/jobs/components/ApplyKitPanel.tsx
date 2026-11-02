@@ -7,10 +7,12 @@ import {
   useJobInsights,
   useMyProfile,
 } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { germanLevelText } from '../format';
 import { promptSections } from '../reply';
+import type { JobFormat } from '../useJobFormat';
+import { useJobFormat } from '../useJobFormat';
 import { PRIMARY, ReplyInput, SavedReply } from './JobResumePanel';
 
 /** The short prompt for Claude in Chrome. The Apply kit page it opens holds the rules and facts. */
@@ -21,8 +23,8 @@ export function chromePrompt(job: Job): string {
 
 export const CLAUDE_URL = 'https://claude.ai/new';
 const LINK = 'text-indigo-700 hover:underline';
-const STEPS = ['Write with Claude', 'Save the reply', 'Fill the form'] as const;
 export type ApplyStep = 1 | 2 | 3;
+const STEPS: ApplyStep[] = [1, 2, 3];
 
 /**
  * Which Apply step you are on: 3 once a reply is saved, 2 once the prompt is copied, else 1.
@@ -66,13 +68,13 @@ async function copyAndOpen(text: string, url: string | null): Promise<boolean> {
 }
 
 function Stepper({ step, onChoose }: { step: ApplyStep; onChoose: (s: ApplyStep) => void }) {
+  const t = useTranslations('Jobs.apply');
   return (
-    <ol aria-label="Apply steps" className="flex items-center gap-2 sm:gap-3">
-      {STEPS.map((label, i) => {
-        const n = (i + 1) as ApplyStep;
+    <ol aria-label={t('stepsLabel')} className="flex items-center gap-2 sm:gap-3">
+      {STEPS.map((n, i) => {
         const state = n < step ? 'done' : n === step ? 'current' : 'next';
         return (
-          <li key={label} className={`flex items-center gap-2 sm:gap-3 ${i > 0 ? 'flex-1' : ''}`}>
+          <li key={n} className={`flex items-center gap-2 sm:gap-3 ${i > 0 ? 'flex-1' : ''}`}>
             {i > 0 && (
               <span
                 aria-hidden="true"
@@ -106,8 +108,8 @@ function Stepper({ step, onChoose }: { step: ApplyStep; onChoose: (s: ApplyStep)
                 {state === 'done' ? '✓' : n}
               </span>
               <span className={state === 'current' ? '' : 'max-sm:sr-only'}>
-                {label}
-                {state === 'done' && <span className="sr-only"> (done)</span>}
+                {t(`steps.${n}`)}
+                {state === 'done' && <span className="sr-only"> {t('done')}</span>}
               </span>
             </button>
           </li>
@@ -130,9 +132,10 @@ function Card({ title, intro, children }: { title: string; intro: string; childr
 }
 
 function ShowText({ label, text }: { label: string; text: string }) {
+  const t = useTranslations('Jobs.apply');
   return (
     <details className="text-sm">
-      <summary className={`cursor-pointer list-none ${LINK}`}>Show the prompt</summary>
+      <summary className={`cursor-pointer list-none ${LINK}`}>{t('showPrompt')}</summary>
       <textarea
         readOnly
         value={text}
@@ -152,11 +155,12 @@ function ShowText({ label, text }: { label: string; text: string }) {
  * stay folded inside too.
  */
 function PromptView({ text }: { text: string }) {
+  const t = useTranslations('Jobs.apply');
   return (
     <details className="w-full text-sm">
-      <summary className={`cursor-pointer list-none ${LINK}`}>Show the prompt</summary>
+      <summary className={`cursor-pointer list-none ${LINK}`}>{t('showPrompt')}</summary>
       <div
-        aria-label="Prompt for Claude"
+        aria-label={t('promptLabel')}
         role="group"
         className="mt-2 max-h-96 space-y-3 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3"
       >
@@ -197,7 +201,12 @@ const COPY_ICON = (
 );
 
 /** What the prompt is built from, so you know what Claude will get before you copy it. */
-function facts(insights: JobInsights, profile: Profile | undefined) {
+function facts(
+  insights: JobInsights,
+  profile: Profile | undefined,
+  t: (key: string, values?: Record<string, string | number>) => string,
+  f: JobFormat,
+) {
   const missing = [...insights.skills, ...insights.keywords].filter(
     (t) => !t.inResume && !t.youHave,
   ).length;
@@ -208,18 +217,19 @@ function facts(insights: JobInsights, profile: Profile | undefined) {
     [profile.phone, profile.workPermit, profile.noticePeriod, profile.salaryExpectation].some(
       Boolean,
     );
+  const level = f.germanLevel(insights);
   return [
-    { text: 'Master resume' },
-    insights.hasResume && missing > 0 && { text: `${String(missing)} missing terms to cover` },
-    mustAdd > 0 && { text: `${String(mustAdd)} skills you have to add` },
+    { text: t('facts.master') },
+    insights.hasResume && missing > 0 && { text: t('facts.missing', { count: missing }) },
+    mustAdd > 0 && { text: t('facts.mustAdd', { count: mustAdd }) },
     insights.germanRequired
       ? {
-          text: `Written in German${insights.germanLevel ? ` (${germanLevelText(insights)} required)` : ''}`,
+          text: level ? t('facts.germanLevel', { level }) : t('facts.german'),
           warn: true,
         }
-      : { text: 'Written in English' },
-    german && { text: `${german} on the resume` },
-    answers && { text: 'Application answers' },
+      : { text: t('facts.english') },
+    german && { text: t('facts.languageOnResume', { language: german }) },
+    answers && { text: t('facts.answers') },
   ].filter((f): f is { text: string; warn?: boolean } => Boolean(f));
 }
 
@@ -256,6 +266,8 @@ function ApplyKit({
 }: Props & { steps: ApplyStepState }) {
   const insights = useJobInsights(job.id);
   const profile = useMyProfile();
+  const t = useTranslations('Jobs.apply');
+  const f = useJobFormat();
   const p = profile.data;
   const noAnswers =
     p && ![p.phone, p.address, p.workPermit, p.noticePeriod, p.salaryExpectation].some(Boolean);
@@ -269,11 +281,11 @@ function ApplyKit({
   if (insights.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
-        Could not load the kit: {getErrorMessage(insights.error)}
+        {t('loadError', { error: getErrorMessage(insights.error) })}
       </p>
     );
   }
-  if (!data) return <p className="text-sm text-slate-500">Loading the Apply kit…</p>;
+  if (!data) return <p className="text-sm text-slate-500">{t('loading')}</p>;
 
   const copyClaudePrompt = async () => {
     setCopyFailed(!(await copyAndOpen(data.prompt, CLAUDE_URL)));
@@ -289,22 +301,20 @@ function ApplyKit({
       }}
       className="h-9 rounded-lg px-3 text-sm font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 disabled:opacity-50"
     >
-      {queued ? 'Remove from Apply queue' : 'Add to Apply queue'}
+      {queued ? t('removeQueue') : t('addQueue')}
     </button>
   );
 
   return (
-    <section aria-label="Apply kit" className="space-y-5 text-sm">
+    <section aria-label={t('kitLabel')} className="space-y-5 text-sm">
       <Stepper step={steps.step} onChoose={steps.choose} />
 
       {applied && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">
-          ✓ On your tracker as applied.
-        </p>
+        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">{t('applied')}</p>
       )}
       {asking && !applied && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg bg-indigo-50 px-3 py-2">
-          <span className="flex-1 text-indigo-900">You opened this posting. Did you apply?</span>
+          <span className="flex-1 text-indigo-900">{t('askOpened')}</span>
           <button
             type="button"
             onClick={() => {
@@ -313,7 +323,7 @@ function ApplyKit({
             }}
             className="h-8 rounded-lg bg-emerald-600 px-3 font-medium text-white hover:bg-emerald-700"
           >
-            Yes, mark Applied
+            {t('yes')}
           </button>
           <button
             type="button"
@@ -322,19 +332,16 @@ function ApplyKit({
             }}
             className="h-8 rounded-lg px-3 text-slate-600 hover:bg-white"
           >
-            Not yet
+            {t('notYet')}
           </button>
         </div>
       )}
 
       {steps.step === 1 && (
         <>
-          <Card
-            title="Claude writes your resume, cover letter and form answers"
-            intro="One prompt, one reply. It knows the job, your master resume and your Application answers."
-          >
-            <ul className="flex flex-wrap gap-1.5" aria-label="What the prompt uses">
-              {facts(data, p).map(({ text, warn }) => (
+          <Card title={t('step1Title')} intro={t('step1Intro')}>
+            <ul className="flex flex-wrap gap-1.5" aria-label={t('factsLabel')}>
+              {facts(data, p, t, f).map(({ text, warn }) => (
                 <li
                   key={text}
                   className={`rounded-md px-2.5 py-1 text-xs ring-1 ring-inset ${
@@ -356,24 +363,20 @@ function ApplyKit({
                 }}
               >
                 {COPY_ICON}
-                Copy prompt and open Claude ↗
+                {t('copyOpen')}
               </button>
             </div>
             <PromptView text={data.prompt} />
-            <p className="text-slate-600">
-              Claude opens in a new tab with the prompt on your clipboard: paste it and send. When
-              Claude answers, copy its whole reply and come back for step 2.
-            </p>
+            <p className="text-slate-600">{t('step1Hint')}</p>
           </Card>
           {noAnswers && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-900">
-              Add your Application answers on “My profile” (phone, work permit, notice period,
-              salary) so Claude and the form get them.
+              {t('noAnswers')}
             </p>
           )}
           {!applied && (
             <p className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              {queued ? 'In your Apply queue.' : 'Applying to several jobs?'}
+              {queued ? t('inQueue') : t('several')}
               {queueButton}
             </p>
           )}
@@ -382,14 +385,11 @@ function ApplyKit({
 
       {steps.step === 2 && (
         <>
-          <Card
-            title="Paste Claude’s reply, get your PDF"
-            intro="In Claude, copy the whole reply (the copy button under it). One click here saves it, scores it and downloads the resume PDF."
-          >
+          <Card title={t('step2Title')} intro={t('step2Intro')}>
             <ReplyInput jobId={job.id} onSaved={steps.saved} />
           </Card>
           <p className="text-slate-600">
-            {steps.copied && (copyFailed ? 'Could not copy the prompt. ' : '✓ Prompt copied · ')}
+            {steps.copied && (copyFailed ? t('copyFailed') : t('copied'))}
             <button
               type="button"
               className={LINK}
@@ -400,11 +400,11 @@ function ApplyKit({
                 });
               }}
             >
-              Copy again
+              {t('copyAgain')}
             </button>{' '}
             ·{' '}
             <a href={CLAUDE_URL} target="_blank" rel="noreferrer" className={LINK}>
-              Open Claude ↗
+              {t('openClaude')}
             </a>
           </p>
           {copyFailed && <PromptView text={data.prompt} />}
@@ -415,21 +415,15 @@ function ApplyKit({
         <>
           {steps.pdfStarted && data.jobResume && (
             <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">
-              ✓ Your resume PDF is downloading. Find it in your Downloads folder and attach it to
-              the application.
+              {t('downloading')}
             </p>
           )}
           {data.jobResume ? (
             <SavedReply insights={data} />
           ) : (
-            <p className="rounded-lg bg-slate-50 px-3 py-2 text-slate-600">
-              No reply saved yet. Claude in Chrome can still fill in the form from your profile.
-            </p>
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-slate-600">{t('noReply')}</p>
           )}
-          <Card
-            title="Let Claude in Chrome fill in the form"
-            intro="It reads your Apply kit, fills in the posting’s form and stops before Submit. You attach the PDF, check it and press Submit."
-          >
+          <Card title={t('step3Title')} intro={t('step3Intro')}>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <button
                 type="button"
@@ -440,18 +434,21 @@ function ApplyKit({
                 }}
               >
                 {COPY_ICON}
-                {job.url ? 'Copy prompt and open posting ↗' : 'Copy prompt for Claude in Chrome'}
+                {job.url ? t('copyPosting') : t('copyChrome')}
               </button>
-              <ShowText label="Prompt for Claude in Chrome" text={chromePrompt(job)} />
+              <ShowText label={t('chromeBox')} text={chromePrompt(job)} />
               <span className="flex-1" />
               {queueButton}
             </div>
             <p className="text-xs text-slate-500">
-              Claude in Chrome reads the{' '}
-              <a href={applyKitUrl(job.id)} target="_blank" rel="noreferrer" className={LINK}>
-                Apply kit page
-              </a>
-              {queued && ' · In your Apply queue.'}
+              {t.rich('readsKit', {
+                link: (chunks) => (
+                  <a href={applyKitUrl(job.id)} target="_blank" rel="noreferrer" className={LINK}>
+                    {chunks}
+                  </a>
+                ),
+              })}
+              {queued && t('inQueueSuffix')}
             </p>
           </Card>
         </>
