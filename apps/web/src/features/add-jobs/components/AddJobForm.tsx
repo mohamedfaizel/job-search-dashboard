@@ -3,7 +3,7 @@ import { APPLICATION_STATUSES, getErrorMessage, useCreateJob, WORKPLACES } from 
 import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useJobFormat } from '@/features/jobs/useJobFormat';
+import { useJobFormat } from '../../jobs/useJobFormat';
 import { countriesIn } from '../countries';
 import type { JobFormValues } from '../schema';
 import { emptyJobForm, jobFormSchema, SENIORITIES, toCreateJobInput } from '../schema';

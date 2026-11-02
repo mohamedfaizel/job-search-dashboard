@@ -10,7 +10,7 @@ import {
 } from '@jobsearch/data';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useJobFormat } from '@/features/jobs/useJobFormat';
+import { useJobFormat } from '../../jobs/useJobFormat';
 import { countryName } from '../countries';
 import { useDateTime } from '../format';
 

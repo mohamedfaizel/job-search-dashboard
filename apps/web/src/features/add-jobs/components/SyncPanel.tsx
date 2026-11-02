@@ -10,7 +10,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { useJobFormat } from '@/features/jobs/useJobFormat';
+import { useJobFormat } from '../../jobs/useJobFormat';
 import { useDateTime } from '../format';
 import type { SyncFormValues } from '../schema';
 import {
