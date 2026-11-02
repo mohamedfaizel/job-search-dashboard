@@ -8,9 +8,11 @@ import {
   useSavedSearches,
   useSetSchedule,
 } from '@jobsearch/data';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useJobFormat } from '../../jobs/useJobFormat';
 import { countryName } from '../countries';
-import { formatDateTime, plural } from '../format';
+import { useDateTime } from '../format';
 
 interface Props {
   /** Put a saved search into the import form to edit it. */
@@ -21,31 +23,30 @@ interface Props {
 export function SavedSearches({ onLoad }: Props) {
   const { data: searches, isPending, error } = useSavedSearches();
   const { data: budget } = useImportBudget();
+  const t = useTranslations('AddJobs');
 
   return (
     <section aria-labelledby="saved-heading" className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="saved-heading" className="text-lg font-semibold text-slate-900">
-          Saved searches
+          {t('saved.heading')}
         </h2>
         {budget && (
           <p className="text-sm text-slate-600">
-            Today: {budget.used} of {plural(budget.cap, 'credit')} used. Scheduled imports stop
-            before going over.
+            {t('saved.budget', {
+              used: budget.used,
+              credits: t('credits', { count: budget.cap }),
+            })}
           </p>
         )}
       </div>
-      {isPending && <p className="text-sm text-slate-500">Loading saved searches…</p>}
+      {isPending && <p className="text-sm text-slate-500">{t('saved.loading')}</p>}
       {error && (
         <p role="alert" className="text-sm text-red-700">
-          Could not load saved searches: {getErrorMessage(error)}
+          {t('saved.loadError', { error: getErrorMessage(error) })}
         </p>
       )}
-      {searches?.length === 0 && (
-        <p className="text-sm text-slate-500">
-          None yet. Fill in the import form and use "Save search".
-        </p>
-      )}
+      {searches?.length === 0 && <p className="text-sm text-slate-500">{t('saved.none')}</p>}
       <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {searches?.map((search) => (
           <li key={search.id}>
@@ -57,24 +58,34 @@ export function SavedSearches({ onLoad }: Props) {
   );
 }
 
-/** "en" → "English", for the search summary. */
-function languageName(code: string): string {
-  return (
-    ({ en: 'English', de: 'German' } as Record<string, string | undefined>)[code] ??
-    code.toUpperCase()
-  );
+/** What a saved search looks for, in one line, in your language. */
+function useDescribeSearch() {
+  const t = useTranslations('AddJobs');
+  const locale = useLocale();
+  const f = useJobFormat();
+  return (search: SavedSearch) => describeSearch(search, t, locale, f.language);
 }
 
-export function describeSearch(search: SavedSearch): string {
+export function describeSearch(
+  search: SavedSearch,
+  t: (key: string, values?: Record<string, string | number>) => string,
+  locale: string,
+  languageName: (code: string) => string,
+): string {
   const extras = [
-    search.languages.length ? `in ${search.languages.map(languageName).join('/')}` : '',
-    search.remoteOnly ? 'remote' : '',
-    search.skipFluentGerman ? 'no fluent German' : '',
-    search.employmentTypes.join(', '),
-    search.excludeTitles.length ? `not ${search.excludeTitles.join(', ')}` : '',
-    search.minSalaryEur === null ? '' : `€${search.minSalaryEur.toLocaleString('en')}+`,
+    search.languages.length
+      ? t('saved.inLanguages', { languages: search.languages.map(languageName).join('/') })
+      : '',
+    search.remoteOnly ? t('saved.remote') : '',
+    search.skipFluentGerman ? t('saved.noFluentGerman') : '',
+    search.employmentTypes.map((type) => t(`jobTypes.${type}`)).join(', '),
+    search.excludeTitles.length
+      ? t('saved.notTitles', { titles: search.excludeTitles.join(', ') })
+      : '',
+    search.minSalaryEur === null ? '' : t('saved.minSalary', { amount: search.minSalaryEur }),
   ];
-  return [search.titles, search.skills, search.countryCodes.map(countryName), search.locations]
+  const countries = search.countryCodes.map((code) => countryName(code, locale));
+  return [search.titles, search.skills, countries, search.locations]
     .filter((part) => part.length > 0)
     .map((part) => part.join(', '))
     .concat(extras.filter(Boolean))
@@ -84,6 +95,9 @@ export function describeSearch(search: SavedSearch): string {
 function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Props['onLoad'] }) {
   const run = useRunSavedSearch();
   const remove = useDeleteSavedSearch();
+  const t = useTranslations('AddJobs');
+  const dateTime = useDateTime();
+  const describe = useDescribeSearch();
   const [confirming, setConfirming] = useState(false);
   const last = search.lastRun;
 
@@ -96,20 +110,25 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
         <h3 id={`saved-${search.id}`} className="font-medium text-slate-900">
           {search.name}
         </h3>
-        <p className="text-sm text-slate-600">{describeSearch(search)}</p>
+        <p className="text-sm text-slate-600">{describe(search)}</p>
         <p className="text-xs text-slate-500">
-          Last {search.maxAgeDays} days · up to{' '}
-          {plural(search.pageSize * search.maxPages, 'credit')} per run
-          {search.onlyNew ? ' · only new jobs' : ''}
+          {t('saved.lastDays', {
+            days: search.maxAgeDays,
+            credits: t('credits', { count: search.pageSize * search.maxPages }),
+          })}
+          {search.onlyNew ? t('saved.onlyNew') : ''}
         </p>
       </div>
 
       <p className="text-sm text-slate-700">
         {last
-          ? `Last run ${formatDateTime(last.finishedAt)}: ${last.created} new, ${last.updated} already saved${
-              last.creditsCharged === null ? '' : `, ${plural(last.creditsCharged, 'credit')}`
-            }.`
-          : 'Never run.'}
+          ? t(last.creditsCharged === null ? 'saved.lastRun' : 'saved.lastRunCredits', {
+              date: dateTime(last.finishedAt),
+              created: last.created,
+              updated: last.updated,
+              credits: t('credits', { count: last.creditsCharged ?? 0 }),
+            })
+          : t('saved.never')}
       </p>
 
       <ScheduleControls search={search} />
@@ -117,12 +136,12 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
       {run.data && <RunResult result={run.data} />}
       {run.isError && (
         <p role="alert" className="text-sm text-red-700">
-          Import failed: {getErrorMessage(run.error)}
+          {t('importFailed', { error: getErrorMessage(run.error) })}
         </p>
       )}
       {remove.isError && (
         <p role="alert" className="text-sm text-red-700">
-          Could not delete: {getErrorMessage(remove.error)}
+          {t('saved.deleteError', { error: getErrorMessage(remove.error) })}
         </p>
       )}
 
@@ -135,7 +154,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
           }}
           className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
         >
-          {run.isPending ? 'Importing…' : 'Run now'}
+          {run.isPending ? t('importing') : t('saved.runNow')}
         </button>
         {run.data?.hasMore && (
           <button
@@ -146,7 +165,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
             }}
             className="rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
-            Continue import
+            {t('continue')}
           </button>
         )}
         <button
@@ -156,7 +175,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
           }}
           className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
         >
-          Edit
+          {t('saved.edit')}
         </button>
         {confirming ? (
           <>
@@ -168,7 +187,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
               }}
               className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
             >
-              Delete "{search.name}"
+              {t('saved.deleteNamed', { name: search.name })}
             </button>
             <button
               type="button"
@@ -177,7 +196,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
               }}
               className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
             >
-              Keep
+              {t('saved.keep')}
             </button>
           </>
         ) : (
@@ -188,7 +207,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
             }}
             className="rounded-md px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
           >
-            Delete
+            {t('saved.delete')}
           </button>
         )}
       </div>
@@ -197,27 +216,24 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
 }
 
 function RunResult({ result }: { result: SyncJobsResult }) {
+  const t = useTranslations('AddJobs');
   return (
     <p role="status" className="rounded-md bg-emerald-50 p-2 text-sm text-emerald-800">
-      {result.resumed ? 'Continued: ' : 'Imported: '}
+      {result.resumed ? t('saved.continued') : t('saved.imported')}
       {result.fetched === 0
-        ? 'no new jobs this time.'
-        : `${result.created} new, ${result.updated} already in your table.`}{' '}
-      Used {plural(result.creditsCharged, 'credit')}.{result.hasMore && ' More pages are waiting.'}
+        ? t('saved.noNew')
+        : t('saved.counts', { created: result.created, updated: result.updated })}{' '}
+      {t('saved.usedCredits', { credits: t('credits', { count: result.creditsCharged }) })}
+      {result.hasMore && t('saved.morePages')}
     </p>
   );
 }
 
-const FREQUENCY_LABELS: Record<ScheduleFrequency, string> = {
-  OFF: 'Off',
-  HOURLY: 'Every hour',
-  DAILY: 'Every day',
-  WEEKDAYS: 'Weekdays (Mon–Fri)',
-};
-
 /** Pick how often the API imports this search by itself, and see what happened last time. */
 function ScheduleControls({ search }: { search: SavedSearch }) {
   const setSchedule = useSetSchedule();
+  const t = useTranslations('AddJobs.saved');
+  const dateTime = useDateTime();
   const [schedule, setFrequency] = useState(search.schedule);
   const [runAt, setRunAt] = useState(search.runAt);
   const changed = schedule !== search.schedule || runAt !== search.runAt;
@@ -225,11 +241,11 @@ function ScheduleControls({ search }: { search: SavedSearch }) {
 
   return (
     <fieldset className="space-y-2 rounded-md bg-slate-50 p-3">
-      <legend className="sr-only">Schedule for {search.name}</legend>
+      <legend className="sr-only">{t('scheduleFor', { name: search.name })}</legend>
       <div className="flex flex-wrap items-end gap-2">
         <div>
           <label className="block text-xs text-slate-600" htmlFor={`${id}-frequency`}>
-            Run automatically
+            {t('runAuto')}
           </label>
           <select
             id={`${id}-frequency`}
@@ -241,7 +257,7 @@ function ScheduleControls({ search }: { search: SavedSearch }) {
           >
             {SCHEDULE_FREQUENCIES.map((value) => (
               <option key={value} value={value}>
-                {FREQUENCY_LABELS[value]}
+                {t(`frequency.${value}`)}
               </option>
             ))}
           </select>
@@ -249,7 +265,7 @@ function ScheduleControls({ search }: { search: SavedSearch }) {
         {schedule !== 'OFF' && (
           <div>
             <label className="block text-xs text-slate-600" htmlFor={`${id}-time`}>
-              {schedule === 'HOURLY' ? 'At minute of' : 'At'}
+              {schedule === 'HOURLY' ? t('atMinute') : t('at')}
             </label>
             <input
               id={`${id}-time`}
@@ -272,17 +288,19 @@ function ScheduleControls({ search }: { search: SavedSearch }) {
             }}
             className="rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-50"
           >
-            Save schedule
+            {t('saveSchedule')}
           </button>
         )}
       </div>
       {search.schedule !== 'OFF' && search.nextRunAt && (
-        <p className="text-xs text-slate-600">Next run: {formatDateTime(search.nextRunAt)}</p>
+        <p className="text-xs text-slate-600">
+          {t('nextRun', { date: dateTime(search.nextRunAt) })}
+        </p>
       )}
       {search.scheduleNote && <p className="text-xs text-slate-600">{search.scheduleNote}</p>}
       {setSchedule.isError && (
         <p role="alert" className="text-sm text-red-700">
-          Could not save the schedule: {getErrorMessage(setSchedule.error)}
+          {t('scheduleError', { error: getErrorMessage(setSchedule.error) })}
         </p>
       )}
     </fieldset>

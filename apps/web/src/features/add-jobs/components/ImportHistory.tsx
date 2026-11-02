@@ -1,5 +1,6 @@
 import { getErrorMessage, useSyncRuns } from '@jobsearch/data';
-import { formatDateTime } from '../format';
+import { useTranslations } from 'next-intl';
+import { useDateTime } from '../format';
 
 /**
  * On phones each import is a short card: the date, then the search, then the numbers on one
@@ -12,42 +13,44 @@ const COUNT =
 /** Every import, newest first: what was searched and what it brought in. */
 export function ImportHistory() {
   const { data: runs, isPending, error } = useSyncRuns(20);
+  const t = useTranslations('AddJobs.history');
+  const dateTime = useDateTime();
 
   return (
     <section aria-labelledby="history-heading" className="space-y-3">
       <h2 id="history-heading" className="text-lg font-semibold text-slate-900">
-        Import history
+        {t('heading')}
       </h2>
-      {isPending && <p className="text-sm text-slate-500">Loading import history…</p>}
+      {isPending && <p className="text-sm text-slate-500">{t('loading')}</p>}
       {error && (
         <p role="alert" className="text-sm text-red-700">
-          Could not load import history: {getErrorMessage(error)}
+          {t('loadError', { error: getErrorMessage(error) })}
         </p>
       )}
-      {runs?.length === 0 && <p className="text-sm text-slate-500">No imports yet.</p>}
+      {runs?.length === 0 && <p className="text-sm text-slate-500">{t('none')}</p>}
       {runs && runs.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
           <table className="block min-w-full text-left text-sm sm:table">
-            <caption className="sr-only">The last 20 imports from JobsPipe</caption>
+            <caption className="sr-only">{t('caption')}</caption>
             <thead className="hidden bg-slate-50 text-slate-500 sm:table-header-group">
               <tr>
                 <th scope="col" className="px-3 py-2 font-medium">
-                  When
+                  {t('when')}
                 </th>
                 <th scope="col" className="px-3 py-2 font-medium">
-                  Search
+                  {t('search')}
                 </th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">
-                  New
+                  {t('new')}
                 </th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">
-                  Already saved
+                  {t('alreadySaved')}
                 </th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">
-                  Credits
+                  {t('credits')}
                 </th>
                 <th scope="col" className="px-3 py-2 font-medium">
-                  Pages
+                  {t('pages')}
                 </th>
               </tr>
             </thead>
@@ -60,7 +63,7 @@ export function ImportHistory() {
                   <td
                     className={`${LINE} basis-full text-xs whitespace-nowrap text-slate-500 sm:text-sm sm:text-slate-700`}
                   >
-                    {formatDateTime(run.finishedAt)}
+                    {dateTime(run.finishedAt)}
                   </td>
                   <td className={`${LINE} basis-full`}>
                     <span>
@@ -70,25 +73,25 @@ export function ImportHistory() {
                       {run.summary}
                       {run.scheduled && (
                         <span className="ml-2 rounded bg-indigo-50 px-1.5 py-0.5 text-xs text-indigo-700">
-                          Scheduled
+                          {t('scheduled')}
                         </span>
                       )}
                     </span>
                   </td>
-                  <td data-label="New" className={COUNT}>
+                  <td data-label={t('new')} className={COUNT}>
                     {run.created}
                   </td>
-                  <td data-label="Already saved" className={COUNT}>
+                  <td data-label={t('alreadySaved')} className={COUNT}>
                     {run.updated}
                   </td>
-                  <td data-label="Credits" className={COUNT}>
+                  <td data-label={t('credits')} className={COUNT}>
                     {run.creditsCharged ?? '–'}
                   </td>
                   <td className="pl-3 sm:table-cell sm:px-3 sm:py-2">
                     {run.complete ? (
-                      'All fetched'
+                      t('allFetched')
                     ) : (
-                      <span className="text-amber-700">More left</span>
+                      <span className="text-amber-700">{t('moreLeft')}</span>
                     )}
                   </td>
                 </tr>

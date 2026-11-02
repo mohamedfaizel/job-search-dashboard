@@ -48,14 +48,23 @@ export const COUNTRIES: readonly (readonly [string, string])[] = [
 ];
 
 const NAMES = new Map(COUNTRIES);
-const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
 
-/** "DE" → "Germany". Codes outside the list get the browser's name, or stay as they are. */
-export function countryName(code: string): string {
+/**
+ * "DE" → "Germany" / "Deutschland". English keeps JobsPipe's names; other languages get the
+ * browser's. A code nobody knows stays as it is.
+ */
+export function countryName(code: string, locale = 'en'): string {
   const upper = code.toUpperCase();
+  const listed = locale === 'en' ? NAMES.get(upper) : undefined;
+  if (listed) return listed;
   try {
-    return NAMES.get(upper) ?? regionNames.of(upper) ?? upper;
+    return new Intl.DisplayNames([locale], { type: 'region' }).of(upper) ?? upper;
   } catch {
     return upper;
   }
+}
+
+/** JobsPipe's countries in its own order, named in your language. */
+export function countriesIn(locale: string): (readonly [string, string])[] {
+  return COUNTRIES.map(([code]) => [code, countryName(code, locale)] as const);
 }

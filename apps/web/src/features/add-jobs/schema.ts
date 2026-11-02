@@ -10,52 +10,63 @@ export function splitList(value: string): string[] {
     .filter(Boolean);
 }
 
-const optionalText = (max: number) => z.string().trim().max(max, `Keep it under ${max} characters`);
-
-const salary = z
-  .string()
-  .trim()
-  .refine((v) => v === '' || (/^\d+$/.test(v) && Number(v) <= 10_000_000), {
-    message: 'Enter a yearly amount in USD, digits only',
-  });
+/** Turns an error key from messages/<locale>.json ("AddJobs.errors") into text. */
+export type ErrorText = (key: string, values?: Record<string, string | number>) => string;
 
 export const SENIORITIES = ['intern', 'junior', 'mid', 'senior', 'lead', 'director', 'executive'];
 
 /**
- * Validation rules for the add-job form. The form works with strings (that's what inputs
- * hold); toCreateJobInput converts them to the API's types.
+ * Validation rules for the add-job form, with error messages in your language. The form works
+ * with strings (that's what inputs hold); toCreateJobInput converts them to the API's types.
  */
-export const jobFormSchema = z
-  .object({
-    title: z.string().trim().min(1, 'Job title is required').max(300),
-    companyName: z.string().trim().min(1, 'Company is required').max(200),
-    url: z.union([z.literal(''), z.url({ message: 'Enter a full link, starting with https://' })]),
-    city: optionalText(100),
-    countryCode: z
-      .string()
-      .trim()
-      .refine((v) => v === '' || /^[A-Za-z]{2}$/.test(v), {
-        message: 'Use a 2-letter code, like US or DE',
-      }),
-    workplace: z.union([z.literal(''), z.enum(WORKPLACES)]),
-    seniority: z.string(),
-    jobFunction: optionalText(100),
-    industry: optionalText(200),
-    skills: z.string(),
-    salaryMinUsd: salary,
-    salaryMaxUsd: salary,
-    description: optionalText(50_000),
-    applicationStatus: z.enum(APPLICATION_STATUSES),
-  })
-  .refine(
-    (v) =>
-      v.salaryMinUsd === '' ||
-      v.salaryMaxUsd === '' ||
-      Number(v.salaryMinUsd) <= Number(v.salaryMaxUsd),
-    { message: 'Minimum salary can’t be above the maximum', path: ['salaryMaxUsd'] },
-  );
+export function jobFormSchema(t: ErrorText) {
+  const optionalText = (max: number) => z.string().trim().max(max, t('tooLong', { max }));
+  const salary = z
+    .string()
+    .trim()
+    .refine((v) => v === '' || (/^\d+$/.test(v) && Number(v) <= 10_000_000), {
+      message: t('salary'),
+    });
+  return z
+    .object({
+      title: z
+        .string()
+        .trim()
+        .min(1, t('titleRequired'))
+        .max(300, t('tooLong', { max: 300 })),
+      companyName: z
+        .string()
+        .trim()
+        .min(1, t('companyRequired'))
+        .max(200, t('tooLong', { max: 200 })),
+      url: z.union([z.literal(''), z.url({ message: t('url') })]),
+      city: optionalText(100),
+      countryCode: z
+        .string()
+        .trim()
+        .refine((v) => v === '' || /^[A-Za-z]{2}$/.test(v), {
+          message: t('countryCode'),
+        }),
+      workplace: z.union([z.literal(''), z.enum(WORKPLACES)]),
+      seniority: z.string(),
+      jobFunction: optionalText(100),
+      industry: optionalText(200),
+      skills: z.string(),
+      salaryMinUsd: salary,
+      salaryMaxUsd: salary,
+      description: optionalText(50_000),
+      applicationStatus: z.enum(APPLICATION_STATUSES),
+    })
+    .refine(
+      (v) =>
+        v.salaryMinUsd === '' ||
+        v.salaryMaxUsd === '' ||
+        Number(v.salaryMinUsd) <= Number(v.salaryMaxUsd),
+      { message: t('salaryOrder'), path: ['salaryMaxUsd'] },
+    );
+}
 
-export type JobFormValues = z.infer<typeof jobFormSchema>;
+export type JobFormValues = z.infer<ReturnType<typeof jobFormSchema>>;
 
 export const emptyJobForm: JobFormValues = {
   title: '',
@@ -102,43 +113,42 @@ export function toCreateJobInput(values: JobFormValues): CreateJobInput {
   return input;
 }
 
-const positiveInt = (max: number) =>
-  z
-    .string()
-    .trim()
-    .refine((v) => /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= max, {
-      message: `Enter a whole number from 1 to ${max}`,
-    });
+/** The import form's rules, with error messages in your language. */
+export function syncFormSchema(t: ErrorText) {
+  const positiveInt = (max: number) =>
+    z
+      .string()
+      .trim()
+      .refine((v) => /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= max, {
+        message: t('wholeNumber', { max }),
+      });
+  return z.object({
+    titles: z.string().refine((v) => splitList(v).length > 0, t('titles')),
+    skills: z.string(),
+    countryCodes: z
+      .string()
+      .refine((v) => splitList(v).every((c) => /^[A-Za-z]{2}$/.test(c)), t('countryCodes')),
+    locations: z.string(),
+    languages: z.array(z.string()),
+    skipFluentGerman: z.boolean(),
+    remoteOnly: z.boolean(),
+    excludeTitles: z.string(),
+    employmentTypes: z.array(z.enum(EMPLOYMENT_TYPES)),
+    minSalaryEur: z
+      .string()
+      .trim()
+      .refine((v) => v === '' || (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 1_000_000), {
+        message: t('minSalary'),
+      }),
+    maxAgeDays: positiveInt(90),
+    // JobsPipe caps the page size by plan (Free 25, Builder/Growth 100, Scale/Business 500).
+    pageSize: positiveInt(500),
+    maxPages: positiveInt(50),
+    onlyNew: z.boolean(),
+  });
+}
 
-export const syncFormSchema = z.object({
-  titles: z.string().refine((v) => splitList(v).length > 0, 'Enter at least one job title'),
-  skills: z.string(),
-  countryCodes: z
-    .string()
-    .refine(
-      (v) => splitList(v).every((c) => /^[A-Za-z]{2}$/.test(c)),
-      'Use 2-letter codes, like US, DE',
-    ),
-  locations: z.string(),
-  languages: z.array(z.string()),
-  skipFluentGerman: z.boolean(),
-  remoteOnly: z.boolean(),
-  excludeTitles: z.string(),
-  employmentTypes: z.array(z.enum(EMPLOYMENT_TYPES)),
-  minSalaryEur: z
-    .string()
-    .trim()
-    .refine((v) => v === '' || (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 1_000_000), {
-      message: 'Enter euros a year, like 60000, or leave it empty',
-    }),
-  maxAgeDays: positiveInt(90),
-  // JobsPipe caps the page size by plan (Free 25, Builder/Growth 100, Scale/Business 500).
-  pageSize: positiveInt(500),
-  maxPages: positiveInt(50),
-  onlyNew: z.boolean(),
-});
-
-export type SyncFormValues = z.infer<typeof syncFormSchema>;
+export type SyncFormValues = z.infer<ReturnType<typeof syncFormSchema>>;
 
 export const defaultSyncForm: SyncFormValues = {
   titles: 'frontend',

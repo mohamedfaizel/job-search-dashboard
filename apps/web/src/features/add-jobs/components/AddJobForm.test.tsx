@@ -59,4 +59,13 @@ describe('AddJobForm', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('Could not save the job: salaryMinUsd');
     });
   });
+
+  it('shows its errors in German when you pick Deutsch', async () => {
+    renderWithData(<AddJobForm />, 'de');
+    await userEvent.click(screen.getByRole('button', { name: 'Job speichern' }));
+
+    expect(await screen.findByText('Jobtitel ist Pflicht')).toBeInTheDocument();
+    expect(screen.getByText('Firma ist Pflicht')).toBeInTheDocument();
+    expect(requests).toHaveLength(0);
+  });
 });

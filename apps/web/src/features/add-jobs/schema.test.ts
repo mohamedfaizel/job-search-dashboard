@@ -10,6 +10,9 @@ import {
 } from './schema';
 import { SAVED } from './test/server';
 
+/** Error messages as their keys, so tests don't depend on the wording. */
+const KEY = (key: string) => key;
+
 describe('splitList', () => {
   it('splits on commas and drops blanks', () => {
     expect(splitList(' react, node.js ,, ')).toEqual(['react', 'node.js']);
@@ -20,13 +23,13 @@ describe('jobFormSchema', () => {
   const valid = { ...emptyJobForm, title: 'Dev', companyName: 'Acme' };
 
   it('needs a title and a company', () => {
-    const result = jobFormSchema.safeParse(emptyJobForm);
+    const result = jobFormSchema(KEY).safeParse(emptyJobForm);
     expect(result.success).toBe(false);
     expect(result.error?.issues.map((i) => i.path[0])).toEqual(['title', 'companyName']);
   });
 
   it('rejects a minimum salary above the maximum', () => {
-    const result = jobFormSchema.safeParse({
+    const result = jobFormSchema(KEY).safeParse({
       ...valid,
       salaryMinUsd: '200000',
       salaryMaxUsd: '100000',
@@ -35,7 +38,11 @@ describe('jobFormSchema', () => {
   });
 
   it('rejects bad links and country codes', () => {
-    const result = jobFormSchema.safeParse({ ...valid, url: 'example.com', countryCode: 'USA' });
+    const result = jobFormSchema(KEY).safeParse({
+      ...valid,
+      url: 'example.com',
+      countryCode: 'USA',
+    });
     expect(result.error?.issues.map((i) => i.path[0])).toEqual(['url', 'countryCode']);
   });
 });
@@ -130,7 +137,7 @@ describe('toSyncJobsInput', () => {
   });
 
   it('refuses a salary that is not a whole number', () => {
-    const result = syncFormSchema.safeParse({ ...defaultSyncForm, minSalaryEur: '60k' });
+    const result = syncFormSchema(KEY).safeParse({ ...defaultSyncForm, minSalaryEur: '60k' });
     expect(result.success).toBe(false);
   });
 });

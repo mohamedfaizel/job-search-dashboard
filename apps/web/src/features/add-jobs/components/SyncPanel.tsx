@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { EmploymentType, SavedSearch } from '@jobsearch/data';
+import type { SavedSearch } from '@jobsearch/data';
 import {
   EMPLOYMENT_TYPES,
   getErrorMessage,
@@ -7,9 +7,11 @@ import {
   useSaveSearch,
   useSyncJobs,
 } from '@jobsearch/data';
-import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { formatDateTime, plural } from '../format';
+import { useJobFormat } from '../../jobs/useJobFormat';
+import { useDateTime } from '../format';
 import type { SyncFormValues } from '../schema';
 import {
   defaultSyncForm,
@@ -21,17 +23,8 @@ import {
 import { CountrySelect } from './CountrySelect';
 import { Field, inputClass } from './Field';
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'de', label: 'German' },
-];
-
-const JOB_TYPE_LABELS: Record<EmploymentType, string> = {
-  'full-time': 'Full-time',
-  'part-time': 'Part-time',
-  contract: 'Contract',
-  internship: 'Internship',
-};
+/** The ad languages you can filter by, named in your language. */
+const LANGUAGES = ['en', 'de'] as const;
 
 const CHECKBOX = 'size-4 rounded border-slate-300 text-indigo-600';
 
@@ -47,6 +40,10 @@ interface Props {
 
 /** Pull fresh postings from JobsPipe into the database, and save searches to reuse. */
 export function SyncPanel({ loaded = null }: Props) {
+  const t = useTranslations('AddJobs');
+  const f = useJobFormat();
+  const dateTime = useDateTime();
+  const schema = useMemo(() => syncFormSchema((key, values) => t(`errors.${key}`, values)), [t]);
   const sync = useSyncJobs();
   const save = useSaveSearch();
   const [name, setName] = useState(loaded?.name ?? '');
@@ -63,7 +60,7 @@ export function SyncPanel({ loaded = null }: Props) {
     setValue,
     formState: { errors },
   } = useForm<SyncFormValues>({
-    resolver: zodResolver(syncFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: loaded ? savedSearchToForm(loaded) : defaultSyncForm,
   });
 
@@ -110,7 +107,7 @@ export function SyncPanel({ loaded = null }: Props) {
 
   const onSave = handleSubmit((values) => {
     if (!name.trim()) {
-      setNameError('Give the search a name');
+      setNameError(t('errors.name'));
       return;
     }
     setNameError(null);
@@ -148,12 +145,9 @@ export function SyncPanel({ loaded = null }: Props) {
     >
       <div>
         <h2 id="sync-heading" className="text-lg font-semibold text-slate-900">
-          Import from JobsPipe
+          {t('sync.heading')}
         </h2>
-        <p className="text-sm text-slate-600">
-          Each job fetched uses one JobsPipe credit. Jobs you already have are updated, never added
-          twice, and fetching them again in the same month is free.
-        </p>
+        <p className="text-sm text-slate-600">{t('sync.intro')}</p>
       </div>
 
       {hasProfile && (
@@ -162,28 +156,28 @@ export function SyncPanel({ loaded = null }: Props) {
           onClick={fillFromProfile}
           className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
         >
-          Fill from my profile
+          {t('sync.fillProfile')}
         </button>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Field
-          label="Job titles"
+          label={t('sync.titles')}
           htmlFor="sync-titles"
           error={errors.titles?.message}
-          hint="Comma separated"
+          hint={t('sync.commaSeparated')}
           required
         >
           <input {...register('titles')} {...a11y('titles')} className={inputClass} />
         </Field>
-        <Field label="Skills" htmlFor="sync-skills" hint="Optional, comma separated">
+        <Field label={t('sync.skills')} htmlFor="sync-skills" hint={t('sync.skillsHint')}>
           <input {...register('skills')} {...a11y('skills')} className={inputClass} />
         </Field>
         <Field
-          label="Countries"
+          label={t('sync.countries')}
           htmlFor="sync-countryCodes"
           error={errors.countryCodes?.message}
-          hint="Pick one or more, or leave it on Worldwide"
+          hint={t('sync.countriesHint')}
         >
           <Controller
             control={control}
@@ -199,11 +193,7 @@ export function SyncPanel({ loaded = null }: Props) {
             )}
           />
         </Field>
-        <Field
-          label="Cities or regions"
-          htmlFor="sync-locations"
-          hint="Optional, comma separated, e.g. Berlin, Bavaria"
-        >
+        <Field label={t('sync.locations')} htmlFor="sync-locations" hint={t('sync.locationsHint')}>
           <input {...register('locations')} {...a11y('locations')} className={inputClass} />
         </Field>
       </div>
@@ -217,10 +207,10 @@ export function SyncPanel({ loaded = null }: Props) {
           className="rounded-md border border-slate-200 px-3 py-2"
         >
           <summary className="cursor-pointer text-sm font-medium text-slate-700">
-            More filters{' '}
+            {t('sync.moreFilters')}{' '}
             {activeFilters > 0 && (
               <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
-                {activeFilters} on
+                {t('sync.filtersOn', { count: activeFilters })}
               </span>
             )}
           </summary>
@@ -230,26 +220,25 @@ export function SyncPanel({ loaded = null }: Props) {
               name="languages"
               render={({ field }) => (
                 <fieldset className="space-y-1">
-                  <legend className="text-sm font-medium text-slate-700">Ad written in</legend>
+                  <legend className="text-sm font-medium text-slate-700">
+                    {t('sync.adLanguage')}
+                  </legend>
                   <div className="flex flex-wrap gap-x-4 gap-y-1">
-                    {LANGUAGES.map((lang) => (
-                      <label key={lang.code} className="flex items-center gap-2 text-sm">
+                    {LANGUAGES.map((code) => (
+                      <label key={code} className="flex items-center gap-2 text-sm">
                         <input
                           type="checkbox"
-                          checked={field.value.includes(lang.code)}
+                          checked={field.value.includes(code)}
                           onChange={() => {
-                            field.onChange(toggle(field.value, lang.code));
+                            field.onChange(toggle(field.value, code));
                           }}
                           className={CHECKBOX}
                         />
-                        {lang.label}
+                        {f.language(code)}
                       </label>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500">
-                    None ticked = any language. Many German jobs are posted in English, and ads with
-                    no language yet are kept.
-                  </p>
+                  <p className="text-xs text-slate-500">{t('sync.languagesHint')}</p>
                 </fieldset>
               )}
             />
@@ -262,14 +251,8 @@ export function SyncPanel({ loaded = null }: Props) {
                   className={`mt-0.5 ${CHECKBOX}`}
                 />
                 <span>
-                  <span className="font-medium text-slate-800">
-                    Skip ads that need fluent German
-                  </span>
-                  <span className="block text-xs text-slate-500">
-                    Catches German ads asking for fließende, verhandlungssichere or C1
-                    Deutschkenntnisse. English ads saying “fluent German” get the German tag in Job
-                    posts instead.
-                  </span>
+                  <span className="font-medium text-slate-800">{t('sync.skipGerman')}</span>
+                  <span className="block text-xs text-slate-500">{t('sync.skipGermanHint')}</span>
                 </span>
               </label>
               <label className="flex items-start gap-2 text-sm">
@@ -278,14 +261,14 @@ export function SyncPanel({ loaded = null }: Props) {
                   {...register('remoteOnly')}
                   className={`mt-0.5 ${CHECKBOX}`}
                 />
-                <span className="font-medium text-slate-800">Remote only</span>
+                <span className="font-medium text-slate-800">{t('sync.remoteOnly')}</span>
               </label>
             </div>
 
             <Field
-              label="Skip titles with"
+              label={t('sync.excludeTitles')}
               htmlFor="sync-excludeTitles"
-              hint="Comma separated, e.g. Werkstudent, Praktikum, Intern. Matches part of a word."
+              hint={t('sync.excludeHint')}
             >
               <input
                 {...register('excludeTitles')}
@@ -299,7 +282,9 @@ export function SyncPanel({ loaded = null }: Props) {
               name="employmentTypes"
               render={({ field }) => (
                 <fieldset className="space-y-1">
-                  <legend className="text-sm font-medium text-slate-700">Job type</legend>
+                  <legend className="text-sm font-medium text-slate-700">
+                    {t('sync.jobType')}
+                  </legend>
                   <div className="flex flex-wrap gap-x-4 gap-y-1">
                     {EMPLOYMENT_TYPES.map((type) => (
                       <label key={type} className="flex items-center gap-2 text-sm">
@@ -311,26 +296,24 @@ export function SyncPanel({ loaded = null }: Props) {
                           }}
                           className={CHECKBOX}
                         />
-                        {JOB_TYPE_LABELS[type]}
+                        {t(`jobTypes.${type}`)}
                       </label>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500">
-                    None ticked = any type. Ads that don’t say are kept.
-                  </p>
+                  <p className="text-xs text-slate-500">{t('sync.jobTypeHint')}</p>
                 </fieldset>
               )}
             />
 
             <Field
-              label="Minimum salary (€ a year)"
+              label={t('sync.minSalary')}
               htmlFor="sync-minSalaryEur"
               error={errors.minSalaryEur?.message}
-              hint="Only about half of ads post a salary, and the rest are skipped. Leave empty to keep them."
+              hint={t('sync.minSalaryHint')}
             >
               <input
                 inputMode="numeric"
-                placeholder="e.g. 60000"
+                placeholder={t('sync.minSalaryPlaceholder')}
                 {...register('minSalaryEur')}
                 {...a11y('minSalaryEur')}
                 className={inputClass}
@@ -347,15 +330,18 @@ export function SyncPanel({ loaded = null }: Props) {
           className="rounded-md border border-slate-200 px-3 py-2"
         >
           <summary className="cursor-pointer text-sm font-medium text-slate-700">
-            Page settings{' '}
+            {t('sync.pageSettings')}{' '}
             <span className="font-normal text-slate-500">
-              · {maxAgeDays} days old at most · {pageSize} per page · {maxPages}{' '}
-              {Number(maxPages) === 1 ? 'page' : 'pages'}
+              {t('sync.pageSummary', {
+                days: maxAgeDays,
+                size: pageSize,
+                pages: Number(maxPages) || 0,
+              })}
             </span>
           </summary>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <Field
-              label="Max age (days)"
+              label={t('sync.maxAge')}
               htmlFor="sync-maxAgeDays"
               error={errors.maxAgeDays?.message}
             >
@@ -367,10 +353,10 @@ export function SyncPanel({ loaded = null }: Props) {
               />
             </Field>
             <Field
-              label="Jobs per page"
+              label={t('sync.pageSize')}
               htmlFor="sync-pageSize"
               error={errors.pageSize?.message}
-              hint="Free plan: max 25"
+              hint={t('sync.pageSizeHint')}
             >
               <input
                 inputMode="numeric"
@@ -379,7 +365,11 @@ export function SyncPanel({ loaded = null }: Props) {
                 className={inputClass}
               />
             </Field>
-            <Field label="Max pages" htmlFor="sync-maxPages" error={errors.maxPages?.message}>
+            <Field
+              label={t('sync.maxPages')}
+              htmlFor="sync-maxPages"
+              error={errors.maxPages?.message}
+            >
               <input
                 inputMode="numeric"
                 {...register('maxPages')}
@@ -401,10 +391,10 @@ export function SyncPanel({ loaded = null }: Props) {
         />
         <div className="text-sm">
           <label htmlFor="sync-onlyNew" className="font-medium text-slate-800">
-            Only jobs new since my last import
+            {t('sync.onlyNew')}
           </label>
           <p id="sync-onlyNew-hint" className="text-slate-500">
-            Skips postings this search already brought in. Untick to fetch everything again.
+            {t('sync.onlyNewHint')}
           </p>
         </div>
       </div>
@@ -415,15 +405,15 @@ export function SyncPanel({ loaded = null }: Props) {
         className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
       >
         {sync.isPending
-          ? 'Importing…'
+          ? t('importing')
           : Number.isFinite(maxCredits)
-            ? `Import (up to ${maxCredits} credits)`
-            : 'Import'}
+            ? t('sync.importUpTo', { count: maxCredits })
+            : t('sync.import')}
       </button>
 
       {sync.isError && (
         <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-          Import failed: {getErrorMessage(sync.error)}
+          {t('importFailed', { error: getErrorMessage(sync.error) })}
         </p>
       )}
       {sync.data && (
@@ -432,33 +422,34 @@ export function SyncPanel({ loaded = null }: Props) {
           className="space-y-1 rounded-md bg-emerald-50 p-3 text-sm text-emerald-800"
         >
           <p>
-            {sync.data.resumed && 'Continued the last import. '}
+            {sync.data.resumed && t('sync.resumed')}
             {sync.data.newSince && !sync.data.resumed
-              ? `Looked for jobs found since ${formatDateTime(sync.data.newSince)}. `
+              ? t('sync.since', { date: dateTime(sync.data.newSince) })
               : ''}
             {sync.data.fetched === 0
-              ? 'No new jobs this time.'
-              : `Fetched ${plural(sync.data.fetched, 'job')}: ${sync.data.created} new` +
-                (sync.data.updated > 0
-                  ? `, ${sync.data.updated} already in your table (updated, not added twice).`
-                  : '.')}
+              ? t('sync.noNew')
+              : t(sync.data.updated > 0 ? 'sync.fetchedUpdated' : 'sync.fetched', {
+                  jobs: t('jobs', { count: sync.data.fetched }),
+                  created: sync.data.created,
+                  updated: sync.data.updated,
+                })}
           </p>
           {sync.data.totalAvailable !== null && !sync.data.resumed && (
-            <p>{plural(sync.data.totalAvailable, 'job')} match this search in total.</p>
+            <p>{t('sync.total', { jobs: t('jobs', { count: sync.data.totalAvailable }) })}</p>
           )}
           <p>
-            Used {plural(sync.data.creditsCharged, 'credit')}
+            {t('sync.used', { credits: t('credits', { count: sync.data.creditsCharged }) })}
             {sync.data.jobsAlreadyPaid > 0 &&
-              ` (${plural(sync.data.jobsAlreadyPaid, 'job')} already paid this month, so free)`}
+              t('sync.alreadyPaid', { jobs: t('jobs', { count: sync.data.jobsAlreadyPaid }) })}
             {sync.data.creditsRemaining !== null &&
-              `, ${sync.data.creditsRemaining.toLocaleString()} left`}
+              t('sync.left', { count: sync.data.creditsRemaining })}
             .
           </p>
         </div>
       )}
       {sync.data?.hasMore && lastInput && (
         <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          <p>More jobs are waiting on the next pages.</p>
+          <p>{t('sync.moreWaiting')}</p>
           <button
             type="button"
             disabled={sync.isPending}
@@ -467,24 +458,24 @@ export function SyncPanel({ loaded = null }: Props) {
             }}
             className="rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
-            Continue import (up to {plural(continueCredits, 'credit')})
+            {t('sync.continueUpTo', { credits: t('credits', { count: continueCredits }) })}
           </button>
         </div>
       )}
 
       <div className="space-y-2 border-t border-slate-200 pt-4">
         <Field
-          label="Save this search as"
+          label={t('sync.saveAs')}
           htmlFor="save-name"
           error={nameError ?? undefined}
-          hint="Run it again in one click from Saved searches"
+          hint={t('sync.saveAsHint')}
           className="max-w-2xl"
         >
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               id="save-name"
               value={name}
-              placeholder="e.g. Frontend in Berlin"
+              placeholder={t('sync.namePlaceholder')}
               aria-invalid={nameError ? true : undefined}
               aria-describedby={nameError ? 'save-name-error' : undefined}
               onChange={(e) => {
@@ -500,16 +491,18 @@ export function SyncPanel({ loaded = null }: Props) {
               }}
               className="shrink-0 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
             >
-              {updating ? 'Update saved search' : 'Save search'}
+              {updating ? t('sync.update') : t('sync.save')}
             </button>
           </div>
         </Field>
         {save.isError && (
           <p role="alert" className="text-sm text-red-700">
-            Could not save: {getErrorMessage(save.error)}
+            {t('sync.saveError', { error: getErrorMessage(save.error) })}
           </p>
         )}
-        {save.isSuccess && <p className="text-sm text-emerald-700">Saved "{save.data.name}".</p>}
+        {save.isSuccess && (
+          <p className="text-sm text-emerald-700">{t('sync.saved', { name: save.data.name })}</p>
+        )}
       </div>
     </form>
   );

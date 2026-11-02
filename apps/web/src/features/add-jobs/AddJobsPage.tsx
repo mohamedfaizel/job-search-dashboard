@@ -2,6 +2,7 @@
 
 import type { SavedSearch } from '@jobsearch/data';
 import { getErrorMessage, useMe, useSavedSearches } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { AddJobForm } from './components/AddJobForm';
 import { ImportHistory } from './components/ImportHistory';
@@ -14,7 +15,8 @@ type TabId = 'saved' | 'import' | 'manual';
 /** Add jobs: saved searches, imports from JobsPipe and adding a job by hand. */
 export function AddJobsPage() {
   const { data: me, isPending, error } = useMe();
-  if (isPending) return <p className="text-sm text-slate-500">Loading…</p>;
+  const t = useTranslations('AddJobs');
+  if (isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
   if (error) {
     return (
       <p role="alert" className="text-sm text-red-700">
@@ -27,8 +29,8 @@ export function AddJobsPage() {
   if (me?.role !== 'ADMIN') {
     return (
       <section className="mx-auto max-w-xl rounded-lg border border-slate-200 bg-white p-6">
-        <h1 className="text-lg font-semibold">Add jobs</h1>
-        <p className="mt-2 text-sm text-slate-600">Only the admin can add or import jobs.</p>
+        <h1 className="text-lg font-semibold">{t('title')}</h1>
+        <p className="mt-2 text-sm text-slate-600">{t('adminOnly')}</p>
       </section>
     );
   }
@@ -36,6 +38,7 @@ export function AddJobsPage() {
 }
 
 function AddJobs() {
+  const t = useTranslations('AddJobs');
   const [tab, setTab] = useState<TabId>('saved');
   // "Edit" on a saved search puts it into the import form. The key remounts the form with it.
   const [loaded, setLoaded] = useState<SavedSearch | null>(null);
@@ -45,17 +48,19 @@ function AddJobs() {
   return (
     <section aria-labelledby="add-jobs-title" className="space-y-6">
       <h1 id="add-jobs-title" className="text-xl font-semibold text-slate-900">
-        Add jobs
+        {t('title')}
       </h1>
       <Tabs
-        label="Ways to add jobs"
+        label={t('tabsLabel')}
         selected={tab}
         onSelect={setTab}
         tabs={[
           {
             id: 'saved',
-            label: searches ? `Saved searches (${searches.length})` : 'Saved searches',
-            short: searches ? `Saved (${searches.length})` : 'Saved',
+            label: searches ? t('tabs.savedCount', { count: searches.length }) : t('tabs.saved'),
+            short: searches
+              ? t('tabs.savedShortCount', { count: searches.length })
+              : t('tabs.savedShort'),
             panel: (
               <SavedSearches
                 onLoad={(search) => {
@@ -68,8 +73,8 @@ function AddJobs() {
           },
           {
             id: 'import',
-            label: 'Import from JobsPipe',
-            short: 'Import',
+            label: t('tabs.import'),
+            short: t('tabs.importShort'),
             panel: (
               <div>
                 <SyncPanel key={formKey} loaded={loaded} />
@@ -78,8 +83,8 @@ function AddJobs() {
           },
           {
             id: 'manual',
-            label: 'Add a job by hand',
-            short: 'By hand',
+            label: t('tabs.manual'),
+            short: t('tabs.manualShort'),
             panel: (
               <div>
                 <AddJobForm />
