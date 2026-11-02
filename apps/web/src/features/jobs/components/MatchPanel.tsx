@@ -1,6 +1,7 @@
 import type { JobMatch } from '@jobsearch/data';
-import { getErrorMessage, useJobMatch, useMatchJob } from '@jobsearch/data';
+import { useJobMatch, useMatchJob } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
+import { AiRunSection } from './AiRunSection';
 import { Badge } from './Badge';
 import type { BadgeTone } from './Badge';
 
@@ -30,71 +31,28 @@ const BAR: Record<BadgeTone, string> = {
   pink: 'bg-pink-500',
 };
 
-const BUTTON =
-  'rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-60';
-
 /**
  * The resume match inside the job popup: a button to start one, progress while Resume-Matcher
  * works (a minute or two), and the ATS score with what to improve once it is done.
  */
 export function MatchPanel({ jobId }: { jobId: string }) {
-  const match = useJobMatch(jobId);
+  const query = useJobMatch(jobId);
   const start = useMatchJob();
-  const t = useTranslations('Jobs.match');
-  const data = match.data;
-  const pending = start.isPending || data?.status === 'PENDING';
-
-  const startButton = (label: string) => (
-    <button
-      type="button"
-      disabled={pending}
-      onClick={() => {
-        start.mutate(jobId);
-      }}
-      className={BUTTON}
-    >
-      {label}
-    </button>
-  );
-
   return (
-    <section
-      aria-labelledby="match-title"
-      className="space-y-3 border-b border-slate-200 px-5 py-4"
+    <AiRunSection
+      namespace="Jobs.match"
+      titleId="match-title"
+      loading={query.isPending}
+      data={query.data}
+      start={{
+        ...start,
+        mutate: () => {
+          start.mutate(jobId);
+        },
+      }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 id="match-title" className="text-sm font-semibold text-slate-900">
-          {t('title')}
-        </h3>
-        {data?.status === 'READY' && startButton(t('again'))}
-      </div>
-
-      {/* aria-live announces "Matching…" and the result to screen readers. */}
-      <div aria-live="polite" className="space-y-3">
-        {match.isPending ? (
-          <p className="text-sm text-slate-500">{t('loading')}</p>
-        ) : pending ? (
-          <p className="text-sm text-slate-700">{t('pending')}</p>
-        ) : !data ? (
-          <div className="flex flex-wrap items-center gap-3">
-            {startButton(t('start'))}
-            <span className="text-xs text-slate-500">{t('startHint')}</span>
-          </div>
-        ) : data.status === 'FAILED' ? (
-          <div className="space-y-2">
-            <p className="text-sm text-red-700">{data.error ?? t('failed')}</p>
-            {startButton(t('tryAgain'))}
-          </div>
-        ) : (
-          <MatchResult match={data} />
-        )}
-        {start.isError && (
-          <p role="alert" className="text-sm text-red-700">
-            {getErrorMessage(start.error)}
-          </p>
-        )}
-      </div>
-    </section>
+      {(run) => <MatchResult match={run} />}
+    </AiRunSection>
   );
 }
 

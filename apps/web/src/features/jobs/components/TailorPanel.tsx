@@ -1,14 +1,8 @@
 import type { TailoredResume } from '@jobsearch/data';
-import {
-  getErrorMessage,
-  tailoredPdfUrl,
-  useTailoredResume,
-  useTailorResume,
-} from '@jobsearch/data';
+import { tailoredPdfUrl, useTailoredResume, useTailorResume } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
+import { AiRunSection } from './AiRunSection';
 
-const BUTTON =
-  'rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-60';
 const LINK =
   'rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700';
 
@@ -17,63 +11,23 @@ const LINK =
  * cover letter (a minute or three), then both download as PDFs.
  */
 export function TailorPanel({ jobId }: { jobId: string }) {
-  const tailored = useTailoredResume(jobId);
+  const query = useTailoredResume(jobId);
   const start = useTailorResume();
-  const t = useTranslations('Jobs.tailor');
-  const data = tailored.data;
-  const pending = start.isPending || data?.status === 'PENDING';
-
-  const startButton = (label: string) => (
-    <button
-      type="button"
-      disabled={pending}
-      onClick={() => {
-        start.mutate(jobId);
-      }}
-      className={BUTTON}
-    >
-      {label}
-    </button>
-  );
-
   return (
-    <section
-      aria-labelledby="tailor-title"
-      className="space-y-3 border-b border-slate-200 px-5 py-4"
+    <AiRunSection
+      namespace="Jobs.tailor"
+      titleId="tailor-title"
+      loading={query.isPending}
+      data={query.data}
+      start={{
+        ...start,
+        mutate: () => {
+          start.mutate(jobId);
+        },
+      }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 id="tailor-title" className="text-sm font-semibold text-slate-900">
-          {t('title')}
-        </h3>
-        {data?.status === 'READY' && startButton(t('again'))}
-      </div>
-
-      {/* aria-live announces progress and the result to screen readers. */}
-      <div aria-live="polite" className="space-y-3">
-        {tailored.isPending ? (
-          <p className="text-sm text-slate-500">{t('loading')}</p>
-        ) : pending ? (
-          <p className="text-sm text-slate-700">{t('pending')}</p>
-        ) : !data ? (
-          <div className="flex flex-wrap items-center gap-3">
-            {startButton(t('start'))}
-            <span className="text-xs text-slate-500">{t('startHint')}</span>
-          </div>
-        ) : data.status === 'FAILED' ? (
-          <div className="space-y-2">
-            <p className="text-sm text-red-700">{data.error ?? t('failed')}</p>
-            {startButton(t('tryAgain'))}
-          </div>
-        ) : (
-          <TailorResult jobId={jobId} tailored={data} />
-        )}
-        {start.isError && (
-          <p role="alert" className="text-sm text-red-700">
-            {getErrorMessage(start.error)}
-          </p>
-        )}
-      </div>
-    </section>
+      {(run) => <TailorResult jobId={jobId} tailored={run} />}
+    </AiRunSection>
   );
 }
 
