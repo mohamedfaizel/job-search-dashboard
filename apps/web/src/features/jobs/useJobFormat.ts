@@ -64,6 +64,19 @@ export function useJobFormat() {
       /** "de" → "German" / "Deutsch". */
       language: (code: string) => displayName(languages, code.toLowerCase()),
 
+      /**
+       * The German level a job asks for: "B2" when the ad names it, "about C1" when it is read
+       * from words like "fließend", "" when the ad says nothing about the level.
+       */
+      germanLevel: (insights: { germanLevel: string | null; germanLevelEstimated: boolean }) => {
+        if (!insights.germanLevel) return '';
+        return insights.germanLevelEstimated
+          ? t('format.aboutLevel', { level: insights.germanLevel })
+          : insights.germanLevel;
+      },
+      /** Tooltip for an estimated German level. */
+      estimatedLevelHint: t('format.estimatedLevelHint'),
+
       /** "Senior Engineer at Acme", so a screen reader knows which row a button belongs to. */
       jobName: (job: { title: string; company: { name: string } }) =>
         t('jobName', { title: job.title, company: job.company.name }),

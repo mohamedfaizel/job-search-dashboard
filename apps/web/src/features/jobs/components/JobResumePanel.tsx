@@ -9,9 +9,11 @@ import {
   useSetHaveTerm,
   useUploadJobResume,
 } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import type { DragEvent } from 'react';
 import { useRef, useState } from 'react';
 import { replyParts, startDownload } from '../reply';
+import { useJobFormat } from '../useJobFormat';
 import { CopyText } from './CopyText';
 import { HaveChip, MissingChip, ScoreRing } from './InsightsPanel';
 
@@ -39,6 +41,7 @@ export function ReplyInput({
 }) {
   const upload = useUploadJobResume();
   const save = useSaveJobResumeText();
+  const t = useTranslations('Jobs.reply');
   const [text, setText] = useState('');
   const [clipboardBlocked, setClipboardBlocked] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -114,18 +117,11 @@ export function ReplyInput({
             <rect x="8" y="3" width="8" height="4" rx="1" />
             <path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2" />
           </svg>
-          {save.isPending ? 'Making your PDF…' : 'Paste reply and get PDF'}
+          {save.isPending ? t('making') : t('paste')}
         </button>
-        <span className="text-sm text-slate-600">
-          One click: saves the reply, downloads the PDF.
-        </span>
+        <span className="text-sm text-slate-600">{t('pasteHint')}</span>
       </div>
-      {clipboardBlocked && (
-        <p className="text-xs text-slate-500">
-          The browser didn’t let us read the clipboard. Paste the reply in the box below instead
-          (Ctrl+V).
-        </p>
-      )}
+      {clipboardBlocked && <p className="text-xs text-slate-500">{t('blocked')}</p>}
 
       <form
         className="space-y-2"
@@ -149,20 +145,20 @@ export function ReplyInput({
             setDragging(false);
           }}
           onDrop={onDrop}
-          aria-label="Claude’s reply"
-          placeholder="Or paste Claude’s whole reply here, or drop a PDF, Word, text or Markdown file"
+          aria-label={t('boxLabel')}
+          placeholder={t('placeholder')}
           rows={7}
           className={`w-full rounded-xl border-[1.5px] p-3 text-sm ${
             dragging ? 'border-dashed border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-white'
           }`}
         />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <ul aria-label="Found in the reply" className="flex flex-wrap gap-1.5 text-xs">
+          <ul aria-label={t('foundLabel')} className="flex flex-wrap gap-1.5 text-xs">
             {(
               [
-                ['Resume', parts.resume],
-                ['Cover letter', parts.coverLetter],
-                ['Form answers', parts.formAnswers],
+                [t('resume'), parts.resume],
+                [t('coverLetter'), parts.coverLetter],
+                [t('formAnswers'), parts.formAnswers],
               ] as const
             ).map(([label, found]) => (
               <li
@@ -174,7 +170,7 @@ export function ReplyInput({
                 }`}
               >
                 {found ? '✓' : '–'} {label}
-                <span className="sr-only">{found ? ' found' : ' not found'}</span>
+                <span className="sr-only">{found ? t('found') : t('notFound')}</span>
               </li>
             ))}
           </ul>
@@ -184,19 +180,19 @@ export function ReplyInput({
             disabled={busy || !text.trim()}
             className="h-9 rounded-lg bg-indigo-600 px-3 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
-            {save.isPending ? 'Saving…' : 'Save and download PDF'}
+            {save.isPending ? t('saving') : t('saveDownload')}
           </button>
         </div>
       </form>
 
       <p className="text-sm text-slate-600">
-        Have a file instead?{' '}
+        {t('haveFile')}{' '}
         <label className={`${LINK} cursor-pointer`}>
-          {upload.isPending ? 'Uploading…' : 'Upload a file'}
+          {upload.isPending ? t('uploading') : t('upload')}
           <input
             type="file"
             accept={ACCEPT}
-            aria-label="Upload resume for this job"
+            aria-label={t('uploadLabel')}
             className="sr-only"
             disabled={busy}
             onChange={(e) => {
@@ -206,11 +202,11 @@ export function ReplyInput({
             }}
           />
         </label>{' '}
-        (PDF, Word, text or Markdown).
+        {t('fileTypes')}
       </p>
       {error && (
         <p role="alert" className="text-red-700">
-          Could not save it: {getErrorMessage(error)}
+          {t('saveError', { error: getErrorMessage(error) })}
         </p>
       )}
     </div>
@@ -248,6 +244,8 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
   const style = useDocumentStyle();
   const [replacing, setReplacing] = useState(false);
   const [template, setTemplate] = useState<string | null>(null);
+  const t = useTranslations('Jobs.reply');
+  const f = useJobFormat();
   const chosen = template ?? style.data?.resumeTemplate ?? 'classic';
   if (!jobResume) return null;
   const base = jobResumeUrl(jobId);
@@ -260,7 +258,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
   const skills = new Set(insights.skills.map((t) => t.term));
 
   return (
-    <section aria-label="Your resume for this job" className="space-y-3">
+    <section aria-label={t('sectionLabel')} className="space-y-3">
       {jobResume.score !== null && (
         <div
           className={`flex items-center gap-4 rounded-xl border px-4 py-3 ${
@@ -269,19 +267,17 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
               : 'border-slate-200 bg-slate-50'
           }`}
         >
-          <div className="flex flex-col items-center" aria-label="Score before and after">
+          <div className="flex flex-col items-center" aria-label={t('beforeAfter')}>
             <ScoreRing score={jobResume.score} size={52} />
             <span className="text-xs text-slate-600">
-              was {before === null ? 'n/a' : `${String(before)}%`}
+              {t('was', { before: before === null ? '–' : `${String(before)}%` })}
             </span>
           </div>
           <div className="min-w-0 flex-1 space-y-1.5">
             {jobResume.nowCovered.length > 0 && (
               <>
-                <p className="text-sm font-semibold text-emerald-900">
-                  The resume for this job now covers
-                </p>
-                <ul className="flex flex-wrap gap-1.5" aria-label="Now covered">
+                <p className="text-sm font-semibold text-emerald-900">{t('nowCovers')}</p>
+                <ul className="flex flex-wrap gap-1.5" aria-label={t('nowCoveredLabel')}>
                   {jobResume.nowCovered.map((term) => (
                     <li
                       key={term}
@@ -295,8 +291,8 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
             )}
             {jobResume.stillMissing.length > 0 && (
               <div className="space-y-1">
-                <p className="text-xs text-slate-600">Still missing</p>
-                <ul className="flex flex-wrap gap-1.5" aria-label="Still missing">
+                <p className="text-xs text-slate-600">{t('stillMissing')}</p>
+                <ul className="flex flex-wrap gap-1.5" aria-label={t('stillMissing')}>
                   {jobResume.stillMissing.map((term) => (
                     <li key={term}>
                       {yours.has(term) ? (
@@ -330,32 +326,31 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
 
       {have.error && (
         <p role="alert" className="text-red-700">
-          Could not change that: {getErrorMessage(have.error)}
+          {t('changeError', { error: getErrorMessage(have.error) })}
         </p>
       )}
 
       {leftOut.length > 0 && (
         <div className="rounded-xl border border-sky-200 bg-sky-50/70 px-4 py-3">
           <CopyText
-            label="Copy updated prompt"
+            label={t('copyUpdated')}
             text={insights.prompt}
-            copiedHint="Paste it into Claude, then Replace this reply with the new one."
-            boxLabel="Updated prompt"
+            copiedHint={t('updatedHint')}
+            boxLabel={t('updatedBox')}
             primary
           >
             <span className="text-sm text-sky-900">
-              Claude’s resume leaves out {leftOut.join(', ')}, which you have. The updated prompt
-              says {leftOut.length === 1 ? 'it' : 'they'} must be in.
+              {t('leftOut', { terms: leftOut.join(', '), count: leftOut.length })}
             </span>
           </CopyText>
         </div>
       )}
 
       <div className="grid gap-2 sm:grid-cols-2">
-        <FileRow name="Resume (PDF)">
+        <FileRow name={t('resumePdf')}>
           {templates.data?.rendererAvailable && (
             <select
-              aria-label="Resume template"
+              aria-label={t('templateLabel')}
               value={chosen}
               onChange={(e) => {
                 setTemplate(e.target.value);
@@ -374,28 +369,28 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
             download
             className={LINK}
           >
-            Download PDF
+            {t('downloadPdf')}
           </a>
           {templates.data?.wordTemplate?.usable && (
             <a
               href={`${base}/resume.docx`}
               download
               className={LINK}
-              title={`In the layout of ${templates.data.wordTemplate.fileName}, to edit in Word`}
+              title={t('wordHint', { file: templates.data.wordTemplate.fileName })}
             >
-              Word
+              {t('word')}
             </a>
           )}
           {jobResume.fileName && (
             <a href={base} download className={LINK} title={jobResume.fileName}>
-              Original
+              {t('original')}
             </a>
           )}
         </FileRow>
         {jobResume.coverLetter && (
-          <FileRow name="Cover letter">
+          <FileRow name={t('coverLetter')}>
             <a href={`${base}/cover-letter.pdf`} download className={LINK}>
-              PDF
+              {t('pdf')}
             </a>
           </FileRow>
         )}
@@ -404,25 +399,25 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
       <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
         {jobResume.coverLetter && (
           <CopyText
-            label="Copy cover letter"
+            label={t('copyCover')}
             text={jobResume.coverLetter}
-            copiedHint="Paste it where the form asks for one."
-            boxLabel="Cover letter"
+            copiedHint={t('coverHint')}
+            boxLabel={t('coverLetter')}
           />
         )}
         {jobResume.formAnswers && (
           <CopyText
-            label="Copy form answers"
+            label={t('copyAnswers')}
             text={jobResume.formAnswers}
-            copiedHint="Claude in Chrome reads them from the Apply kit page too."
-            boxLabel="Form answers"
+            copiedHint={t('answersHint')}
+            boxLabel={t('formAnswers')}
           />
         )}
       </div>
 
       <p className="text-xs text-slate-500">
-        {jobResume.fileName ?? 'Pasted text'} · saved{' '}
-        {new Date(jobResume.updatedAt).toLocaleDateString()} ·{' '}
+        {jobResume.fileName ?? t('pastedText')} ·{' '}
+        {t('saved', { date: f.date(jobResume.updatedAt) })} ·{' '}
         <button
           type="button"
           className={LINK}
@@ -431,7 +426,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
             setReplacing((open) => !open);
           }}
         >
-          Replace
+          {t('replace')}
         </button>{' '}
         ·{' '}
         <button
@@ -442,12 +437,12 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
             remove.mutate(jobId);
           }}
         >
-          Delete
+          {t('delete')}
         </button>
       </p>
       {remove.error && (
         <p role="alert" className="text-red-700">
-          Could not delete it: {getErrorMessage(remove.error)}
+          {t('deleteError', { error: getErrorMessage(remove.error) })}
         </p>
       )}
       {replacing && (
