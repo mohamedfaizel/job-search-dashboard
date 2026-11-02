@@ -39,6 +39,54 @@ export function isUnauthenticated(error: unknown): boolean {
   );
 }
 
+/**
+ * A failed upload (these go over plain HTTP, not GraphQL). `code` and `params` are the API's
+ * error code and its values; the message is the English fallback.
+ */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly code?: string,
+    readonly params?: Record<string, string | number>,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+/** Reads the error body of a failed upload: `{ message, code?, params? }`. */
+export function apiErrorFrom(body: unknown, fallback: string): ApiError {
+  const { message, code, params } = (body ?? {}) as Record<string, unknown>;
+  return new ApiError(
+    typeof message === 'string' ? message : fallback,
+    typeof code === 'string' ? code : undefined,
+    typeof params === 'object' && params !== null
+      ? (params as Record<string, string | number>)
+      : undefined,
+  );
+}
+
+/** What the API said went wrong, as a code the web app can translate. */
+export interface ErrorCode {
+  code: string;
+  params: Record<string, string | number>;
+}
+
+/** The API's error code for a failed request, or null for errors that have none. */
+export function getErrorCode(error: unknown): ErrorCode | null {
+  if (error instanceof ApiError) {
+    return error.code ? { code: error.code, params: error.params ?? {} } : null;
+  }
+  if (error instanceof ClientError) {
+    const extensions = error.response.errors?.[0]?.extensions as
+      Record<string, unknown> | undefined;
+    const code = extensions?.['apiCode'];
+    if (typeof code !== 'string') return null;
+    return { code, params: (extensions?.['apiParams'] ?? {}) as ErrorCode['params'] };
+  }
+  return null;
+}
+
 /** Turns a failed request into something you can show the user. */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ClientError) {

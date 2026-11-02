@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { meKey } from './auth';
-import { API_URL, graphqlClient } from './client';
+import { API_URL, apiErrorFrom, graphqlClient } from './client';
 import { queryKeys } from './hooks';
 import { jobInsightsPrefix } from './insights';
 import {
@@ -71,13 +71,8 @@ async function uploadResumeFile(url: string, file: File): Promise<Profile> {
   body.append('file', file);
   // No Content-Type header: the browser sets it, with the boundary between the parts.
   const res = await fetch(url, { method: 'POST', body, credentials: 'include' });
-  const json = (await res.json().catch(() => null)) as (Profile & { message?: unknown }) | null;
-  if (!res.ok) {
-    const message = json?.message;
-    throw new Error(
-      typeof message === 'string' ? message : `Upload failed (${String(res.status)})`,
-    );
-  }
+  const json = (await res.json().catch(() => null)) as Profile | null;
+  if (!res.ok) throw apiErrorFrom(json, `Upload failed (${String(res.status)})`);
   return json as Profile;
 }
 

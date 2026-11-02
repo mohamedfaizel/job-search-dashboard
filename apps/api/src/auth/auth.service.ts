@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { hash, verify } from '@node-rs/argon2';
+import { apiError } from '../common/api-error';
 import type { User } from '../generated/prisma/client';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -27,7 +28,7 @@ export class AuthService {
 
   async signUp(input: SignUpInput): Promise<User> {
     if (this.config.get<string>('ALLOW_SIGNUP') === 'false') {
-      throw new ForbiddenException('Sign-up is closed on this server');
+      throw apiError(ForbiddenException, 'SIGNUP_CLOSED', 'Sign-up is closed on this server');
     }
     const passwordHash = await hash(input.password);
     try {
@@ -40,7 +41,11 @@ export class AuthService {
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new BadRequestException('An account with this email already exists');
+        throw apiError(
+          BadRequestException,
+          'EMAIL_TAKEN',
+          'An account with this email already exists',
+        );
       }
       throw error;
     }
@@ -51,7 +56,8 @@ export class AuthService {
     // Same message and similar timing whether the email or the password is wrong, so the
     // login form can't be used to find out who has an account.
     const ok = await verify(user?.passwordHash ?? (await DUMMY_HASH), input.password);
-    if (!user || !ok) throw new UnauthorizedException('Wrong email or password');
+    if (!user || !ok)
+      throw apiError(UnauthorizedException, 'WRONG_LOGIN', 'Wrong email or password');
     return user;
   }
 
@@ -62,7 +68,7 @@ export class AuthService {
   /** Saves the language you picked, so the app shows it on every device. */
   setLocale(id: number, locale: string): Promise<User> {
     if (!(LOCALES as readonly string[]).includes(locale)) {
-      throw new BadRequestException(`Pick one of: ${LOCALES.join(', ')}`);
+      throw apiError(BadRequestException, 'LOCALE_UNKNOWN', `Pick one of: ${LOCALES.join(', ')}`);
     }
     return this.prisma.user.update({ where: { id }, data: { locale } });
   }

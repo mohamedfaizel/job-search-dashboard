@@ -10,7 +10,7 @@ import { TEST_DATABASE_URL } from './env';
 
 export interface GqlResult<T> {
   data?: T;
-  errors?: { message: string }[];
+  errors?: { message: string; extensions?: Record<string, unknown> }[];
 }
 
 type Gql = <T = Record<string, unknown>>(

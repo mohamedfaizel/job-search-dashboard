@@ -1,5 +1,6 @@
 import type { OnApplicationBootstrap } from '@nestjs/common';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import type { Prisma } from '../generated/prisma/client';
 import { ApplicationStatus, JobSource } from '../generated/prisma/enums';
 import { FitService } from '../insights/fit.service';
@@ -166,7 +167,7 @@ export class JobsService implements OnApplicationBootstrap {
 
   async findOne(userId: number, id: string) {
     const job = await this.prisma.job.findUnique({ where: { id }, include: forUser(userId) });
-    if (!job) throw new NotFoundException(`Job ${id} not found`);
+    if (!job) throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${id} not found`, { id });
     return withStatus(job);
   }
 
@@ -239,7 +240,11 @@ export class JobsService implements OnApplicationBootstrap {
   async create(userId: number, input: CreateJobInput) {
     const { companyName, salaryMinUsd, salaryMaxUsd, applicationStatus, ...rest } = input;
     if (salaryMinUsd !== undefined && salaryMaxUsd !== undefined && salaryMinUsd > salaryMaxUsd) {
-      throw new BadRequestException('salaryMinUsd cannot be greater than salaryMaxUsd');
+      throw apiError(
+        BadRequestException,
+        'SALARY_ORDER',
+        'salaryMinUsd cannot be greater than salaryMaxUsd',
+      );
     }
 
     const job = await this.prisma.job.create({

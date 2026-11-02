@@ -1,12 +1,8 @@
 import type { Profile } from '@jobsearch/data';
-import {
-  getErrorMessage,
-  useResumeMatcherStatus,
-  useSyncResumeToMatcher,
-  useUploadResume,
-} from '@jobsearch/data';
+import { useResumeMatcherStatus, useSyncResumeToMatcher, useUploadResume } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPT =
@@ -19,6 +15,7 @@ interface Props {
 
 /** Picks a PDF or Word file and sends it straight away; the API turns it into text. */
 export function ResumeUpload({ fileName, onUploaded }: Props) {
+  const errorText = useErrorText();
   const t = useTranslations('Profile.resume');
   const upload = useUploadResume();
   const matcher = useResumeMatcherStatus();
@@ -70,7 +67,7 @@ export function ResumeUpload({ fileName, onUploaded }: Props) {
       )}
       {(tooBig || upload.isError) && (
         <p role="alert" className="text-sm text-red-700">
-          {tooBig ? t('tooBig') : getErrorMessage(upload.error)}
+          {tooBig ? t('tooBig') : errorText(upload.error)}
         </p>
       )}
     </div>

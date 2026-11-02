@@ -1,5 +1,6 @@
 export * from './api/types';
-export { API_URL, getErrorMessage, isUnauthenticated } from './api/client';
+export { API_URL, ApiError, getErrorCode, getErrorMessage, isUnauthenticated } from './api/client';
+export type { ErrorCode } from './api/client';
 export { meKey, useLogIn, useLogOut, useMe, useSetLocale, useSignUp } from './api/auth';
 export {
   jobInsightsKey,

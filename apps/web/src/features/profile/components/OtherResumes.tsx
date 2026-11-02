@@ -1,6 +1,5 @@
 import type { LanguageResume, Profile } from '@jobsearch/data';
 import {
-  getErrorMessage,
   RESUME_LANGUAGES,
   useDeleteLanguageResume,
   useSaveLanguageResume,
@@ -9,6 +8,7 @@ import {
 } from '@jobsearch/data';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { inputClass } from './Field';
 import { useLanguageName } from './useLanguageName';
 
@@ -32,6 +32,7 @@ function UploadButton({
   label?: string;
   onDone?: () => void;
 }) {
+  const errorText = useErrorText();
   const t = useTranslations('Profile.other');
   const nameOf = useLanguageName();
   const upload = useUploadLanguageResume();
@@ -63,7 +64,7 @@ function UploadButton({
       </label>
       {(tooBig || upload.isError) && (
         <span role="alert" className="text-sm text-red-700">
-          {tooBig ? t('tooBig') : getErrorMessage(upload.error)}
+          {tooBig ? t('tooBig') : errorText(upload.error)}
         </span>
       )}
     </span>
@@ -83,6 +84,7 @@ function SavedResume({
   justSaved: boolean;
   onSaved: OnSaved;
 }) {
+  const errorText = useErrorText();
   const t = useTranslations('Profile.other');
   const format = useFormatter();
   const save = useSaveLanguageResume();
@@ -162,7 +164,7 @@ function SavedResume({
       </div>
       {(save.error ?? remove.error) && (
         <p role="alert" className="text-sm text-red-700">
-          {getErrorMessage(save.error ?? remove.error)}
+          {errorText(save.error ?? remove.error)}
         </p>
       )}
     </div>
@@ -174,6 +176,7 @@ function SavedResume({
  * facts and language levels kept), then paste the answer or upload a file you already have.
  */
 function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSaved }) {
+  const errorText = useErrorText();
   const [language, setLanguage] = useState(languages.includes('de') ? 'de' : (languages[0] ?? ''));
   const [text, setText] = useState('');
   const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
@@ -241,7 +244,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
           )}
           {prompt.isError && (
             <p role="alert" className="text-red-700">
-              {getErrorMessage(prompt.error)}
+              {errorText(prompt.error)}
             </p>
           )}
           {prompt.data && (
@@ -301,7 +304,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
           <p className="text-xs text-slate-500">{t('uploadSaves')}</p>
           {save.isError && (
             <p role="alert" className="text-red-700">
-              {getErrorMessage(save.error)}
+              {errorText(save.error)}
             </p>
           )}
         </li>

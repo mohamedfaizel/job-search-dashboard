@@ -1,6 +1,5 @@
 import type { JobInsights } from '@jobsearch/data';
 import {
-  getErrorMessage,
   jobResumeUrl,
   useDeleteJobResume,
   useSaveJobResumeText,
@@ -12,6 +11,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { DragEvent } from 'react';
 import { useRef, useState } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { replyParts, startDownload } from '../reply';
 import { useJobFormat } from '../useJobFormat';
 import { CopyText } from './CopyText';
@@ -39,6 +39,7 @@ export function ReplyInput({
   /** pdf is true when the resume PDF started downloading. */
   onSaved: (result: { pdf: boolean }) => void;
 }) {
+  const errorText = useErrorText();
   const upload = useUploadJobResume();
   const save = useSaveJobResumeText();
   const t = useTranslations('Jobs.reply');
@@ -206,7 +207,7 @@ export function ReplyInput({
       </p>
       {error && (
         <p role="alert" className="text-red-700">
-          {t('saveError', { error: getErrorMessage(error) })}
+          {t('saveError', { error: errorText(error) })}
         </p>
       )}
     </div>
@@ -237,6 +238,7 @@ function FileRow({ name, children }: { name: string; children: React.ReactNode }
  * after), the files to attach, and the cover letter and form answers to copy.
  */
 export function SavedReply({ insights }: { insights: JobInsights }) {
+  const errorText = useErrorText();
   const { jobId, jobResume, score: before } = insights;
   const remove = useDeleteJobResume();
   const have = useSetHaveTerm();
@@ -326,7 +328,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
 
       {have.error && (
         <p role="alert" className="text-red-700">
-          {t('changeError', { error: getErrorMessage(have.error) })}
+          {t('changeError', { error: errorText(have.error) })}
         </p>
       )}
 
@@ -442,7 +444,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
       </p>
       {remove.error && (
         <p role="alert" className="text-red-700">
-          {t('deleteError', { error: getErrorMessage(remove.error) })}
+          {t('deleteError', { error: errorText(remove.error) })}
         </p>
       )}
       {replacing && (

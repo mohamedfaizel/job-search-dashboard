@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
+import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
 import type { DocumentFile } from '../documents/documents.service';
 import { MAX_RESUME_BYTES } from '../profile/profile.controller';
@@ -46,9 +47,13 @@ export class JobResumeController {
     @Param('jobId') jobId: string,
     @UploadedFile() file: UploadedResume | undefined,
   ): Promise<JobInsightsModel> {
-    if (!file) throw new BadRequestException('Choose a file to upload');
+    if (!file) throw apiError(BadRequestException, 'FILE_REQUIRED', 'Choose a file to upload');
     if (!isText(file) && !isDocument(file)) {
-      throw new BadRequestException('Upload a PDF, Word (.docx), text or Markdown file');
+      throw apiError(
+        BadRequestException,
+        'JOB_RESUME_FILE_TYPE',
+        'Upload a PDF, Word (.docx), text or Markdown file',
+      );
     }
     const text = isText(file) ? file.buffer.toString('utf8') : await extractResumeText(file);
     return this.insights.saveJobResume(user.id, jobId, text, {

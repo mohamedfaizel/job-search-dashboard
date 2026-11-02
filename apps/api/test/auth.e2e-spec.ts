@@ -115,6 +115,11 @@ describe('auth', () => {
       input: { email: 'nobody@example.com', password: MOHAMED.password },
     });
     expect(wrongPassword.body.errors?.[0]?.message).toBe('Wrong email or password');
+    // The web app shows the code in the language you picked; the message is the fallback.
+    expect(wrongPassword.body.errors?.[0]?.extensions).toMatchObject({
+      apiCode: 'WRONG_LOGIN',
+      apiParams: {},
+    });
     expect(unknownEmail.body.errors?.[0]?.message).toBe('Wrong email or password');
 
     const gql = browser();

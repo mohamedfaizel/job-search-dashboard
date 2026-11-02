@@ -6,7 +6,6 @@ import type {
 } from '@jobsearch/data';
 import {
   documentPreviewUrl,
-  getErrorMessage,
   PHOTO_URL,
   useDeletePhoto,
   useDocumentStyle,
@@ -17,6 +16,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 
 const BUTTON =
   'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
@@ -84,6 +84,7 @@ function TemplateCard({
 }
 
 function Photo({ style }: { style: DocumentStyle }) {
+  const errorText = useErrorText();
   const t = useTranslations('Profile.design');
   const upload = useUploadPhoto();
   const remove = useDeletePhoto();
@@ -140,7 +141,7 @@ function Photo({ style }: { style: DocumentStyle }) {
       <span className="text-xs text-slate-500">{t('photoHint')}</span>
       {(tooBig || error) && (
         <p role="alert" className="basis-full text-sm text-red-700">
-          {tooBig ? t('photoTooBig') : getErrorMessage(error)}
+          {tooBig ? t('photoTooBig') : errorText(error)}
         </p>
       )}
     </div>
@@ -184,6 +185,7 @@ function WordFileNote({ word }: { word: WordTemplate | null }) {
 
 /** Edits a copy of the saved style; Save sends it. */
 function DesignForm({ saved }: { saved: DocumentStyle }) {
+  const errorText = useErrorText();
   const t = useTranslations('Profile.design');
   const templates = useDocumentTemplates();
   const update = useUpdateDocumentStyle();
@@ -370,7 +372,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
         )}
         {update.isError && (
           <p role="alert" className="text-sm text-red-700">
-            {t('saveFailed', { error: getErrorMessage(update.error) })}
+            {t('saveFailed', { error: errorText(update.error) })}
           </p>
         )}
       </div>
@@ -384,6 +386,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
  * PDF properties name only you.
  */
 export function DocumentDesign() {
+  const errorText = useErrorText();
   const t = useTranslations('Profile.design');
   const style = useDocumentStyle();
   return (
@@ -401,7 +404,7 @@ export function DocumentDesign() {
         <p className="text-sm text-slate-500">{t('loading')}</p>
       ) : style.isError ? (
         <p role="alert" className="text-sm text-red-700">
-          {getErrorMessage(style.error)}
+          {errorText(style.error)}
         </p>
       ) : (
         <DesignForm saved={style.data} />

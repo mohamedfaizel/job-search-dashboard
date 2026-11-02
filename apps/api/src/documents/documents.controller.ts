@@ -15,6 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
+import { apiError } from '../common/api-error';
 import { send } from '../insights/job-resume.controller';
 import type { UploadedResume } from '../profile/resume-text';
 import type { DocumentStyleModel } from './documents.model';
@@ -43,7 +44,7 @@ export class DocumentsController {
     @CurrentUser() user: SessionUser,
     @UploadedFile() file: UploadedResume | undefined,
   ): Promise<DocumentStyleModel> {
-    if (!file) throw new BadRequestException('Choose a photo to upload');
+    if (!file) throw apiError(BadRequestException, 'PHOTO_REQUIRED', 'Choose a photo to upload');
     return this.documents.savePhoto(user.id, file.mimetype, file.buffer);
   }
 

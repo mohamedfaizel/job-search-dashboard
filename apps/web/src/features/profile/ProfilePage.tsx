@@ -1,8 +1,9 @@
 'use client';
 
-import { getErrorMessage, useMe, useMyProfile } from '@jobsearch/data';
+import { useMe, useMyProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useErrorText } from '../../i18n/useErrorText';
 import { DocumentDesign } from './components/DocumentDesign';
 import { OtherResumes } from './components/OtherResumes';
 import type { ProfileTab } from './components/ProfileForm';
@@ -31,6 +32,7 @@ function savedTab(): ProfileTab {
 
 /** The My profile screen: your details, resumes, document design and Resume-Matcher. */
 export function ProfilePage() {
+  const errorText = useErrorText();
   const t = useTranslations('Profile');
   const tabs: TabItem<ProfileTab>[] = TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) }));
   const { data: profile, isPending, error } = useMyProfile();
@@ -56,7 +58,7 @@ export function ProfilePage() {
       ) : error ? (
         <>
           <p role="alert" className="text-sm text-red-700">
-            {t('loadFailed', { error: getErrorMessage(error) })}
+            {t('loadFailed', { error: errorText(error) })}
           </p>
           <ResumeMatcherStatus />
         </>

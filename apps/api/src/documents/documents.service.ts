@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import { germanRequirement } from '../insights/german';
 import { pdfFileName, textToPdf } from '../insights/pdf';
 import { detectLanguage } from '../insights/text';
@@ -242,7 +243,9 @@ export class DocumentsService {
   ): Promise<Buffer> {
     const file = await this.wordFile(userId, props.language);
     if (!file) {
-      throw new BadRequestException(
+      throw apiError(
+        BadRequestException,
+        'DOCX_TEMPLATE_FIRST',
         'Upload your master resume as a Word (.docx) file on “My profile” to use it as the template',
       );
     }
@@ -252,7 +255,9 @@ export class DocumentsService {
         knownHeadlines: [file.headline, parseResume(file.text, '').headline ?? ''],
       });
     } catch (error) {
-      if (error instanceof DocxTemplateError) throw new BadRequestException(error.message);
+      if (error instanceof DocxTemplateError) {
+        throw apiError(BadRequestException, 'DOCX_NOT_WORD', error.message);
+      }
       throw error;
     }
   }
@@ -276,8 +281,10 @@ export class DocumentsService {
   }
 
   async savePhoto(userId: number, type: string, bytes: Buffer): Promise<DocumentStyleModel> {
-    if (!PHOTO_TYPES[type]) throw new BadRequestException('Upload a JPEG or PNG photo');
-    if (bytes.length > MAX_PHOTO_BYTES) throw new BadRequestException('The photo is over 2 MB');
+    if (!PHOTO_TYPES[type])
+      throw apiError(BadRequestException, 'PHOTO_TYPE', 'Upload a JPEG or PNG photo');
+    if (bytes.length > MAX_PHOTO_BYTES)
+      throw apiError(BadRequestException, 'PHOTO_TOO_BIG', 'The photo is over 2 MB');
     const data = { photo: new Uint8Array(bytes), photoType: type };
     await this.prisma.documentStyle.upsert({
       where: { userId },
@@ -301,7 +308,8 @@ export class DocumentsService {
       where: { userId },
       select: { photo: true, photoType: true },
     });
-    if (!row?.photo || !row.photoType) throw new NotFoundException('No photo uploaded');
+    if (!row?.photo || !row.photoType)
+      throw apiError(NotFoundException, 'PHOTO_MISSING', 'No photo uploaded');
     return {
       name: `photo.${PHOTO_TYPES[row.photoType] ?? 'jpg'}`,
       type: row.photoType,
@@ -352,9 +360,9 @@ export class DocumentsService {
     ]);
     const text = kind === 'resume' ? row?.text : row?.coverLetter;
     if (!text?.trim() || !job) {
-      throw new NotFoundException(
-        kind === 'resume' ? 'No resume saved for this job' : 'No cover letter saved for this job',
-      );
+      throw kind === 'resume'
+        ? apiError(NotFoundException, 'JOB_RESUME_MISSING', 'No resume saved for this job')
+        : apiError(NotFoundException, 'COVER_LETTER_MISSING', 'No cover letter saved for this job');
     }
     // The language it is written in; a text too short to tell is in the job's resume language.
     const jobLanguage = job.language ?? detectLanguage(job.description);

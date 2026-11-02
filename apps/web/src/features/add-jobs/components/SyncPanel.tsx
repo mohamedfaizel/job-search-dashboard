@@ -1,15 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { SavedSearch } from '@jobsearch/data';
-import {
-  EMPLOYMENT_TYPES,
-  getErrorMessage,
-  useMyProfile,
-  useSaveSearch,
-  useSyncJobs,
-} from '@jobsearch/data';
+import { EMPLOYMENT_TYPES, useMyProfile, useSaveSearch, useSyncJobs } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
 import { useDateTime } from '../format';
 import type { SyncFormValues } from '../schema';
@@ -40,6 +35,7 @@ interface Props {
 
 /** Pull fresh postings from JobsPipe into the database, and save searches to reuse. */
 export function SyncPanel({ loaded = null }: Props) {
+  const errorText = useErrorText();
   const t = useTranslations('AddJobs');
   const f = useJobFormat();
   const dateTime = useDateTime();
@@ -413,7 +409,7 @@ export function SyncPanel({ loaded = null }: Props) {
 
       {sync.isError && (
         <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-          {t('importFailed', { error: getErrorMessage(sync.error) })}
+          {t('importFailed', { error: errorText(sync.error) })}
         </p>
       )}
       {sync.data && (
@@ -497,7 +493,7 @@ export function SyncPanel({ loaded = null }: Props) {
         </Field>
         {save.isError && (
           <p role="alert" className="text-sm text-red-700">
-            {t('sync.saveError', { error: getErrorMessage(save.error) })}
+            {t('sync.saveError', { error: errorText(save.error) })}
           </p>
         )}
         {save.isSuccess && (

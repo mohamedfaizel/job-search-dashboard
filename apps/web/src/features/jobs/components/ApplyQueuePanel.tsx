@@ -2,7 +2,6 @@ import type { ApplyQueueItem } from '@jobsearch/data';
 import {
   APPLY_QUEUE_URL,
   applyKitUrl,
-  getErrorMessage,
   useApplyQueue,
   useApplyQueuePrompt,
   useChangeApplyQueue,
@@ -12,6 +11,7 @@ import {
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { CLAUDE_URL } from './ApplyKitPanel';
 import { CopyText } from './CopyText';
 
@@ -35,6 +35,7 @@ const SECONDARY =
  * to 5 jobs, then paste Claude's whole reply back and each job gets its own part.
  */
 function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: string) => void }) {
+  const errorText = useErrorText();
   const t = useTranslations('Jobs.queue');
   const prompt = useApplyQueuePrompt();
   const save = useSaveApplyQueueReply();
@@ -163,8 +164,8 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
       {(prompt.isError || save.isError) && (
         <p role="alert" className="text-red-700">
           {save.isError
-            ? t('saveError', { error: getErrorMessage(save.error) })
-            : t('promptError', { error: getErrorMessage(prompt.error) })}
+            ? t('saveError', { error: errorText(save.error) })
+            : t('promptError', { error: errorText(prompt.error) })}
         </p>
       )}
     </div>
@@ -176,6 +177,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
  * before Submit on each), then you check each tab, send it and mark the job Applied here.
  */
 export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => void }) {
+  const errorText = useErrorText();
   const t = useTranslations('Jobs.queue');
   const queue = useApplyQueue();
   const change = useChangeApplyQueue();
@@ -329,7 +331,7 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
       {(change.isError || move.isError || updateStatus.isError) && (
         <p role="alert" className="text-red-700">
           {t('changeError', {
-            error: getErrorMessage(change.error ?? move.error ?? updateStatus.error),
+            error: errorText(change.error ?? move.error ?? updateStatus.error),
           })}
         </p>
       )}

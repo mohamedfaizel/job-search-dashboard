@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { extractRawText } from 'mammoth';
 import { extractText, getDocumentProxy } from 'unpdf';
+import { apiError } from '../common/api-error';
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
@@ -30,11 +31,13 @@ export async function extractResumeText(file: UploadedResume): Promise<string> {
   } else if (file.mimetype === DOCX || name.endsWith('.docx')) {
     text = (await extractRawText({ buffer: file.buffer })).value;
   } else {
-    throw new BadRequestException('Upload a PDF or Word (.docx) file');
+    throw apiError(BadRequestException, 'RESUME_FILE_TYPE', 'Upload a PDF or Word (.docx) file');
   }
   const tidied = tidy(text);
   if (!tidied) {
-    throw new BadRequestException(
+    throw apiError(
+      BadRequestException,
+      'RESUME_NO_TEXT',
       "Couldn't find any text in this file. Is it a scanned image? Paste the text instead.",
     );
   }

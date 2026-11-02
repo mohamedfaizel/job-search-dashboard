@@ -9,6 +9,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
+import { apiError } from '../common/api-error';
 import type { ProfileModel } from './profile.model';
 import { ProfileService } from './profile.service';
 import type { UploadedResume } from './resume-text';
@@ -30,7 +31,7 @@ export class ProfileController {
     @CurrentUser() user: SessionUser,
     @UploadedFile() file: UploadedResume | undefined,
   ): Promise<ProfileModel> {
-    if (!file) throw new BadRequestException('Choose a file to upload');
+    if (!file) throw apiError(BadRequestException, 'FILE_REQUIRED', 'Choose a file to upload');
     const text = await extractResumeText(file);
     return this.profiles.saveResume(
       user.id,
@@ -47,7 +48,7 @@ export class ProfileController {
     @Param('language') language: string,
     @UploadedFile() file: UploadedResume | undefined,
   ): Promise<ProfileModel> {
-    if (!file) throw new BadRequestException('Choose a file to upload');
+    if (!file) throw apiError(BadRequestException, 'FILE_REQUIRED', 'Choose a file to upload');
     const text = await extractResumeText(file);
     return this.profiles.saveLanguageResume(user.id, language, text, {
       name: file.originalname,

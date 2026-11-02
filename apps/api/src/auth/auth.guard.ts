@@ -2,6 +2,7 @@ import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { apiError } from '../common/api-error';
 import type { Role } from '../generated/prisma/client';
 import type { SessionUser } from './auth.decorators';
 import { IS_PUBLIC, requestOf, ROLES } from './auth.decorators';
@@ -25,11 +26,11 @@ export class AuthGuard implements CanActivate {
 
     const targets = [context.getHandler(), context.getClass()];
     if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets)) return true;
-    if (!req.user) throw new UnauthorizedException('Please log in');
+    if (!req.user) throw apiError(UnauthorizedException, 'LOGIN_REQUIRED', 'Please log in');
 
     const roles = this.reflector.getAllAndOverride<Role[] | undefined>(ROLES, targets);
     if (roles && !roles.includes(req.user.role)) {
-      throw new ForbiddenException('Only the admin can do this');
+      throw apiError(ForbiddenException, 'ADMIN_ONLY', 'Only the admin can do this');
     }
     return true;
   }

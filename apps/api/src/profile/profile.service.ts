@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import type { LanguageResume, Profile } from '../generated/prisma/client';
 import { FitService } from '../insights/fit.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -210,14 +211,22 @@ export class ProfileService {
       select: { resumeLanguage: true },
     });
     if ((main?.resumeLanguage ?? 'en') === language) {
-      throw new BadRequestException(
+      throw apiError(
+        BadRequestException,
+        'LANGUAGE_IS_MASTER',
         `Your master resume is already in ${languageName(language)}. Pick another language.`,
+        { language: language },
       );
     }
     const clean = tidy(text);
-    if (!clean) throw new BadRequestException('The resume is empty');
+    if (!clean) throw apiError(BadRequestException, 'RESUME_EMPTY', 'The resume is empty');
     if (clean.length > MAX_RESUME_CHARS) {
-      throw new BadRequestException(`A resume is at most ${String(MAX_RESUME_CHARS)} characters`);
+      throw apiError(
+        BadRequestException,
+        'RESUME_TOO_LONG',
+        `A resume is at most ${String(MAX_RESUME_CHARS)} characters`,
+        { max: MAX_RESUME_CHARS },
+      );
     }
     const data = {
       text: clean,
@@ -249,7 +258,7 @@ export class ProfileService {
       select: { resumeText: true, resumeLanguage: true, languages: true },
     });
     if (!profile?.resumeText.trim()) {
-      throw new NotFoundException('Add your master resume first');
+      throw apiError(NotFoundException, 'MASTER_RESUME_FIRST', 'Add your master resume first');
     }
     return buildTranslationPrompt({
       resume: profile.resumeText,
@@ -261,7 +270,7 @@ export class ProfileService {
 
   private assertLanguage(language: string) {
     if (!(language in RESUME_LANGUAGES)) {
-      throw new BadRequestException('Pick a language from the list');
+      throw apiError(BadRequestException, 'LANGUAGE_UNKNOWN', 'Pick a language from the list');
     }
   }
 }

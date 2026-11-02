@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Profile } from '@jobsearch/data';
-import { getErrorMessage, RESUME_LANGUAGES, useUpdateProfile } from '@jobsearch/data';
+import { RESUME_LANGUAGES, useUpdateProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import type { FieldErrors } from 'react-hook-form';
 import { useFieldArray, useForm } from 'react-hook-form';
+import { useErrorText } from '../../../i18n/useErrorText';
 import type { ProfileFormValues } from '../schema';
 import { profileSchema, profileToForm, toProfileInput } from '../schema';
 import { Field, inputClass } from './Field';
@@ -56,6 +57,7 @@ interface Props {
  * form across three tabs: hidden tabs stay mounted, so unsaved edits survive switching.
  */
 export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
+  const errorText = useErrorText();
   const t = useTranslations('Profile');
   const tError = useTranslations('Profile.errors');
   const languageName = useLanguageName();
@@ -538,7 +540,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
         )}
         {update.isError && (
           <p role="alert" className="text-sm text-red-700">
-            {t('saveFailed', { error: getErrorMessage(update.error) })}
+            {t('saveFailed', { error: errorText(update.error) })}
           </p>
         )}
       </div>

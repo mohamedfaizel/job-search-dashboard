@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { API_URL, graphqlClient } from './client';
+import { API_URL, apiErrorFrom, graphqlClient } from './client';
 import { queryKeys } from './hooks';
 import {
   ADD_TO_APPLY_QUEUE,
@@ -250,14 +250,8 @@ export function useUploadJobResume() {
         body,
         credentials: 'include',
       });
-      const json = (await res.json().catch(() => null)) as
-        (JobInsights & { message?: unknown }) | null;
-      if (!res.ok) {
-        const message = json?.message;
-        throw new Error(
-          typeof message === 'string' ? message : `Upload failed (${String(res.status)})`,
-        );
-      }
+      const json = (await res.json().catch(() => null)) as JobInsights | null;
+      if (!res.ok) throw apiErrorFrom(json, `Upload failed (${String(res.status)})`);
       return json as JobInsights;
     },
     onSuccess: (insights) => {

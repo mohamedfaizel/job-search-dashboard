@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
+import { apiError } from '../common/api-error';
 import type { TailoredResume } from '../generated/prisma/client';
 import { JobMatchStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
@@ -96,10 +97,14 @@ export class TailorService implements OnApplicationBootstrap {
       where: { userId_jobId: { userId, jobId } },
     });
     if (row?.status !== JobMatchStatus.READY || !row.rmResumeId) {
-      throw new NotFoundException('Tailor your resume for this job first.');
+      throw apiError(NotFoundException, 'TAILOR_FIRST', 'Tailor your resume for this job first.');
     }
     if (kind === 'cover-letter' && !row.coverLetter) {
-      throw new NotFoundException('There is no cover letter for this job. Tailor again.');
+      throw apiError(
+        NotFoundException,
+        'NO_COVER_LETTER',
+        'There is no cover letter for this job. Tailor again.',
+      );
     }
     return kind === 'resume'
       ? this.client.resumePdf(row.rmResumeId)

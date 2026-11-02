@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { APPLICATION_STATUSES, getErrorMessage, useCreateJob, WORKPLACES } from '@jobsearch/data';
+import { APPLICATION_STATUSES, useCreateJob, WORKPLACES } from '@jobsearch/data';
 import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
 import { countriesIn } from '../countries';
 import type { JobFormValues } from '../schema';
@@ -11,6 +12,7 @@ import { Field, inputClass } from './Field';
 
 /** Add a job by hand: React Hook Form manages the inputs, Zod validates them. */
 export function AddJobForm() {
+  const errorText = useErrorText();
   const t = useTranslations('AddJobs');
   const locale = useLocale();
   const f = useJobFormat();
@@ -63,7 +65,7 @@ export function AddJobForm() {
       )}
       {createJob.isError && (
         <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-          {t('form.saveError', { error: getErrorMessage(createJob.error) })}
+          {t('form.saveError', { error: errorText(createJob.error) })}
         </p>
       )}
 
