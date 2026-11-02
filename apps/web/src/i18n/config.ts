@@ -23,3 +23,9 @@ export function localeFromHeader(acceptLanguage: string | null): Locale {
 export function writeLocaleCookie(locale: Locale) {
   document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
 }
+
+/**
+ * Dates are shown in this time zone. The server and the browser must agree on one, or a date
+ * near midnight could render differently on each. Job dates only need the day, so UTC is enough.
+ */
+export const TIME_ZONE = 'UTC';

@@ -1,14 +1,11 @@
 import type { JobFilterOptions, JobsTableState, ListFilterKey } from '@jobsearch/data';
-import { capitalize, countryName } from '../format';
+import { useTranslations } from 'next-intl';
+import { capitalize } from '../format';
+import { useJobFormat } from '../useJobFormat';
 import { ColumnFilter } from './ColumnFilter';
 
 /** The "Posted" choices, in days. */
-export const POSTED_WITHIN = [
-  { days: 1, label: 'Last 24 hours' },
-  { days: 3, label: 'Last 3 days' },
-  { days: 7, label: 'Last week' },
-  { days: 30, label: 'Last month' },
-] as const;
+export const POSTED_WITHIN = [1, 3, 7, 30] as const;
 
 interface Props {
   filters: JobsTableState['filters'];
@@ -38,6 +35,8 @@ export function QuickFilters({
   onPostedWithin,
   onMinFit,
 }: Props) {
+  const t = useTranslations('Jobs.quick');
+  const f = useJobFormat();
   const goodFit = minFit === GOOD_FIT;
   const remote = filters.workplaces?.includes('REMOTE') ?? false;
   const chip = (on: boolean) =>
@@ -48,7 +47,7 @@ export function QuickFilters({
     }`;
 
   return (
-    <div role="group" aria-label="Quick filters" className="flex flex-wrap items-center gap-2">
+    <div role="group" aria-label={t('label')} className="flex flex-wrap items-center gap-2">
       <button
         type="button"
         aria-pressed={goodFit}
@@ -57,14 +56,14 @@ export function QuickFilters({
         }}
         className={chip(goodFit)}
       >
-        Fit ≥ {GOOD_FIT}%
+        {t('goodFit', { fit: GOOD_FIT })}
       </button>
       <ColumnFilter
         chip
-        column="Country"
+        column={t('country')}
         options={(filterOptions?.countryCodes ?? []).map((code) => ({
           value: code,
-          label: countryName(code),
+          label: f.country(code),
         }))}
         selected={filters.countryCodes ?? []}
         onToggle={(value) => {
@@ -82,11 +81,11 @@ export function QuickFilters({
         }}
         className={chip(remote)}
       >
-        Remote
+        {t('remote')}
       </button>
       <ColumnFilter
         chip
-        column="Seniority"
+        column={t('seniority')}
         options={(filterOptions?.seniorities ?? []).map((v) => ({
           value: v,
           label: capitalize(v),
@@ -100,17 +99,17 @@ export function QuickFilters({
         }}
       />
       <select
-        aria-label="Posted"
+        aria-label={t('posted')}
         value={postedWithinDays ?? ''}
         onChange={(e) => {
           onPostedWithin(e.target.value ? Number(e.target.value) : null);
         }}
         className={`${chip(postedWithinDays !== null)} appearance-none pr-3`}
       >
-        <option value="">Posted: any time</option>
-        {POSTED_WITHIN.map(({ days, label }) => (
+        <option value="">{t('anyTime')}</option>
+        {POSTED_WITHIN.map((days) => (
           <option key={days} value={days}>
-            Posted: {label.toLowerCase()}
+            {t(`within.d${days}`)}
           </option>
         ))}
       </select>

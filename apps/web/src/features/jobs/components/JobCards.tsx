@@ -1,4 +1,5 @@
 import type { Job } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import {
   ActionsCell,
   FitCell,
@@ -17,9 +18,10 @@ import {
  * cells), stacked so nothing needs scrolling sideways.
  */
 export function JobCards({ jobs, isFetching }: { jobs: Job[]; isFetching: boolean }) {
+  const t = useTranslations('Jobs.row');
   return (
     <ul
-      aria-label="Jobs"
+      aria-label={t('jobs')}
       className={`space-y-3 ${isFetching ? 'opacity-60 transition-opacity' : ''}`}
     >
       {jobs.map((job) => (

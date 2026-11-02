@@ -2,6 +2,7 @@ import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
+import { Intl } from '@/test/intl';
 import { api, READY_MATCH, requests, server } from '../test/server';
 import { MatchPanel } from './MatchPanel';
 
@@ -9,9 +10,11 @@ function renderPanel() {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   render(
-    <DataProvider store={makeStore()} queryClient={queryClient}>
-      <MatchPanel jobId="job-1" />
-    </DataProvider>,
+    <Intl>
+      <DataProvider store={makeStore()} queryClient={queryClient}>
+        <MatchPanel jobId="job-1" />
+      </DataProvider>
+    </Intl>,
   );
 }
 

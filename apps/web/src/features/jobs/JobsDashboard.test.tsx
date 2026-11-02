@@ -2,17 +2,20 @@ import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
+import { Intl } from '@/test/intl';
 import { JobsDashboard } from './JobsDashboard';
 import { makeJob } from './test/fixtures';
 import { api, applyQueue, OFF_PAGE_JOB_ID, requests, server } from './test/server';
 
-function renderDashboard() {
+function renderDashboard(locale: 'en' | 'de' = 'en') {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   render(
-    <DataProvider store={makeStore()} queryClient={queryClient}>
-      <JobsDashboard />
-    </DataProvider>,
+    <Intl locale={locale}>
+      <DataProvider store={makeStore()} queryClient={queryClient}>
+        <JobsDashboard />
+      </DataProvider>
+    </Intl>,
   );
 }
 
@@ -41,6 +44,45 @@ describe('JobsDashboard', () => {
       'https://example.com/jobs/1',
     );
     expect(screen.getByText('Showing 1–2 of 2')).toBeInTheDocument();
+  });
+
+  it('shows the list in German', async () => {
+    renderDashboard('de');
+
+    expect(await screen.findByRole('heading', { name: 'Stellenanzeigen' })).toBeInTheDocument();
+    const row = (await screen.findByRole('button', { name: 'Senior Frontend Engineer' })).closest(
+      'tr',
+    )!;
+    expect(within(row).getByText('90 Tsd. $ – 120 Tsd. $')).toBeInTheDocument();
+    expect(within(row).getByText('Deutschland · Remote')).toBeInTheDocument();
+    expect(within(row).getByText('Visa-Unterstützung')).toBeInTheDocument();
+    expect(
+      within(row).getByRole('combobox', { name: 'Status für Senior Frontend Engineer bei Acme' }),
+    ).toHaveDisplayValue('Nicht beworben');
+    expect(
+      within(row).getByRole('link', {
+        name: 'Anzeige für Senior Frontend Engineer bei Acme öffnen',
+      }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByRole('columnheader', { name: /Gehalt/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Jobs gefunden/ })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Veröffentlicht' })).toHaveDisplayValue(
+      'Veröffentlicht: jederzeit',
+    );
+    expect(screen.getByText('1–2 von 2')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Firma filtern' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Acme' }));
+    expect(
+      await screen.findByRole('button', { name: 'Firma filtern (1 ausgewählt)' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('1 Filter aktiv')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /Spalten/ }));
+    expect(screen.getByRole('dialog', { name: 'Spalten ein- oder ausblenden' })).toHaveTextContent(
+      'Fähigkeiten',
+    );
   });
 
   it('sorts on the server when a header is clicked', async () => {

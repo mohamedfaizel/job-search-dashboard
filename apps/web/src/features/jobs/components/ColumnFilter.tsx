@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 
 interface Option {
@@ -28,6 +29,7 @@ export function ColumnFilter({
   onClear,
   chip = false,
 }: Props) {
+  const t = useTranslations('Jobs.filter');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
@@ -82,7 +84,9 @@ export function ColumnFilter({
       ) : (
         <button
           type="button"
-          aria-label={`Filter ${column}${active ? ` (${selected.length} selected)` : ''}`}
+          aria-label={
+            active ? t('buttonActive', { column, count: selected.length }) : t('button', { column })
+          }
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => {
@@ -101,7 +105,7 @@ export function ColumnFilter({
         <div
           id={panelId}
           role="dialog"
-          aria-label={`Filter ${column}`}
+          aria-label={t('button', { column })}
           className={`z-20 mt-1 rounded-lg ${
             // A chip near the right edge of a phone would push the panel off screen, so on
             // phones it spans the screen width just below the chip.
@@ -113,8 +117,8 @@ export function ColumnFilter({
           {options.length > 8 && (
             <input
               type="search"
-              aria-label={`Search ${column} values`}
-              placeholder="Search…"
+              aria-label={t('search', { column })}
+              placeholder={t('placeholder')}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -124,7 +128,7 @@ export function ColumnFilter({
           )}
           <ul className="max-h-64 overflow-y-auto">
             {visible.length === 0 && (
-              <li className="px-2 py-1 text-sm text-slate-500">No values</li>
+              <li className="px-2 py-1 text-sm text-slate-500">{t('none')}</li>
             )}
             {visible.map((option) => (
               <li key={option.value}>
@@ -147,7 +151,7 @@ export function ColumnFilter({
               onClick={onClear}
               className="mt-2 w-full rounded px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-50"
             >
-              Clear filter
+              {t('clear')}
             </button>
           )}
         </div>

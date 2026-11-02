@@ -2,6 +2,7 @@ import { API_URL, createQueryClient, DataProvider, makeStore } from '@jobsearch/
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
+import { Intl } from '@/test/intl';
 import { api, READY_TAILORED, requests, server } from '../test/server';
 import { TailorPanel } from './TailorPanel';
 
@@ -9,9 +10,11 @@ function renderPanel() {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   render(
-    <DataProvider store={makeStore()} queryClient={queryClient}>
-      <TailorPanel jobId="job-1" />
-    </DataProvider>,
+    <Intl>
+      <DataProvider store={makeStore()} queryClient={queryClient}>
+        <TailorPanel jobId="job-1" />
+      </DataProvider>
+    </Intl>,
   );
 }
 

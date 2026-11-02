@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
  * also in a box below, to select by hand.
  */
 export function CopyText({ label, text, copiedHint, boxLabel, primary = false, children }: Props) {
+  const t = useTranslations('Jobs.copy');
   const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
   const copy = async () => {
     try {
@@ -46,14 +48,12 @@ export function CopyText({ label, text, copiedHint, boxLabel, primary = false, c
         {children}
         {copied && (
           <span role="status" className="text-sm text-slate-600">
-            {copied === 'yes'
-              ? `Copied. ${copiedHint}`
-              : 'Could not copy. Select the text below instead.'}
+            {copied === 'yes' ? t('copied', { hint: copiedHint }) : t('failed')}
           </span>
         )}
       </div>
       <details open={copied === 'failed'}>
-        <summary className="cursor-pointer text-xs text-slate-500">Show the text</summary>
+        <summary className="cursor-pointer text-xs text-slate-500">{t('show')}</summary>
         <textarea
           readOnly
           value={text}

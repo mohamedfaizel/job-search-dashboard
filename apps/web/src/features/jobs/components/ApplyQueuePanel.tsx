@@ -10,11 +10,15 @@ import {
   useSaveApplyQueueReply,
   useUpdateJobStatus,
 } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { CLAUDE_URL } from './ApplyKitPanel';
 import { CopyText } from './CopyText';
 
-/** The one prompt for Claude in Chrome that works through the whole queue, never submitting. */
+/**
+ * The one prompt for Claude in Chrome that works through the whole queue, never submitting. It
+ * stays in English whatever your language: it is for Claude, not for you.
+ */
 export function queuePrompt(count: number): string {
   const jobs = count === 1 ? 'one job' : `${String(count)} jobs`;
   return `Please help me apply for ${jobs} in my Apply queue. First open ${APPLY_QUEUE_URL} and read all of it. Then take the jobs one at a time, each in a new tab: open its Apply kit link, then its posting, and fill in the application form following the kit's instructions. Never click Submit: leave each form filled in on its own tab. At the end, tell me for each job what you filled in and what is left for me.`;
@@ -31,6 +35,7 @@ const SECONDARY =
  * to 5 jobs, then paste Claude's whole reply back and each job gets its own part.
  */
 function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: string) => void }) {
+  const t = useTranslations('Jobs.queue');
   const prompt = useApplyQueuePrompt();
   const save = useSaveApplyQueueReply();
   const [note, setNote] = useState<string | null>(null);
@@ -38,15 +43,15 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
   const [text, setText] = useState('');
   const data = prompt.data;
   const count = data?.jobIds.length ?? 0;
-  const jobs = count === 1 ? '1 job' : `${String(count)} jobs`;
+  const jobs = t('jobs', { count });
 
   const copyAndOpen = async () => {
     if (!data) return;
     try {
       await navigator.clipboard.writeText(data.prompt);
-      setNote(`Prompt for ${jobs} copied. Paste it into Claude, then copy Claude’s whole reply.`);
+      setNote(t('copied', { jobs }));
     } catch {
-      setNote('Could not copy. Select the prompt below instead.');
+      setNote(t('copyFailed'));
     }
     window.open(CLAUDE_URL, '_blank', 'noopener');
   };
@@ -57,7 +62,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
         const left = queue.filter((item) => !item.ready).length;
         setNote(null);
         // Said by the panel: this card goes away once every job is ready.
-        onSaved(`Saved Claude’s replies for ${String(before - left)} of ${String(before)} jobs.`);
+        onSaved(t('savedReplies', { done: before - left, total: before }));
         setText('');
         setPasting(false);
       },
@@ -79,9 +84,9 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
   return (
     <div className="space-y-2 rounded-md bg-amber-50 px-3 py-2.5 text-amber-900">
       <p>
-        {waiting === 1 ? '1 job has' : `${String(waiting)} jobs have`} no Claude reply yet, so the
-        forms would miss your cover letter and answers. One Claude chat writes them all
-        {waiting > count && count > 0 ? ` (the first ${String(count)} now, then the rest)` : ''}.
+        {waiting > count && count > 0
+          ? t('waitingMore', { count: waiting, now: count })
+          : t('waiting', { count: waiting })}
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -92,7 +97,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
             void copyAndOpen();
           }}
         >
-          1. Copy prompt for {count > 0 ? jobs : 'the jobs'} and open Claude ↗
+          {count > 0 ? t('copyButton', { jobs }) : t('copyButtonAll')}
         </button>
         <button
           type="button"
@@ -102,7 +107,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
             void pasteFromClipboard();
           }}
         >
-          {save.isPending ? 'Saving…' : '2. Paste Claude’s reply from clipboard'}
+          {save.isPending ? t('saving') : t('pasteButton')}
         </button>
         <button
           type="button"
@@ -112,7 +117,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
             setPasting((open) => !open);
           }}
         >
-          or paste it yourself
+          {t('pasteYourself')}
         </button>
       </div>
       {note && (
@@ -133,23 +138,23 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
             onChange={(e) => {
               setText(e.target.value);
             }}
-            aria-label="Claude’s reply for the queue"
-            placeholder="Paste Claude’s whole reply, with its === JOB 1 … === lines"
+            aria-label={t('replyBox')}
+            placeholder={t('replyPlaceholder')}
             rows={6}
             className="w-full rounded-md border border-slate-300 bg-white p-2 text-slate-900"
           />
           <button type="submit" className={PRIMARY} disabled={save.isPending || !text.trim()}>
-            Save the replies
+            {t('saveReplies')}
           </button>
         </form>
       )}
       {data?.prompt && (
         <details>
-          <summary className="cursor-pointer text-xs">Show the prompt</summary>
+          <summary className="cursor-pointer text-xs">{t('showPrompt')}</summary>
           <textarea
             readOnly
             value={data.prompt}
-            aria-label="Prompt for the queued jobs"
+            aria-label={t('promptForJobs')}
             rows={8}
             className="mt-1 w-full rounded-md border border-slate-200 bg-white p-2 font-mono text-xs text-slate-700"
           />
@@ -157,8 +162,9 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
       )}
       {(prompt.isError || save.isError) && (
         <p role="alert" className="text-red-700">
-          {save.isError ? 'Could not save the replies' : 'Could not make the prompt'}:{' '}
-          {getErrorMessage(save.error ?? prompt.error)}
+          {save.isError
+            ? t('saveError', { error: getErrorMessage(save.error) })
+            : t('promptError', { error: getErrorMessage(prompt.error) })}
         </p>
       )}
     </div>
@@ -170,6 +176,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
  * before Submit on each), then you check each tab, send it and mark the job Applied here.
  */
 export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => void }) {
+  const t = useTranslations('Jobs.queue');
   const queue = useApplyQueue();
   const change = useChangeApplyQueue();
   const move = useMoveInApplyQueue();
@@ -191,10 +198,10 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
     >
       <div className="flex flex-wrap items-center gap-2">
         <h2 id="apply-queue-heading" className="mr-auto text-base font-semibold text-slate-900">
-          Apply queue ({items.length})
+          {t('heading', { count: items.length })}
         </h2>
         <a href={APPLY_QUEUE_URL} target="_blank" rel="noreferrer" className={LINK}>
-          Open queue page ↗
+          {t('openPage')}
         </a>
         <button
           type="button"
@@ -203,7 +210,7 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
           }}
           className="rounded-md bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-700"
         >
-          Mark all Applied
+          {t('markAll')}
         </button>
       </div>
       {notReady > 0 && <WriteAll waiting={notReady} onSaved={setSavedNote} />}
@@ -228,8 +235,8 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
                 onClick={() => {
                   move.mutate({ jobId: item.jobId, direction: 'UP' });
                 }}
-                aria-label={`Move ${item.title} up`}
-                title="Move up: apply for it sooner"
+                aria-label={t('moveUp', { title: item.title })}
+                title={t('moveUpHint')}
                 className="h-3.5 px-1 text-[10px] leading-none text-slate-500 hover:text-slate-900 disabled:opacity-25"
               >
                 ▲
@@ -240,8 +247,8 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
                 onClick={() => {
                   move.mutate({ jobId: item.jobId, direction: 'DOWN' });
                 }}
-                aria-label={`Move ${item.title} down`}
-                title="Move down: apply for it later"
+                aria-label={t('moveDown', { title: item.title })}
+                title={t('moveDownHint')}
                 className="h-3.5 px-1 text-[10px] leading-none text-slate-500 hover:text-slate-900 disabled:opacity-25"
               >
                 ▼
@@ -253,12 +260,12 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
                 onClick={() => {
                   onOpenJob(item.jobId);
                 }}
-                title="Open the job description"
+                title={t('openJob')}
                 className="text-left font-medium text-slate-900 hover:text-indigo-700 hover:underline"
               >
                 {item.title}
               </button>{' '}
-              <span className="text-slate-500">at {item.company}</span>
+              <span className="text-slate-500">{t('at', { company: item.company })}</span>
             </span>
             <span
               className={
@@ -267,16 +274,16 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
                   : 'rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800'
               }
             >
-              {item.ready ? 'Ready' : 'Needs Claude’s reply'}
+              {item.ready ? t('ready') : t('needsReply')}
             </span>
             <a
               href={applyKitUrl(item.jobId)}
               target="_blank"
               rel="noreferrer"
               className={LINK}
-              aria-label={`Apply kit for ${item.title}`}
+              aria-label={t('kitLabel', { title: item.title })}
             >
-              Kit ↗
+              {t('kit')}
             </a>
             {item.url && (
               <a
@@ -284,9 +291,9 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
                 target="_blank"
                 rel="noreferrer"
                 className={LINK}
-                aria-label={`Posting for ${item.title}`}
+                aria-label={t('postingLabel', { title: item.title })}
               >
-                Posting ↗
+                {t('posting')}
               </a>
             )}
             <button
@@ -295,9 +302,9 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
                 markApplied([item]);
               }}
               className="rounded-md px-2 py-0.5 font-medium text-emerald-700 hover:bg-emerald-50"
-              aria-label={`Mark ${item.title} Applied`}
+              aria-label={t('appliedLabel', { title: item.title })}
             >
-              Applied
+              {t('applied')}
             </button>
             <button
               type="button"
@@ -305,7 +312,7 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
                 change.mutate({ jobIds: [item.jobId], remove: true });
               }}
               className="px-1 text-slate-400 hover:text-slate-700"
-              aria-label={`Remove ${item.title} from the queue`}
+              aria-label={t('remove', { title: item.title })}
             >
               ✕
             </button>
@@ -314,15 +321,16 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
       </ol>
       <CopyText
         primary
-        label="Copy prompt for Claude in Chrome"
+        label={t('copyPrompt')}
         text={queuePrompt(items.length)}
-        copiedHint="Paste it into Claude in Chrome. It fills in each form on its own tab and stops before Submit: check each one and send it yourself."
-        boxLabel="Prompt for the Apply queue"
+        copiedHint={t('copiedHint')}
+        boxLabel={t('promptBox')}
       />
       {(change.isError || move.isError || updateStatus.isError) && (
         <p role="alert" className="text-red-700">
-          Could not change the queue:{' '}
-          {getErrorMessage(change.error ?? move.error ?? updateStatus.error)}
+          {t('changeError', {
+            error: getErrorMessage(change.error ?? move.error ?? updateStatus.error),
+          })}
         </p>
       )}
     </section>
