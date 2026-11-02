@@ -1,15 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Profile } from '@jobsearch/data';
 import { getErrorMessage, RESUME_LANGUAGES, useUpdateProfile } from '@jobsearch/data';
-import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
 import type { FieldErrors } from 'react-hook-form';
 import { useFieldArray, useForm } from 'react-hook-form';
 import type { ProfileFormValues } from '../schema';
 import { profileSchema, profileToForm, toProfileInput } from '../schema';
 import { Field, inputClass } from './Field';
 import { ResumeUpload } from './ResumeUpload';
-
-const LIST_HINT = 'Separate with commas';
+import { useLanguageName } from './useLanguageName';
 
 /** The tabs of My profile. The first three hold this one form; the others are separate. */
 export type ProfileTab = 'personal' | 'applications' | 'resume' | 'design' | 'matcher';
@@ -32,13 +32,13 @@ const FIELD_TAB: Partial<Record<keyof ProfileFormValues, ProfileTab>> = {
   resumeLanguage: 'resume',
 };
 
-/** Words for the gender codes the API stores. */
-const GENDER_LABELS = [
-  ['', 'Not given'],
-  ['female', 'Female'],
-  ['male', 'Male'],
-  ['diverse', 'Diverse'],
-  ['not_specified', 'Prefer not to say'],
+/** The gender codes the API stores; their words are in messages under Profile.personal.genders. */
+const GENDERS = [
+  ['', 'none'],
+  ['female', 'female'],
+  ['male', 'male'],
+  ['diverse', 'diverse'],
+  ['not_specified', 'not_specified'],
 ] as const;
 
 const card = 'space-y-4 rounded-lg border border-slate-200 bg-white p-5';
@@ -56,6 +56,15 @@ interface Props {
  * form across three tabs: hidden tabs stay mounted, so unsaved edits survive switching.
  */
 export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
+  const t = useTranslations('Profile');
+  const tError = useTranslations('Profile.errors');
+  const languageName = useLanguageName();
+  const listHint = t('listHint');
+  // The rules carry their error texts, so they change with the language.
+  const schema = useMemo(
+    () => profileSchema((key, values) => tError(key as 'date', values as never)),
+    [tError],
+  );
   const update = useUpdateProfile();
   const [saved, setSaved] = useState(false);
   const {
@@ -66,7 +75,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
     control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(schema),
     defaultValues: profileToForm(profile, accountName),
   });
   const custom = useFieldArray({ control, name: 'customFields' });
@@ -110,15 +119,16 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
         <section aria-labelledby="personal-heading" className={card}>
           <div>
             <h2 id="personal-heading" className="text-lg font-semibold text-slate-900">
-              Personal details
+              {t('personal.heading')}
             </h2>
-            <p className="text-sm text-slate-600">
-              What forms ask about you. Your first and last name also become your account name, used
-              on resumes and letters.
-            </p>
+            <p className="text-sm text-slate-600">{t('personal.intro')}</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="First name" htmlFor="firstName" error={errors.firstName?.message}>
+            <Field
+              label={t('personal.firstName')}
+              htmlFor="firstName"
+              error={errors.firstName?.message}
+            >
               <input
                 {...register('firstName')}
                 {...a11y('firstName')}
@@ -126,7 +136,11 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                 className={inputClass}
               />
             </Field>
-            <Field label="Last name" htmlFor="lastName" error={errors.lastName?.message}>
+            <Field
+              label={t('personal.lastName')}
+              htmlFor="lastName"
+              error={errors.lastName?.message}
+            >
               <input
                 {...register('lastName')}
                 {...a11y('lastName')}
@@ -135,24 +149,24 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               />
             </Field>
             <Field
-              label="Gender"
+              label={t('personal.gender')}
               htmlFor="gender"
               error={errors.gender?.message}
-              hint="Only for forms that ask. Never put on resumes."
+              hint={t('personal.genderHint')}
             >
               <select {...register('gender')} {...a11y('gender')} className={inputClass}>
-                {GENDER_LABELS.map(([code, label]) => (
+                {GENDERS.map(([code, key]) => (
                   <option key={code} value={code}>
-                    {label}
+                    {t(`personal.genders.${key}`)}
                   </option>
                 ))}
               </select>
             </Field>
             <Field
-              label="Date of birth"
+              label={t('personal.dateOfBirth')}
               htmlFor="dateOfBirth"
               error={errors.dateOfBirth?.message}
-              hint="Only for forms that ask"
+              hint={t('personal.dateOfBirthHint')}
             >
               <input
                 {...register('dateOfBirth')}
@@ -162,53 +176,62 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                 className={inputClass}
               />
             </Field>
-            <Field label="Nationality" htmlFor="nationality" error={errors.nationality?.message}>
+            <Field
+              label={t('personal.nationality')}
+              htmlFor="nationality"
+              error={errors.nationality?.message}
+            >
               <input {...register('nationality')} {...a11y('nationality')} className={inputClass} />
             </Field>
           </div>
         </section>
         <section aria-labelledby="about-heading" className={card}>
           <h2 id="about-heading" className="text-lg font-semibold text-slate-900">
-            About you
+            {t('about.heading')}
           </h2>
           <Field
-            label="Headline"
+            label={t('about.headline')}
             htmlFor="headline"
             error={errors.headline?.message}
-            hint="One line, like “Frontend engineer who loves design systems”"
+            hint={t('about.headlineHint')}
           >
             <input {...register('headline')} {...a11y('headline')} className={inputClass} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
-              label="Roles you want"
+              label={t('about.targetRoles')}
               htmlFor="targetRoles"
               error={errors.targetRoles?.message}
-              hint={LIST_HINT}
+              hint={listHint}
             >
               <input {...register('targetRoles')} {...a11y('targetRoles')} className={inputClass} />
             </Field>
             <Field
-              label="Where you want to work"
+              label={t('about.locations')}
               htmlFor="locations"
               error={errors.locations?.message}
-              hint={LIST_HINT}
+              hint={listHint}
             >
               <input {...register('locations')} {...a11y('locations')} className={inputClass} />
             </Field>
-            <Field label="Skills" htmlFor="skills" error={errors.skills?.message} hint={LIST_HINT}>
+            <Field
+              label={t('about.skills')}
+              htmlFor="skills"
+              error={errors.skills?.message}
+              hint={listHint}
+            >
               <input {...register('skills')} {...a11y('skills')} className={inputClass} />
             </Field>
             <Field
-              label="Languages"
+              label={t('about.languages')}
               htmlFor="languages"
               error={errors.languages?.message}
-              hint="With your real level, e.g. German A2, English C1. Resumes copy it exactly."
+              hint={t('about.languagesHint')}
             >
               <input {...register('languages')} {...a11y('languages')} className={inputClass} />
             </Field>
             <Field
-              label="Years of experience"
+              label={t('about.yearsExperience')}
               htmlFor="yearsExperience"
               error={errors.yearsExperience?.message}
             >
@@ -221,7 +244,11 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="LinkedIn" htmlFor="linkedinUrl" error={errors.linkedinUrl?.message}>
+            <Field
+              label={t('about.linkedin')}
+              htmlFor="linkedinUrl"
+              error={errors.linkedinUrl?.message}
+            >
               <input
                 {...register('linkedinUrl')}
                 {...a11y('linkedinUrl')}
@@ -230,7 +257,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                 className={inputClass}
               />
             </Field>
-            <Field label="GitHub" htmlFor="githubUrl" error={errors.githubUrl?.message}>
+            <Field label={t('about.github')} htmlFor="githubUrl" error={errors.githubUrl?.message}>
               <input
                 {...register('githubUrl')}
                 {...a11y('githubUrl')}
@@ -239,7 +266,11 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                 className={inputClass}
               />
             </Field>
-            <Field label="Website" htmlFor="websiteUrl" error={errors.websiteUrl?.message}>
+            <Field
+              label={t('about.website')}
+              htmlFor="websiteUrl"
+              error={errors.websiteUrl?.message}
+            >
               <input
                 {...register('websiteUrl')}
                 {...a11y('websiteUrl')}
@@ -255,16 +286,12 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
         <section aria-labelledby="answers-heading" className={card}>
           <div>
             <h2 id="answers-heading" className="text-lg font-semibold text-slate-900">
-              Application answers
+              {t('answers.heading')}
             </h2>
-            <p className="text-sm text-slate-600">
-              What every application form asks. The Apply kit gives these to Claude for the cover
-              letter and to Claude in Chrome to fill in forms, exactly as you write them here. Leave
-              out anything you don’t want shared.
-            </p>
+            <p className="text-sm text-slate-600">{t('answers.intro')}</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Phone" htmlFor="phone" error={errors.phone?.message}>
+            <Field label={t('answers.phone')} htmlFor="phone" error={errors.phone?.message}>
               <input
                 {...register('phone')}
                 {...a11y('phone')}
@@ -275,26 +302,26 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               />
             </Field>
             <Field
-              label="Address"
+              label={t('answers.address')}
               htmlFor="address"
               error={errors.address?.message}
-              hint="City and country, or the full address forms ask for"
+              hint={t('answers.addressHint')}
             >
               <input {...register('address')} {...a11y('address')} className={inputClass} />
             </Field>
             <Field
-              label="Work permit"
+              label={t('answers.workPermit')}
               htmlFor="workPermit"
               error={errors.workPermit?.message}
-              hint="e.g. EU Blue Card, or no visa needed in the EU"
+              hint={t('answers.workPermitHint')}
             >
               <input {...register('workPermit')} {...a11y('workPermit')} className={inputClass} />
             </Field>
             <Field
-              label="Notice period / earliest start"
+              label={t('answers.noticePeriod')}
               htmlFor="noticePeriod"
               error={errors.noticePeriod?.message}
-              hint="e.g. 1 month, or immediately"
+              hint={t('answers.noticePeriodHint')}
             >
               <input
                 {...register('noticePeriod')}
@@ -303,10 +330,10 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               />
             </Field>
             <Field
-              label="Salary expectation"
+              label={t('answers.salary')}
               htmlFor="salaryExpectation"
               error={errors.salaryExpectation?.message}
-              hint="e.g. €65,000 a year"
+              hint={t('answers.salaryHint')}
             >
               <input
                 {...register('salaryExpectation')}
@@ -315,19 +342,19 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               />
             </Field>
             <Field
-              label="Willing to relocate"
+              label={t('answers.relocation')}
               htmlFor="relocation"
               error={errors.relocation?.message}
-              hint="e.g. Yes, anywhere in Germany"
+              hint={t('answers.relocationHint')}
             >
               <input {...register('relocation')} {...a11y('relocation')} className={inputClass} />
             </Field>
           </div>
           <Field
-            label="Saved answers"
+            label={t('answers.notes')}
             htmlFor="applicationNotes"
             error={errors.applicationNotes?.message}
-            hint="Short answers you reuse, like why you are looking for a new job. Claude adapts them to each job."
+            hint={t('answers.notesHint')}
           >
             <textarea
               {...register('applicationNotes')}
@@ -341,14 +368,14 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
         <div className="space-y-6">
           <section aria-labelledby="more-heading" className={card}>
             <h2 id="more-heading" className="text-lg font-semibold text-slate-900">
-              What you are looking for
+              {t('looking.heading')}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
-                label="Employment type"
+                label={t('looking.employmentType')}
                 htmlFor="employmentType"
                 error={errors.employmentType?.message}
-                hint="e.g. Full-time"
+                hint={t('looking.employmentTypeHint')}
               >
                 <input
                   {...register('employmentType')}
@@ -357,10 +384,10 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                 />
               </Field>
               <Field
-                label="Remote, hybrid or on-site"
+                label={t('looking.workplace')}
                 htmlFor="workplacePreference"
                 error={errors.workplacePreference?.message}
-                hint="e.g. Remote or hybrid"
+                hint={t('looking.workplaceHint')}
               >
                 <input
                   {...register('workplacePreference')}
@@ -369,10 +396,10 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                 />
               </Field>
               <Field
-                label="Driving licence"
+                label={t('looking.drivingLicence')}
                 htmlFor="drivingLicence"
                 error={errors.drivingLicence?.message}
-                hint="e.g. Class B, or none"
+                hint={t('looking.drivingLicenceHint')}
               >
                 <input
                   {...register('drivingLicence')}
@@ -386,12 +413,9 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
           <section aria-labelledby="custom-heading" className={card}>
             <div>
               <h2 id="custom-heading" className="text-lg font-semibold text-slate-900">
-                Your own fields
+                {t('custom.heading')}
               </h2>
-              <p className="text-sm text-slate-600">
-                Anything else forms ask, like Xing, pronouns or a portfolio. The Apply kit passes
-                them on as you write them.
-              </p>
+              <p className="text-sm text-slate-600">{t('custom.intro')}</p>
             </div>
             {custom.fields.length > 0 && (
               <ul className="space-y-2">
@@ -402,9 +426,9 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                       <div className="min-w-32 flex-1">
                         <input
                           {...register(`customFields.${index}.label`)}
-                          aria-label={`Field ${String(index + 1)} name`}
+                          aria-label={t('custom.name', { n: index + 1 })}
                           aria-invalid={rowErrors?.label ? true : undefined}
-                          placeholder="Name, e.g. Xing"
+                          placeholder={t('custom.namePlaceholder')}
                           className={inputClass}
                         />
                         {rowErrors?.label && (
@@ -416,9 +440,9 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                       <div className="min-w-48 flex-[2]">
                         <input
                           {...register(`customFields.${index}.value`)}
-                          aria-label={`Field ${String(index + 1)} value`}
+                          aria-label={t('custom.value', { n: index + 1 })}
                           aria-invalid={rowErrors?.value ? true : undefined}
-                          placeholder="Value"
+                          placeholder={t('custom.valuePlaceholder')}
                           className={inputClass}
                         />
                         {rowErrors?.value && (
@@ -432,8 +456,8 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                         onClick={() => {
                           custom.remove(index);
                         }}
-                        aria-label={`Remove field ${String(index + 1)}`}
-                        title="Remove this field"
+                        aria-label={t('custom.remove', { n: index + 1 })}
+                        title={t('custom.removeTitle')}
                         className="rounded-md px-2 py-1.5 text-sm text-slate-500 hover:bg-red-50 hover:text-red-700"
                       >
                         ✕
@@ -451,7 +475,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               }}
               className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
-              + Add a field
+              {t('custom.add')}
             </button>
           </section>
         </div>
@@ -460,11 +484,9 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
       <section aria-labelledby="resume-heading" hidden={tab !== 'resume'} className={card}>
         <div>
           <h2 id="resume-heading" className="text-lg font-semibold text-slate-900">
-            Master resume
+            {t('resume.heading')}
           </h2>
-          <p className="text-sm text-slate-600">
-            Your full resume as plain text. Match scores and tailored resumes start from this.
-          </p>
+          <p className="text-sm text-slate-600">{t('resume.intro')}</p>
         </div>
         <ResumeUpload
           fileName={profile.resumeFileName}
@@ -475,23 +497,23 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
           }}
         />
         <Field
-          label="Language of this resume"
+          label={t('resume.language')}
           htmlFor="resumeLanguage"
-          hint="Jobs in this language are checked against it. Add other languages below."
+          hint={t('resume.languageHint')}
         >
           <select
             {...register('resumeLanguage')}
             {...a11y('resumeLanguage')}
             className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
           >
-            {Object.entries(RESUME_LANGUAGES).map(([code, name]) => (
+            {Object.keys(RESUME_LANGUAGES).map((code) => (
               <option key={code} value={code}>
-                {name}
+                {languageName(code)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Resume text" htmlFor="resumeText" error={errors.resumeText?.message}>
+        <Field label={t('resume.text')} htmlFor="resumeText" error={errors.resumeText?.message}>
           <textarea
             {...register('resumeText')}
             {...a11y('resumeText')}
@@ -507,16 +529,16 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
           disabled={isSubmitting}
           className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
         >
-          {isSubmitting ? 'Saving…' : 'Save profile'}
+          {isSubmitting ? t('saving') : t('save')}
         </button>
         {saved && !isDirty && (
           <p role="status" className="text-sm text-emerald-700">
-            Profile saved.
+            {t('saved')}
           </p>
         )}
         {update.isError && (
           <p role="alert" className="text-sm text-red-700">
-            Could not save: {getErrorMessage(update.error)}
+            {t('saveFailed', { error: getErrorMessage(update.error) })}
           </p>
         )}
       </div>

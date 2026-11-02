@@ -1,6 +1,7 @@
 'use client';
 
 import { getErrorMessage, useMe, useMyProfile } from '@jobsearch/data';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { DocumentDesign } from './components/DocumentDesign';
 import { OtherResumes } from './components/OtherResumes';
@@ -10,13 +11,7 @@ import { ResumeMatcherStatus } from './components/ResumeMatcherStatus';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
 
-const TABS: TabItem<ProfileTab>[] = [
-  { id: 'personal', label: 'Personal' },
-  { id: 'applications', label: 'Applications' },
-  { id: 'resume', label: 'Resume' },
-  { id: 'design', label: 'Design' },
-  { id: 'matcher', label: 'Resume-Matcher' },
-];
+const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume', 'design', 'matcher'];
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
@@ -28,7 +23,7 @@ const TAB_KEY = 'jobsearch.profile.tab';
 function savedTab(): ProfileTab {
   try {
     const tab = localStorage.getItem(TAB_KEY);
-    return TABS.find((t) => t.id === tab)?.id ?? 'personal';
+    return TAB_IDS.find((id) => id === tab) ?? 'personal';
   } catch {
     return 'personal';
   }
@@ -36,6 +31,8 @@ function savedTab(): ProfileTab {
 
 /** The My profile screen: your details, resumes, document design and Resume-Matcher. */
 export function ProfilePage() {
+  const t = useTranslations('Profile');
+  const tabs: TabItem<ProfileTab>[] = TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) }));
   const { data: profile, isPending, error } = useMyProfile();
   const { data: me } = useMe();
   const [tab, setTab] = useState<ProfileTab>(savedTab);
@@ -52,14 +49,14 @@ export function ProfilePage() {
   return (
     <section aria-labelledby="profile-title" className="mx-auto max-w-screen-2xl space-y-6">
       <h1 id="profile-title" className="text-xl font-semibold text-slate-900">
-        My profile
+        {t('title')}
       </h1>
       {isPending ? (
-        <p className="text-sm text-slate-500">Loading your profile…</p>
+        <p className="text-sm text-slate-500">{t('loading')}</p>
       ) : error ? (
         <>
           <p role="alert" className="text-sm text-red-700">
-            Could not load your profile: {getErrorMessage(error)}
+            {t('loadFailed', { error: getErrorMessage(error) })}
           </p>
           <ResumeMatcherStatus />
         </>
@@ -67,10 +64,10 @@ export function ProfilePage() {
         // The form starts from the saved profile, so it waits until that has loaded.
         <>
           <TabList
-            label="Profile sections"
+            label={t('sections')}
             idPrefix="profile-tab"
             panelId="profile-panel"
-            tabs={TABS}
+            tabs={tabs}
             selected={tab}
             onSelect={selectTab}
           />

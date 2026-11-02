@@ -7,8 +7,10 @@ import {
   useTranslationPrompt,
   useUploadLanguageResume,
 } from '@jobsearch/data';
+import { useFormatter, useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { inputClass } from './Field';
+import { useLanguageName } from './useLanguageName';
 
 const CLAUDE_URL = 'https://claude.ai/new';
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -20,18 +22,18 @@ const PRIMARY =
 
 const SELECT = 'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm';
 
-const nameOf = (code: string) => RESUME_LANGUAGES[code] ?? code;
-
 /** "Upload a PDF or Word file" for one language. */
 function UploadButton({
   language,
-  label = 'Upload a file (PDF, Word)',
+  label,
   onDone,
 }: {
   language: string;
   label?: string;
   onDone?: () => void;
 }) {
+  const t = useTranslations('Profile.other');
+  const nameOf = useLanguageName();
   const upload = useUploadLanguageResume();
   const id = useId();
   const [tooBig, setTooBig] = useState(false);
@@ -41,12 +43,12 @@ function UploadButton({
         htmlFor={id}
         className={`${BUTTON} cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-indigo-500`}
       >
-        {upload.isPending ? 'Reading it…' : label}
+        {upload.isPending ? t('reading') : (label ?? t('upload'))}
         <input
           id={id}
           type="file"
           accept={ACCEPT}
-          aria-label={`Upload your ${nameOf(language)} resume`}
+          aria-label={t('uploadLabel', { language: nameOf(language) })}
           disabled={upload.isPending}
           className="sr-only"
           onChange={(e) => {
@@ -61,7 +63,7 @@ function UploadButton({
       </label>
       {(tooBig || upload.isError) && (
         <span role="alert" className="text-sm text-red-700">
-          {tooBig ? 'That file is over 5 MB.' : getErrorMessage(upload.error)}
+          {tooBig ? t('tooBig') : getErrorMessage(upload.error)}
         </span>
       )}
     </span>
@@ -81,10 +83,12 @@ function SavedResume({
   justSaved: boolean;
   onSaved: OnSaved;
 }) {
+  const t = useTranslations('Profile.other');
+  const format = useFormatter();
   const save = useSaveLanguageResume();
   const remove = useDeleteLanguageResume();
   const [text, setText] = useState(resume.text);
-  const name = nameOf(resume.language);
+  const name = useLanguageName()(resume.language);
   const boxId = useId();
 
   return (
@@ -92,12 +96,14 @@ function SavedResume({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="font-medium text-slate-900">{name}</h3>
         <span className="text-xs text-slate-500">
-          {resume.fileName ?? 'Pasted text'} · saved{' '}
-          {new Date(resume.updatedAt).toLocaleDateString()}
+          {resume.fileName ?? t('pasted')} ·{' '}
+          {t('savedOn', {
+            date: format.dateTime(new Date(resume.updatedAt), { dateStyle: 'medium' }),
+          })}
         </span>
       </div>
       <label htmlFor={boxId} className="sr-only">
-        {name} resume text
+        {t('textLabel', { language: name })}
       </label>
       <textarea
         id={boxId}
@@ -110,8 +116,9 @@ function SavedResume({
       />
       {justSaved && text === resume.text && (
         <p role="status" className="text-sm text-emerald-700">
-          ✓ Your {name} resume is saved
-          {resume.fileName ? ` (read from ${resume.fileName})` : ''}. Jobs in {name} now use it.
+          {resume.fileName
+            ? t('savedNoteFile', { language: name, file: resume.fileName })
+            : t('savedNote', { language: name })}
         </p>
       )}
       <div className="flex flex-wrap items-center gap-2">
@@ -132,12 +139,12 @@ function SavedResume({
               );
             }}
           >
-            {save.isPending ? 'Saving…' : 'Save changes'}
+            {save.isPending ? t('saving') : t('saveChanges')}
           </button>
         )}
         <UploadButton
           language={resume.language}
-          label="Replace with a file (PDF, Word)"
+          label={t('replace')}
           onDone={() => {
             onSaved(resume.language);
           }}
@@ -150,7 +157,7 @@ function SavedResume({
             remove.mutate(resume.language);
           }}
         >
-          Delete
+          {t('delete')}
         </button>
       </div>
       {(save.error ?? remove.error) && (
@@ -170,6 +177,8 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
   const [language, setLanguage] = useState(languages.includes('de') ? 'de' : (languages[0] ?? ''));
   const [text, setText] = useState('');
   const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
+  const t = useTranslations('Profile.other');
+  const nameOf = useLanguageName();
   const prompt = useTranslationPrompt(language);
   const save = useSaveLanguageResume();
   const selectId = useId();
@@ -193,7 +202,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
     <div className="space-y-3 rounded-md border border-dashed border-slate-300 p-4">
       <div className="flex flex-wrap items-center gap-2">
         <label htmlFor={selectId} className="text-sm font-medium text-slate-700">
-          Add your resume in
+          {t('addIn')}
         </label>
         <select
           id={selectId}
@@ -214,10 +223,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
 
       <ol className="list-decimal space-y-3 pl-5 text-sm text-slate-700">
         <li className="space-y-2">
-          <p>
-            No {name} resume yet? Let Claude translate your master resume. The prompt keeps every
-            employer, date and number, and your real language levels.
-          </p>
+          <p>{t('noResume', { language: name })}</p>
           <button
             type="button"
             className={BUTTON}
@@ -226,15 +232,11 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
               void copyPrompt();
             }}
           >
-            {prompt.isFetching
-              ? 'Getting the prompt…'
-              : 'Copy translation prompt and open Claude ↗'}
+            {prompt.isFetching ? t('gettingPrompt') : t('copyPrompt')}
           </button>
           {copied && (
             <p role="status" className="text-slate-600">
-              {copied === 'yes'
-                ? 'Copied. Paste it into Claude, then paste Claude’s answer below.'
-                : 'Could not copy. Select the prompt below instead.'}
+              {copied === 'yes' ? t('copied') : t('copyFailed')}
             </p>
           )}
           {prompt.isError && (
@@ -244,11 +246,11 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
           )}
           {prompt.data && (
             <details open={copied === 'failed'}>
-              <summary className="cursor-pointer text-xs text-slate-500">Show the prompt</summary>
+              <summary className="cursor-pointer text-xs text-slate-500">{t('showPrompt')}</summary>
               <textarea
                 readOnly
                 value={prompt.data}
-                aria-label="Translation prompt"
+                aria-label={t('promptLabel')}
                 rows={6}
                 className={`${inputClass} mt-1 font-mono text-xs`}
               />
@@ -257,7 +259,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
         </li>
         <li className="space-y-2">
           <label htmlFor={boxId} className="block">
-            Paste your {name} resume
+            {t('paste', { language: name })}
           </label>
           <textarea
             id={boxId}
@@ -286,9 +288,9 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
                 );
               }}
             >
-              {save.isPending ? 'Saving…' : `Save ${name} resume`}
+              {save.isPending ? t('saving') : t('saveResume', { language: name })}
             </button>
-            <span className="text-slate-500">or</span>
+            <span className="text-slate-500">{t('or')}</span>
             <UploadButton
               language={language}
               onDone={() => {
@@ -296,9 +298,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
               }}
             />
           </div>
-          <p className="text-xs text-slate-500">
-            Uploading a file saves it straight away: no need to click Save.
-          </p>
+          <p className="text-xs text-slate-500">{t('uploadSaves')}</p>
           {save.isError && (
             <p role="alert" className="text-red-700">
               {getErrorMessage(save.error)}
@@ -316,6 +316,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
  * from it. Resume-Matcher keeps using the main master resume.
  */
 export function OtherResumes({ profile }: { profile: Profile }) {
+  const t = useTranslations('Profile.other');
   // The language saved last, to confirm it: the saved resume's form starts again after a save.
   const [justSaved, setJustSaved] = useState<string | null>(null);
   const taken = new Set([profile.resumeLanguage, ...profile.otherResumes.map((r) => r.language)]);
@@ -328,12 +329,9 @@ export function OtherResumes({ profile }: { profile: Profile }) {
     >
       <div>
         <h2 id="other-resumes-heading" className="text-lg font-semibold text-slate-900">
-          Resume in other languages
+          {t('heading')}
         </h2>
-        <p className="text-sm text-slate-600">
-          Optional. Jobs whose ad is in one of these languages are checked against that resume, and
-          the Claude prompt starts from it. Your master resume above stays the main one.
-        </p>
+        <p className="text-sm text-slate-600">{t('intro')}</p>
       </div>
       {profile.otherResumes.map((resume) => (
         // key includes the save time, so the text box starts again from a newly saved version.
@@ -350,7 +348,7 @@ export function OtherResumes({ profile }: { profile: Profile }) {
         ) : (
           <details>
             <summary className="cursor-pointer text-sm font-medium text-indigo-700">
-              Add another language
+              {t('addAnother')}
             </summary>
             <div className="mt-3">
               <AddResume key={free.join()} languages={free} onSaved={setJustSaved} />
