@@ -17,7 +17,7 @@ export function SortButton({ direction, onClick, children }: Props) {
       className="flex items-center gap-1 rounded font-medium whitespace-nowrap hover:text-slate-900"
     >
       {children}
-      <span aria-hidden="true" className={direction ? 'text-indigo-600' : 'text-slate-300'}>
+      <span aria-hidden="true" className={direction ? 'text-brand-600' : 'text-slate-300'}>
         {arrow}
       </span>
     </button>

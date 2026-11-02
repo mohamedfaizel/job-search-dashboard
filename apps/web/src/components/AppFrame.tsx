@@ -140,7 +140,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
                       onClick={() => {
                         setMenuOpen(false);
                       }}
-                      className="block w-full rounded-md px-3 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-100 aria-[current=page]:bg-indigo-50 aria-[current=page]:text-indigo-700 md:w-auto md:py-1.5"
+                      className="block w-full rounded-md px-3 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-100 aria-[current=page]:bg-brand-400 aria-[current=page]:font-semibold aria-[current=page]:text-black md:w-auto md:py-1.5"
                     >
                       {t(label)}
                     </Link>

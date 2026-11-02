@@ -67,13 +67,13 @@ export function ColumnFilter({
           }}
           className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition ${
             active
-              ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+              ? 'border-brand-200 bg-brand-50 text-brand-700'
               : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
           }`}
         >
           {column}
           {active && (
-            <span className="rounded-full bg-indigo-600 px-1.5 text-xs font-semibold text-white">
+            <span className="rounded-full bg-brand-600 px-1.5 text-xs font-semibold text-white">
               {selected.length}
             </span>
           )}
@@ -92,7 +92,7 @@ export function ColumnFilter({
           onClick={() => {
             setOpen((o) => !o);
           }}
-          className={`flex items-center gap-0.5 rounded px-1 py-0.5 text-xs hover:bg-slate-200 ${active ? 'bg-indigo-50 text-indigo-700' : 'text-slate-400'}`}
+          className={`flex items-center gap-0.5 rounded px-1 py-0.5 text-xs hover:bg-slate-200 ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-400'}`}
         >
           <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current">
             <path d="M1.5 2h13l-5 6.2V13l-3 1.5V8.2z" />
@@ -149,7 +149,7 @@ export function ColumnFilter({
             <button
               type="button"
               onClick={onClear}
-              className="mt-2 w-full rounded px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-50"
+              className="mt-2 w-full rounded px-2 py-1 text-xs text-brand-700 hover:bg-brand-50"
             >
               {t('clear')}
             </button>

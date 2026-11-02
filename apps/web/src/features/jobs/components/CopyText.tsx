@@ -39,7 +39,7 @@ export function CopyText({ label, text, copiedHint, boxLabel, primary = false, c
           }}
           className={
             primary
-              ? 'rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700'
+              ? 'rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700'
               : 'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50'
           }
         >

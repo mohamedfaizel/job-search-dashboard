@@ -57,7 +57,7 @@ export function ResumeMatcherStatus() {
             href="http://localhost:3100/settings"
             target="_blank"
             rel="noreferrer"
-            className="text-indigo-700 underline"
+            className="text-brand-700 underline"
           >
             {t('settings')}
           </a>{' '}

@@ -24,9 +24,9 @@ export function queuePrompt(count: number): string {
   return `Please help me apply for ${jobs} in my Apply queue. First open ${APPLY_QUEUE_URL} and read all of it. Then take the jobs one at a time, each in a new tab: open its Apply kit link, then its posting, and fill in the application form following the kit's instructions. Never click Submit: leave each form filled in on its own tab. At the end, tell me for each job what you filled in and what is left for me.`;
 }
 
-const LINK = 'text-indigo-700 hover:underline';
+const LINK = 'text-brand-700 hover:underline';
 const PRIMARY =
-  'rounded-md bg-indigo-600 px-3 py-1.5 font-medium text-white hover:bg-indigo-700 disabled:opacity-50';
+  'rounded-md bg-brand-600 px-3 py-1.5 font-medium text-white hover:bg-brand-700 disabled:opacity-50';
 const SECONDARY =
   'rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
 
@@ -196,7 +196,7 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
   return (
     <section
       aria-labelledby="apply-queue-heading"
-      className="space-y-3 rounded-xl border border-indigo-200 bg-white px-4 py-3 text-sm"
+      className="space-y-3 rounded-xl border border-brand-200 bg-white px-4 py-3 text-sm"
     >
       <div className="flex flex-wrap items-center gap-2">
         <h2 id="apply-queue-heading" className="mr-auto text-base font-semibold text-slate-900">
@@ -210,7 +210,7 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
           onClick={() => {
             markApplied(items);
           }}
-          className="rounded-md bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-700"
+          className="rounded-md bg-brand-600 px-3 py-1 font-medium text-white hover:bg-brand-700"
         >
           {t('markAll')}
         </button>
@@ -226,7 +226,7 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
           <li key={item.jobId} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
             <span
               aria-hidden="true"
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-semibold text-indigo-700 tabular-nums"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700 tabular-nums"
             >
               {item.number}
             </span>
@@ -263,7 +263,7 @@ export function ApplyQueuePanel({ onOpenJob }: { onOpenJob: (jobId: string) => v
                   onOpenJob(item.jobId);
                 }}
                 title={t('openJob')}
-                className="text-left font-medium text-slate-900 hover:text-indigo-700 hover:underline"
+                className="text-left font-medium text-slate-900 hover:text-brand-700 hover:underline"
               >
                 {item.title}
               </button>{' '}

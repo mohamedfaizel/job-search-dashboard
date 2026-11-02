@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 
 const BUTTON =
-  'rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-60';
+  'rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100 disabled:opacity-60';
 
 interface Run {
   status: 'PENDING' | 'READY' | 'FAILED';

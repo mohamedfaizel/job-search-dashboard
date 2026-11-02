@@ -21,7 +21,7 @@ import { Field, inputClass } from './Field';
 /** The ad languages you can filter by, named in your language. */
 const LANGUAGES = ['en', 'de'] as const;
 
-const CHECKBOX = 'size-4 rounded border-slate-300 text-indigo-600';
+const CHECKBOX = 'size-4 rounded border-slate-300 text-brand-600';
 
 /** Adds a value to a list, or takes it out. */
 function toggle<T>(list: T[], value: T): T[] {
@@ -205,7 +205,7 @@ export function SyncPanel({ loaded = null }: Props) {
           <summary className="cursor-pointer text-sm font-medium text-slate-700">
             {t('sync.moreFilters')}{' '}
             {activeFilters > 0 && (
-              <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
+              <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700">
                 {t('sync.filtersOn', { count: activeFilters })}
               </span>
             )}
@@ -383,7 +383,7 @@ export function SyncPanel({ loaded = null }: Props) {
           type="checkbox"
           {...register('onlyNew')}
           aria-describedby="sync-onlyNew-hint"
-          className="mt-0.5 size-4 rounded border-slate-300 text-indigo-600"
+          className="mt-0.5 size-4 rounded border-slate-300 text-brand-600"
         />
         <div className="text-sm">
           <label htmlFor="sync-onlyNew" className="font-medium text-slate-800">
@@ -398,7 +398,7 @@ export function SyncPanel({ loaded = null }: Props) {
       <button
         type="submit"
         disabled={sync.isPending}
-        className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+        className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
       >
         {sync.isPending
           ? t('importing')
@@ -485,7 +485,7 @@ export function SyncPanel({ loaded = null }: Props) {
               onClick={() => {
                 void onSave();
               }}
-              className="shrink-0 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
+              className="shrink-0 rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100 disabled:opacity-50"
             >
               {updating ? t('sync.update') : t('sync.save')}
             </button>

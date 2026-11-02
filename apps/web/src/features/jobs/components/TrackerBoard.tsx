@@ -9,7 +9,7 @@ export const BOARD_COLUMNS = ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJE
 
 const COLUMN_TONE: Record<(typeof BOARD_COLUMNS)[number], string> = {
   SAVED: 'border-t-sky-400',
-  APPLIED: 'border-t-indigo-400',
+  APPLIED: 'border-t-brand-400',
   INTERVIEWING: 'border-t-amber-400',
   OFFER: 'border-t-emerald-400',
   REJECTED: 'border-t-red-400',
@@ -62,7 +62,7 @@ export function TrackerBoard({ applications, onMove, onOpen }: Props) {
               if (app && app.status !== status) onMove(app.job, status);
             }}
             className={`flex min-h-40 flex-col gap-2 rounded-lg border border-t-4 bg-slate-50 p-3 ${COLUMN_TONE[status]} ${
-              dropTarget === status ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200'
+              dropTarget === status ? 'border-brand-400 bg-brand-50' : 'border-slate-200'
             }`}
           >
             <h2 id={headingId} className="text-sm font-semibold text-slate-700">
@@ -87,7 +87,7 @@ export function TrackerBoard({ applications, onMove, onOpen }: Props) {
                       onClick={() => {
                         onOpen(job);
                       }}
-                      className="text-left text-sm font-medium text-slate-900 hover:text-indigo-700 hover:underline"
+                      className="text-left text-sm font-medium text-slate-900 hover:text-brand-700 hover:underline"
                     >
                       {job.title}
                     </button>

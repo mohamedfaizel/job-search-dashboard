@@ -18,7 +18,7 @@ const ACCEPT = '.pdf,.docx';
 const BUTTON =
   'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
 const PRIMARY =
-  'rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50';
+  'rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50';
 
 const SELECT = 'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm';
 
@@ -42,7 +42,7 @@ function UploadButton({
     <span className="inline-flex flex-wrap items-center gap-2">
       <label
         htmlFor={id}
-        className={`${BUTTON} cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-indigo-500`}
+        className={`${BUTTON} cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-500`}
       >
         {upload.isPending ? t('reading') : (label ?? t('upload'))}
         <input
@@ -350,7 +350,7 @@ export function OtherResumes({ profile }: { profile: Profile }) {
           <AddResume key={free.join()} languages={free} onSaved={setJustSaved} />
         ) : (
           <details>
-            <summary className="cursor-pointer text-sm font-medium text-indigo-700">
+            <summary className="cursor-pointer text-sm font-medium text-brand-700">
               {t('addAnother')}
             </summary>
             <div className="mt-3">

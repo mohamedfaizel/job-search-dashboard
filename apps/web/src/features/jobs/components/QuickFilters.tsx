@@ -42,7 +42,7 @@ export function QuickFilters({
   const chip = (on: boolean) =>
     `rounded-full border px-3 py-1 text-sm transition ${
       on
-        ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+        ? 'border-brand-200 bg-brand-50 text-brand-700'
         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
     }`;
 

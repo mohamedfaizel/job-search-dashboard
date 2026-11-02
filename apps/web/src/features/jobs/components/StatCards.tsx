@@ -24,7 +24,7 @@ interface Props {
 }
 
 const CARDS: { key: StatCardKey; dot: string }[] = [
-  { key: 'total', dot: 'bg-indigo-500' },
+  { key: 'total', dot: 'bg-brand-500' },
   { key: 'SAVED', dot: 'bg-sky-500' },
   { key: 'APPLIED', dot: 'bg-amber-500' },
   { key: 'INTERVIEWING', dot: 'bg-emerald-500' },
@@ -56,7 +56,7 @@ export function StatCards({
   };
 
   const pill = (pressed: boolean) =>
-    `flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none ${
+    `flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none ${
       pressed
         ? 'border-slate-900 bg-slate-900 text-white'
         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'

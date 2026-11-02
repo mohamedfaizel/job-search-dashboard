@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { AiRunSection } from './AiRunSection';
 
 const LINK =
-  'rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700';
+  'rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700';
 
 /**
  * Tailoring inside the job popup: Resume-Matcher rewrites your resume for this job and writes a

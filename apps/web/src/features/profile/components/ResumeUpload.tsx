@@ -28,7 +28,7 @@ export function ResumeUpload({ fileName, onUploaded }: Props) {
       <div className="flex flex-wrap items-center gap-3">
         <label
           htmlFor={inputId}
-          className="cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-indigo-500"
+          className="cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-500"
         >
           {upload.isPending ? t('reading') : t('upload')}
           <input

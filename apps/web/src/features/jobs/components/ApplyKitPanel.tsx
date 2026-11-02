@@ -22,7 +22,7 @@ export function chromePrompt(job: Job): string {
 }
 
 export const CLAUDE_URL = 'https://claude.ai/new';
-const LINK = 'text-indigo-700 hover:underline';
+const LINK = 'text-brand-700 hover:underline';
 export type ApplyStep = 1 | 2 | 3;
 const STEPS: ApplyStep[] = [1, 2, 3];
 
@@ -101,7 +101,7 @@ function Stepper({ step, onChoose }: { step: ApplyStep; onChoose: (s: ApplyStep)
                   state === 'done'
                     ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
                     : state === 'current'
-                      ? 'border-indigo-600 bg-indigo-600 text-white'
+                      ? 'border-brand-600 bg-brand-600 text-white'
                       : 'border-slate-300 text-slate-500'
                 }`}
               >
@@ -300,7 +300,7 @@ function ApplyKit({
       onClick={() => {
         changeQueue.mutate({ jobIds: [job.id], remove: queued });
       }}
-      className="h-9 rounded-lg px-3 text-sm font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 disabled:opacity-50"
+      className="h-9 rounded-lg px-3 text-sm font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50 disabled:opacity-50"
     >
       {queued ? t('removeQueue') : t('addQueue')}
     </button>
@@ -314,15 +314,15 @@ function ApplyKit({
         <p className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">{t('applied')}</p>
       )}
       {asking && !applied && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-indigo-50 px-3 py-2">
-          <span className="flex-1 text-indigo-900">{t('askOpened')}</span>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-brand-50 px-3 py-2">
+          <span className="flex-1 text-brand-900">{t('askOpened')}</span>
           <button
             type="button"
             onClick={() => {
               onStatusChange('APPLIED');
               onAnswered(job);
             }}
-            className="h-8 rounded-lg bg-emerald-600 px-3 font-medium text-white hover:bg-emerald-700"
+            className="h-8 rounded-lg bg-brand-600 px-3 font-medium text-white hover:bg-brand-700"
           >
             {t('yes')}
           </button>

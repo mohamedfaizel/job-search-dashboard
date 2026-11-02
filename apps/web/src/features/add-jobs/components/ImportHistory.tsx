@@ -74,7 +74,7 @@ export function ImportHistory() {
                       )}
                       {run.summary}
                       {run.scheduled && (
-                        <span className="ml-2 rounded bg-indigo-50 px-1.5 py-0.5 text-xs text-indigo-700">
+                        <span className="ml-2 rounded bg-brand-50 px-1.5 py-0.5 text-xs text-brand-700">
                           {t('scheduled')}
                         </span>
                       )}

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type BadgeTone = 'gray' | 'red' | 'orange' | 'purple' | 'blue' | 'green' | 'pink';
+export type BadgeTone = 'gray' | 'red' | 'orange' | 'purple' | 'blue' | 'green' | 'pink' | 'flag';
 
 const TONES: Record<BadgeTone, string> = {
   gray: 'bg-slate-50 text-slate-700 ring-slate-200',
@@ -10,6 +10,8 @@ const TONES: Record<BadgeTone, string> = {
   blue: 'bg-sky-50 text-sky-700 ring-sky-200',
   green: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   pink: 'bg-pink-50 text-pink-700 ring-pink-200',
+  /** The flag's red with white text: for the "New" badge. */
+  flag: 'bg-flag-red text-white ring-flag-red',
 };
 
 interface Props {

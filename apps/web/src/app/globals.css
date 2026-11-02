@@ -5,3 +5,4 @@
  * the CSS step ("Node.js process exited with code 0xc0000409").
  */
 @import 'tailwindcss' source('../');
+@import './theme.css';

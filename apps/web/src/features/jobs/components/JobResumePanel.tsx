@@ -20,8 +20,8 @@ import { HaveChip, MissingChip, ScoreRing } from './InsightsPanel';
 export const BUTTON =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
 export const PRIMARY =
-  'inline-flex h-11 items-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50';
-const LINK = 'text-indigo-700 hover:underline';
+  'inline-flex h-11 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50';
+const LINK = 'text-brand-700 hover:underline';
 
 const ACCEPT = '.pdf,.docx,.txt,.md';
 const isResumeFile = (file: File) => /\.(pdf|docx|txt|md)$/i.test(file.name);
@@ -150,7 +150,7 @@ export function ReplyInput({
           placeholder={t('placeholder')}
           rows={7}
           className={`w-full rounded-xl border-[1.5px] p-3 text-sm ${
-            dragging ? 'border-dashed border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-white'
+            dragging ? 'border-dashed border-brand-400 bg-brand-50' : 'border-slate-300 bg-white'
           }`}
         />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -179,7 +179,7 @@ export function ReplyInput({
           <button
             type="submit"
             disabled={busy || !text.trim()}
-            className="h-9 rounded-lg bg-indigo-600 px-3 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="h-9 rounded-lg bg-brand-600 px-3 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {save.isPending ? t('saving') : t('saveDownload')}
           </button>

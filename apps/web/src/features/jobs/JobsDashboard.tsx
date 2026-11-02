@@ -233,7 +233,7 @@ export function JobsDashboard() {
               for (const job of changed) setHidden.mutate({ id: job.id, hidden: !hidden });
               setLastChange(null);
             }}
-            className="font-semibold text-indigo-300 hover:text-indigo-200"
+            className="font-semibold text-brand-300 hover:text-brand-200"
           >
             {t('undo.undo')}
           </button>
@@ -270,7 +270,7 @@ export function JobsDashboard() {
                   updateStatus.mutate({ id: p.id, status: 'APPLIED' });
                   applying.answer(p.id);
                 }}
-                className="rounded-md bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-700"
+                className="rounded-md bg-brand-600 px-3 py-1 font-medium text-white hover:bg-brand-700"
               >
                 {t('pending.yes')}
               </button>
@@ -332,7 +332,7 @@ export function JobsDashboard() {
         <div
           role="region"
           aria-label={t('selection.label')}
-          className="flex flex-wrap items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm text-indigo-900"
+          className="flex flex-wrap items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2 text-sm text-brand-900"
         >
           <span className="mr-auto font-medium">
             {t('selection.count', { count: selectedJobs.length })}
@@ -346,7 +346,7 @@ export function JobsDashboard() {
                 }
                 setChecked(new Set());
               }}
-              className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
+              className="rounded-md bg-white px-3 py-1 font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100"
             >
               {t('selection.save')}
             </button>
@@ -358,7 +358,7 @@ export function JobsDashboard() {
                 changeQueue.mutate({ jobIds: selectedJobs.map((job) => job.id) });
                 setChecked(new Set());
               }}
-              className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
+              className="rounded-md bg-white px-3 py-1 font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100"
             >
               {t('selection.addToQueue')}
             </button>
@@ -369,7 +369,7 @@ export function JobsDashboard() {
               void changeHidden(selectedJobs);
               setChecked(new Set());
             }}
-            className="rounded-md bg-white px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
+            className="rounded-md bg-white px-3 py-1 font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100"
           >
             {showingHidden ? t('selection.unhide') : t('selection.hide')}
           </button>
@@ -378,7 +378,7 @@ export function JobsDashboard() {
             onClick={() => {
               setChecked(new Set());
             }}
-            className="px-2 py-1 text-indigo-700 hover:underline"
+            className="px-2 py-1 text-brand-700 hover:underline"
           >
             {t('selection.clear')}
           </button>

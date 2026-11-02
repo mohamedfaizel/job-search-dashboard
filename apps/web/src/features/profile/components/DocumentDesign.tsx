@@ -21,7 +21,7 @@ import { useErrorText } from '../../../i18n/useErrorText';
 const BUTTON =
   'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
 const SELECT = 'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm';
-const LINK = 'text-sm text-indigo-700 hover:underline';
+const LINK = 'text-sm text-brand-700 hover:underline';
 
 /** Colours that print well and look calm on a resume. */
 const SWATCHES = [
@@ -54,7 +54,7 @@ function TemplateCard({
   const id = useId();
   return (
     <div
-      className={`rounded-lg border p-3 ${checked ? 'border-indigo-500 bg-indigo-50/60 ring-1 ring-indigo-500' : 'border-slate-200'}`}
+      className={`rounded-lg border p-3 ${checked ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200'}`}
     >
       <div className="flex items-start gap-2">
         <input
@@ -361,7 +361,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
               },
             });
           }}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
         >
           {update.isPending ? t('saving') : t('save')}
         </button>

@@ -57,7 +57,7 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
         </svg>
         {t('menu')}
         {hiddenCount > 0 && (
-          <span className="rounded-full bg-indigo-100 px-1.5 text-xs text-indigo-700">
+          <span className="rounded-full bg-brand-100 px-1.5 text-xs text-brand-700">
             {t('hiddenCount', { count: hiddenCount })}
           </span>
         )}
@@ -98,7 +98,7 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
             <button
               type="button"
               onClick={onShowAll}
-              className="mt-2 w-full rounded px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-50"
+              className="mt-2 w-full rounded px-2 py-1 text-xs text-brand-700 hover:bg-brand-50"
             >
               {t('showAll')}
             </button>
