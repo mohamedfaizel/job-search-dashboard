@@ -529,7 +529,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
         >
           {isSubmitting ? t('saving') : t('save')}
         </button>

@@ -72,7 +72,7 @@ export function Tabs<Id extends string>({ label, tabs, selected, onSelect }: Pro
               }}
               className={`-mb-px border-b-2 px-3 py-2 sm:px-4 text-sm font-medium whitespace-nowrap ${
                 active
-                  ? 'border-indigo-600 text-indigo-700'
+                  ? 'border-brand-600 text-brand-700'
                   : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900'
               }`}
             >

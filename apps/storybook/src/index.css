@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* The app's colours (black, red, gold), shared with the web app. */
+@import '../../web/src/app/theme.css';
 
 /* Tailwind only generates the classes it finds, so point it at the app's code. */
 @source '../../web/src';

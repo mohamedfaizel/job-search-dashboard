@@ -154,7 +154,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
           onClick={() => {
             run.mutate({ id: search.id });
           }}
-          className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {run.isPending ? t('importing') : t('saved.runNow')}
         </button>

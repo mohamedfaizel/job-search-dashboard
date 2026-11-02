@@ -29,6 +29,7 @@ const BAR: Record<BadgeTone, string> = {
   purple: 'bg-violet-500',
   blue: 'bg-sky-500',
   pink: 'bg-pink-500',
+  flag: 'bg-flag-red',
 };
 
 /**

@@ -135,14 +135,14 @@ export function JobCell({ job }: { job: Job }) {
           onClick={() => {
             openJob(job);
           }}
-          className="block max-w-[22rem] truncate text-left text-sm font-semibold text-slate-900 hover:text-indigo-700"
+          className="block max-w-[22rem] truncate text-left text-sm font-semibold text-slate-900 hover:text-brand-700"
           title={job.title}
         >
           {job.title}
         </button>
         <span className="flex max-w-[22rem] items-center gap-1.5 text-slate-500">
           {fresh && (
-            <Badge tone="blue" title={t('newHint')}>
+            <Badge tone="flag" title={t('newHint')}>
               {t('new')}
             </Badge>
           )}
@@ -321,7 +321,7 @@ export function SelectCell({ job }: { job: Job }) {
       onChange={() => {
         toggleSelected(job);
       }}
-      className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
+      className="h-4 w-4 rounded border-slate-300 accent-brand-600"
     />
   );
 }
@@ -339,13 +339,13 @@ function SelectAllHeader() {
         if (box) box.indeterminate = !allSelected && selected.size > 0;
       }}
       onChange={toggleAll}
-      className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
+      className="h-4 w-4 rounded border-slate-300 accent-brand-600"
     />
   );
 }
 
 const ICON_BUTTON =
-  'inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent';
+  'inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent';
 
 /**
  * Save (bookmark), Hide (crossed-out eye) and Open posting, as icon buttons with tooltips.
@@ -377,7 +377,7 @@ export function ActionsCell({ job, withText = false }: { job: Job; withText?: bo
         onClick={() => {
           setStatus(job, saved ? 'NONE' : 'SAVED');
         }}
-        className={`${ICON_BUTTON} ${wide} ${saved || tracked ? 'text-indigo-600' : ''}`}
+        className={`${ICON_BUTTON} ${wide} ${saved || tracked ? 'text-brand-600' : ''}`}
       >
         <BookmarkIcon filled={saved || tracked} />
         {withText && t(saved ? 'saved' : 'save')}

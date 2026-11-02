@@ -22,7 +22,7 @@ function text(form: FormData, name: string): string {
 }
 
 const field =
-  'mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500';
+  'mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500';
 
 /**
  * The log-in and sign-up form. Each has its own page (/login, /signup), so a link can open
@@ -131,7 +131,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           <button
             type="submit"
             disabled={active.isPending}
-            className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="w-full rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {mode === 'log-in'
               ? t(logIn.isPending ? 'loggingIn' : 'logIn')
@@ -143,7 +143,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           {mode === 'log-in' ? t('newHere') : t('haveAccount')}{' '}
           <Link
             href={{ pathname: mode === 'log-in' ? '/signup' : '/login', query: otherQuery }}
-            className="font-medium text-indigo-700 hover:underline"
+            className="font-medium text-brand-700 hover:underline"
           >
             {mode === 'log-in' ? t('createAnAccount') : t('logIn')}
           </Link>

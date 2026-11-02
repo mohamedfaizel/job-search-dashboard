@@ -63,12 +63,12 @@ export function Toolbar({
           onChange={(e) => {
             setValue(e.target.value);
           }}
-          className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none sm:w-72"
+          className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm shadow-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none sm:w-72"
         />
       </div>
       {quickFilters}
       {activeFilterCount > 0 && (
-        <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+        <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
           {t('active', { count: activeFilterCount })}
         </span>
       )}
@@ -76,7 +76,7 @@ export function Toolbar({
         <button
           type="button"
           onClick={onClearAll}
-          className="text-sm text-indigo-700 hover:underline"
+          className="text-sm text-brand-700 hover:underline"
         >
           {t('clearAll')}
         </button>

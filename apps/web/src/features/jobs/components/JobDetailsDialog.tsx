@@ -156,7 +156,7 @@ function JobDetails({
               aria-pressed={saved}
               aria-label={t('saveLabel')}
               title={sent ? t('onTracker') : saved ? t('removeFromTracker') : t('saveLabel')}
-              className={`${ICON_BUTTON} hidden disabled:opacity-60 sm:inline-flex ${saved ? 'text-indigo-600' : ''}`}
+              className={`${ICON_BUTTON} hidden disabled:opacity-60 sm:inline-flex ${saved ? 'text-brand-600' : ''}`}
             >
               <BookmarkIcon filled={saved} className="h-[18px] w-[18px]" />
             </button>
@@ -238,13 +238,13 @@ function JobDetails({
               }}
               className={`-mb-px h-11 border-b-2 px-0.5 text-sm font-medium ${
                 tab === id
-                  ? 'border-indigo-600 text-indigo-700'
+                  ? 'border-brand-600 text-brand-700'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
               {t(`tabs.${id}`)}
               {id === 'apply' && !SENT.has(job.applicationStatus) && (
-                <span className="ml-1.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-700 max-sm:hidden">
+                <span className="ml-1.5 rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] font-medium text-brand-700 max-sm:hidden">
                   {t('stepOf', { step: applySteps.step })}
                 </span>
               )}
@@ -317,7 +317,7 @@ function JobDetails({
             onClick={() => {
               setTab('apply');
             }}
-            className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 sm:w-auto"
+            className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 sm:w-auto"
           >
             {t('apply')}
           </button>
@@ -329,7 +329,7 @@ function JobDetails({
                 onStatusChange('APPLIED');
                 onApplyAnswered(job);
               }}
-              className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 sm:w-auto"
+              className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 sm:w-auto"
             >
               {t('markApplied')}
             </button>

@@ -5,7 +5,7 @@ import { useJobFormat } from '../useJobFormat';
 const TONE: Record<ApplicationStatus, string> = {
   NONE: 'text-slate-500',
   SAVED: 'text-sky-700',
-  APPLIED: 'text-indigo-700',
+  APPLIED: 'text-brand-700',
   INTERVIEWING: 'text-amber-700',
   OFFER: 'text-emerald-700',
   REJECTED: 'text-red-700',

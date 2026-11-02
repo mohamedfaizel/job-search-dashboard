@@ -77,13 +77,13 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
           {picked.map((code) => (
             <li
               key={code}
-              className="inline-flex items-center gap-1 rounded bg-indigo-50 py-0.5 pr-0.5 pl-1.5 text-xs font-medium text-indigo-800 ring-1 ring-indigo-200 ring-inset"
+              className="inline-flex items-center gap-1 rounded bg-brand-50 py-0.5 pr-0.5 pl-1.5 text-xs font-medium text-brand-800 ring-1 ring-brand-200 ring-inset"
             >
               {name(code)} · {code}
               <button
                 type="button"
                 aria-label={t('remove', { country: name(code) })}
-                className="rounded px-1 leading-none hover:bg-indigo-100"
+                className="rounded px-1 leading-none hover:bg-brand-100"
                 onClick={(e) => {
                   e.stopPropagation();
                   choose(code);
@@ -155,7 +155,7 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
                 role="option"
                 tabIndex={-1}
                 aria-selected={selected}
-                className={`flex cursor-pointer items-center justify-between px-3 py-1.5 ${i === active ? 'bg-indigo-50' : ''} ${option.code === null ? 'border-b border-slate-100 font-medium' : ''}`}
+                className={`flex cursor-pointer items-center justify-between px-3 py-1.5 ${i === active ? 'bg-brand-50' : ''} ${option.code === null ? 'border-b border-slate-100 font-medium' : ''}`}
                 onMouseEnter={() => {
                   setActive(i);
                 }}
@@ -166,7 +166,7 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
                 }}
               >
                 {option.label}
-                {selected && <span className="text-indigo-600">✓</span>}
+                {selected && <span className="text-brand-600">✓</span>}
               </div>
             );
           })}

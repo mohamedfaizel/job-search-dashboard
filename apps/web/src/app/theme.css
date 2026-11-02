@@ -1,0 +1,25 @@
+/*
+ * The app's colours, in one place. They come from the German flag: black, red and gold.
+ *
+ * "brand" is the scale the screens use. Its dark end (600 and up) is black, for buttons, links
+ * and focus rings. Its light end (50 to 400) is gold, for the active menu item and chosen
+ * filters. Gold is only ever a background with dark text, never text on white (too pale to read).
+ * Change these values and every screen follows.
+ */
+@theme {
+  --color-brand-50: #fff8d6;
+  --color-brand-100: #ffefa6;
+  --color-brand-200: #ffe27a;
+  --color-brand-300: #ffd84d;
+  --color-brand-400: #ffce00;
+  --color-brand-500: #111111;
+  --color-brand-600: #111111;
+  --color-brand-700: #333333;
+  --color-brand-800: #1f1f1f;
+  --color-brand-900: #000000;
+
+  /* The flag itself: the stripe on top, the logo and the "NEW" badge. */
+  --color-flag-black: #000000;
+  --color-flag-red: #dd0000;
+  --color-flag-gold: #ffce00;
+}

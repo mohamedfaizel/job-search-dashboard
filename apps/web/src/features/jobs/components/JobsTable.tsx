@@ -180,7 +180,7 @@ export function JobsTable({
               <tr
                 key={row.id}
                 className={`border-t border-slate-100 transition-colors hover:bg-slate-50 ${
-                  selected.has(row.id) ? 'bg-indigo-50/60' : ''
+                  selected.has(row.id) ? 'bg-brand-50/60' : ''
                 }`}
               >
                 {row.getVisibleCells().map((cell) => (

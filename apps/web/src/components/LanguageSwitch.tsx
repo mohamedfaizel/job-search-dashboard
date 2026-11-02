@@ -30,7 +30,7 @@ export function LanguageSwitch({ onPick }: { onPick?: (locale: Locale) => void }
             onPick?.(locale);
             router.refresh();
           }}
-          className="px-2 py-1 text-xs font-medium text-slate-600 uppercase first:rounded-l-md last:rounded-r-md hover:bg-slate-100 aria-pressed:bg-indigo-50 aria-pressed:text-indigo-700"
+          className="px-2 py-1 text-xs font-medium text-slate-600 uppercase first:rounded-l-md last:rounded-r-md hover:bg-slate-100 aria-pressed:bg-brand-400 aria-pressed:text-black"
         >
           {locale}
         </button>

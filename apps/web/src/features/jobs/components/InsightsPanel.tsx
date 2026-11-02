@@ -225,8 +225,8 @@ function RemovedTerms({
     <details className="group text-xs text-slate-600">
       <summary className="cursor-pointer list-none">
         {t('removedSummary', { count: removed.length })} ·{' '}
-        <span className="text-indigo-600 group-open:hidden">{t('show')}</span>
-        <span className="hidden text-indigo-600 group-open:inline">{t('hide')}</span>
+        <span className="text-brand-600 group-open:hidden">{t('show')}</span>
+        <span className="hidden text-brand-600 group-open:inline">{t('hide')}</span>
       </summary>
       <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t('removedLabel')}>
         {removed.map(({ term, everywhere }) => (
@@ -253,7 +253,7 @@ function RemovedTerms({
                 onRestore(term);
               }}
               aria-label={t('putBack', { term })}
-              className={`${CHIP_BUTTON} text-indigo-700`}
+              className={`${CHIP_BUTTON} text-brand-700`}
             >
               {t('undo')}
             </button>
@@ -294,7 +294,7 @@ function Summary({ insights }: { insights: JobInsights }) {
           {t('titleValue', { value: titleMatch === null ? t('na') : `${String(titleMatch)}%` })}
         </p>
         <details className="group">
-          <summary className="cursor-pointer list-none text-indigo-600 hover:text-indigo-800">
+          <summary className="cursor-pointer list-none text-brand-600 hover:text-brand-800">
             {t('howWorked')}
           </summary>
           <p className="mt-1 text-xs text-slate-500">{t('howText')}</p>
