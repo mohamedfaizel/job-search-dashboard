@@ -67,8 +67,9 @@ export function SyncPanel({ loaded = null }: Props) {
   });
 
   const source = useWatch({ control, name: 'source' });
-  // The free German board: no credits, and only some of the filters apply.
-  const free = source === 'ARBEITSAGENTUR';
+  // The free sources: no credits, and only some of the filters apply.
+  const free = source !== 'JOBSPIPE';
+  const boards = source === 'COMPANY_BOARDS';
   const [pageSize, maxPages, maxAgeDays] = useWatch({
     control,
     name: ['pageSize', 'maxPages', 'maxAgeDays'],
@@ -150,14 +151,16 @@ export function SyncPanel({ loaded = null }: Props) {
     >
       <div>
         <h2 id="sync-heading" className="text-lg font-semibold text-slate-900">
-          {t(free ? 'sync.headingFree' : 'sync.heading')}
+          {t(boards ? 'sync.headingBoards' : free ? 'sync.headingFree' : 'sync.heading')}
         </h2>
-        <p className="text-sm text-slate-600">{t(free ? 'sync.introFree' : 'sync.intro')}</p>
+        <p className="text-sm text-slate-600">
+          {t(boards ? 'sync.introBoards' : free ? 'sync.introFree' : 'sync.intro')}
+        </p>
       </div>
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-slate-700">{t('sync.source')}</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-3">
           {IMPORT_SOURCES.map((value) => (
             <label
               key={value}
@@ -190,6 +193,23 @@ export function SyncPanel({ loaded = null }: Props) {
         >
           {t('sync.fillProfile')}
         </button>
+      )}
+
+      {boards && (
+        <Field
+          label={t('sync.boards')}
+          htmlFor="sync-boards"
+          error={errors.boards?.message}
+          hint={t('sync.boardsHint')}
+          required
+        >
+          <input
+            placeholder={t('sync.boardsPlaceholder')}
+            {...register('boards')}
+            {...a11y('boards')}
+            className={inputClass}
+          />
+        </Field>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -327,7 +347,8 @@ export function SyncPanel({ loaded = null }: Props) {
                   </legend>
                   <div className="flex flex-wrap gap-x-4 gap-y-1">
                     {EMPLOYMENT_TYPES.filter(
-                      (type) => !free || type === 'full-time' || type === 'part-time',
+                      (type) =>
+                        source !== 'ARBEITSAGENTUR' || type === 'full-time' || type === 'part-time',
                     ).map((type) => (
                       <label key={type} className="flex items-center gap-2 text-sm">
                         <input
@@ -376,11 +397,13 @@ export function SyncPanel({ loaded = null }: Props) {
           <summary className="cursor-pointer text-sm font-medium text-slate-700">
             {t('sync.pageSettings')}{' '}
             <span className="font-normal text-slate-500">
-              {t('sync.pageSummary', {
-                days: maxAgeDays,
-                size: pageSize,
-                pages: Number(maxPages) || 0,
-              })}
+              {boards
+                ? t('sync.pageSummaryBoards', { days: maxAgeDays })
+                : t('sync.pageSummary', {
+                    days: maxAgeDays,
+                    size: pageSize,
+                    pages: Number(maxPages) || 0,
+                  })}
             </span>
           </summary>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
@@ -396,52 +419,58 @@ export function SyncPanel({ loaded = null }: Props) {
                 className={inputClass}
               />
             </Field>
-            <Field
-              label={t('sync.pageSize')}
-              htmlFor="sync-pageSize"
-              error={errors.pageSize?.message}
-              hint={t('sync.pageSizeHint')}
-            >
-              <input
-                inputMode="numeric"
-                {...register('pageSize')}
-                {...a11y('pageSize')}
-                className={inputClass}
-              />
-            </Field>
-            <Field
-              label={t('sync.maxPages')}
-              htmlFor="sync-maxPages"
-              error={errors.maxPages?.message}
-            >
-              <input
-                inputMode="numeric"
-                {...register('maxPages')}
-                {...a11y('maxPages')}
-                className={inputClass}
-              />
-            </Field>
+            {!boards && (
+              <>
+                <Field
+                  label={t('sync.pageSize')}
+                  htmlFor="sync-pageSize"
+                  error={errors.pageSize?.message}
+                  hint={t('sync.pageSizeHint')}
+                >
+                  <input
+                    inputMode="numeric"
+                    {...register('pageSize')}
+                    {...a11y('pageSize')}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field
+                  label={t('sync.maxPages')}
+                  htmlFor="sync-maxPages"
+                  error={errors.maxPages?.message}
+                >
+                  <input
+                    inputMode="numeric"
+                    {...register('maxPages')}
+                    {...a11y('maxPages')}
+                    className={inputClass}
+                  />
+                </Field>
+              </>
+            )}
           </div>
         </details>
       </div>
 
-      <div className="flex items-start gap-2">
-        <input
-          id="sync-onlyNew"
-          type="checkbox"
-          {...register('onlyNew')}
-          aria-describedby="sync-onlyNew-hint"
-          className="mt-0.5 size-4 rounded border-slate-300 text-brand-600"
-        />
-        <div className="text-sm">
-          <label htmlFor="sync-onlyNew" className="font-medium text-slate-800">
-            {t('sync.onlyNew')}
-          </label>
-          <p id="sync-onlyNew-hint" className="text-slate-500">
-            {t('sync.onlyNewHint')}
-          </p>
+      {!boards && (
+        <div className="flex items-start gap-2">
+          <input
+            id="sync-onlyNew"
+            type="checkbox"
+            {...register('onlyNew')}
+            aria-describedby="sync-onlyNew-hint"
+            className="mt-0.5 size-4 rounded border-slate-300 text-brand-600"
+          />
+          <div className="text-sm">
+            <label htmlFor="sync-onlyNew" className="font-medium text-slate-800">
+              {t('sync.onlyNew')}
+            </label>
+            <p id="sync-onlyNew-hint" className="text-slate-500">
+              {t('sync.onlyNewHint')}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <button
         type="submit"
@@ -481,7 +510,7 @@ export function SyncPanel({ loaded = null }: Props) {
           {sync.data.totalAvailable !== null && !sync.data.resumed && (
             <p>{t('sync.total', { jobs: t('jobs', { count: sync.data.totalAvailable }) })}</p>
           )}
-          {lastInput?.source === 'ARBEITSAGENTUR' ? (
+          {lastInput?.source && lastInput.source !== 'JOBSPIPE' ? (
             <p>{t('sync.usedFree')}</p>
           ) : (
             <p>
@@ -492,6 +521,16 @@ export function SyncPanel({ loaded = null }: Props) {
                 t('sync.left', { count: sync.data.creditsRemaining })}
               .
             </p>
+          )}
+          {sync.data.warnings.length > 0 && (
+            <div className="text-amber-900">
+              <p className="font-medium">{t('sync.warnings')}</p>
+              <ul className="list-disc pl-5">
+                {sync.data.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       )}
@@ -506,7 +545,7 @@ export function SyncPanel({ loaded = null }: Props) {
             }}
             className="rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
-            {lastInput.source === 'ARBEITSAGENTUR'
+            {lastInput.source && lastInput.source !== 'JOBSPIPE'
               ? t('sync.continueFree')
               : t('sync.continueUpTo', { credits: t('credits', { count: continueCredits }) })}
           </button>

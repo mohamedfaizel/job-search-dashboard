@@ -812,6 +812,7 @@
       "countryCode": "Use a 2-letter code, like US or DE",
       "salaryOrder": "Minimum salary can’t be above the maximum",
       "wholeNumber": "Enter a whole number from 1 to {max}",
+      "boards": "Add at least one company board, like greenhouse:stripe",
       "titles": "Enter at least one job title",
       "countryCodes": "Use 2-letter codes, like US, DE",
       "minSalary": "Enter euros a year, like 60000, or leave it empty",
@@ -904,6 +905,8 @@
       "save": "Save search",
       "saveError": "Could not save: {error}",
       "saved": "Saved \"{name}\".",
+      "headingBoards": "Import from company career pages",
+      "introBoards": "Reads the open jobs straight from companies’ own career pages (Greenhouse, Lever, Ashby). Free, no credits. Only jobs that match your search are saved.",
       "headingFree": "Import from Arbeitsagentur",
       "introFree": "The German Federal Employment Agency’s job board. Free, no credits. Germany only. Only some filters apply, so the rest are hidden.",
       "source": "Where to look",
@@ -915,8 +918,17 @@
         "ARBEITSAGENTUR": {
           "name": "Arbeitsagentur (free)",
           "hint": "Germany only. No credits. Reads each ad in full."
+        },
+        "COMPANY_BOARDS": {
+          "name": "Company career pages (free)",
+          "hint": "Greenhouse, Lever and Ashby. No credits. You pick the companies."
         }
       },
+      "boards": "Company career pages",
+      "boardsHint": "Comma separated: greenhouse:name, lever:name, ashby:name, or paste the career page address",
+      "boardsPlaceholder": "e.g. greenhouse:stripe, lever:netflix, ashby:ramp",
+      "pageSummaryBoards": "· {days} days old at most",
+      "warnings": "Some things to know:",
       "usedFree": "Free: no credits used.",
       "continueFree": "Continue import"
     },
@@ -961,6 +973,7 @@
       "saveSchedule": "Save schedule",
       "nextRun": "Next run: {date}",
       "scheduleError": "Could not save the schedule: {error}",
+      "boardsBadge": "Career pages",
       "freeBadge": "Free",
       "lastDaysFree": "Last {days} days · free",
       "free": "Free: no credits used."
@@ -1009,6 +1022,8 @@
     "QUEUE_REPLY_EMPTY": "No “=== JOB 1: … ===” lines found. Paste Claude’s whole reply to the queue prompt.",
     "SAVED_SEARCH_NOT_FOUND": "Saved search {id} was not found.",
     "SAVED_SEARCH_NAME_TAKEN": "A saved search named “{name}” already exists.",
+    "INVALID_BOARD": "Could not read the company board “{entry}”. Use greenhouse:name, lever:name or ashby:name, or paste the career page address.",
+    "NO_BOARDS": "Add at least one company board, for example greenhouse:stripe.",
     "NOTHING_TO_CONTINUE": "Nothing to continue: the last import of this search already fetched every page.",
     "TAILOR_FIRST": "Tailor your resume for this job first.",
     "NO_COVER_LETTER": "There is no cover letter for this job. Tailor again.",

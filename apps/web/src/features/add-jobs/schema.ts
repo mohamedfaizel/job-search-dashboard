@@ -15,6 +15,11 @@ export function splitList(value: string): string[] {
     .filter(Boolean);
 }
 
+/** Splits "greenhouse:stripe, lever:netflix  ashby:ramp" on commas and spaces. */
+export function splitBoards(value: string): string[] {
+  return value.split(/[\s,]+/).filter(Boolean);
+}
+
 /** Turns an error key from messages/<locale>.json ("AddJobs.errors") into text. */
 export type ErrorText = (key: string, values?: Record<string, string | number>) => string;
 
@@ -127,8 +132,9 @@ export function syncFormSchema(t: ErrorText) {
       .refine((v) => /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= max, {
         message: t('wholeNumber', { max }),
       });
-  return z.object({
+  const fields = z.object({
     source: z.enum(IMPORT_SOURCES),
+    boards: z.string(),
     titles: z.string().refine((v) => splitList(v).length > 0, t('titles')),
     skills: z.string(),
     countryCodes: z
@@ -152,12 +158,18 @@ export function syncFormSchema(t: ErrorText) {
     maxPages: positiveInt(50),
     onlyNew: z.boolean(),
   });
+  // Career pages are only asked for when that source is picked.
+  return fields.refine((v) => v.source !== 'COMPANY_BOARDS' || splitBoards(v.boards).length > 0, {
+    path: ['boards'],
+    message: t('boards'),
+  });
 }
 
 export type SyncFormValues = z.infer<ReturnType<typeof syncFormSchema>>;
 
 export const defaultSyncForm: SyncFormValues = {
   source: 'JOBSPIPE',
+  boards: '',
   titles: 'frontend',
   skills: 'react',
   countryCodes: '',
@@ -180,11 +192,13 @@ export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
   const locations = splitList(values.locations);
   const excludeTitles = splitList(values.excludeTitles);
   const minSalary = values.minSalaryEur.trim();
-  // The free German board looks at titles, places, job type, remote, skipped titles and age.
-  // Fields it ignores are left out, so a value hidden in the form is never sent.
-  const free = values.source === 'ARBEITSAGENTUR';
+  // The free sources look at titles, places, job type, remote, skipped titles and age.
+  // Fields they ignore are left out, so a value hidden in the form is never sent.
+  const free = values.source !== 'JOBSPIPE';
+  const boards = splitBoards(values.boards);
   return {
     ...(free ? { source: values.source } : {}),
+    ...(values.source === 'COMPANY_BOARDS' ? { boards } : {}),
     titles: splitList(values.titles),
     ...(skills.length && !free ? { skills } : {}),
     ...(countryCodes.length && !free ? { countryCodes } : {}),
@@ -206,6 +220,7 @@ export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
 export function savedSearchToForm(search: SavedSearch): SyncFormValues {
   return {
     source: search.source,
+    boards: search.boards.join(', '),
     titles: search.titles.join(', '),
     skills: search.skills.join(', '),
     countryCodes: search.countryCodes.join(', '),

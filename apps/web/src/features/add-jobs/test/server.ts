@@ -28,6 +28,7 @@ export const LAST_RUN: SyncRun = {
 export const SAVED: SavedSearch = {
   id: 1,
   source: 'JOBSPIPE',
+  boards: [],
   name: 'Frontend in Berlin',
   titles: ['frontend'],
   skills: ['react'],
@@ -125,6 +126,7 @@ export const server = setupServer(
           // The API only sets this when it ran an "only new jobs" import.
           newSince: input.onlyNew ? '2026-10-25T09:30:00.000Z' : null,
           resumed,
+          warnings: [],
         },
       },
     });
@@ -187,6 +189,7 @@ export const server = setupServer(
           jobsAlreadyPaid: 20,
           newSince: '2026-10-26T07:00:00.000Z',
           resumed: Boolean(variables['resume']),
+          warnings: [],
         },
       },
     });

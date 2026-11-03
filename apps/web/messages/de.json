@@ -812,6 +812,7 @@
       "countryCode": "Nutze einen Code aus 2 Buchstaben, z. B. US oder DE",
       "salaryOrder": "Das Mindestgehalt darf nicht über dem Höchstgehalt liegen",
       "wholeNumber": "Gib eine ganze Zahl von 1 bis {max} ein",
+      "boards": "Füge mindestens ein Firmen-Board hinzu, z. B. greenhouse:stripe",
       "titles": "Gib mindestens einen Jobtitel ein",
       "countryCodes": "Nutze Codes aus 2 Buchstaben, z. B. US, DE",
       "minSalary": "Gib Euro pro Jahr ein, z. B. 60000, oder lass es leer",
@@ -904,6 +905,8 @@
       "save": "Suche speichern",
       "saveError": "Konnte nicht gespeichert werden: {error}",
       "saved": "„{name}“ gespeichert.",
+      "headingBoards": "Von Firmen-Karriereseiten importieren",
+      "introBoards": "Liest die offenen Stellen direkt von den Karriereseiten der Firmen (Greenhouse, Lever, Ashby). Kostenlos, keine Credits. Nur passende Stellen werden gespeichert.",
       "headingFree": "Von der Arbeitsagentur importieren",
       "introFree": "Die Jobbörse der Bundesagentur für Arbeit. Kostenlos, ohne Credits. Nur Deutschland. Es gelten nur einige Filter, die anderen sind ausgeblendet.",
       "source": "Wo suchen",
@@ -915,8 +918,17 @@
         "ARBEITSAGENTUR": {
           "name": "Arbeitsagentur (kostenlos)",
           "hint": "Nur Deutschland. Keine Credits. Liest jede Anzeige vollständig."
+        },
+        "COMPANY_BOARDS": {
+          "name": "Firmen-Karriereseiten (kostenlos)",
+          "hint": "Greenhouse, Lever und Ashby. Keine Credits. Du wählst die Firmen."
         }
       },
+      "boards": "Firmen-Karriereseiten",
+      "boardsHint": "Mit Komma getrennt: greenhouse:name, lever:name, ashby:name oder die Adresse der Karriereseite einfügen",
+      "boardsPlaceholder": "z. B. greenhouse:stripe, lever:netflix, ashby:ramp",
+      "pageSummaryBoards": "· höchstens {days} Tage alt",
+      "warnings": "Das solltest du wissen:",
       "usedFree": "Kostenlos: keine Credits verbraucht.",
       "continueFree": "Import fortsetzen"
     },
@@ -961,6 +973,7 @@
       "saveSchedule": "Zeitplan speichern",
       "nextRun": "Nächster Lauf: {date}",
       "scheduleError": "Der Zeitplan konnte nicht gespeichert werden: {error}",
+      "boardsBadge": "Karriereseiten",
       "freeBadge": "Kostenlos",
       "lastDaysFree": "Letzte {days} Tage · kostenlos",
       "free": "Kostenlos: keine Credits verbraucht."
@@ -1009,6 +1022,8 @@
     "QUEUE_REPLY_EMPTY": "Keine Zeilen „=== JOB 1: … ===“ gefunden. Füge die ganze Antwort von Claude auf den Warteschlangen-Prompt ein.",
     "SAVED_SEARCH_NOT_FOUND": "Die gespeicherte Suche {id} wurde nicht gefunden.",
     "SAVED_SEARCH_NAME_TAKEN": "Eine gespeicherte Suche namens „{name}“ gibt es schon.",
+    "INVALID_BOARD": "Das Firmen-Board „{entry}“ konnte nicht gelesen werden. Nutze greenhouse:name, lever:name oder ashby:name oder füge die Adresse der Karriereseite ein.",
+    "NO_BOARDS": "Füge mindestens ein Firmen-Board hinzu, zum Beispiel greenhouse:stripe.",
     "NOTHING_TO_CONTINUE": "Nichts fortzusetzen: Der letzte Import dieser Suche hat schon alle Seiten geholt.",
     "TAILOR_FIRST": "Passe zuerst deinen Lebenslauf für diesen Job an.",
     "NO_COVER_LETTER": "Für diesen Job gibt es kein Anschreiben. Passe ihn noch einmal an.",

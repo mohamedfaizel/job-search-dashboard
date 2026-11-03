@@ -96,6 +96,7 @@ export class ArbeitsagenturSyncService {
       jobsAlreadyPaid: 0,
       newSince,
       resumed: input.resume,
+      warnings: [],
     };
 
     // One search per place (the board takes a single "where"); pages are counted across them.

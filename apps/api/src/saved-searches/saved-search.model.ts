@@ -67,6 +67,9 @@ export class SavedSearch {
   @Field(() => ImportSource, { description: 'Where this search looks for jobs' })
   source!: ImportSource;
 
+  @Field(() => [String], { description: 'Company career pages, for the COMPANY_BOARDS source' })
+  boards!: string[];
+
   @Field(() => [String])
   titles!: string[];
 

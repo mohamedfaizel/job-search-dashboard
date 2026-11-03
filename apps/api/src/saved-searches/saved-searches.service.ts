@@ -32,7 +32,7 @@ export function summarize(input: Prisma.JsonValue): string {
     list('excludeTitles').length ? `not ${list('excludeTitles').join(', ')}` : '',
     typeof obj['minSalaryEur'] === 'number' ? `€${obj['minSalaryEur'].toLocaleString('en')}+` : '',
   ];
-  return [list('titles'), list('skills'), list('countryCodes'), list('locations')]
+  return [list('boards'), list('titles'), list('skills'), list('countryCodes'), list('locations')]
     .filter((part) => part.length > 0)
     .map((part) => part.join(', '))
     .concat(extras.filter(Boolean))
@@ -140,6 +140,7 @@ export class SavedSearchesService {
     const row = await this.findRow(id);
     const input: SyncJobsInput = {
       source: row.source,
+      boards: row.boards,
       titles: row.titles,
       skills: row.skills,
       countryCodes: row.countryCodes,
@@ -190,6 +191,7 @@ function toData(input: SavedSearchInput) {
   return {
     name: input.name.trim(),
     source: input.source,
+    boards: input.boards ?? [],
     titles: input.titles,
     skills: input.skills ?? [],
     countryCodes: (input.countryCodes ?? []).map((c) => c.toUpperCase()),

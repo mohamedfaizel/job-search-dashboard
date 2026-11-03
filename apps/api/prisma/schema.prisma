@@ -16,12 +16,15 @@ enum JobSource {
   MANUAL
   /// The German Federal Employment Agency's job board (free).
   ARBEITSAGENTUR
+  /// A company's own career page (Greenhouse, Lever or Ashby).
+  COMPANY_BOARD
 }
 
 /// Where a saved search or import looks for jobs.
 enum ImportSource {
   JOBSPIPE
   ARBEITSAGENTUR
+  COMPANY_BOARDS
 }
 
 /// What the last "Is it still open?" check found when it opened the job's link.
@@ -414,6 +417,8 @@ model SavedSearch {
   id               Int               @id @default(autoincrement())
   name             String            @unique
   source           ImportSource      @default(JOBSPIPE)
+  /// Company career pages to read when the source is COMPANY_BOARDS, e.g. "greenhouse:stripe".
+  boards           String[]          @default([])
   titles           String[]
   skills           String[]
   countryCodes     String[]

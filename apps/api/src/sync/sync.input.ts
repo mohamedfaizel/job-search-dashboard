@@ -23,10 +23,22 @@ export class SyncJobsInput {
   @Field(() => ImportSource, {
     defaultValue: ImportSource.JOBSPIPE,
     description:
-      'Where to look. ARBEITSAGENTUR is free (Germany only) and uses titles, locations, job type, remote, age and excludeTitles.',
+      'Where to look. ARBEITSAGENTUR and COMPANY_BOARDS are free and use titles, locations, job type, remote, age and excludeTitles; COMPANY_BOARDS also needs boards.',
   })
   @IsEnum(ImportSource)
   source: ImportSource = ImportSource.JOBSPIPE;
+
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      'COMPANY_BOARDS only: the career pages to read, e.g. ["greenhouse:stripe", "lever:netflix", "ashby:ramp"] or their addresses',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(30)
+  @IsString({ each: true })
+  @Length(1, 200, { each: true })
+  boards?: string[];
 
   @Field(() => [String], { description: 'Match any of these job titles, e.g. ["frontend"]' })
   @IsArray()
@@ -194,4 +206,9 @@ export class SyncJobsResult {
 
   @Field({ description: 'True when this run continued an earlier import from its saved cursor' })
   resumed!: boolean;
+
+  @Field(() => [String], {
+    description: 'Things worth knowing, e.g. a company board that could not be read',
+  })
+  warnings!: string[];
 }
