@@ -1,6 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { SavedSearch } from '@jobsearch/data';
-import { EMPLOYMENT_TYPES, useMyProfile, useSaveSearch, useSyncJobs } from '@jobsearch/data';
+import {
+  EMPLOYMENT_TYPES,
+  IMPORT_SOURCES,
+  useMyProfile,
+  useSaveSearch,
+  useSyncJobs,
+} from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -60,6 +66,9 @@ export function SyncPanel({ loaded = null }: Props) {
     defaultValues: loaded ? savedSearchToForm(loaded) : defaultSyncForm,
   });
 
+  const source = useWatch({ control, name: 'source' });
+  // The free German board: no credits, and only some of the filters apply.
+  const free = source === 'ARBEITSAGENTUR';
   const [pageSize, maxPages, maxAgeDays] = useWatch({
     control,
     name: ['pageSize', 'maxPages', 'maxAgeDays'],
@@ -78,12 +87,12 @@ export function SyncPanel({ loaded = null }: Props) {
     ],
   });
   const activeFilters = [
-    filters[0].length > 0,
-    filters[1],
+    !free && filters[0].length > 0,
+    !free && filters[1],
     filters[2],
     filters[3].trim() !== '',
     filters[4].length > 0,
-    filters[5].trim() !== '',
+    !free && filters[5].trim() !== '',
   ].filter(Boolean).length;
   // Open at first when a loaded search uses any of them, and whenever one has a mistake.
   const [moreOpen, setMoreOpen] = useState(activeFilters > 0);
@@ -141,10 +150,37 @@ export function SyncPanel({ loaded = null }: Props) {
     >
       <div>
         <h2 id="sync-heading" className="text-lg font-semibold text-slate-900">
-          {t('sync.heading')}
+          {t(free ? 'sync.headingFree' : 'sync.heading')}
         </h2>
-        <p className="text-sm text-slate-600">{t('sync.intro')}</p>
+        <p className="text-sm text-slate-600">{t(free ? 'sync.introFree' : 'sync.intro')}</p>
       </div>
+
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-slate-700">{t('sync.source')}</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {IMPORT_SOURCES.map((value) => (
+            <label
+              key={value}
+              className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-3 text-sm has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50"
+            >
+              <input
+                type="radio"
+                value={value}
+                {...register('source')}
+                className="mt-0.5 size-4 border-slate-300 text-brand-600"
+              />
+              <span>
+                <span className="font-medium text-slate-800">
+                  {t(`sync.sources.${value}.name`)}
+                </span>
+                <span className="block text-xs text-slate-500">
+                  {t(`sync.sources.${value}.hint`)}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       {hasProfile && (
         <button
@@ -166,29 +202,33 @@ export function SyncPanel({ loaded = null }: Props) {
         >
           <input {...register('titles')} {...a11y('titles')} className={inputClass} />
         </Field>
-        <Field label={t('sync.skills')} htmlFor="sync-skills" hint={t('sync.skillsHint')}>
-          <input {...register('skills')} {...a11y('skills')} className={inputClass} />
-        </Field>
-        <Field
-          label={t('sync.countries')}
-          htmlFor="sync-countryCodes"
-          error={errors.countryCodes?.message}
-          hint={t('sync.countriesHint')}
-        >
-          <Controller
-            control={control}
-            name="countryCodes"
-            render={({ field }) => (
-              <CountrySelect
-                id="sync-countryCodes"
-                value={field.value}
-                onChange={field.onChange}
-                invalid={Boolean(errors.countryCodes)}
-                describedBy={errors.countryCodes ? 'sync-countryCodes-error' : undefined}
-              />
-            )}
-          />
-        </Field>
+        {!free && (
+          <Field label={t('sync.skills')} htmlFor="sync-skills" hint={t('sync.skillsHint')}>
+            <input {...register('skills')} {...a11y('skills')} className={inputClass} />
+          </Field>
+        )}
+        {!free && (
+          <Field
+            label={t('sync.countries')}
+            htmlFor="sync-countryCodes"
+            error={errors.countryCodes?.message}
+            hint={t('sync.countriesHint')}
+          >
+            <Controller
+              control={control}
+              name="countryCodes"
+              render={({ field }) => (
+                <CountrySelect
+                  id="sync-countryCodes"
+                  value={field.value}
+                  onChange={field.onChange}
+                  invalid={Boolean(errors.countryCodes)}
+                  describedBy={errors.countryCodes ? 'sync-countryCodes-error' : undefined}
+                />
+              )}
+            />
+          </Field>
+        )}
         <Field label={t('sync.locations')} htmlFor="sync-locations" hint={t('sync.locationsHint')}>
           <input {...register('locations')} {...a11y('locations')} className={inputClass} />
         </Field>
@@ -211,46 +251,50 @@ export function SyncPanel({ loaded = null }: Props) {
             )}
           </summary>
           <div className="mt-3 space-y-4">
-            <Controller
-              control={control}
-              name="languages"
-              render={({ field }) => (
-                <fieldset className="space-y-1">
-                  <legend className="text-sm font-medium text-slate-700">
-                    {t('sync.adLanguage')}
-                  </legend>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1">
-                    {LANGUAGES.map((code) => (
-                      <label key={code} className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={field.value.includes(code)}
-                          onChange={() => {
-                            field.onChange(toggle(field.value, code));
-                          }}
-                          className={CHECKBOX}
-                        />
-                        {f.language(code)}
-                      </label>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-500">{t('sync.languagesHint')}</p>
-                </fieldset>
-              )}
-            />
+            {!free && (
+              <Controller
+                control={control}
+                name="languages"
+                render={({ field }) => (
+                  <fieldset className="space-y-1">
+                    <legend className="text-sm font-medium text-slate-700">
+                      {t('sync.adLanguage')}
+                    </legend>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {LANGUAGES.map((code) => (
+                        <label key={code} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={field.value.includes(code)}
+                            onChange={() => {
+                              field.onChange(toggle(field.value, code));
+                            }}
+                            className={CHECKBOX}
+                          />
+                          {f.language(code)}
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500">{t('sync.languagesHint')}</p>
+                  </fieldset>
+                )}
+              />
+            )}
 
             <div className="space-y-2">
-              <label className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  {...register('skipFluentGerman')}
-                  className={`mt-0.5 ${CHECKBOX}`}
-                />
-                <span>
-                  <span className="font-medium text-slate-800">{t('sync.skipGerman')}</span>
-                  <span className="block text-xs text-slate-500">{t('sync.skipGermanHint')}</span>
-                </span>
-              </label>
+              {!free && (
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    {...register('skipFluentGerman')}
+                    className={`mt-0.5 ${CHECKBOX}`}
+                  />
+                  <span>
+                    <span className="font-medium text-slate-800">{t('sync.skipGerman')}</span>
+                    <span className="block text-xs text-slate-500">{t('sync.skipGermanHint')}</span>
+                  </span>
+                </label>
+              )}
               <label className="flex items-start gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -282,7 +326,9 @@ export function SyncPanel({ loaded = null }: Props) {
                     {t('sync.jobType')}
                   </legend>
                   <div className="flex flex-wrap gap-x-4 gap-y-1">
-                    {EMPLOYMENT_TYPES.map((type) => (
+                    {EMPLOYMENT_TYPES.filter(
+                      (type) => !free || type === 'full-time' || type === 'part-time',
+                    ).map((type) => (
                       <label key={type} className="flex items-center gap-2 text-sm">
                         <input
                           type="checkbox"
@@ -301,20 +347,22 @@ export function SyncPanel({ loaded = null }: Props) {
               )}
             />
 
-            <Field
-              label={t('sync.minSalary')}
-              htmlFor="sync-minSalaryEur"
-              error={errors.minSalaryEur?.message}
-              hint={t('sync.minSalaryHint')}
-            >
-              <input
-                inputMode="numeric"
-                placeholder={t('sync.minSalaryPlaceholder')}
-                {...register('minSalaryEur')}
-                {...a11y('minSalaryEur')}
-                className={inputClass}
-              />
-            </Field>
+            {!free && (
+              <Field
+                label={t('sync.minSalary')}
+                htmlFor="sync-minSalaryEur"
+                error={errors.minSalaryEur?.message}
+                hint={t('sync.minSalaryHint')}
+              >
+                <input
+                  inputMode="numeric"
+                  placeholder={t('sync.minSalaryPlaceholder')}
+                  {...register('minSalaryEur')}
+                  {...a11y('minSalaryEur')}
+                  className={inputClass}
+                />
+              </Field>
+            )}
           </div>
         </details>
 
@@ -402,7 +450,7 @@ export function SyncPanel({ loaded = null }: Props) {
       >
         {sync.isPending
           ? t('importing')
-          : Number.isFinite(maxCredits)
+          : Number.isFinite(maxCredits) && !free
             ? t('sync.importUpTo', { count: maxCredits })
             : t('sync.import')}
       </button>
@@ -433,14 +481,18 @@ export function SyncPanel({ loaded = null }: Props) {
           {sync.data.totalAvailable !== null && !sync.data.resumed && (
             <p>{t('sync.total', { jobs: t('jobs', { count: sync.data.totalAvailable }) })}</p>
           )}
-          <p>
-            {t('sync.used', { credits: t('credits', { count: sync.data.creditsCharged }) })}
-            {sync.data.jobsAlreadyPaid > 0 &&
-              t('sync.alreadyPaid', { jobs: t('jobs', { count: sync.data.jobsAlreadyPaid }) })}
-            {sync.data.creditsRemaining !== null &&
-              t('sync.left', { count: sync.data.creditsRemaining })}
-            .
-          </p>
+          {lastInput?.source === 'ARBEITSAGENTUR' ? (
+            <p>{t('sync.usedFree')}</p>
+          ) : (
+            <p>
+              {t('sync.used', { credits: t('credits', { count: sync.data.creditsCharged }) })}
+              {sync.data.jobsAlreadyPaid > 0 &&
+                t('sync.alreadyPaid', { jobs: t('jobs', { count: sync.data.jobsAlreadyPaid }) })}
+              {sync.data.creditsRemaining !== null &&
+                t('sync.left', { count: sync.data.creditsRemaining })}
+              .
+            </p>
+          )}
         </div>
       )}
       {sync.data?.hasMore && lastInput && (
@@ -454,7 +506,9 @@ export function SyncPanel({ loaded = null }: Props) {
             }}
             className="rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
-            {t('sync.continueUpTo', { credits: t('credits', { count: continueCredits }) })}
+            {lastInput.source === 'ARBEITSAGENTUR'
+              ? t('sync.continueFree')
+              : t('sync.continueUpTo', { credits: t('credits', { count: continueCredits }) })}
           </button>
         </div>
       )}

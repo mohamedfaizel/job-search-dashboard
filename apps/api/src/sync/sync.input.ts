@@ -3,6 +3,7 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsEnum,
   IsIn,
   IsInt,
   IsOptional,
@@ -11,6 +12,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { ImportSource } from './import-source';
 
 /** The job types JobsPipe's employment_type_or accepts. */
 export const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
@@ -18,6 +20,14 @@ export const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internsh
 /** What to fetch from JobsPipe. Also the shape a scheduled search will reuse later. */
 @InputType()
 export class SyncJobsInput {
+  @Field(() => ImportSource, {
+    defaultValue: ImportSource.JOBSPIPE,
+    description:
+      'Where to look. ARBEITSAGENTUR is free (Germany only) and uses titles, locations, job type, remote, age and excludeTitles.',
+  })
+  @IsEnum(ImportSource)
+  source: ImportSource = ImportSource.JOBSPIPE;
+
   @Field(() => [String], { description: 'Match any of these job titles, e.g. ["frontend"]' })
   @IsArray()
   @ArrayMaxSize(20)

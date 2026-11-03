@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ArbeitsagenturSyncService } from '../arbeitsagentur/arbeitsagentur-sync.service';
 import { apiError } from '../common/api-error';
+import { ImportSource } from '../generated/prisma/enums';
 import { JobsService } from '../jobs/jobs.service';
 import { JobsPipeClient } from '../jobspipe/jobspipe.client';
 import { mapJobsPipeJob } from '../jobspipe/jobspipe.mapper';
@@ -111,12 +113,17 @@ export class SyncService {
     private readonly jobsPipe: JobsPipeClient,
     private readonly jobs: JobsService,
     private readonly prisma: PrismaService,
+    private readonly arbeitsagentur: ArbeitsagenturSyncService,
   ) {}
 
   async sync(
     input: SyncJobsInput,
     options: { savedSearchId?: number; scheduled?: boolean } = {},
   ): Promise<SyncJobsResult> {
+    // The free German job board has its own, simpler import (no credits, no cursor).
+    if (input.source === ImportSource.ARBEITSAGENTUR) {
+      return this.arbeitsagentur.sync(input, options);
+    }
     const key = searchKey(input);
     const start = input.resume ? await this.resumePoint(key) : await this.freshStart(key, input);
 

@@ -27,6 +27,7 @@ export const LAST_RUN: SyncRun = {
 
 export const SAVED: SavedSearch = {
   id: 1,
+  source: 'JOBSPIPE',
   name: 'Frontend in Berlin',
   titles: ['frontend'],
   skills: ['react'],

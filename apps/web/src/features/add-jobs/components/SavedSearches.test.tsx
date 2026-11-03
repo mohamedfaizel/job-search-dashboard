@@ -1,8 +1,9 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { vi } from 'vitest';
 import { renderWithData } from '../test/render';
-import { requests, SAVED } from '../test/server';
+import { api, requests, SAVED, server } from '../test/server';
 import { SavedSearches } from './SavedSearches';
 
 describe('SavedSearches', () => {
@@ -17,6 +18,22 @@ describe('SavedSearches', () => {
     expect(card.getByText('frontend · react · Germany · Berlin')).toBeInTheDocument();
     expect(card.getByText(/up to 50 credits per run · only new jobs/)).toBeInTheDocument();
     expect(card.getByText(/20 new, 5 already saved, 20 credits\./)).toBeInTheDocument();
+  });
+
+  it('marks a free search and shows no credits for it', async () => {
+    server.use(
+      api.query('SavedSearches', () =>
+        HttpResponse.json({
+          data: { savedSearches: [{ ...SAVED, source: 'ARBEITSAGENTUR' }] },
+        }),
+      ),
+    );
+    const card = await renderCard();
+
+    expect(card.getByText('Free')).toBeInTheDocument();
+    expect(card.getByText(/Last 7 days · free · only new jobs/)).toBeInTheDocument();
+    expect(card.queryByText(/credits per run/)).not.toBeInTheDocument();
+    expect(card.getByText(/Last run .*: 20 new, 5 already saved\./)).toBeInTheDocument();
   });
 
   it('runs a search, then continues it when pages are left', async () => {

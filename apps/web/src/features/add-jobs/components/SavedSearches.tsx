@@ -102,6 +102,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
   const describe = useDescribeSearch();
   const [confirming, setConfirming] = useState(false);
   const last = search.lastRun;
+  const free = search.source === 'ARBEITSAGENTUR';
 
   return (
     <article
@@ -109,22 +110,31 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
       className="flex h-full flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4"
     >
       <div>
-        <h3 id={`saved-${search.id}`} className="font-medium text-slate-900">
-          {search.name}
-        </h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 id={`saved-${search.id}`} className="font-medium text-slate-900">
+            {search.name}
+          </h3>
+          {free && (
+            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 ring-inset">
+              {t('saved.freeBadge')}
+            </span>
+          )}
+        </div>
         <p className="text-sm text-slate-600">{describe(search)}</p>
         <p className="text-xs text-slate-500">
-          {t('saved.lastDays', {
-            days: search.maxAgeDays,
-            credits: t('credits', { count: search.pageSize * search.maxPages }),
-          })}
+          {free
+            ? t('saved.lastDaysFree', { days: search.maxAgeDays })
+            : t('saved.lastDays', {
+                days: search.maxAgeDays,
+                credits: t('credits', { count: search.pageSize * search.maxPages }),
+              })}
           {search.onlyNew ? t('saved.onlyNew') : ''}
         </p>
       </div>
 
       <p className="text-sm text-slate-700">
         {last
-          ? t(last.creditsCharged === null ? 'saved.lastRun' : 'saved.lastRunCredits', {
+          ? t(last.creditsCharged === null || free ? 'saved.lastRun' : 'saved.lastRunCredits', {
               date: dateTime(last.finishedAt),
               created: last.created,
               updated: last.updated,
@@ -135,7 +145,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
 
       <ScheduleControls search={search} />
 
-      {run.data && <RunResult result={run.data} />}
+      {run.data && <RunResult result={run.data} free={free} />}
       {run.isError && (
         <p role="alert" className="text-sm text-red-700">
           {t('importFailed', { error: errorText(run.error) })}
@@ -217,7 +227,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
   );
 }
 
-function RunResult({ result }: { result: SyncJobsResult }) {
+function RunResult({ result, free }: { result: SyncJobsResult; free: boolean }) {
   const t = useTranslations('AddJobs');
   return (
     <p role="status" className="rounded-md bg-emerald-50 p-2 text-sm text-emerald-800">
@@ -225,7 +235,9 @@ function RunResult({ result }: { result: SyncJobsResult }) {
       {result.fetched === 0
         ? t('saved.noNew')
         : t('saved.counts', { created: result.created, updated: result.updated })}{' '}
-      {t('saved.usedCredits', { credits: t('credits', { count: result.creditsCharged }) })}
+      {free
+        ? t('saved.free')
+        : t('saved.usedCredits', { credits: t('credits', { count: result.creditsCharged }) })}
       {result.hasMore && t('saved.morePages')}
     </p>
   );

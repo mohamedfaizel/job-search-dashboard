@@ -1,5 +1,6 @@
 import { Field, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
 import { IsEnum, IsString, Length, Matches } from 'class-validator';
+import { ImportSource } from '../sync/import-source';
 import { SyncJobsInput } from '../sync/sync.input';
 import { ScheduleFrequency } from './schedule';
 
@@ -62,6 +63,9 @@ export class SavedSearch {
 
   @Field()
   name!: string;
+
+  @Field(() => ImportSource, { description: 'Where this search looks for jobs' })
+  source!: ImportSource;
 
   @Field(() => [String])
   titles!: string[];

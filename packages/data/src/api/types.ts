@@ -168,7 +168,13 @@ export interface CreateJobInput {
 export const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
 export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
 
+/** Where an import looks for jobs. ARBEITSAGENTUR is free and covers Germany only. */
+export const IMPORT_SOURCES = ['JOBSPIPE', 'ARBEITSAGENTUR'] as const;
+export type ImportSource = (typeof IMPORT_SOURCES)[number];
+
 export interface SyncJobsInput {
+  /** Default JOBSPIPE. */
+  source?: ImportSource;
   titles: string[];
   skills?: string[];
   countryCodes?: string[];
@@ -235,6 +241,7 @@ export interface SyncRun {
 export interface SavedSearch {
   id: number;
   name: string;
+  source: ImportSource;
   titles: string[];
   skills: string[];
   countryCodes: string[];
