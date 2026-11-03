@@ -21,6 +21,40 @@ export const RESUME_TEMPLATES = [
     name: 'Compact',
     description: 'Smaller type and tighter spacing: fits a long career on fewer pages.',
   },
+  // The six below follow the career-ops CV templates (MIT, github.com/career-ops-hq/career-ops),
+  // rebuilt in LaTeX: same looks, one column, real text.
+  {
+    id: 'sharp',
+    name: 'Sharp',
+    description:
+      'Bold name, accent rule under the header, company names in your colour. Most jobs.',
+  },
+  {
+    id: 'bold',
+    name: 'Bold',
+    description:
+      'Big name, accent bars before the headings, tinted summary. Tech and product roles.',
+  },
+  {
+    id: 'executive',
+    name: 'Executive',
+    description: 'Serif, centred header, ruled capital headings, no colour. Banks and big firms.',
+  },
+  {
+    id: 'leadership',
+    name: 'Leadership',
+    description: 'Skills and strengths before your work history. Leads and managers.',
+  },
+  {
+    id: 'jake',
+    name: 'Jake',
+    description: 'The well-known engineering resume look: dates on the right, full-width rules.',
+  },
+  {
+    id: 'ats',
+    name: 'ATS plain',
+    description: 'Black and white, no photo, no decoration: the safest for job portals.',
+  },
 ] as const;
 export type ResumeTemplateId = (typeof RESUME_TEMPLATES)[number]['id'];
 export const isResumeTemplate = (id: string): id is ResumeTemplateId =>
@@ -70,9 +104,197 @@ export interface DocumentLook {
   language: string;
 }
 
-const FONT_NAMES = { sans: 'TeX Gyre Heros', serif: 'TeX Gyre Pagella' } as const;
+const FONT_NAMES = {
+  sans: 'TeX Gyre Heros',
+  serif: 'TeX Gyre Pagella',
+  // Computer Modern's look, as an OpenType font: what the Jake resume is known for.
+  latin: 'Latin Modern Roman',
+} as const;
+
+/** How one template sets its type, spacing and parts. */
+interface TemplateStyle {
+  size: number;
+  margin: string;
+  top: string;
+  entryGap: string;
+  /** Its own type when the font setting is "auto". */
+  font: keyof typeof FONT_NAMES;
+  /** The name, headline and contact line centred. */
+  centred: boolean;
+  /** False for templates with no colour: the accent becomes near-black. */
+  colour: boolean;
+  /** False when the template never shows a photo (ATS plain). */
+  photo: boolean;
+  name: (name: string) => string;
+  headline: (headline: string) => string;
+  section: (title: string) => string;
+  /** The title, company and "City | dates" line of a job or degree. */
+  entry: (title: string, org: string | null, meta: string | null) => string;
+  /** Text under the header that is not in a section, e.g. a summary without a heading. */
+  summaryBox?: boolean;
+  /** Moves the Skills section before Experience. */
+  skillsFirst?: boolean;
+}
+
+const caps = (t: string) => `\\MakeUppercase{${t}}`;
+const sep = (org: string | null) => (org ? ` {\\color{muted}\\textbar} ${org}` : '');
+const metaLine = (meta: string | null) => (meta ? `{\\small\\color{muted}${meta}}\\par\n` : '');
+const metaRight = (meta: string | null) => (meta ? `\\hfill{\\small\\color{muted}${meta}}` : '');
+
+const STYLES: Record<ResumeTemplateId, TemplateStyle> = {
+  classic: {
+    size: 11,
+    margin: '2cm',
+    top: '1.6cm',
+    entryGap: '7pt',
+    font: 'serif',
+    centred: true,
+    colour: true,
+    photo: true,
+    name: (n) => `{\\fontsize{24}{24}\\selectfont\\scshape ${n}}`,
+    headline: (h) => `{\\large\\color{muted}${h}}`,
+    section: (t) =>
+      `\\vspace{9pt}{\\large\\color{accent}\\scshape ${t}}\\par\\vspace{1pt}{\\color{accent}\\rule{\\linewidth}{0.6pt}}\\par\\vspace{4pt}\n`,
+    entry: (t, o, m) => `\\textbf{${t}}${sep(o)}\\par\n${metaLine(m)}`,
+  },
+  modern: {
+    size: 11,
+    margin: '1.9cm',
+    top: '1.5cm',
+    entryGap: '7pt',
+    font: 'sans',
+    centred: false,
+    colour: true,
+    photo: true,
+    name: (n) => `{\\fontsize{24}{24}\\selectfont\\bfseries\\color{accent}${n}}`,
+    headline: (h) => `{\\large\\color{muted}${h}}`,
+    section: (t) =>
+      `\\vspace{10pt}{\\color{accent}\\bfseries\\large ${t}}\\par\\vspace{2pt}{\\color{accent}\\rule{\\linewidth}{1pt}}\\par\\vspace{5pt}\n`,
+    entry: (t, o, m) => `\\textbf{${t}}${sep(o)}\\par\n${metaLine(m)}`,
+  },
+  compact: {
+    size: 10,
+    margin: '1.5cm',
+    top: '1.2cm',
+    entryGap: '4pt',
+    font: 'sans',
+    centred: false,
+    colour: true,
+    photo: true,
+    name: (n) => `{\\fontsize{20}{20}\\selectfont\\bfseries\\color{accent}${n}}`,
+    headline: (h) => `{\\large\\color{muted}${h}}`,
+    section: (t) =>
+      `\\vspace{6pt}{\\color{accent}\\bfseries ${t}}\\par\\vspace{1pt}{\\color{muted!40}\\rule{\\linewidth}{0.4pt}}\\par\\vspace{3pt}\n`,
+    entry: (t, o, m) => `\\textbf{${t}}${sep(o)}${metaRight(m)}\\par\n`,
+  },
+  sharp: {
+    size: 10.5,
+    margin: '1.6cm',
+    top: '1.4cm',
+    entryGap: '6pt',
+    font: 'sans',
+    centred: false,
+    colour: true,
+    photo: true,
+    name: (n) => `{\\fontsize{26}{28}\\selectfont\\bfseries ${n}}`,
+    headline: (h) =>
+      `{\\large\\color{accent}${h}}\\\\[3pt]{\\color{accent}\\rule{0.22\\linewidth}{2pt}}`,
+    section: (t) =>
+      `\\vspace{9pt}{\\small\\bfseries\\color{accent}${caps(t)}}\\par\\vspace{1pt}{\\color{muted!30}\\rule{\\linewidth}{0.4pt}}\\par\\vspace{4pt}\n`,
+    entry: (t, o, m) =>
+      `${o ? `{\\bfseries\\color{accent}${o}}` : `\\textbf{${t}}`}${metaRight(m)}\\par\n${o ? `\\textbf{${t}}\\par\n` : ''}`,
+  },
+  bold: {
+    size: 10.5,
+    margin: '1.7cm',
+    top: '1.4cm',
+    entryGap: '7pt',
+    font: 'sans',
+    centred: false,
+    colour: true,
+    photo: true,
+    name: (n) => `{\\fontsize{32}{34}\\selectfont\\bfseries ${n}}`,
+    headline: (h) => `{\\Large\\bfseries\\color{accent}${h}}`,
+    section: (t) =>
+      `\\vspace{10pt}{\\color{accent}\\rule[-1pt]{3pt}{11pt}}\\hspace{6pt}{\\bfseries ${caps(t)}}\\par\\vspace{5pt}\n`,
+    entry: (t, o, m) =>
+      `{\\large\\bfseries ${o ?? t}}${metaRight(m)}\\par\n${o ? `{\\bfseries\\color{accent}${t}}\\par\n` : ''}`,
+    summaryBox: true,
+  },
+  executive: {
+    size: 11,
+    margin: '2cm',
+    top: '1.6cm',
+    entryGap: '7pt',
+    font: 'serif',
+    centred: true,
+    colour: false,
+    photo: true,
+    name: (n) => `{\\fontsize{24}{26}\\selectfont\\bfseries ${caps(n)}}`,
+    headline: (h) => `{\\large\\color{muted}${caps(h)}}`,
+    section: (t) =>
+      `\\vspace{10pt}{\\bfseries ${caps(t)}}\\par\\vspace{1pt}\\rule{\\linewidth}{0.5pt}\\par\\vspace{5pt}\n`,
+    entry: (t, o, m) =>
+      `\\textbf{${o ?? t}}${metaRight(m)}\\par\n${o ? `\\textit{${t}}\\par\n` : ''}`,
+  },
+  leadership: {
+    size: 10.5,
+    margin: '1.8cm',
+    top: '1.5cm',
+    entryGap: '7pt',
+    font: 'sans',
+    centred: false,
+    colour: true,
+    photo: true,
+    name: (n) => `{\\fontsize{26}{28}\\selectfont\\bfseries\\color{accent}${n}}`,
+    headline: (h) => `{\\large\\bfseries ${h}}`,
+    section: (t) =>
+      `\\vspace{10pt}{\\color{accent}\\bfseries\\large ${t}}\\par\\vspace{1pt}{\\color{accent}\\rule{\\linewidth}{0.8pt}}\\par\\vspace{4pt}\n`,
+    entry: (t, o, m) => `\\textbf{${t}}${sep(o)}${metaRight(m)}\\par\n`,
+    skillsFirst: true,
+  },
+  jake: {
+    size: 11,
+    margin: '1.5cm',
+    top: '1.3cm',
+    entryGap: '5pt',
+    font: 'latin',
+    centred: true,
+    colour: false,
+    photo: false,
+    name: (n) => `{\\fontsize{26}{28}\\selectfont ${n}}`,
+    headline: (h) => `{\\bfseries ${h}}`,
+    section: (t) =>
+      `\\vspace{8pt}{\\large ${caps(t)}}\\par\\vspace{-2pt}\\rule{\\linewidth}{0.5pt}\\par\\vspace{3pt}\n`,
+    entry: (t, o, m) => {
+      // "City | 01/2021 - today": the dates go on the right of the first line, the city on the
+      // right of the second.
+      const parts = (m ?? '').split(' | ');
+      const dates = parts.length > 1 ? parts.slice(1).join(' | ') : (m ?? '');
+      const place = parts.length > 1 ? (parts[0] ?? '') : '';
+      const second =
+        o || place ? `\\textit{${o ? t : ''}}\\hfill{\\small\\textit{${place}}}\\par\n` : '';
+      return `\\textbf{${o ?? t}}${dates ? `\\hfill ${dates}` : ''}\\par\n${second}`;
+    },
+  },
+  ats: {
+    size: 11,
+    margin: '2cm',
+    top: '1.6cm',
+    entryGap: '7pt',
+    font: 'sans',
+    centred: false,
+    colour: false,
+    photo: false,
+    name: (n) => `{\\fontsize{20}{22}\\selectfont\\bfseries ${n}}`,
+    headline: (h) => h,
+    section: (t) => `\\vspace{10pt}{\\large\\bfseries ${caps(t)}}\\par\\vspace{4pt}\n`,
+    entry: (t, o, m) => `\\textbf{${t}}${o ? `, ${o}` : ''}\\par\n${m ? `${m}\\par\n` : ''}`,
+  },
+};
+
 const fontFor = (look: DocumentLook) =>
-  FONT_NAMES[look.font === 'auto' ? (look.template === 'classic' ? 'serif' : 'sans') : look.font];
+  FONT_NAMES[look.font === 'auto' ? STYLES[look.template].font : look.font];
 
 /** "#1f4e79" or "1F4E79" → "1F4E79"; anything else → the default blue. */
 export function hexColor(value: string): string {
@@ -80,21 +302,17 @@ export function hexColor(value: string): string {
   return /^[0-9A-F]{6}$/.test(hex) ? hex : '1F4E79';
 }
 
-const SPACING = {
-  classic: { size: 11, margin: '2cm', top: '1.6cm', entryGap: '7pt' },
-  modern: { size: 11, margin: '1.9cm', top: '1.5cm', entryGap: '7pt' },
-  compact: { size: 10, margin: '1.5cm', top: '1.2cm', entryGap: '4pt' },
-} as const;
-
 function preamble(look: DocumentLook, size: number, geometry: string, extra = ''): string {
   // No common ligatures ("fi", "fl"): some applicant tracking systems read them as one odd
   // character. Title and author go into the PDF properties; the API sets them again after.
+  const style = STYLES[look.template];
+  const accent = style.colour ? hexColor(look.accent) : '222222';
   return `\\documentclass[${String(size)}pt,a4paper]{article}
 \\usepackage[a4paper,${geometry}]{geometry}
 \\usepackage{fontspec}
 \\setmainfont{${fontFor(look)}}[Ligatures={TeX,NoCommon}]
 \\usepackage{xcolor}
-\\definecolor{accent}{HTML}{${hexColor(look.accent)}}
+\\definecolor{accent}{HTML}{${accent}}
 \\definecolor{muted}{HTML}{555B66}
 \\usepackage{enumitem}
 \\setlist[itemize]{leftmargin=1.1em,label={\\color{accent}\\textbullet},itemsep=1pt,parsep=0pt,topsep=2pt}
@@ -107,34 +325,23 @@ ${extra}\\pagestyle{empty}
 `;
 }
 
-/** The section title in each template's style. */
-function sectionTitle(look: DocumentLook, title: string): string {
-  const t = inline(title);
-  switch (look.template) {
-    case 'classic':
-      return `\\vspace{9pt}{\\large\\color{accent}\\scshape ${t}}\\par\\vspace{1pt}{\\color{accent}\\rule{\\linewidth}{0.6pt}}\\par\\vspace{4pt}\n`;
-    case 'modern':
-      return `\\vspace{10pt}{\\color{accent}\\bfseries\\large ${t}}\\par\\vspace{2pt}{\\color{accent}\\rule{\\linewidth}{1pt}}\\par\\vspace{5pt}\n`;
-    case 'compact':
-      return `\\vspace{6pt}{\\color{accent}\\bfseries ${t}}\\par\\vspace{1pt}{\\color{muted!40}\\rule{\\linewidth}{0.4pt}}\\par\\vspace{3pt}\n`;
-  }
-}
-
-function block(look: DocumentLook, b: ResumeBlock): string {
+function block(look: DocumentLook, b: ResumeBlock, summary = false): string {
+  const style = STYLES[look.template];
   switch (b.kind) {
     case 'paragraph':
-      return `${inline(b.text)}\\par\\vspace{3pt}\n`;
+      return summary && style.summaryBox
+        ? `\\colorbox{accent!8}{\\parbox{\\dimexpr\\linewidth-2\\fboxsep}{${inline(b.text)}}}\\par\\vspace{4pt}\n`
+        : `${inline(b.text)}\\par\\vspace{3pt}\n`;
     case 'bullets':
       return itemize(b.items);
     case 'entry': {
-      const org = b.org ? ` {\\color{muted}\\textbar} ${inline(b.org)}` : '';
-      const meta = b.meta ? inline(b.meta) : '';
-      const head =
-        look.template === 'compact'
-          ? `\\textbf{${inline(b.title)}}${org}${meta ? `\\hfill{\\small\\color{muted}${meta}}` : ''}\\par\n`
-          : `\\textbf{${inline(b.title)}}${org}\\par\n${meta ? `{\\small\\color{muted}${meta}}\\par\n` : ''}`;
+      const head = style.entry(
+        inline(b.title),
+        b.org ? inline(b.org) : null,
+        b.meta ? inline(b.meta) : null,
+      );
       const lines = b.lines.map((l) => `${inline(l)}\\par\n`).join('');
-      return `${head}${lines}${itemize(b.bullets)}\\vspace{${SPACING[look.template].entryGap}}\n`;
+      return `${head}${lines}${itemize(b.bullets)}\\vspace{${style.entryGap}}\n`;
     }
   }
 }
@@ -150,17 +357,14 @@ function header(
   doc: Pick<ResumeDoc, 'name' | 'headline' | 'contact'>,
   centred: boolean,
 ): string {
-  const size = look.template === 'compact' ? '20' : '24';
-  const name =
-    look.template === 'classic'
-      ? `{\\fontsize{${size}}{${size}}\\selectfont\\scshape ${esc(doc.name)}}`
-      : `{\\fontsize{${size}}{${size}}\\selectfont\\bfseries\\color{accent}${esc(doc.name)}}`;
-  const headline = doc.headline ? `\\\\[5pt]{\\large\\color{muted}${inline(doc.headline)}}` : '';
+  const style = STYLES[look.template];
+  const name = style.name(esc(doc.name));
+  const headline = doc.headline ? `\\\\[5pt]${style.headline(inline(doc.headline))}` : '';
   const contact = doc.contact.length
     ? `\\\\[5pt]{\\small ${doc.contact.map(contactItem).join(' {\\color{muted}\\enspace|\\enspace} ')}}`
     : '';
   const text = `${name}${headline}${contact}`;
-  if (look.photo) {
+  if (look.photo && style.photo) {
     const align = centred ? '\\centering' : '\\raggedright';
     return `\\begin{tabularx}{\\linewidth}{@{}>{${align}\\arraybackslash}X@{\\hspace{12pt}}r@{}}
 \\begin{minipage}[c]{\\linewidth}${align}${text}\\end{minipage} &
@@ -172,20 +376,43 @@ function header(
     : `{\\raggedright ${text}\\par}\\vspace{8pt}\n`;
 }
 
+/** Section titles that mean Skills or Experience, in the languages the app supports. */
+const SKILLS_TITLE =
+  /^(skills|core skills|key skills|technical skills|core competencies|competencies|kenntnisse|fähigkeiten|kompetenzen|fachkenntnisse|skills (&|und) kompetenzen)$/i;
+const EXPERIENCE_TITLE =
+  /^(experience|work experience|professional experience|berufserfahrung|erfahrung|beruflicher werdegang)$/i;
+
+/** For Leadership: your skills and strengths come before the work history. */
+function skillsBeforeExperience(sections: ResumeDoc['sections']): ResumeDoc['sections'] {
+  const skills = sections.findIndex((s) => SKILLS_TITLE.test(s.title.trim()));
+  const experience = sections.findIndex((s) => EXPERIENCE_TITLE.test(s.title.trim()));
+  if (skills < 0 || experience < 0 || skills < experience) return sections;
+  const out = sections.filter((_, i) => i !== skills);
+  out.splice(experience, 0, sections[skills] as ResumeDoc['sections'][number]);
+  return out;
+}
+
 /** A resume as a complete .tex file in the chosen template. */
 export function resumeTex(doc: ResumeDoc, look: DocumentLook): string {
-  const s = SPACING[look.template];
-  const body = doc.sections
-    .map(
-      (section) =>
-        (section.title ? sectionTitle(look, section.title) : '') +
-        section.blocks.map((b) => block(look, b)).join(''),
-    )
+  const s = STYLES[look.template];
+  const sections = s.skillsFirst ? skillsBeforeExperience(doc.sections) : doc.sections;
+  const body = sections
+    .map((section, i) => {
+      const first =
+        i === 0 ||
+        /^(summary|profile|professional summary|profil|kurzprofil|zusammenfassung)$/i.test(
+          section.title.trim(),
+        );
+      return (
+        (section.title ? s.section(inline(section.title)) : '') +
+        section.blocks.map((b) => block(look, b, first)).join('')
+      );
+    })
     .join('');
   return `${preamble(look, s.size, `left=${s.margin},right=${s.margin},top=${s.top},bottom=${s.top}`)}
 \\begin{document}
 \\raggedright
-${header(look, doc, look.template === 'classic')}${body}
+${header(look, doc, s.centred)}${body}
 \\end{document}
 `;
 }

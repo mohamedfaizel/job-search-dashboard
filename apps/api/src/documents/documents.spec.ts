@@ -5,7 +5,7 @@ import { cityOf } from './documents.service';
 import { contactItem, esc, inline } from './latex';
 import { cleanPdf } from './pdf-metadata';
 import { asciiDates, letterParagraphs, parseResume } from './resume-doc';
-import { coverLetterTex, hexColor, letterDate, resumeTex } from './templates';
+import { coverLetterTex, hexColor, letterDate, RESUME_TEMPLATES, resumeTex } from './templates';
 
 const RESUME = `\`\`\`markdown
 # Mohamed Faizel
@@ -73,6 +73,12 @@ describe('parseResume', () => {
   });
 });
 
+it('drops a "Headline:" label Claude kept from the prompt', () => {
+  expect(parseResume('# Jane\nHeadline: Frontend Developer\nBerlin | j@x.de', 'X').headline).toBe(
+    'Frontend Developer',
+  );
+});
+
 describe('asciiDates', () => {
   it('puts a plain hyphen in date ranges, so ATS imports keep the end date', () => {
     expect(asciiDates('Berlin | 01/2019 – 02/2022')).toBe('Berlin | 01/2019 - 02/2022');
@@ -138,8 +144,10 @@ describe('templates', () => {
     expect(resumeTex(doc, { ...look, template: 'classic', font: 'sans' })).toContain(
       'TeX Gyre Heros',
     );
-    for (const template of ['classic', 'modern', 'compact'] as const) {
+    for (const { id: template } of RESUME_TEMPLATES) {
       const tex = resumeTex(doc, { ...look, template });
+      expect(tex).toContain('\\begin{document}');
+      expect(tex).toContain('Senior Frontend Engineer');
       // No white or tiny text: nothing a reader can't see.
       expect(tex).not.toMatch(/\\color\{white\}|\\tiny|\\phantom/);
       expect(tex.toLowerCase()).not.toContain('latex');
@@ -147,6 +155,51 @@ describe('templates', () => {
     expect(resumeTex(doc, { ...look, photo: 'photo.jpg' })).toContain(
       '\\includegraphics[width=2.8cm,height=3.6cm,keepaspectratio]{photo.jpg}',
     );
+  });
+
+  it('has the career-ops looks, each with its own type and colour rules', () => {
+    const doc = parseResume(RESUME, 'X');
+    expect(RESUME_TEMPLATES.map((t) => t.id)).toEqual([
+      'classic',
+      'modern',
+      'compact',
+      'sharp',
+      'bold',
+      'executive',
+      'leadership',
+      'jake',
+      'ats',
+    ]);
+    expect(resumeTex(doc, { ...look, template: 'jake' })).toContain('Latin Modern Roman');
+    expect(resumeTex(doc, { ...look, template: 'executive' })).toContain('TeX Gyre Pagella');
+    // Executive, Jake and ATS plain have no colour, whatever accent you picked.
+    for (const template of ['executive', 'jake', 'ats'] as const) {
+      expect(resumeTex(doc, { ...look, template })).toContain(
+        '\\definecolor{accent}{HTML}{222222}',
+      );
+    }
+    // Jake and ATS plain never show a photo.
+    for (const template of ['jake', 'ats'] as const) {
+      expect(resumeTex(doc, { ...look, template, photo: 'photo.jpg' })).not.toContain('photo.jpg');
+    }
+    expect(resumeTex(doc, { ...look, template: 'bold' })).toContain('\\colorbox{accent!8}');
+  });
+
+  it('puts Skills before Experience in Leadership only', () => {
+    const doc = parseResume(
+      '# Jane\n## Summary\nHi.\n## Experience\n### Lead | Acme\n- Led 9 people.\n## Skills\n- Hiring',
+      'X',
+    );
+    const order = (tex: string) => tex.indexOf('Skills') < tex.indexOf('Experience');
+    expect(order(resumeTex(doc, { ...look, template: 'leadership' }))).toBe(true);
+    expect(order(resumeTex(doc, { ...look, template: 'modern' }))).toBe(false);
+  });
+
+  it('puts Jake dates on the right and the city under them', () => {
+    const doc = parseResume('# Jane\n## Experience\n### Dev | Acme\nBerlin | 01/2020 - today', 'X');
+    const tex = resumeTex(doc, { ...look, template: 'jake' });
+    expect(tex).toContain('\\textbf{Acme}\\hfill 01/2020 - today\\par');
+    expect(tex).toContain('\\textit{Dev}\\hfill{\\small\\textit{Berlin}}');
   });
 
   it('accepts only real hex colours', () => {

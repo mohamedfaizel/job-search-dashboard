@@ -142,7 +142,8 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
             .filter(Boolean),
         );
       } else if (!doc.headline) {
-        doc.headline = line;
+        // The prompt shows the line as "Headline: …"; Claude sometimes keeps the label.
+        doc.headline = line.replace(/^\*{0,2}(headline|überschrift|titel)\*{0,2}\s*:\s*/i, '');
       } else {
         doc.contact.push(line);
       }

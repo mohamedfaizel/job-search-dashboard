@@ -157,7 +157,7 @@ model Profile {
 model DocumentStyle {
   userId            Int      @id
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// classic, modern or compact (see apps/api/src/documents/templates.ts).
+  /// A template id: classic, modern, compact, sharp, bold, executive, leadership, jake, ats or mine (see apps/api/src/documents/templates.ts).
   resumeTemplate    String   @default("classic")
   /// auto (DIN 5008 for German letters), din or modern.
   coverLetterLayout String   @default("auto")
