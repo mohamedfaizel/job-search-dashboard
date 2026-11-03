@@ -26,6 +26,15 @@ const ALIASES: Record<string, string[]> = {
   'artificial intelligence': ['ai'],
 };
 
+/** The main spelling of a skill: "reactjs" → "react", "k8s" → "kubernetes". Unknown ones stay. */
+export function canonicalSkill(term: string): string {
+  const name = term.toLowerCase().trim();
+  const main = Object.entries(ALIASES).find(
+    ([key, others]) => key === name || others.includes(name),
+  );
+  return main?.[0] ?? name;
+}
+
 /**
  * A skill without case, hyphens, dots, slashes or spaces: "Front-End", "front end" and
  * "frontend" all become "frontend"; "Node.js" becomes "nodejs"; "CI/CD" becomes "cicd".

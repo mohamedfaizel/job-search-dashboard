@@ -92,6 +92,7 @@ export const SAVED_RESUME: JobResume = {
   score: 85,
   nowCovered: ['graphql'],
   stillMissing: ['microfrontends'],
+  factCheck: [],
 };
 
 /** What the test user saved for job-1. Tests start with nothing. */

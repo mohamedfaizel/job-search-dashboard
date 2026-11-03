@@ -31,6 +31,24 @@ export class RemovedTermModel {
   everywhere!: boolean;
 }
 
+@ObjectType('FactFinding', {
+  description:
+    'Something in the resume or cover letter Claude wrote that is not in your resume or profile',
+})
+export class FactFindingModel {
+  @Field(() => String, { description: 'NUMBER, SKILL or LEVEL (a language level such as B2)' })
+  kind!: string;
+
+  @Field({ description: 'The number, skill or level as written' })
+  text!: string;
+
+  @Field(() => String, { description: 'RESUME or COVER_LETTER' })
+  where!: string;
+
+  @Field({ description: 'The line it is in, shortened' })
+  context!: string;
+}
+
 @ObjectType('JobResume', {
   description:
     'The resume you wrote for this job, uploaded or pasted, scored the same way as your profile resume',
@@ -73,6 +91,13 @@ export class JobResumeModel {
 
   @Field(() => [String], { description: 'Skills and keywords still missing from this resume' })
   stillMissing!: string[];
+
+  @Field(() => [FactFindingModel], {
+    nullable: true,
+    description:
+      'Numbers, skills and language levels that are not in your resume or profile. Null when there is no resume of yours to compare with',
+  })
+  factCheck!: FactFindingModel[] | null;
 }
 
 @ObjectType('JobInsights', {

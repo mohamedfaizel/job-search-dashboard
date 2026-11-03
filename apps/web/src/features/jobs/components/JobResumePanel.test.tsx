@@ -96,6 +96,60 @@ describe('JobResumePanel', () => {
     ).toContain('MUST: graphql');
   });
 
+  describe('fact check', () => {
+    it('says so when nothing is beyond your resume', async () => {
+      jobResume.current = { ...SAVED_RESUME };
+      renderPanel();
+
+      expect(
+        await screen.findByText(/every number, skill and language level is in your/),
+      ).toBeInTheDocument();
+    });
+
+    it('shows nothing without a resume of yours to compare with', async () => {
+      jobResume.current = { ...SAVED_RESUME, factCheck: null };
+      renderPanel();
+
+      await screen.findByLabelText('Score before and after');
+      expect(screen.queryByText(/Fact check/)).toBeNull();
+      expect(screen.queryByRole('region', { name: /Check before you send/ })).toBeNull();
+    });
+
+    it('lists what is not in your resume and copies a fix request', async () => {
+      const user = userEvent.setup();
+      jobResume.current = {
+        ...SAVED_RESUME,
+        factCheck: [
+          { kind: 'NUMBER', text: '60%', where: 'RESUME', context: 'Cut load time by 60%' },
+          { kind: 'NUMBER', text: '45%', where: 'COVER_LETTER', context: 'Raised revenue by 45%' },
+          { kind: 'SKILL', text: 'Kubernetes', where: 'RESUME', context: 'React, Kubernetes' },
+          { kind: 'LEVEL', text: 'B2', where: 'RESUME', context: 'German (B2)' },
+        ],
+      };
+      renderPanel();
+
+      const box = await screen.findByRole('region', { name: /4 things are not in your resume/ });
+      const numbers = within(within(box).getByRole('list', { name: 'Numbers' }));
+      expect(numbers.getByText('60%')).toBeInTheDocument();
+      expect(numbers.getByText(/\(cover letter\) “Raised revenue by 45%”/)).toBeInTheDocument();
+      expect(
+        within(within(box).getByRole('list', { name: 'Skills' })).getByText('Kubernetes'),
+      ).toBeInTheDocument();
+      expect(
+        within(within(box).getByRole('list', { name: 'Language levels' })).getByText('B2'),
+      ).toBeInTheDocument();
+
+      await user.click(within(box).getByRole('button', { name: 'Copy a fix request for Claude' }));
+
+      const request = within(box).getByRole<HTMLTextAreaElement>('textbox', {
+        name: 'Fix request',
+      });
+      expect(request.value).toContain('Do not invent anything');
+      expect(request.value).toContain('- 60%: "Cut load time by 60%"');
+      expect(request.value).toContain('- Kubernetes (skill): "React, Kubernetes"');
+    });
+  });
+
   it('uploads a file and offers it for download', async () => {
     const user = userEvent.setup();
     renderPanel();

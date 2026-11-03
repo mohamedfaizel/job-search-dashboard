@@ -565,6 +565,12 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       score
       nowCovered
       stillMissing
+      factCheck {
+        kind
+        text
+        where
+        context
+      }
     }
     prompt
   }

@@ -1,4 +1,4 @@
-import type { JobInsights } from '@jobsearch/data';
+import type { FactFinding, JobInsights } from '@jobsearch/data';
 import {
   jobResumeUrl,
   useDeleteJobResume,
@@ -233,6 +233,72 @@ function FileRow({ name, children }: { name: string; children: React.ReactNode }
   );
 }
 
+const FACT_KINDS = ['NUMBER', 'SKILL', 'LEVEL'] as const;
+
+/** A message to paste into the same Claude chat: what to remove or correct. */
+export function fixRequest(intro: string, findings: FactFinding[]): string {
+  const lines = findings.map(
+    (f) => `- ${f.text}${f.kind === 'SKILL' ? ' (skill)' : ''}: "${f.context}"`,
+  );
+  return `${intro}\n\n${lines.join('\n')}`;
+}
+
+/**
+ * Numbers, skills and language levels in Claude's reply that are not in your resume or profile.
+ * Nothing is shown without a resume of yours to compare with.
+ */
+export function FactCheck({ findings }: { findings: FactFinding[] | null }) {
+  const t = useTranslations('Jobs.reply');
+  if (findings === null) return null;
+  if (findings.length === 0) {
+    return (
+      <p className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-2.5 text-sm text-emerald-900">
+        ✓ {t('factOk')}
+      </p>
+    );
+  }
+  return (
+    <section
+      aria-label={t('factTitle', { count: findings.length })}
+      className="space-y-3 rounded-xl border border-amber-300 bg-amber-50/70 px-4 py-3"
+    >
+      <div>
+        <h3 className="text-sm font-semibold text-amber-950">
+          {t('factTitle', { count: findings.length })}
+        </h3>
+        <p className="text-xs text-amber-900">{t('factHint')}</p>
+      </div>
+      {FACT_KINDS.map((kind) => {
+        const items = findings.filter((f) => f.kind === kind);
+        if (items.length === 0) return null;
+        return (
+          <div key={kind} className="space-y-1">
+            <h4 className="text-xs font-medium text-amber-900">{t(`fact${kind}`)}</h4>
+            <ul aria-label={t(`fact${kind}`)} className="space-y-1">
+              {items.map((f) => (
+                <li key={`${f.where}-${f.text}`} className="text-sm text-slate-800">
+                  <mark className="rounded bg-amber-200 px-1 font-medium text-amber-950">
+                    {f.text}
+                  </mark>{' '}
+                  <span className="text-slate-600">
+                    {f.where === 'COVER_LETTER' && `(${t('inCoverLetter')}) `}“{f.context}”
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+      <CopyText
+        label={t('copyFix')}
+        text={fixRequest(t('fixIntro'), findings)}
+        copiedHint={t('fixHint')}
+        boxLabel={t('fixBox')}
+      />
+    </section>
+  );
+}
+
 /**
  * The reply you saved for this job: the resume scored next to your master resume (before and
  * after), the files to attach, and the cover letter and form answers to copy.
@@ -331,6 +397,8 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
           {t('changeError', { error: errorText(have.error) })}
         </p>
       )}
+
+      <FactCheck findings={jobResume.factCheck} />
 
       {leftOut.length > 0 && (
         <div className="rounded-xl border border-sky-200 bg-sky-50/70 px-4 py-3">

@@ -9,6 +9,8 @@ import { buildApplyKit } from './apply-kit';
 import type { ApplyQueueItemModel, ApplyQueuePromptModel } from './apply-queue';
 import { buildQueuePage } from './apply-queue';
 import { CorpusService } from './corpus.service';
+import type { FactCheckInput } from './fact-check';
+import { factCheck } from './fact-check';
 import { germanRequirement } from './german';
 import type {
   JobInsightsModel,
@@ -74,6 +76,7 @@ export class InsightsService {
         select: {
           resumeText: true,
           resumeLanguage: true,
+          headline: true,
           skills: true,
           languages: true,
           yearsExperience: true,
@@ -168,6 +171,20 @@ export class InsightsService {
       facts: applicationFacts(profile),
       savedAnswers: profile?.applicationNotes ?? '',
     };
+    // What you have told us about yourself: the fact check looks for anything beyond it.
+    const factTexts = [resumes.text, ...resumes.others.values()];
+    const factSources = factTexts.some((text) => text.trim())
+      ? {
+          sources: [
+            ...factTexts,
+            ...otherSkills,
+            ...(profile?.languages ?? []),
+            profile?.headline ?? '',
+            profile?.yearsExperience ? `${String(profile.yearsExperience)} years` : '',
+          ],
+          jobSkills: terms.skills,
+        }
+      : null;
     const insights: JobInsightsModel = {
       jobId,
       title: job.title,
@@ -187,7 +204,7 @@ export class InsightsService {
       keywordsCoverage: before.keywords,
       titleMatch: before.title,
       score: before.score,
-      jobResume: jobResume && this.afterScore(jobResume, terms, before),
+      jobResume: jobResume && this.afterScore(jobResume, terms, before, factSources),
       prompt: buildResumePrompt(promptInput),
     };
     return { insights, promptInput };
@@ -523,6 +540,7 @@ export class InsightsService {
     },
     terms: Parameters<typeof checkResume>[1],
     before: ResumeCheck,
+    facts: Pick<FactCheckInput, 'sources' | 'jobSkills'> | null,
   ): JobResumeModel {
     const after = checkResume(jobResume.text, terms);
     const beforeChecks = [...before.skillChecks, ...before.keywordChecks];
@@ -540,6 +558,13 @@ export class InsightsService {
         .filter((t, i) => t.inResume && !beforeChecks[i]?.inResume)
         .map((t) => t.term),
       stillMissing: afterChecks.filter((t) => !t.inResume).map((t) => t.term),
+      factCheck:
+        facts &&
+        factCheck({
+          resume: jobResume.text,
+          coverLetter: jobResume.coverLetter,
+          ...facts,
+        }),
     };
   }
 }
