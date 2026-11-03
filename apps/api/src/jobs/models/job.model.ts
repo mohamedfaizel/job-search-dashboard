@@ -1,5 +1,12 @@
 import { Field, Float, GraphQLISODateTime, ID, Int, ObjectType } from '@nestjs/graphql';
-import { ApplicationStatus, JobMatchStatus, JobSource, VisaSponsorship, Workplace } from './enums';
+import {
+  ApplicationStatus,
+  JobMatchStatus,
+  JobSource,
+  PostingCheck,
+  VisaSponsorship,
+  Workplace,
+} from './enums';
 
 @ObjectType()
 export class Company {
@@ -87,8 +94,29 @@ export class Job {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field({ description: 'Whether the ad is still open ("active" or "closed")' })
+  @Field({
+    description:
+      '"active", "closed" (JobsPipe says so) or "expired" (our still-open check found it closed)',
+  })
   postingStatus!: string;
+
+  @Field(() => GraphQLISODateTime, {
+    nullable: true,
+    description: "When the still-open check last opened the job's link",
+  })
+  checkedAt!: Date | null;
+
+  @Field(() => PostingCheck, {
+    nullable: true,
+    description: 'What the last still-open check found',
+  })
+  lastCheck!: PostingCheck | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'Why, as a code: NOT_FOUND, SAYS_CLOSED, REDIRECTED, BLOCKED, TIMEOUT…',
+  })
+  checkReason!: string | null;
 
   @Field(() => ApplicationStatus, {
     description: 'Where you are with this job. Each user has their own; NONE until you act.',

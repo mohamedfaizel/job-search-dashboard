@@ -2,7 +2,9 @@ import type { Application, ApplicationStatus, Job } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useJobFormat } from '../useJobFormat';
+import { Badge } from './Badge';
 import { StatusSelect } from './StatusSelect';
+import { isExpired } from './StillOpen';
 
 /** The board's columns, in the order a job moves through them. */
 export const BOARD_COLUMNS = ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED'] as const;
@@ -91,7 +93,12 @@ export function TrackerBoard({ applications, onMove, onOpen }: Props) {
                     >
                       {job.title}
                     </button>
-                    <p className="text-xs text-slate-600">
+                    <p className="flex items-center gap-1.5 text-xs text-slate-600">
+                      {isExpired(job) && (
+                        <Badge tone="red" title={row('expiredHint')}>
+                          {row('expired')}
+                        </Badge>
+                      )}
                       {job.company.name}
                       {job.city ? ` · ${job.city}` : ''}
                     </p>

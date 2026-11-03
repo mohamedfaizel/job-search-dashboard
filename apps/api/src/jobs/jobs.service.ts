@@ -321,9 +321,13 @@ export class JobsService implements OnApplicationBootstrap {
 
     const existing = await this.prisma.job.findMany({
       where: { externalId: { in: mapped.map((m) => m.job.externalId) } },
-      select: { externalId: true },
+      select: { externalId: true, postingStatus: true },
     });
     const existingIds = new Set(existing.map((e) => e.externalId));
+    // Our still-open check found these closed; a re-import must not reopen them.
+    const expiredIds = new Set(
+      existing.filter((e) => e.postingStatus === 'expired').map((e) => e.externalId),
+    );
 
     // One company row per name; keep any domain/logo we already have.
     const companyIds = new Map<string, number>();
@@ -347,7 +351,7 @@ export class JobsService implements OnApplicationBootstrap {
         return this.prisma.job.upsert({
           where: { externalId: job.externalId },
           create: data,
-          update: data,
+          update: expiredIds.has(job.externalId) ? { ...data, postingStatus: 'expired' } : data,
         });
       }),
     );

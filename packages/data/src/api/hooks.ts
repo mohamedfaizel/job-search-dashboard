@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
 import {
+  CHECK_JOB_STILL_OPEN,
   CREATE_JOB,
   CREATE_SAVED_SEARCH,
   DELETE_SAVED_SEARCH,
@@ -141,6 +142,26 @@ export function useUpdateJobStatus() {
       if (context?.previous) queryClient.setQueryData(queryKeys.applications, context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobs }),
+  });
+}
+
+/**
+ * Opens the job's link to see if it is still open. A closed job comes back "expired", and every
+ * list showing it refreshes. The API answers from memory if it checked in the last 10 minutes.
+ */
+export function useCheckJobStillOpen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await graphqlClient.request<{ checkJobStillOpen: Job }>(CHECK_JOB_STILL_OPEN, {
+        id,
+      });
+      return data.checkJobStillOpen;
+    },
+    onSuccess: (job) => {
+      queryClient.setQueryData(queryKeys.job(job.id), job);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+    },
   });
 }
 

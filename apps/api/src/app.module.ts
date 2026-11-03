@@ -10,6 +10,7 @@ import { withApiError } from './common/api-error';
 import { HealthModule } from './health/health.module';
 import { InsightsModule } from './insights/insights.module';
 import { JobsModule } from './jobs/jobs.module';
+import { LivenessModule } from './liveness/liveness.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
 import { ResumeMatcherModule } from './resume-matcher/resume-matcher.module';
@@ -42,6 +43,7 @@ import { SyncModule } from './sync/sync.module';
     ProfileModule,
     ResumeMatcherModule,
     InsightsModule,
+    LivenessModule,
   ],
 })
 export class AppModule {}

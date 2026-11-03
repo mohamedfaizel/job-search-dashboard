@@ -28,6 +28,9 @@ const JOB_FIELDS = /* GraphQL */ `
     industry
     description
     postingStatus
+    checkedAt
+    lastCheck
+    checkReason
     applicationStatus
     matchStatus
     matchScore
@@ -105,6 +108,16 @@ export const UPDATE_JOB_STATUS = /* GraphQL */ `
       applicationStatus
     }
   }
+`;
+
+/** Opens the job's link to see if it is still open. Returns the job with the answer. */
+export const CHECK_JOB_STILL_OPEN = /* GraphQL */ `
+  mutation CheckJobStillOpen($id: ID!) {
+    checkJobStillOpen(id: $id) {
+      ...JobFields
+    }
+  }
+  ${JOB_FIELDS}
 `;
 
 export const HIDE_JOB = /* GraphQL */ `

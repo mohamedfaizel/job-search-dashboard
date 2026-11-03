@@ -39,6 +39,7 @@ export async function createTestApp(env: Record<string, string> = {}): Promise<T
     DATABASE_URL: TEST_DATABASE_URL,
     // Tests call the scheduler directly instead of waiting for its cron.
     SCHEDULER_ENABLED: 'false',
+    STILL_OPEN_CHECK_ENABLED: 'false',
     // No PDF renderer unless a test brings its own fake one: downloads are plain PDFs.
     PDF_RENDERER_URL: '',
     ...env,

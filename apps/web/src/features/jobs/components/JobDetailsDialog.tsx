@@ -11,6 +11,7 @@ import { InsightsPanel } from './InsightsPanel';
 import { JobAdPanel } from './JobAdPanel';
 import { MatchPanel, scoreTone } from './MatchPanel';
 import { StatusSelect } from './StatusSelect';
+import { StillOpen } from './StillOpen';
 import { TailorPanel } from './TailorPanel';
 
 interface Props {
@@ -145,6 +146,8 @@ function JobDetails({
               )}
             </div>
             <MetaLine job={job} />
+            {/* Opening the Apply tab checks again, so you don't apply to a closed ad. */}
+            <StillOpen job={job} autoCheck={tab === 'apply'} />
           </div>
           <div className="flex shrink-0 items-center">
             <button
