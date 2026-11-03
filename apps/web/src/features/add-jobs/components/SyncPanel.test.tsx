@@ -205,4 +205,42 @@ describe('SyncPanel', () => {
       expect(requests[0]?.operation).toBe('CreateSavedSearch');
     });
   });
+
+  it('imports from the free German board, hiding filters it ignores', async () => {
+    renderWithData(<SyncPanel />);
+    expect(screen.getByRole('radio', { name: /JobsPipe/ })).toBeChecked();
+    await userEvent.type(screen.getByLabelText(/cities or regions/i), 'Berlin');
+
+    await userEvent.click(screen.getByRole('radio', { name: /Arbeitsagentur \(free\)/ }));
+
+    expect(screen.getByRole('heading', { name: 'Import from Arbeitsagentur' })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^skills/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Countries' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText('More filters'));
+    expect(screen.queryByRole('checkbox', { name: 'English' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Minimum salary (€ a year)')).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Contract' })).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Part-time' })).toBeInTheDocument();
+
+    // No credit estimate on the button.
+    await userEvent.click(screen.getByRole('button', { name: 'Import' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Free: no credits used.');
+    expect(requests[0]?.variables).toEqual({
+      input: {
+        source: 'ARBEITSAGENTUR',
+        titles: ['frontend'],
+        locations: ['Berlin'],
+        maxAgeDays: 7,
+        pageSize: 25,
+        maxPages: 1,
+        onlyNew: true,
+      },
+    });
+  });
+
+  it('opens a saved free search on the free board', () => {
+    renderWithData(<SyncPanel loaded={{ ...SAVED, source: 'ARBEITSAGENTUR' }} />);
+    expect(screen.getByRole('radio', { name: /Arbeitsagentur/ })).toBeChecked();
+  });
 });

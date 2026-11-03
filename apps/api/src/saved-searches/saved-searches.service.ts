@@ -139,6 +139,7 @@ export class SavedSearchesService {
   ): Promise<SyncJobsResult> {
     const row = await this.findRow(id);
     const input: SyncJobsInput = {
+      source: row.source,
       titles: row.titles,
       skills: row.skills,
       countryCodes: row.countryCodes,
@@ -188,6 +189,7 @@ export class SavedSearchesService {
 function toData(input: SavedSearchInput) {
   return {
     name: input.name.trim(),
+    source: input.source,
     titles: input.titles,
     skills: input.skills ?? [],
     countryCodes: (input.countryCodes ?? []).map((c) => c.toUpperCase()),

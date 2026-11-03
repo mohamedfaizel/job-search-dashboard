@@ -903,7 +903,22 @@
       "update": "Update saved search",
       "save": "Save search",
       "saveError": "Could not save: {error}",
-      "saved": "Saved \"{name}\"."
+      "saved": "Saved \"{name}\".",
+      "headingFree": "Import from Arbeitsagentur",
+      "introFree": "The German Federal Employment Agency’s job board. Free, no credits. Germany only. Only some filters apply, so the rest are hidden.",
+      "source": "Where to look",
+      "sources": {
+        "JOBSPIPE": {
+          "name": "JobsPipe",
+          "hint": "Worldwide. Each job uses one credit."
+        },
+        "ARBEITSAGENTUR": {
+          "name": "Arbeitsagentur (free)",
+          "hint": "Germany only. No credits. Reads each ad in full."
+        }
+      },
+      "usedFree": "Free: no credits used.",
+      "continueFree": "Continue import"
     },
     "saved": {
       "heading": "Saved searches",
@@ -945,7 +960,10 @@
       "at": "At",
       "saveSchedule": "Save schedule",
       "nextRun": "Next run: {date}",
-      "scheduleError": "Could not save the schedule: {error}"
+      "scheduleError": "Could not save the schedule: {error}",
+      "freeBadge": "Free",
+      "lastDaysFree": "Last {days} days · free",
+      "free": "Free: no credits used."
     },
     "history": {
       "heading": "Import history",

@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ArbeitsagenturSyncService } from '../arbeitsagentur/arbeitsagentur-sync.service';
 import { apiError } from '../common/api-error';
+import { ImportSource } from '../generated/prisma/enums';
 import { JobsService } from '../jobs/jobs.service';
 import { JobsPipeClient } from '../jobspipe/jobspipe.client';
 import { mapJobsPipeJob } from '../jobspipe/jobspipe.mapper';
@@ -39,7 +41,9 @@ export const EUR_TO_USD = 1.08;
 /** The same search always gets the same key, whatever the order or case of its terms. */
 export function searchKey(input: SyncJobsInput): string {
   const norm = (list: string[] | undefined) =>
-    [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort();
+    [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b),
+    );
   const locations = norm(input.locations);
   const languages = norm(input.languages);
   const excludeTitles = norm(input.excludeTitles);
@@ -111,12 +115,17 @@ export class SyncService {
     private readonly jobsPipe: JobsPipeClient,
     private readonly jobs: JobsService,
     private readonly prisma: PrismaService,
+    private readonly arbeitsagentur: ArbeitsagenturSyncService,
   ) {}
 
   async sync(
     input: SyncJobsInput,
     options: { savedSearchId?: number; scheduled?: boolean } = {},
   ): Promise<SyncJobsResult> {
+    // The free German job board has its own, simpler import (no credits, no cursor).
+    if (input.source === ImportSource.ARBEITSAGENTUR) {
+      return this.arbeitsagentur.sync(input, options);
+    }
     const key = searchKey(input);
     const start = input.resume ? await this.resumePoint(key) : await this.freshStart(key, input);
 

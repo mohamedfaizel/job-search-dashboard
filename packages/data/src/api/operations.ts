@@ -197,6 +197,7 @@ const SYNC_RUN_FIELDS = /* GraphQL */ `
 const SAVED_SEARCH_FIELDS = /* GraphQL */ `
   id
   name
+  source
   titles
   skills
   countryCodes

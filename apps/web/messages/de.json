@@ -903,7 +903,22 @@
       "update": "Gespeicherte Suche aktualisieren",
       "save": "Suche speichern",
       "saveError": "Konnte nicht gespeichert werden: {error}",
-      "saved": "„{name}“ gespeichert."
+      "saved": "„{name}“ gespeichert.",
+      "headingFree": "Von der Arbeitsagentur importieren",
+      "introFree": "Die Jobbörse der Bundesagentur für Arbeit. Kostenlos, ohne Credits. Nur Deutschland. Es gelten nur einige Filter, die anderen sind ausgeblendet.",
+      "source": "Wo suchen",
+      "sources": {
+        "JOBSPIPE": {
+          "name": "JobsPipe",
+          "hint": "Weltweit. Jeder Job kostet einen Credit."
+        },
+        "ARBEITSAGENTUR": {
+          "name": "Arbeitsagentur (kostenlos)",
+          "hint": "Nur Deutschland. Keine Credits. Liest jede Anzeige vollständig."
+        }
+      },
+      "usedFree": "Kostenlos: keine Credits verbraucht.",
+      "continueFree": "Import fortsetzen"
     },
     "saved": {
       "heading": "Gespeicherte Suchen",
@@ -945,7 +960,10 @@
       "at": "Um",
       "saveSchedule": "Zeitplan speichern",
       "nextRun": "Nächster Lauf: {date}",
-      "scheduleError": "Der Zeitplan konnte nicht gespeichert werden: {error}"
+      "scheduleError": "Der Zeitplan konnte nicht gespeichert werden: {error}",
+      "freeBadge": "Kostenlos",
+      "lastDaysFree": "Letzte {days} Tage · kostenlos",
+      "free": "Kostenlos: keine Credits verbraucht."
     },
     "history": {
       "heading": "Import-Verlauf",

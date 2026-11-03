@@ -1,5 +1,10 @@
 import type { CreateJobInput, SavedSearch, SavedSearchInput, SyncJobsInput } from '@jobsearch/data';
-import { APPLICATION_STATUSES, EMPLOYMENT_TYPES, WORKPLACES } from '@jobsearch/data';
+import {
+  APPLICATION_STATUSES,
+  EMPLOYMENT_TYPES,
+  IMPORT_SOURCES,
+  WORKPLACES,
+} from '@jobsearch/data';
 import { z } from 'zod';
 
 /** Splits "react, node.js ,  " into ["react", "node.js"]. */
@@ -123,6 +128,7 @@ export function syncFormSchema(t: ErrorText) {
         message: t('wholeNumber', { max }),
       });
   return z.object({
+    source: z.enum(IMPORT_SOURCES),
     titles: z.string().refine((v) => splitList(v).length > 0, t('titles')),
     skills: z.string(),
     countryCodes: z
@@ -151,6 +157,7 @@ export function syncFormSchema(t: ErrorText) {
 export type SyncFormValues = z.infer<ReturnType<typeof syncFormSchema>>;
 
 export const defaultSyncForm: SyncFormValues = {
+  source: 'JOBSPIPE',
   titles: 'frontend',
   skills: 'react',
   countryCodes: '',
@@ -173,17 +180,21 @@ export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
   const locations = splitList(values.locations);
   const excludeTitles = splitList(values.excludeTitles);
   const minSalary = values.minSalaryEur.trim();
+  // The free German board looks at titles, places, job type, remote, skipped titles and age.
+  // Fields it ignores are left out, so a value hidden in the form is never sent.
+  const free = values.source === 'ARBEITSAGENTUR';
   return {
+    ...(free ? { source: values.source } : {}),
     titles: splitList(values.titles),
-    ...(skills.length ? { skills } : {}),
-    ...(countryCodes.length ? { countryCodes } : {}),
+    ...(skills.length && !free ? { skills } : {}),
+    ...(countryCodes.length && !free ? { countryCodes } : {}),
     ...(locations.length ? { locations } : {}),
-    ...(values.languages.length ? { languages: values.languages } : {}),
-    ...(values.skipFluentGerman ? { skipFluentGerman: true } : {}),
+    ...(values.languages.length && !free ? { languages: values.languages } : {}),
+    ...(values.skipFluentGerman && !free ? { skipFluentGerman: true } : {}),
     ...(values.remoteOnly ? { remoteOnly: true } : {}),
     ...(excludeTitles.length ? { excludeTitles } : {}),
     ...(values.employmentTypes.length ? { employmentTypes: values.employmentTypes } : {}),
-    ...(minSalary ? { minSalaryEur: Number(minSalary) } : {}),
+    ...(minSalary && !free ? { minSalaryEur: Number(minSalary) } : {}),
     maxAgeDays: Number(values.maxAgeDays),
     pageSize: Number(values.pageSize),
     maxPages: Number(values.maxPages),
@@ -194,6 +205,7 @@ export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
 /** A saved search → the import form, so it can be edited, run or saved again. */
 export function savedSearchToForm(search: SavedSearch): SyncFormValues {
   return {
+    source: search.source,
     titles: search.titles.join(', '),
     skills: search.skills.join(', '),
     countryCodes: search.countryCodes.join(', '),
