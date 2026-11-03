@@ -583,9 +583,31 @@ export interface DocumentStyle {
   font: string;
   showPhoto: boolean;
   hasPhoto: boolean;
+  /** The look of your own resume, as settings. Null until you save one. */
+  myDesign: MyDesign | null;
 }
 
-export type DocumentStyleInput = Omit<DocumentStyle, 'hasPhoto'>;
+/** "My design": your resume's look, typeset as the template "design". */
+export interface MyDesign {
+  font: 'sans' | 'serif' | 'latin';
+  accent: string;
+  nameSize: 'normal' | 'large' | 'huge';
+  nameStyle: 'bold' | 'caps' | 'smallcaps' | 'plain';
+  nameColour: 'accent' | 'black';
+  align: 'left' | 'centre';
+  headingStyle: 'rule' | 'bar' | 'plain';
+  headingCase: 'normal' | 'upper';
+  headingColour: 'accent' | 'black';
+  dates: 'right' | 'below';
+  companyFirst: boolean;
+  density: 'normal' | 'compact';
+  skillsFirst: boolean;
+  photo: boolean;
+  /** Your resume has two columns; My design always uses one. */
+  twoColumns: boolean;
+}
+
+export type DocumentStyleInput = Omit<DocumentStyle, 'hasPhoto' | 'myDesign'>;
 
 export interface DocumentTemplate {
   id: string;
@@ -609,6 +631,8 @@ export interface DocumentTemplates {
   coverLetterLayouts: DocumentTemplate[];
   /** Null without a Word (.docx) master resume. */
   wordTemplate: WordTemplate | null;
+  /** Paste into Claude with your resume attached: its JSON reply becomes My design. */
+  designPrompt: string;
   rendererConfigured: boolean;
   /** The pdf-renderer container answers. Without it, PDFs are plain. */
   rendererAvailable: boolean;

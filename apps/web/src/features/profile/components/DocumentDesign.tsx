@@ -2,14 +2,17 @@ import type {
   DocumentStyle,
   DocumentStyleInput,
   DocumentTemplate,
+  MyDesign,
   WordTemplate,
 } from '@jobsearch/data';
 import {
   documentPreviewUrl,
   PHOTO_URL,
+  useDeleteMyDesign,
   useDeletePhoto,
   useDocumentStyle,
   useDocumentTemplates,
+  useSaveMyDesign,
   useUpdateDocumentStyle,
   useUploadPhoto,
 } from '@jobsearch/data';
@@ -183,6 +186,184 @@ function WordFileNote({ word }: { word: WordTemplate | null }) {
   );
 }
 
+/** What My design took from your resume, as short labels. */
+function designChips(d: MyDesign, t: ReturnType<typeof useTranslations<'Profile.design'>>) {
+  return [
+    t(`myDesignFont.${d.font}`),
+    t(`myDesignAlign.${d.align}`),
+    t(`myDesignHeading.${d.headingStyle}`),
+    d.headingCase === 'upper' ? t('myDesignCaps') : null,
+    d.dates === 'right' ? t('myDesignDatesRight') : t('myDesignDatesBelow'),
+    d.companyFirst ? t('myDesignCompanyFirst') : null,
+    d.skillsFirst ? t('myDesignSkillsFirst') : null,
+    d.density === 'compact' ? t('myDesignCompact') : null,
+  ].filter((c): c is string => !!c);
+}
+
+/**
+ * My design: Claude looks at your own resume file (you attach it in Claude) and answers with its
+ * design settings; saving them adds "My design" to the templates, in one clean LaTeX column.
+ */
+function MyDesignCard({ saved }: { saved: DocumentStyle }) {
+  const errorText = useErrorText();
+  const t = useTranslations('Profile.design');
+  const templates = useDocumentTemplates();
+  const save = useSaveMyDesign();
+  const remove = useDeleteMyDesign();
+  const [reply, setReply] = useState('');
+  const [copied, setCopied] = useState<'ok' | 'failed' | null>(null);
+  const [redo, setRedo] = useState(false);
+  const replyId = useId();
+  const prompt = templates.data?.designPrompt ?? '';
+  const design = saved.myDesign;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setCopied('ok');
+    } catch {
+      setCopied('failed');
+    }
+    window.open('https://claude.ai/new', '_blank', 'noopener');
+  };
+
+  if (design && !redo) {
+    return (
+      <div className="space-y-3 rounded-lg border border-slate-200 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-sm font-semibold text-slate-900">{t('myDesignTitle')}</h3>
+          <span
+            className="h-4 w-4 rounded-full ring-1 ring-slate-300"
+            style={{ backgroundColor: `#${design.accent}` }}
+            title={`#${design.accent}`}
+          />
+        </div>
+        <ul className="flex flex-wrap gap-1.5" aria-label={t('myDesignTook')}>
+          {designChips(design, t).map((chip) => (
+            <li key={chip} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+              {chip}
+            </li>
+          ))}
+        </ul>
+        {design.twoColumns && (
+          <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {t('myDesignTwoColumns')}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href={documentPreviewUrl('resume', { template: 'design' })}
+            target="_blank"
+            rel="noreferrer"
+            className={LINK}
+          >
+            {t('myDesignPreview')}
+          </a>
+          <button
+            type="button"
+            className={BUTTON}
+            onClick={() => {
+              setRedo(true);
+            }}
+          >
+            {t('myDesignRedo')}
+          </button>
+          <button
+            type="button"
+            className={BUTTON}
+            disabled={remove.isPending}
+            onClick={() => {
+              remove.mutate();
+            }}
+          >
+            {t('myDesignDelete')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-brand-200 bg-brand-50/40 p-4">
+      <div className="space-y-1">
+        <h3 className="text-sm font-semibold text-slate-900">{t('myDesignMake')}</h3>
+        <p className="text-sm text-slate-600">{t('myDesignIntro')}</p>
+      </div>
+      <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700">
+        <li>{t('myDesignStep1')}</li>
+        <li>{t('myDesignStep2')}</li>
+        <li>{t('myDesignStep3')}</li>
+      </ol>
+      <button
+        type="button"
+        disabled={!prompt}
+        onClick={() => {
+          void copy();
+        }}
+        className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+      >
+        {t('myDesignCopy')}
+      </button>
+      {copied === 'failed' && (
+        <details open className="text-xs text-slate-600">
+          <summary>{t('myDesignCopyFailed')}</summary>
+          <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap rounded bg-white p-2">
+            {prompt}
+          </pre>
+        </details>
+      )}
+      <div className="space-y-1">
+        <label htmlFor={replyId} className="block text-sm font-medium text-slate-700">
+          {t('myDesignReply')}
+        </label>
+        <textarea
+          id={replyId}
+          rows={4}
+          value={reply}
+          onChange={(e) => {
+            setReply(e.target.value);
+          }}
+          placeholder='{ "font": "serif", … }'
+          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-xs"
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={!reply.trim() || save.isPending}
+          onClick={() => {
+            save.mutate(reply, {
+              onSuccess: () => {
+                setReply('');
+                setRedo(false);
+              },
+            });
+          }}
+          className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+        >
+          {save.isPending ? t('saving') : t('myDesignSave')}
+        </button>
+        {redo && (
+          <button
+            type="button"
+            className={BUTTON}
+            onClick={() => {
+              setRedo(false);
+            }}
+          >
+            {t('myDesignCancel')}
+          </button>
+        )}
+        {save.isError && (
+          <p role="alert" className="text-sm text-red-700">
+            {errorText(save.error)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Edits a copy of the saved style; Save sends it. */
 function DesignForm({ saved }: { saved: DocumentStyle }) {
   const errorText = useErrorText();
@@ -238,6 +419,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
             />
           ))}
         </div>
+        <MyDesignCard saved={saved} />
         {data && <WordFileNote word={data.wordTemplate} />}
       </fieldset>
 
@@ -407,7 +589,8 @@ export function DocumentDesign() {
           {errorText(style.error)}
         </p>
       ) : (
-        <DesignForm saved={style.data} />
+        // Saving or deleting My design changes the default template: start the form again from it.
+        <DesignForm key={style.data.myDesign ? 'design' : 'none'} saved={style.data} />
       )}
     </section>
   );

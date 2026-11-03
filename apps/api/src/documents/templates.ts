@@ -1,4 +1,6 @@
 import { contactItem, esc, inline } from './latex';
+import type { MyDesign } from './my-design';
+import { DEFAULT_DESIGN } from './my-design';
 import type { ResumeBlock, ResumeDoc } from './resume-doc';
 
 /**
@@ -67,10 +69,17 @@ export const MY_WORD_FILE = {
   description:
     'The .docx you uploaded on this page: your layout, fonts and colours, with the tailored words.',
 } as const;
-/** A built-in template or your own Word file. */
-export type ResumeChoice = ResumeTemplateId | typeof MY_WORD_FILE.id;
+/** The look of your own resume, rebuilt in LaTeX (see my-design.ts). */
+export const MY_DESIGN = {
+  id: 'design',
+  name: 'My design',
+  description:
+    'The look of the resume you showed Claude: your colour, type, headings and order, in one clean column.',
+} as const;
+/** A built-in template, My design or your own Word file. */
+export type ResumeChoice = ResumeTemplateId | typeof MY_DESIGN.id | typeof MY_WORD_FILE.id;
 export const isResumeChoice = (id: string): id is ResumeChoice =>
-  id === MY_WORD_FILE.id || isResumeTemplate(id);
+  id === MY_WORD_FILE.id || id === MY_DESIGN.id || isResumeTemplate(id);
 
 /** How a cover letter is laid out: DIN 5008 is the German business letter standard. */
 export const LETTER_LAYOUTS = [
@@ -94,7 +103,9 @@ export const FONTS = ['auto', 'sans', 'serif'] as const;
 export type FontChoice = (typeof FONTS)[number];
 
 export interface DocumentLook {
-  template: ResumeTemplateId;
+  /** A built-in template, or "design" for My design (then `design` holds it). */
+  template: ResumeTemplateId | typeof MY_DESIGN.id;
+  design?: MyDesign | null;
   /** Six hex digits, e.g. "1F4E79". */
   accent: string;
   font: FontChoice;
@@ -293,8 +304,61 @@ const STYLES: Record<ResumeTemplateId, TemplateStyle> = {
   },
 };
 
+/** My design as a template: the same parts as the built-in ones, set from your settings. */
+export function designStyle(d: MyDesign): TemplateStyle {
+  const compact = d.density === 'compact';
+  const nameSize = { normal: 20, large: 26, huge: 32 }[d.nameSize] - (compact ? 2 : 0);
+  const nameShape = {
+    bold: (n: string) => `\\bfseries ${n}`,
+    caps: (n: string) => `\\bfseries ${caps(n)}`,
+    smallcaps: (n: string) => `\\scshape ${n}`,
+    plain: (n: string) => n,
+  }[d.nameStyle];
+  const nameColour = d.nameColour === 'accent' ? '\\color{accent}' : '';
+  const headColour = d.headingColour === 'accent' ? '\\color{accent}' : '';
+  const word = (t: string) => (d.headingCase === 'upper' ? caps(t) : t);
+  const gap = compact ? '6pt' : '9pt';
+  const section = {
+    rule: (t: string) =>
+      `\\vspace{${gap}}{${headColour}\\bfseries ${word(t)}}\\par\\vspace{1pt}{${headColour}\\rule{\\linewidth}{0.6pt}}\\par\\vspace{4pt}\n`,
+    bar: (t: string) =>
+      `\\vspace{${gap}}{\\color{accent}\\rule[-1pt]{3pt}{11pt}}\\hspace{6pt}{${headColour}\\bfseries ${word(t)}}\\par\\vspace{4pt}\n`,
+    plain: (t: string) =>
+      `\\vspace{${gap}}{${headColour}\\bfseries\\large ${word(t)}}\\par\\vspace{3pt}\n`,
+  }[d.headingStyle];
+  return {
+    size: compact ? 10 : 11,
+    margin: compact ? '1.5cm' : '1.9cm',
+    top: compact ? '1.2cm' : '1.5cm',
+    entryGap: compact ? '4pt' : '7pt',
+    font: d.font,
+    centred: d.align === 'centre',
+    colour: true,
+    photo: d.photo,
+    name: (n) =>
+      `{\\fontsize{${String(nameSize)}}{${String(nameSize + 2)}}\\selectfont${nameColour}${nameShape(n)}}`,
+    headline: (h) => `{\\large\\color{muted}${h}}`,
+    section,
+    entry: (t, o, m) => {
+      const first = d.companyFirst && o ? o : t;
+      const second = d.companyFirst && o ? t : o;
+      const line1 = d.companyFirst && o ? `\\textbf{${first}}` : `\\textbf{${first}}${sep(second)}`;
+      const line2 = d.companyFirst && o ? `\\textit{${t}}\\par\n` : '';
+      return d.dates === 'right'
+        ? `${line1}${metaRight(m)}\\par\n${line2}`
+        : `${line1}\\par\n${line2}${metaLine(m)}`;
+    },
+    skillsFirst: d.skillsFirst,
+  };
+}
+
+function styleOf(look: DocumentLook): TemplateStyle {
+  if (look.template === MY_DESIGN.id) return designStyle(look.design ?? DEFAULT_DESIGN);
+  return STYLES[look.template];
+}
+
 const fontFor = (look: DocumentLook) =>
-  FONT_NAMES[look.font === 'auto' ? STYLES[look.template].font : look.font];
+  FONT_NAMES[look.font === 'auto' ? styleOf(look).font : look.font];
 
 /** "#1f4e79" or "1F4E79" → "1F4E79"; anything else → the default blue. */
 export function hexColor(value: string): string {
@@ -305,7 +369,7 @@ export function hexColor(value: string): string {
 function preamble(look: DocumentLook, size: number, geometry: string, extra = ''): string {
   // No common ligatures ("fi", "fl"): some applicant tracking systems read them as one odd
   // character. Title and author go into the PDF properties; the API sets them again after.
-  const style = STYLES[look.template];
+  const style = styleOf(look);
   const accent = style.colour ? hexColor(look.accent) : '222222';
   return `\\documentclass[${String(size)}pt,a4paper]{article}
 \\usepackage[a4paper,${geometry}]{geometry}
@@ -326,7 +390,7 @@ ${extra}\\pagestyle{empty}
 }
 
 function block(look: DocumentLook, b: ResumeBlock, summary = false): string {
-  const style = STYLES[look.template];
+  const style = styleOf(look);
   switch (b.kind) {
     case 'paragraph':
       return summary && style.summaryBox
@@ -357,7 +421,7 @@ function header(
   doc: Pick<ResumeDoc, 'name' | 'headline' | 'contact'>,
   centred: boolean,
 ): string {
-  const style = STYLES[look.template];
+  const style = styleOf(look);
   const name = style.name(esc(doc.name));
   const headline = doc.headline ? `\\\\[5pt]${style.headline(inline(doc.headline))}` : '';
   const contact = doc.contact.length
@@ -394,7 +458,7 @@ function skillsBeforeExperience(sections: ResumeDoc['sections']): ResumeDoc['sec
 
 /** A resume as a complete .tex file in the chosen template. */
 export function resumeTex(doc: ResumeDoc, look: DocumentLook): string {
-  const s = STYLES[look.template];
+  const s = styleOf(look);
   const sections = s.skillsFirst ? skillsBeforeExperience(doc.sections) : doc.sections;
   const body = sections
     .map((section, i) => {

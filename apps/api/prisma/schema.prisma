@@ -169,6 +169,8 @@ model DocumentStyle {
   /// JPEG or PNG, at most 2 MB.
   photo             Bytes?
   photoType         String?
+  /// "My design": the look of your own resume as settings (see apps/api/src/documents/my-design.ts).
+  myDesign          Json?
   updatedAt         DateTime @updatedAt
 }
 

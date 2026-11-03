@@ -53,9 +53,11 @@ export {
   documentStyleKey,
   documentTemplatesKey,
   PHOTO_URL,
+  useDeleteMyDesign,
   useDeletePhoto,
   useDocumentStyle,
   useDocumentTemplates,
+  useSaveMyDesign,
   useUpdateDocumentStyle,
   useUploadPhoto,
 } from './api/documents';

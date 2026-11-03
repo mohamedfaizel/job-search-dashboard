@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { apiError } from '../common/api-error';
+import { Prisma } from '../generated/prisma/client';
 import { germanRequirement } from '../insights/german';
 import { pdfFileName, textToPdf } from '../insights/pdf';
 import { detectLanguage } from '../insights/text';
@@ -11,6 +12,8 @@ import type {
   WordTemplateModel,
 } from './documents.model';
 import { analyseDocx, DocxTemplateError, fillDocx } from './docx-template';
+import { buildDesignPrompt, DesignReplyError, parseDesign, toDesign } from './my-design';
+import type { MyDesign } from './my-design';
 import { cleanPdf } from './pdf-metadata';
 import { DOCX_TYPE, PdfRendererClient, RenderError } from './pdf-renderer.client';
 import type { ResumeDoc } from './resume-doc';
@@ -28,10 +31,16 @@ import {
   isLetterLayout,
   isResumeChoice,
   LETTER_LAYOUTS,
+  MY_DESIGN,
   MY_WORD_FILE,
   RESUME_TEMPLATES,
   resumeTex,
 } from './templates';
+
+/** The My design column as a design, or null when none is saved. */
+function storedDesign(value: Prisma.JsonValue | null | undefined): MyDesign | null {
+  return value && typeof value === 'object' && !Array.isArray(value) ? toDesign(value) : null;
+}
 
 /** A file to download. */
 export interface DocumentFile {
@@ -145,7 +154,53 @@ export class DocumentsService {
       font: row?.font ?? DEFAULT_STYLE.font,
       showPhoto: row?.showPhoto ?? DEFAULT_STYLE.showPhoto,
       hasPhoto: !!row?.photoType,
+      myDesign: storedDesign(row?.myDesign),
     };
+  }
+
+  /**
+   * Saves Claude's reply to the design prompt as My design and makes it your default resume
+   * template, so the next download already uses it.
+   */
+  async saveMyDesign(userId: number, reply: string): Promise<DocumentStyleModel> {
+    let design: MyDesign;
+    try {
+      design = parseDesign(reply);
+    } catch (error) {
+      if (error instanceof DesignReplyError) {
+        throw apiError(
+          BadRequestException,
+          'DESIGN_REPLY',
+          'Paste Claude’s whole reply: it should be one JSON object with the design settings',
+        );
+      }
+      throw error;
+    }
+    const data = { myDesign: { ...design }, resumeTemplate: MY_DESIGN.id };
+    await this.prisma.documentStyle.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: data,
+    });
+    return this.style(userId);
+  }
+
+  /** Deletes My design; a default of "design" goes back to Classic. Deleting again does nothing. */
+  async deleteMyDesign(userId: number): Promise<DocumentStyleModel> {
+    const row = await this.prisma.documentStyle.findUnique({
+      where: { userId },
+      select: { resumeTemplate: true },
+    });
+    if (row) {
+      await this.prisma.documentStyle.update({
+        where: { userId },
+        data: {
+          myDesign: Prisma.DbNull,
+          ...(row.resumeTemplate === MY_DESIGN.id ? { resumeTemplate: 'classic' } : {}),
+        },
+      });
+    }
+    return this.style(userId);
   }
 
   async updateStyle(userId: number, input: DocumentStyleInput): Promise<DocumentStyleModel> {
@@ -165,17 +220,20 @@ export class DocumentsService {
   }
 
   async templates(userId: number): Promise<DocumentTemplatesModel> {
-    const [rendererAvailable, wordTemplate] = await Promise.all([
+    const [rendererAvailable, wordTemplate, row] = await Promise.all([
       this.renderer.isReachable(),
       this.wordTemplate(userId),
+      this.prisma.documentStyle.findUnique({ where: { userId }, select: { myDesign: true } }),
     ]);
     return {
       resumeTemplates: [
+        ...(row?.myDesign ? [{ ...MY_DESIGN }] : []),
         ...RESUME_TEMPLATES.map((t) => ({ ...t })),
         ...(wordTemplate?.usable ? [{ ...MY_WORD_FILE }] : []),
       ],
       coverLetterLayouts: LETTER_LAYOUTS.map((l) => ({ ...l })),
       wordTemplate,
+      designPrompt: buildDesignPrompt(),
       rendererConfigured: this.renderer.isConfigured,
       rendererAvailable,
     };
@@ -463,12 +521,18 @@ export class DocumentsService {
         ? doc.template
         : (style?.resumeTemplate ?? DEFAULT_STYLE.resumeTemplate)
     ) as ResumeChoice;
-    // Your Word file sets the resume's look; the cover letter then uses Classic.
-    const template: ResumeTemplateId = choice === MY_WORD_FILE.id ? 'classic' : choice;
+    // Your Word file sets the resume's look; the cover letter then uses Classic. My design
+    // without a saved design falls back to Classic too.
+    const design = storedDesign(style?.myDesign);
+    const template: ResumeTemplateId | typeof MY_DESIGN.id =
+      choice === MY_WORD_FILE.id || (choice === MY_DESIGN.id && !design) ? 'classic' : choice;
     const photoType = style?.showPhoto && style.photoType ? PHOTO_TYPES[style.photoType] : null;
+    const ownColour = template === MY_DESIGN.id && design ? design.accent : null;
     const look: DocumentLook = {
       template,
-      accent: hexColor(doc.accent ?? style?.accentColor ?? DEFAULT_STYLE.accentColor),
+      design,
+      // My design keeps its own colour; the colour setting is for the built-in templates.
+      accent: hexColor(ownColour ?? doc.accent ?? style?.accentColor ?? DEFAULT_STYLE.accentColor),
       font: (doc.font && ['auto', 'sans', 'serif'].includes(doc.font)
         ? doc.font
         : (style?.font ?? 'auto')) as FontChoice,

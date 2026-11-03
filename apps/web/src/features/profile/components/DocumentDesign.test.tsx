@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ProfilePage } from '../ProfilePage';
 import { renderWithData } from '../test/render';
-import { requests, wordTemplate } from '../test/server';
+import { requests, SAVED_DESIGN, wordTemplate } from '../test/server';
 import { DocumentDesign } from './DocumentDesign';
 
 async function renderPage() {
@@ -94,5 +94,40 @@ describe('resume and cover letter design', () => {
   it('says how to use your own Word file when there is none', async () => {
     await renderPage();
     expect(section()).toHaveTextContent('Upload your master resume as a Word (.docx) file');
+  });
+
+  it('makes My design from Claude’s reply and makes it your default template', async () => {
+    const user = await renderPage();
+    const design = section();
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+
+    await user.click(
+      within(design).getByRole('button', { name: 'Copy design prompt and open Claude ↗' }),
+    );
+    expect(await navigator.clipboard.readText()).toBe(
+      'I attached my resume. Describe its design as JSON.',
+    );
+    expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
+
+    await user.click(within(design).getByRole('textbox', { name: 'Claude’s reply' }));
+    await user.paste(JSON.stringify(SAVED_DESIGN));
+    await user.click(within(design).getByRole('button', { name: 'Save my design' }));
+
+    expect(requests).toContainEqual({
+      operation: 'SaveMyDesign',
+      variables: { reply: JSON.stringify(SAVED_DESIGN) },
+    });
+    expect(await within(design).findByRole('radio', { name: /My design/ })).toBeChecked();
+    const took = within(design).getByRole('list', { name: 'What My design took from your resume' });
+    expect(took).toHaveTextContent('Serif type');
+    expect(took).toHaveTextContent('Centred header');
+    expect(took).toHaveTextContent('Dates on the right');
+    expect(within(design).getByText(/Your resume has two columns/)).toBeInTheDocument();
+
+    await user.click(within(design).getByRole('button', { name: 'Delete' }));
+    expect(requests).toContainEqual({ operation: 'DeleteMyDesign', variables: {} });
+    expect(
+      await within(design).findByRole('button', { name: 'Save my design' }),
+    ).toBeInTheDocument();
   });
 });

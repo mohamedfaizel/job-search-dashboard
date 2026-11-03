@@ -26,4 +26,20 @@ export class DocumentsResolver {
   ): Promise<DocumentStyleModel> {
     return this.documents.updateStyle(user.id, input);
   }
+
+  @Mutation(() => DocumentStyleModel, {
+    description:
+      'Saves Claude’s reply to the design prompt as My design and makes it your default template',
+  })
+  saveMyDesign(
+    @CurrentUser() user: SessionUser,
+    @Args('reply') reply: string,
+  ): Promise<DocumentStyleModel> {
+    return this.documents.saveMyDesign(user.id, reply.slice(0, 20_000));
+  }
+
+  @Mutation(() => DocumentStyleModel, { description: 'Deletes My design' })
+  deleteMyDesign(@CurrentUser() user: SessionUser): Promise<DocumentStyleModel> {
+    return this.documents.deleteMyDesign(user.id);
+  }
 }

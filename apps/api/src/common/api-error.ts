@@ -52,6 +52,7 @@ export const API_ERROR_CODES = [
   'GMAIL_ACCOUNT_NOT_FOUND',
   'SUGGESTION_NOT_FOUND',
   'SUGGESTION_ANSWERED',
+  'DESIGN_REPLY',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
