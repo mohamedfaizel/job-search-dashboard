@@ -25,6 +25,12 @@ const JOB_RESUME = `jobResume {
   score
   nowCovered
   stillMissing
+  factCheck {
+    kind
+    text
+    where
+    context
+  }
 }`;
 
 const INSIGHTS = /* GraphQL */ `
@@ -137,6 +143,7 @@ interface JobResume {
   score: number | null;
   nowCovered: string[];
   stillMissing: string[];
+  factCheck: { kind: string; text: string; where: string; context: string }[] | null;
 }
 
 interface Insights {
@@ -491,6 +498,49 @@ describe('job insights without AI', () => {
       );
       await download(job.id, t.cookieFor('ADMIN')).expect(404);
       await request(t.server).get(`/job-resume/${job.id}`).expect(401);
+    });
+
+    it('flags numbers and skills that are not in your resume or profile', async () => {
+      const job = await backendJob();
+
+      const res = await t.asUser<{ saveJobResumeText: Insights }>(SAVE_TEXT, {
+        jobId: job.id,
+        text: [
+          '=== RESUME ===',
+          '# Ada',
+          '## Skills',
+          'Node.js, Rust',
+          '## Experience',
+          '- Cut costs by 40% with Kafka',
+          '=== COVER LETTER ===',
+          'I have 12 years of experience.',
+        ].join('\n'),
+      });
+
+      expect(res.errors).toBeUndefined();
+      const found = res.data!.saveJobResumeText.jobResume!.factCheck!;
+      expect(found.map((f) => `${f.kind}:${f.where}:${f.text}`)).toEqual(
+        expect.arrayContaining([
+          'NUMBER:RESUME:40%',
+          'NUMBER:COVER_LETTER:12',
+          'SKILL:RESUME:Rust',
+          'SKILL:RESUME:kafka',
+        ]),
+      );
+      expect(found.find((f) => f.text === '40%')?.context).toBe('Cut costs by 40% with Kafka');
+      // Node.js is in your resume as NodeJS.
+      expect(found.map((f) => f.text)).not.toContain('Node.js');
+    });
+
+    it('has no fact check without a resume of yours to compare with', async () => {
+      const job = await addJob({ title: 'Backend Engineer', skills: ['kafka'] });
+
+      const res = await t.asUser<{ saveJobResumeText: Insights }>(SAVE_TEXT, {
+        jobId: job.id,
+        text: 'Kafka and 40% faster',
+      });
+
+      expect(res.data!.saveJobResumeText.jobResume!.factCheck).toBeNull();
     });
 
     it('reads an uploaded PDF and gives the same file back', async () => {
