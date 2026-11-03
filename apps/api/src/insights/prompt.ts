@@ -37,16 +37,30 @@ const list = (items: string[]) =>
 const TERM_RULES = `How to handle each skill or keyword:
 1. Supported: my resume or my other skills show it. Use it, in the job ad's own words.
 2. Related: it is closely tied to something I have done (same ecosystem, or the usual tool for it), for example Apollo with GraphQL, Next.js with React, Jest with unit testing, Kubernetes with Docker. Add it next to that experience, e.g. "GraphQL APIs with Apollo Client".
-3. Keywords from the job ad (teamwork, efficiency, platforms, business impact, and the ad's own phrases): use as many as you honestly can, in the ad's exact wording, so ATS keyword matching finds them. Work them naturally into the summary, the bullet points and the skills, as normal words in real sentences. Never stuff them into a list, repeat them, or hide them.
+3. Keywords from the job ad (the ad's own phrases): use the ad's exact word where it means the same as what I really did, because ATS keyword matching is often literal (the ad says "reusable UI components" and I built reusable React components: write "reusable UI components with React"). Put them in the summary, the first bullet of each job and the skills, as normal words in real sentences. Never use a keyword only to raise a score, and never stuff, repeat or hide them.
 4. A skill with no connection to my experience: leave it out.
 
-Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.`;
+Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.
+Interview test: I must be able to explain every line in an interview without saying "well, what I actually meant was...". Moving my most relevant work first and using the ad's words for the same thing is fine. Making adjacent work sound like the ad's exact task, or mixing study and job experience into one claim, is a stretch: list it under Stretches in the CHECK part.`;
+
+/**
+ * Writing rules from the best tailoring guides (ai-job-search's writing style guide): what makes a
+ * resume read like a person wrote it, not a keyword machine.
+ */
+const WRITING_RULES = `How to write:
+- Summary: 3 to 4 lines that say which role I am targeting and why I fit this one, with one or two proof points that match the ad's most important requirements. If the job is outside my usual field, open with the one sentence that connects my background to their problem.
+- Bullets: start with a strong verb, show the result (numbers only when they are in my resume), vary how they start. 4 to 5 bullets for my latest job, 2 to 3 for the one before, 1 to 2 for older ones.
+- Skills: 4 to 6 groups with bold labels; use the ad's own name for a group when it truly fits.
+- Banned words and phrases: passionate, leverage, synergy, drive results, hit the ground running, team player, results-driven, dynamic, cutting-edge, I believe I would be a great fit. Show it with an example instead.
+- No em dashes (—). Use commas or full stops.
+- Active voice, confident, no apologising ("I think I could"). Plain words, short sentences.
+- A degree or course I have not finished says so in its own entry: "In progress, expected MM/YYYY".`;
 
 /**
  * The resume comes back in one Markdown shape, so the download can put it into the PDF
  * template you picked (apps/api/src/documents/resume-doc.ts reads it).
  */
-const LAYOUT = `Layout: ATS-friendly. Up to three pages, most relevant experience first. Write the resume in Markdown in exactly this shape (section headings in the resume's language), so my job tracker can put it into my PDF template:
+const LAYOUT = `Layout: ATS-friendly, one column. At most two pages (one page if I have less than 3 years of experience); when it is too long, cut the lines least relevant to this job first, wherever they are. Most relevant experience first. Write the resume in Markdown in exactly this shape (section headings in the resume's language), so my job tracker can put it into my PDF template:
 # Full Name
 Headline: the job title I am applying as
 City, Country | phone | email | LinkedIn or website
@@ -56,17 +70,20 @@ Two to four sentences.
 - **Group:** skill, skill, skill
 ## Experience
 ### Job title | Company
-City | MM/YYYY – MM/YYYY
+City | MM/YYYY - MM/YYYY
 - What I did, with a result
 ## Education
 ### Degree | School
-MM/YYYY – MM/YYYY
+MM/YYYY - MM/YYYY
 ## Languages
 - Language: level
+Dates: a plain hyphen (-) between start and end, never a long dash (– or —), and always both a start and an end ("today" for my current job): many ATS systems drop dates they cannot split.
+My email and phone as plain text in the contact line, not only behind a link.
 No tables, columns, icons or images, and no styling other than **bold**.`;
 
 const CHECK_PART = `- Related: the terms you added under rule 2, each with the experience it is tied to.
-- Skipped: the terms you left out, each with one line why.`;
+- Skipped: the terms you left out, each with one line why.
+- Stretches: each line I might struggle to explain in an interview, with why, and ask me: keep, soften or drop?`;
 
 /** The "I have this" terms, or nothing when there are none (so the prompt stays short). */
 const mustAddPart = (terms: string[], resume = 'my resume') =>
@@ -80,7 +97,7 @@ const languagesRule = (languages: string[]) =>
     : 'Keep any language levels from my resume exactly as they are. Never raise them.';
 
 const coverAndAnswers = (company: string) =>
-  `- A cover letter for this job: 200 to 300 words, to the hiring team at ${company}. Three short paragraphs: why this role, what I bring (two or three real examples from my resume), and a short close. Same honesty rules as the resume. Start with the greeting and end with the sign-off and my name: my tracker adds my address, the date, the company and the subject line.
+  `- A cover letter for this job: 200 to 300 words, to the hiring team at ${company}. Three short paragraphs: why this role and this company, what I can do for them (two or three real examples from my resume as proof, looking forward, not repeating my resume), and a short confident close. Same honesty and writing rules as the resume, and no company facts you are not sure of. Start with the greeting and end with the sign-off and my name: my tracker adds my address, the date, the company and the subject line.
 - Answers to the questions application forms usually ask, 1 to 3 sentences each: why ${company}, why I fit this role, why I am looking for a new job, salary expectation, notice period or earliest start, work permit, willingness to relocate. Take the facts from my list below and never change them. When a fact is missing, write "(fill in)".`;
 
 /** Which language to write in, and whether my resume needs translating first. */
@@ -118,7 +135,7 @@ export function buildResumePrompt(input: PromptInput): string {
     ? `\n\nMy saved answers (reuse their wording where they fit):\n"""\n${input.savedAnswers.trim()}\n"""`
     : '';
 
-  return `Please tailor my resume for this job, then write a cover letter and the answers for the application form. Goal: use at least 85% of the skills and keywords below, as long as each one is honest for me.
+  return `Please tailor my resume for this job, then write a cover letter and the answers for the application form. Goal: a resume a hiring manager believes and an ATS reads correctly. Cover the job's must-have skills first, then use the ad's own words wherever they truly describe my work.
 
 Job: ${input.title} at ${input.company}${where}
 ${writeIn}
@@ -126,13 +143,15 @@ ${writeIn}
 Skills the job asks for that my resume does not show yet:
 ${list(input.missingSkills)}
 
-Keywords from the job ad that my resume does not use yet (use as many as you honestly can, as natural words, see rule 3):
+Keywords from the job ad that my resume does not use yet (use the ones that truly fit, as natural words, see rule 3):
 ${list(input.missingKeywords)}${mustAddPart(input.mustAdd)}
 
 Other skills I have (not all of them are in my resume):
 ${list(input.otherSkills)}
 
 ${TERM_RULES}
+
+${WRITING_RULES}
 
 ${languagesRule(input.languages)}
 
@@ -163,6 +182,91 @@ ${marker('FORM ANSWERS')}
 (one "Question: answer" per line)
 ${marker('CHECK')}
 ${CHECK_PART}`;
+}
+
+/** What Claude wrote for a job, as saved: the draft the review prompt checks. */
+export interface DraftReply {
+  resume: string;
+  coverLetter: string;
+  formAnswers: string;
+}
+
+const REVIEW_CHECK = `- Changes: what you changed and why, one line each.
+- Removed: claims you took out because my resume does not support them.
+- Stretches: lines still worth a second look, with why, and ask me: keep, soften or drop?
+- Missing: must-have requirements of the job my experience does not cover (do not fake them; tell me how to answer them in an interview).`;
+
+/**
+ * The review prompt: a second pass where Claude reads the draft as the hiring manager would,
+ * checks every claim against your own resume, and returns the fixed documents in the same marker
+ * format, so pasting the reply saves the improved version over the draft. Modelled on
+ * ai-job-search's drafter-reviewer workflow.
+ */
+export function buildReviewPrompt(input: PromptInput, draft: DraftReply): string {
+  const where = input.city ? ` in ${input.city}` : '';
+  const language = input.resumeLanguage === 'de' ? 'German' : 'English';
+  const source = input.resume.trim() || '(I have not added my resume here yet.)';
+  const part = (text: string) => text.trim() || '(empty)';
+  return `Please review my application for ${input.title} at ${input.company}${where} as the hiring manager for this job would, then fix it.
+
+Do these checks, in order:
+1. Facts: compare every employer, title, date, degree, number and skill in the draft with my own resume and my other skills below. Anything they do not support must go, or be rewritten to what they do support.
+2. Requirements: list the job ad's must-have requirements and check each one is shown in the draft where my experience really covers it.
+3. Hiring manager's eye: would you believe each line? Is the summary specific to this role? Do the first lines show proof for the ad's most important needs? Is anything vague, repeated, generic or a cliché?
+4. Rules: check the draft follows every rule below (writing, keywords, layout, dates, length, languages). Fix whatever does not.
+
+${TERM_RULES}
+
+${WRITING_RULES}
+
+${languagesRule(input.languages)}
+
+${LAYOUT}
+
+Keep everything in ${language}. Keep what is already good: change only what a check found.
+
+My own resume (the source of truth for facts):
+"""
+${source}
+"""
+
+Other skills I have:
+${list(input.otherSkills)}
+
+My application facts:
+${list(input.facts)}
+
+The job ad:
+"""
+${input.description?.trim() || '(No description saved.)'}
+"""
+
+THE DRAFT TO REVIEW
+
+Resume:
+"""
+${part(draft.resume)}
+"""
+
+Cover letter:
+"""
+${part(draft.coverLetter)}
+"""
+
+Form answers:
+"""
+${part(draft.formAnswers)}
+"""
+
+Reply with the improved versions of all three in exactly this format, with these four marker lines in English as written, so my job tracker can save them over the draft:
+${marker('RESUME')}
+(the improved resume, complete)
+${marker('COVER LETTER')}
+(the improved cover letter, complete)
+${marker('FORM ANSWERS')}
+(one "Question: answer" per line)
+${marker('CHECK')}
+${REVIEW_CHECK}`;
 }
 
 const MARKER_LINE = /^[ \t#*_>]*=+\s*(RESUME|COVER LETTER|FORM ANSWERS|CHECK)\s*=+[ \t*_]*$/gim;
@@ -268,7 +372,7 @@ ${language}${start}
 Skills it asks for that my resume does not show yet:
 ${list(job.missingSkills)}
 
-Keywords from its ad that my resume does not use yet (use as many as you honestly can, as natural words, see rule 3):
+Keywords from its ad that my resume does not use yet (use the ones that truly fit, as natural words, see rule 3):
 ${list(job.missingKeywords)}${mustAddPart(job.mustAdd)}
 
 The job ad:
@@ -278,9 +382,11 @@ ${ad.length > QUEUE_AD_CHARS ? `${ad.slice(0, QUEUE_AD_CHARS)} […]` : ad}
     })
     .join('\n\n');
 
-  return `Please do this for each of the ${count} below: tailor my resume for the job, then write a cover letter and the answers for its application form. Goal for each job: use at least 85% of its skills and keywords, as long as each one is honest for me.
+  return `Please do this for each of the ${count} below: tailor my resume for the job, then write a cover letter and the answers for its application form. Goal for each job: a resume a hiring manager believes and an ATS reads correctly. Cover its must-have skills first, then use the ad's own words wherever they truly describe my work.
 
 ${TERM_RULES}
+
+${WRITING_RULES}
 
 ${languagesRule(first.languages)}
 

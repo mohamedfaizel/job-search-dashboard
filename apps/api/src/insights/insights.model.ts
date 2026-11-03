@@ -207,6 +207,13 @@ export class JobInsightsModel {
   })
   prompt!: string;
 
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'The review prompt for Claude: checks the saved draft as a hiring manager would, against your own resume and the rules, and returns the fixed resume, cover letter and form answers. Null until a reply is saved',
+  })
+  reviewPrompt!: string | null;
+
   @Field({
     description:
       'The interview prep prompt for Claude: likely questions with answers from your resume, your gaps, and questions to ask',

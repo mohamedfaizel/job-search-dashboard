@@ -573,6 +573,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       }
     }
     prompt
+    reviewPrompt
     interviewPrompt
     interviewPrep {
       text

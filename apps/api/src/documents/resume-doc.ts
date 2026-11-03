@@ -7,7 +7,7 @@
  *
  *   ## Experience
  *   ### Job title | Company
- *   City | 01/2021 – today
+ *   City | 01/2021 - today
  *   - What I did
  *
  * Templates lay out these parts; they never add or change words. Section titles are kept as
@@ -19,7 +19,7 @@ export interface ResumeEntry {
   title: string;
   /** "Acme GmbH" */
   org: string | null;
-  /** "Berlin | 01/2021 – today" */
+  /** "Berlin | 01/2021 - today" */
   meta: string | null;
   bullets: string[];
   /** Plain lines under the entry that are not bullets. */
@@ -164,7 +164,7 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
       continue;
     }
     if (entry && entry.bullets.length === 0 && entry.meta === null && entry.lines.length === 0) {
-      entry.meta = line;
+      entry.meta = asciiDates(line);
       continue;
     }
     if (entry) {
@@ -178,6 +178,15 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
   if (!doc.name) doc.name = fallbackName;
   doc.sections = doc.sections.filter((s) => s.title || s.blocks.length);
   return doc;
+}
+
+/**
+ * A date range with a plain hyphen: "01/2019 – 02/2022" becomes "01/2019 - 02/2022". Many
+ * applicant tracking systems (Workday among them) split a date range only on the ASCII hyphen,
+ * so a long dash can silently drop the end date when your resume is imported.
+ */
+export function asciiDates(text: string): string {
+  return text.replace(/(\d{4})\s*[‐‑‒–—―]\s*/g, '$1 - ');
 }
 
 /** The text without Markdown marks, for names and titles. */

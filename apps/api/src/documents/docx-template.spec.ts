@@ -79,7 +79,7 @@ describe('fillDocx', () => {
     );
     // Dates after the tab, in your italic grey.
     expect(xml).toContain(
-      '<w:t xml:space="preserve">Frontend Developer | Example GmbH</w:t></w:r><w:r><w:rPr><w:b/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:i/><w:color w:val="666666"/></w:rPr><w:t xml:space="preserve">London | 01/2021 – heute</w:t>',
+      '<w:t xml:space="preserve">Frontend Developer | Example GmbH</w:t></w:r><w:r><w:rPr><w:b/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:i/><w:color w:val="666666"/></w:rPr><w:t xml:space="preserve">London | 01/2021 - heute</w:t>',
     );
     // Bullets in your list style; Markdown bold and italics become Word bold and italics.
     expect(xml).toContain(
