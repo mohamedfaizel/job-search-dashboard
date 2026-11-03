@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_URL, apiErrorFrom, graphqlClient } from './client';
-import { DOCUMENT_STYLE, DOCUMENT_TEMPLATES, UPDATE_DOCUMENT_STYLE } from './operations';
+import {
+  DELETE_MY_DESIGN,
+  DOCUMENT_STYLE,
+  DOCUMENT_TEMPLATES,
+  SAVE_MY_DESIGN,
+  UPDATE_DOCUMENT_STYLE,
+} from './operations';
 import type { DocumentStyle, DocumentStyleInput, DocumentTemplates } from './types';
 
 export const documentStyleKey = ['documentStyle'] as const;
@@ -52,6 +58,34 @@ export function useUpdateDocumentStyle() {
       ).updateDocumentStyle,
     onSuccess: (style) => {
       queryClient.setQueryData(documentStyleKey, style);
+    },
+  });
+}
+
+/** Saves Claude's reply to the design prompt as My design (and your default template). */
+export function useSaveMyDesign() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (reply: string) =>
+      (await graphqlClient.request<{ saveMyDesign: DocumentStyle }>(SAVE_MY_DESIGN, { reply }))
+        .saveMyDesign,
+    onSuccess: (style) => {
+      queryClient.setQueryData(documentStyleKey, style);
+      // My design joins the template list.
+      void queryClient.invalidateQueries({ queryKey: documentTemplatesKey });
+    },
+  });
+}
+
+export function useDeleteMyDesign() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      (await graphqlClient.request<{ deleteMyDesign: DocumentStyle }>(DELETE_MY_DESIGN))
+        .deleteMyDesign,
+    onSuccess: (style) => {
+      queryClient.setQueryData(documentStyleKey, style);
+      void queryClient.invalidateQueries({ queryKey: documentTemplatesKey });
     },
   });
 }

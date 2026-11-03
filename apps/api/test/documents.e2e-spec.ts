@@ -302,6 +302,54 @@ describe('resume and cover letter templates', () => {
     expect(saved.errors).toBeUndefined();
   });
 
+  it("makes My design from Claude's reply, typesets with it and deletes it", async () => {
+    const SAVE_DESIGN = `mutation ($reply: String!) { saveMyDesign(reply: $reply) { resumeTemplate myDesign { font accent align headingCase twoColumns } } }`;
+    const DELETE_DESIGN = `mutation { deleteMyDesign { resumeTemplate myDesign { font } } }`;
+    const LIST = `query { documentTemplates { resumeTemplates { id } designPrompt } }`;
+
+    const before = await t.asUser<{
+      documentTemplates: { resumeTemplates: { id: string }[]; designPrompt: string };
+    }>(LIST);
+    expect(before.data!.documentTemplates.designPrompt).toContain('I attached my resume');
+    expect(before.data!.documentTemplates.resumeTemplates.map((r) => r.id)).not.toContain('design');
+
+    const bad = await t.asUser(SAVE_DESIGN, { reply: 'Sorry, I cannot see a file.' });
+    expect(bad.errors?.[0]?.message).toBeTruthy();
+
+    const saved = await t.asUser<{
+      saveMyDesign: { resumeTemplate: string; myDesign: Record<string, unknown> };
+    }>(SAVE_DESIGN, {
+      reply:
+        'Here it is:\n```json\n{"font":"serif","accent":"#1e3a5f","align":"center","headingCase":"upper","twoColumns":true,"x":"\\\\input{/etc/passwd}"}\n```',
+    });
+    expect(saved.errors).toBeUndefined();
+    expect(saved.data!.saveMyDesign).toEqual({
+      resumeTemplate: 'design',
+      myDesign: {
+        font: 'serif',
+        accent: '1E3A5F',
+        align: 'centre',
+        headingCase: 'upper',
+        twoColumns: true,
+      },
+    });
+
+    const after = await t.asUser<{ documentTemplates: { resumeTemplates: { id: string }[] } }>(
+      LIST,
+    );
+    expect(after.data!.documentTemplates.resumeTemplates[0]?.id).toBe('design');
+
+    await pdf(`/job-resume/${jobId}/resume.pdf`).expect(200);
+    expect(rendered[0]?.tex).toContain('\\definecolor{accent}{HTML}{1E3A5F}');
+    expect(rendered[0]?.tex).toContain('TeX Gyre Pagella');
+    expect(rendered[0]?.tex).not.toContain('passwd');
+
+    const deleted = await t.asUser<{
+      deleteMyDesign: { resumeTemplate: string; myDesign: unknown };
+    }>(DELETE_DESIGN);
+    expect(deleted.data!.deleteMyDesign).toEqual({ resumeTemplate: 'classic', myDesign: null });
+  });
+
   it('shows a sample in any template, to compare them', async () => {
     const res = await pdf('/documents/preview/resume.pdf?template=compact&accent=AA3300').expect(
       200,

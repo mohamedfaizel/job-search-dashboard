@@ -244,7 +244,43 @@
       "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file above, and “My own Word file” appears here.",
       "wordUnusable": "<b>{file}</b> can’t be used as a template yet.",
       "wordUses": "<b>My own Word file</b> uses <b>{file}</b>: everything above your first heading stays as it is, and each section is written in the style of yours (found: {sections}).",
-      "wordPdf": "Step 3 of the Apply kit then offers a Word download you can edit. The PDF is made with LibreOffice, which may swap a font it doesn’t have; for an exact PDF, open the Word file and save it as PDF."
+      "wordPdf": "Step 3 of the Apply kit then offers a Word download you can edit. The PDF is made with LibreOffice, which may swap a font it doesn’t have; for an exact PDF, open the Word file and save it as PDF.",
+      "myDesignMake": "Make my own design",
+      "myDesignIntro": "Use the look of your own resume, rebuilt in LaTeX as one clean column that applicant tracking systems read.",
+      "myDesignStep1": "Copy the prompt. Claude opens in a new tab.",
+      "myDesignStep2": "Attach your resume file (PDF, Word or a screenshot) in Claude and send the prompt.",
+      "myDesignStep3": "Paste Claude’s reply below and save. “My design” becomes your default template.",
+      "myDesignCopy": "Copy design prompt and open Claude ↗",
+      "myDesignCopyFailed": "Could not copy. Select the prompt here instead.",
+      "myDesignReply": "Claude’s reply",
+      "myDesignSave": "Save my design",
+      "myDesignCancel": "Cancel",
+      "myDesignTitle": "My design",
+      "myDesignTook": "What My design took from your resume",
+      "myDesignTwoColumns": "Your resume has two columns. My design puts everything in one column, because applicant tracking systems read two columns in the wrong order.",
+      "myDesignPreview": "Preview PDF ↗",
+      "myDesignRedo": "Make it again",
+      "myDesignDelete": "Delete",
+      "myDesignFont": {
+        "sans": "Sans-serif type",
+        "serif": "Serif type",
+        "latin": "Classic LaTeX type"
+      },
+      "myDesignAlign": {
+        "left": "Header on the left",
+        "centre": "Centred header"
+      },
+      "myDesignHeading": {
+        "rule": "Headings with a line",
+        "bar": "Headings with a bar",
+        "plain": "Plain headings"
+      },
+      "myDesignCaps": "Capital headings",
+      "myDesignDatesRight": "Dates on the right",
+      "myDesignDatesBelow": "Dates under the title",
+      "myDesignCompanyFirst": "Company first",
+      "myDesignSkillsFirst": "Skills before experience",
+      "myDesignCompact": "Compact"
     },
     "matcher": {
       "intro": "Scores each job against your resume (ATS score) and writes a tailored version.",
@@ -1125,6 +1161,7 @@
     "GMAIL_NOT_CONFIGURED": "Gmail is not set up on this server.",
     "GMAIL_ACCOUNT_NOT_FOUND": "That Gmail account was not found.",
     "SUGGESTION_NOT_FOUND": "That suggestion was not found.",
-    "SUGGESTION_ANSWERED": "You already answered that suggestion."
+    "SUGGESTION_ANSWERED": "You already answered that suggestion.",
+    "DESIGN_REPLY": "Paste Claude’s whole reply: it should be one JSON object with the design settings."
   }
 }

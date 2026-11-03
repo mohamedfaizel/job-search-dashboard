@@ -1,4 +1,5 @@
 import type {
+  MyDesign,
   GmailAccount,
   LanguageResume,
   MatcherResume,
@@ -23,6 +24,28 @@ export const STYLE = {
   font: 'auto',
   showPhoto: false,
   hasPhoto: false,
+  myDesign: null as MyDesign | null,
+};
+
+/** My design as the server has it; null until a test saves one. */
+export const myDesign: { current: MyDesign | null } = { current: null };
+
+export const SAVED_DESIGN: MyDesign = {
+  font: 'serif',
+  accent: '1E3A5F',
+  nameSize: 'huge',
+  nameStyle: 'caps',
+  nameColour: 'accent',
+  align: 'centre',
+  headingStyle: 'bar',
+  headingCase: 'upper',
+  headingColour: 'black',
+  dates: 'right',
+  companyFirst: true,
+  density: 'normal',
+  skillsFirst: false,
+  photo: false,
+  twoColumns: true,
 };
 
 export const PROFILE: Profile = {
@@ -166,12 +189,35 @@ export const server = setupServer(
       : RM_RUNNING;
     return HttpResponse.json({ data: { resumeMatcherStatus: status } });
   }),
-  api.query('DocumentStyle', () => HttpResponse.json({ data: { documentStyle: STYLE } })),
+  api.query('DocumentStyle', () =>
+    HttpResponse.json({
+      data: {
+        documentStyle: myDesign.current
+          ? { ...STYLE, resumeTemplate: 'design', myDesign: myDesign.current }
+          : STYLE,
+      },
+    }),
+  ),
+  api.mutation('SaveMyDesign', ({ variables }) => {
+    requests.push({ operation: 'SaveMyDesign', variables });
+    myDesign.current = SAVED_DESIGN;
+    return HttpResponse.json({
+      data: { saveMyDesign: { ...STYLE, resumeTemplate: 'design', myDesign: SAVED_DESIGN } },
+    });
+  }),
+  api.mutation('DeleteMyDesign', () => {
+    requests.push({ operation: 'DeleteMyDesign', variables: {} });
+    myDesign.current = null;
+    return HttpResponse.json({ data: { deleteMyDesign: STYLE } });
+  }),
   api.query('DocumentTemplates', () =>
     HttpResponse.json({
       data: {
         documentTemplates: {
           resumeTemplates: [
+            ...(myDesign.current
+              ? [{ id: 'design', name: 'My design', description: 'Your look.' }]
+              : []),
             { id: 'classic', name: 'Classic', description: 'Serif.' },
             { id: 'modern', name: 'Modern', description: 'Sans.' },
             { id: 'compact', name: 'Compact', description: 'Small.' },
@@ -185,6 +231,7 @@ export const server = setupServer(
             { id: 'modern', name: 'Modern', description: 'Header.' },
           ],
           wordTemplate: wordTemplate.current,
+          designPrompt: 'I attached my resume. Describe its design as JSON.',
           rendererConfigured: true,
           rendererAvailable: false,
         },

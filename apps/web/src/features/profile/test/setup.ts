@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { gmail, otherResumes, requests, server, syncs, wordTemplate } from './server';
+import { gmail, myDesign, otherResumes, requests, server, syncs, wordTemplate } from './server';
 
 // jsdom doesn't lay out pages, so it has no scrollIntoView.
 Element.prototype.scrollIntoView = () => undefined;
@@ -15,6 +15,7 @@ afterEach(() => {
   Object.assign(gmail, { configured: true, accounts: [], found: 0 });
   window.history.replaceState(null, '', '/');
   wordTemplate.current = null;
+  myDesign.current = null;
   // The profile page remembers its open tab; start each test on the first one.
   localStorage.clear();
 });

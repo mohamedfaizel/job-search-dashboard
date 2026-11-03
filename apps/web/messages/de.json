@@ -244,7 +244,43 @@
       "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf oben als Word-Datei (.docx) hoch, dann erscheint hier „Meine eigene Word-Datei“.",
       "wordUnusable": "<b>{file}</b> kann noch nicht als Vorlage verwendet werden.",
       "wordUses": "<b>Meine eigene Word-Datei</b> verwendet <b>{file}</b>: alles über deiner ersten Überschrift bleibt, wie es ist, und jeder Abschnitt wird in deinem Stil geschrieben (gefunden: {sections}).",
-      "wordPdf": "Schritt 3 des Bewerbungs-Kits bietet dann einen Word-Download zum Bearbeiten. Das PDF erstellt LibreOffice, das eine fehlende Schrift ersetzen kann; für ein genaues PDF öffne die Word-Datei und speichere sie als PDF."
+      "wordPdf": "Schritt 3 des Bewerbungs-Kits bietet dann einen Word-Download zum Bearbeiten. Das PDF erstellt LibreOffice, das eine fehlende Schrift ersetzen kann; für ein genaues PDF öffne die Word-Datei und speichere sie als PDF.",
+      "myDesignMake": "Mein eigenes Design erstellen",
+      "myDesignIntro": "Nutze das Aussehen deines eigenen Lebenslaufs, in LaTeX nachgebaut als eine saubere Spalte, die Bewerbermanagementsysteme lesen.",
+      "myDesignStep1": "Kopiere den Prompt. Claude öffnet sich in einem neuen Tab.",
+      "myDesignStep2": "Hänge in Claude deine Lebenslauf-Datei an (PDF, Word oder Screenshot) und sende den Prompt.",
+      "myDesignStep3": "Füge Claudes Antwort unten ein und speichere. „Mein Design“ wird deine Standardvorlage.",
+      "myDesignCopy": "Design-Prompt kopieren und Claude öffnen ↗",
+      "myDesignCopyFailed": "Kopieren ging nicht. Markiere den Prompt hier.",
+      "myDesignReply": "Claudes Antwort",
+      "myDesignSave": "Mein Design speichern",
+      "myDesignCancel": "Abbrechen",
+      "myDesignTitle": "Mein Design",
+      "myDesignTook": "Was Mein Design aus deinem Lebenslauf übernommen hat",
+      "myDesignTwoColumns": "Dein Lebenslauf hat zwei Spalten. Mein Design setzt alles in eine Spalte, weil Bewerbermanagementsysteme zwei Spalten in falscher Reihenfolge lesen.",
+      "myDesignPreview": "PDF-Vorschau ↗",
+      "myDesignRedo": "Neu erstellen",
+      "myDesignDelete": "Löschen",
+      "myDesignFont": {
+        "sans": "Serifenlose Schrift",
+        "serif": "Serifenschrift",
+        "latin": "Klassische LaTeX-Schrift"
+      },
+      "myDesignAlign": {
+        "left": "Kopfzeile links",
+        "centre": "Kopfzeile zentriert"
+      },
+      "myDesignHeading": {
+        "rule": "Überschriften mit Linie",
+        "bar": "Überschriften mit Balken",
+        "plain": "Schlichte Überschriften"
+      },
+      "myDesignCaps": "Überschriften in Großbuchstaben",
+      "myDesignDatesRight": "Daten rechts",
+      "myDesignDatesBelow": "Daten unter dem Titel",
+      "myDesignCompanyFirst": "Firma zuerst",
+      "myDesignSkillsFirst": "Kenntnisse vor Erfahrung",
+      "myDesignCompact": "Kompakt"
     },
     "matcher": {
       "intro": "Bewertet jede Stelle anhand deines Lebenslaufs (ATS-Wert) und schreibt eine angepasste Version.",
@@ -1125,6 +1161,7 @@
     "GMAIL_NOT_CONFIGURED": "Gmail ist auf diesem Server nicht eingerichtet.",
     "GMAIL_ACCOUNT_NOT_FOUND": "Dieses Gmail-Konto wurde nicht gefunden.",
     "SUGGESTION_NOT_FOUND": "Dieser Vorschlag wurde nicht gefunden.",
-    "SUGGESTION_ANSWERED": "Du hast diesen Vorschlag schon beantwortet."
+    "SUGGESTION_ANSWERED": "Du hast diesen Vorschlag schon beantwortet.",
+    "DESIGN_REPLY": "Füge Claudes ganze Antwort ein: Sie sollte ein JSON-Objekt mit den Design-Einstellungen sein."
   }
 }

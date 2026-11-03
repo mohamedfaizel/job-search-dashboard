@@ -1,12 +1,66 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsBoolean, IsIn, IsString, Matches } from 'class-validator';
-import { FONTS, LETTER_LAYOUTS, MY_WORD_FILE, RESUME_TEMPLATES } from './templates';
+import { FONTS, LETTER_LAYOUTS, MY_DESIGN, MY_WORD_FILE, RESUME_TEMPLATES } from './templates';
+
+@ObjectType('MyDesign', {
+  description:
+    'The look of your own resume, as settings: typeset in LaTeX as the template "design"',
+})
+export class MyDesignModel {
+  @Field({ description: 'sans, serif or latin' })
+  font!: string;
+
+  @Field({ description: 'Six hex digits' })
+  accent!: string;
+
+  @Field({ description: 'normal, large or huge' })
+  nameSize!: string;
+
+  @Field({ description: 'bold, caps, smallcaps or plain' })
+  nameStyle!: string;
+
+  @Field({ description: 'accent or black' })
+  nameColour!: string;
+
+  @Field({ description: 'left or centre' })
+  align!: string;
+
+  @Field({ description: 'rule, bar or plain' })
+  headingStyle!: string;
+
+  @Field({ description: 'normal or upper' })
+  headingCase!: string;
+
+  @Field({ description: 'accent or black' })
+  headingColour!: string;
+
+  @Field({ description: 'right or below' })
+  dates!: string;
+
+  @Field()
+  companyFirst!: boolean;
+
+  @Field({ description: 'normal or compact' })
+  density!: string;
+
+  @Field()
+  skillsFirst!: boolean;
+
+  @Field()
+  photo!: boolean;
+
+  @Field({ description: 'Your resume has two columns; My design always uses one' })
+  twoColumns!: boolean;
+}
 
 @ObjectType('DocumentStyle', {
   description: 'How your resume and cover letter PDFs look',
 })
 export class DocumentStyleModel {
-  @Field({ description: 'classic, modern, compact, or mine (your own Word file)' })
+  @Field({
+    description:
+      'A template id from documentTemplates, "design" (My design) or "mine" (your own Word file)',
+  })
   resumeTemplate!: string;
 
   @Field({ description: 'auto (DIN 5008 for German letters), din or modern' })
@@ -23,12 +77,15 @@ export class DocumentStyleModel {
 
   @Field({ description: 'A photo is uploaded (GET /documents/photo shows it)' })
   hasPhoto!: boolean;
+
+  @Field(() => MyDesignModel, { nullable: true, description: 'Null until you save one' })
+  myDesign!: MyDesignModel | null;
 }
 
 @InputType()
 export class DocumentStyleInput {
   @Field()
-  @IsIn([...RESUME_TEMPLATES.map((t) => t.id), MY_WORD_FILE.id], {
+  @IsIn([...RESUME_TEMPLATES.map((t) => t.id), MY_DESIGN.id, MY_WORD_FILE.id], {
     message: 'Pick a resume template from the list',
   })
   resumeTemplate!: string;
@@ -98,6 +155,12 @@ export class DocumentTemplatesModel {
     description: 'Your own Word file: the template "mine". Null without a .docx master resume',
   })
   wordTemplate!: WordTemplateModel | null;
+
+  @Field({
+    description:
+      'Paste into Claude with your resume file attached: its JSON reply becomes My design',
+  })
+  designPrompt!: string;
 
   @Field({ description: 'False when PDF_RENDERER_URL is empty in .env' })
   rendererConfigured!: boolean;

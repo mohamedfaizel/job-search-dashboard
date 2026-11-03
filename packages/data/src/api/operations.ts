@@ -733,6 +733,23 @@ const DOCUMENT_STYLE_FIELDS = /* GraphQL */ `
   font
   showPhoto
   hasPhoto
+  myDesign {
+    font
+    accent
+    nameSize
+    nameStyle
+    nameColour
+    align
+    headingStyle
+    headingCase
+    headingColour
+    dates
+    companyFirst
+    density
+    skillsFirst
+    photo
+    twoColumns
+  }
 `;
 
 export const DOCUMENT_STYLE = /* GraphQL */ `
@@ -746,6 +763,22 @@ export const DOCUMENT_STYLE = /* GraphQL */ `
 export const UPDATE_DOCUMENT_STYLE = /* GraphQL */ `
   mutation UpdateDocumentStyle($input: DocumentStyleInput!) {
     updateDocumentStyle(input: $input) {
+      ${DOCUMENT_STYLE_FIELDS}
+    }
+  }
+`;
+
+export const SAVE_MY_DESIGN = /* GraphQL */ `
+  mutation SaveMyDesign($reply: String!) {
+    saveMyDesign(reply: $reply) {
+      ${DOCUMENT_STYLE_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_MY_DESIGN = /* GraphQL */ `
+  mutation DeleteMyDesign {
+    deleteMyDesign {
       ${DOCUMENT_STYLE_FIELDS}
     }
   }
@@ -771,6 +804,7 @@ export const DOCUMENT_TEMPLATES = /* GraphQL */ `
         sections
         warnings
       }
+      designPrompt
       rendererConfigured
       rendererAvailable
     }
