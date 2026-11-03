@@ -5,23 +5,25 @@ import {
   useSyncGmail,
 } from '@jobsearch/data';
 import { useFormatter, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 
 const RESULTS = ['connected', 'denied', 'error', 'not-configured'] as const;
 type Result = (typeof RESULTS)[number];
 
-/** What Google's sign-in left in the address (?gmail=connected), then clears it. */
+/** What Google's sign-in left in the address (?gmail=connected). Only reads: no side effects. */
 function cameBackWith(): Result | null {
   if (typeof window === 'undefined') return null;
   const value = new URLSearchParams(window.location.search).get('gmail');
-  const result = RESULTS.find((known) => known === value) ?? null;
-  if (result) {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('gmail');
-    window.history.replaceState(null, '', url);
-  }
-  return result;
+  return RESULTS.find((known) => known === value) ?? null;
+}
+
+/** Takes ?gmail= out of the address so a reload doesn't show the result again. */
+function clearCameBack(): void {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has('gmail')) return;
+  url.searchParams.delete('gmail');
+  window.history.replaceState(null, '', url);
 }
 
 /** Connect as many Gmail accounts as you like (read-only) and check them for employer replies. */
@@ -33,6 +35,8 @@ export function GmailAccounts() {
   const sync = useSyncGmail();
   const disconnect = useDisconnectGmail();
   const [result] = useState(cameBackWith);
+  // After the page has drawn: changing the address while drawing makes Next.js complain.
+  useEffect(clearCameBack, []);
 
   const accounts = status.data?.accounts ?? [];
   const configured = status.data?.configured ?? false;
