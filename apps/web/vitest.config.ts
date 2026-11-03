@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 const alias = { '@': fileURLToPath(new URL('./src', import.meta.url)) };
-// Each screen moved over from the old apps keeps its own fake API (its own test/setup.ts),
+// Each screen has its own fake API (its own test/setup.ts),
 // so it runs as its own Vitest project.
 const FEATURES = [
   // The profile page is a big form: on a busy CI runner a test can take a few seconds.

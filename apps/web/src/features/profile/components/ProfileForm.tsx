@@ -15,7 +15,7 @@ import { useLanguageName } from './useLanguageName';
 
 /** The tabs of My profile. The first three hold this one form; the others are separate. */
 export type ProfileTab = 'personal' | 'applications' | 'resume' | 'design' | 'mail' | 'matcher';
-export const FORM_TABS: ProfileTab[] = ['personal', 'applications', 'resume'];
+const FORM_TABS: ProfileTab[] = ['personal', 'applications', 'resume'];
 
 /** Which tab each field is on, so a save with a mistake opens the tab that shows it. */
 const FIELD_TAB: Partial<Record<keyof ProfileFormValues, ProfileTab>> = {

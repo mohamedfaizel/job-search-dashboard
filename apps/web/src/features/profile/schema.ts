@@ -2,7 +2,7 @@ import type { Profile, ProfileInput } from '@jobsearch/data';
 import { z } from 'zod';
 
 /** Splits "react, node.js ,  " into ["react", "node.js"]. */
-export function splitList(value: string): string[] {
+function splitList(value: string): string[] {
   return value
     .split(',')
     .map((item) => item.trim())

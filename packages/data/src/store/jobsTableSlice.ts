@@ -9,7 +9,7 @@ export type ListFilterKey = {
 
 /**
  * What the user has chosen in the table: search, column filters, sort and page.
- * It lives in Redux so any microfrontend (and the URL, later) can read or change it.
+ * It lives in Redux so any part of the page can read or change it.
  */
 export interface JobsTableState {
   search: string;

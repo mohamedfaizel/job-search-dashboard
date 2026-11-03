@@ -1,7 +1,7 @@
 /** The languages the app is translated into. Each has a messages/<locale>.json file. */
 export const LOCALES = ['en', 'de'] as const;
 export type Locale = (typeof LOCALES)[number];
-export const DEFAULT_LOCALE: Locale = 'en';
+const DEFAULT_LOCALE: Locale = 'en';
 
 /** The cookie that remembers your language in this browser (the server reads it too). */
 export const LOCALE_COOKIE = 'locale';

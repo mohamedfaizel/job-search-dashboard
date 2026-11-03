@@ -1,11 +1,9 @@
 export * from './api/types';
-export { API_URL, ApiError, getErrorCode, getErrorMessage, isUnauthenticated } from './api/client';
+export { API_URL, ApiError, getErrorCode, getErrorMessage } from './api/client';
 export type { ErrorCode } from './api/client';
-export { meKey, useLogIn, useLogOut, useMe, useSetLocale, useSignUp } from './api/auth';
+export { useLogIn, useLogOut, useMe, useSetLocale, useSignUp } from './api/auth';
 export {
   GMAIL_CONNECT_URL,
-  gmailStatusKey,
-  mailSuggestionsKey,
   useApproveMailSuggestion,
   useDisconnectGmail,
   useDismissMailSuggestion,
@@ -14,11 +12,8 @@ export {
   useSyncGmail,
 } from './api/gmail';
 export {
-  jobInsightsKey,
   APPLY_QUEUE_URL,
   applyKitUrl,
-  applyQueueKey,
-  applyQueuePromptKey,
   useApplyQueue,
   useApplyQueuePrompt,
   useCheckResumePdf,
@@ -38,7 +33,6 @@ export {
   useUploadJobResume,
 } from './api/insights';
 export {
-  profileKey,
   RESUME_LANGUAGES,
   RESUME_UPLOAD_URL,
   useDeleteLanguageResume,
@@ -51,8 +45,6 @@ export {
 } from './api/profile';
 export {
   documentPreviewUrl,
-  documentStyleKey,
-  documentTemplatesKey,
   PHOTO_URL,
   useDeleteMyDesign,
   useDeletePhoto,
@@ -63,11 +55,7 @@ export {
   useUploadPhoto,
 } from './api/documents';
 export {
-  jobMatchKey,
-  matcherResumeKey,
-  resumeMatcherStatusKey,
   tailoredPdfUrl,
-  tailoredResumeKey,
   useIsSyncingResume,
   useJobMatch,
   useMatchJob,
@@ -79,7 +67,6 @@ export {
   useTestAiConnection,
 } from './api/resumeMatcher';
 export {
-  queryKeys,
   useCheckJobStillOpen,
   useCreateJob,
   useDeleteSavedSearch,

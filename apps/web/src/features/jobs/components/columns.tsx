@@ -117,7 +117,7 @@ function CompanyLogo({ job }: { job: Job }) {
 }
 
 /** Imported or added after your last visit. */
-export function isNew(job: Job, newSince: string | null | undefined): boolean {
+function isNew(job: Job, newSince: string | null | undefined): boolean {
   return !!newSince && Date.parse(job.createdAt) > Date.parse(newSince);
 }
 

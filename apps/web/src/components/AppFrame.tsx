@@ -21,7 +21,7 @@ interface NavItem {
   adminOnly?: boolean;
 }
 
-export const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS: NavItem[] = [
   { href: '/jobs', label: 'jobs' },
   { href: '/tracker', label: 'tracker' },
   // Imports spend the server's JobsPipe credits, so only the admin sees this page.
@@ -101,7 +101,7 @@ interface TopBarProps {
  * flag. The page you are on is a gold pill. On phones (under 768 px) the links fold into a ☰ menu, so
  * the header never makes the page scroll sideways.
  */
-export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps) {
+function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps) {
   const t = useTranslations('Nav');
   const setLocale = useSetLocale();
   const items = NAV_ITEMS.filter((item) => !item.adminOnly || user.role === 'ADMIN');

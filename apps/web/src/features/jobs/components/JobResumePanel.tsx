@@ -237,7 +237,7 @@ function FileRow({ name, children }: { name: string; children: React.ReactNode }
 const FACT_KINDS = ['NUMBER', 'SKILL', 'LEVEL'] as const;
 
 /** A message to paste into the same Claude chat: what to remove or correct. */
-export function fixRequest(intro: string, findings: FactFinding[]): string {
+function fixRequest(intro: string, findings: FactFinding[]): string {
   const lines = findings.map(
     (f) => `- ${f.text}${f.kind === 'SKILL' ? ' (skill)' : ''}: "${f.context}"`,
   );
@@ -248,7 +248,7 @@ export function fixRequest(intro: string, findings: FactFinding[]): string {
  * Numbers, skills and language levels in Claude's reply that are not in your resume or profile.
  * Nothing is shown without a resume of yours to compare with.
  */
-export function FactCheck({ findings }: { findings: FactFinding[] | null }) {
+function FactCheck({ findings }: { findings: FactFinding[] | null }) {
   const t = useTranslations('Jobs.reply');
   if (findings === null) return null;
   if (findings.length === 0) {
@@ -315,7 +315,7 @@ const PDF_CHECKS = [
  * Checks the finished PDF the way an ATS reads it: only its text. Runs when you press the
  * button, because it typesets the PDF first.
  */
-export function PdfCheck({ jobId, template }: { jobId: string; template: string }) {
+function PdfCheck({ jobId, template }: { jobId: string; template: string }) {
   const t = useTranslations('Jobs.reply');
   const errorText = useErrorText();
   const check = useCheckResumePdf();

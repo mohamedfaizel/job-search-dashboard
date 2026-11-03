@@ -16,7 +16,7 @@ export function splitList(value: string): string[] {
 }
 
 /** Splits "greenhouse:stripe, lever:netflix  ashby:ramp" on commas and spaces. */
-export function splitBoards(value: string): string[] {
+function splitBoards(value: string): string[] {
   return value.split(/[\s,]+/).filter(Boolean);
 }
 

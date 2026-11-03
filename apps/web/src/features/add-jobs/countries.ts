@@ -1,5 +1,5 @@
 /** The countries JobsPipe suggests, in its own order: [2-letter code, name]. */
-export const COUNTRIES: readonly (readonly [string, string])[] = [
+const COUNTRIES: readonly (readonly [string, string])[] = [
   ['US', 'United States'],
   ['GB', 'United Kingdom'],
   ['CA', 'Canada'],

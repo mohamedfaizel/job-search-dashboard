@@ -67,7 +67,7 @@ function useDescribeSearch() {
   return (search: SavedSearch) => describeSearch(search, t, locale, f.language);
 }
 
-export function describeSearch(
+function describeSearch(
   search: SavedSearch,
   t: (key: string, values?: Record<string, string | number>) => string,
   locale: string,

@@ -15,15 +15,12 @@
   "dependencies": {
     "@hookform/resolvers": "^6.0.0",
     "@jobsearch/data": "workspace:*",
-    "@reduxjs/toolkit": "^2.13.0",
-    "@tanstack/react-query": "^5.105.0",
     "@tanstack/react-table": "^9.3.1",
     "next": "16.4.3",
     "next-intl": "4.14.9",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.91.0",
-    "react-redux": "^9.3.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

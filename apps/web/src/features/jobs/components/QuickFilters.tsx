@@ -5,7 +5,7 @@ import { useJobFormat } from '../useJobFormat';
 import { ColumnFilter } from './ColumnFilter';
 
 /** The "Posted" choices, in days. */
-export const POSTED_WITHIN = [1, 3, 7, 30] as const;
+const POSTED_WITHIN = [1, 3, 7, 30] as const;
 
 interface Props {
   filters: JobsTableState['filters'];
@@ -19,7 +19,7 @@ interface Props {
 }
 
 /** The "Fit ≥ 70%" chip: a strong match, worth a closer look. */
-export const GOOD_FIT = 70;
+const GOOD_FIT = 70;
 
 /**
  * The filters you reach for most, as chips above the table: they work on phones too, where the
