@@ -32,7 +32,7 @@ export interface PdfCheckInput {
  * A long dash between two dates, which some ATS (Workday) read as a broken date: "01/2020 – today",
  * "Jan 2022 – Aug 2022", "2013—2017".
  */
-const LONG_DASH_DATE =
+export const LONG_DASH_DATE =
   /(?:\d{1,2}[./])?\d{4}\s*[–—―‒]\s*(?:(?:\p{L}{3,9}\.?\s+)?(?:\d{1,2}[./])?\d{4}|today|present|now|heute|current|jetzt)/giu;
 
 /** Text left for you to fill in, which must never reach an employer. */

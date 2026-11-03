@@ -5,6 +5,7 @@ import { FitService } from '../insights/fit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from './custom-fields';
 import type { LanguageResumeModel, ProfileInput, ProfileModel } from './profile.model';
+import { buildMasterReviewPrompt, reviewResume } from './resume-review';
 import { tidy } from './resume-text';
 import { buildTranslationPrompt, languageName, RESUME_LANGUAGES } from './resumes';
 
@@ -42,6 +43,10 @@ const empty = (otherResumes: LanguageResumeModel[]): ProfileModel => ({
   drivingLicence: '',
   applicationNotes: '',
   achievements: '',
+  resumeMaxPages: 2,
+  keepMySections: false,
+  resumeSuggestions: [],
+  resumeReviewPrompt: '',
   customFields: [],
   updatedAt: null,
 });
@@ -63,6 +68,13 @@ function toModel(
     updatedAt: r.updatedAt,
   }));
   if (!profile) return empty(otherResumes);
+  const review = {
+    text: profile.resumeText,
+    languages: profile.languages,
+    workPermit: profile.workPermit,
+    achievements: profile.achievements,
+    maxPages: profile.resumeMaxPages,
+  };
   return {
     firstName: profile.firstName,
     lastName: profile.lastName,
@@ -93,6 +105,10 @@ function toModel(
     drivingLicence: profile.drivingLicence,
     applicationNotes: profile.applicationNotes,
     achievements: profile.achievements,
+    resumeMaxPages: profile.resumeMaxPages,
+    keepMySections: profile.keepMySections,
+    resumeSuggestions: reviewResume(review),
+    resumeReviewPrompt: profile.resumeText.trim() ? buildMasterReviewPrompt(review) : '',
     customFields: customFieldsOf(profile.customFields),
     updatedAt: profile.updatedAt,
   };
@@ -150,6 +166,8 @@ export class ProfileService {
       drivingLicence: input.drivingLicence,
       applicationNotes: input.applicationNotes,
       achievements: input.achievements,
+      resumeMaxPages: input.resumeMaxPages,
+      keepMySections: input.keepMySections,
       // Empty rows from the form are dropped.
       customFields: input.customFields
         .filter((f) => f.label || f.value)

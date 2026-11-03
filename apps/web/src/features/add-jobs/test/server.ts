@@ -83,6 +83,10 @@ export const PROFILE: Profile = {
   relocation: '',
   applicationNotes: '',
   achievements: '',
+  resumeMaxPages: 2,
+  keepMySections: false,
+  resumeSuggestions: [],
+  resumeReviewPrompt: '',
   updatedAt: null,
 };
 

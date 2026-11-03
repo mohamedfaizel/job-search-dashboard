@@ -25,6 +25,7 @@ import { checkPdf, readPdf } from './pdf-check';
 import type { PromptInput } from './prompt';
 import {
   achievementLines,
+  DEFAULT_RESUME_SETTINGS,
   applicationFacts,
   buildQueuePrompt,
   buildResumePrompt,
@@ -97,6 +98,8 @@ export class InsightsService {
             relocation: true,
             applicationNotes: true,
             achievements: true,
+            resumeMaxPages: true,
+            keepMySections: true,
           },
         }),
         this.prisma.removedTerm.findMany({
@@ -186,6 +189,9 @@ export class InsightsService {
       facts: applicationFacts(profile),
       savedAnswers: profile?.applicationNotes ?? '',
       achievements: achievementLines(profile?.achievements ?? ''),
+      settings: profile
+        ? { maxPages: profile.resumeMaxPages, keepSections: profile.keepMySections }
+        : DEFAULT_RESUME_SETTINGS,
     };
     // What you have told us about yourself: the fact check looks for anything beyond it.
     const factTexts = [resumes.text, ...resumes.others.values()];
@@ -345,7 +351,7 @@ export class InsightsService {
       }),
       this.prisma.user.findUniqueOrThrow({
         where: { id: userId },
-        select: { name: true, email: true, profile: { select: { yearsExperience: true } } },
+        select: { name: true, email: true, profile: { select: { resumeMaxPages: true } } },
       }),
       this.prisma.documentStyle.findUnique({
         where: { userId },
@@ -354,7 +360,6 @@ export class InsightsService {
     ]);
     const file = await this.documents.jobPdf(userId, jobId, 'resume', template);
     const { text, pages } = await readPdf(new Uint8Array(file.bytes));
-    const years = user.profile?.yearsExperience;
     const resumeText = row?.text ?? '';
     return {
       jobId,
@@ -364,7 +369,7 @@ export class InsightsService {
         pages,
         name: user.name,
         email: user.email,
-        maxPages: years != null && years < 3 ? 1 : 2,
+        maxPages: user.profile?.resumeMaxPages ?? DEFAULT_RESUME_SETTINGS.maxPages,
         skills: insights.skills.map((s) => s.term).filter((term) => mentions(resumeText, term)),
       }),
     };

@@ -357,6 +357,14 @@ export interface Profile {
   applicationNotes: string;
   /** Your achievements bank: true facts with numbers, one per line. */
   achievements: string;
+  /** Tailored resumes are at most this many pages: 1, 2 or 3. */
+  resumeMaxPages: number;
+  /** Tailored resumes keep every section heading of your resume, in your order. */
+  keepMySections: boolean;
+  /** Suggestions for your master resume, worked out without AI. */
+  resumeSuggestions: ResumeSuggestion[];
+  /** A prompt to paste into Claude for a recruiter review of your resume. Empty without one. */
+  resumeReviewPrompt: string;
   /** Your own fields for anything else forms ask. */
   customFields: ProfileField[];
   /** Null until the profile is first saved. */
@@ -372,7 +380,26 @@ export interface LanguageResume {
   updatedAt: string;
 }
 
-export type ProfileInput = Omit<Profile, 'resumeFileName' | 'otherResumes' | 'updatedAt'>;
+export type ProfileInput = Omit<
+  Profile,
+  'resumeFileName' | 'otherResumes' | 'updatedAt' | 'resumeSuggestions' | 'resumeReviewPrompt'
+>;
+
+/** A suggestion for your master resume. */
+export interface ResumeSuggestion {
+  code:
+    | 'LEVEL'
+    | 'DATES'
+    | 'CLICHES'
+    | 'SYMBOLS'
+    | 'NUMBERS'
+    | 'LENGTH'
+    | 'CONTACT'
+    | 'WORK_PERMIT'
+    | 'ACHIEVEMENTS';
+  /** NUMBERS: "with/bullets"; LENGTH: "words/pages/limit"; ACHIEVEMENTS: the lines. */
+  detail: string;
+}
 
 /** Whether Resume-Matcher (resume tailoring and ATS scores) is running and can reach its AI. */
 export interface ResumeMatcherStatus {

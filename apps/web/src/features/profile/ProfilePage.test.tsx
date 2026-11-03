@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { ProfilePage } from './ProfilePage';
 import { renderWithData } from './test/render';
-import { api, rejectUpload, requests, server, syncs } from './test/server';
+import { api, PROFILE, rejectUpload, requests, server, syncs } from './test/server';
 
 async function renderProfile() {
   // applyAccept: false lets tests pick a file the input's `accept` would hide, like a user
@@ -109,6 +109,63 @@ describe('profile page', () => {
     expect(requests[0]).toMatchObject({
       variables: { input: { achievements: 'Cut page load time by 40% at Acme (2023)' } },
     });
+  });
+
+  it('suggests fixes for your resume and copies its achievements to the bank', async () => {
+    server.use(
+      api.query('MyProfile', () =>
+        HttpResponse.json({
+          data: {
+            myProfile: {
+              ...PROFILE,
+              resumeReviewPrompt: 'Please review my resume as an experienced tech recruiter.',
+              resumeSuggestions: [
+                { code: 'LEVEL', detail: 'German: B2 → A2' },
+                { code: 'NUMBERS', detail: '12/35' },
+                { code: 'LENGTH', detail: '1238/3/2' },
+                { code: 'ACHIEVEMENTS', detail: 'Cut costs by 20%\nLed 5 people' },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    const user = await renderProfile();
+    await openTab(user, 'Resume');
+
+    const box = screen.getByRole('region', { name: 'Suggestions for your resume' });
+    expect(
+      within(box).getByText(/differs from My profile \(German: B2 → A2\)/),
+    ).toBeInTheDocument();
+    expect(within(box).getByText(/Only 12 of 35 bullets have a number/)).toBeInTheDocument();
+    expect(
+      within(box).getByText(/About 3 pages \(1238 words\), more than your limit of 2/),
+    ).toBeInTheDocument();
+    expect(within(box).getByText(/Your resume has 2 achievements/)).toBeInTheDocument();
+    await user.click(within(box).getByRole('button', { name: 'Copy to Achievements bank' }));
+    expect(screen.getByRole('textbox', { name: 'Achievements bank' })).toHaveValue(
+      'Cut costs by 20%\nLed 5 people',
+    );
+    await user.click(within(box).getByRole('button', { name: 'Ask Claude for more suggestions' }));
+    expect(within(box).getByRole('textbox', { name: 'Review prompt' })).toHaveValue(
+      'Please review my resume as an experienced tech recruiter.',
+    );
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Page limit' }), '3');
+    await user.click(screen.getByRole('checkbox', { name: /Keep all my headings/ }));
+    await user.click(screen.getByRole('button', { name: 'Save profile' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.');
+    expect(requests[0]).toMatchObject({
+      variables: {
+        input: {
+          achievements: 'Cut costs by 20%\nLed 5 people',
+          resumeMaxPages: 3,
+          keepMySections: true,
+        },
+      },
+    });
+    expect(requests[0]?.variables).not.toHaveProperty('input.resumeSuggestions');
   });
 
   it('shows what to fix before saving', async () => {

@@ -60,6 +60,8 @@ export function profileSchema(t: ErrorText) {
     drivingLicence: text(100),
     applicationNotes: text(5_000),
     achievements: text(10_000),
+    resumeMaxPages: z.enum(['1', '2', '3']),
+    keepMySections: z.boolean(),
     customFields: z
       .array(
         z
@@ -117,6 +119,9 @@ export function profileToForm(profile: Profile, accountName = ''): ProfileFormVa
     drivingLicence: profile.drivingLicence,
     applicationNotes: profile.applicationNotes,
     achievements: profile.achievements,
+    resumeMaxPages:
+      (['1', '2', '3'] as const)[Math.min(Math.max(profile.resumeMaxPages, 1), 3) - 1] ?? '2',
+    keepMySections: profile.keepMySections,
     customFields: profile.customFields.map((f) => ({ label: f.label, value: f.value })),
   };
 }
@@ -151,6 +156,8 @@ export function toProfileInput(values: ProfileFormValues): ProfileInput {
     drivingLicence: values.drivingLicence,
     applicationNotes: values.applicationNotes,
     achievements: values.achievements,
+    resumeMaxPages: Number(values.resumeMaxPages),
+    keepMySections: values.keepMySections,
     // Rows left empty are dropped.
     customFields: values.customFields.filter((f) => f.label.trim() || f.value.trim()),
   };

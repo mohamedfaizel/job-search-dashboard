@@ -150,6 +150,10 @@ model Profile {
   /// Your achievements bank: true facts with numbers, one per line. Resume prompts may use
   /// them and the fact check trusts them.
   achievements      String    @default("")
+  /// Resume settings: tailored resumes are at most this many pages (1, 2 or 3).
+  resumeMaxPages    Int       @default(2)
+  /// Tailored resumes keep every section heading of your resume, in your order.
+  keepMySections    Boolean   @default(false)
   /// Your own fields for anything else forms ask: [{ "label": "Xing", "value": "…" }].
   customFields      Json      @default("[]")
   updatedAt         DateTime  @updatedAt

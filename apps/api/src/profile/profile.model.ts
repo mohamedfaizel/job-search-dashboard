@@ -3,6 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -41,6 +42,21 @@ export class ProfileFieldModel {
 
   @Field()
   value!: string;
+}
+
+@ObjectType('ResumeSuggestion', { description: 'A suggestion for your master resume' })
+export class ResumeSuggestionModel {
+  @Field(() => String, {
+    description:
+      'LEVEL, DATES, CLICHES, SYMBOLS, NUMBERS, LENGTH, CONTACT, WORK_PERMIT or ACHIEVEMENTS',
+  })
+  code!: string;
+
+  @Field({
+    description:
+      'What was found. NUMBERS: "with/bullets"; LENGTH: "words/pages/limit"; ACHIEVEMENTS: the lines',
+  })
+  detail!: string;
 }
 
 @ObjectType('Profile')
@@ -136,6 +152,22 @@ export class ProfileModel {
       'Your achievements bank: true facts with numbers, one per line. Resume prompts may use them and the fact check trusts them',
   })
   achievements!: string;
+
+  @Field(() => Int, { description: 'Tailored resumes are at most this many pages: 1, 2 or 3' })
+  resumeMaxPages!: number;
+
+  @Field({
+    description: 'Tailored resumes keep every section heading of your resume, in your order',
+  })
+  keepMySections!: boolean;
+
+  @Field(() => [ResumeSuggestionModel], {
+    description: 'Suggestions for your master resume, worked out without AI',
+  })
+  resumeSuggestions!: ResumeSuggestionModel[];
+
+  @Field({ description: 'A prompt to paste into Claude for a recruiter review of your resume' })
+  resumeReviewPrompt!: string;
 
   @Field(() => [ProfileFieldModel], { description: 'Your own fields, in your order' })
   customFields!: ProfileFieldModel[];
@@ -328,6 +360,16 @@ export class ProfileInput {
   @IsString()
   @MaxLength(10_000, { message: 'Keep your achievements under 10,000 characters' })
   achievements: string = '';
+
+  @Field(() => Int, { defaultValue: 2 })
+  @IsInt()
+  @Min(1, { message: 'Pick 1, 2 or 3 pages' })
+  @Max(3, { message: 'Pick 1, 2 or 3 pages' })
+  resumeMaxPages: number = 2;
+
+  @Field({ defaultValue: false })
+  @IsBoolean()
+  keepMySections: boolean = false;
 
   @Field({ defaultValue: '' })
   @Transform(trim)

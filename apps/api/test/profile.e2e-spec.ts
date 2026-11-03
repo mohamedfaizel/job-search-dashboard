@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
-const FIELDS = `firstName lastName gender dateOfBirth nationality employmentType workplacePreference drivingLicence customFields { label value } headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName phone address workPermit noticePeriod salaryExpectation relocation applicationNotes achievements updatedAt`;
+const FIELDS = `firstName lastName gender dateOfBirth nationality employmentType workplacePreference drivingLicence customFields { label value } headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName phone address workPermit noticePeriod salaryExpectation relocation applicationNotes achievements resumeMaxPages keepMySections resumeSuggestions { code detail } updatedAt`;
 const MY_PROFILE = `query { myProfile { ${FIELDS} } }`;
 const UPDATE = `mutation ($input: ProfileInput!) { updateProfile(input: $input) { ${FIELDS} } }`;
 
@@ -30,6 +30,8 @@ const INPUT = {
   relocation: 'Yes, within Germany',
   applicationNotes: 'I want to build products people use every day.',
   achievements: ' Cut page load time by 40% at Acme (2023) ',
+  resumeMaxPages: 3,
+  keepMySections: true,
 };
 
 describe('profile', () => {
@@ -94,6 +96,9 @@ describe('profile', () => {
         relocation: '',
         applicationNotes: '',
         achievements: '',
+        resumeMaxPages: 2,
+        keepMySections: false,
+        resumeSuggestions: [],
         updatedAt: null,
       },
     });
@@ -123,6 +128,8 @@ describe('profile', () => {
       relocation: 'Yes, within Germany',
       applicationNotes: 'I want to build products people use every day.',
       achievements: 'Cut page load time by 40% at Acme (2023)',
+      resumeMaxPages: 3,
+      keepMySections: true,
     });
     expect(res.data!.myProfile['updatedAt']).not.toBeNull();
   });
