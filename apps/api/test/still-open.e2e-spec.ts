@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import type { FetchedPage } from '../src/liveness/judge';
 import { LivenessService } from '../src/liveness/liveness.service';
 import { PageFetcher } from '../src/liveness/page-fetcher';
+import { UnsafeUrlError } from '../src/liveness/safe-fetch';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
@@ -30,6 +31,10 @@ describe('still-open check', () => {
     liveness = t.app.get(LivenessService);
     vi.spyOn(t.app.get(PageFetcher), 'get').mockImplementation((url: string) => {
       const answer = pages[url];
+      if (url.includes('/slow')) {
+        return Promise.reject(Object.assign(new Error('timed out'), { name: 'TimeoutError' }));
+      }
+      if (url.includes('/local')) return Promise.reject(new UnsafeUrlError('local'));
       if (!answer) return Promise.reject(new Error('unreachable'));
       return Promise.resolve({ status: 200, url, finalUrl: url, body: OPEN_PAGE, ...answer });
     });
@@ -137,5 +142,52 @@ describe('still-open check', () => {
     expect(byId.get(newest.id)?.checkedAt).toEqual(now);
     expect(byId.get(older.id)?.checkedAt).toBeNull();
     expect(byId.get(expired.id)?.checkedAt).toBeNull();
+  });
+
+  it('turns network trouble into an unclear answer, never Expired', async () => {
+    expect(await liveness.open('https://jobs.example.com/slow')).toEqual({
+      result: 'UNKNOWN',
+      reason: 'TIMEOUT',
+    });
+    expect(await liveness.open('http://jobs.example.com/local')).toEqual({
+      result: 'UNKNOWN',
+      reason: 'NO_LINK',
+    });
+    expect(await liveness.open('https://jobs.example.com/down')).toEqual({
+      result: 'UNKNOWN',
+      reason: 'UNREACHABLE',
+    });
+  });
+
+  it('answers from memory when the job was checked a few minutes ago', async () => {
+    const { id } = await job('https://jobs.example.com/again');
+    pages['https://jobs.example.com/again'] = { status: 404 };
+    await liveness.check(id, new Date('2026-11-03T10:00:00Z'));
+    pages['https://jobs.example.com/again'] = {};
+
+    const verdict = await liveness.check(id, new Date('2026-11-03T10:05:00Z'));
+
+    expect(verdict).toEqual({ result: 'CLOSED', reason: 'NOT_FOUND' });
+  });
+
+  it('nightly does nothing when switched off', async () => {
+    const spy = vi.spyOn(liveness, 'checkDue');
+    await liveness.nightly();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('nightly runs the check when switched on', async () => {
+    process.env['STILL_OPEN_CHECK_ENABLED'] = 'true';
+    const spy = vi
+      .spyOn(liveness, 'checkDue')
+      .mockResolvedValue({ checked: 1, closed: 0, unknown: 0 });
+    try {
+      await liveness.nightly();
+      expect(spy).toHaveBeenCalledOnce();
+    } finally {
+      spy.mockRestore();
+      process.env['STILL_OPEN_CHECK_ENABLED'] = 'false';
+    }
   });
 });
