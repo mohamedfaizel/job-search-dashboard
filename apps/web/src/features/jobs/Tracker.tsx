@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
+import { MailSuggestions } from './components/MailSuggestions';
 import { TrackerBoard } from './components/TrackerBoard';
 
 export function TrackerPage() {
@@ -29,6 +30,8 @@ export function TrackerPage() {
         </h1>
         <p className="text-sm text-slate-600">{t('intro')}</p>
       </div>
+
+      <MailSuggestions />
 
       {applications.isError && (
         <p

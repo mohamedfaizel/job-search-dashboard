@@ -47,7 +47,33 @@
       "applications": "Bewerbungsangaben",
       "resume": "Lebenslauf",
       "design": "Design",
-      "matcher": "Resume-Matcher"
+      "matcher": "Resume-Matcher",
+      "mail": "E-Mail"
+    },
+    "mail": {
+      "title": "E-Mail",
+      "intro": "Verbinde deine Gmail-Konten, dann liest die App Antworten von Arbeitgebern und schlägt Änderungen in deinen Bewerbungen vor (eine Absage, eine Einladung zum Gespräch, ein Angebot). Du bestätigst jeden Vorschlag.",
+      "loading": "Deine E-Mail-Konten werden geladen…",
+      "loadFailed": "Deine E-Mail-Konten konnten nicht geladen werden: {error}",
+      "none": "Noch kein Gmail-Konto verbunden.",
+      "connect": "Gmail verbinden",
+      "connectAnother": "Weiteres Gmail-Konto verbinden",
+      "notConfigured": "Gmail ist auf diesem Server noch nicht eingerichtet. Trage GOOGLE_CLIENT_ID und GOOGLE_CLIENT_SECRET in deine .env-Datei ein (siehe README).",
+      "disconnect": "Trennen",
+      "disconnectLabel": "{email} trennen",
+      "checkNow": "Jetzt prüfen",
+      "checking": "Wird geprüft…",
+      "checkFailed": "Deine E-Mails konnten nicht geprüft werden: {error}",
+      "checked": "{count, plural, =0 {Keine neuen Vorschläge.} one {1 neuer Vorschlag. Du findest ihn bei deinen Bewerbungen.} other {# neue Vorschläge. Du findest sie bei deinen Bewerbungen.}}",
+      "lastChecked": "Zuletzt geprüft: {date}",
+      "neverChecked": "Noch nicht geprüft",
+      "privacy": "Nur Lesezugriff: Die App kann nie E-Mails senden, ändern oder löschen. Sie sieht die letzten zwei Wochen an, einmal pro Stunde, und speichert nur Absender, Betreff und einen kurzen Ausschnitt von Mails, die zu einem Job passen, auf den du dich beworben hast. Du kannst das Konto jederzeit trennen.",
+      "result": {
+        "connected": "Gmail-Konto verbunden.",
+        "denied": "Du hast den Zugriff nicht erlaubt, deshalb wurde nichts verbunden.",
+        "error": "Das Verbinden von Gmail hat nicht geklappt. Bitte versuche es erneut.",
+        "not-configured": "Gmail ist auf diesem Server noch nicht eingerichtet."
+      }
     },
     "listHint": "Mit Kommas trennen",
     "personal": {
@@ -804,6 +830,17 @@
     "loading": "Deine Bewerbungen werden geladen…",
     "empty": "Hier ist noch nichts. Gib einem Job unter Stellenanzeigen einen Status (Gemerkt, Beworben…), dann erscheint er hier.",
     "moved": "Verschoben am {date}",
+    "mail": {
+      "title": "{count, plural, one {1 E-Mail schlägt eine Änderung vor} other {# E-Mails schlagen Änderungen vor}}",
+      "hint": "Gefunden in deinen verbundenen Gmail-Konten. Nichts ändert sich, bevor du zustimmst.",
+      "error": "Der Vorschlag konnte nicht beantwortet werden: {error}",
+      "move": "{from} → {to}",
+      "from": "Von {sender} an {account} am {date}",
+      "approve": "Verschieben nach {status}",
+      "approveLabel": "{job} nach {status} verschieben",
+      "dismiss": "Nicht diese",
+      "dismissLabel": "Vorschlag für {job} ignorieren"
+    },
     "followUp": {
       "badge": "Nachfassen?",
       "badgeHint": "Eine Woche „Beworben“ ohne Antwort",
@@ -1078,6 +1115,10 @@
     "PHOTO_TOO_BIG": "Das Foto ist größer als 2 MB.",
     "PHOTO_MISSING": "Es ist kein Foto hochgeladen.",
     "DOCX_TEMPLATE_FIRST": "Lade deinen Haupt-Lebenslauf unter „Mein Profil“ als Word-Datei (.docx) hoch, um ihn als Vorlage zu nutzen.",
-    "DOCX_NOT_WORD": "Diese Word-Datei lässt sich nicht als Vorlage nutzen. Lade deinen Haupt-Lebenslauf unter „Mein Profil“ als .docx-Datei hoch."
+    "DOCX_NOT_WORD": "Diese Word-Datei lässt sich nicht als Vorlage nutzen. Lade deinen Haupt-Lebenslauf unter „Mein Profil“ als .docx-Datei hoch.",
+    "GMAIL_NOT_CONFIGURED": "Gmail ist auf diesem Server nicht eingerichtet.",
+    "GMAIL_ACCOUNT_NOT_FOUND": "Dieses Gmail-Konto wurde nicht gefunden.",
+    "SUGGESTION_NOT_FOUND": "Dieser Vorschlag wurde nicht gefunden.",
+    "SUGGESTION_ANSWERED": "Du hast diesen Vorschlag schon beantwortet."
   }
 }

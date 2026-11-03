@@ -6,6 +6,7 @@ import type {
   JobInsights,
   JobMatch,
   JobResume,
+  MailSuggestion,
   Profile,
   RemovedTerm,
   TailoredResume,
@@ -30,6 +31,9 @@ export const hiddenIds = new Set<string>();
 
 /** The test user's tracker. Tests fill it; status changes update it like the real API. */
 export const applications: Application[] = [];
+
+/** Employer-email suggestions waiting for an answer in the current test. */
+export const mailSuggestions: MailSuggestion[] = [];
 
 /** The test user's Apply queue. Marking a job Applied takes it out, like the real API. */
 export const applyQueue: ApplyQueueItem[] = [];
@@ -448,6 +452,26 @@ export const handlers = [
   api.query('JobFilterOptions', () =>
     HttpResponse.json({ data: { jobFilterOptions: FILTER_OPTIONS } }),
   ),
+  api.query('MailSuggestions', () =>
+    HttpResponse.json({ data: { mailSuggestions: [...mailSuggestions] } }),
+  ),
+  api.mutation('ApproveMailSuggestion', ({ variables }) => {
+    requests.push({ operation: 'ApproveMailSuggestion', variables });
+    const index = mailSuggestions.findIndex((item) => item.id === variables['id']);
+    const [item] = index < 0 ? [] : mailSuggestions.splice(index, 1);
+    if (item) {
+      for (const app of applications) {
+        if (app.job.id === item.jobId) app.status = item.status;
+      }
+    }
+    return HttpResponse.json({ data: { approveMailSuggestion: true } });
+  }),
+  api.mutation('DismissMailSuggestion', ({ variables }) => {
+    requests.push({ operation: 'DismissMailSuggestion', variables });
+    const index = mailSuggestions.findIndex((item) => item.id === variables['id']);
+    if (index >= 0) mailSuggestions.splice(index, 1);
+    return HttpResponse.json({ data: { dismissMailSuggestion: true } });
+  }),
   api.query('MyApplications', () => HttpResponse.json({ data: { myApplications: applications } })),
   api.mutation('MarkFollowedUp', ({ variables }) => {
     requests.push({ operation: 'MarkFollowedUp', variables });

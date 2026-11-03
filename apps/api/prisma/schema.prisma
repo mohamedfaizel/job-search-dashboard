@@ -83,6 +83,8 @@ model User {
   removedTerms    RemovedTerm[]
   jobResumes      JobResume[]
   interviewPreps  InterviewPrep[]
+  gmailAccounts   GmailAccount[]
+  mailSuggestions MailSuggestion[]
   applyQueue      ApplyQueueItem[]
   jobFits         JobFit[]
   /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
@@ -338,6 +340,7 @@ model Job {
   removedTerms    RemovedTerm[]
   jobResumes      JobResume[]
   interviewPreps  InterviewPrep[]
+  mailSuggestions MailSuggestion[]
   applyQueue      ApplyQueueItem[]
   fits            JobFit[]
 
@@ -526,4 +529,52 @@ model JobFit {
 
   @@id([userId, jobId])
   @@index([userId, score])
+}
+
+/// Whether you still have to answer a suggestion made from an employer's email.
+enum SuggestionState {
+  PENDING
+  APPROVED
+  DISMISSED
+}
+
+/// A Gmail account one user connected (read-only). A user can connect several.
+model GmailAccount {
+  id           Int              @id @default(autoincrement())
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Int
+  email        String
+  /// Encrypted with AES-256-GCM (gmail/token-crypto.ts). Never returned by the API.
+  refreshToken String
+  connectedAt  DateTime         @default(now())
+  lastSyncAt   DateTime?
+  /// Why the last check failed (for example "access was revoked"), or null when it worked.
+  lastError    String?
+  suggestions  MailSuggestion[]
+
+  @@unique([userId, email])
+}
+
+/// "This email looks like a rejection: move the job to Rejected?" The user approves or dismisses.
+model MailSuggestion {
+  id          Int               @id @default(autoincrement())
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  account     GmailAccount      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId   Int
+  job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId       String
+  /// Gmail's id for the email, so the same email is only suggested once per account.
+  messageId   String
+  fromAddress String
+  subject     String
+  snippet     String
+  receivedAt  DateTime
+  /// The status the email points to.
+  status      ApplicationStatus
+  state       SuggestionState   @default(PENDING)
+  createdAt   DateTime          @default(now())
+
+  @@unique([accountId, messageId])
+  @@index([userId, state])
 }

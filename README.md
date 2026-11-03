@@ -227,6 +227,19 @@ pick Anthropic in <http://localhost:3100/settings>, or reset its saved settings 
 `docker compose --profile tools down` and `docker volume rm job-search-dashboard_resume-data`
 (this deletes Resume-Matcher's data), then `pnpm rm:up`.
 
+### Connect Gmail (optional)
+
+On **My profile > Email** every user can connect their own Gmail accounts (as many as they like). The app reads the last two weeks of mail once an hour, finds replies from companies you applied to, and **suggests** a move on your tracker (a rejection, an interview invitation, an offer). Nothing changes until you press the button. It is read-only: the app can never send, change or delete mail.
+
+One-time setup (free):
+
+1. Open [console.cloud.google.com](https://console.cloud.google.com), create a project, and enable the **Gmail API** (APIs & Services > Library).
+2. **OAuth consent screen**: choose _External_, fill in the app name and your email, add the scope `.../auth/gmail.readonly`, and add the Gmail addresses that will connect under **Test users** (up to 100 while the app is in _Testing_).
+3. **Credentials > Create credentials > OAuth client ID**, type _Web application_. Under **Authorized redirect URIs** add `http://localhost:3000/gmail/callback`.
+4. Copy the client ID and secret into `.env` as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, set `GMAIL_TOKEN_KEY` to a long random string, and restart the API.
+
+Refresh tokens are stored encrypted (AES-256-GCM). Opening this to the public later needs Google's verification for the Gmail read-only scope.
+
 ### Resume and cover letter templates (optional)
 
 The resume and cover letter you save for a job download as PDFs in the design you pick on

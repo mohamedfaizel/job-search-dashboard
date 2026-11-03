@@ -7,6 +7,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { withApiError } from './common/api-error';
+import { GmailModule } from './gmail/gmail.module';
 import { HealthModule } from './health/health.module';
 import { InsightsModule } from './insights/insights.module';
 import { JobsModule } from './jobs/jobs.module';
@@ -44,6 +45,7 @@ import { SyncModule } from './sync/sync.module';
     ResumeMatcherModule,
     InsightsModule,
     LivenessModule,
+    GmailModule,
   ],
 })
 export class AppModule {}
