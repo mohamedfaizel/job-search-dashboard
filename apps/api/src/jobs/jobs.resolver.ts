@@ -57,6 +57,16 @@ export class JobsResolver {
     return this.jobs.applications(user.id);
   }
 
+  @Mutation(() => [Application], {
+    description: 'Say you followed up on an application. Hides "Follow up?" for another week.',
+  })
+  markFollowedUp(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+  ) {
+    return this.jobs.markFollowedUp(user.id, jobId);
+  }
+
   @Query(() => JobFilterOptions, { description: 'Values to offer in each column filter' })
   jobFilterOptions(): Promise<JobFilterOptions> {
     return this.jobs.filterOptions();

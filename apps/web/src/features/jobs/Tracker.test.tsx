@@ -24,6 +24,8 @@ const [FRONTEND, BACKEND] = JOBS as [(typeof JOBS)[number], (typeof JOBS)[number
 const tracked = (job: typeof FRONTEND, status: Application['status']): Application => ({
   status,
   updatedAt: '2026-10-26T09:00:00.000Z',
+  followedUpAt: null,
+  followUpDue: false,
   job: { ...job, applicationStatus: status },
 });
 const column = (name: RegExp) => screen.getByRole('region', { name });
@@ -120,5 +122,37 @@ describe('Tracker board', () => {
     expect(within(column(/^Beworben/)).getByText(FRONTEND.title)).toBeInTheDocument();
     expect(column(/^Im Gespräch/)).toHaveTextContent('Im Gespräch (0)');
     expect(screen.getByText('Verschoben am 26. Okt. 2026')).toBeInTheDocument();
+  });
+
+  it('asks to follow up after a week in Applied, with an email to copy', async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    renderTracker([{ ...tracked(FRONTEND, 'APPLIED'), followUpDue: true }]);
+
+    expect(await screen.findByText(/1 application has had no news for a week/)).toBeInTheDocument();
+    expect(within(column(/^Applied/)).getByText('Follow up?')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Copy email' }));
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining(FRONTEND.title));
+    expect(await screen.findByText(/Copied\./)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'I followed up' }));
+    expect(requests).toContainEqual({
+      operation: 'MarkFollowedUp',
+      variables: { jobId: FRONTEND.id },
+    });
+    expect(await screen.findByText('Followed up Nov 3, 2026')).toBeInTheDocument();
+    expect(screen.queryByText('Follow up?')).not.toBeInTheDocument();
+  });
+
+  it('says when the clipboard is blocked', async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockRejectedValue(new Error('denied'));
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    renderTracker([{ ...tracked(FRONTEND, 'APPLIED'), followUpDue: true }]);
+
+    await user.click(await screen.findByRole('button', { name: 'Copy email' }));
+    expect(await screen.findByText(/Couldn’t copy/)).toBeInTheDocument();
   });
 });

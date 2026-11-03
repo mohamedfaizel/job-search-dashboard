@@ -1,6 +1,8 @@
 import type { Application, ApplicationStatus, Job } from '@jobsearch/data';
+import { useMyProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { followUpEmail } from '../followUpEmail';
 import { useJobFormat } from '../useJobFormat';
 import { Badge } from './Badge';
 import { StatusSelect } from './StatusSelect';
@@ -24,13 +26,66 @@ interface Props {
   applications: Application[];
   onMove: (job: Job, status: ApplicationStatus) => void;
   onOpen: (job: Job) => void;
+  /** You followed up on this application: the reminder waits another week. */
+  onFollowedUp?: (job: Job) => void;
+}
+
+const SMALL_BUTTON =
+  'inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50';
+
+/** "Follow up?" on a card: copy a ready email, then say you sent it. */
+function FollowUp({ app, onFollowedUp }: { app: Application; onFollowedUp: (job: Job) => void }) {
+  const t = useTranslations('Tracker.followUp');
+  const profile = useMyProfile();
+  const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
+  const name = [profile.data?.firstName, profile.data?.lastName].filter(Boolean).join(' ');
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(followUpEmail(app, name));
+      setCopied('yes');
+    } catch {
+      setCopied('failed');
+    }
+  };
+
+  return (
+    <div className="space-y-2 rounded-md bg-amber-50 p-2 ring-1 ring-amber-200 ring-inset">
+      <p className="text-xs text-amber-800">{t('hint')}</p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            void copy();
+          }}
+          className={SMALL_BUTTON}
+        >
+          {t('copy')}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onFollowedUp(app.job);
+          }}
+          className={SMALL_BUTTON}
+        >
+          {t('done')}
+        </button>
+      </div>
+      {copied && (
+        <p role="status" className="text-xs text-amber-800">
+          {copied === 'yes' ? t('copied') : t('copyFailed')}
+        </p>
+      )}
+    </div>
+  );
 }
 
 /**
  * The Kanban board. Drag a card to another column, or use its status menu, which also works
  * with a keyboard and screen readers (dragging alone would leave those users out).
  */
-export function TrackerBoard({ applications, onMove, onOpen }: Props) {
+export function TrackerBoard({ applications, onMove, onOpen, onFollowedUp }: Props) {
   const t = useTranslations('Tracker');
   const row = useTranslations('Jobs.row');
   const f = useJobFormat();
@@ -72,51 +127,67 @@ export function TrackerBoard({ applications, onMove, onOpen }: Props) {
               <span className="font-normal text-slate-500">({cards.length})</span>
             </h2>
             <ul className="flex flex-col gap-2">
-              {cards.map(({ job, updatedAt }) => (
-                // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- see above
-                <li
-                  key={job.id}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData(DRAG_TYPE, job.id);
-                    e.dataTransfer.effectAllowed = 'move';
-                  }}
-                  className="cursor-grab space-y-2 rounded-md border border-slate-200 bg-white p-3 shadow-sm active:cursor-grabbing"
-                >
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onOpen(job);
-                      }}
-                      className="text-left text-sm font-medium text-slate-900 hover:text-brand-700 hover:underline"
-                    >
-                      {job.title}
-                    </button>
-                    <p className="flex items-center gap-1.5 text-xs text-slate-600">
-                      {isExpired(job) && (
-                        <Badge tone="red" title={row('expiredHint')}>
-                          {row('expired')}
-                        </Badge>
-                      )}
-                      {job.company.name}
-                      {job.city ? ` · ${job.city}` : ''}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-slate-500">
-                      {t('moved', { date: f.date(updatedAt) })}
-                    </span>
-                    <StatusSelect
-                      label={row('statusFor', { job: f.jobName(job) })}
-                      value={status}
-                      onChange={(next) => {
-                        onMove(job, next);
-                      }}
-                    />
-                  </div>
-                </li>
-              ))}
+              {cards.map((app) => {
+                const { job, updatedAt } = app;
+                return (
+                  // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- see above
+                  <li
+                    key={job.id}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData(DRAG_TYPE, job.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
+                    className="cursor-grab space-y-2 rounded-md border border-slate-200 bg-white p-3 shadow-sm active:cursor-grabbing"
+                  >
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onOpen(job);
+                        }}
+                        className="text-left text-sm font-medium text-slate-900 hover:text-brand-700 hover:underline"
+                      >
+                        {job.title}
+                      </button>
+                      <p className="flex items-center gap-1.5 text-xs text-slate-600">
+                        {app.followUpDue && (
+                          <Badge tone="orange" title={t('followUp.badgeHint')}>
+                            {t('followUp.badge')}
+                          </Badge>
+                        )}
+                        {isExpired(job) && (
+                          <Badge tone="red" title={row('expiredHint')}>
+                            {row('expired')}
+                          </Badge>
+                        )}
+                        {job.company.name}
+                        {job.city ? ` · ${job.city}` : ''}
+                      </p>
+                    </div>
+                    {app.followUpDue && onFollowedUp && (
+                      <FollowUp app={app} onFollowedUp={onFollowedUp} />
+                    )}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-500">
+                        {t('moved', { date: f.date(updatedAt) })}
+                        {app.followedUpAt && !app.followUpDue && (
+                          <span className="block">
+                            {t('followUp.followedUp', { date: f.date(app.followedUpAt) })}
+                          </span>
+                        )}
+                      </span>
+                      <StatusSelect
+                        label={row('statusFor', { job: f.jobName(job) })}
+                        value={status}
+                        onChange={(next) => {
+                          onMove(job, next);
+                        }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         );

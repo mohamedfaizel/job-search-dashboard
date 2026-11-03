@@ -1,4 +1,5 @@
 import { Field, Float, GraphQLISODateTime, ID, Int, ObjectType } from '@nestjs/graphql';
+import { FOLLOW_UP_DAYS } from '../follow-up';
 import {
   ApplicationStatus,
   JobMatchStatus,
@@ -156,6 +157,17 @@ export class Application {
 
   @Field(() => GraphQLISODateTime, { description: 'When the status last changed' })
   updatedAt!: Date;
+
+  @Field(() => GraphQLISODateTime, {
+    nullable: true,
+    description: 'When you last marked that you followed up on it',
+  })
+  followedUpAt!: Date | null;
+
+  @Field({
+    description: `Applied, and no change or follow-up for ${FOLLOW_UP_DAYS} days: time to follow up`,
+  })
+  followUpDue!: boolean;
 
   @Field(() => Job)
   job!: Job;

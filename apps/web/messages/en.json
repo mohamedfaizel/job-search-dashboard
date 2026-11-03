@@ -762,7 +762,19 @@
     "moveError": "Could not move that job: {error}",
     "loading": "Loading your tracker…",
     "empty": "Nothing on your tracker yet. Set a status on a job in Job posts (Saved, Applied…) and it shows up here.",
-    "moved": "Moved {date}"
+    "moved": "Moved {date}",
+    "followUp": {
+      "badge": "Follow up?",
+      "badgeHint": "A week in Applied with no news",
+      "hint": "No news for a week. A short, polite email often gets a reply.",
+      "copy": "Copy email",
+      "copied": "Copied. Paste it into your email and check it before sending.",
+      "copyFailed": "Couldn’t copy. Your browser blocked the clipboard.",
+      "done": "I followed up",
+      "followedUp": "Followed up {date}",
+      "banner": "{count, plural, one {# application has} other {# applications have}} had no news for a week. Look for “Follow up?” below.",
+      "error": "Could not save that: {error}"
+    }
   },
   "AddJobs": {
     "title": "Add jobs",
