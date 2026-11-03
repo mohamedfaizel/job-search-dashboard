@@ -90,6 +90,26 @@ export class InsightsResolver {
     return this.insights.deleteJobResume(user.id, jobId);
   }
 
+  @Mutation(() => JobInsightsModel, {
+    description:
+      "Saves Claude's answer to the interview prep prompt for this job (replacing the one before)",
+  })
+  saveInterviewPrep(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('text') text: string,
+  ): Promise<JobInsightsModel> {
+    return this.insights.saveInterviewPrep(user.id, jobId, text);
+  }
+
+  @Mutation(() => JobInsightsModel, { description: 'Deletes the interview prep for this job' })
+  deleteInterviewPrep(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+  ): Promise<JobInsightsModel> {
+    return this.insights.deleteInterviewPrep(user.id, jobId);
+  }
+
   @Query(() => [ApplyQueueItemModel], {
     description: 'Jobs you lined up to apply for, oldest first',
   })

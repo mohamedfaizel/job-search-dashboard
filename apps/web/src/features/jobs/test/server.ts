@@ -2,6 +2,7 @@ import type {
   Application,
   ApplicationStatus,
   ApplyQueueItem,
+  InterviewPrep,
   JobInsights,
   JobMatch,
   JobResume,
@@ -78,6 +79,8 @@ export const INSIGHTS: JobInsights = {
   score: 50,
   jobResume: null,
   prompt: 'Please tailor my resume for this job.\n- graphql',
+  interviewPrompt: 'Please prepare me for an interview.\n- graphql',
+  interviewPrep: null,
 };
 
 /** The resume the test user saved for job-1, once they upload or paste one. */
@@ -94,6 +97,9 @@ export const SAVED_RESUME: JobResume = {
   stillMissing: ['microfrontends'],
   factCheck: [],
 };
+
+/** Claude's interview prep the test user saved for job-1. Tests start with nothing. */
+export const interviewPrep: { current: InterviewPrep | null } = { current: null };
 
 /** What the test user saved for job-1. Tests start with nothing. */
 export const jobResume: { current: JobResume | null } = { current: null };
@@ -113,10 +119,11 @@ function insightsNow(): JobInsights {
   const skills = INSIGHTS.skills.map(mark);
   const keywords = INSIGHTS.keywords.map(mark);
   if (removedTerms.length === 0 && haveTerms.length === 0)
-    return { ...INSIGHTS, jobResume: jobResume.current };
+    return { ...INSIGHTS, jobResume: jobResume.current, interviewPrep: interviewPrep.current };
   return {
     ...INSIGHTS,
     jobResume: jobResume.current,
+    interviewPrep: interviewPrep.current,
     skills: skills.filter(kept),
     keywords: keywords.filter(kept),
     removed: [...removedTerms],
@@ -348,6 +355,19 @@ export const handlers = [
     requests.push({ operation: 'SaveJobResumeText', variables });
     jobResume.current = SAVED_RESUME;
     return HttpResponse.json({ data: { saveJobResumeText: insightsNow() } });
+  }),
+  api.mutation('SaveInterviewPrep', ({ variables }) => {
+    requests.push({ operation: 'SaveInterviewPrep', variables });
+    interviewPrep.current = {
+      text: (variables['text'] as string).trim(),
+      updatedAt: '2026-11-03T12:00:00.000Z',
+    };
+    return HttpResponse.json({ data: { saveInterviewPrep: insightsNow() } });
+  }),
+  api.mutation('DeleteInterviewPrep', ({ variables }) => {
+    requests.push({ operation: 'DeleteInterviewPrep', variables });
+    interviewPrep.current = null;
+    return HttpResponse.json({ data: { deleteInterviewPrep: insightsNow() } });
   }),
   api.mutation('DeleteJobResume', ({ variables }) => {
     requests.push({ operation: 'DeleteJobResume', variables });

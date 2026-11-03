@@ -65,6 +65,11 @@ const INSIGHTS = /* GraphQL */ `
       score
       ${JOB_RESUME}
       prompt
+      interviewPrompt
+      interviewPrep {
+        text
+        updatedAt
+      }
     }
   }
 `;
@@ -676,6 +681,88 @@ Why Acme: I like your product.
 
       const missing = await t.asUser(SAVE_TEXT, { jobId: 'nope', text: 'Hi' });
       expect(missing.errors?.[0]?.message).toBe('Job nope not found');
+    });
+  });
+
+  describe('interview prep', () => {
+    const SAVE_PREP = /* GraphQL */ `
+      mutation ($jobId: ID!, $text: String!) {
+        saveInterviewPrep(jobId: $jobId, text: $text) {
+          interviewPrep {
+            text
+          }
+        }
+      }
+    `;
+    const DELETE_PREP = /* GraphQL */ `
+      mutation ($jobId: ID!) {
+        deleteInterviewPrep(jobId: $jobId) {
+          interviewPrep {
+            text
+          }
+        }
+      }
+    `;
+    interface Prep {
+      interviewPrep: { text: string } | null;
+    }
+
+    async function backendJob() {
+      const job = await addJob({
+        title: 'Backend Engineer',
+        skills: ['node.js', 'kafka'],
+        description: 'Event streaming with Kafka and Node.js in microservices.',
+      });
+      await t.prisma.profile.create({ data: { userId: 2, resumeText: 'NodeJS microservices.' } });
+      return job;
+    }
+
+    it('gives a prompt built from your resume, and keeps what you paste back', async () => {
+      const job = await backendJob();
+      const before = await t.asUser<{ jobInsights: { interviewPrompt: string } & Prep }>(INSIGHTS, {
+        jobId: job.id,
+      });
+      expect(before.data!.jobInsights.interviewPrep).toBeNull();
+      expect(before.data!.jobInsights.interviewPrompt).toContain('Job: Backend Engineer at');
+      expect(before.data!.jobInsights.interviewPrompt).toContain('NodeJS microservices.');
+      expect(before.data!.jobInsights.interviewPrompt).toContain('- kafka');
+
+      const saved = await t.asUser<{ saveInterviewPrep: Prep }>(SAVE_PREP, {
+        jobId: job.id,
+        text: '  1. What they care about\nKafka.  ',
+      });
+      expect(saved.errors).toBeUndefined();
+      expect(saved.data!.saveInterviewPrep.interviewPrep!.text).toBe(
+        '1. What they care about\nKafka.',
+      );
+
+      // Saving again replaces it, and it is only yours.
+      await t.asUser(SAVE_PREP, { jobId: job.id, text: 'Second version' });
+      expect(await t.prisma.interviewPrep.count()).toBe(1);
+      const other = await t.gql<{ jobInsights: Prep }>(INSIGHTS, { jobId: job.id });
+      expect(other.data!.jobInsights.interviewPrep).toBeNull();
+
+      const deleted = await t.asUser<{ deleteInterviewPrep: Prep }>(DELETE_PREP, {
+        jobId: job.id,
+      });
+      expect(deleted.data!.deleteInterviewPrep.interviewPrep).toBeNull();
+      expect(await t.prisma.interviewPrep.count()).toBe(0);
+      // Deleting again does nothing.
+      expect((await t.asUser(DELETE_PREP, { jobId: job.id })).errors).toBeUndefined();
+    });
+
+    it('refuses an empty or oversized reply, and an unknown job', async () => {
+      const job = await backendJob();
+
+      const empty = await t.asUser(SAVE_PREP, { jobId: job.id, text: '   ' });
+      expect(empty.errors?.[0]?.extensions).toMatchObject({ apiCode: 'INTERVIEW_PREP_EMPTY' });
+      const long = await t.asUser(SAVE_PREP, { jobId: job.id, text: 'x'.repeat(30_001) });
+      expect(long.errors?.[0]?.extensions).toMatchObject({
+        apiCode: 'INTERVIEW_PREP_TOO_LONG',
+        apiParams: { max: 30_000 },
+      });
+      const missing = await t.asUser(SAVE_PREP, { jobId: 'nope', text: 'Hello' });
+      expect(missing.errors?.[0]?.extensions).toMatchObject({ apiCode: 'JOB_NOT_FOUND' });
     });
   });
 

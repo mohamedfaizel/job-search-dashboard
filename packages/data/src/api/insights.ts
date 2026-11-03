@@ -6,6 +6,7 @@ import {
   ADD_TO_APPLY_QUEUE,
   APPLY_QUEUE,
   APPLY_QUEUE_PROMPT,
+  DELETE_INTERVIEW_PREP,
   DELETE_JOB_RESUME,
   JOB_INSIGHTS,
   RECALCULATE_FIT,
@@ -14,6 +15,7 @@ import {
   REMOVE_INSIGHT_TERM,
   RESTORE_INSIGHT_TERM,
   SAVE_APPLY_QUEUE_REPLY,
+  SAVE_INTERVIEW_PREP,
   SAVE_JOB_RESUME_TEXT,
   SET_HAVE_TERM,
 } from './operations';
@@ -273,6 +275,40 @@ export function useSaveJobResumeText() {
     },
     onSuccess: (insights) => {
       savedReply(queryClient, insights);
+    },
+  });
+}
+
+/** Saves Claude's answer to the interview prep prompt for a job. */
+export function useSaveInterviewPrep() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { jobId: string; text: string }) => {
+      const data = await graphqlClient.request<{ saveInterviewPrep: JobInsights }>(
+        SAVE_INTERVIEW_PREP,
+        vars,
+      );
+      return data.saveInterviewPrep;
+    },
+    onSuccess: (insights) => {
+      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+    },
+  });
+}
+
+/** Deletes the interview prep for a job. */
+export function useDeleteInterviewPrep() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const data = await graphqlClient.request<{ deleteInterviewPrep: JobInsights }>(
+        DELETE_INTERVIEW_PREP,
+        { jobId },
+      );
+      return data.deleteInterviewPrep;
+    },
+    onSuccess: (insights) => {
+      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
     },
   });
 }

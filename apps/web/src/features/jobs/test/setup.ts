@@ -5,6 +5,7 @@ import {
   downloads,
   applyQueue,
   hiddenIds,
+  interviewPrep,
   jobResume,
   haveTerms,
   removedTerms,
@@ -29,6 +30,7 @@ afterEach(() => {
   removedTerms.length = 0;
   haveTerms.length = 0;
   jobResume.current = null;
+  interviewPrep.current = null;
   downloads.length = 0;
   localStorage.clear();
 });

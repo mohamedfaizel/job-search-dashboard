@@ -8,6 +8,7 @@ import { useJobFormat } from '../useJobFormat';
 import { ApplyKitPanel, useApplyStep } from './ApplyKitPanel';
 import { BookmarkIcon, EyeIcon, EyeSlashIcon } from './icons';
 import { InsightsPanel } from './InsightsPanel';
+import { InterviewPanel } from './InterviewPanel';
 import { JobAdPanel } from './JobAdPanel';
 import { MatchPanel, scoreTone } from './MatchPanel';
 import { StatusSelect } from './StatusSelect';
@@ -31,7 +32,7 @@ interface Props {
 const NOBODY: ReadonlySet<string> = new Set();
 const noop = () => undefined;
 
-const TABS = ['fit', 'apply', 'ad', 'match'] as const;
+const TABS = ['fit', 'apply', 'interview', 'ad', 'match'] as const;
 type Tab = (typeof TABS)[number];
 
 const ICON_BUTTON =
@@ -270,6 +271,9 @@ function JobDetails({
             onApplyStarted={onApplyStarted}
             onAnswered={onApplyAnswered}
           />
+        </TabPanel>
+        <TabPanel id="interview" active={tab}>
+          <InterviewPanel jobId={job.id} />
         </TabPanel>
         <TabPanel id="ad" active={tab}>
           <JobAdPanel jobId={job.id} description={job.description} />
