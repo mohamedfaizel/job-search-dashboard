@@ -368,6 +368,13 @@ const PROFILE_FIELDS = /* GraphQL */ `
   drivingLicence
   applicationNotes
   achievements
+  resumeMaxPages
+  keepMySections
+  resumeSuggestions {
+    code
+    detail
+  }
+  resumeReviewPrompt
   customFields {
     label
     value

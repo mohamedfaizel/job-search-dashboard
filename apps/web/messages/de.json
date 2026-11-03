@@ -159,7 +159,13 @@
       "tooBig": "Die Datei ist größer als 5 MB.",
       "achievements": "Erfolge-Sammlung",
       "achievementsHint": "Ein wahrer Erfolg pro Zeile, mit echten Zahlen. Claude darf sie in jedem angepassten Lebenslauf nutzen, und die Faktenprüfung vertraut ihnen.",
-      "achievementsExample": "Ladezeit bei Acme um 40 % gesenkt (2023)\nTeam von 4 Entwicklern beim Checkout-Redesign geleitet"
+      "achievementsExample": "Ladezeit bei Acme um 40 % gesenkt (2023)\nTeam von 4 Entwicklern beim Checkout-Redesign geleitet",
+      "settings": "Einstellungen für angepasste Lebensläufe",
+      "maxPages": "Seitenlimit",
+      "maxPagesHint": "Claude hält jeden angepassten Lebenslauf in dieser Länge. Die PDF-Prüfung nutzt es auch.",
+      "pages": "{count, plural, one {# Seite} other {# Seiten}}",
+      "keepSections": "Alle meine Überschriften behalten",
+      "keepSectionsHint": "Jeder Abschnitt meines Lebenslaufs bleibt, mit meinen Namen und in meiner Reihenfolge (Key Highlights, Erfolge, Technische Skills…), und jede Stelle behält ihre Projekte. Claude passt nur den Inhalt an."
     },
     "save": "Profil speichern",
     "saving": "Wird gespeichert…",
@@ -309,6 +315,23 @@
       "sending": "Wird gesendet… Die KI von Resume-Matcher liest deinen Lebenslauf, das kann eine Minute dauern.",
       "send": "Lebenslauf senden",
       "sendAgain": "Erneut senden"
+    },
+    "suggestions": {
+      "title": "Vorschläge für deinen Lebenslauf",
+      "allGood": "Dein Lebenslauf sieht gut aus. Keine schnellen Korrekturen gefunden.",
+      "LEVEL": "Sprachniveau weicht von Mein Profil ab ({detail}). Nutze überall dein echtes Niveau.",
+      "WORK_PERMIT": "Dein Lebenslauf nennt „{detail}“. Trag es unter Bewerbungsangaben > Arbeitserlaubnis ein, damit angepasste Lebensläufe es behalten.",
+      "DATES": "Lange Striche in Datumsangaben ({detail}). Manche ATS lesen sie falsch: schreib 08/2022 - 05/2026.",
+      "CLICHES": "Allgemeine Wörter, die Recruiter überspringen: {detail}. Zeig es lieber mit einem Beispiel.",
+      "SYMBOLS": "Symbole, die ein ATS vielleicht nicht liest: {detail}",
+      "NUMBERS": "Nur {with} von {bullets} Stichpunkten haben eine Zahl. Ergänze Ergebnisse (gesparte Zeit, Umfang, Teamgröße), wo du sie hast.",
+      "LENGTH": "Etwa {pages} Seiten ({words} Wörter), mehr als dein Limit von {limit}. Angepasste Lebensläufe werden auf {limit} gekürzt, oder erhöhe das Limit unten.",
+      "CONTACT": "Fehlt im Kopf: {detail}",
+      "ACHIEVEMENTS": "Dein Lebenslauf hat {count, plural, one {# Erfolg} other {# Erfolge}}. Übernimm sie in die Erfolge-Sammlung, damit jeder angepasste Lebenslauf sie nutzen kann.",
+      "useAchievements": "In die Erfolge-Sammlung kopieren",
+      "askClaude": "Claude nach weiteren Vorschlägen fragen",
+      "askClaudeHint": "In Claude einfügen: es prüft deinen Lebenslauf wie ein Recruiter und nennt die wichtigsten Korrekturen.",
+      "askClaudeBox": "Prüf-Prompt"
     }
   },
   "Jobs": {
@@ -855,6 +878,7 @@
         "EMAIL": "Deine E-Mail ist lesbarer Text: {detail}",
         "DATES": "Datumsangaben mit einfachem Bindestrich",
         "CHARACTERS": "Keine kaputten Zeichen oder Icons",
+        "PLACEHOLDERS": "Keine Platzhalter wie „(fill in)“",
         "SKILLS": "Jeder Job-Skill aus deinem Lebenslauf steht im PDF-Text"
       },
       "pdfBad": {
@@ -863,6 +887,7 @@
         "EMAIL": "Deine E-Mail {detail} ist nicht als Text lesbar. Schreib sie als einfachen Text in den Kopf.",
         "DATES": "Lange Striche in Datumsangaben ({detail}): manche ATS lesen sie falsch. Nutze 01/2020 - 03/2023.",
         "CHARACTERS": "Zeichen, die ein ATS nicht lesen kann ({detail}): Ligaturen oder Icons.",
+        "PLACEHOLDERS": "Noch auszufüllen: {detail}. Bitte Claude, es zu entfernen, oder ergänze es vor dem Senden.",
         "SKILLS": "Im PDF-Text verloren: {detail}"
       }
     },

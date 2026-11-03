@@ -79,6 +79,10 @@ export const PROFILE: Profile = {
   relocation: '',
   applicationNotes: '',
   achievements: '',
+  resumeMaxPages: 2,
+  keepMySections: false,
+  resumeSuggestions: [],
+  resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
 };
 

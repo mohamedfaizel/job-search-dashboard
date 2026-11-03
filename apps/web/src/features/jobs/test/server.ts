@@ -223,6 +223,10 @@ export const PROFILE: Profile = {
   relocation: '',
   applicationNotes: '',
   achievements: '',
+  resumeMaxPages: 2,
+  keepMySections: false,
+  resumeSuggestions: [],
+  resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
 };
 
@@ -369,6 +373,7 @@ export const handlers = [
             { code: 'EMAIL', ok: true, detail: 'user@example.com' },
             { code: 'DATES', ok: false, detail: '01/2020 – today' },
             { code: 'CHARACTERS', ok: true, detail: '' },
+            { code: 'PLACEHOLDERS', ok: false, detail: '(fill in)' },
             { code: 'SKILLS', ok: true, detail: '' },
           ],
         },

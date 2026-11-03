@@ -159,7 +159,13 @@
       "tooBig": "That file is over 5 MB.",
       "achievements": "Achievements bank",
       "achievementsHint": "One true fact per line, with real numbers. Claude may use them in any tailored resume, and the fact check trusts them.",
-      "achievementsExample": "Cut page load time by 40% at Acme (2023)\nLed a team of 4 developers on the checkout redesign"
+      "achievementsExample": "Cut page load time by 40% at Acme (2023)\nLed a team of 4 developers on the checkout redesign",
+      "settings": "Tailored resume settings",
+      "maxPages": "Page limit",
+      "maxPagesHint": "Claude keeps each tailored resume to this length. The PDF check uses it too.",
+      "pages": "{count, plural, one {# page} other {# pages}}",
+      "keepSections": "Keep all my headings",
+      "keepSectionsHint": "Every section of my resume stays, with my own names and order (Key Highlights, Achievements, Technical Skills…), and every job keeps its projects. Claude only tailors what is inside."
     },
     "save": "Save profile",
     "saving": "Saving…",
@@ -309,6 +315,23 @@
       "sending": "Sending… Resume-Matcher’s AI is reading your resume, which can take a minute.",
       "send": "Send resume",
       "sendAgain": "Send again"
+    },
+    "suggestions": {
+      "title": "Suggestions for your resume",
+      "allGood": "Your resume looks good. No quick fixes found.",
+      "LEVEL": "Language level differs from My profile ({detail}). Use your real level everywhere.",
+      "WORK_PERMIT": "Your resume mentions “{detail}”. Add it under Applications > Work permit so tailored resumes keep it.",
+      "DATES": "Long dashes in dates ({detail}). Some ATS misread them: write 08/2022 - 05/2026.",
+      "CLICHES": "Generic words recruiters skip: {detail}. Show it with an example instead.",
+      "SYMBOLS": "Symbols an ATS may not read: {detail}",
+      "NUMBERS": "Only {with} of {bullets} bullets have a number. Add results (time saved, scale, team size) where you have them.",
+      "LENGTH": "About {pages} pages ({words} words), more than your limit of {limit}. Tailored resumes will be cut to {limit}, or raise the limit below.",
+      "CONTACT": "Missing in the header: {detail}",
+      "ACHIEVEMENTS": "Your resume has {count, plural, one {# achievement} other {# achievements}}. Put them in the Achievements bank so every tailored resume can use them.",
+      "useAchievements": "Copy to Achievements bank",
+      "askClaude": "Ask Claude for more suggestions",
+      "askClaudeHint": "Paste it into Claude: it reviews your resume like a recruiter and lists the top fixes.",
+      "askClaudeBox": "Review prompt"
     }
   },
   "Jobs": {
@@ -855,6 +878,7 @@
         "EMAIL": "Your e-mail is readable text: {detail}",
         "DATES": "Dates use a plain hyphen",
         "CHARACTERS": "No broken characters or icons",
+        "PLACEHOLDERS": "No placeholders such as \"(fill in)\"",
         "SKILLS": "Every job skill in your resume is in the PDF text"
       },
       "pdfBad": {
@@ -863,6 +887,7 @@
         "EMAIL": "Your e-mail {detail} is not readable as text. Put it in the header as plain text.",
         "DATES": "Long dashes in dates ({detail}): some ATS misread them. Use 01/2020 - 03/2023.",
         "CHARACTERS": "Characters an ATS can’t read ({detail}): ligatures or icons.",
+        "PLACEHOLDERS": "Text left to fill in: {detail}. Ask Claude to remove it, or fill it in before you send.",
         "SKILLS": "Lost in the PDF text: {detail}"
       }
     },

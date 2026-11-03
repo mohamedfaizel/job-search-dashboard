@@ -241,6 +241,7 @@ describe('buildInterviewPrompt', () => {
     facts: [] as string[],
     savedAnswers: '',
     achievements: [] as string[],
+    settings: { maxPages: 2, keepSections: false },
   };
 
   it('coaches in German for a German job, at your real level', () => {
@@ -303,6 +304,7 @@ describe('buildResumePrompt', () => {
     facts: ['Work permit: EU Blue Card', 'Notice period / earliest start: 1 month'],
     savedAnswers: 'I want to work on products people use every day.',
     achievements: ['Cut page load time by 40% at Acme (2023)'],
+    settings: { maxPages: 2, keepSections: false },
   };
 
   it('asks for the job’s language and lists what is missing', () => {
@@ -374,6 +376,20 @@ describe('buildResumePrompt', () => {
     }
     expect(buildResumePrompt({ ...input, savedAnswers: ' ' })).not.toContain('My saved answers');
     expect(prompt).toContain('My achievements bank');
+    expect(prompt).toContain('Never name the company or say that I am applying');
+    expect(prompt).toContain('never write "(fill in)"');
+    expect(prompt).toContain('| work permit (only when my application facts give one');
+    expect(prompt).toContain('One result per bullet');
+    expect(prompt).toContain('At most two pages;');
+    expect(prompt).toContain('4 to 5 bullets for my latest job');
+    const keep = buildResumePrompt({ ...input, settings: { maxPages: 3, keepSections: true } });
+    expect(keep).toContain('At most three pages;');
+    expect(keep).toContain('Keep every section of my resume, with my own heading names');
+    expect(keep).toContain('Keep every job and project of my resume');
+    expect(keep).not.toContain('4 to 5 bullets');
+    expect(
+      buildResumePrompt({ ...input, settings: { maxPages: 1, keepSections: false } }),
+    ).toContain('At most one page;');
     expect(prompt).toContain('- Cut page load time by 40% at Acme (2023)');
     expect(buildResumePrompt({ ...input, achievements: [] })).not.toContain('achievements bank');
     expect(prompt).toContain('- Skipped:');
@@ -570,6 +586,7 @@ describe('queue prompt', () => {
     facts: [],
     savedAnswers: '',
     achievements: [],
+    settings: { maxPages: 2, keepSections: false },
   });
 
   it('puts the resume in once and each job with its own language and markers', () => {

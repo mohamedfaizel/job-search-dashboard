@@ -9,6 +9,7 @@ import { useErrorText } from '../../../i18n/useErrorText';
 import type { ProfileFormValues } from '../schema';
 import { profileSchema, profileToForm, toProfileInput } from '../schema';
 import { Field, inputClass } from './Field';
+import { ResumeSuggestions } from './ResumeSuggestions';
 import { ResumeUpload } from './ResumeUpload';
 import { useLanguageName } from './useLanguageName';
 
@@ -32,6 +33,7 @@ const FIELD_TAB: Partial<Record<keyof ProfileFormValues, ProfileTab>> = {
   resumeText: 'resume',
   resumeLanguage: 'resume',
   achievements: 'resume',
+  resumeMaxPages: 'resume',
 };
 
 /** The gender codes the API stores; their words are in messages under Profile.personal.genders. */
@@ -75,6 +77,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
     handleSubmit,
     reset,
     resetField,
+    setValue,
     control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
@@ -499,6 +502,13 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             resetField('resumeText', { defaultValue: uploaded.resumeText });
           }}
         />
+        <ResumeSuggestions
+          suggestions={profile.resumeSuggestions}
+          reviewPrompt={profile.resumeReviewPrompt}
+          onUseAchievements={(lines) => {
+            setValue('achievements', lines, { shouldDirty: true });
+          }}
+        />
         <Field
           label={t('resume.language')}
           htmlFor="resumeLanguage"
@@ -538,6 +548,39 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             className={inputClass}
           />
         </Field>
+        <fieldset className="space-y-3 rounded-md border border-slate-200 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900">
+            {t('resume.settings')}
+          </legend>
+          <Field
+            label={t('resume.maxPages')}
+            htmlFor="resumeMaxPages"
+            hint={t('resume.maxPagesHint')}
+          >
+            <select
+              {...register('resumeMaxPages')}
+              {...a11y('resumeMaxPages')}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
+            >
+              {(['1', '2', '3'] as const).map((n) => (
+                <option key={n} value={n}>
+                  {t('resume.pages', { count: Number(n) })}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <label className="flex items-start gap-2 text-sm text-slate-800">
+            <input
+              type="checkbox"
+              {...register('keepMySections')}
+              className="mt-0.5 h-4 w-4 rounded border-slate-300"
+            />
+            <span>
+              {t('resume.keepSections')}
+              <span className="block text-xs text-slate-500">{t('resume.keepSectionsHint')}</span>
+            </span>
+          </label>
+        </fieldset>
       </section>
 
       <div className="flex items-center gap-3">

@@ -28,13 +28,14 @@ describe('PDF check', () => {
     expect(
       failing({
         ...base,
-        text: `User Example\nuser @ example.com ﬁnance\n01/2020 – today, 2018—2019\nReact\n${words(100)}`,
+        text: `User Example\nuser @ example.com ﬁnance\n01/2020 – today, 2018—2019, Jan 2022 – Aug 2022\nAnna University (fill in) - 2013\nReact\n${words(100)}`,
         pages: 3,
       }),
     ).toEqual([
       ['PAGES', '3/2'],
-      ['DATES', '01/2020 – today, 2018—2019'],
+      ['DATES', '01/2020 – today, 2018—2019, 2022 – Aug 2022'],
       ['CHARACTERS', 'U+FB01'],
+      ['PLACEHOLDERS', '(fill in)'],
       ['SKILLS', 'graphql'],
     ]);
   });

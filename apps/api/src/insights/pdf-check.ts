@@ -5,7 +5,8 @@ import { mentions } from './skills';
  * What the PDF check looks at, the way an ATS reads the file: only its text layer. Modelled on
  * ai-job-search's verify_pdf step.
  */
-export type PdfCheckCode = 'PAGES' | 'TEXT' | 'EMAIL' | 'DATES' | 'CHARACTERS' | 'SKILLS';
+export type PdfCheckCode =
+  'PAGES' | 'TEXT' | 'EMAIL' | 'DATES' | 'CHARACTERS' | 'PLACEHOLDERS' | 'SKILLS';
 
 export interface PdfCheckItem {
   code: PdfCheckCode;
@@ -27,9 +28,16 @@ export interface PdfCheckInput {
   skills: string[];
 }
 
-/** A long dash between two dates, which some ATS (Workday) read as a broken date. */
-const LONG_DASH_DATE =
-  /(?:\d{4}|\d{1,2}\/\d{4})\s*[–—―‒]\s*(?:\d{1,2}\/\d{4}|\d{4}|today|present|now|heute|current|jetzt)/giu;
+/**
+ * A long dash between two dates, which some ATS (Workday) read as a broken date: "01/2020 – today",
+ * "Jan 2022 – Aug 2022", "2013—2017".
+ */
+export const LONG_DASH_DATE =
+  /(?:\d{1,2}[./])?\d{4}\s*[–—―‒]\s*(?:(?:\p{L}{3,9}\.?\s+)?(?:\d{1,2}[./])?\d{4}|today|present|now|heute|current|jetzt)/giu;
+
+/** Text left for you to fill in, which must never reach an employer. */
+const PLACEHOLDER =
+  /\((?:fill in|to fill|ausfüllen|bitte ergänzen)[^)]*\)|\bTBD\b|\bTODO\b|\[(?:company|name|date|year|school|firma|datum)[^\]]*\]|lorem ipsum/giu;
 
 /**
  * Characters that come out wrong when an ATS copies the text: ligatures ("ﬁ" for "fi"), the
@@ -58,6 +66,7 @@ export function checkPdf(input: PdfCheckInput): PdfCheckItem[] {
   const email = input.email.trim().toLowerCase();
   const dashDates = unique([...text.matchAll(LONG_DASH_DATE)].map((m) => m[0]));
   const badCharacters = unique([...text.matchAll(BAD_CHARACTERS)].map((m) => m[0]));
+  const placeholders = unique([...text.matchAll(PLACEHOLDER)].map((m) => m[0]));
   const lost = input.skills.filter((skill) => !mentions(text, skill));
 
   return [
@@ -76,6 +85,11 @@ export function checkPdf(input: PdfCheckInput): PdfCheckItem[] {
       detail: badCharacters
         .map((c) => `U+${(c.codePointAt(0) ?? 0).toString(16).toUpperCase()}`)
         .join(', '),
+    },
+    {
+      code: 'PLACEHOLDERS',
+      ok: placeholders.length === 0,
+      detail: placeholders.slice(0, 3).join(', '),
     },
     { code: 'SKILLS', ok: lost.length === 0, detail: lost.join(', ') },
   ];
