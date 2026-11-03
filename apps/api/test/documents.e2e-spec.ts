@@ -152,6 +152,12 @@ describe('resume and cover letter templates', () => {
       'classic',
       'modern',
       'compact',
+      'sharp',
+      'bold',
+      'executive',
+      'leadership',
+      'jake',
+      'ats',
     ]);
     expect(res.data!.documentTemplates.rendererAvailable).toBe(true);
   });

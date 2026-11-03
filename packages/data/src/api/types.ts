@@ -573,7 +573,7 @@ export interface ApplyQueueItem {
 
 /** How your resume and cover letter PDFs look. */
 export interface DocumentStyle {
-  /** classic, modern or compact */
+  /** A template id from resumeTemplates, e.g. classic, sharp or jake */
   resumeTemplate: string;
   /** auto (DIN 5008 for German letters), din or modern */
   coverLetterLayout: string;
