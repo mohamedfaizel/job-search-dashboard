@@ -6,7 +6,7 @@ import {
   WORKPLACES,
 } from '@jobsearch/data';
 import { z } from 'zod';
-import { splitList } from '@/lib/split-list';
+import { splitList } from '../../lib/split-list';
 
 /** Splits "greenhouse:stripe, lever:netflix  ashby:ramp" on commas and spaces. */
 function splitBoards(value: string): string[] {

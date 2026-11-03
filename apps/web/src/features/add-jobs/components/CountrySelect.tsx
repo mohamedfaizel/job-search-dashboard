@@ -1,6 +1,6 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
-import { splitList } from '@/lib/split-list';
+import { splitList } from '../../../lib/split-list';
 import { countriesIn, countryName } from '../countries';
 import { inputClass } from './Field';
 

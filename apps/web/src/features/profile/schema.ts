@@ -1,6 +1,6 @@
 import type { Profile, ProfileInput } from '@jobsearch/data';
 import { z } from 'zod';
-import { splitList } from '@/lib/split-list';
+import { splitList } from '../../lib/split-list';
 
 /** Turns an error key from messages/<locale>.json ("Profile.errors") into text. */
 export type ErrorText = (key: string, values?: Record<string, string | number>) => string;
