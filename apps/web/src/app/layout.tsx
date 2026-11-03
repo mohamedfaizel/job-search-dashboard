@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
-import { FlagStripe } from '@/components/FlagStripe';
 import { APP_NAME } from '@/lib/app-name';
 import { Providers } from './providers';
 import './globals.css';
@@ -24,7 +23,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={locale}>
       <body className="min-h-screen bg-slate-100 text-slate-900 antialiased">
-        <FlagStripe />
         <NextIntlClientProvider>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
