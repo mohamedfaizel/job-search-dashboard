@@ -573,7 +573,7 @@ export interface FactFinding {
 
 /** One check of the finished resume PDF, read the way an ATS reads it. */
 export interface PdfCheckItem {
-  code: 'PAGES' | 'TEXT' | 'EMAIL' | 'DATES' | 'CHARACTERS' | 'PLACEHOLDERS' | 'SKILLS';
+  code: 'PAGES' | 'TEXT' | 'NAME' | 'EMAIL' | 'DATES' | 'CHARACTERS' | 'PLACEHOLDERS' | 'SKILLS';
   ok: boolean;
   /** "pages/limit" for PAGES, the word count for TEXT, your e-mail for EMAIL, else what is wrong. */
   detail: string;

@@ -874,7 +874,8 @@
       "pdfError": "Could not check the PDF: {error}",
       "pdfOk": {
         "PAGES": "{pages, plural, one {# page} other {# pages}} (limit {limit})",
-        "TEXT": "The text can be read ({detail} words), with your name",
+        "TEXT": "The text can be read ({detail} words)",
+        "NAME": "Your name is readable text: {detail}",
         "EMAIL": "Your e-mail is readable text: {detail}",
         "DATES": "Dates use a plain hyphen",
         "CHARACTERS": "No broken characters or icons",
@@ -883,7 +884,8 @@
       },
       "pdfBad": {
         "PAGES": "{pages, plural, one {# page} other {# pages}}: keep it to {limit}. Ask Claude to shorten it, or pick a compact template.",
-        "TEXT": "Almost no readable text ({detail} words) or your name is missing: an ATS may see an empty resume.",
+        "TEXT": "Almost no readable text ({detail} words): an ATS may see an empty resume. Use a template, not a scanned or image PDF.",
+        "NAME": "Your name “{detail}” is not readable as text in the PDF.",
         "EMAIL": "Your e-mail {detail} is not readable as text. Put it in the header as plain text.",
         "DATES": "Long dashes in dates ({detail}): some ATS misread them. Use 01/2020 - 03/2023.",
         "CHARACTERS": "Characters an ATS can’t read ({detail}): ligatures or icons.",

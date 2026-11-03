@@ -303,6 +303,7 @@ export function FactCheck({ findings }: { findings: FactFinding[] | null }) {
 const PDF_CHECKS = [
   'PAGES',
   'TEXT',
+  'NAME',
   'EMAIL',
   'DATES',
   'CHARACTERS',

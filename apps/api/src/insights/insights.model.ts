@@ -232,7 +232,7 @@ export class JobInsightsModel {
 })
 export class PdfCheckItemModel {
   @Field(() => String, {
-    description: 'PAGES, TEXT, EMAIL, DATES, CHARACTERS, PLACEHOLDERS or SKILLS',
+    description: 'PAGES, TEXT, NAME, EMAIL, DATES, CHARACTERS, PLACEHOLDERS or SKILLS',
   })
   code!: string;
 
@@ -241,7 +241,7 @@ export class PdfCheckItemModel {
 
   @Field({
     description:
-      'What was found: "pages/limit" for PAGES, the word count for TEXT, your e-mail for EMAIL, else what is wrong (comma separated)',
+      'What was found: "pages/limit" for PAGES, the word count for TEXT, the name for NAME, the e-mail(s) for EMAIL, else what is wrong (comma separated)',
   })
   detail!: string;
 }
