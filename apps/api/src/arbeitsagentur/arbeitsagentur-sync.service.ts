@@ -24,7 +24,9 @@ const wait = (ms: number) =>
 /** The search key of this source: an import with the same input resumes and dedups together. */
 export function arbeitsagenturKey(input: SyncJobsInput): string {
   const norm = (list: string[] | undefined) =>
-    [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort();
+    [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b),
+    );
   return JSON.stringify({
     source: ImportSource.ARBEITSAGENTUR,
     titles: norm(input.titles),

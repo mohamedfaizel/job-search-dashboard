@@ -139,7 +139,9 @@ describe('Arbeitsagentur import', () => {
     });
     expect(job.company.name).toBe('Firma 1');
     expect(apiKeys).toEqual(['jobboerse-jobsuche', 'jobboerse-jobsuche']);
-    expect(detailRequests.sort()).toEqual([1, 2, 3].map((n) => `10001-000000${n}-S`));
+    expect(detailRequests.sort((a, b) => a.localeCompare(b))).toEqual(
+      [1, 2, 3].map((n) => `10001-000000${n}-S`),
+    );
   });
 
   it('sends the search the board understands', async () => {

@@ -41,7 +41,9 @@ export const EUR_TO_USD = 1.08;
 /** The same search always gets the same key, whatever the order or case of its terms. */
 export function searchKey(input: SyncJobsInput): string {
   const norm = (list: string[] | undefined) =>
-    [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort();
+    [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b),
+    );
   const locations = norm(input.locations);
   const languages = norm(input.languages);
   const excludeTitles = norm(input.excludeTitles);
