@@ -20,7 +20,7 @@ export const APPLICATION_STATUSES = [
 ] as const;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 
-export type JobSource = 'JOBSPIPE' | 'MANUAL';
+export type JobSource = 'JOBSPIPE' | 'MANUAL' | 'ARBEITSAGENTUR' | 'COMPANY_BOARD';
 
 export type JobSortField =
   'POSTED_AT' | 'TITLE' | 'COMPANY' | 'SENIORITY' | 'CITY' | 'SALARY' | 'WORKPLACE' | 'FIT';
@@ -168,13 +168,18 @@ export interface CreateJobInput {
 export const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
 export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
 
-/** Where an import looks for jobs. ARBEITSAGENTUR is free and covers Germany only. */
-export const IMPORT_SOURCES = ['JOBSPIPE', 'ARBEITSAGENTUR'] as const;
+/**
+ * Where an import looks for jobs. ARBEITSAGENTUR (Germany only) and COMPANY_BOARDS (companies'
+ * own career pages on Greenhouse, Lever and Ashby) are free.
+ */
+export const IMPORT_SOURCES = ['JOBSPIPE', 'ARBEITSAGENTUR', 'COMPANY_BOARDS'] as const;
 export type ImportSource = (typeof IMPORT_SOURCES)[number];
 
 export interface SyncJobsInput {
   /** Default JOBSPIPE. */
   source?: ImportSource;
+  /** COMPANY_BOARDS only: "greenhouse:stripe", "lever:netflix", "ashby:ramp" or career page addresses. */
+  boards?: string[];
   titles: string[];
   skills?: string[];
   countryCodes?: string[];
@@ -212,6 +217,8 @@ export interface SyncJobsResult {
   /** ISO date-time the incremental run started from, or null on a first/full run. */
   newSince: string | null;
   resumed: boolean;
+  /** Things worth knowing, e.g. a company board that could not be read. */
+  warnings: string[];
 }
 
 /** A search to save: a name plus the import fields (everything but `resume`). */
@@ -242,6 +249,7 @@ export interface SavedSearch {
   id: number;
   name: string;
   source: ImportSource;
+  boards: string[];
   titles: string[];
   skills: string[];
   countryCodes: string[];

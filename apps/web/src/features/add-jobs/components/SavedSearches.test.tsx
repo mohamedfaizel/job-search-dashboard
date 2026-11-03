@@ -36,6 +36,50 @@ describe('SavedSearches', () => {
     expect(card.getByText(/Last run .*: 20 new, 5 already saved\./)).toBeInTheDocument();
   });
 
+  it('shows the companies of a career page search, and what could not be read', async () => {
+    server.use(
+      api.query('SavedSearches', () =>
+        HttpResponse.json({
+          data: {
+            savedSearches: [
+              {
+                ...SAVED,
+                source: 'COMPANY_BOARDS',
+                boards: ['greenhouse:stripe', 'lever:netflix'],
+              },
+            ],
+          },
+        }),
+      ),
+      api.mutation('RunSavedSearch', () =>
+        HttpResponse.json({
+          data: {
+            runSavedSearch: {
+              pages: 2,
+              fetched: 1,
+              created: 1,
+              updated: 0,
+              totalAvailable: null,
+              hasMore: false,
+              creditsRemaining: null,
+              creditsCharged: 0,
+              jobsAlreadyPaid: 0,
+              newSince: null,
+              resumed: false,
+              warnings: ['lever:netflix: 404 Not Found'],
+            },
+          },
+        }),
+      ),
+    );
+    const card = await renderCard();
+
+    expect(card.getByText('Career pages')).toBeInTheDocument();
+    expect(card.getByText(/greenhouse:stripe, lever:netflix · frontend/)).toBeInTheDocument();
+    await userEvent.click(card.getByRole('button', { name: 'Run now' }));
+    expect(await card.findByText('lever:netflix: 404 Not Found')).toBeInTheDocument();
+  });
+
   it('runs a search, then continues it when pages are left', async () => {
     const card = await renderCard();
 

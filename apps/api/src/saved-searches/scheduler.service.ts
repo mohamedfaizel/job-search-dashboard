@@ -72,9 +72,8 @@ export class SchedulerService {
       });
 
       const { used, cap } = await this.budget(now);
-      // The free German board has no credits to run out of.
-      const mostItCanCost =
-        search.source === 'ARBEITSAGENTUR' ? 0 : search.pageSize * search.maxPages;
+      // The free sources have no credits to run out of.
+      const mostItCanCost = search.source === 'JOBSPIPE' ? search.pageSize * search.maxPages : 0;
       if (used + mostItCanCost > cap) {
         await this.note(
           search.id,

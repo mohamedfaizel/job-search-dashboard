@@ -86,7 +86,7 @@ export function describeSearch(
     search.minSalaryEur === null ? '' : t('saved.minSalary', { amount: search.minSalaryEur }),
   ];
   const countries = search.countryCodes.map((code) => countryName(code, locale));
-  return [search.titles, search.skills, countries, search.locations]
+  return [search.boards, search.titles, search.skills, countries, search.locations]
     .filter((part) => part.length > 0)
     .map((part) => part.join(', '))
     .concat(extras.filter(Boolean))
@@ -102,7 +102,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
   const describe = useDescribeSearch();
   const [confirming, setConfirming] = useState(false);
   const last = search.lastRun;
-  const free = search.source === 'ARBEITSAGENTUR';
+  const free = search.source !== 'JOBSPIPE';
 
   return (
     <article
@@ -116,7 +116,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
           </h3>
           {free && (
             <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 ring-inset">
-              {t('saved.freeBadge')}
+              {t(search.source === 'COMPANY_BOARDS' ? 'saved.boardsBadge' : 'saved.freeBadge')}
             </span>
           )}
         </div>
@@ -230,16 +230,25 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
 function RunResult({ result, free }: { result: SyncJobsResult; free: boolean }) {
   const t = useTranslations('AddJobs');
   return (
-    <p role="status" className="rounded-md bg-emerald-50 p-2 text-sm text-emerald-800">
-      {result.resumed ? t('saved.continued') : t('saved.imported')}
-      {result.fetched === 0
-        ? t('saved.noNew')
-        : t('saved.counts', { created: result.created, updated: result.updated })}{' '}
-      {free
-        ? t('saved.free')
-        : t('saved.usedCredits', { credits: t('credits', { count: result.creditsCharged }) })}
-      {result.hasMore && t('saved.morePages')}
-    </p>
+    <div role="status" className="rounded-md bg-emerald-50 p-2 text-sm text-emerald-800">
+      <p>
+        {result.resumed ? t('saved.continued') : t('saved.imported')}
+        {result.fetched === 0
+          ? t('saved.noNew')
+          : t('saved.counts', { created: result.created, updated: result.updated })}{' '}
+        {free
+          ? t('saved.free')
+          : t('saved.usedCredits', { credits: t('credits', { count: result.creditsCharged }) })}
+        {result.hasMore && t('saved.morePages')}
+      </p>
+      {result.warnings.length > 0 && (
+        <ul className="mt-1 list-disc pl-5 text-amber-900">
+          {result.warnings.map((warning) => (
+            <li key={warning}>{warning}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

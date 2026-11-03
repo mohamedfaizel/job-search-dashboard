@@ -1,7 +1,8 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { renderWithData } from '../test/render';
-import { requests, SAVED } from '../test/server';
+import { api, requests, SAVED, server } from '../test/server';
 import { SyncPanel } from './SyncPanel';
 
 describe('SyncPanel', () => {
@@ -242,5 +243,101 @@ describe('SyncPanel', () => {
   it('opens a saved free search on the free board', () => {
     renderWithData(<SyncPanel loaded={{ ...SAVED, source: 'ARBEITSAGENTUR' }} />);
     expect(screen.getByRole('radio', { name: /Arbeitsagentur/ })).toBeChecked();
+  });
+
+  describe('company career pages', () => {
+    const pick = () => userEvent.click(screen.getByRole('radio', { name: /Company career pages/ }));
+
+    it('asks for the companies, hides what does not apply and sends them', async () => {
+      renderWithData(<SyncPanel />);
+      await pick();
+
+      expect(
+        screen.getByRole('heading', { name: 'Import from company career pages' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByLabelText(/^skills/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: 'Countries' })).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Jobs per page')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Max pages')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/only jobs new since/i)).not.toBeInTheDocument();
+
+      await userEvent.type(
+        screen.getByRole('textbox', { name: /^company career pages/i }),
+        'greenhouse:stripe, https://jobs.lever.co/netflix  ashby:ramp',
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Import' }));
+
+      expect(await screen.findByRole('status')).toHaveTextContent('Free: no credits used.');
+      expect(requests[0]?.variables).toEqual({
+        input: {
+          source: 'COMPANY_BOARDS',
+          boards: ['greenhouse:stripe', 'https://jobs.lever.co/netflix', 'ashby:ramp'],
+          titles: ['frontend'],
+          maxAgeDays: 7,
+          pageSize: 25,
+          maxPages: 1,
+          onlyNew: true,
+        },
+      });
+    });
+
+    it('needs at least one company', async () => {
+      renderWithData(<SyncPanel />);
+      await pick();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Import' }));
+
+      expect(
+        await screen.findByText('Add at least one company board, like greenhouse:stripe'),
+      ).toBeInTheDocument();
+      expect(requests).toHaveLength(0);
+    });
+
+    it('lists the boards that could not be read', async () => {
+      server.use(
+        api.mutation('SyncJobs', () =>
+          HttpResponse.json({
+            data: {
+              syncJobs: {
+                pages: 2,
+                fetched: 1,
+                created: 1,
+                updated: 0,
+                totalAvailable: null,
+                hasMore: false,
+                creditsRemaining: null,
+                creditsCharged: 0,
+                jobsAlreadyPaid: 0,
+                newSince: null,
+                resumed: false,
+                warnings: ['greenhouse:gone: 404 Not Found'],
+              },
+            },
+          }),
+        ),
+      );
+      renderWithData(<SyncPanel />);
+      await pick();
+      await userEvent.type(
+        screen.getByRole('textbox', { name: /^company career pages/i }),
+        'greenhouse:gone',
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'Import' }));
+
+      const status = await screen.findByRole('status');
+      expect(status).toHaveTextContent('Some things to know:');
+      expect(status).toHaveTextContent('greenhouse:gone: 404 Not Found');
+    });
+
+    it('opens a saved search with its companies', () => {
+      renderWithData(
+        <SyncPanel loaded={{ ...SAVED, source: 'COMPANY_BOARDS', boards: ['lever:netflix'] }} />,
+      );
+      expect(screen.getByRole('radio', { name: /Company career pages/ })).toBeChecked();
+      expect(screen.getByRole('textbox', { name: /^company career pages/i })).toHaveValue(
+        'lever:netflix',
+      );
+    });
   });
 });

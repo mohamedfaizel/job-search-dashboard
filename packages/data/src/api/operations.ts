@@ -168,6 +168,7 @@ const SYNC_RESULT_FIELDS = /* GraphQL */ `
   jobsAlreadyPaid
   newSince
   resumed
+  warnings
 `;
 
 export const SYNC_JOBS = /* GraphQL */ `
@@ -198,6 +199,7 @@ const SAVED_SEARCH_FIELDS = /* GraphQL */ `
   id
   name
   source
+  boards
   titles
   skills
   countryCodes
