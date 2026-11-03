@@ -56,6 +56,9 @@ function queueItem(jobId: string): ApplyQueueItem | null {
 const numbered = () => applyQueue.map((item, i) => ({ ...item, number: i + 1 }));
 
 /** Insights for a job when the user has a resume: some skills found, some missing. */
+/** The review prompt the server gives once a reply is saved. */
+export const REVIEW_PROMPT = 'Please review my application as the hiring manager would.';
+
 export const INSIGHTS: JobInsights = {
   jobId: 'job-1',
   title: 'Senior Frontend Engineer',
@@ -83,6 +86,7 @@ export const INSIGHTS: JobInsights = {
   score: 50,
   jobResume: null,
   prompt: 'Please tailor my resume for this job.\n- graphql',
+  reviewPrompt: null,
   interviewPrompt: 'Please prepare me for an interview.\n- graphql',
   interviewPrep: null,
 };
@@ -122,11 +126,18 @@ function insightsNow(): JobInsights {
   });
   const skills = INSIGHTS.skills.map(mark);
   const keywords = INSIGHTS.keywords.map(mark);
+  const reviewPrompt = jobResume.current ? REVIEW_PROMPT : null;
   if (removedTerms.length === 0 && haveTerms.length === 0)
-    return { ...INSIGHTS, jobResume: jobResume.current, interviewPrep: interviewPrep.current };
+    return {
+      ...INSIGHTS,
+      jobResume: jobResume.current,
+      reviewPrompt,
+      interviewPrep: interviewPrep.current,
+    };
   return {
     ...INSIGHTS,
     jobResume: jobResume.current,
+    reviewPrompt,
     interviewPrep: interviewPrep.current,
     skills: skills.filter(kept),
     keywords: keywords.filter(kept),

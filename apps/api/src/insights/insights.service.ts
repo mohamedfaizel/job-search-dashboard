@@ -24,6 +24,7 @@ import {
   applicationFacts,
   buildQueuePrompt,
   buildResumePrompt,
+  buildReviewPrompt,
   QUEUE_PROMPT_MAX,
   splitQueueReply,
   splitReply,
@@ -214,6 +215,13 @@ export class InsightsService {
       score: before.score,
       jobResume: jobResume && this.afterScore(jobResume, terms, before, factSources),
       prompt: buildResumePrompt(promptInput),
+      reviewPrompt: jobResume?.text.trim()
+        ? buildReviewPrompt(promptInput, {
+            resume: jobResume.text,
+            coverLetter: jobResume.coverLetter,
+            formAnswers: jobResume.formAnswers,
+          })
+        : null,
       interviewPrompt: buildInterviewPrompt(promptInput),
       interviewPrep,
     };

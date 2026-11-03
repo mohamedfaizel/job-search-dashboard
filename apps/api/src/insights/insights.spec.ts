@@ -6,6 +6,7 @@ import { parseLine, pdfFileName, textToPdf, toWinAnsi } from './pdf';
 import {
   applicationFacts,
   buildResumePrompt,
+  buildReviewPrompt,
   splitReply,
   buildQueuePrompt,
   splitQueueReply,
@@ -310,8 +311,41 @@ describe('buildResumePrompt', () => {
     expect(prompt).toContain('- microfrontends');
     expect(prompt).toContain('React developer since 2019.');
     expect(prompt).toContain('Never invent');
-    expect(prompt).toContain('Goal: use at least 85%');
-    expect(prompt).toContain('Up to three pages');
+    expect(prompt).toContain('Goal: a resume a hiring manager believes');
+    expect(prompt).toContain('At most two pages');
+    expect(prompt).not.toContain('85%');
+  });
+
+  it('asks for ATS-safe dates and bans clichés and em dashes', () => {
+    const prompt = buildResumePrompt(input);
+    expect(prompt).toContain('City | MM/YYYY - MM/YYYY');
+    expect(prompt).not.toMatch(/MM\/YYYY [–—]/);
+    expect(prompt).toContain('a plain hyphen (-) between start and end');
+    expect(prompt).toContain('Banned words and phrases: passionate, leverage');
+    expect(prompt).toContain('No em dashes');
+    expect(prompt).toContain('Interview test:');
+    expect(prompt).toContain('- Stretches:');
+  });
+
+  it('builds a review prompt that checks the draft against your own resume', () => {
+    const prompt = buildReviewPrompt(input, {
+      resume: '# Jane\n## Experience\n### Dev | Acme',
+      coverLetter: 'Dear team,',
+      formAnswers: 'Why Acme: products.',
+    });
+    expect(prompt).toContain('as the hiring manager for this job would');
+    expect(prompt).toContain('Keep everything in German.');
+    expect(prompt).toContain('React developer since 2019.');
+    expect(prompt).toContain('# Jane');
+    expect(prompt).toContain('Dear team,');
+    expect(prompt).toContain('Why Acme: products.');
+    expect(prompt).toContain('=== RESUME ===');
+    expect(prompt).toContain('- Removed:');
+    // Its reply goes through the same paste box, so it splits like an Apply kit reply.
+    const reply = splitReply(
+      '=== RESUME ===\nNew\n=== COVER LETTER ===\nHi\n=== FORM ANSWERS ===\nQ: A\n=== CHECK ===\n- Changes: x',
+    );
+    expect(reply).toEqual({ resume: 'New', coverLetter: 'Hi', formAnswers: 'Q: A' });
   });
 
   it('lets Claude use related terms and the skills on your profile', () => {
@@ -340,13 +374,13 @@ describe('buildResumePrompt', () => {
     expect(prompt).toContain('- Skipped:');
   });
 
-  it('asks for as many job-ad keywords as possible, as natural words', () => {
+  it('asks for the job-ad keywords that truly fit, as natural words', () => {
     const prompt = buildResumePrompt(input);
     expect(prompt).toContain(
-      'Keywords from the job ad that my resume does not use yet (use as many as you honestly can, as natural words, see rule 3):',
+      'Keywords from the job ad that my resume does not use yet (use the ones that truly fit, as natural words, see rule 3):',
     );
-    expect(prompt).toContain("in the ad's exact wording");
-    expect(prompt).toContain('Never stuff them into a list');
+    expect(prompt).toContain("use the ad's exact word where it means the same");
+    expect(prompt).toContain('Never use a keyword only to raise a score');
   });
 
   it('tells Claude the skills you said you have must be in the resume', () => {

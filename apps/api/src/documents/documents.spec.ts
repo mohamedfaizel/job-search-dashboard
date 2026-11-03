@@ -4,7 +4,7 @@ import { textToPdf } from '../insights/pdf';
 import { cityOf } from './documents.service';
 import { contactItem, esc, inline } from './latex';
 import { cleanPdf } from './pdf-metadata';
-import { letterParagraphs, parseResume } from './resume-doc';
+import { asciiDates, letterParagraphs, parseResume } from './resume-doc';
 import { coverLetterTex, hexColor, letterDate, resumeTex } from './templates';
 
 const RESUME = `\`\`\`markdown
@@ -48,7 +48,7 @@ describe('parseResume', () => {
       kind: 'entry',
       title: 'Senior Frontend Engineer',
       org: 'Wayne GmbH',
-      meta: 'Aachen | 01/2021 – heute',
+      meta: 'Aachen | 01/2021 - heute',
       bullets: ['Built a dashboard used by 40 teams.'],
       lines: [],
     });
@@ -70,6 +70,24 @@ describe('parseResume', () => {
         ],
       },
     ]);
+  });
+});
+
+describe('asciiDates', () => {
+  it('puts a plain hyphen in date ranges, so ATS imports keep the end date', () => {
+    expect(asciiDates('Berlin | 01/2019 – 02/2022')).toBe('Berlin | 01/2019 - 02/2022');
+    expect(asciiDates('2016—2024')).toBe('2016 - 2024');
+    expect(asciiDates('03/2022 – today')).toBe('03/2022 - today');
+    expect(asciiDates('EUR 600k–1M')).toBe('EUR 600k–1M');
+  });
+
+  it('is used for the date line of each entry', () => {
+    const doc = parseResume(
+      '# Jane\n## Experience\n### Dev | Acme\nBerlin | 01/2019 – 02/2022',
+      'x',
+    );
+    const entry = doc.sections[0]?.blocks[0];
+    expect(entry?.kind === 'entry' && entry.meta).toBe('Berlin | 01/2019 - 02/2022');
   });
 });
 
