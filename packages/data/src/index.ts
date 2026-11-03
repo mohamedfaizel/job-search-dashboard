@@ -21,6 +21,7 @@ export {
   applyQueuePromptKey,
   useApplyQueue,
   useApplyQueuePrompt,
+  useCheckResumePdf,
   useChangeApplyQueue,
   useMoveInApplyQueue,
   useSaveApplyQueueReply,

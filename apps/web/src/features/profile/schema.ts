@@ -59,6 +59,7 @@ export function profileSchema(t: ErrorText) {
     workplacePreference: text(100),
     drivingLicence: text(100),
     applicationNotes: text(5_000),
+    achievements: text(10_000),
     customFields: z
       .array(
         z
@@ -115,6 +116,7 @@ export function profileToForm(profile: Profile, accountName = ''): ProfileFormVa
     workplacePreference: profile.workplacePreference,
     drivingLicence: profile.drivingLicence,
     applicationNotes: profile.applicationNotes,
+    achievements: profile.achievements,
     customFields: profile.customFields.map((f) => ({ label: f.label, value: f.value })),
   };
 }
@@ -148,6 +150,7 @@ export function toProfileInput(values: ProfileFormValues): ProfileInput {
     workplacePreference: values.workplacePreference,
     drivingLicence: values.drivingLicence,
     applicationNotes: values.applicationNotes,
+    achievements: values.achievements,
     // Rows left empty are dropped.
     customFields: values.customFields.filter((f) => f.label.trim() || f.value.trim()),
   };

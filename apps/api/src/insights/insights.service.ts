@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { apiError } from '../common/api-error';
+import { DocumentsService } from '../documents/documents.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from '../profile/custom-fields';
 import { tidy } from '../profile/resume-text';
@@ -15,12 +16,15 @@ import { germanRequirement } from './german';
 import type {
   JobInsightsModel,
   JobResumeModel,
+  PdfCheckModel,
   RemovedTermModel,
   TermCheckModel,
 } from './insights.model';
 import { buildInterviewPrompt } from './interview-prompt';
+import { checkPdf, readPdf } from './pdf-check';
 import type { PromptInput } from './prompt';
 import {
+  achievementLines,
   applicationFacts,
   buildQueuePrompt,
   buildResumePrompt,
@@ -31,7 +35,7 @@ import {
 } from './prompt';
 import type { ResumeCheck } from './score';
 import { checkResume } from './score';
-import { relatedTo } from './skills';
+import { mentions, relatedTo } from './skills';
 import { jobTerms } from './terms';
 
 /** Longer than any real resume, short enough to keep junk out. */
@@ -51,6 +55,7 @@ export class InsightsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly corpora: CorpusService,
+    private readonly documents: DocumentsService,
   ) {}
 
   async forJob(userId: number, jobId: string): Promise<JobInsightsModel> {
@@ -91,6 +96,7 @@ export class InsightsService {
             salaryExpectation: true,
             relocation: true,
             applicationNotes: true,
+            achievements: true,
           },
         }),
         this.prisma.removedTerm.findMany({
@@ -179,6 +185,7 @@ export class InsightsService {
       description: job.description,
       facts: applicationFacts(profile),
       savedAnswers: profile?.applicationNotes ?? '',
+      achievements: achievementLines(profile?.achievements ?? ''),
     };
     // What you have told us about yourself: the fact check looks for anything beyond it.
     const factTexts = [resumes.text, ...resumes.others.values()];
@@ -187,6 +194,7 @@ export class InsightsService {
           sources: [
             ...factTexts,
             ...otherSkills,
+            profile?.achievements ?? '',
             ...(profile?.languages ?? []),
             profile?.headline ?? '',
             profile?.yearsExperience ? `${String(profile.yearsExperience)} years` : '',
@@ -321,6 +329,45 @@ export class InsightsService {
       update: data,
     });
     return this.forJob(userId, jobId);
+  }
+
+  /**
+   * Makes the resume PDF for a job in your template (or `template`) and checks what an ATS reads
+   * from it: page count, readable text with your name and e-mail, plain dates, no broken
+   * characters, and every job skill your resume names still in the text.
+   */
+  async pdfCheck(userId: number, jobId: string, template?: string): Promise<PdfCheckModel> {
+    const [{ insights }, row, user, style] = await Promise.all([
+      this.analyse(userId, jobId),
+      this.prisma.jobResume.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { text: true },
+      }),
+      this.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { name: true, email: true, profile: { select: { yearsExperience: true } } },
+      }),
+      this.prisma.documentStyle.findUnique({
+        where: { userId },
+        select: { resumeTemplate: true },
+      }),
+    ]);
+    const file = await this.documents.jobPdf(userId, jobId, 'resume', template);
+    const { text, pages } = await readPdf(new Uint8Array(file.bytes));
+    const years = user.profile?.yearsExperience;
+    const resumeText = row?.text ?? '';
+    return {
+      jobId,
+      template: template ?? style?.resumeTemplate ?? 'classic',
+      items: checkPdf({
+        text,
+        pages,
+        name: user.name,
+        email: user.email,
+        maxPages: years != null && years < 3 ? 1 : 2,
+        skills: insights.skills.map((s) => s.term).filter((term) => mentions(resumeText, term)),
+      }),
+    };
   }
 
   /** Deletes the resume you wrote for a job. Deleting again does nothing. */

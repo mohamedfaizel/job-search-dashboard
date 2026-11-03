@@ -355,6 +355,8 @@ export interface Profile {
   drivingLicence: string;
   /** Short answers you reuse on applications, as free text. */
   applicationNotes: string;
+  /** Your achievements bank: true facts with numbers, one per line. */
+  achievements: string;
   /** Your own fields for anything else forms ask. */
   customFields: ProfileField[];
   /** Null until the profile is first saved. */
@@ -540,6 +542,20 @@ export interface FactFinding {
   where: 'RESUME' | 'COVER_LETTER';
   /** The line it is in, shortened. */
   context: string;
+}
+
+/** One check of the finished resume PDF, read the way an ATS reads it. */
+export interface PdfCheckItem {
+  code: 'PAGES' | 'TEXT' | 'EMAIL' | 'DATES' | 'CHARACTERS' | 'SKILLS';
+  ok: boolean;
+  /** "pages/limit" for PAGES, the word count for TEXT, your e-mail for EMAIL, else what is wrong. */
+  detail: string;
+}
+
+export interface PdfCheck {
+  jobId: string;
+  template: string;
+  items: PdfCheckItem[];
 }
 
 export interface RemovedTerm {

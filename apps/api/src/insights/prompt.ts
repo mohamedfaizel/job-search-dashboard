@@ -24,6 +24,23 @@ export interface PromptInput {
   facts: string[];
   /** Short answers you reuse on applications (free text from My profile). */
   savedAnswers: string;
+  /** Your achievements bank from My profile: true facts with numbers, one per line. */
+  achievements: string[];
+}
+
+/** The lines of your achievements bank, without list marks or empty lines. */
+export function achievementLines(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*(?:[-*•–]|\d+[.)])\s+/, '').trim())
+    .filter(Boolean);
+}
+
+/** Your achievements bank as a prompt part, or nothing when it is empty. */
+export function achievementsPart(achievements: string[]): string {
+  return achievements.length
+    ? `\n\nMy achievements bank (true facts, with their real numbers). Use the ones that fit this job, in the right job of my resume, and never change a number:\n${list(achievements)}`
+    : '';
 }
 
 /** The marker lines Claude is asked to put between the parts of its reply, in this order. */
@@ -147,7 +164,7 @@ Keywords from the job ad that my resume does not use yet (use the ones that trul
 ${list(input.missingKeywords)}${mustAddPart(input.mustAdd)}
 
 Other skills I have (not all of them are in my resume):
-${list(input.otherSkills)}
+${list(input.otherSkills)}${achievementsPart(input.achievements)}
 
 ${TERM_RULES}
 
@@ -210,7 +227,7 @@ export function buildReviewPrompt(input: PromptInput, draft: DraftReply): string
   return `Please review my application for ${input.title} at ${input.company}${where} as the hiring manager for this job would, then fix it.
 
 Do these checks, in order:
-1. Facts: compare every employer, title, date, degree, number and skill in the draft with my own resume and my other skills below. Anything they do not support must go, or be rewritten to what they do support.
+1. Facts: compare every employer, title, date, degree, number and skill in the draft with my own resume, my other skills and my achievements below. Anything they do not support must go, or be rewritten to what they do support.
 2. Requirements: list the job ad's must-have requirements and check each one is shown in the draft where my experience really covers it.
 3. Hiring manager's eye: would you believe each line? Is the summary specific to this role? Do the first lines show proof for the ad's most important needs? Is anything vague, repeated, generic or a cliché?
 4. Rules: check the draft follows every rule below (writing, keywords, layout, dates, length, languages). Fix whatever does not.
@@ -231,7 +248,7 @@ ${source}
 """
 
 Other skills I have:
-${list(input.otherSkills)}
+${list(input.otherSkills)}${achievementsPart(input.achievements)}
 
 My application facts:
 ${list(input.facts)}
@@ -398,7 +415,7 @@ ${coverAndAnswers('the company')}
 ${resumeBlocks}
 
 Other skills I have (not all of them are in my resume):
-${list(first.otherSkills)}
+${list(first.otherSkills)}${achievementsPart(first.achievements)}
 
 My application facts:
 ${list(first.facts)}${savedAnswers}

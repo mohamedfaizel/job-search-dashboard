@@ -3,7 +3,7 @@ import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
 import { ApplyQueueItemModel, ApplyQueuePromptModel, QueueDirection } from './apply-queue';
 import { FitService } from './fit.service';
-import { JobInsightsModel } from './insights.model';
+import { JobInsightsModel, PdfCheckModel } from './insights.model';
 import { InsightsService } from './insights.service';
 
 @Resolver()
@@ -30,6 +30,18 @@ export class InsightsResolver {
     @Args('jobId', { type: () => ID }) jobId: string,
   ): Promise<JobInsightsModel> {
     return this.insights.forJob(user.id, jobId);
+  }
+
+  @Query(() => PdfCheckModel, {
+    description:
+      'Makes the resume PDF saved for a job and checks it the way an ATS reads it: pages, text, e-mail, dates, characters and skills',
+  })
+  resumePdfCheck(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('template', { type: () => String, nullable: true }) template?: string | null,
+  ): Promise<PdfCheckModel> {
+    return this.insights.pdfCheck(user.id, jobId, template ?? undefined);
   }
 
   @Mutation(() => JobInsightsModel, {

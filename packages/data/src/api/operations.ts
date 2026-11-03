@@ -367,6 +367,7 @@ const PROFILE_FIELDS = /* GraphQL */ `
   workplacePreference
   drivingLicence
   applicationNotes
+  achievements
   customFields {
     label
     value
@@ -869,5 +870,19 @@ export const APPROVE_MAIL_SUGGESTION = /* GraphQL */ `
 export const DISMISS_MAIL_SUGGESTION = /* GraphQL */ `
   mutation DismissMailSuggestion($id: Int!) {
     dismissMailSuggestion(id: $id)
+  }
+`;
+
+export const RESUME_PDF_CHECK = /* GraphQL */ `
+  query ResumePdfCheck($jobId: ID!, $template: String) {
+    resumePdfCheck(jobId: $jobId, template: $template) {
+      jobId
+      template
+      items {
+        code
+        ok
+        detail
+      }
+    }
   }
 `;

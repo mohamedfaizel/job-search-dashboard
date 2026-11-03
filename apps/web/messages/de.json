@@ -156,7 +156,10 @@
       "lastUpload": "Zuletzt hochgeladen: {file}",
       "uploadHint": "Bis 5 MB. Eingescannte Bilder können nicht gelesen werden.",
       "read": "Lebenslauf gelesen. Den Text unten verwenden wir; korrigiere, was falsch erkannt wurde.",
-      "tooBig": "Die Datei ist größer als 5 MB."
+      "tooBig": "Die Datei ist größer als 5 MB.",
+      "achievements": "Erfolge-Sammlung",
+      "achievementsHint": "Ein wahrer Erfolg pro Zeile, mit echten Zahlen. Claude darf sie in jedem angepassten Lebenslauf nutzen, und die Faktenprüfung vertraut ihnen.",
+      "achievementsExample": "Ladezeit bei Acme um 40 % gesenkt (2023)\nTeam von 4 Entwicklern beim Checkout-Redesign geleitet"
     },
     "save": "Profil speichern",
     "saving": "Wird gespeichert…",
@@ -837,7 +840,31 @@
       "saved": "gespeichert am {date}",
       "replace": "Ersetzen",
       "delete": "Löschen",
-      "deleteError": "Konnte nicht gelöscht werden: {error}"
+      "deleteError": "Konnte nicht gelöscht werden: {error}",
+      "pdfTitle": "PDF-Prüfung",
+      "pdfIntro": "Liest das fertige PDF wie ein ATS, nur aus dem Text: Seiten, Name und E-Mail, Daten, seltsame Zeichen und Skills.",
+      "pdfRun": "PDF prüfen",
+      "pdfAgain": "Erneut prüfen",
+      "pdfChecking": "PDF wird erstellt und gelesen…",
+      "pdfAllOk": "Alles gut: ein ATS liest dieses PDF richtig.",
+      "pdfProblems": "{count, plural, one {# Punkt} other {# Punkte}} zu beheben",
+      "pdfError": "Das PDF konnte nicht geprüft werden: {error}",
+      "pdfOk": {
+        "PAGES": "{pages, plural, one {# Seite} other {# Seiten}} (Grenze {limit})",
+        "TEXT": "Der Text ist lesbar ({detail} Wörter), mit deinem Namen",
+        "EMAIL": "Deine E-Mail ist lesbarer Text: {detail}",
+        "DATES": "Datumsangaben mit einfachem Bindestrich",
+        "CHARACTERS": "Keine kaputten Zeichen oder Icons",
+        "SKILLS": "Jeder Job-Skill aus deinem Lebenslauf steht im PDF-Text"
+      },
+      "pdfBad": {
+        "PAGES": "{pages, plural, one {# Seite} other {# Seiten}}: höchstens {limit}. Bitte Claude, ihn zu kürzen, oder wähle eine kompakte Vorlage.",
+        "TEXT": "Kaum lesbarer Text ({detail} Wörter) oder dein Name fehlt: ein ATS sieht vielleicht einen leeren Lebenslauf.",
+        "EMAIL": "Deine E-Mail {detail} ist nicht als Text lesbar. Schreib sie als einfachen Text in den Kopf.",
+        "DATES": "Lange Striche in Datumsangaben ({detail}): manche ATS lesen sie falsch. Nutze 01/2020 - 03/2023.",
+        "CHARACTERS": "Zeichen, die ein ATS nicht lesen kann ({detail}): Ligaturen oder Icons.",
+        "SKILLS": "Im PDF-Text verloren: {detail}"
+      }
     },
     "stillOpen": {
       "never": "Noch nicht geprüft, ob die Anzeige noch online ist",

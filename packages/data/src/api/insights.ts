@@ -13,13 +13,14 @@ import {
   MOVE_IN_APPLY_QUEUE,
   REMOVE_FROM_APPLY_QUEUE,
   REMOVE_INSIGHT_TERM,
+  RESUME_PDF_CHECK,
   RESTORE_INSIGHT_TERM,
   SAVE_APPLY_QUEUE_REPLY,
   SAVE_INTERVIEW_PREP,
   SAVE_JOB_RESUME_TEXT,
   SET_HAVE_TERM,
 } from './operations';
-import type { ApplyQueueItem, ApplyQueuePrompt, JobInsights } from './types';
+import type { ApplyQueueItem, ApplyQueuePrompt, JobInsights, PdfCheck } from './types';
 
 /** All insights share this prefix, so a new resume can refresh every job's at once. */
 export const jobInsightsPrefix = ['insights'] as const;
@@ -326,6 +327,22 @@ export function useDeleteJobResume() {
     },
     onSuccess: (insights) => {
       savedReply(queryClient, insights);
+    },
+  });
+}
+
+/**
+ * Makes the resume PDF for a job (in `template`, or your default) and checks what an ATS reads
+ * from it. A mutation hook because it runs when you press the button: it typesets a PDF.
+ */
+export function useCheckResumePdf() {
+  return useMutation({
+    mutationFn: async ({ jobId, template }: { jobId: string; template?: string | null }) => {
+      const data = await graphqlClient.request<{ resumePdfCheck: PdfCheck }>(RESUME_PDF_CHECK, {
+        jobId,
+        template: template ?? null,
+      });
+      return data.resumePdfCheck;
     },
   });
 }

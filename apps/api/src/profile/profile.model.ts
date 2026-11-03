@@ -131,6 +131,12 @@ export class ProfileModel {
   @Field({ description: 'Short answers you reuse on applications, as free text' })
   applicationNotes!: string;
 
+  @Field({
+    description:
+      'Your achievements bank: true facts with numbers, one per line. Resume prompts may use them and the fact check trusts them',
+  })
+  achievements!: string;
+
   @Field(() => [ProfileFieldModel], { description: 'Your own fields, in your order' })
   customFields!: ProfileFieldModel[];
 
@@ -316,6 +322,12 @@ export class ProfileInput {
   @IsString()
   @MaxLength(5_000, { message: 'Keep your saved answers under 5,000 characters' })
   applicationNotes: string = '';
+
+  @Field({ defaultValue: '' })
+  @Transform(trim)
+  @IsString()
+  @MaxLength(10_000, { message: 'Keep your achievements under 10,000 characters' })
+  achievements: string = '';
 
   @Field({ defaultValue: '' })
   @Transform(trim)

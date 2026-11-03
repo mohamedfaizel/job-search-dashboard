@@ -350,6 +350,27 @@ describe('resume and cover letter templates', () => {
     expect(deleted.data!.deleteMyDesign).toEqual({ resumeTemplate: 'classic', myDesign: null });
   });
 
+  it('checks the finished PDF the way an ATS reads it', async () => {
+    const CHECK = `query ($jobId: ID!, $template: String) { resumePdfCheck(jobId: $jobId, template: $template) { template items { code ok detail } } }`;
+    // The plain PDF (LaTeX failed) has a real text layer to read.
+    renderFails = true;
+    const res = await t.asUser<{
+      resumePdfCheck: { template: string; items: { code: string; ok: boolean; detail: string }[] };
+    }>(CHECK, { jobId, template: 'compact' });
+    expect(res.errors).toBeUndefined();
+    expect(res.data!.resumePdfCheck.template).toBe('compact');
+    const items = Object.fromEntries(res.data!.resumePdfCheck.items.map((i) => [i.code, i]));
+    expect(items['PAGES']).toEqual({ code: 'PAGES', ok: true, detail: '1/2' });
+    expect(items['DATES']?.ok).toBe(true);
+    expect(items['CHARACTERS']?.ok).toBe(true);
+    // A short test resume: too few words for an ATS to trust.
+    expect(items['TEXT']?.ok).toBe(false);
+    expect(rendered[0]?.tex).toBeTruthy();
+
+    const none = await t.gql(CHECK, { jobId });
+    expect(none.errors?.[0]?.message).toContain('No resume saved');
+  });
+
   it('shows a sample in any template, to compare them', async () => {
     const res = await pdf('/documents/preview/resume.pdf?template=compact&accent=AA3300').expect(
       200,

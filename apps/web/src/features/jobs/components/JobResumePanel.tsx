@@ -1,6 +1,7 @@
-import type { FactFinding, JobInsights } from '@jobsearch/data';
+import type { FactFinding, JobInsights, PdfCheckItem } from '@jobsearch/data';
 import {
   jobResumeUrl,
+  useCheckResumePdf,
   useDeleteJobResume,
   useSaveJobResumeText,
   useDocumentStyle,
@@ -299,6 +300,79 @@ export function FactCheck({ findings }: { findings: FactFinding[] | null }) {
   );
 }
 
+const PDF_CHECKS = ['PAGES', 'TEXT', 'EMAIL', 'DATES', 'CHARACTERS', 'SKILLS'] as const;
+
+/**
+ * Checks the finished PDF the way an ATS reads it: only its text. Runs when you press the
+ * button, because it typesets the PDF first.
+ */
+export function PdfCheck({ jobId, template }: { jobId: string; template: string }) {
+  const t = useTranslations('Jobs.reply');
+  const errorText = useErrorText();
+  const check = useCheckResumePdf();
+  const result = check.data?.template === template ? check.data : null;
+  const line = (item: PdfCheckItem) => {
+    const [pages = '', limit = ''] = item.detail.split('/');
+    const values = { detail: item.detail, pages, limit };
+    return t(item.ok ? `pdfOk.${item.code}` : `pdfBad.${item.code}`, values);
+  };
+  const problems = result?.items.filter((item) => !item.ok).length ?? 0;
+  return (
+    <section
+      aria-label={t('pdfTitle')}
+      className="space-y-2 rounded-xl border border-slate-200 bg-white px-4 py-3"
+    >
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h3 className="text-sm font-semibold text-slate-900">{t('pdfTitle')}</h3>
+        <button
+          type="button"
+          className={BUTTON}
+          disabled={check.isPending}
+          onClick={() => {
+            check.mutate({ jobId, template });
+          }}
+        >
+          {check.isPending ? t('pdfChecking') : result ? t('pdfAgain') : t('pdfRun')}
+        </button>
+        {result && (
+          <span
+            role="status"
+            className={`text-sm ${problems ? 'text-amber-800' : 'text-emerald-700'}`}
+          >
+            {problems ? t('pdfProblems', { count: problems }) : t('pdfAllOk')}
+          </span>
+        )}
+      </div>
+      {!result && !check.isPending && <p className="text-xs text-slate-600">{t('pdfIntro')}</p>}
+      {check.error && (
+        <p role="alert" className="text-sm text-red-700">
+          {t('pdfError', { error: errorText(check.error) })}
+        </p>
+      )}
+      {result && (
+        <ul className="space-y-1" aria-label={t('pdfTitle')}>
+          {PDF_CHECKS.map((code) => result.items.find((item) => item.code === code))
+            .filter((item): item is PdfCheckItem => item !== undefined)
+            .map((item) => (
+              <li
+                key={item.code}
+                className={`flex gap-2 text-sm ${item.ok ? 'text-slate-700' : 'text-amber-900'}`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={item.ok ? 'text-emerald-600' : 'text-amber-600'}
+                >
+                  {item.ok ? '✓' : '!'}
+                </span>
+                <span>{line(item)}</span>
+              </li>
+            ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 /**
  * The reply you saved for this job: the resume scored next to your master resume (before and
  * after), the files to attach, and the cover letter and form answers to copy.
@@ -465,6 +539,8 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
           </FileRow>
         )}
       </div>
+
+      <PdfCheck key={jobResume.updatedAt} jobId={jobId} template={chosen} />
 
       <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
         {jobResume.coverLetter && (
