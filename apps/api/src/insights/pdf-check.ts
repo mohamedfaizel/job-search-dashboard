@@ -6,7 +6,7 @@ import { mentions } from './skills';
  * ai-job-search's verify_pdf step.
  */
 export type PdfCheckCode =
-  'PAGES' | 'TEXT' | 'EMAIL' | 'DATES' | 'CHARACTERS' | 'PLACEHOLDERS' | 'SKILLS';
+  'PAGES' | 'TEXT' | 'NAME' | 'EMAIL' | 'DATES' | 'CHARACTERS' | 'PLACEHOLDERS' | 'SKILLS';
 
 export interface PdfCheckItem {
   code: PdfCheckCode;
@@ -19,10 +19,11 @@ export interface PdfCheckInput {
   /** The text an ATS gets out of the PDF. */
   text: string;
   pages: number;
-  /** Your name and e-mail as on your account: both must be readable text. */
+  /** The name at the top of the resume: it must be readable text. */
   name: string;
-  email: string;
-  /** 1 page under three years of experience, else 2. */
+  /** The e-mail addresses in the resume's contact line: each must be readable text. */
+  emails: string[];
+  /** Your page limit from My profile. */
   maxPages: number;
   /** Job skills the resume text names: each must still be in the PDF's text. */
   skills: string[];
@@ -63,7 +64,9 @@ export function checkPdf(input: PdfCheckInput): PdfCheckItem[] {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   const name = input.name.trim();
   const nameFound = !name || squash(text).includes(squash(name));
-  const email = input.email.trim().toLowerCase();
+  const unreadable = input.emails
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e && !squash(text).includes(e));
   const dashDates = unique([...text.matchAll(LONG_DASH_DATE)].map((m) => m[0]));
   const badCharacters = unique([...text.matchAll(BAD_CHARACTERS)].map((m) => m[0]));
   const placeholders = unique([...text.matchAll(PLACEHOLDER)].map((m) => m[0]));
@@ -76,8 +79,13 @@ export function checkPdf(input: PdfCheckInput): PdfCheckItem[] {
       detail: `${String(pages)}/${String(maxPages)}`,
     },
     // A scanned or image-only PDF has (almost) no text: an ATS sees an empty resume.
-    { code: 'TEXT', ok: words >= 80 && nameFound, detail: String(words) },
-    { code: 'EMAIL', ok: !email || squash(text).includes(email), detail: email },
+    { code: 'TEXT', ok: words >= 80, detail: String(words) },
+    { code: 'NAME', ok: nameFound, detail: name },
+    {
+      code: 'EMAIL',
+      ok: unreadable.length === 0,
+      detail: (unreadable.length ? unreadable : input.emails).join(', '),
+    },
     { code: 'DATES', ok: dashDates.length === 0, detail: dashDates.slice(0, 3).join(', ') },
     {
       code: 'CHARACTERS',

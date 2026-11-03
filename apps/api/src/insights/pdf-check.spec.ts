@@ -9,7 +9,7 @@ const base = {
   text: `User Example\nuser@example.com\nFrontend Engineer | Acme\n01/2020 - today\nReact, GraphQL\n${words(100)}`,
   pages: 1,
   name: 'User Example',
-  email: 'user@example.com',
+  emails: ['user@example.com'],
   maxPages: 2,
   skills: ['react', 'graphql'],
 };
@@ -40,9 +40,35 @@ describe('PDF check', () => {
     ]);
   });
 
+  it('checks the name and e-mail the resume itself uses, not the account ones', () => {
+    const text = `MOHAMED EXAMPLE M\nme.js @ example.com\n${words(100)}`;
+    expect(
+      failing({
+        ...base,
+        text,
+        name: 'Mohamed Example M',
+        emails: ['me.js@example.com'],
+        skills: [],
+      }),
+    ).toEqual([]);
+    expect(
+      failing({
+        ...base,
+        text,
+        name: 'Mohamed Example Abdullah',
+        emails: ['other@example.com'],
+        skills: [],
+      }),
+    ).toEqual([
+      ['NAME', 'Mohamed Example Abdullah'],
+      ['EMAIL', 'other@example.com'],
+    ]);
+  });
+
   it('flags an image-only PDF and a missing e-mail', () => {
     expect(failing({ ...base, text: 'Scan', maxPages: 1 }).map(([code]) => code)).toEqual([
       'TEXT',
+      'NAME',
       'EMAIL',
       'SKILLS',
     ]);

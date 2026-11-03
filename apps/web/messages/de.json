@@ -874,7 +874,8 @@
       "pdfError": "Das PDF konnte nicht geprüft werden: {error}",
       "pdfOk": {
         "PAGES": "{pages, plural, one {# Seite} other {# Seiten}} (Grenze {limit})",
-        "TEXT": "Der Text ist lesbar ({detail} Wörter), mit deinem Namen",
+        "TEXT": "Der Text ist lesbar ({detail} Wörter)",
+        "NAME": "Dein Name ist lesbarer Text: {detail}",
         "EMAIL": "Deine E-Mail ist lesbarer Text: {detail}",
         "DATES": "Datumsangaben mit einfachem Bindestrich",
         "CHARACTERS": "Keine kaputten Zeichen oder Icons",
@@ -883,7 +884,8 @@
       },
       "pdfBad": {
         "PAGES": "{pages, plural, one {# Seite} other {# Seiten}}: höchstens {limit}. Bitte Claude, ihn zu kürzen, oder wähle eine kompakte Vorlage.",
-        "TEXT": "Kaum lesbarer Text ({detail} Wörter) oder dein Name fehlt: ein ATS sieht vielleicht einen leeren Lebenslauf.",
+        "TEXT": "Kaum lesbarer Text ({detail} Wörter): ein ATS sieht vielleicht einen leeren Lebenslauf. Nutze eine Vorlage, kein gescanntes PDF.",
+        "NAME": "Dein Name „{detail}“ ist im PDF nicht als Text lesbar.",
         "EMAIL": "Deine E-Mail {detail} ist nicht als Text lesbar. Schreib sie als einfachen Text in den Kopf.",
         "DATES": "Lange Striche in Datumsangaben ({detail}): manche ATS lesen sie falsch. Nutze 01/2020 - 03/2023.",
         "CHARACTERS": "Zeichen, die ein ATS nicht lesen kann ({detail}): Ligaturen oder Icons.",

@@ -162,6 +162,7 @@ describe('JobResumePanel', () => {
     expect(within(box).getByText(/3 pages: keep it to 2/)).toBeInTheDocument();
     expect(within(box).getByText(/Long dashes in dates \(01\/2020 – today\)/)).toBeInTheDocument();
     expect(within(box).getByText(/412 words/)).toBeInTheDocument();
+    expect(within(box).getByText('Your name is readable text: User Example')).toBeInTheDocument();
     expect(within(box).getByText(/Text left to fill in: \(fill in\)/)).toBeInTheDocument();
     expect(
       within(box).getByText('Your e-mail is readable text: user@example.com'),

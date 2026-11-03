@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
+import { parseResume } from '../documents/resume-doc';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from '../profile/custom-fields';
 import { tidy } from '../profile/resume-text';
@@ -50,6 +51,8 @@ export interface JobResumeFile {
   type: string;
   bytes: Buffer;
 }
+
+const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
 
 @Injectable()
 export class InsightsService {
@@ -361,14 +364,19 @@ export class InsightsService {
     const file = await this.documents.jobPdf(userId, jobId, 'resume', template);
     const { text, pages } = await readPdf(new Uint8Array(file.bytes));
     const resumeText = row?.text ?? '';
+    // Check what the resume itself says: its own name line and contact e-mail, which can differ
+    // from your account ("Mohamed Faizel M", a second address). A resume without an e-mail gets
+    // your account's one from the template, so that is the one to find then.
+    const doc = parseResume(resumeText, user.name);
+    const emails = doc.contact.flatMap((c) => c.match(EMAIL) ?? []);
     return {
       jobId,
       template: template ?? style?.resumeTemplate ?? 'classic',
       items: checkPdf({
         text,
         pages,
-        name: user.name,
-        email: user.email,
+        name: doc.name || user.name,
+        emails: emails.length ? emails : [user.email],
         maxPages: user.profile?.resumeMaxPages ?? DEFAULT_RESUME_SETTINGS.maxPages,
         skills: insights.skills.map((s) => s.term).filter((term) => mentions(resumeText, term)),
       }),

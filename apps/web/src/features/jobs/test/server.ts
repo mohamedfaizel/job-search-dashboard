@@ -370,6 +370,7 @@ export const handlers = [
           items: [
             { code: 'PAGES', ok: false, detail: '3/2' },
             { code: 'TEXT', ok: true, detail: '412' },
+            { code: 'NAME', ok: true, detail: 'User Example' },
             { code: 'EMAIL', ok: true, detail: 'user@example.com' },
             { code: 'DATES', ok: false, detail: '01/2020 – today' },
             { code: 'CHARACTERS', ok: true, detail: '' },
