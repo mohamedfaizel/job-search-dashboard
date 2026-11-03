@@ -48,6 +48,10 @@ export const API_ERROR_CODES = [
   'PHOTO_MISSING',
   'DOCX_TEMPLATE_FIRST',
   'DOCX_NOT_WORD',
+  'GMAIL_NOT_CONFIGURED',
+  'GMAIL_ACCOUNT_NOT_FOUND',
+  'SUGGESTION_NOT_FOUND',
+  'SUGGESTION_ANSWERED',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

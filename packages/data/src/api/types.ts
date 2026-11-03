@@ -608,3 +608,40 @@ export interface DocumentTemplates {
   /** The pdf-renderer container answers. Without it, PDFs are plain. */
   rendererAvailable: boolean;
 }
+
+/** A Gmail account you connected (read-only). */
+export interface GmailAccount {
+  id: number;
+  email: string;
+  connectedAt: string;
+  lastSyncAt: string | null;
+  /** Why the last check failed, or null when it worked. */
+  lastError: string | null;
+}
+
+export interface GmailStatus {
+  /** False until the server has a Google client set up. */
+  configured: boolean;
+  accounts: GmailAccount[];
+}
+
+/** "This email looks like a rejection: move the job to Rejected?" */
+export interface MailSuggestion {
+  id: number;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  currentStatus: ApplicationStatus;
+  status: ApplicationStatus;
+  accountEmail: string;
+  fromAddress: string;
+  subject: string;
+  snippet: string;
+  receivedAt: string;
+}
+
+export interface GmailSyncResult {
+  accounts: number;
+  suggestions: number;
+  warnings: string[];
+}

@@ -120,6 +120,7 @@ describe('profile page', () => {
       'Bewerbungsangaben',
       'Lebenslauf',
       'Design',
+      'E-Mail',
       'Resume-Matcher',
     ]);
     expect(headline).toHaveValue('Frontend engineer');

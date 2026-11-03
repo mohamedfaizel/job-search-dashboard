@@ -3,6 +3,17 @@ export { API_URL, ApiError, getErrorCode, getErrorMessage, isUnauthenticated } f
 export type { ErrorCode } from './api/client';
 export { meKey, useLogIn, useLogOut, useMe, useSetLocale, useSignUp } from './api/auth';
 export {
+  GMAIL_CONNECT_URL,
+  gmailStatusKey,
+  mailSuggestionsKey,
+  useApproveMailSuggestion,
+  useDisconnectGmail,
+  useDismissMailSuggestion,
+  useGmailStatus,
+  useMailSuggestions,
+  useSyncGmail,
+} from './api/gmail';
+export {
   jobInsightsKey,
   APPLY_QUEUE_URL,
   applyKitUrl,

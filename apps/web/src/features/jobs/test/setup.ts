@@ -7,6 +7,7 @@ import {
   hiddenIds,
   interviewPrep,
   jobResume,
+  mailSuggestions,
   haveTerms,
   removedTerms,
   requests,
@@ -26,6 +27,7 @@ afterEach(() => {
   requests.length = 0;
   hiddenIds.clear();
   applications.length = 0;
+  mailSuggestions.length = 0;
   applyQueue.length = 0;
   removedTerms.length = 0;
   haveTerms.length = 0;

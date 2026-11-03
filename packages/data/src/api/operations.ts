@@ -775,3 +775,64 @@ export const DOCUMENT_TEMPLATES = /* GraphQL */ `
     }
   }
 `;
+
+export const GMAIL_STATUS = /* GraphQL */ `
+  query GmailStatus {
+    gmailStatus {
+      configured
+      accounts {
+        id
+        email
+        connectedAt
+        lastSyncAt
+        lastError
+      }
+    }
+  }
+`;
+
+export const MAIL_SUGGESTIONS = /* GraphQL */ `
+  query MailSuggestions {
+    mailSuggestions {
+      id
+      jobId
+      jobTitle
+      company
+      currentStatus
+      status
+      accountEmail
+      fromAddress
+      subject
+      snippet
+      receivedAt
+    }
+  }
+`;
+
+export const SYNC_GMAIL = /* GraphQL */ `
+  mutation SyncGmail {
+    syncGmail {
+      accounts
+      suggestions
+      warnings
+    }
+  }
+`;
+
+export const DISCONNECT_GMAIL = /* GraphQL */ `
+  mutation DisconnectGmail($id: Int!) {
+    disconnectGmail(id: $id)
+  }
+`;
+
+export const APPROVE_MAIL_SUGGESTION = /* GraphQL */ `
+  mutation ApproveMailSuggestion($id: Int!) {
+    approveMailSuggestion(id: $id)
+  }
+`;
+
+export const DISMISS_MAIL_SUGGESTION = /* GraphQL */ `
+  mutation DismissMailSuggestion($id: Int!) {
+    dismissMailSuggestion(id: $id)
+  }
+`;

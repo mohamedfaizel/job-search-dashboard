@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
 import { DocumentDesign } from './components/DocumentDesign';
+import { GmailAccounts } from './components/GmailAccounts';
 import { OtherResumes } from './components/OtherResumes';
 import type { ProfileTab } from './components/ProfileForm';
 import { ProfileForm } from './components/ProfileForm';
@@ -12,7 +13,7 @@ import { ResumeMatcherStatus } from './components/ResumeMatcherStatus';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
 
-const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume', 'design', 'matcher'];
+const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume', 'design', 'mail', 'matcher'];
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
@@ -37,7 +38,12 @@ export function ProfilePage() {
   const tabs: TabItem<ProfileTab>[] = TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) }));
   const { data: profile, isPending, error } = useMyProfile();
   const { data: me } = useMe();
-  const [tab, setTab] = useState<ProfileTab>(savedTab);
+  // Coming back from Google's sign-in (?gmail=...) opens the Email tab to show the result.
+  const [tab, setTab] = useState<ProfileTab>(() =>
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('gmail')
+      ? 'mail'
+      : savedTab(),
+  );
 
   const selectTab = (next: ProfileTab) => {
     setTab(next);
@@ -89,6 +95,8 @@ export function ProfilePage() {
               <div hidden={tab !== 'design'}>
                 <DocumentDesign />
               </div>
+              {/* Only while open: it asks the server about Gmail, which other tabs don't need. */}
+              {tab === 'mail' && <GmailAccounts />}
               <div hidden={tab !== 'matcher'}>
                 <ResumeMatcherStatus />
               </div>

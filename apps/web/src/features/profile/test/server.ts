@@ -1,4 +1,5 @@
 import type {
+  GmailAccount,
   LanguageResume,
   MatcherResume,
   Profile,
@@ -96,10 +97,35 @@ export const MATCHER_RESUME: MatcherResume = {
   message: "ada.pdf hasn't been sent to Resume-Matcher yet.",
 };
 
+/** The Gmail accounts connected in the current test, and whether the server has Google set up. */
+export const gmail: { configured: boolean; accounts: GmailAccount[]; found: number } = {
+  configured: true,
+  accounts: [],
+  found: 0,
+};
+
 /** Sends to Resume-Matcher made in the current test. */
 export const syncs: number[] = [];
 
 export const server = setupServer(
+  api.query('GmailStatus', () =>
+    HttpResponse.json({
+      data: { gmailStatus: { configured: gmail.configured, accounts: gmail.accounts } },
+    }),
+  ),
+  api.mutation('SyncGmail', () => {
+    for (const account of gmail.accounts) account.lastSyncAt = '2026-11-03T12:00:00.000Z';
+    return HttpResponse.json({
+      data: {
+        syncGmail: { accounts: gmail.accounts.length, suggestions: gmail.found, warnings: [] },
+      },
+    });
+  }),
+  api.mutation('DisconnectGmail', ({ variables }) => {
+    requests.push({ operation: 'DisconnectGmail', variables });
+    gmail.accounts = gmail.accounts.filter((account) => account.id !== variables['id']);
+    return HttpResponse.json({ data: { disconnectGmail: true } });
+  }),
   api.query('Me', () =>
     HttpResponse.json({
       data: {
