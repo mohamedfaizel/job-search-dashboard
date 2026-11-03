@@ -428,6 +428,16 @@ export const handlers = [
     HttpResponse.json({ data: { jobFilterOptions: FILTER_OPTIONS } }),
   ),
   api.query('MyApplications', () => HttpResponse.json({ data: { myApplications: applications } })),
+  api.mutation('MarkFollowedUp', ({ variables }) => {
+    requests.push({ operation: 'MarkFollowedUp', variables });
+    for (const app of applications) {
+      if (app.job.id === variables['jobId']) {
+        app.followUpDue = false;
+        app.followedUpAt = '2026-11-03T12:00:00.000Z';
+      }
+    }
+    return HttpResponse.json({ data: { markFollowedUp: applications } });
+  }),
   api.mutation('UpdateJobStatus', ({ variables }) => {
     requests.push({ operation: 'UpdateJobStatus', variables });
     const id = variables['id'] as string;
@@ -441,7 +451,13 @@ export const handlers = [
     }
     if (status !== 'NONE' && job) {
       const updatedAt = '2026-10-27T12:00:00.000Z';
-      applications.unshift({ status, updatedAt, job: { ...job, applicationStatus: status } });
+      applications.unshift({
+        status,
+        updatedAt,
+        followedUpAt: null,
+        followUpDue: false,
+        job: { ...job, applicationStatus: status },
+      });
     }
     return HttpResponse.json({
       data: { updateJobStatus: { id: variables['id'], applicationStatus: variables['status'] } },

@@ -1,5 +1,5 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
-import { useMyApplications, useUpdateJobStatus } from '@jobsearch/data';
+import { useMarkFollowedUp, useMyApplications, useUpdateJobStatus } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
@@ -11,10 +11,12 @@ export function TrackerPage() {
   const t = useTranslations('Tracker');
   const applications = useMyApplications();
   const updateStatus = useUpdateJobStatus();
+  const followedUp = useMarkFollowedUp();
   const [openJobId, setOpenJobId] = useState<string | null>(null);
 
   const list = applications.data ?? [];
   const openJob = list.find((app) => app.job.id === openJobId)?.job ?? null;
+  const due = list.filter((app) => app.followUpDue).length;
   const move = (job: Job, status: ApplicationStatus) => {
     updateStatus.mutate({ id: job.id, status });
   };
@@ -36,6 +38,19 @@ export function TrackerPage() {
           {t('loadError', { error: errorText(applications.error) })}
         </p>
       )}
+      {due > 0 && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          {t('followUp.banner', { count: due })}
+        </p>
+      )}
+      {followedUp.isError && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+        >
+          {t('followUp.error', { error: errorText(followedUp.error) })}
+        </p>
+      )}
       {updateStatus.isError && (
         <p
           role="alert"
@@ -55,6 +70,9 @@ export function TrackerPage() {
         <TrackerBoard
           applications={list}
           onMove={move}
+          onFollowedUp={(job) => {
+            followedUp.mutate(job.id);
+          }}
           onOpen={(job) => {
             setOpenJobId(job.id);
           }}

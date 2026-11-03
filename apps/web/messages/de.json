@@ -762,7 +762,19 @@
     "moveError": "Der Job konnte nicht verschoben werden: {error}",
     "loading": "Deine Bewerbungen werden geladen…",
     "empty": "Hier ist noch nichts. Gib einem Job unter Stellenanzeigen einen Status (Gemerkt, Beworben…), dann erscheint er hier.",
-    "moved": "Verschoben am {date}"
+    "moved": "Verschoben am {date}",
+    "followUp": {
+      "badge": "Nachfassen?",
+      "badgeHint": "Eine Woche „Beworben“ ohne Antwort",
+      "hint": "Seit einer Woche keine Antwort. Eine kurze, höfliche E-Mail bringt oft eine Antwort.",
+      "copy": "E-Mail kopieren",
+      "copied": "Kopiert. Füge sie in deine E-Mail ein und prüfe sie vor dem Senden.",
+      "copyFailed": "Kopieren ging nicht. Dein Browser blockiert die Zwischenablage.",
+      "done": "Nachgefasst",
+      "followedUp": "Nachgefasst am {date}",
+      "banner": "{count, plural, one {# Bewerbung hat} other {# Bewerbungen haben}} seit einer Woche keine Antwort. Achte unten auf „Nachfassen?“.",
+      "error": "Konnte nicht gespeichert werden: {error}"
+    }
   },
   "AddJobs": {
     "title": "Jobs hinzufügen",

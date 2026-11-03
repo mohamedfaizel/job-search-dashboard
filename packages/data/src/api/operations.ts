@@ -68,6 +68,8 @@ export const MY_APPLICATIONS = /* GraphQL */ `
     myApplications {
       status
       updatedAt
+      followedUpAt
+      followUpDue
       job {
         ...JobFields
       }
@@ -115,6 +117,22 @@ export const CHECK_JOB_STILL_OPEN = /* GraphQL */ `
   mutation CheckJobStillOpen($id: ID!) {
     checkJobStillOpen(id: $id) {
       ...JobFields
+    }
+  }
+  ${JOB_FIELDS}
+`;
+
+/** Says you followed up on an application. Returns your whole tracker. */
+export const MARK_FOLLOWED_UP = /* GraphQL */ `
+  mutation MarkFollowedUp($jobId: ID!) {
+    markFollowedUp(jobId: $jobId) {
+      status
+      updatedAt
+      followedUpAt
+      followUpDue
+      job {
+        ...JobFields
+      }
     }
   }
   ${JOB_FIELDS}

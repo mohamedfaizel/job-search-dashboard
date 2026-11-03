@@ -82,6 +82,10 @@ export interface Application {
   status: ApplicationStatus;
   /** When the status last changed. */
   updatedAt: string;
+  /** When you last said you followed up on it. */
+  followedUpAt: string | null;
+  /** Applied, and a week without news or a follow-up: time to follow up. */
+  followUpDue: boolean;
   job: Job;
 }
 

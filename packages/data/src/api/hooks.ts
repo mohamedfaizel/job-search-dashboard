@@ -11,6 +11,7 @@ import {
   JOB,
   JOBS_PAGE,
   JOB_FILTER_OPTIONS,
+  MARK_FOLLOWED_UP,
   MY_APPLICATIONS,
   RUN_SAVED_SEARCH,
   SAVED_SEARCHES,
@@ -161,6 +162,23 @@ export function useCheckJobStillOpen() {
     onSuccess: (job) => {
       queryClient.setQueryData(queryKeys.job(job.id), job);
       return queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+    },
+  });
+}
+
+/** Says you followed up on an application, so its "Follow up?" reminder waits another week. */
+export function useMarkFollowedUp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const data = await graphqlClient.request<{ markFollowedUp: Application[] }>(
+        MARK_FOLLOWED_UP,
+        { jobId },
+      );
+      return data.markFollowedUp;
+    },
+    onSuccess: (applications) => {
+      queryClient.setQueryData(queryKeys.applications, applications);
     },
   });
 }

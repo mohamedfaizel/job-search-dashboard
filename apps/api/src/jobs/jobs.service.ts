@@ -9,6 +9,7 @@ import type { MappedJob } from '../jobspipe/jobspipe.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateJobInput } from './dto/create-job.input';
 import type { JobFilterInput, JobsArgs, JobSortInput } from './dto/jobs.args';
+import { isFollowUpDue } from './follow-up';
 import { JobSortField, SortDirection } from './models/enums';
 import type { JobFilterOptions, JobPage } from './models/job.model';
 import { visaSponsorship } from './visa';
@@ -172,13 +173,36 @@ export class JobsService implements OnApplicationBootstrap {
   }
 
   /** The jobs this user is tracking (any status but NONE), most recently moved first. */
-  async applications(userId: number) {
+  async applications(userId: number, now = new Date()) {
     const rows = await this.prisma.application.findMany({
       where: { userId },
-      orderBy: [{ updatedAt: 'desc' }, { jobId: 'asc' }],
+      orderBy: [{ statusChangedAt: 'desc' }, { jobId: 'asc' }],
       include: { job: { include: forUser(userId) } },
     });
-    return rows.map(({ status, updatedAt, job }) => ({ status, updatedAt, job: withStatus(job) }));
+    return rows.map((row) => ({
+      status: row.status,
+      updatedAt: row.statusChangedAt,
+      followedUpAt: row.followedUpAt,
+      followUpDue: isFollowUpDue(row, now),
+      job: withStatus(row.job),
+    }));
+  }
+
+  /**
+   * You followed up on an application (sent an email, called): the "Follow up?" reminder goes
+   * away and comes back after another FOLLOW_UP_DAYS without news. Returns your tracker.
+   */
+  async markFollowedUp(userId: number, jobId: string, now = new Date()) {
+    const { count } = await this.prisma.application.updateMany({
+      where: { userId, jobId },
+      data: { followedUpAt: now },
+    });
+    if (count === 0) {
+      throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} is not on your tracker`, {
+        id: jobId,
+      });
+    }
+    return this.applications(userId, now);
   }
 
   async filterOptions(): Promise<JobFilterOptions> {
@@ -299,11 +323,18 @@ export class JobsService implements OnApplicationBootstrap {
     if (status === ApplicationStatus.NONE) {
       await this.prisma.application.deleteMany({ where: { userId, jobId } });
     } else {
-      await this.prisma.application.upsert({
+      const current = await this.prisma.application.findUnique({
         where: { userId_jobId: { userId, jobId } },
-        create: { userId, jobId, status },
-        update: { status },
+        select: { status: true },
       });
+      // Choosing the same status again doesn't restart the follow-up clock.
+      if (current?.status !== status) {
+        await this.prisma.application.upsert({
+          where: { userId_jobId: { userId, jobId } },
+          create: { userId, jobId, status },
+          update: { status, statusChangedAt: new Date() },
+        });
+      }
     }
     // Applied (or further along): it no longer waits in your Apply queue.
     if (status !== ApplicationStatus.NONE && status !== ApplicationStatus.SAVED) {

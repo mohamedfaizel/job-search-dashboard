@@ -340,9 +340,13 @@ model Application {
   userId    Int
   job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobId     String
-  status    ApplicationStatus
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  status          ApplicationStatus
+  /// When the status last changed. Marking a follow-up doesn't move it.
+  statusChangedAt DateTime          @default(now())
+  /// When you last said you followed up on it (resets the "Follow up?" reminder).
+  followedUpAt    DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@id([userId, jobId])
   @@index([userId, status])
