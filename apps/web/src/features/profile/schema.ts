@@ -1,13 +1,6 @@
 import type { Profile, ProfileInput } from '@jobsearch/data';
 import { z } from 'zod';
-
-/** Splits "react, node.js ,  " into ["react", "node.js"]. */
-function splitList(value: string): string[] {
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
+import { splitList } from '@/lib/split-list';
 
 /** Turns an error key from messages/<locale>.json ("Profile.errors") into text. */
 export type ErrorText = (key: string, values?: Record<string, string | number>) => string;

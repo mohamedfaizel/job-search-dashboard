@@ -3,7 +3,6 @@ import {
   emptyJobForm,
   jobFormSchema,
   savedSearchToForm,
-  splitList,
   syncFormSchema,
   toCreateJobInput,
   toSyncJobsInput,
@@ -12,12 +11,6 @@ import { SAVED } from './test/server';
 
 /** Error messages as their keys, so tests don't depend on the wording. */
 const KEY = (key: string) => key;
-
-describe('splitList', () => {
-  it('splits on commas and drops blanks', () => {
-    expect(splitList(' react, node.js ,, ')).toEqual(['react', 'node.js']);
-  });
-});
 
 describe('jobFormSchema', () => {
   const valid = { ...emptyJobForm, title: 'Dev', companyName: 'Acme' };
