@@ -64,6 +64,7 @@ export {
 } from './api/resumeMatcher';
 export {
   queryKeys,
+  useCheckJobStillOpen,
   useCreateJob,
   useDeleteSavedSearch,
   useImportBudget,

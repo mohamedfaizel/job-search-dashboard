@@ -262,6 +262,21 @@ export const handlers = [
     for (const q of applyQueue) if (text.includes(`JOB`) && text.includes(q.jobId)) q.ready = true;
     return HttpResponse.json({ data: { saveApplyQueueReply: numbered() } });
   }),
+  // Every job's link answers "still open" unless a test says otherwise.
+  api.mutation('CheckJobStillOpen', ({ variables }) => {
+    requests.push({ operation: 'CheckJobStillOpen', variables });
+    const job = JOBS.find((j) => j.id === variables['id']) ?? JOBS[0]!;
+    return HttpResponse.json({
+      data: {
+        checkJobStillOpen: {
+          ...job,
+          checkedAt: new Date().toISOString(),
+          lastCheck: 'OPEN',
+          checkReason: 'LOOKS_OPEN',
+        },
+      },
+    });
+  }),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
   // By default nothing has been tailored yet.
   api.query('TailoredResume', () => HttpResponse.json({ data: { tailoredResume: null } })),

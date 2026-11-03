@@ -16,6 +16,14 @@ enum JobSource {
   MANUAL
 }
 
+/// What the last "Is it still open?" check found when it opened the job's link.
+enum PostingCheck {
+  OPEN
+  CLOSED
+  /// The site blocked the check, timed out, or the page gave no clear answer.
+  UNKNOWN
+}
+
 /// What a job ad says about visa sponsorship (or relocation help).
 enum VisaSponsorship {
   OFFERS
@@ -298,7 +306,15 @@ model Job {
   visa            VisaSponsorship?
   industry        String?
   description     String?
+  /// "active", "closed" (JobsPipe says so) or "expired" (our still-open check found it closed).
   postingStatus   String           @default("active")
+  /// When the still-open check last opened the job's link. Null until it has been checked.
+  checkedAt       DateTime?
+  lastCheck       PostingCheck?
+  /// Why: a short code such as NOT_FOUND or SAYS_CLOSED (the web app turns it into words).
+  checkReason     String?
+  /// When the check first found the job closed.
+  expiredAt       DateTime?
   /// The original API record, kept so new columns can be backfilled without re-fetching.
   raw             Json?
   createdAt       DateTime         @default(now())
@@ -314,6 +330,7 @@ model Job {
 
   @@index([postedAt])
   @@index([companyId])
+  @@index([checkedAt])
 }
 
 /// Where one user is with one job. No row means "not applied" (NONE is never stored), so

@@ -7,6 +7,9 @@ export type Workplace = (typeof WORKPLACES)[number];
 export const VISA_SPONSORSHIPS = ['OFFERS', 'NO', 'NOT_STATED'] as const;
 export type VisaSponsorship = (typeof VISA_SPONSORSHIPS)[number];
 
+/** What the still-open check found: UNKNOWN when the site blocked it or gave no clear answer. */
+export type PostingCheck = 'OPEN' | 'CLOSED' | 'UNKNOWN';
+
 export const APPLICATION_STATUSES = [
   'NONE',
   'SAVED',
@@ -53,7 +56,13 @@ export interface Job {
   visa: VisaSponsorship | null;
   industry: string | null;
   description: string | null;
+  /** "active", "closed" (JobsPipe says so) or "expired" (our still-open check found it closed). */
   postingStatus: string;
+  /** When the still-open check last opened the job's link. Null until it has been checked. */
+  checkedAt: string | null;
+  lastCheck: PostingCheck | null;
+  /** Why, as a code: LOOKS_OPEN, NOT_FOUND, SAYS_CLOSED, REDIRECTED, BLOCKED, TIMEOUT… */
+  checkReason: string | null;
   applicationStatus: ApplicationStatus;
   /** Your resume match for this job, if you asked for one. */
   matchStatus: JobMatchStatus | null;

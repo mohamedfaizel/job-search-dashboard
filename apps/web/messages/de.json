@@ -427,7 +427,9 @@
       "unhideHint": "Zurück in deine Tabelle holen",
       "postingLabel": "Anzeige für {job} öffnen",
       "postingHint": "Die Original-Anzeige öffnen",
-      "posting": "Anzeige"
+      "posting": "Anzeige",
+      "expired": "Abgelaufen",
+      "expiredHint": "Die Anzeige ist geschlossen (laut Prüfung oder Jobbörse)"
     },
     "queue": {
       "heading": "Bewerbungsliste ({count})",
@@ -727,6 +729,30 @@
       "replace": "Ersetzen",
       "delete": "Löschen",
       "deleteError": "Konnte nicht gelöscht werden: {error}"
+    },
+    "stillOpen": {
+      "never": "Noch nicht geprüft, ob die Anzeige noch online ist",
+      "checking": "Prüfe, ob die Anzeige noch online ist…",
+      "open": "Noch offen (geprüft {when})",
+      "expired": "Abgelaufen: Die Anzeige ist geschlossen",
+      "expiredBecause": "Abgelaufen: {reason}",
+      "unsure": "Unklar, ob noch offen: {reason}",
+      "unsureNoReason": "Unklar, ob noch offen",
+      "checkedWhen": "geprüft {when}",
+      "checkNow": "Jetzt prüfen",
+      "failed": "Prüfung fehlgeschlagen: {error}",
+      "reasons": {
+        "LOOKS_OPEN": "die Seite zeigt die Anzeige",
+        "NOT_FOUND": "die Seite gibt es nicht mehr",
+        "SAYS_CLOSED": "die Seite sagt, sie ist geschlossen",
+        "REDIRECTED": "die Website hat uns von der Anzeige weggeleitet",
+        "BLOCKED": "die Website blockiert automatische Prüfungen, öffne sie selbst",
+        "SERVER_ERROR": "die Website hatte einen Fehler",
+        "NO_CONTENT": "die Seite lädt ihren Text per JavaScript, öffne sie selbst",
+        "TIMEOUT": "die Website hat zu lange gebraucht",
+        "UNREACHABLE": "die Website war nicht erreichbar",
+        "NO_LINK": "dieser Job hat keinen Link zum Prüfen"
+      }
     }
   },
   "Tracker": {

@@ -427,7 +427,9 @@
       "unhideHint": "Put back in your table",
       "postingLabel": "Open posting for {job}",
       "postingHint": "Open the original posting",
-      "posting": "Posting"
+      "posting": "Posting",
+      "expired": "Expired",
+      "expiredHint": "The ad is closed (found by the still-open check or the job board)"
     },
     "queue": {
       "heading": "Apply queue ({count})",
@@ -727,6 +729,30 @@
       "replace": "Replace",
       "delete": "Delete",
       "deleteError": "Could not delete it: {error}"
+    },
+    "stillOpen": {
+      "never": "Not checked yet if the ad is still open",
+      "checking": "Checking if the ad is still open…",
+      "open": "Still open (checked {when})",
+      "expired": "Expired: this ad is closed",
+      "expiredBecause": "Expired: {reason}",
+      "unsure": "Couldn’t tell if it is still open: {reason}",
+      "unsureNoReason": "Couldn’t tell if it is still open",
+      "checkedWhen": "checked {when}",
+      "checkNow": "Check now",
+      "failed": "Check failed: {error}",
+      "reasons": {
+        "LOOKS_OPEN": "the page shows the ad",
+        "NOT_FOUND": "the page is gone",
+        "SAYS_CLOSED": "the page says it is closed",
+        "REDIRECTED": "the site sent us away from the ad",
+        "BLOCKED": "the site blocks automatic checks, so open it yourself",
+        "SERVER_ERROR": "the site had an error",
+        "NO_CONTENT": "the page loads its text with JavaScript, so open it yourself",
+        "TIMEOUT": "the site took too long",
+        "UNREACHABLE": "the site couldn’t be reached",
+        "NO_LINK": "this job has no link to check"
+      }
     }
   },
   "Tracker": {

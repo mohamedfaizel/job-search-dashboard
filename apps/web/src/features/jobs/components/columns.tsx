@@ -11,6 +11,7 @@ import { Badge } from './Badge';
 import { BookmarkIcon, ExternalLinkIcon, EyeIcon, EyeSlashIcon } from './icons';
 import { scoreTone } from './MatchPanel';
 import { StatusSelect } from './StatusSelect';
+import { isExpired } from './StillOpen';
 
 const dash = <span className="text-slate-400">–</span>;
 
@@ -144,6 +145,11 @@ export function JobCell({ job }: { job: Job }) {
           {fresh && (
             <Badge tone="flag" title={t('newHint')}>
               {t('new')}
+            </Badge>
+          )}
+          {isExpired(job) && (
+            <Badge tone="red" title={t('expiredHint')}>
+              {t('expired')}
             </Badge>
           )}
           {queued !== undefined && (
