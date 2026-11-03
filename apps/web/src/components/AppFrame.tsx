@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { isLocale, writeLocaleCookie } from '@/i18n/config';
 import { APP_NAME } from '@/lib/app-name';
 import { useErrorText } from '../i18n/useErrorText';
+import { FlagStripe } from './FlagStripe';
 import { LanguageSwitch } from './LanguageSwitch';
 import { Logo } from './Logo';
 
@@ -96,7 +97,8 @@ interface TopBarProps {
 }
 
 /**
- * The header with the main links. On phones (under 768 px) the links fold into a ☰ menu, so
+ * The header with the main links: a black bar with a red and gold stripe under it, the German
+ * flag. The page you are on is a gold pill. On phones (under 768 px) the links fold into a ☰ menu, so
  * the header never makes the page scroll sideways.
  */
 export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps) {
@@ -108,10 +110,16 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="bg-flag-black text-white">
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
-          <Link href="/jobs" className="flex items-center gap-2 font-semibold text-slate-900">
-            <Logo />
+          <Link
+            href="/jobs"
+            className="flex items-center gap-2 rounded-md font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+          >
+            {/* A white tile, so the logo's black card still shows on the black bar. */}
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white">
+              <Logo />
+            </span>
             {APP_NAME}
           </Link>
           <button
@@ -122,7 +130,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
             onClick={() => {
               setMenuOpen((open) => !open);
             }}
-            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-md text-xl text-slate-700 hover:bg-slate-100 md:hidden"
+            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-md text-xl text-white hover:bg-neutral-800 md:hidden"
           >
             <span aria-hidden>{menuOpen ? '✕' : '☰'}</span>
           </button>
@@ -140,7 +148,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
                       onClick={() => {
                         setMenuOpen(false);
                       }}
-                      className="block w-full rounded-md px-3 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-100 aria-[current=page]:bg-brand-400 aria-[current=page]:font-semibold aria-[current=page]:text-black md:w-auto md:py-1.5"
+                      className="block w-full rounded-md px-3 py-2.5 text-left text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white aria-[current=page]:bg-brand-400 aria-[current=page]:font-semibold aria-[current=page]:text-black md:w-auto md:py-1.5"
                     >
                       {t(label)}
                     </Link>
@@ -148,17 +156,18 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
                 ))}
               </ul>
             </nav>
-            <div className="flex items-center justify-between gap-2 border-t border-slate-200 px-3 pt-2 text-sm md:border-t-0 md:border-l md:px-0 md:pt-0 md:pl-4">
-              <span className="text-slate-700" title={user.email}>
+            <div className="flex items-center justify-between gap-2 border-t border-neutral-700 px-3 pt-2 text-sm md:border-t-0 md:border-l md:px-0 md:pt-0 md:pl-4">
+              <span className="text-neutral-200" title={user.email}>
                 {user.name}
                 {user.role === 'ADMIN' && (
-                  <span className="ml-1.5 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
+                  <span className="ml-1.5 rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-300">
                     {t('admin')}
                   </span>
                 )}
               </span>
               <span className="flex items-center gap-2">
                 <LanguageSwitch
+                  onDark
                   onPick={(picked) => {
                     setLocale.mutate(picked);
                   }}
@@ -167,7 +176,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
                   type="button"
                   disabled={loggingOut}
                   onClick={onLogOut}
-                  className="rounded-md px-2 py-2.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50 md:py-1.5"
+                  className="rounded-md px-2 py-2.5 text-neutral-300 hover:bg-neutral-800 hover:text-white disabled:opacity-50 md:py-1.5"
                 >
                   {t('logOut')}
                 </button>
@@ -176,6 +185,7 @@ export function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBa
           </div>
         </div>
       </header>
+      <FlagStripe afterBlack />
       <main className="px-4 py-6 sm:px-6">{children}</main>
     </div>
   );
