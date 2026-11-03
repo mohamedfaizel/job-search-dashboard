@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 /** How long you have to finish signing in at Google. */
-export const STATE_MINUTES = 10;
+const STATE_MINUTES = 10;
 
 const sign = (payload: string, secret: string) =>
   createHmac('sha256', secret).update(payload).digest('base64url');

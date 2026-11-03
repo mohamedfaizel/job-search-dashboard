@@ -42,7 +42,7 @@ export interface FetchedPage {
  * lower case, so keep them lower case and specific: a phrase that could appear in a "similar
  * jobs" box on an open ad would mark open jobs closed.
  */
-export const CLOSED_PHRASES = [
+const CLOSED_PHRASES = [
   // English
   'no longer accepting applications',
   'job is no longer available',

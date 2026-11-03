@@ -6,7 +6,7 @@ const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const USERINFO_URL = 'https://openidconnect.googleapis.com/v1/userinfo';
 const GMAIL_URL = 'https://gmail.googleapis.com/gmail/v1/users/me';
 /** Read-only: the app can never send, change or delete mail. */
-export const SCOPES = ['openid', 'email', 'https://www.googleapis.com/auth/gmail.readonly'];
+const SCOPES = ['openid', 'email', 'https://www.googleapis.com/auth/gmail.readonly'];
 
 export interface MailMessage {
   id: string;

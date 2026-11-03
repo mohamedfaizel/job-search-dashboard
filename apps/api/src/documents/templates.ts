@@ -59,7 +59,7 @@ export const RESUME_TEMPLATES = [
   },
 ] as const;
 export type ResumeTemplateId = (typeof RESUME_TEMPLATES)[number]['id'];
-export const isResumeTemplate = (id: string): id is ResumeTemplateId =>
+const isResumeTemplate = (id: string): id is ResumeTemplateId =>
   RESUME_TEMPLATES.some((t) => t.id === id);
 
 /** Your own Word resume as the template (see docx-template.ts). */
@@ -305,7 +305,7 @@ const STYLES: Record<ResumeTemplateId, TemplateStyle> = {
 };
 
 /** My design as a template: the same parts as the built-in ones, set from your settings. */
-export function designStyle(d: MyDesign): TemplateStyle {
+function designStyle(d: MyDesign): TemplateStyle {
   const compact = d.density === 'compact';
   const nameSize = { normal: 20, large: 26, huge: 32 }[d.nameSize] - (compact ? 2 : 0);
   const nameShape = {

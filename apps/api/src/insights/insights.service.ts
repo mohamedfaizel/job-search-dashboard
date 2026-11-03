@@ -4,7 +4,7 @@ import { DocumentsService } from '../documents/documents.service';
 import { parseResume } from '../documents/resume-doc';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from '../profile/custom-fields';
-import { tidy } from '../profile/resume-text';
+import { cleanResume, tidy } from '../profile/resume-text';
 import type { MasterResumes } from '../profile/resumes';
 import { resumeFor } from '../profile/resumes';
 import { buildApplyKit } from './apply-kit';
@@ -40,10 +40,8 @@ import { checkResume } from './score';
 import { mentions, relatedTo } from './skills';
 import { jobTerms } from './terms';
 
-/** Longer than any real resume, short enough to keep junk out. */
-export const MAX_RESUME_CHARS = 50_000;
 /** Claude's interview prep is long (questions, answers, plans), but it is still text for reading. */
-export const MAX_INTERVIEW_PREP_CHARS = 30_000;
+const MAX_INTERVIEW_PREP_CHARS = 30_000;
 
 /** A resume file: what was uploaded, or what a download sends. */
 export interface JobResumeFile {
@@ -313,16 +311,7 @@ export class InsightsService {
     // An Apply kit reply has the cover letter and form answers after the resume: keep them apart,
     // so only the resume is scored and downloaded.
     const reply = splitReply(text);
-    const clean = tidy(reply.resume);
-    if (!clean) throw apiError(BadRequestException, 'RESUME_EMPTY', 'The resume is empty');
-    if (clean.length > MAX_RESUME_CHARS) {
-      throw apiError(
-        BadRequestException,
-        'RESUME_TOO_LONG',
-        `A resume is at most ${String(MAX_RESUME_CHARS)} characters`,
-        { max: MAX_RESUME_CHARS },
-      );
-    }
+    const clean = cleanResume(reply.resume);
     await this.assertJob(jobId);
     const data = {
       text: clean,

@@ -11,7 +11,7 @@ import type { BaDetail } from './arbeitsagentur.types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** The board returns at most 100 listings a page. */
-export const BA_MAX_PAGE_SIZE = 100;
+const BA_MAX_PAGE_SIZE = 100;
 /** Full ads are fetched this many at a time, to be kind to a free public service. */
 const DETAIL_PARALLEL = 5;
 const PAUSE_MS = 250;

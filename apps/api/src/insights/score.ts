@@ -6,7 +6,7 @@ import { stopwordsFor, tokenize } from './text';
  * The parts of the score and their weights: the same as Resume-Matcher's ATS score, so the two
  * numbers can be compared.
  */
-export const WEIGHTS = {
+const WEIGHTS = {
   keywords: 0.4,
   skills: 0.2,
   title: 0.15,
