@@ -21,7 +21,7 @@ export function useMe() {
 
 /** Swap in a new user: drop everything cached for the previous one first. */
 function startSession(queryClient: QueryClient, user: User | null) {
-  // Not queryClient.clear(): that would also drop the `me` query the shell is watching,
+  // Not queryClient.clear(): that would also drop the `me` query the app frame is watching,
   // and the page would never see the change.
   queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== meKey[0] });
   queryClient.setQueryData(meKey, user);

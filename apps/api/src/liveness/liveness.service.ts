@@ -10,7 +10,7 @@ import { PageFetcher } from './page-fetcher';
 import { UnsafeUrlError } from './safe-fetch';
 
 /** A job checked this recently isn't fetched again when you press "Check now". */
-export const RECHECK_AFTER_MS = 10 * 60 * 1000;
+const RECHECK_AFTER_MS = 10 * 60 * 1000;
 /** The nightly run skips jobs checked within this long (a manual check, or last night). */
 const NIGHTLY_SKIP_MS = 20 * 60 * 60 * 1000;
 /** How many links the nightly run opens at the same time. Small, to be polite to job sites. */

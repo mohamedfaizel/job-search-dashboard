@@ -38,7 +38,7 @@ function withStatus({ applications, matches, fits, ...job }: JobForUser) {
 }
 
 /** Opening Job posts again within this long counts as the same visit, so the New badges stay. */
-export const VISIT_GAP_MS = 30 * 60 * 1000;
+const VISIT_GAP_MS = 30 * 60 * 1000;
 
 export interface UpsertResult {
   created: number;

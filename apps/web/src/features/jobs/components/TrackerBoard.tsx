@@ -9,7 +9,7 @@ import { StatusSelect } from './StatusSelect';
 import { isExpired } from './StillOpen';
 
 /** The board's columns, in the order a job moves through them. */
-export const BOARD_COLUMNS = ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED'] as const;
+const BOARD_COLUMNS = ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED'] as const;
 
 const COLUMN_TONE: Record<(typeof BOARD_COLUMNS)[number], string> = {
   SAVED: 'border-t-sky-400',

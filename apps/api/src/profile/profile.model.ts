@@ -33,7 +33,7 @@ export class LanguageResumeModel {
 }
 
 /** Genders a form may ask for, as codes; each language shows its own words. */
-export const GENDERS = ['female', 'male', 'diverse', 'not_specified'] as const;
+const GENDERS = ['female', 'male', 'diverse', 'not_specified'] as const;
 
 @ObjectType('ProfileField', { description: 'A field of your own, like "Xing" or "Pronouns"' })
 export class ProfileFieldModel {

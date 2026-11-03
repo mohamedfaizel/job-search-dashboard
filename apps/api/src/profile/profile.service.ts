@@ -6,11 +6,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from './custom-fields';
 import type { LanguageResumeModel, ProfileInput, ProfileModel } from './profile.model';
 import { buildMasterReviewPrompt, reviewResume } from './resume-review';
-import { tidy } from './resume-text';
+import { cleanResume } from './resume-text';
 import { buildTranslationPrompt, languageName, RESUME_LANGUAGES } from './resumes';
-
-/** Longer than any real resume, short enough to keep junk out. */
-const MAX_RESUME_CHARS = 50_000;
 
 /** What a user who never saved a profile sees (they may still have saved other resumes). */
 const empty = (otherResumes: LanguageResumeModel[]): ProfileModel => ({
@@ -239,16 +236,7 @@ export class ProfileService {
         { language: language },
       );
     }
-    const clean = tidy(text);
-    if (!clean) throw apiError(BadRequestException, 'RESUME_EMPTY', 'The resume is empty');
-    if (clean.length > MAX_RESUME_CHARS) {
-      throw apiError(
-        BadRequestException,
-        'RESUME_TOO_LONG',
-        `A resume is at most ${String(MAX_RESUME_CHARS)} characters`,
-        { max: MAX_RESUME_CHARS },
-      );
-    }
+    const clean = cleanResume(text);
     const data = {
       text: clean,
       fileName: file?.name ?? null,

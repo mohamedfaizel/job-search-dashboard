@@ -21,7 +21,7 @@ const OVERLAP_MS = 60 * 60 * 1000;
  * Phrases a German ad uses when it needs fluent German. JobsPipe matches every word of a phrase,
  * in any order, so each one names Deutschkenntnisse itself to avoid skipping English ads.
  */
-export const FLUENT_GERMAN_PHRASES = [
+const FLUENT_GERMAN_PHRASES = [
   'fließende Deutschkenntnisse',
   'fließenden Deutschkenntnissen',
   'fliessende Deutschkenntnisse',
@@ -37,10 +37,10 @@ export const FLUENT_GERMAN_PHRASES = [
  * JobsPipe's salary filter is in US dollars. A rough rate is enough for a minimum; update it if
  * the euro moves a lot.
  */
-export const EUR_TO_USD = 1.08;
+const EUR_TO_USD = 1.08;
 
 /** The same search always gets the same key, whatever the order or case of its terms. */
-export function searchKey(input: SyncJobsInput): string {
+function searchKey(input: SyncJobsInput): string {
   const norm = (list: string[] | undefined) =>
     [...new Set((list ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))].sort((a, b) =>
       a.localeCompare(b),
@@ -65,7 +65,7 @@ export function searchKey(input: SyncJobsInput): string {
 }
 
 /** JobsPipe's date-time format: "2026-10-26 14:05:00" in UTC. */
-export function toJobsPipeTime(date: Date): string {
+function toJobsPipeTime(date: Date): string {
   return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 

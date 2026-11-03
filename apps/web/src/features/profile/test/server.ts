@@ -17,7 +17,7 @@ export const api = graphql.link(API_URL);
 /** Requests made in the current test, so tests can check what was sent. */
 export const requests: { operation: string; variables: Record<string, unknown> }[] = [];
 
-export const STYLE = {
+const STYLE = {
   resumeTemplate: 'classic',
   coverLetterLayout: 'auto',
   accentColor: '1F4E79',

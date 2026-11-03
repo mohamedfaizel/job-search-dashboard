@@ -19,7 +19,7 @@ import { CopyText } from './CopyText';
  * The one prompt for Claude in Chrome that works through the whole queue, never submitting. It
  * stays in English whatever your language: it is for Claude, not for you.
  */
-export function queuePrompt(count: number): string {
+function queuePrompt(count: number): string {
   const jobs = count === 1 ? 'one job' : `${String(count)} jobs`;
   return `Please help me apply for ${jobs} in my Apply queue. First open ${APPLY_QUEUE_URL} and read all of it. Then take the jobs one at a time, each in a new tab: open its Apply kit link, then its posting, and fill in the application form following the kit's instructions. Never click Submit: leave each form filled in on its own tab. At the end, tell me for each job what you filled in and what is left for me.`;
 }

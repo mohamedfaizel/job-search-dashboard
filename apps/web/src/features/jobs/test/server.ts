@@ -233,7 +233,7 @@ export const PROFILE: Profile = {
 /** A queued job that isn't on the dashboard's page, so the popup has to fetch it. */
 export const OFF_PAGE_JOB_ID = 'job-elsewhere';
 
-export const handlers = [
+const handlers = [
   api.query('Job', ({ variables }) => {
     requests.push({ operation: 'Job', variables });
     const id = variables['id'] as string;

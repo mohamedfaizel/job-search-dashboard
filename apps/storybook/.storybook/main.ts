@@ -1,6 +1,6 @@
 import type { StorybookConfig } from '@storybook/react-vite';
 
-// Storybook is a catalogue of the UI components from every microfrontend. It runs on its own
+// Storybook is a catalogue of the web app's UI components. It runs on its own
 // (no API, no database), and Chromatic snapshots each story to catch visual changes in PRs.
 const config: StorybookConfig = {
   framework: '@storybook/react-vite',

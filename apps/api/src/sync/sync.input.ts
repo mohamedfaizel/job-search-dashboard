@@ -15,7 +15,7 @@ import {
 import { ImportSource } from './import-source';
 
 /** The job types JobsPipe's employment_type_or accepts. */
-export const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
+const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
 
 /** What to fetch from JobsPipe. Also the shape a scheduled search will reuse later. */
 @InputType()

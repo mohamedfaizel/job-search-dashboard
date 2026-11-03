@@ -4,7 +4,7 @@ import type { DocumentFrequencies } from './tfidf';
 import { documentFrequencies, rankTerms } from './tfidf';
 
 /** How many TF-IDF keywords to show for a job. */
-export const KEYWORD_COUNT = 15;
+const KEYWORD_COUNT = 15;
 
 /** What we learn from all saved jobs at once. */
 export interface Corpus {

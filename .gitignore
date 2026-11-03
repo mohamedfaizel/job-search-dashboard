@@ -10,7 +10,6 @@ coverage-e2e/
 .turbo/
 *.tsbuildinfo
 .vite/
-.__mf__temp/
 storybook-static/
 .next/
 next-env.d.ts

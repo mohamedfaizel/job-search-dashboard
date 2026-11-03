@@ -14,7 +14,6 @@ export default tseslint.config(
       '**/dist/**',
       '**/coverage/**',
       '**/.turbo/**',
-      '**/.__mf__temp/**',
       '**/storybook-static/**',
       '**/.next/**',
       '**/next-env.d.ts',

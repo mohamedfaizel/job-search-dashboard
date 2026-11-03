@@ -9,7 +9,7 @@ export const api = graphql.link(API_URL);
 /** Requests made in the current test, so tests can check what was sent. */
 export const requests: { operation: string; variables: Record<string, unknown> }[] = [];
 
-export const LAST_RUN: SyncRun = {
+const LAST_RUN: SyncRun = {
   id: 7,
   startedAt: '2026-10-26T08:00:00.000Z',
   finishedAt: '2026-10-26T08:00:05.000Z',
@@ -52,7 +52,7 @@ export const SAVED: SavedSearch = {
   lastRun: LAST_RUN,
 };
 
-export const PROFILE: Profile = {
+const PROFILE: Profile = {
   firstName: '',
   lastName: '',
   gender: '',

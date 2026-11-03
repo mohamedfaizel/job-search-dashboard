@@ -6,17 +6,10 @@ import {
   WORKPLACES,
 } from '@jobsearch/data';
 import { z } from 'zod';
-
-/** Splits "react, node.js ,  " into ["react", "node.js"]. */
-export function splitList(value: string): string[] {
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
+import { splitList } from '../../lib/split-list';
 
 /** Splits "greenhouse:stripe, lever:netflix  ashby:ramp" on commas and spaces. */
-export function splitBoards(value: string): string[] {
+function splitBoards(value: string): string[] {
   return value.split(/[\s,]+/).filter(Boolean);
 }
 

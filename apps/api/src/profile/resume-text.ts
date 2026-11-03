@@ -14,6 +14,24 @@ export function tidy(text: string): string {
     .trim();
 }
 
+/** Longer than any real resume, short enough to keep junk out. */
+const MAX_RESUME_CHARS = 50_000;
+
+/** Tidied resume text, or a "the resume is empty / too long" error. */
+export function cleanResume(text: string): string {
+  const clean = tidy(text);
+  if (!clean) throw apiError(BadRequestException, 'RESUME_EMPTY', 'The resume is empty');
+  if (clean.length > MAX_RESUME_CHARS) {
+    throw apiError(
+      BadRequestException,
+      'RESUME_TOO_LONG',
+      `A resume is at most ${String(MAX_RESUME_CHARS)} characters`,
+      { max: MAX_RESUME_CHARS },
+    );
+  }
+  return clean;
+}
+
 /** The parts of a multer upload we use. */
 export interface UploadedResume {
   buffer: Buffer;

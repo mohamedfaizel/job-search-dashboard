@@ -4,10 +4,9 @@ import { Provider } from 'react-redux';
 import { meKey } from './api/auth';
 import { isUnauthenticated } from './api/client';
 import type { AppStore } from './store/store';
-import { makeStore } from './store/store';
 
 export function createQueryClient(): QueryClient {
-  // When any request says "log in first" (the session expired), forget the user: the shell
+  // When any request says "log in first" (the session expired), forget the user: the app
   // then shows the login page instead of a screen full of errors.
   const onError = (error: unknown) => {
     if (isUnauthenticated(error)) client.setQueryData(meKey, null);
@@ -27,24 +26,14 @@ export function createQueryClient(): QueryClient {
   return client;
 }
 
-// One store and one query cache for the whole page. Module Federation shares this package
-// as a singleton, so the shell and every microfrontend see the same state and cache:
-// a job added in the form shows up in the dashboard without a reload.
-const sharedStore = makeStore();
-const sharedQueryClient = createQueryClient();
-
 interface Props {
   children: ReactNode;
-  /** Tests and stories pass their own, so each starts from a clean slate. */
-  store?: AppStore;
-  queryClient?: QueryClient;
+  /** Made once per page (or per test or story) with makeStore() and createQueryClient(). */
+  store: AppStore;
+  queryClient: QueryClient;
 }
 
-export function DataProvider({
-  children,
-  store = sharedStore,
-  queryClient = sharedQueryClient,
-}: Props) {
+export function DataProvider({ children, store, queryClient }: Props) {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

@@ -12,7 +12,7 @@ import type { BoardRef } from './company-boards.types';
 
 const PAUSE_MS = 250;
 /** A run saves at most this many postings, however wide the search. */
-export const MAX_SAVED_PER_RUN = 500;
+const MAX_SAVED_PER_RUN = 500;
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => {

@@ -21,7 +21,7 @@ function languageName(code: string): string {
 }
 
 /** "frontend, react dev · DE · Berlin" from the input an import stored. */
-export function summarize(input: Prisma.JsonValue): string {
+function summarize(input: Prisma.JsonValue): string {
   const obj = (input ?? {}) as Record<string, unknown>;
   const list = (key: string) => (Array.isArray(obj[key]) ? (obj[key] as string[]) : []);
   const extras = [
@@ -39,7 +39,7 @@ export function summarize(input: Prisma.JsonValue): string {
     .join(' · ');
 }
 
-export function toRunModel(run: RunRow): SyncRunModel {
+function toRunModel(run: RunRow): SyncRunModel {
   return {
     id: run.id,
     startedAt: run.startedAt,
