@@ -495,6 +495,16 @@ export interface JobInsights {
   jobResume: JobResume | null;
   /** The Apply kit prompt: paste into Claude for the resume, cover letter and form answers. */
   prompt: string;
+  /** The interview prep prompt: paste into Claude for questions, answers and your gaps. */
+  interviewPrompt: string;
+  /** What Claude answered to it, if you pasted it back. */
+  interviewPrep: InterviewPrep | null;
+}
+
+/** Claude's interview prep for one job, as pasted back. */
+export interface InterviewPrep {
+  text: string;
+  updatedAt: string;
 }
 
 /** The resume you wrote for one job, scored the same way as your profile resume. */

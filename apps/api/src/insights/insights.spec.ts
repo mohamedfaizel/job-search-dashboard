@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildTranslationPrompt, resumeFor } from '../profile/resumes';
 import { germanRequirement } from './german';
+import { buildInterviewPrompt } from './interview-prompt';
 import { parseLine, pdfFileName, textToPdf, toWinAnsi } from './pdf';
 import {
   applicationFacts,
@@ -218,6 +219,67 @@ describe('titleMatch', () => {
     expect(
       titleMatch('Frontend Softwareentwickler (all genders)', 'Frontend developer', 'de'),
     ).toBe(50);
+  });
+});
+
+describe('buildInterviewPrompt', () => {
+  const input = {
+    title: 'Frontend Entwickler',
+    company: 'Acme',
+    city: 'Berlin',
+    resumeLanguage: 'de' as const,
+    germanLevel: 'B2',
+    languages: ['German A2', 'English C1'],
+    missingSkills: ['kafka'],
+    missingKeywords: ['microfrontends', 'a', 'b', 'c', 'd', 'e', 'f'],
+    mustAdd: [] as string[],
+    resumeIn: 'en',
+    otherSkills: ['Apollo'],
+    resume: 'React developer since 2019.',
+    description: 'Wir suchen …',
+    facts: [] as string[],
+    savedAnswers: '',
+  };
+
+  it('coaches in German for a German job, at your real level', () => {
+    const prompt = buildInterviewPrompt(input);
+    expect(prompt).toContain('Job: Frontend Entwickler at Acme in Berlin');
+    expect(prompt).toContain('The job asks for German (B2)');
+    expect(prompt).toContain('model answers in German');
+    expect(prompt).toContain('- German A2\n- English C1');
+    expect(prompt).toContain('never claim a higher one');
+  });
+
+  it('lists the gaps, with a few keywords, and keeps your honesty rules', () => {
+    const prompt = buildInterviewPrompt(input);
+    expect(prompt).toContain('- kafka\n- microfrontends\n- a\n- b\n- c\n- d');
+    expect(prompt).not.toContain('- e\n');
+    expect(prompt).toContain('Never invent employers, projects, numbers, titles or skills');
+    expect(prompt).toContain('React developer since 2019.');
+    expect(prompt).toContain('Wir suchen …');
+    expect(prompt).toContain('What they care about');
+    expect(prompt).toContain('Questions for them');
+    expect(prompt).toContain('what to read about Acme');
+  });
+
+  it('writes in English for an English job, without a city, resume or description', () => {
+    const prompt = buildInterviewPrompt({
+      ...input,
+      resumeLanguage: 'en',
+      germanLevel: null,
+      city: null,
+      languages: [],
+      missingSkills: [],
+      missingKeywords: [],
+      resume: ' ',
+      description: null,
+    });
+    expect(prompt).toContain('Job: Frontend Entwickler at Acme\n');
+    expect(prompt).toContain('Write everything in English.');
+    expect(prompt).not.toContain('My languages');
+    expect(prompt).toContain('Ask me for it before you start.');
+    expect(prompt).toContain('(No description saved.)');
+    expect(prompt).toContain('(my likely gaps):\n- (none)');
   });
 });
 

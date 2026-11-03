@@ -18,6 +18,7 @@ import type {
   RemovedTermModel,
   TermCheckModel,
 } from './insights.model';
+import { buildInterviewPrompt } from './interview-prompt';
 import type { PromptInput } from './prompt';
 import {
   applicationFacts,
@@ -34,6 +35,8 @@ import { jobTerms } from './terms';
 
 /** Longer than any real resume, short enough to keep junk out. */
 export const MAX_RESUME_CHARS = 50_000;
+/** Claude's interview prep is long (questions, answers, plans), but it is still text for reading. */
+export const MAX_INTERVIEW_PREP_CHARS = 30_000;
 
 /** A resume file: what was uploaded, or what a download sends. */
 export interface JobResumeFile {
@@ -58,55 +61,60 @@ export class InsightsService {
     userId: number,
     jobId: string,
   ): Promise<{ insights: JobInsightsModel; promptInput: PromptInput }> {
-    const [job, profile, removedRows, jobResume, languageResumes] = await Promise.all([
-      this.prisma.job.findUnique({
-        where: { id: jobId },
-        select: {
-          title: true,
-          description: true,
-          language: true,
-          skills: true,
-          city: true,
-          raw: true,
-          company: { select: { name: true } },
-        },
-      }),
-      this.prisma.profile.findUnique({
-        where: { userId },
-        select: {
-          resumeText: true,
-          resumeLanguage: true,
-          headline: true,
-          skills: true,
-          languages: true,
-          yearsExperience: true,
-          address: true,
-          workPermit: true,
-          noticePeriod: true,
-          salaryExpectation: true,
-          relocation: true,
-          applicationNotes: true,
-        },
-      }),
-      this.prisma.removedTerm.findMany({
-        where: { userId, OR: [{ jobId }, { jobId: null }] },
-        orderBy: { createdAt: 'asc' },
-      }),
-      this.prisma.jobResume.findUnique({
-        where: { userId_jobId: { userId, jobId } },
-        select: {
-          text: true,
-          fileName: true,
-          coverLetter: true,
-          formAnswers: true,
-          updatedAt: true,
-        },
-      }),
-      this.prisma.languageResume.findMany({
-        where: { userId },
-        select: { language: true, text: true },
-      }),
-    ]);
+    const [job, profile, removedRows, jobResume, languageResumes, interviewPrep] =
+      await Promise.all([
+        this.prisma.job.findUnique({
+          where: { id: jobId },
+          select: {
+            title: true,
+            description: true,
+            language: true,
+            skills: true,
+            city: true,
+            raw: true,
+            company: { select: { name: true } },
+          },
+        }),
+        this.prisma.profile.findUnique({
+          where: { userId },
+          select: {
+            resumeText: true,
+            resumeLanguage: true,
+            headline: true,
+            skills: true,
+            languages: true,
+            yearsExperience: true,
+            address: true,
+            workPermit: true,
+            noticePeriod: true,
+            salaryExpectation: true,
+            relocation: true,
+            applicationNotes: true,
+          },
+        }),
+        this.prisma.removedTerm.findMany({
+          where: { userId, OR: [{ jobId }, { jobId: null }] },
+          orderBy: { createdAt: 'asc' },
+        }),
+        this.prisma.jobResume.findUnique({
+          where: { userId_jobId: { userId, jobId } },
+          select: {
+            text: true,
+            fileName: true,
+            coverLetter: true,
+            formAnswers: true,
+            updatedAt: true,
+          },
+        }),
+        this.prisma.languageResume.findMany({
+          where: { userId },
+          select: { language: true, text: true },
+        }),
+        this.prisma.interviewPrep.findUnique({
+          where: { userId_jobId: { userId, jobId } },
+          select: { text: true, updatedAt: true },
+        }),
+      ]);
     if (!job)
       throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
 
@@ -206,6 +214,8 @@ export class InsightsService {
       score: before.score,
       jobResume: jobResume && this.afterScore(jobResume, terms, before, factSources),
       prompt: buildResumePrompt(promptInput),
+      interviewPrompt: buildInterviewPrompt(promptInput),
+      interviewPrep,
     };
     return { insights, promptInput };
   }
@@ -308,6 +318,38 @@ export class InsightsService {
   /** Deletes the resume you wrote for a job. Deleting again does nothing. */
   async deleteJobResume(userId: number, jobId: string) {
     await this.prisma.jobResume.deleteMany({ where: { userId, jobId } });
+    return this.forJob(userId, jobId);
+  }
+
+  /**
+   * Saves what Claude answered to the interview prep prompt, replacing the one before. The text
+   * is kept as pasted (it is for reading, not scored).
+   */
+  async saveInterviewPrep(userId: number, jobId: string, text: string) {
+    const clean = tidy(text);
+    if (!clean) {
+      throw apiError(BadRequestException, 'INTERVIEW_PREP_EMPTY', 'The interview prep is empty');
+    }
+    if (clean.length > MAX_INTERVIEW_PREP_CHARS) {
+      throw apiError(
+        BadRequestException,
+        'INTERVIEW_PREP_TOO_LONG',
+        `Interview prep is at most ${String(MAX_INTERVIEW_PREP_CHARS)} characters`,
+        { max: MAX_INTERVIEW_PREP_CHARS },
+      );
+    }
+    await this.assertJob(jobId);
+    await this.prisma.interviewPrep.upsert({
+      where: { userId_jobId: { userId, jobId } },
+      create: { userId, jobId, text: clean },
+      update: { text: clean },
+    });
+    return this.forJob(userId, jobId);
+  }
+
+  /** Deletes the interview prep for a job. Deleting again does nothing. */
+  async deleteInterviewPrep(userId: number, jobId: string) {
+    await this.prisma.interviewPrep.deleteMany({ where: { userId, jobId } });
     return this.forJob(userId, jobId);
   }
 

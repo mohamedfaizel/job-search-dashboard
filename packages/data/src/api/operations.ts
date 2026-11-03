@@ -573,6 +573,11 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       }
     }
     prompt
+    interviewPrompt
+    interviewPrep {
+      text
+      updatedAt
+    }
   }
 `;
 
@@ -616,6 +621,24 @@ export const SAVE_JOB_RESUME_TEXT = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation SaveJobResumeText($jobId: ID!, $text: String!) {
     saveJobResumeText(jobId: $jobId, text: $text) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const SAVE_INTERVIEW_PREP = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation SaveInterviewPrep($jobId: ID!, $text: String!) {
+    saveInterviewPrep(jobId: $jobId, text: $text) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const DELETE_INTERVIEW_PREP = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation DeleteInterviewPrep($jobId: ID!) {
+    deleteInterviewPrep(jobId: $jobId) {
       ...JobInsightsFields
     }
   }

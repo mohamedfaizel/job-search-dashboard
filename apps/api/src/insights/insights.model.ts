@@ -100,6 +100,17 @@ export class JobResumeModel {
   factCheck!: FactFindingModel[] | null;
 }
 
+@ObjectType('InterviewPrep', {
+  description: 'What Claude wrote to prepare you for an interview for this job, pasted back',
+})
+export class InterviewPrepModel {
+  @Field()
+  text!: string;
+
+  @Field()
+  updatedAt!: Date;
+}
+
 @ObjectType('JobInsights', {
   description:
     'What the job asks for, worked out without AI: JobsPipe tags, TF-IDF and word matching against your resume text.',
@@ -195,4 +206,16 @@ export class JobInsightsModel {
       'The Apply kit prompt for Claude desktop or web: your resume tailored to this job, a cover letter and form answers',
   })
   prompt!: string;
+
+  @Field({
+    description:
+      'The interview prep prompt for Claude: likely questions with answers from your resume, your gaps, and questions to ask',
+  })
+  interviewPrompt!: string;
+
+  @Field(() => InterviewPrepModel, {
+    nullable: true,
+    description: 'Claude’s interview prep for this job, if you pasted it back',
+  })
+  interviewPrep!: InterviewPrepModel | null;
 }

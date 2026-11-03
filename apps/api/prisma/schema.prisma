@@ -82,6 +82,7 @@ model User {
   tailored        TailoredResume[]
   removedTerms    RemovedTerm[]
   jobResumes      JobResume[]
+  interviewPreps  InterviewPrep[]
   applyQueue      ApplyQueueItem[]
   jobFits         JobFit[]
   /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
@@ -336,6 +337,7 @@ model Job {
   tailored        TailoredResume[]
   removedTerms    RemovedTerm[]
   jobResumes      JobResume[]
+  interviewPreps  InterviewPrep[]
   applyQueue      ApplyQueueItem[]
   fits            JobFit[]
 
@@ -482,6 +484,19 @@ model JobResume {
   coverLetter String   @default("")
   formAnswers String   @default("")
   updatedAt   DateTime @updatedAt
+
+  @@id([userId, jobId])
+}
+
+/// What Claude wrote to prepare you for an interview for one job (pasted back from the prompt in
+/// the job popup). One per user and job; saving again replaces it.
+model InterviewPrep {
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId     String
+  text      String
+  updatedAt DateTime @updatedAt
 
   @@id([userId, jobId])
 }
