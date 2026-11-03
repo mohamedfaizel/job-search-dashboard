@@ -855,6 +855,7 @@
         "EMAIL": "Deine E-Mail ist lesbarer Text: {detail}",
         "DATES": "Datumsangaben mit einfachem Bindestrich",
         "CHARACTERS": "Keine kaputten Zeichen oder Icons",
+        "PLACEHOLDERS": "Keine Platzhalter wie „(fill in)“",
         "SKILLS": "Jeder Job-Skill aus deinem Lebenslauf steht im PDF-Text"
       },
       "pdfBad": {
@@ -863,6 +864,7 @@
         "EMAIL": "Deine E-Mail {detail} ist nicht als Text lesbar. Schreib sie als einfachen Text in den Kopf.",
         "DATES": "Lange Striche in Datumsangaben ({detail}): manche ATS lesen sie falsch. Nutze 01/2020 - 03/2023.",
         "CHARACTERS": "Zeichen, die ein ATS nicht lesen kann ({detail}): Ligaturen oder Icons.",
+        "PLACEHOLDERS": "Noch auszufüllen: {detail}. Bitte Claude, es zu entfernen, oder ergänze es vor dem Senden.",
         "SKILLS": "Im PDF-Text verloren: {detail}"
       }
     },

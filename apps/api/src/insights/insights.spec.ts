@@ -374,6 +374,10 @@ describe('buildResumePrompt', () => {
     }
     expect(buildResumePrompt({ ...input, savedAnswers: ' ' })).not.toContain('My saved answers');
     expect(prompt).toContain('My achievements bank');
+    expect(prompt).toContain('Never name the company or say that I am applying');
+    expect(prompt).toContain('never write "(fill in)"');
+    expect(prompt).toContain('| work permit (only when my application facts give one');
+    expect(prompt).toContain('One result per bullet');
     expect(prompt).toContain('- Cut page load time by 40% at Acme (2023)');
     expect(buildResumePrompt({ ...input, achievements: [] })).not.toContain('achievements bank');
     expect(prompt).toContain('- Skipped:');

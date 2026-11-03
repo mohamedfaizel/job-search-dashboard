@@ -65,22 +65,23 @@ Interview test: I must be able to explain every line in an interview without say
  * resume read like a person wrote it, not a keyword machine.
  */
 const WRITING_RULES = `How to write:
-- Summary: 3 to 4 lines that say which role I am targeting and why I fit this one, with one or two proof points that match the ad's most important requirements. If the job is outside my usual field, open with the one sentence that connects my background to their problem.
-- Bullets: start with a strong verb, show the result (numbers only when they are in my resume), vary how they start. 4 to 5 bullets for my latest job, 2 to 3 for the one before, 1 to 2 for older ones.
+- Summary: 3 to 4 lines that say which role I am targeting and why I fit this one, with one or two proof points that match the ad's most important requirements. If the job is outside my usual field, open with the one sentence that connects my background to their problem. Never name the company or say that I am applying ("applying for the … role at …"): the summary is about what I bring.
+- Bullets: start with a strong verb, show the result (numbers only when they are in my resume or achievements), vary how they start. One result per bullet, at most two lines: split a bullet that holds two results. 4 to 5 bullets for my latest job, 2 to 3 for the one before, 1 to 2 for older ones. Keep my strongest numbers (team sizes, time saved, scale, money) when they fit the job, also from older jobs.
 - Skills: 4 to 6 groups with bold labels; use the ad's own name for a group when it truly fits.
 - Banned words and phrases: passionate, leverage, synergy, drive results, hit the ground running, team player, results-driven, dynamic, cutting-edge, I believe I would be a great fit. Show it with an example instead.
 - No em dashes (—). Use commas or full stops.
 - Active voice, confident, no apologising ("I think I could"). Plain words, short sentences.
-- A degree or course I have not finished says so in its own entry: "In progress, expected MM/YYYY".`;
+- A degree or course I have not finished says so in its own entry: "In progress, expected MM/YYYY".
+- No placeholders in the resume or cover letter: never write "(fill in)", "TBD", "[Company]" or similar. Leave out a detail you do not know (a school name, a start date) and ask me for it under Ask me in the CHECK part.`;
 
 /**
  * The resume comes back in one Markdown shape, so the download can put it into the PDF
  * template you picked (apps/api/src/documents/resume-doc.ts reads it).
  */
-const LAYOUT = `Layout: ATS-friendly, one column. At most two pages (one page if I have less than 3 years of experience); when it is too long, cut the lines least relevant to this job first, wherever they are. Most relevant experience first. Write the resume in Markdown in exactly this shape (section headings in the resume's language), so my job tracker can put it into my PDF template:
+const LAYOUT = `Layout: ATS-friendly, one column. At most two pages (one page if I have less than 3 years of experience); when it is too long, cut the lines least relevant to this job first, wherever they are. Use the room well: when a second page would be less than a third full, either add my strongest results that fit this job or tighten to one page. Most relevant experience first. Write the resume in Markdown in exactly this shape (section headings in the resume's language), so my job tracker can put it into my PDF template:
 # Full Name
 Headline: the job title I am applying as
-City, Country | phone | email | LinkedIn or website
+City, Country | phone | email | LinkedIn or website | work permit (only when my application facts give one, e.g. "EU Blue Card"; employers in Germany look for it)
 ## Summary
 Two to four sentences.
 ## Skills
@@ -91,16 +92,17 @@ City | MM/YYYY - MM/YYYY
 - What I did, with a result
 ## Education
 ### Degree | School
-MM/YYYY - MM/YYYY
+the year I finished (or MM/YYYY - MM/YYYY when my resume gives both)
 ## Languages
 - Language: level
-Dates: a plain hyphen (-) between start and end, never a long dash (– or —), and always both a start and an end ("today" for my current job): many ATS systems drop dates they cannot split.
+Dates: a plain hyphen (-) between start and end, never a long dash (– or —), and every job with both a start and an end ("today" for my current job): many ATS systems drop dates they cannot split.
 My email and phone as plain text in the contact line, not only behind a link.
 No tables, columns, icons or images, and no styling other than **bold**.`;
 
 const CHECK_PART = `- Related: the terms you added under rule 2, each with the experience it is tied to.
 - Skipped: the terms you left out, each with one line why.
-- Stretches: each line I might struggle to explain in an interview, with why, and ask me: keep, soften or drop?`;
+- Stretches: each line I might struggle to explain in an interview, with why, and ask me: keep, soften or drop?
+- Ask me: details you left out because you did not know them (a school name, a date).`;
 
 /** The "I have this" terms, or nothing when there are none (so the prompt stays short). */
 const mustAddPart = (terms: string[], resume = 'my resume') =>

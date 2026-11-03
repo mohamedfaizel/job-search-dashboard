@@ -300,7 +300,15 @@ export function FactCheck({ findings }: { findings: FactFinding[] | null }) {
   );
 }
 
-const PDF_CHECKS = ['PAGES', 'TEXT', 'EMAIL', 'DATES', 'CHARACTERS', 'SKILLS'] as const;
+const PDF_CHECKS = [
+  'PAGES',
+  'TEXT',
+  'EMAIL',
+  'DATES',
+  'CHARACTERS',
+  'PLACEHOLDERS',
+  'SKILLS',
+] as const;
 
 /**
  * Checks the finished PDF the way an ATS reads it: only its text. Runs when you press the

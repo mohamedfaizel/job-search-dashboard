@@ -369,6 +369,7 @@ export const handlers = [
             { code: 'EMAIL', ok: true, detail: 'user@example.com' },
             { code: 'DATES', ok: false, detail: '01/2020 – today' },
             { code: 'CHARACTERS', ok: true, detail: '' },
+            { code: 'PLACEHOLDERS', ok: false, detail: '(fill in)' },
             { code: 'SKILLS', ok: true, detail: '' },
           ],
         },

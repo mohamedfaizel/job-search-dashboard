@@ -231,7 +231,9 @@ export class JobInsightsModel {
   description: 'One check of the finished resume PDF, read the way an ATS reads it',
 })
 export class PdfCheckItemModel {
-  @Field(() => String, { description: 'PAGES, TEXT, EMAIL, DATES, CHARACTERS or SKILLS' })
+  @Field(() => String, {
+    description: 'PAGES, TEXT, EMAIL, DATES, CHARACTERS, PLACEHOLDERS or SKILLS',
+  })
   code!: string;
 
   @Field()

@@ -855,6 +855,7 @@
         "EMAIL": "Your e-mail is readable text: {detail}",
         "DATES": "Dates use a plain hyphen",
         "CHARACTERS": "No broken characters or icons",
+        "PLACEHOLDERS": "No placeholders such as \"(fill in)\"",
         "SKILLS": "Every job skill in your resume is in the PDF text"
       },
       "pdfBad": {
@@ -863,6 +864,7 @@
         "EMAIL": "Your e-mail {detail} is not readable as text. Put it in the header as plain text.",
         "DATES": "Long dashes in dates ({detail}): some ATS misread them. Use 01/2020 - 03/2023.",
         "CHARACTERS": "Characters an ATS can’t read ({detail}): ligatures or icons.",
+        "PLACEHOLDERS": "Text left to fill in: {detail}. Ask Claude to remove it, or fill it in before you send.",
         "SKILLS": "Lost in the PDF text: {detail}"
       }
     },
