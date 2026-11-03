@@ -156,7 +156,10 @@
       "lastUpload": "Last upload: {file}",
       "uploadHint": "Up to 5 MB. Scanned images can’t be read.",
       "read": "Resume read. The text below is what we’ll use; fix anything that came out wrong.",
-      "tooBig": "That file is over 5 MB."
+      "tooBig": "That file is over 5 MB.",
+      "achievements": "Achievements bank",
+      "achievementsHint": "One true fact per line, with real numbers. Claude may use them in any tailored resume, and the fact check trusts them.",
+      "achievementsExample": "Cut page load time by 40% at Acme (2023)\nLed a team of 4 developers on the checkout redesign"
     },
     "save": "Save profile",
     "saving": "Saving…",
@@ -837,7 +840,31 @@
       "saved": "saved {date}",
       "replace": "Replace",
       "delete": "Delete",
-      "deleteError": "Could not delete it: {error}"
+      "deleteError": "Could not delete it: {error}",
+      "pdfTitle": "PDF check",
+      "pdfIntro": "Reads the finished PDF the way an ATS does, from its text only: pages, your name and e-mail, dates, odd characters and skills.",
+      "pdfRun": "Check the PDF",
+      "pdfAgain": "Check again",
+      "pdfChecking": "Making and reading the PDF…",
+      "pdfAllOk": "All good: an ATS reads this PDF correctly.",
+      "pdfProblems": "{count, plural, one {# thing} other {# things}} to fix",
+      "pdfError": "Could not check the PDF: {error}",
+      "pdfOk": {
+        "PAGES": "{pages, plural, one {# page} other {# pages}} (limit {limit})",
+        "TEXT": "The text can be read ({detail} words), with your name",
+        "EMAIL": "Your e-mail is readable text: {detail}",
+        "DATES": "Dates use a plain hyphen",
+        "CHARACTERS": "No broken characters or icons",
+        "SKILLS": "Every job skill in your resume is in the PDF text"
+      },
+      "pdfBad": {
+        "PAGES": "{pages, plural, one {# page} other {# pages}}: keep it to {limit}. Ask Claude to shorten it, or pick a compact template.",
+        "TEXT": "Almost no readable text ({detail} words) or your name is missing: an ATS may see an empty resume.",
+        "EMAIL": "Your e-mail {detail} is not readable as text. Put it in the header as plain text.",
+        "DATES": "Long dashes in dates ({detail}): some ATS misread them. Use 01/2020 - 03/2023.",
+        "CHARACTERS": "Characters an ATS can’t read ({detail}): ligatures or icons.",
+        "SKILLS": "Lost in the PDF text: {detail}"
+      }
     },
     "stillOpen": {
       "never": "Not checked yet if the ad is still open",

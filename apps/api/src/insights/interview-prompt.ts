@@ -1,4 +1,5 @@
 import type { PromptInput } from './prompt';
+import { achievementsPart } from './prompt';
 
 const list = (items: string[]) =>
   items.length ? items.map((item) => `- ${item}`).join('\n') : '- (none)';
@@ -33,7 +34,7 @@ export function buildInterviewPrompt(input: PromptInput): string {
 Job: ${input.title} at ${input.company}${where}
 ${languageLine(input)}
 
-Rules: use only what is in my resume below. Never invent employers, projects, numbers, titles or skills for me. Where my resume is thin, say so and give me an honest way to answer instead of a made-up story.${languages}
+Rules: use only what is in my resume and my achievements below. Never invent employers, projects, numbers, titles or skills for me. Where my resume is thin, say so and give me an honest way to answer instead of a made-up story.${languages}
 
 Skills and keywords in the job ad that my resume does not show (my likely gaps):
 ${list(gaps)}
@@ -49,7 +50,7 @@ Write these six parts, each with a heading:
 My resume:
 """
 ${resume}
-"""
+"""${achievementsPart(input.achievements)}
 
 The job ad:
 """

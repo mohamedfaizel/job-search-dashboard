@@ -240,6 +240,7 @@ describe('buildInterviewPrompt', () => {
     description: 'Wir suchen …',
     facts: [] as string[],
     savedAnswers: '',
+    achievements: [] as string[],
   };
 
   it('coaches in German for a German job, at your real level', () => {
@@ -301,6 +302,7 @@ describe('buildResumePrompt', () => {
     description: 'Wir suchen …',
     facts: ['Work permit: EU Blue Card', 'Notice period / earliest start: 1 month'],
     savedAnswers: 'I want to work on products people use every day.',
+    achievements: ['Cut page load time by 40% at Acme (2023)'],
   };
 
   it('asks for the job’s language and lists what is missing', () => {
@@ -371,6 +373,9 @@ describe('buildResumePrompt', () => {
       expect(prompt).toContain(`=== ${part} ===`);
     }
     expect(buildResumePrompt({ ...input, savedAnswers: ' ' })).not.toContain('My saved answers');
+    expect(prompt).toContain('My achievements bank');
+    expect(prompt).toContain('- Cut page load time by 40% at Acme (2023)');
+    expect(buildResumePrompt({ ...input, achievements: [] })).not.toContain('achievements bank');
     expect(prompt).toContain('- Skipped:');
   });
 
@@ -564,6 +569,7 @@ describe('queue prompt', () => {
     description: 'x'.repeat(6000),
     facts: [],
     savedAnswers: '',
+    achievements: [],
   });
 
   it('puts the resume in once and each job with its own language and markers', () => {

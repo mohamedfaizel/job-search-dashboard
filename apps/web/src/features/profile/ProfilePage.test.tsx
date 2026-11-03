@@ -95,6 +95,22 @@ describe('profile page', () => {
     });
   });
 
+  it('saves the achievements bank on the Resume tab', async () => {
+    const user = await renderProfile();
+    await openTab(user, 'Resume');
+    await user.type(
+      screen.getByRole('textbox', { name: 'Achievements bank' }),
+      'Cut page load time by 40% at Acme (2023)',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Save profile' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.');
+    expect(requests[0]).toMatchObject({
+      variables: { input: { achievements: 'Cut page load time by 40% at Acme (2023)' } },
+    });
+  });
+
   it('shows what to fix before saving', async () => {
     const user = await renderProfile();
     await user.type(screen.getByRole('textbox', { name: 'Website' }), 'my site');

@@ -82,6 +82,7 @@ export const PROFILE: Profile = {
   salaryExpectation: '',
   relocation: '',
   applicationNotes: '',
+  achievements: '',
   updatedAt: null,
 };
 

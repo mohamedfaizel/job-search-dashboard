@@ -150,6 +150,28 @@ describe('JobResumePanel', () => {
     });
   });
 
+  it('checks the finished PDF the way an ATS reads it', async () => {
+    const user = userEvent.setup();
+    jobResume.current = { ...SAVED_RESUME };
+    renderPanel();
+
+    const box = await screen.findByRole('region', { name: 'PDF check' });
+    await user.click(within(box).getByRole('button', { name: 'Check the PDF' }));
+
+    expect(await within(box).findByRole('status')).toHaveTextContent('2 things to fix');
+    expect(within(box).getByText(/3 pages: keep it to 2/)).toBeInTheDocument();
+    expect(within(box).getByText(/Long dashes in dates \(01\/2020 – today\)/)).toBeInTheDocument();
+    expect(within(box).getByText(/412 words/)).toBeInTheDocument();
+    expect(
+      within(box).getByText('Your e-mail is readable text: user@example.com'),
+    ).toBeInTheDocument();
+    expect(requests).toContainEqual({
+      operation: 'ResumePdfCheck',
+      variables: { jobId: 'job-1', template: 'modern' },
+    });
+    expect(within(box).getByRole('button', { name: 'Check again' })).toBeInTheDocument();
+  });
+
   it('uploads a file and offers it for download', async () => {
     const user = userEvent.setup();
     renderPanel();

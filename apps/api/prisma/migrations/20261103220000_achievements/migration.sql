@@ -1,0 +1,1 @@
+ALTER TABLE "Profile" ADD COLUMN "achievements" TEXT NOT NULL DEFAULT '';

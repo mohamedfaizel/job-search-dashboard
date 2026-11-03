@@ -147,6 +147,9 @@ model Profile {
   drivingLicence    String    @default("")
   /// Free text: short answers you reuse, like why you are looking for a new job.
   applicationNotes  String    @default("")
+  /// Your achievements bank: true facts with numbers, one per line. Resume prompts may use
+  /// them and the fact check trusts them.
+  achievements      String    @default("")
   /// Your own fields for anything else forms ask: [{ "label": "Xing", "value": "…" }].
   customFields      Json      @default("[]")
   updatedAt         DateTime  @updatedAt

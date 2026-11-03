@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
-const FIELDS = `firstName lastName gender dateOfBirth nationality employmentType workplacePreference drivingLicence customFields { label value } headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName phone address workPermit noticePeriod salaryExpectation relocation applicationNotes updatedAt`;
+const FIELDS = `firstName lastName gender dateOfBirth nationality employmentType workplacePreference drivingLicence customFields { label value } headline targetRoles locations skills languages yearsExperience linkedinUrl githubUrl websiteUrl resumeText resumeFileName phone address workPermit noticePeriod salaryExpectation relocation applicationNotes achievements updatedAt`;
 const MY_PROFILE = `query { myProfile { ${FIELDS} } }`;
 const UPDATE = `mutation ($input: ProfileInput!) { updateProfile(input: $input) { ${FIELDS} } }`;
 
@@ -29,6 +29,7 @@ const INPUT = {
   salaryExpectation: '',
   relocation: 'Yes, within Germany',
   applicationNotes: 'I want to build products people use every day.',
+  achievements: ' Cut page load time by 40% at Acme (2023) ',
 };
 
 describe('profile', () => {
@@ -92,6 +93,7 @@ describe('profile', () => {
         salaryExpectation: '',
         relocation: '',
         applicationNotes: '',
+        achievements: '',
         updatedAt: null,
       },
     });
@@ -120,6 +122,7 @@ describe('profile', () => {
       salaryExpectation: '',
       relocation: 'Yes, within Germany',
       applicationNotes: 'I want to build products people use every day.',
+      achievements: 'Cut page load time by 40% at Acme (2023)',
     });
     expect(res.data!.myProfile['updatedAt']).not.toBeNull();
   });

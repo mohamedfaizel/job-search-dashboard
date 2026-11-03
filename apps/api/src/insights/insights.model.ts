@@ -226,3 +226,34 @@ export class JobInsightsModel {
   })
   interviewPrep!: InterviewPrepModel | null;
 }
+
+@ObjectType('PdfCheckItem', {
+  description: 'One check of the finished resume PDF, read the way an ATS reads it',
+})
+export class PdfCheckItemModel {
+  @Field(() => String, { description: 'PAGES, TEXT, EMAIL, DATES, CHARACTERS or SKILLS' })
+  code!: string;
+
+  @Field()
+  ok!: boolean;
+
+  @Field({
+    description:
+      'What was found: "pages/limit" for PAGES, the word count for TEXT, your e-mail for EMAIL, else what is wrong (comma separated)',
+  })
+  detail!: string;
+}
+
+@ObjectType('PdfCheck', {
+  description: 'The finished resume PDF in your template, checked from its text layer',
+})
+export class PdfCheckModel {
+  @Field()
+  jobId!: string;
+
+  @Field({ description: 'The template the PDF was made with' })
+  template!: string;
+
+  @Field(() => [PdfCheckItemModel])
+  items!: PdfCheckItemModel[];
+}

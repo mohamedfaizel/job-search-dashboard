@@ -41,6 +41,7 @@ const empty = (otherResumes: LanguageResumeModel[]): ProfileModel => ({
   workplacePreference: '',
   drivingLicence: '',
   applicationNotes: '',
+  achievements: '',
   customFields: [],
   updatedAt: null,
 });
@@ -91,6 +92,7 @@ function toModel(
     workplacePreference: profile.workplacePreference,
     drivingLicence: profile.drivingLicence,
     applicationNotes: profile.applicationNotes,
+    achievements: profile.achievements,
     customFields: customFieldsOf(profile.customFields),
     updatedAt: profile.updatedAt,
   };
@@ -147,6 +149,7 @@ export class ProfileService {
       workplacePreference: input.workplacePreference,
       drivingLicence: input.drivingLicence,
       applicationNotes: input.applicationNotes,
+      achievements: input.achievements,
       // Empty rows from the form are dropped.
       customFields: input.customFields
         .filter((f) => f.label || f.value)

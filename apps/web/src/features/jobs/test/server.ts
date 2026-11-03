@@ -222,6 +222,7 @@ export const PROFILE: Profile = {
   salaryExpectation: '',
   relocation: '',
   applicationNotes: '',
+  achievements: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
 };
 
@@ -355,6 +356,25 @@ export const handlers = [
       },
     }),
   ),
+  api.query('ResumePdfCheck', ({ variables }) => {
+    requests.push({ operation: 'ResumePdfCheck', variables });
+    return HttpResponse.json({
+      data: {
+        resumePdfCheck: {
+          jobId: variables['jobId'],
+          template: variables['template'],
+          items: [
+            { code: 'PAGES', ok: false, detail: '3/2' },
+            { code: 'TEXT', ok: true, detail: '412' },
+            { code: 'EMAIL', ok: true, detail: 'user@example.com' },
+            { code: 'DATES', ok: false, detail: '01/2020 – today' },
+            { code: 'CHARACTERS', ok: true, detail: '' },
+            { code: 'SKILLS', ok: true, detail: '' },
+          ],
+        },
+      },
+    });
+  }),
   api.query('JobInsights', ({ variables }) =>
     HttpResponse.json({ data: { jobInsights: { ...insightsNow(), jobId: variables['jobId'] } } }),
   ),

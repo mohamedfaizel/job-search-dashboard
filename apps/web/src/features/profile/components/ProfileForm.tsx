@@ -31,6 +31,7 @@ const FIELD_TAB: Partial<Record<keyof ProfileFormValues, ProfileTab>> = {
   customFields: 'applications',
   resumeText: 'resume',
   resumeLanguage: 'resume',
+  achievements: 'resume',
 };
 
 /** The gender codes the API stores; their words are in messages under Profile.personal.genders. */
@@ -521,6 +522,20 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             {...a11y('resumeText')}
             rows={16}
             className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field
+          label={t('resume.achievements')}
+          htmlFor="achievements"
+          error={errors.achievements?.message}
+          hint={t('resume.achievementsHint')}
+        >
+          <textarea
+            {...register('achievements')}
+            {...a11y('achievements')}
+            rows={6}
+            placeholder={t('resume.achievementsExample')}
+            className={inputClass}
           />
         </Field>
       </section>
