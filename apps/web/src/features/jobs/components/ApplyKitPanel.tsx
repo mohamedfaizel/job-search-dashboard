@@ -131,56 +131,6 @@ function Card({ title, intro, children }: { title: string; intro: string; childr
   );
 }
 
-/**
- * A second pass before you apply: Claude reads the draft as the hiring manager would, checks every
- * claim against your own resume, and returns the fixed version. Pasting that reply saves it over
- * the draft.
- */
-function ReviewCard({ jobId, prompt }: { jobId: string; prompt: string }) {
-  const t = useTranslations('Jobs.apply');
-  const [copied, setCopied] = useState<'ok' | 'failed' | null>(null);
-  const [saved, setSaved] = useState(false);
-  return (
-    <Card title={t('reviewTitle')} intro={t('reviewIntro')}>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <button
-          type="button"
-          className={PRIMARY}
-          onClick={() => {
-            setSaved(false);
-            void copyAndOpen(prompt, CLAUDE_URL).then((ok) => {
-              setCopied(ok ? 'ok' : 'failed');
-            });
-          }}
-        >
-          {COPY_ICON}
-          {t('reviewCopy')}
-        </button>
-        <ShowText label={t('reviewShow')} text={prompt} />
-      </div>
-      {copied === 'failed' && <p className="text-amber-800">{t('copyFailed')}</p>}
-      {saved ? (
-        <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">
-          {t('reviewSaved')}
-        </p>
-      ) : (
-        copied && (
-          <div className="space-y-2">
-            <p className="text-slate-600">{t('reviewPaste')}</p>
-            <ReplyInput
-              jobId={jobId}
-              onSaved={() => {
-                setSaved(true);
-                setCopied(null);
-              }}
-            />
-          </div>
-        )
-      )}
-    </Card>
-  );
-}
-
 function ShowText({ label, text }: { label: string; text: string }) {
   const t = useTranslations('Jobs.apply');
   return (
@@ -473,14 +423,6 @@ function ApplyKit({
             <SavedReply insights={data} />
           ) : (
             <p className="rounded-lg bg-slate-50 px-3 py-2 text-slate-600">{t('noReply')}</p>
-          )}
-          {data.reviewPrompt && (
-            <details className="text-sm">
-              <summary className={`cursor-pointer list-none ${LINK}`}>{t('reviewAgain')}</summary>
-              <div className="mt-2">
-                <ReviewCard jobId={job.id} prompt={data.reviewPrompt} />
-              </div>
-            </details>
           )}
           <Card title={t('step3Title')} intro={t('step3Intro')}>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

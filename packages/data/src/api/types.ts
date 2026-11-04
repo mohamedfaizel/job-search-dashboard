@@ -524,11 +524,6 @@ export interface JobInsights {
   jobResume: JobResume | null;
   /** The Apply kit prompt: paste into Claude for the resume, cover letter and form answers. */
   prompt: string;
-  /**
-   * The review prompt: Claude checks the saved draft as a hiring manager would and returns the
-   * fixed version. Null until a reply is saved.
-   */
-  reviewPrompt: string | null;
   /** The interview prep prompt: paste into Claude for questions, answers and your gaps. */
   interviewPrompt: string;
   /** What Claude answered to it, if you pasted it back. */

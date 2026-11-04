@@ -237,14 +237,6 @@ function FileRow({ name, children }: { name: string; children: React.ReactNode }
 
 const FACT_KINDS = ['NUMBER', 'SKILL', 'LEVEL'] as const;
 
-/** A message to paste into the same Claude chat: what to remove or correct. */
-function fixRequest(intro: string, findings: FactFinding[]): string {
-  const lines = findings.map(
-    (f) => `- ${f.text}${f.kind === 'SKILL' ? ' (skill)' : ''}: "${f.context}"`,
-  );
-  return `${intro}\n\n${lines.join('\n')}`;
-}
-
 /**
  * Numbers, skills and language levels in Claude's reply that are not in your resume or profile.
  * Nothing is shown without a resume of yours to compare with.
@@ -313,12 +305,6 @@ function FactCheck({ jobId, findings }: { jobId: string; findings: FactFinding[]
           )}
         </div>
       )}
-      <CopyText
-        label={t('copyFix')}
-        text={fixRequest(t('fixIntro'), findings)}
-        copiedHint={t('fixHint')}
-        boxLabel={t('fixBox')}
-      />
     </section>
   );
 }

@@ -115,8 +115,7 @@ describe('JobResumePanel', () => {
       expect(screen.queryByRole('region', { name: /Check before you send/ })).toBeNull();
     });
 
-    it('lists what is not in your resume and copies a fix request', async () => {
-      const user = userEvent.setup();
+    it('lists what is not in your resume', async () => {
       jobResume.current = {
         ...SAVED_RESUME,
         factCheck: [
@@ -138,15 +137,7 @@ describe('JobResumePanel', () => {
       expect(
         within(within(box).getByRole('list', { name: 'Language levels' })).getByText('B2'),
       ).toBeInTheDocument();
-
-      await user.click(within(box).getByRole('button', { name: 'Copy a fix request for Claude' }));
-
-      const request = within(box).getByRole<HTMLTextAreaElement>('textbox', {
-        name: 'Fix request',
-      });
-      expect(request.value).toContain('Do not invent anything');
-      expect(request.value).toContain('- 60%: "Cut load time by 60%"');
-      expect(request.value).toContain('- Kubernetes (skill): "React, Kubernetes"');
+      expect(within(box).queryByRole('button', { name: /fix request/ })).toBeNull();
     });
   });
 
