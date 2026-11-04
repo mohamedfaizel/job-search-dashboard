@@ -29,10 +29,14 @@ export interface JobsTableState {
   newOnly: boolean;
   /** Show only the jobs in your Apply queue (the Apply queue chip). */
   queueOnly: boolean;
+  /** Columns you switched on or off yourself (column id → shown). The rest follow the defaults. */
+  columns: Record<string, boolean>;
+  /** True once your saved filters and sort are back (or there were none), so the table can load. */
+  restored: boolean;
 }
 
-/** The table opens with your best matches first. */
-export const DEFAULT_SORT: JobSortInput = { field: 'FIT', direction: 'DESC' };
+/** The table opens with the newest postings first. */
+export const DEFAULT_SORT: JobSortInput = { field: 'POSTED_AT', direction: 'DESC' };
 
 export const initialJobsTableState: JobsTableState = {
   search: '',
@@ -46,6 +50,8 @@ export const initialJobsTableState: JobsTableState = {
   newSince: null,
   newOnly: false,
   queueOnly: false,
+  columns: {},
+  restored: false,
 };
 
 export const jobsTableSlice = createSlice({
@@ -106,13 +112,15 @@ export const jobsTableSlice = createSlice({
       state.page = 1;
     },
     /**
-     * Clicking a column header cycles: ascending → descending → off. Fit starts with descending,
-     * because the best match first is what you want from it.
+     * Clicking a column header cycles: ascending → descending → off. Fit and Posted start with
+     * descending, because the best match and the newest posting first are what you want.
      */
     cycleSort(state, action: PayloadAction<JobSortField>) {
       const field = action.payload;
       const [first, second] =
-        field === 'FIT' ? (['DESC', 'ASC'] as const) : (['ASC', 'DESC'] as const);
+        field === 'FIT' || field === 'POSTED_AT'
+          ? (['DESC', 'ASC'] as const)
+          : (['ASC', 'DESC'] as const);
       if (state.sort?.field !== field) state.sort = { field, direction: first };
       else if (state.sort.direction === first) state.sort = { field, direction: second };
       else state.sort = null;
@@ -121,6 +129,24 @@ export const jobsTableSlice = createSlice({
     setShowHidden(state, action: PayloadAction<boolean>) {
       state.showHidden = action.payload;
       state.page = 1;
+    },
+    /** Puts back what you saved last time (see `parseSavedSettings`). */
+    applySavedSettings(state, action: PayloadAction<SavedTableSettings | null>) {
+      const saved = action.payload;
+      if (saved) {
+        state.filters = saved.filters;
+        state.sort = saved.sort;
+        state.postedWithinDays = saved.postedWithinDays;
+        state.minFit = saved.minFit;
+        state.pageSize = saved.pageSize;
+        state.columns = saved.columns;
+        state.page = 1;
+      }
+      state.restored = true;
+    },
+    /** Switches columns on or off (the Columns menu). */
+    setColumnChoices(state, action: PayloadAction<Record<string, boolean>>) {
+      state.columns = action.payload;
     },
     setPage(state, action: PayloadAction<number>) {
       state.page = Math.max(1, action.payload);
@@ -139,6 +165,8 @@ export const {
   clearFilter,
   clearAll,
   cycleSort,
+  applySavedSettings,
+  setColumnChoices,
   setPage,
   setPageSize,
   setShowHidden,
@@ -151,6 +179,116 @@ export const {
 
 const HOUR_MS = 60 * 60 * 1000;
 
+/** What is remembered between visits: your filters and sort, not the page, search or Hidden view. */
+export interface SavedTableSettings {
+  filters: JobsTableState['filters'];
+  sort: JobSortInput | null;
+  postedWithinDays: number | null;
+  minFit: number | null;
+  pageSize: number;
+  columns: Record<string, boolean>;
+}
+
+const LIST_FILTER_KEYS = [
+  'companies',
+  'seniorities',
+  'jobFunctions',
+  'skills',
+  'cities',
+  'countryCodes',
+  'languages',
+  'providers',
+  'industries',
+  'workplaces',
+  'visas',
+  'applicationStatuses',
+] as const satisfies readonly ListFilterKey[];
+
+const SORT_FIELDS = [
+  'POSTED_AT',
+  'TITLE',
+  'COMPANY',
+  'SENIORITY',
+  'CITY',
+  'SALARY',
+  'WORKPLACE',
+  'FIT',
+] as const satisfies readonly JobSortField[];
+
+/** The text saved for the next visit. */
+export function toSavedSettings(state: JobsTableState): string {
+  const saved: SavedTableSettings = {
+    filters: state.filters,
+    sort: state.sort,
+    postedWithinDays: state.postedWithinDays,
+    minFit: state.minFit,
+    pageSize: state.pageSize,
+    columns: state.columns,
+  };
+  return JSON.stringify(saved);
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const numberIn = (value: unknown, min: number, max: number): number | null =>
+  typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max
+    ? value
+    : null;
+
+/**
+ * Reads the saved text back, keeping only what is valid today: a column or sort that was
+ * renamed since, or text someone edited by hand, is dropped instead of breaking the table.
+ * Null when there is nothing usable, so the table keeps its defaults.
+ */
+export function parseSavedSettings(text: string | null): SavedTableSettings | null {
+  if (!text) return null;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (!isRecord(raw)) return null;
+
+  const filters: SavedTableSettings['filters'] = {};
+  if (isRecord(raw['filters'])) {
+    for (const key of LIST_FILTER_KEYS) {
+      const values = raw['filters'][key];
+      if (Array.isArray(values)) {
+        const strings = values.filter((v): v is string => typeof v === 'string');
+        if (strings.length) filters[key] = strings;
+      }
+    }
+  }
+
+  const rawSort = raw['sort'];
+  let sort: JobSortInput | null = DEFAULT_SORT;
+  if (rawSort === null) sort = null;
+  else if (
+    isRecord(rawSort) &&
+    SORT_FIELDS.some((f) => f === rawSort['field']) &&
+    (rawSort['direction'] === 'ASC' || rawSort['direction'] === 'DESC')
+  ) {
+    sort = { field: rawSort['field'] as JobSortField, direction: rawSort['direction'] };
+  }
+
+  return {
+    filters,
+    sort,
+    postedWithinDays: numberIn(raw['postedWithinDays'], 1, 3650),
+    minFit: numberIn(raw['minFit'], 0, 100),
+    pageSize: numberIn(raw['pageSize'], 1, 500) ?? initialJobsTableState.pageSize,
+    columns: isRecord(raw['columns'])
+      ? Object.fromEntries(
+          Object.entries(raw['columns']).filter(
+            (entry): entry is [string, boolean] => typeof entry[1] === 'boolean',
+          ),
+        )
+      : {},
+  };
+}
+
 /** Converts table state into the arguments for the jobsPage GraphQL query. */
 export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
   const filter: JobFilterInput = {};
@@ -158,6 +296,12 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
   if (search) filter.search = search;
   Object.assign(filter, state.filters);
   if (state.showHidden) filter.hidden = true;
+  else {
+    // The table is for jobs still to act on: expired postings never show, and jobs you applied
+    // to only show when you pick a status card (Applied, Interviewing, ...).
+    filter.hideExpired = true;
+    if (!filter.applicationStatuses?.length) filter.hideApplied = true;
+  }
   if (state.minFit !== null) filter.minFit = state.minFit;
   if (state.newOnly && state.newSince) filter.createdAfter = state.newSince;
   if (state.queueOnly) filter.inApplyQueue = true;

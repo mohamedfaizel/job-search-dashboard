@@ -5,7 +5,7 @@ import { HttpResponse } from 'msw';
 import { Intl } from '@/test/intl';
 import { JobsDashboard } from './JobsDashboard';
 import { makeJob } from './test/fixtures';
-import { api, applyQueue, OFF_PAGE_JOB_ID, requests, server } from './test/server';
+import { api, applyQueue, OFF_PAGE_JOB_ID, requests, server, tableSettings } from './test/server';
 
 function renderDashboard(locale: 'en' | 'de' = 'en') {
   const queryClient = createQueryClient();
@@ -19,7 +19,7 @@ function renderDashboard(locale: 'en' | 'de' = 'en') {
   );
 }
 
-// The "Jobs found" card asks for a one-row page just to read the total; skip that one.
+// The "All jobs" card asks for a one-row page just to read the total; skip that one.
 const lastJobsPageVariables = () =>
   requests.filter((r) => r.operation === 'JobsPage' && r.variables['pageSize'] !== 1).at(-1)
     ?.variables;
@@ -66,7 +66,7 @@ describe('JobsDashboard', () => {
     ).toBeInTheDocument();
 
     expect(screen.getByRole('columnheader', { name: /Gehalt/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Jobs gefunden/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Alle Jobs/ })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Veröffentlicht' })).toHaveDisplayValue(
       'Veröffentlicht: jederzeit',
     );
@@ -192,7 +192,7 @@ describe('JobsDashboard', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('opens with the best Fit first and shows each job’s Fit %', async () => {
+  it('opens with the newest jobs first and shows each job’s Fit %', async () => {
     server.use(
       api.query('JobsPage', ({ variables }) => {
         requests.push({ operation: 'JobsPage', variables });
@@ -216,8 +216,10 @@ describe('JobsDashboard', () => {
     const fit = await screen.findByRole('button', {
       name: 'Fit for Senior Frontend Engineer: 82%',
     });
-    expect(lastJobsPageVariables()).toMatchObject({ sort: { field: 'FIT', direction: 'DESC' } });
-    expect(screen.getByRole('columnheader', { name: /Fit/ })).toHaveAttribute(
+    expect(lastJobsPageVariables()).toMatchObject({
+      sort: { field: 'POSTED_AT', direction: 'DESC' },
+    });
+    expect(screen.getByRole('columnheader', { name: /Posted/ })).toHaveAttribute(
       'aria-sort',
       'descending',
     );
@@ -292,10 +294,89 @@ describe('JobsDashboard', () => {
     });
   });
 
-  it('shows no New chip on your first visit', async () => {
+  it('shows the New chip with 0 on your first visit, and a chip for every status', async () => {
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
-    expect(screen.queryByRole('button', { name: /^New/ })).not.toBeInTheDocument();
+    expect(within(card(/^New/)).getByText('0')).toBeInTheDocument();
+    for (const name of [
+      /^All jobs/,
+      /^Saved/,
+      /^Applied/,
+      /^Interviewing/,
+      /^Offer/,
+      /^Rejected/,
+    ]) {
+      expect(card(name)).toBeInTheDocument();
+    }
+  });
+
+  describe('saved settings', () => {
+    it('puts back the filters and sort you saved, loading the table once', async () => {
+      tableSettings.current = JSON.stringify({
+        filters: { countryCodes: ['DE'], workplaces: ['REMOTE'] },
+        sort: { field: 'SALARY', direction: 'DESC' },
+        postedWithinDays: 7,
+        minFit: 70,
+        pageSize: 50,
+        columns: { salary: false },
+      });
+      renderDashboard();
+
+      await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+      expect(lastJobsPageVariables()).toMatchObject({
+        pageSize: 50,
+        sort: { field: 'SALARY', direction: 'DESC' },
+        filter: { countryCodes: ['DE'], workplaces: ['REMOTE'], minFit: 70 },
+      });
+      expect(screen.queryByRole('columnheader', { name: /Salary/ })).not.toBeInTheDocument();
+      // The defaults were never asked for first.
+      expect(
+        requests.filter((r) => r.operation === 'JobsPage' && r.variables['sort'] !== undefined),
+      ).not.toContainEqual(
+        expect.objectContaining({ variables: expect.objectContaining({ pageSize: 25 }) }),
+      );
+    });
+
+    it('ignores saved text it cannot use', async () => {
+      tableSettings.current =
+        '{"sort":{"field":"NOPE","direction":"UP"},"filters":{"x":["y"]},"minFit":500}';
+      renderDashboard();
+
+      await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+      expect(lastJobsPageVariables()).toMatchObject({
+        sort: { field: 'POSTED_AT', direction: 'DESC' },
+      });
+      expect(lastJobsPageVariables()).toMatchObject({
+        filter: { hideExpired: true, hideApplied: true },
+      });
+    });
+
+    it('saves a change once you stop clicking, and nothing before', async () => {
+      const user = userEvent.setup();
+      renderDashboard();
+      await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+      expect(requests.filter((r) => r.operation === 'SaveTableSettings')).toEqual([]);
+
+      await user.click(screen.getByRole('button', { name: 'Remote' }));
+
+      await waitFor(
+        () => {
+          expect(requests.filter((r) => r.operation === 'SaveTableSettings')).toHaveLength(1);
+        },
+        { timeout: 3000 },
+      );
+      expect(JSON.parse(tableSettings.current!)).toMatchObject({
+        filters: { workplaces: ['REMOTE'] },
+        sort: { field: 'POSTED_AT', direction: 'DESC' },
+      });
+    });
+
+    it('keeps the columns this browser remembered when nothing is saved yet', async () => {
+      localStorage.setItem('jobsearch.dashboard.columns', '{"salary":false}');
+      renderDashboard();
+      await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+      expect(screen.queryByRole('columnheader', { name: /Salary/ })).not.toBeInTheDocument();
+    });
   });
 
   it('recalculates Fit on request', async () => {
@@ -353,7 +434,12 @@ describe('JobsDashboard', () => {
     expect(screen.queryByText('$90k - $120k')).not.toBeInTheDocument();
     // Salary plus the eight columns that start hidden.
     expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('9 hidden');
-    expect(localStorage.getItem('jobsearch.dashboard.columns')).toBe('{"salary":false}');
+    await waitFor(
+      () => {
+        expect(JSON.parse(tableSettings.current!)).toMatchObject({ columns: { salary: false } });
+      },
+      { timeout: 3000 },
+    );
 
     await userEvent.click(within(menu).getByRole('button', { name: 'Show all columns' }));
     expect(screen.getByRole('columnheader', { name: /Salary/ })).toBeInTheDocument();
@@ -390,7 +476,12 @@ describe('JobsDashboard', () => {
     expect(within(menu).getByRole('checkbox', { name: 'Workplace' })).not.toBeChecked();
     await userEvent.click(within(menu).getByRole('checkbox', { name: 'Workplace' }));
     expect(screen.getByRole('columnheader', { name: /Workplace/ })).toBeInTheDocument();
-    expect(localStorage.getItem('jobsearch.dashboard.columns')).toBe('{"workplace":true}');
+    await waitFor(
+      () => {
+        expect(JSON.parse(tableSettings.current!)).toMatchObject({ columns: { workplace: true } });
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('starts with the columns hidden on an earlier visit', async () => {
@@ -406,7 +497,7 @@ describe('JobsDashboard', () => {
   it('shows counts above the table', async () => {
     renderDashboard();
 
-    const jobsFound = (await screen.findByText('Jobs found')).closest('button')!;
+    const jobsFound = (await screen.findByText('All jobs')).closest('button')!;
     await waitFor(() => {
       expect(within(jobsFound).getByText('2')).toBeInTheDocument();
     });
@@ -421,7 +512,7 @@ describe('JobsDashboard', () => {
     await user.click(card(/^Applied/));
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({
-        filter: { applicationStatuses: ['APPLIED'] },
+        filter: { applicationStatuses: ['APPLIED'], hideExpired: true },
       });
     });
     expect(card(/^Applied/)).toHaveAttribute('aria-pressed', 'true');
@@ -431,13 +522,15 @@ describe('JobsDashboard', () => {
       ).not.toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: 'Backend Developer' })).toBeInTheDocument();
-    // "Jobs found" still counts every status.
-    expect(within(card(/^Jobs found/)).getByText('2')).toBeInTheDocument();
+    // "All jobs" still counts every status.
+    expect(within(card(/^All jobs/)).getByText('2')).toBeInTheDocument();
 
     // Clicking the card that is on goes back to all jobs.
     await user.click(card(/^Applied/));
-    expect(card(/^Jobs found/)).toHaveAttribute('aria-pressed', 'true');
-    expect(lastJobsPageVariables()).not.toHaveProperty('filter');
+    expect(card(/^All jobs/)).toHaveAttribute('aria-pressed', 'true');
+    expect(lastJobsPageVariables()).toMatchObject({
+      filter: { hideExpired: true, hideApplied: true },
+    });
   });
 
   it('hides a job from its popup, with Undo', async () => {
@@ -530,7 +623,7 @@ describe('JobsDashboard', () => {
     );
     expect(await screen.findByText('No hidden jobs match.')).toBeInTheDocument();
 
-    await user.click(card(/^Jobs found/));
+    await user.click(card(/^All jobs/));
     expect(
       await screen.findByRole('button', { name: 'Senior Frontend Engineer' }),
     ).toBeInTheDocument();

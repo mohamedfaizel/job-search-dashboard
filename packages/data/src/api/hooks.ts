@@ -17,6 +17,8 @@ import {
   SAVED_SEARCHES,
   SET_SAVED_SEARCH_SCHEDULE,
   START_JOBS_VISIT,
+  MY_TABLE_SETTINGS,
+  SAVE_TABLE_SETTINGS,
   SYNC_JOBS,
   SYNC_RUNS,
   UNHIDE_JOB,
@@ -54,6 +56,7 @@ export const queryKeys = {
   importBudget: ['importBudget'] as const,
   // Not under 'jobs': refreshing the jobs must not start a new visit.
   jobsVisit: ['jobsVisit'] as const,
+  tableSettings: ['tableSettings'] as const,
 };
 
 export function useJobsPage(args: JobsPageArgs, { enabled = true }: { enabled?: boolean } = {}) {
@@ -324,6 +327,38 @@ export function useRunSavedSearch() {
       return data.runSavedSearch;
     },
     onSuccess: () => refreshAfterImport(queryClient),
+  });
+}
+
+/** The Job posts filters and sort you saved (JSON text), or null if you never saved any. */
+export function useTableSettings() {
+  return useQuery({
+    queryKey: queryKeys.tableSettings,
+    queryFn: async () => {
+      const data = await graphqlClient.request<{ myTableSettings: string | null }>(
+        MY_TABLE_SETTINGS,
+      );
+      return data.myTableSettings;
+    },
+    // Read once when the page opens; the page itself is the newest copy after that.
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: false,
+  });
+}
+
+/** Saves the Job posts filters and sort. Nothing to refresh: the table already shows them. */
+export function useSaveTableSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (settings: string) => {
+      await graphqlClient.request(SAVE_TABLE_SETTINGS, { settings });
+      return settings;
+    },
+    // Opening Job posts again in this visit must put back the newest copy, not the first one.
+    onSuccess: (settings) => {
+      queryClient.setQueryData(queryKeys.tableSettings, settings);
+    },
   });
 }
 

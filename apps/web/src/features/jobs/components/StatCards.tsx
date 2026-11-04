@@ -1,7 +1,8 @@
 import type { Application } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 
-export type StatCardKey = 'total' | 'SAVED' | 'APPLIED' | 'INTERVIEWING' | 'hidden';
+export type StatCardKey =
+  'total' | 'SAVED' | 'APPLIED' | 'INTERVIEWING' | 'OFFER' | 'REJECTED' | 'hidden';
 
 interface Props {
   /** Jobs matching the current search and filters, whatever their status. */
@@ -11,7 +12,7 @@ interface Props {
   /** The card whose jobs the table shows now, if any. */
   active: StatCardKey | null;
   onSelect: (key: StatCardKey) => void;
-  /** Jobs imported since your last visit. The New chip shows only when there are some. */
+  /** Jobs imported since your last visit, shown on the New chip (0 when there are none). */
   newCount?: number | undefined;
   /** True while the table shows only the New jobs. */
   newOnly?: boolean;
@@ -28,6 +29,8 @@ const CARDS: { key: StatCardKey; dot: string }[] = [
   { key: 'SAVED', dot: 'bg-sky-500' },
   { key: 'APPLIED', dot: 'bg-amber-500' },
   { key: 'INTERVIEWING', dot: 'bg-emerald-500' },
+  { key: 'OFFER', dot: 'bg-teal-500' },
+  { key: 'REJECTED', dot: 'bg-rose-500' },
   { key: 'hidden', dot: 'bg-slate-400' },
 ];
 
@@ -61,7 +64,7 @@ export function StatCards({
         ? 'border-slate-900 bg-slate-900 text-white'
         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
     }`;
-  const newChip = onToggleNew && (newCount > 0 || newOnly) && (
+  const newChip = onToggleNew && (
     <button
       key="new"
       type="button"
@@ -122,7 +125,7 @@ export function StatCards({
             </span>
           </button>
         );
-        // The New and Apply queue chips sit right after "Jobs found": parts of them.
+        // The New and Apply queue chips sit right after "All jobs": parts of them.
         return key === 'total' ? [card, newChip, queueChip].filter(Boolean) : [card];
       })}
     </div>

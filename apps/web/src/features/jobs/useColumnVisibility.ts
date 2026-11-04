@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { setColumnChoices, useAppDispatch, useAppSelector } from '@jobsearch/data';
+import { useCallback, useMemo } from 'react';
 
 const STORAGE_KEY = 'jobsearch.dashboard.columns';
 /** The first version saved only the ids you switched off. Still read, so nobody loses a choice. */
@@ -6,8 +7,10 @@ const OLD_STORAGE_KEY = 'jobsearch.dashboard.hiddenColumns';
 
 type Choices = Record<string, boolean>;
 
-/** Reads the saved choices. Storage can be blocked (private mode, settings), so never throw. */
-function load(): Choices {
+/**
+ * The choices an earlier version kept in this browser. Read once, when nothing is saved on the
+ * server yet, so nobody loses their columns. Storage can be blocked (private mode, settings), so never throw. */
+export function loadLocalColumnChoices(): Choices {
   try {
     const saved: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
     if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
@@ -27,21 +30,15 @@ function load(): Choices {
   }
 }
 
-function save(choices: Choices) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(choices));
-  } catch {
-    // Not saved this time; the table still works for this visit.
-  }
-}
-
 /**
  * Which table columns are switched on. `hiddenByDefault` columns start off; every checkbox you
- * tick or untick is saved as your own choice and wins over the default. A display preference for
- * this browser only, so it lives in localStorage rather than in the database or Redux.
+ * tick or untick is your own choice and wins over the default. The choices are kept with the
+ * rest of your saved Job posts settings (see useSavedTableSettings), so they follow you to other
+ * devices.
  */
 export function useColumnVisibility(hiddenByDefault: readonly string[] = []) {
-  const [choices, setChoices] = useState(load);
+  const dispatch = useAppDispatch();
+  const choices = useAppSelector((state) => state.jobsTable.columns);
 
   // TanStack Table's shape: { columnId: false } for each hidden column.
   const visibility = useMemo(
@@ -49,10 +46,12 @@ export function useColumnVisibility(hiddenByDefault: readonly string[] = []) {
     [hiddenByDefault, choices],
   );
 
-  const update = useCallback((next: Choices) => {
-    setChoices(next);
-    save(next);
-  }, []);
+  const update = useCallback(
+    (next: Choices) => {
+      dispatch(setColumnChoices(next));
+    },
+    [dispatch],
+  );
 
   const toggle = useCallback(
     (id: string) => {

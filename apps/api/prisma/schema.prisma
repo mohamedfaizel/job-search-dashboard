@@ -87,6 +87,7 @@ model User {
   mailSuggestions MailSuggestion[]
   applyQueue      ApplyQueueItem[]
   jobFits         JobFit[]
+  tableSettings   TableSettings?
   /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
   jobsLastSeenAt  DateTime?
   /// Jobs imported after this are "New" for this visit: the end of your previous visit.
@@ -95,6 +96,15 @@ model User {
   locale          String           @default("en")
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+}
+
+/// The Job posts filters and sort a user saved, as JSON text, so the table opens the way they left
+/// it on any device. The shape is the web app's business; the API only keeps it.
+model TableSettings {
+  userId    Int      @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  settings  String
+  updatedAt DateTime @updatedAt
 }
 
 /// What you're looking for and your master resume. One per user, created on first save.

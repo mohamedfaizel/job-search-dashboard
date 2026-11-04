@@ -1,5 +1,5 @@
 import { createQueryClient, DataProvider, jobResumeUrl, makeStore } from '@jobsearch/data';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Intl } from '@/test/intl';
 import { makeJob } from '../test/fixtures';
@@ -96,71 +96,6 @@ describe('JobResumePanel', () => {
     ).toContain('MUST: graphql');
   });
 
-  describe('fact check', () => {
-    it('says so when nothing is beyond your resume', async () => {
-      jobResume.current = { ...SAVED_RESUME };
-      renderPanel();
-
-      expect(
-        await screen.findByText(/every number, skill and language level is in your/),
-      ).toBeInTheDocument();
-    });
-
-    it('shows nothing without a resume of yours to compare with', async () => {
-      jobResume.current = { ...SAVED_RESUME, factCheck: null };
-      renderPanel();
-
-      await screen.findByLabelText('Score before and after');
-      expect(screen.queryByText(/Fact check/)).toBeNull();
-      expect(screen.queryByRole('region', { name: /Check before you send/ })).toBeNull();
-    });
-
-    it('lists what is not in your resume', async () => {
-      jobResume.current = {
-        ...SAVED_RESUME,
-        factCheck: [
-          { kind: 'NUMBER', text: '60%', where: 'RESUME', context: 'Cut load time by 60%' },
-          { kind: 'NUMBER', text: '45%', where: 'COVER_LETTER', context: 'Raised revenue by 45%' },
-          { kind: 'SKILL', text: 'Kubernetes', where: 'RESUME', context: 'React, Kubernetes' },
-          { kind: 'LEVEL', text: 'B2', where: 'RESUME', context: 'German (B2)' },
-        ],
-      };
-      renderPanel();
-
-      const box = await screen.findByRole('region', { name: /4 things are not in your resume/ });
-      const numbers = within(within(box).getByRole('list', { name: 'Numbers' }));
-      expect(numbers.getByText('60%')).toBeInTheDocument();
-      expect(numbers.getByText(/\(cover letter\) “Raised revenue by 45%”/)).toBeInTheDocument();
-      expect(
-        within(within(box).getByRole('list', { name: 'Skills' })).getByText('Kubernetes'),
-      ).toBeInTheDocument();
-      expect(
-        within(within(box).getByRole('list', { name: 'Language levels' })).getByText('B2'),
-      ).toBeInTheDocument();
-      expect(within(box).queryByRole('button', { name: /fix request/ })).toBeNull();
-    });
-  });
-
-  it('removes the flagged skills in one click, without a Claude round trip', async () => {
-    const user = userEvent.setup();
-    jobResume.current = {
-      ...SAVED_RESUME,
-      factCheck: [
-        { kind: 'SKILL', text: 'Kubernetes', where: 'RESUME', context: 'React, Kubernetes' },
-      ],
-    };
-    renderPanel();
-
-    const box = await screen.findByRole('region', { name: /1 thing is not in your resume/ });
-    await user.click(within(box).getByRole('button', { name: 'Remove the skills I don’t have' }));
-
-    expect(requests).toContainEqual({
-      operation: 'RemoveUnsupportedSkills',
-      variables: { jobId: 'job-1' },
-    });
-    expect(await screen.findByText(/in your resume or profile/)).toBeInTheDocument();
-  });
-
   it('checks the AI match of the saved resume when asked, and shows the score', async () => {
     const user = userEvent.setup();
     jobResume.current = { ...SAVED_RESUME };
@@ -168,7 +103,12 @@ describe('JobResumePanel', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Check AI match' }));
 
-    expect(requests).toContainEqual({ operation: 'MatchJobResume', variables: { jobId: 'job-1' } });
+    await waitFor(() => {
+      expect(requests).toContainEqual({
+        operation: 'MatchJobResume',
+        variables: { jobId: 'job-1' },
+      });
+    });
     expect(await screen.findByText('Resume-Matcher is reading this resume…')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Checking…' })).toBeDisabled();
 

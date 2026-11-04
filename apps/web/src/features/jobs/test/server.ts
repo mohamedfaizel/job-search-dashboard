@@ -104,10 +104,12 @@ export const SAVED_RESUME: JobResume = {
   aiError: null,
   nowCovered: ['graphql'],
   stillMissing: ['microfrontends'],
-  factCheck: [],
 };
 
 /** Claude's interview prep the test user saved for job-1. Tests start with nothing. */
+/** The Job posts settings the test user saved (JSON text). Tests start with nothing saved. */
+export const tableSettings: { current: string | null } = { current: null };
+
 export const interviewPrep: { current: InterviewPrep | null } = { current: null };
 
 /** What the test user saved for job-1. Tests start with nothing. */
@@ -430,12 +432,6 @@ const handlers = [
     haveTerms.splice(0, haveTerms.length, ...others, ...(variables['have'] ? [term] : []));
     return HttpResponse.json({ data: { setHaveTerm: insightsNow() } });
   }),
-  api.mutation('RemoveUnsupportedSkills', ({ variables }) => {
-    requests.push({ operation: 'RemoveUnsupportedSkills', variables });
-    // The skill is gone from the saved resume, so the fact check has nothing left to flag.
-    if (jobResume.current) jobResume.current = { ...jobResume.current, factCheck: [] };
-    return HttpResponse.json({ data: { removeUnsupportedSkills: insightsNow() } });
-  }),
   api.mutation('MatchJobResume', ({ variables }) => {
     requests.push({ operation: 'MatchJobResume', variables });
     // The real server answers at once with PENDING, then finishes in the background.
@@ -478,6 +474,14 @@ const handlers = [
     return HttpResponse.json({
       data: { jobsPage: { items, total: items.length, page: 1, pageSize: 25 } },
     });
+  }),
+  api.query('MyTableSettings', () =>
+    HttpResponse.json({ data: { myTableSettings: tableSettings.current } }),
+  ),
+  api.mutation('SaveTableSettings', ({ variables }) => {
+    requests.push({ operation: 'SaveTableSettings', variables });
+    tableSettings.current = variables['settings'] as string;
+    return HttpResponse.json({ data: { saveTableSettings: true } });
   }),
   // By default this is your first visit, so nothing is New.
   api.mutation('StartJobsVisit', () => HttpResponse.json({ data: { startJobsVisit: null } })),

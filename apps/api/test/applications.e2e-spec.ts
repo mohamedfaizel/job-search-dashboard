@@ -97,6 +97,31 @@ describe('applications (tracker)', () => {
     ]);
   });
 
+  it('can leave out jobs you applied to and expired postings', async () => {
+    await t.asUser(SET, { id: ids['Frontend Engineer'], status: 'APPLIED' });
+    await t.asUser(SET, { id: ids['Backend Engineer'], status: 'SAVED' });
+    await t.prisma.job.update({
+      where: { id: ids['Data Analyst']! },
+      data: { postingStatus: 'expired' },
+    });
+
+    const open = await t.asUser<Page>(PAGE, {
+      filter: { hideApplied: true, hideExpired: true },
+    });
+    expect(open.data!.jobsPage.items.map((j) => j.title)).toEqual(['Backend Engineer']);
+
+    // Picking the Applied card brings the applied jobs back, still without expired ones.
+    const applied = await t.asUser<Page>(PAGE, {
+      filter: { applicationStatuses: ['APPLIED'], hideExpired: true },
+    });
+    expect(applied.data!.jobsPage.items.map((j) => j.title)).toEqual(['Frontend Engineer']);
+
+    // Another user's Applied does not hide the job from you.
+    await t.gql(SET, { id: ids['Backend Engineer'], status: 'APPLIED' });
+    const mine = await t.asUser<Page>(PAGE, { filter: { hideApplied: true } });
+    expect(mine.data!.jobsPage.items.map((j) => j.title)).toContain('Backend Engineer');
+  });
+
   it('gives a status chosen when adding a job to the admin who added it', async () => {
     const res = await t.gql<{ createJob: { id: string; applicationStatus: string } }>(CREATE_JOB, {
       input: { title: 'Designer', companyName: 'Acme', applicationStatus: 'SAVED' },

@@ -6,6 +6,7 @@ import {
   applyQueue,
   hiddenIds,
   interviewPrep,
+  tableSettings,
   jobResume,
   mailSuggestions,
   haveTerms,
@@ -33,6 +34,7 @@ afterEach(() => {
   haveTerms.length = 0;
   jobResume.current = null;
   interviewPrep.current = null;
+  tableSettings.current = null;
   downloads.length = 0;
   localStorage.clear();
 });
