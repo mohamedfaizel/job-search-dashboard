@@ -436,6 +436,10 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
   const leftOut = jobResume.stillMissing.filter((term) => yours.has(term));
   // ✓ is for skills only: keywords are Claude's to work in.
   const skills = new Set(insights.skills.map((t) => t.term));
+  // The card lists skills only. Keywords from the ad ("risk", "bets", "polishing") still count in
+  // the score, but as chips they are noise: the Fit tab has them for anyone who wants to look.
+  const nowCovered = jobResume.nowCovered.filter((term) => skills.has(term));
+  const stillMissing = jobResume.stillMissing.filter((term) => skills.has(term));
 
   return (
     <section aria-label={t('sectionLabel')} className="space-y-3">
@@ -454,11 +458,11 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
             </span>
           </div>
           <div className="min-w-0 flex-1 space-y-1.5">
-            {jobResume.nowCovered.length > 0 && (
+            {nowCovered.length > 0 && (
               <>
                 <p className="text-sm font-semibold text-emerald-900">{t('nowCovers')}</p>
                 <ul className="flex flex-wrap gap-1.5" aria-label={t('nowCoveredLabel')}>
-                  {jobResume.nowCovered.map((term) => (
+                  {nowCovered.map((term) => (
                     <li
                       key={term}
                       className="rounded-md bg-white px-2 py-0.5 text-xs text-emerald-700 ring-1 ring-emerald-200 ring-inset"
@@ -469,11 +473,11 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
                 </ul>
               </>
             )}
-            {jobResume.stillMissing.length > 0 && (
+            {stillMissing.length > 0 && (
               <div className="space-y-1">
                 <p className="text-xs text-slate-600">{t('stillMissing')}</p>
                 <ul className="flex flex-wrap gap-1.5" aria-label={t('stillMissing')}>
-                  {jobResume.stillMissing.map((term) => (
+                  {stillMissing.map((term) => (
                     <li key={term}>
                       {yours.has(term) ? (
                         <HaveChip

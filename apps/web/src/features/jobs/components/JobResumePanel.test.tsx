@@ -61,14 +61,16 @@ describe('JobResumePanel', () => {
     expect(
       within(screen.getByRole('list', { name: 'Now covered' })).getByText('graphql'),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Still missing')).toHaveTextContent('microfrontends');
+    // Keywords from the ad ("microfrontends") count in the score but are not listed as chips.
+    expect(screen.queryByLabelText('Still missing')).toBeNull();
+    expect(screen.queryByText('microfrontends')).toBeNull();
     expect(screen.queryByRole('textbox', { name: 'Claude’s reply' })).toBeNull();
     // The resume PDF downloads straight away.
     expect(downloads).toEqual([`${jobResumeUrl('job-1')}/resume.pdf`]);
     expect(screen.getByText(/Your resume PDF is downloading/)).toBeInTheDocument();
   });
 
-  it('✓ on a still-missing skill offers the updated prompt; keywords get no buttons', async () => {
+  it('✓ on a still-missing skill offers the updated prompt; keywords are not listed', async () => {
     const user = userEvent.setup();
     jobResume.current = {
       ...SAVED_RESUME,
@@ -79,8 +81,8 @@ describe('JobResumePanel', () => {
 
     const missing = await screen.findByRole('list', { name: 'Still missing' });
     expect(screen.queryByRole('button', { name: 'Copy updated prompt' })).toBeNull();
-    // microfrontends is a keyword: Claude works it in, so there is nothing to pick.
-    expect(within(missing).queryByRole('button', { name: 'I have microfrontends' })).toBeNull();
+    // microfrontends is a keyword: Claude works it in, so it is not listed at all.
+    expect(within(missing).queryByText('microfrontends')).toBeNull();
     const tick = within(missing).getByRole('button', { name: 'I have graphql' });
     expect(tick).toHaveAccessibleDescription('I have this skill: add it to my resume');
     await user.click(tick);
