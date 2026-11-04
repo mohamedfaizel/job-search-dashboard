@@ -62,6 +62,7 @@ function toneFor(text: string): BadgeTone {
 export type ColumnNameKey =
   | 'title'
   | 'fit'
+  | 'apply'
   | 'match'
   | 'location'
   | 'postedAt'
@@ -287,6 +288,29 @@ export function FitCell({ job }: { job: Job }) {
   );
 }
 
+/**
+ * Apply kit score: the same score as Fit %, for the resume Claude wrote for this job. It shows
+ * what the Apply kit gained, next to the Fit % of your own resume. Click for the popup.
+ */
+export function ApplyKitCell({ job }: { job: Job }) {
+  const { openJob } = useRowActions();
+  const t = useTranslations('Jobs.row');
+  if (job.applyScore === null) return <span title={t('applyEmpty')}>{dash}</span>;
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        openJob(job);
+      }}
+      aria-label={t('applyLabel', { title: job.title, score: job.applyScore })}
+      title={t('applyHint')}
+      className="rounded"
+    >
+      <Badge tone={scoreTone(job.applyScore)}>{job.applyScore}%</Badge>
+    </button>
+  );
+}
+
 /** Resume-Matcher's ATS score for the job; clicking it opens the popup with the breakdown. */
 export function MatchCell({ job }: { job: Job }) {
   const { openJob } = useRowActions();
@@ -439,6 +463,11 @@ export const columns = helper.columns([
     id: 'fit',
     header: () => <ColumnName id="fit" />,
     cell: ({ row }) => <FitCell job={row.original} />,
+  }),
+  helper.display({
+    id: 'apply',
+    header: () => <ColumnName id="apply" />,
+    cell: ({ row }) => <ApplyKitCell job={row.original} />,
   }),
   // Resume-Matcher's score needs AI and one run per job, so it starts hidden (Columns menu).
   helper.display({

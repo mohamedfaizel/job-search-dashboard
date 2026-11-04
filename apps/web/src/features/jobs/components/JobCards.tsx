@@ -2,6 +2,7 @@ import type { Job } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import {
   ActionsCell,
+  ApplyKitCell,
   FitCell,
   JobCell,
   LocationCell,
@@ -31,6 +32,7 @@ export function JobCards({ jobs, isFetching }: { jobs: Job[]; isFetching: boolea
               <JobCell job={job} />
             </div>
             {job.fitScore !== null && <FitCell job={job} />}
+            {job.applyScore !== null && <ApplyKitCell job={job} />}
             {job.matchStatus && <MatchCell job={job} />}
             <SelectCell job={job} />
           </div>

@@ -238,6 +238,11 @@ type Job {
   """
   applicationStatus: ApplicationStatus!
 
+  """
+  Apply kit score (0-100): the same score as Fit %, but for the resume Claude wrote for this job. Null until you save a reply
+  """
+  applyScore: Int
+
   """Why, as a code: NOT_FOUND, SAYS_CLOSED, REDIRECTED, BLOCKED, TIMEOUT…"""
   checkReason: String
 
@@ -520,6 +525,17 @@ type JobPage {
 The resume you wrote for this job, uploaded or pasted, scored the same way as your profile resume
 """
 type JobResume {
+  """What went wrong. Null unless FAILED"""
+  aiError: String
+
+  """Resume-Matcher's ATS score (0-100)"""
+  aiScore: Float
+
+  """
+  Resume-Matcher's check of this resume. Null until asked, and again after the resume is saved anew
+  """
+  aiStatus: JobMatchStatus
+
   """The cover letter from the Apply kit reply. Empty when there was none"""
   coverLetter: String!
 
@@ -679,6 +695,11 @@ type Mutation {
   Score your resume against a job with Resume-Matcher. Returns at once as PENDING; poll jobMatch until READY or FAILED (a minute or two). Uses AI credits
   """
   matchJob(jobId: ID!): JobMatch!
+
+  """
+  Scores the resume saved for this job with Resume-Matcher (AI match). Returns at once with aiStatus PENDING; poll jobInsights until READY or FAILED (a minute or two). Uses AI credits
+  """
+  matchJobResume(jobId: ID!): JobInsights!
 
   """Moves a job one place up or down in your Apply queue"""
   moveInApplyQueue(direction: QueueDirection!, jobId: ID!): [ApplyQueueItem!]!

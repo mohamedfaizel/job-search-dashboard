@@ -161,6 +161,38 @@ describe('JobResumePanel', () => {
     expect(await screen.findByText(/in your resume or profile/)).toBeInTheDocument();
   });
 
+  it('checks the AI match of the saved resume when asked, and shows the score', async () => {
+    const user = userEvent.setup();
+    jobResume.current = { ...SAVED_RESUME };
+    renderPanel();
+
+    await user.click(await screen.findByRole('button', { name: 'Check AI match' }));
+
+    expect(requests).toContainEqual({ operation: 'MatchJobResume', variables: { jobId: 'job-1' } });
+    expect(await screen.findByText('Resume-Matcher is reading this resume…')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Checking…' })).toBeDisabled();
+
+    jobResume.current = { ...SAVED_RESUME, aiStatus: 'READY', aiScore: 71.4 };
+    // The panel looks again every few seconds while Resume-Matcher works.
+    expect(
+      await screen.findByLabelText('AI match 71', undefined, { timeout: 8000 }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'AI match (Resume-Matcher)' })).getByRole(
+        'button',
+        {
+          name: 'Check again',
+        },
+      ),
+    ).toBeEnabled();
+  }, 15000);
+
+  it('says why the AI match failed', async () => {
+    jobResume.current = { ...SAVED_RESUME, aiStatus: 'FAILED', aiError: 'Resume-Matcher is off.' };
+    renderPanel();
+    expect(await screen.findByText('Resume-Matcher is off.')).toBeInTheDocument();
+  });
+
   it('checks the finished PDF the way an ATS reads it', async () => {
     jobResume.current = { ...SAVED_RESUME };
     renderPanel();

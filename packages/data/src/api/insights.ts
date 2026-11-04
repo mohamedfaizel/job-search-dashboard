@@ -9,6 +9,7 @@ import {
   DELETE_INTERVIEW_PREP,
   DELETE_JOB_RESUME,
   JOB_INSIGHTS,
+  MATCH_JOB_RESUME,
   RECALCULATE_FIT,
   MOVE_IN_APPLY_QUEUE,
   REMOVE_FROM_APPLY_QUEUE,
@@ -38,6 +39,24 @@ export function useJobInsights(jobId: string | null) {
       return data.jobInsights;
     },
     enabled: jobId !== null,
+    // The AI match of the saved resume takes a minute or two: look again until it is done.
+    refetchInterval: (q) => (q.state.data?.jobResume?.aiStatus === 'PENDING' ? 3000 : false),
+  });
+}
+
+/** Starts Resume-Matcher on the resume saved for a job. The answer has aiStatus PENDING. */
+export function useMatchJobResume() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const data = await graphqlClient.request<{ matchJobResume: JobInsights }>(MATCH_JOB_RESUME, {
+        jobId,
+      });
+      return data.matchJobResume;
+    },
+    onSuccess: (insights) => {
+      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+    },
   });
 }
 
@@ -163,6 +182,8 @@ export function applyKitUrl(jobId: string) {
 /** A saved or deleted reply changes the job's insights and whether it is ready in the queue. */
 function savedReply(queryClient: QueryClient, insights: JobInsights) {
   queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+  // The Apply kit column in the Job posts table follows the saved resume.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
   void queryClient.invalidateQueries({ queryKey: applyQueueKey });
 }
 

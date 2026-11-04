@@ -1,0 +1,5 @@
+ALTER TABLE "JobResume" ADD COLUMN "score" DOUBLE PRECISION,
+ADD COLUMN "aiStatus" "JobMatchStatus",
+ADD COLUMN "aiScore" DOUBLE PRECISION,
+ADD COLUMN "aiError" TEXT,
+ADD COLUMN "aiStartedAt" TIMESTAMP(3);
