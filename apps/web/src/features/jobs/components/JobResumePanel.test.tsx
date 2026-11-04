@@ -137,6 +137,33 @@ describe('JobResumePanel', () => {
     ).toBeEnabled();
   }, 15000);
 
+  it('lets you tick missing keywords and copy a prompt for them, without touching your skills', async () => {
+    const user = userEvent.setup();
+    jobResume.current = {
+      ...SAVED_RESUME,
+      aiStatus: 'READY',
+      aiScore: 71.4,
+      aiMissing: ['Kubernetes', 'Terraform'],
+    };
+    renderPanel();
+
+    expect(screen.queryByRole('button', { name: /^Copy prompt for/ })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'I have Terraform' }));
+    expect(screen.getByRole('button', { name: 'I have Terraform' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(screen.getByRole('button', { name: 'Copy prompt for 1 keyword' }));
+    const text = await navigator.clipboard.readText();
+    expect(text).toContain('- Terraform');
+    expect(text).not.toContain('Kubernetes');
+    // Ticks are only for the prompt: nothing is sent to the server.
+    expect(requests.some((r) => r.operation === 'SetHaveTerm')).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'I have Terraform' }));
+    expect(screen.queryByRole('button', { name: /^Copy prompt for/ })).not.toBeInTheDocument();
+  });
+
   it('says why the AI match failed', async () => {
     jobResume.current = { ...SAVED_RESUME, aiStatus: 'FAILED', aiError: 'Resume-Matcher is off.' };
     renderPanel();
