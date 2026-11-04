@@ -99,6 +99,16 @@ export class JobResumeModel {
   aiError!: string | null;
 
   @Field(() => [String], {
+    description: 'Job keywords Resume-Matcher still misses in this resume. Empty until READY',
+  })
+  aiMissing!: string[];
+
+  @Field(() => [String], {
+    description: "Resume-Matcher's tips for this resume. Empty until READY",
+  })
+  aiTips!: string[];
+
+  @Field(() => [String], {
     description: 'Skills and keywords this resume has and your profile resume doesn’t',
   })
   nowCovered!: string[];

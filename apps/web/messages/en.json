@@ -418,9 +418,7 @@
       "REJECTED": "Rejected",
       "hidden": "Hidden",
       "new": "New",
-      "newHint": "Jobs imported since your last visit",
-      "queue": "In Apply queue",
-      "queueHint": "Jobs in your Apply queue"
+      "newHint": "Jobs imported since your last visit"
     },
     "quick": {
       "label": "Quick filters",
@@ -527,6 +525,14 @@
     },
     "queue": {
       "heading": "Apply queue ({count})",
+      "open": "Open Apply queue, {count, plural, =0 {nothing queued} one {# job} other {# jobs}}",
+      "openHint": "Apply queue: write and fill in your applications",
+      "maximize": "Make it bigger",
+      "restore": "Make it smaller",
+      "close": "Close",
+      "empty": "Nothing in your queue yet. Add jobs from the table or a job's Apply tab, and they show up here.",
+      "showInTable": "Show only these in the table",
+      "showAllJobs": "Show all jobs again",
       "openPage": "Open queue page ↗",
       "markAll": "Mark all Applied",
       "moveUp": "Move {title} up",
@@ -835,6 +841,9 @@
       "aiRun": "Check AI match",
       "aiAgain": "Check again",
       "aiWait": "Checking…",
+      "aiMissing": "Still missing",
+      "aiTips": "Tips from Resume-Matcher ({count})",
+      "aiNothingMissing": "Resume-Matcher found nothing missing.",
       "beforeAfter": "Score before and after",
       "was": "was {before}",
       "nowCovers": "The resume for this job now covers",

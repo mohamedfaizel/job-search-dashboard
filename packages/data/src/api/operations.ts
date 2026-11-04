@@ -575,6 +575,8 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       aiStatus
       aiScore
       aiError
+      aiMissing
+      aiTips
       nowCovered
       stillMissing
     }

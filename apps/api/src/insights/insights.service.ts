@@ -159,6 +159,8 @@ export class InsightsService implements OnApplicationBootstrap {
             aiStatus: true,
             aiScore: true,
             aiError: true,
+            aiMissing: true,
+            aiTips: true,
           },
         }),
         this.prisma.languageResume.findMany({
@@ -368,6 +370,8 @@ export class InsightsService implements OnApplicationBootstrap {
       aiStatus: null,
       aiScore: null,
       aiError: null,
+      aiMissing: [],
+      aiTips: [],
       aiStartedAt: null,
     };
     await this.prisma.jobResume.upsert({
@@ -398,7 +402,15 @@ export class InsightsService implements OnApplicationBootstrap {
     if (removed.length > 0) {
       await this.prisma.jobResume.update({
         where: { userId_jobId: { userId, jobId } },
-        data: { text, aiStatus: null, aiScore: null, aiError: null, aiStartedAt: null },
+        data: {
+          text,
+          aiStatus: null,
+          aiScore: null,
+          aiError: null,
+          aiMissing: [],
+          aiTips: [],
+          aiStartedAt: null,
+        },
       });
     }
     return this.forJob(userId, jobId);
@@ -714,6 +726,8 @@ export class InsightsService implements OnApplicationBootstrap {
       aiStatus: JobMatchStatus | null;
       aiScore: number | null;
       aiError: string | null;
+      aiMissing: string[];
+      aiTips: string[];
     },
     terms: Parameters<typeof checkResume>[1],
     before: ResumeCheck,
@@ -734,6 +748,8 @@ export class InsightsService implements OnApplicationBootstrap {
       aiStatus: jobResume.aiStatus,
       aiScore: jobResume.aiScore,
       aiError: jobResume.aiError,
+      aiMissing: jobResume.aiMissing,
+      aiTips: jobResume.aiTips,
       nowCovered: afterChecks
         .filter((t, i) => t.inResume && !beforeChecks[i]?.inResume)
         .map((t) => t.term),

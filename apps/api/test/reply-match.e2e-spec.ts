@@ -7,7 +7,7 @@ import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
 const RM_URL = 'http://resume-matcher.test';
 const CREATE_JOB = `mutation ($input: CreateJobInput!) { createJob(input: $input) { id } }`;
-const FIELDS = `jobResume { score aiStatus aiScore aiError }`;
+const FIELDS = `jobResume { score aiStatus aiScore aiError aiMissing aiTips }`;
 const SAVE = `mutation ($jobId: ID!, $text: String!) {
   saveJobResumeText(jobId: $jobId, text: $text) { ${FIELDS} } }`;
 const MATCH = `mutation ($jobId: ID!) { matchJobResume(jobId: $jobId) { ${FIELDS} } }`;
@@ -19,6 +19,8 @@ interface JobResume {
   aiStatus: string | null;
   aiScore: number | null;
   aiError: string | null;
+  aiMissing: string[];
+  aiTips: string[];
 }
 
 const RESUME =
@@ -59,9 +61,9 @@ const server = setupServer(
             section_completeness: 100,
             date_consistency: null,
           },
-          missing_keywords: [],
+          missing_keywords: ['Kubernetes'],
           injectable_keywords: [],
-          recommendations: [],
+          recommendations: ['Add Kubernetes to your skills.'],
         },
         warnings: [],
       },
@@ -153,7 +155,13 @@ describe('AI match of the resume Claude wrote', () => {
     // The real run takes a minute; the fake one can finish before this answer is read.
     expect(['PENDING', 'READY']).toContain(started.data?.matchJobResume.jobResume.aiStatus);
 
-    expect(await finished()).toMatchObject({ aiStatus: 'READY', aiScore: 81.2, aiError: null });
+    expect(await finished()).toMatchObject({
+      aiStatus: 'READY',
+      aiScore: 81.2,
+      aiError: null,
+      aiMissing: ['Kubernetes'],
+      aiTips: ['Add Kubernetes to your skills.'],
+    });
     expect(rm.jobs).toEqual(['Frontend Engineer at Acme\n\nReact and GraphQL.']);
     // Resume-Matcher keeps at most 5 master resumes, so the copy must not stay.
     expect(rm.deleted).toEqual(['rm-temp']);
@@ -165,7 +173,13 @@ describe('AI match of the resume Claude wrote', () => {
     await finished();
 
     const again = (await save()).data!.saveJobResumeText.jobResume;
-    expect(again).toMatchObject({ aiStatus: null, aiScore: null, aiError: null });
+    expect(again).toMatchObject({
+      aiStatus: null,
+      aiScore: null,
+      aiError: null,
+      aiMissing: [],
+      aiTips: [],
+    });
   });
 
   it("says so when Resume-Matcher's AI can't read the PDF", async () => {

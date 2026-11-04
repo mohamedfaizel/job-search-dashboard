@@ -340,35 +340,67 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
   const run = () => {
     start.mutate(jobId);
   };
+  const missing = ready ? jobResume.aiMissing : [];
+  const tips = ready ? jobResume.aiTips : [];
   return (
     <section
       aria-label={t('aiTitle')}
-      className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"
+      className="space-y-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5"
     >
-      <div className="min-w-0 flex-1">
+      <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm font-semibold text-slate-900">{t('aiTitle')}</p>
-        <p className="text-xs text-slate-600">{running ? t('aiRunning') : t('aiHint')}</p>
-        {aiStatus === 'FAILED' && (
-          <p role="alert" className="text-xs text-red-700">
-            {aiError ?? t('aiFailed')}
-          </p>
+        {ready && (
+          <Badge tone={scoreTone(aiScore)}>
+            <span aria-label={t('aiScoreLabel', { score: Math.round(aiScore) })}>
+              {Math.round(aiScore)}
+            </span>
+          </Badge>
         )}
-        {start.error && (
-          <p role="alert" className="text-xs text-red-700">
-            {errorText(start.error)}
-          </p>
-        )}
+        <button type="button" className={`${BUTTON} ml-auto`} disabled={running} onClick={run}>
+          {running ? t('aiWait') : ready || aiStatus === 'FAILED' ? t('aiAgain') : t('aiRun')}
+        </button>
       </div>
-      {ready && (
-        <Badge tone={scoreTone(aiScore)}>
-          <span aria-label={t('aiScoreLabel', { score: Math.round(aiScore) })}>
-            {Math.round(aiScore)}
-          </span>
-        </Badge>
+      {!ready && <p className="text-xs text-slate-600">{running ? t('aiRunning') : t('aiHint')}</p>}
+      {ready && missing.length === 0 && tips.length === 0 && (
+        <p className="text-xs text-emerald-700">{t('aiNothingMissing')}</p>
       )}
-      <button type="button" className={BUTTON} disabled={running} onClick={run}>
-        {running ? t('aiWait') : ready || aiStatus === 'FAILED' ? t('aiAgain') : t('aiRun')}
-      </button>
+      {missing.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-slate-600">{t('aiMissing')}</span>
+          <ul className="flex flex-wrap gap-1" aria-label={t('aiMissing')}>
+            {missing.map((term) => (
+              <li
+                key={term}
+                className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 ring-1 ring-amber-200 ring-inset"
+              >
+                {term}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {tips.length > 0 && (
+        <details className="text-xs text-slate-700">
+          <summary className="cursor-pointer text-slate-600">
+            {t('aiTips', { count: tips.length })}
+          </summary>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5">
+            {tips.map((tip) => (
+              <li key={tip}>{tip}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {aiStatus === 'FAILED' && (
+        <p role="alert" className="text-xs text-red-700">
+          {aiError ?? t('aiFailed')}
+        </p>
+      )}
+      {start.error && (
+        <p role="alert" className="text-xs text-red-700">
+          {errorText(start.error)}
+        </p>
+      )}
     </section>
   );
 }
