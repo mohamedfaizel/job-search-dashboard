@@ -474,7 +474,14 @@ function ApplyKit({
           ) : (
             <p className="rounded-lg bg-slate-50 px-3 py-2 text-slate-600">{t('noReply')}</p>
           )}
-          {data.reviewPrompt && <ReviewCard jobId={job.id} prompt={data.reviewPrompt} />}
+          {data.reviewPrompt && (
+            <details className="text-sm">
+              <summary className={`cursor-pointer list-none ${LINK}`}>{t('reviewAgain')}</summary>
+              <div className="mt-2">
+                <ReviewCard jobId={job.id} prompt={data.reviewPrompt} />
+              </div>
+            </details>
+          )}
           <Card title={t('step3Title')} intro={t('step3Intro')}>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <button

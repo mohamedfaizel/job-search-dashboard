@@ -67,6 +67,7 @@ const TERM_RULES = `How to handle each skill or keyword:
 2. Related: it is closely tied to something I have done (same ecosystem, or the usual tool for it), for example Apollo with GraphQL, Next.js with React, Jest with unit testing, Kubernetes with Docker. Add it next to that experience, e.g. "GraphQL APIs with Apollo Client".
 3. Keywords from the job ad (the ad's own phrases): use the ad's exact word where it means the same as what I really did, because ATS keyword matching is often literal (the ad says "reusable UI components" and I built reusable React components: write "reusable UI components with React"). Put them in the summary, the first bullet of each job and the skills, as normal words in real sentences. Never use a keyword only to raise a score, and never stuff, repeat or hide them.
 4. A skill with no connection to my experience: leave it out.
+5. Only the job ad’s own skills may be added. A tool the ad does not ask for, and my resume and skills list do not show, must not appear in the new resume, however common it is (for example Kubernetes when the ad never names it).
 
 Never invent employers, job titles, dates, degrees, certificates or numbers. Keep my real employers, titles and dates.
 Interview test: I must be able to explain every line in an interview without saying "well, what I actually meant was...". Moving my most relevant work first and using the ad's words for the same thing is fine. Making adjacent work sound like the ad's exact task, or mixing study and job experience into one claim, is a stretch: list it under Stretches in the CHECK part.`;
@@ -79,7 +80,7 @@ function writingRules(settings: ResumeSettings): string {
   return `How to write:
 - Summary: 3 to 4 lines that say which role I am targeting and why I fit this one, with one or two proof points that match the ad's most important requirements. If the job is outside my usual field, open with the one sentence that connects my background to their problem. Never name the company or say that I am applying ("applying for the … role at …"): the summary is about what I bring.
 - Bullets: start with a strong verb, show the result (numbers only when they are in my resume or achievements), vary how they start. One result per bullet, at most two lines: split a bullet that holds two results. ${settings.keepSections ? 'Keep every job and project of my resume, each with its most relevant bullets for this job.' : '4 to 5 bullets for my latest job, 2 to 3 for the one before, 1 to 2 for older ones.'} Keep my strongest numbers (team sizes, time saved, scale, money) when they fit the job, also from older jobs.
-- Skills: 4 to 6 groups with bold labels; use the ad's own name for a group when it truly fits.
+- Skills: 4 to 6 groups with bold labels; use the ad's own name for a group when it truly fits. List the skills this job asks for first. Leave out skills from my resume that the ad does not need, so the section stays short and every item is one I can talk about in an interview.
 - Banned words and phrases: passionate, leverage, synergy, drive results, hit the ground running, team player, results-driven, dynamic, cutting-edge, I believe I would be a great fit. Show it with an example instead.
 - No em dashes (—). Use commas or full stops.
 - Active voice, confident, no apologising ("I think I could"). Plain words, short sentences.
@@ -123,8 +124,16 @@ No tables, columns, icons or images, and no styling other than **bold**.`;
 
 const CHECK_PART = `- Related: the terms you added under rule 2, each with the experience it is tied to.
 - Skipped: the terms you left out, each with one line why.
+- Changes: what your own review changed in the draft, one line each.
 - Stretches: each line I might struggle to explain in an interview, with why, and ask me: keep, soften or drop?
 - Ask me: details you left out because you did not know them (a school name, a date).`;
+
+/** The review Claude does on its own draft before replying, so one prompt is enough. */
+const SELF_REVIEW = `1. Facts: every employer, title, date, degree, number and skill must be supported by my resume, my other skills or my achievements. Remove or rewrite anything that is not.
+2. Skills: remove any skill that is not in my resume, my other skills or the job ad's list above.
+3. Requirements: each must-have of the ad that my experience covers is shown in the resume.
+4. Eye: the summary is specific to this role, the first lines show proof for the ad's top needs, and nothing is vague, repeated or a cliché.
+5. Rules: the writing, keyword, layout, date, length and language rules above are followed.`;
 
 /** The "I have this" terms, or nothing when there are none (so the prompt stays short). */
 const mustAddPart = (terms: string[], resume = 'my resume') =>
@@ -210,6 +219,9 @@ ${input.description?.trim() || '(No description saved.)'}
 
 Then write, ${sameLanguage}:
 ${coverAndAnswers(input.company)}
+
+Before you reply, review your own draft as the hiring manager for this job would, and fix what you find. Reply only with the fixed version:
+${SELF_REVIEW}
 
 My application facts:
 ${list(input.facts)}${savedAnswers}

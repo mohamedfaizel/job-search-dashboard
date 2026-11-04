@@ -12,7 +12,7 @@ import type { ApplyQueueItemModel, ApplyQueuePromptModel } from './apply-queue';
 import { buildQueuePage } from './apply-queue';
 import { CorpusService } from './corpus.service';
 import type { FactCheckInput } from './fact-check';
-import { factCheck } from './fact-check';
+import { factCheck, removeSkillItems } from './fact-check';
 import { germanRequirement } from './german';
 import type {
   JobInsightsModel,
@@ -326,6 +326,32 @@ export class InsightsService {
       create: { userId, jobId, ...data },
       update: data,
     });
+    return this.forJob(userId, jobId);
+  }
+
+  /**
+   * Takes the skills the fact check flagged (not in your resume, profile skills or the job ad's
+   * own list of what it needs) out of the Skills section of the resume you saved for this job,
+   * and saves it again. Only list items are removed, never words inside a sentence, so the rest
+   * of the resume stays as it was.
+   */
+  async removeUnsupportedSkills(userId: number, jobId: string) {
+    const { insights } = await this.analyse(userId, jobId);
+    const row = await this.prisma.jobResume.findUnique({
+      where: { userId_jobId: { userId, jobId } },
+      select: { text: true },
+    });
+    if (!row) return insights;
+    const flagged = (insights.jobResume?.factCheck ?? [])
+      .filter((f) => f.kind === 'SKILL' && f.where === 'RESUME')
+      .map((f) => f.text);
+    const { text, removed } = removeSkillItems(row.text, flagged);
+    if (removed.length > 0) {
+      await this.prisma.jobResume.update({
+        where: { userId_jobId: { userId, jobId } },
+        data: { text },
+      });
+    }
     return this.forJob(userId, jobId);
   }
 

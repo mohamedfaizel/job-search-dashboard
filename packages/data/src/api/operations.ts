@@ -617,6 +617,15 @@ export const SET_HAVE_TERM = /* GraphQL */ `
   }
 `;
 
+export const REMOVE_UNSUPPORTED_SKILLS = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation RemoveUnsupportedSkills($jobId: ID!) {
+    removeUnsupportedSkills(jobId: $jobId) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
 export const RESTORE_INSIGHT_TERM = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation RestoreInsightTerm($jobId: ID!, $term: String!) {

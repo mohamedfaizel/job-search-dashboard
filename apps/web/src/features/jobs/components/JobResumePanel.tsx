@@ -6,12 +6,13 @@ import {
   useSaveJobResumeText,
   useDocumentStyle,
   useDocumentTemplates,
+  useRemoveUnsupportedSkills,
   useSetHaveTerm,
   useUploadJobResume,
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { DragEvent } from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { replyParts, startDownload } from '../reply';
 import { useJobFormat } from '../useJobFormat';
@@ -248,8 +249,10 @@ function fixRequest(intro: string, findings: FactFinding[]): string {
  * Numbers, skills and language levels in Claude's reply that are not in your resume or profile.
  * Nothing is shown without a resume of yours to compare with.
  */
-function FactCheck({ findings }: { findings: FactFinding[] | null }) {
+function FactCheck({ jobId, findings }: { jobId: string; findings: FactFinding[] | null }) {
   const t = useTranslations('Jobs.reply');
+  const errorText = useErrorText();
+  const removeSkills = useRemoveUnsupportedSkills();
   if (findings === null) return null;
   if (findings.length === 0) {
     return (
@@ -290,6 +293,26 @@ function FactCheck({ findings }: { findings: FactFinding[] | null }) {
           </div>
         );
       })}
+      {findings.some((f) => f.kind === 'SKILL' && f.where === 'RESUME') && (
+        <div className="space-y-1">
+          <button
+            type="button"
+            className={PRIMARY}
+            disabled={removeSkills.isPending}
+            onClick={() => {
+              removeSkills.mutate(jobId);
+            }}
+          >
+            {removeSkills.isPending ? t('removingSkills') : t('removeSkills')}
+          </button>
+          <p className="text-xs text-amber-900">{t('removeSkillsHint')}</p>
+          {removeSkills.error && (
+            <p role="alert" className="text-sm text-red-700">
+              {t('changeError', { error: errorText(removeSkills.error) })}
+            </p>
+          )}
+        </div>
+      )}
       <CopyText
         label={t('copyFix')}
         text={fixRequest(t('fixIntro'), findings)}
@@ -312,14 +335,20 @@ const PDF_CHECKS = [
 ] as const;
 
 /**
- * Checks the finished PDF the way an ATS reads it: only its text. Runs when you press the
- * button, because it typesets the PDF first.
+ * Checks the finished PDF the way an ATS reads it: only its text. It runs by itself when a reply
+ * is saved, because it typesets the PDF first; the button runs it again.
  */
 function PdfCheck({ jobId, template }: { jobId: string; template: string }) {
   const t = useTranslations('Jobs.reply');
   const errorText = useErrorText();
   const check = useCheckResumePdf();
   const result = check.data?.template === template ? check.data : null;
+  // One step: the check runs by itself when the reply is saved (this panel is remounted for each
+  // saved reply) or the template changes. The button is only for running it again.
+  const { mutate } = check;
+  useEffect(() => {
+    mutate({ jobId, template });
+  }, [mutate, jobId, template]);
   const line = (item: PdfCheckItem) => {
     const [pages = '', limit = ''] = item.detail.split('/');
     const values = { detail: item.detail, pages, limit };
@@ -481,7 +510,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
         </p>
       )}
 
-      <FactCheck findings={jobResume.factCheck} />
+      <FactCheck jobId={jobId} findings={jobResume.factCheck} />
 
       {leftOut.length > 0 && (
         <div className="rounded-xl border border-sky-200 bg-sky-50/70 px-4 py-3">

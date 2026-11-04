@@ -145,6 +145,8 @@ describe('ApplyKitPanel', () => {
     jobResume.current = SAVED_RESUME;
     const { user, open } = renderKit();
 
+    // The first prompt already reviews its own draft, so the second opinion is tucked away.
+    await user.click(await screen.findByText(/Review again with Claude/));
     await user.click(
       await screen.findByRole('button', { name: 'Copy review prompt and open Claude' }),
     );

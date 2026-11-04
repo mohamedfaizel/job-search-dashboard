@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { factCheck, numberKey, skillItems } from './fact-check';
+import { factCheck, numberKey, removeSkillItems, skillItems } from './fact-check';
 
 const MASTER = `# Mohamed Faizel
 Frontend Engineer
@@ -171,5 +171,37 @@ React, TypeScript, Kubernetes, Storybook
   it('accepts a skill from your profile skills', () => {
     const resume = '## Skills\nStorybook\n';
     expect(check(resume)).toEqual([]);
+  });
+});
+
+describe('removeSkillItems', () => {
+  const resume = `# Mo
+## Summary
+Built apps with Kubernetes and React.
+## Skills
+- **Frontend:** React, TypeScript, Next.js
+- **Tools:** Kubernetes, Docker (3 years)
+- Kubernetes
+## Languages
+- English: C1`;
+
+  it('takes skills out of the Skills section list items only', () => {
+    const out = removeSkillItems(resume, ['Kubernetes', 'next.js']);
+    expect(out.removed).toEqual(['Next.js', 'Kubernetes']);
+    expect(out.text).toContain('- **Frontend:** React, TypeScript\n');
+    expect(out.text).toContain('- **Tools:** Docker (3 years)');
+  });
+
+  it('leaves sentences and other sections alone, and drops a line left empty', () => {
+    const out = removeSkillItems(resume, ['kubernetes']);
+    expect(out.text).toContain('Built apps with Kubernetes and React.');
+    expect(out.text).not.toMatch(/^- Kubernetes$/m);
+    expect(out.text).toContain('- English: C1');
+  });
+
+  it('changes nothing when no flagged skill is in the list', () => {
+    const out = removeSkillItems(resume, ['figma']);
+    expect(out.text).toBe(resume);
+    expect(out.removed).toEqual([]);
   });
 });
