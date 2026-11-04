@@ -31,8 +31,8 @@ export interface JobsTableState {
   queueOnly: boolean;
 }
 
-/** The table opens with your best matches first. */
-export const DEFAULT_SORT: JobSortInput = { field: 'FIT', direction: 'DESC' };
+/** The table opens with the newest postings first. */
+export const DEFAULT_SORT: JobSortInput = { field: 'POSTED_AT', direction: 'DESC' };
 
 export const initialJobsTableState: JobsTableState = {
   search: '',
@@ -106,13 +106,15 @@ export const jobsTableSlice = createSlice({
       state.page = 1;
     },
     /**
-     * Clicking a column header cycles: ascending → descending → off. Fit starts with descending,
-     * because the best match first is what you want from it.
+     * Clicking a column header cycles: ascending → descending → off. Fit and Posted start with
+     * descending, because the best match and the newest posting first are what you want.
      */
     cycleSort(state, action: PayloadAction<JobSortField>) {
       const field = action.payload;
       const [first, second] =
-        field === 'FIT' ? (['DESC', 'ASC'] as const) : (['ASC', 'DESC'] as const);
+        field === 'FIT' || field === 'POSTED_AT'
+          ? (['DESC', 'ASC'] as const)
+          : (['ASC', 'DESC'] as const);
       if (state.sort?.field !== field) state.sort = { field, direction: first };
       else if (state.sort.direction === first) state.sort = { field, direction: second };
       else state.sort = null;
@@ -158,6 +160,12 @@ export function toJobsPageArgs(state: JobsTableState): JobsPageArgs {
   if (search) filter.search = search;
   Object.assign(filter, state.filters);
   if (state.showHidden) filter.hidden = true;
+  else {
+    // The table is for jobs still to act on: expired postings never show, and jobs you applied
+    // to only show when you pick a status card (Applied, Interviewing, ...).
+    filter.hideExpired = true;
+    if (!filter.applicationStatuses?.length) filter.hideApplied = true;
+  }
   if (state.minFit !== null) filter.minFit = state.minFit;
   if (state.newOnly && state.newSince) filter.createdAfter = state.newSince;
   if (state.queueOnly) filter.inApplyQueue = true;

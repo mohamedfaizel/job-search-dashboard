@@ -192,7 +192,7 @@ describe('JobsDashboard', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('opens with the best Fit first and shows each job’s Fit %', async () => {
+  it('opens with the newest jobs first and shows each job’s Fit %', async () => {
     server.use(
       api.query('JobsPage', ({ variables }) => {
         requests.push({ operation: 'JobsPage', variables });
@@ -216,8 +216,10 @@ describe('JobsDashboard', () => {
     const fit = await screen.findByRole('button', {
       name: 'Fit for Senior Frontend Engineer: 82%',
     });
-    expect(lastJobsPageVariables()).toMatchObject({ sort: { field: 'FIT', direction: 'DESC' } });
-    expect(screen.getByRole('columnheader', { name: /Fit/ })).toHaveAttribute(
+    expect(lastJobsPageVariables()).toMatchObject({
+      sort: { field: 'POSTED_AT', direction: 'DESC' },
+    });
+    expect(screen.getByRole('columnheader', { name: /Posted/ })).toHaveAttribute(
       'aria-sort',
       'descending',
     );
@@ -421,7 +423,7 @@ describe('JobsDashboard', () => {
     await user.click(card(/^Applied/));
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({
-        filter: { applicationStatuses: ['APPLIED'] },
+        filter: { applicationStatuses: ['APPLIED'], hideExpired: true },
       });
     });
     expect(card(/^Applied/)).toHaveAttribute('aria-pressed', 'true');
@@ -437,7 +439,7 @@ describe('JobsDashboard', () => {
     // Clicking the card that is on goes back to all jobs.
     await user.click(card(/^Applied/));
     expect(card(/^Jobs found/)).toHaveAttribute('aria-pressed', 'true');
-    expect(lastJobsPageVariables()).not.toHaveProperty('filter');
+    expect(lastJobsPageVariables().filter).toEqual({ hideExpired: true, hideApplied: true });
   });
 
   it('hides a job from its popup, with Undo', async () => {

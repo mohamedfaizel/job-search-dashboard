@@ -116,6 +116,10 @@ export interface JobFilterInput {
   postedAfter?: string;
   /** True lists only the jobs you hid; otherwise they are left out. */
   hidden?: boolean;
+  /** Leave out jobs whose posting our still-open check found closed. */
+  hideExpired?: boolean;
+  /** Leave out the jobs you marked Applied. */
+  hideApplied?: boolean;
 }
 
 export interface JobSortInput {

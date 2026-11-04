@@ -323,6 +323,14 @@ input JobFilterInput {
   """True lists only the jobs you hid. Otherwise hidden jobs are left out."""
   hidden: Boolean
 
+  """True leaves out the jobs you marked Applied"""
+  hideApplied: Boolean
+
+  """
+  True leaves out jobs whose posting the still-open check found closed (expired)
+  """
+  hideExpired: Boolean
+
   """True lists only the jobs in your Apply queue"""
   inApplyQueue: Boolean
   industries: [String!]

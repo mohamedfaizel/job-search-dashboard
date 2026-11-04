@@ -435,6 +435,11 @@ function buildWhere(filter: JobFilterInput | undefined, userId: number): Prisma.
     if (condition) and.push({ [field]: condition });
   }
 
+  if (filter.hideExpired) and.push({ postingStatus: { not: 'expired' } });
+  if (filter.hideApplied) {
+    and.push({ NOT: { applications: { some: { userId, status: ApplicationStatus.APPLIED } } } });
+  }
+
   const statuses = filter.applicationStatuses ?? [];
   if (statuses.length) {
     // NONE is stored as "no row", so it needs its own condition.

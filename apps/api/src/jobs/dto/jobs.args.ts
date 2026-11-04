@@ -147,6 +147,19 @@ export class JobFilterInput {
   @IsOptional()
   @IsBoolean()
   hidden?: boolean;
+
+  @Field({
+    nullable: true,
+    description: 'True leaves out jobs whose posting the still-open check found closed (expired)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  hideExpired?: boolean;
+
+  @Field({ nullable: true, description: 'True leaves out the jobs you marked Applied' })
+  @IsOptional()
+  @IsBoolean()
+  hideApplied?: boolean;
 }
 
 @InputType()
