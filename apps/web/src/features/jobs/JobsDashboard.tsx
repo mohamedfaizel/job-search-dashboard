@@ -90,6 +90,9 @@ export function JobsDashboard() {
     return toJobsPageArgs({
       ...tableState,
       filters,
+      // New and the queue are views of the list, not filters on the All jobs count.
+      newOnly: false,
+      queueOnly: false,
       showHidden: false,
       sort: null,
       page: 1,
@@ -170,7 +173,9 @@ export function JobsDashboard() {
   const activeCard: StatCardKey | null = showingHidden
     ? 'hidden'
     : statuses.length === 0
-      ? 'total'
+      ? tableState.newOnly || tableState.queueOnly
+        ? null
+        : 'total'
       : statuses.length === 1 && STATUS_CARDS.includes(statuses[0] as StatCardKey)
         ? (statuses[0] as StatCardKey)
         : null;
@@ -179,6 +184,9 @@ export function JobsDashboard() {
   const selectCard = (key: StatCardKey) => {
     const target = key === activeCard ? 'total' : key;
     setLastChange(null);
+    // Picking a card leaves the New and queue views.
+    dispatch(setNewOnly(false));
+    dispatch(setQueueOnly(false));
     dispatch(setShowHidden(target === 'hidden'));
     const values = target === 'total' || target === 'hidden' ? [] : [target];
     dispatch(setFilterValues({ key: 'applicationStatuses', values }));
@@ -206,11 +214,6 @@ export function JobsDashboard() {
         newCount={newSince === null ? 0 : newCountQuery.data?.total}
         newOnly={tableState.newOnly}
         onToggleNew={showingHidden ? undefined : () => dispatch(setNewOnly(!tableState.newOnly))}
-        queueCount={applyQueue.data?.length}
-        queueOnly={tableState.queueOnly}
-        onToggleQueue={
-          showingHidden ? undefined : () => dispatch(setQueueOnly(!tableState.queueOnly))
-        }
       />
       {showingHidden && <p className="text-sm text-slate-600">{t('hiddenIntro')}</p>}
 
@@ -291,7 +294,13 @@ export function JobsDashboard() {
         </ul>
       )}
 
-      {!showingHidden && <ApplyQueuePanel onOpenJob={setOpenJobId} />}
+      {!showingHidden && (
+        <ApplyQueuePanel
+          onOpenJob={setOpenJobId}
+          queueOnly={tableState.queueOnly}
+          onToggleQueueOnly={() => dispatch(setQueueOnly(!tableState.queueOnly))}
+        />
+      )}
 
       <Toolbar
         search={tableState.search}

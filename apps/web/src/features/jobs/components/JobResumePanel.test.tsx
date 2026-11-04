@@ -112,11 +112,21 @@ describe('JobResumePanel', () => {
     expect(await screen.findByText('Resume-Matcher is reading this resume…')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Checking…' })).toBeDisabled();
 
-    jobResume.current = { ...SAVED_RESUME, aiStatus: 'READY', aiScore: 71.4 };
+    jobResume.current = {
+      ...SAVED_RESUME,
+      aiStatus: 'READY',
+      aiScore: 71.4,
+      aiMissing: ['Kubernetes'],
+      aiTips: ['Add Kubernetes to your skills.'],
+    };
     // The panel looks again every few seconds while Resume-Matcher works.
     expect(
       await screen.findByLabelText('AI match 71', undefined, { timeout: 8000 }),
     ).toBeInTheDocument();
+    const card = within(screen.getByRole('region', { name: 'AI match (Resume-Matcher)' }));
+    expect(card.getByRole('list', { name: 'Still missing' })).toHaveTextContent('Kubernetes');
+    expect(card.getByText('Tips from Resume-Matcher (1)')).toBeInTheDocument();
+    expect(card.getByText('Add Kubernetes to your skills.')).toBeInTheDocument();
     expect(
       within(screen.getByRole('region', { name: 'AI match (Resume-Matcher)' })).getByRole(
         'button',

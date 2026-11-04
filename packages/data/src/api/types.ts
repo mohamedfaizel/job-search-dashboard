@@ -559,6 +559,9 @@ export interface JobResume {
   aiStatus: JobMatchStatus | null;
   aiScore: number | null;
   aiError: string | null;
+  /** Job keywords Resume-Matcher still misses in this resume, and its tips. Empty until READY. */
+  aiMissing: string[];
+  aiTips: string[];
   /** Skills and keywords it has and your profile resume doesn't. */
   nowCovered: string[];
   /** Skills and keywords still missing. */

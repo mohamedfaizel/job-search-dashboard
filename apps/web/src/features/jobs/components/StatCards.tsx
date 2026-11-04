@@ -17,11 +17,6 @@ interface Props {
   /** True while the table shows only the New jobs. */
   newOnly?: boolean;
   onToggleNew?: (() => void) | undefined;
-  /** Jobs in your Apply queue. The chip shows only when there are some. */
-  queueCount?: number | undefined;
-  /** True while the table shows only the jobs in your Apply queue. */
-  queueOnly?: boolean;
-  onToggleQueue?: (() => void) | undefined;
 }
 
 const CARDS: { key: StatCardKey; dot: string }[] = [
@@ -47,9 +42,6 @@ export function StatCards({
   newCount = 0,
   newOnly = false,
   onToggleNew,
-  queueCount = 0,
-  queueOnly = false,
-  onToggleQueue,
 }: Props) {
   const t = useTranslations('Jobs.cards');
   const value = (key: StatCardKey) => {
@@ -81,23 +73,6 @@ export function StatCards({
     </button>
   );
 
-  const queueChip = onToggleQueue && (queueCount > 0 || queueOnly) && (
-    <button
-      key="queue"
-      type="button"
-      aria-pressed={queueOnly}
-      title={t('queueHint')}
-      onClick={onToggleQueue}
-      className={pill(queueOnly)}
-    >
-      <span aria-hidden="true" className="h-2 w-2 rounded-full bg-violet-500" />
-      {t('queue')}
-      <span className={`font-semibold tabular-nums ${queueOnly ? 'text-white' : 'text-slate-900'}`}>
-        {queueCount}
-      </span>
-    </button>
-  );
-
   return (
     <div
       role="group"
@@ -125,8 +100,8 @@ export function StatCards({
             </span>
           </button>
         );
-        // The New and Apply queue chips sit right after "All jobs": parts of them.
-        return key === 'total' ? [card, newChip, queueChip].filter(Boolean) : [card];
+        // The New chip sits right after "All jobs": part of it.
+        return key === 'total' ? [card, newChip].filter(Boolean) : [card];
       })}
     </div>
   );

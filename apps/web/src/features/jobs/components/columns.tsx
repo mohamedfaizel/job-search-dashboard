@@ -137,7 +137,7 @@ export function JobCell({ job }: { job: Job }) {
           onClick={() => {
             openJob(job);
           }}
-          className="block max-w-[22rem] truncate text-left text-sm font-semibold text-slate-900 hover:text-brand-700"
+          className="block max-w-[22rem] cursor-pointer truncate rounded-sm text-left text-sm font-semibold text-slate-900 decoration-brand-400 decoration-2 underline-offset-4 transition-colors hover:text-brand-700 hover:underline focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
           title={job.title}
         >
           {job.title}

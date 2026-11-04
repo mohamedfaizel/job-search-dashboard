@@ -536,6 +536,11 @@ type JobResume {
   """What went wrong. Null unless FAILED"""
   aiError: String
 
+  """
+  Job keywords Resume-Matcher still misses in this resume. Empty until READY
+  """
+  aiMissing: [String!]!
+
   """Resume-Matcher's ATS score (0-100)"""
   aiScore: Float
 
@@ -543,6 +548,9 @@ type JobResume {
   Resume-Matcher's check of this resume. Null until asked, and again after the resume is saved anew
   """
   aiStatus: JobMatchStatus
+
+  """Resume-Matcher's tips for this resume. Empty until READY"""
+  aiTips: [String!]!
 
   """The cover letter from the Apply kit reply. Empty when there was none"""
   coverLetter: String!

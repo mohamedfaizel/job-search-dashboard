@@ -511,6 +511,9 @@ model JobResume {
   aiStatus    JobMatchStatus?
   aiScore     Float?
   aiError     String?
+  /// Job keywords this resume still lacks, and Resume-Matcher's tips, from the same check.
+  aiMissing   String[] @default([])
+  aiTips      String[] @default([])
   aiStartedAt DateTime?
   updatedAt   DateTime @updatedAt
 

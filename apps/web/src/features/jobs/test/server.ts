@@ -102,6 +102,8 @@ export const SAVED_RESUME: JobResume = {
   aiStatus: null,
   aiScore: null,
   aiError: null,
+  aiMissing: [],
+  aiTips: [],
   nowCovered: ['graphql'],
   stillMissing: ['microfrontends'],
 };

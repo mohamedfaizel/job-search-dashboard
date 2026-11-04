@@ -26,6 +26,12 @@ const lastJobsPageVariables = () =>
 
 const card = (name: RegExp) => screen.getByRole('button', { name });
 
+/** The Apply queue is a chat-style window: open it from its round button first. */
+async function openQueue(user: ReturnType<typeof userEvent.setup>, count: number) {
+  await user.click(await screen.findByRole('button', { name: /^Open Apply queue/ }));
+  return screen.findByRole('region', { name: `Apply queue (${String(count)})` });
+}
+
 describe('JobsDashboard', () => {
   it('shows jobs from the API', async () => {
     renderDashboard();
@@ -292,6 +298,15 @@ describe('JobsDashboard', () => {
         screen.queryByRole('button', { name: 'Senior Frontend Engineer' }),
       ).not.toBeInTheDocument();
     });
+    // New is a view of the list: All jobs neither changes its count nor looks selected.
+    const all = screen.getByRole('button', { name: /^All jobs/ });
+    expect(all).toHaveAttribute('aria-pressed', 'false');
+    expect(all).toHaveTextContent(/All jobs\s*\d+/);
+    await user.click(all);
+    await waitFor(() => {
+      expect(chip).toHaveAttribute('aria-pressed', 'false');
+    });
+    expect(all).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('shows the New chip with 0 on your first visit, and a chip for every status', async () => {
@@ -760,6 +775,7 @@ describe('JobsDashboard', () => {
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
     expect(screen.queryByRole('region', { name: /Apply queue/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Open Apply queue/ })).toBeInTheDocument();
 
     await user.click(screen.getByRole('checkbox', { name: 'Select all jobs on this page' }));
     const bar = screen.getByRole('region', { name: 'Selected jobs' });
@@ -769,7 +785,7 @@ describe('JobsDashboard', () => {
       operation: 'AddToApplyQueue',
       variables: { jobIds: ['job-1', 'job-2'] },
     });
-    const queue = await screen.findByRole('region', { name: 'Apply queue (2)' });
+    const queue = await openQueue(user, 2);
     expect(queue).toHaveTextContent('2 jobs have no Claude reply yet');
 
     // One Claude chat writes the replies for both, and pasting it back saves each.
@@ -816,7 +832,9 @@ describe('JobsDashboard', () => {
 
     await user.click(screen.getByRole('button', { name: 'Mark all Applied' }));
     await waitFor(() => {
-      expect(screen.queryByRole('region', { name: /Apply queue/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'Apply queue (0)' })).toHaveTextContent(
+        'Nothing in your queue yet',
+      );
     });
     expect(requests).toContainEqual({
       operation: 'UpdateJobStatus',
@@ -861,7 +879,7 @@ describe('JobsDashboard', () => {
     );
     const user = userEvent.setup();
     renderDashboard();
-    const queue = await screen.findByRole('region', { name: 'Apply queue (2)' });
+    const queue = await openQueue(user, 2);
 
     await user.click(within(queue).getByRole('button', { name: 'Senior Frontend Engineer' }));
     const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
@@ -884,7 +902,7 @@ describe('JobsDashboard', () => {
       await user.click(within(row).getByRole('checkbox'));
     }
     await user.click(screen.getByRole('button', { name: 'Add to Apply queue' }));
-    const queue = await screen.findByRole('region', { name: 'Apply queue (2)' });
+    const queue = await openQueue(user, 2);
 
     const items = within(queue).getAllByRole('listitem');
     expect(items[0]).toHaveTextContent(/^1/);
@@ -904,8 +922,8 @@ describe('JobsDashboard', () => {
     });
     expect(await within(backendRow()).findByText('Queue #1')).toBeInTheDocument();
 
-    // The chip shows only the queued jobs.
-    await user.click(screen.getByRole('button', { name: /^In Apply queue\s*2$/ }));
+    // The window can show only the queued jobs in the table.
+    await user.click(within(queue).getByRole('button', { name: 'Show only these in the table' }));
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({ filter: { inApplyQueue: true } });
     });

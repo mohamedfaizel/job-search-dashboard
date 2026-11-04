@@ -74,6 +74,8 @@ export class ReplyMatchService implements OnApplicationBootstrap {
         aiStatus: JobMatchStatus.PENDING,
         aiScore: null,
         aiError: null,
+        aiMissing: [],
+        aiTips: [],
         aiStartedAt: startedAt,
       },
     });
@@ -112,6 +114,8 @@ export class ReplyMatchService implements OnApplicationBootstrap {
         aiStatus: JobMatchStatus.READY,
         aiScore: ats.overall_score,
         aiError: null,
+        aiMissing: ats.missing_keywords,
+        aiTips: ats.recommendations,
       });
     } catch (error) {
       this.logger.warn(`Reply match ${userId}:${jobId} failed: ${describeError(error)}`);
@@ -135,7 +139,13 @@ export class ReplyMatchService implements OnApplicationBootstrap {
     userId: number,
     jobId: string,
     startedAt: Date,
-    data: { aiStatus: JobMatchStatus; aiScore?: number; aiError: string | null },
+    data: {
+      aiStatus: JobMatchStatus;
+      aiScore?: number;
+      aiError: string | null;
+      aiMissing?: string[];
+      aiTips?: string[];
+    },
   ): Promise<void> {
     await this.prisma.jobResume.updateMany({
       where: { userId, jobId, aiStartedAt: startedAt },
