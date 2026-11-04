@@ -577,12 +577,6 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       aiError
       nowCovered
       stillMissing
-      factCheck {
-        kind
-        text
-        where
-        context
-      }
     }
     prompt
     interviewPrompt
@@ -624,15 +618,6 @@ export const MATCH_JOB_RESUME = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation MatchJobResume($jobId: ID!) {
     matchJobResume(jobId: $jobId) {
-      ...JobInsightsFields
-    }
-  }
-`;
-
-export const REMOVE_UNSUPPORTED_SKILLS = /* GraphQL */ `
-  ${JOB_INSIGHTS_FIELDS}
-  mutation RemoveUnsupportedSkills($jobId: ID!) {
-    removeUnsupportedSkills(jobId: $jobId) {
       ...JobInsightsFields
     }
   }

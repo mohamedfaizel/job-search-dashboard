@@ -842,13 +842,6 @@
       "copyUpdated": "Aktualisierten Prompt kopieren",
       "updatedHint": "Füge ihn in Claude ein und ersetze dann diese Antwort durch die neue.",
       "updatedBox": "Aktualisierter Prompt",
-      "factOk": "Faktencheck: Jede Zahl, jede Fähigkeit und jedes Sprachniveau steht in deinem Lebenslauf oder Profil.",
-      "factTitle": "Prüfe das vor dem Senden: {count, plural, one {# Punkt steht} other {# Punkte stehen}} nicht in deinem Lebenslauf oder Profil",
-      "factHint": "Ein Wort-für-Wort-Vergleich, kein Urteil. Auch eine passende Umformulierung kann hier auftauchen. Korrigiere es oder lass es bewusst stehen.",
-      "factNUMBER": "Zahlen",
-      "factSKILL": "Fähigkeiten",
-      "factLEVEL": "Sprachniveaus",
-      "inCoverLetter": "Anschreiben",
       "leftOut": "Claudes Lebenslauf lässt {terms} weg, obwohl du {count, plural, one {es} other {sie}} hast. Der aktualisierte Prompt verlangt, dass {count, plural, one {es} other {sie}} drin {count, plural, one {ist} other {sind}}.",
       "resumePdf": "Lebenslauf (PDF)",
       "templateLabel": "Lebenslauf-Vorlage",
@@ -893,10 +886,7 @@
         "CHARACTERS": "Zeichen, die ein ATS nicht lesen kann ({detail}): Ligaturen oder Icons.",
         "PLACEHOLDERS": "Noch auszufüllen: {detail}. Bitte Claude, es zu entfernen, oder ergänze es vor dem Senden.",
         "SKILLS": "Im PDF-Text verloren: {detail}"
-      },
-      "removeSkills": "Skills entfernen, die ich nicht habe",
-      "removingSkills": "Wird entfernt…",
-      "removeSkillsHint": "Nimmt die markierten Skills hier aus dem Skills-Abschnitt, ohne Umweg über Claude. Zahlen und Wörter in Sätzen entscheidest du selbst."
+      }
     },
     "stillOpen": {
       "never": "Noch nicht geprüft, ob die Anzeige noch online ist",

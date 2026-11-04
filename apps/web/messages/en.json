@@ -842,13 +842,6 @@
       "copyUpdated": "Copy updated prompt",
       "updatedHint": "Paste it into Claude, then Replace this reply with the new one.",
       "updatedBox": "Updated prompt",
-      "factOk": "Fact check: every number, skill and language level is in your resume or profile.",
-      "factTitle": "Check before you send: {count, plural, one {# thing is} other {# things are}} not in your resume or profile",
-      "factHint": "A word-for-word check, not a judgement. A fair rewording can show up here too. Fix it or keep it on purpose.",
-      "factNUMBER": "Numbers",
-      "factSKILL": "Skills",
-      "factLEVEL": "Language levels",
-      "inCoverLetter": "cover letter",
       "leftOut": "Claude’s resume leaves out {terms}, which you have. The updated prompt says {count, plural, one {it} other {they}} must be in.",
       "resumePdf": "Resume (PDF)",
       "templateLabel": "Resume template",
@@ -893,10 +886,7 @@
         "CHARACTERS": "Characters an ATS can’t read ({detail}): ligatures or icons.",
         "PLACEHOLDERS": "Text left to fill in: {detail}. Ask Claude to remove it, or fill it in before you send.",
         "SKILLS": "Lost in the PDF text: {detail}"
-      },
-      "removeSkills": "Remove the skills I don’t have",
-      "removingSkills": "Removing…",
-      "removeSkillsHint": "Takes the flagged skills out of the Skills section here, with no Claude round trip. Numbers and words inside sentences stay for you to decide."
+      }
     },
     "stillOpen": {
       "never": "Not checked yet if the ad is still open",

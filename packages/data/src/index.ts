@@ -26,7 +26,6 @@ export {
   useJobInsights,
   useRemoveInsightTerm,
   useMatchJobResume,
-  useRemoveUnsupportedSkills,
   useSetHaveTerm,
   useRecalculateFit,
   useRestoreInsightTerm,

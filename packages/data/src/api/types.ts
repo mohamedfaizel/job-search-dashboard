@@ -559,17 +559,6 @@ export interface JobResume {
   nowCovered: string[];
   /** Skills and keywords still missing. */
   stillMissing: string[];
-  /** Things in it that are not in your resume or profile. Null with no resume of yours to compare. */
-  factCheck: FactFinding[] | null;
-}
-
-/** A number, skill or language level in the resume or cover letter that is not in your CV. */
-export interface FactFinding {
-  kind: 'NUMBER' | 'SKILL' | 'LEVEL';
-  text: string;
-  where: 'RESUME' | 'COVER_LETTER';
-  /** The line it is in, shortened. */
-  context: string;
 }
 
 /** One check of the finished resume PDF, read the way an ATS reads it. */

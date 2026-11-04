@@ -104,7 +104,6 @@ export const SAVED_RESUME: JobResume = {
   aiError: null,
   nowCovered: ['graphql'],
   stillMissing: ['microfrontends'],
-  factCheck: [],
 };
 
 /** Claude's interview prep the test user saved for job-1. Tests start with nothing. */
@@ -429,12 +428,6 @@ const handlers = [
     const others = haveTerms.filter((t) => t !== term);
     haveTerms.splice(0, haveTerms.length, ...others, ...(variables['have'] ? [term] : []));
     return HttpResponse.json({ data: { setHaveTerm: insightsNow() } });
-  }),
-  api.mutation('RemoveUnsupportedSkills', ({ variables }) => {
-    requests.push({ operation: 'RemoveUnsupportedSkills', variables });
-    // The skill is gone from the saved resume, so the fact check has nothing left to flag.
-    if (jobResume.current) jobResume.current = { ...jobResume.current, factCheck: [] };
-    return HttpResponse.json({ data: { removeUnsupportedSkills: insightsNow() } });
   }),
   api.mutation('MatchJobResume', ({ variables }) => {
     requests.push({ operation: 'MatchJobResume', variables });
