@@ -14,6 +14,10 @@ import {
   setNewSince,
   setShowHidden,
   toJobsPageArgs,
+  parseSavedSettings,
+  toSavedSettings,
+  applySavedSettings,
+  setColumnChoices,
 } from './jobsTableSlice';
 
 const reduce = jobsTableSlice.reducer;
@@ -95,6 +99,72 @@ describe('jobsTable slice', () => {
     expect(state.newOnly).toBe(false);
     // The visit time stays: it isn't a filter you chose.
     expect(state.newSince).toBe('2026-10-30T09:00:00.000Z');
+  });
+
+  describe('saved settings', () => {
+    it('saves filters, sort and column choices, and reads them back', () => {
+      let state = reduce(
+        initialJobsTableState,
+        toggleFilterValue({ key: 'workplaces', value: 'REMOTE' }),
+      );
+      state = reduce(state, setMinFit(70));
+      state = reduce(state, cycleSort('SALARY'));
+      state = reduce(state, setColumnChoices({ salary: false }));
+
+      const back = parseSavedSettings(toSavedSettings(state));
+      expect(back).toEqual({
+        filters: { workplaces: ['REMOTE'] },
+        sort: { field: 'SALARY', direction: 'ASC' },
+        postedWithinDays: null,
+        minFit: 70,
+        pageSize: 25,
+        columns: { salary: false },
+      });
+      const restored = reduce(initialJobsTableState, applySavedSettings(back));
+      expect(restored).toMatchObject({ ...back, restored: true, page: 1 });
+    });
+
+    it('is restored even when nothing was saved', () => {
+      const state = reduce(initialJobsTableState, applySavedSettings(null));
+      expect(state.restored).toBe(true);
+      expect(state.sort).toEqual(initialJobsTableState.sort);
+    });
+
+    it('keeps "no sort" as no sort', () => {
+      const off = reduce(initialJobsTableState, cycleSort('POSTED_AT'));
+      const state = reduce(off, cycleSort('POSTED_AT'));
+      expect(state.sort).toBeNull();
+      expect(parseSavedSettings(toSavedSettings(state))?.sort).toBeNull();
+    });
+
+    it('drops what is not valid and keeps the rest', () => {
+      const back = parseSavedSettings(
+        JSON.stringify({
+          filters: { workplaces: ['REMOTE', 3], nope: ['x'], cities: 'Berlin' },
+          sort: { field: 'NOPE', direction: 'UP' },
+          postedWithinDays: -2,
+          minFit: 500,
+          pageSize: 'big',
+          columns: { salary: false, match: 'yes' },
+        }),
+      );
+      expect(back).toEqual({
+        filters: { workplaces: ['REMOTE'] },
+        sort: initialJobsTableState.sort,
+        postedWithinDays: null,
+        minFit: null,
+        pageSize: 25,
+        columns: { salary: false },
+      });
+    });
+
+    it('gives nothing for text that is not a saved table', () => {
+      expect(parseSavedSettings(null)).toBeNull();
+      expect(parseSavedSettings('')).toBeNull();
+      expect(parseSavedSettings('not json')).toBeNull();
+      expect(parseSavedSettings('[1]')).toBeNull();
+      expect(parseSavedSettings('{}')).toMatchObject({ filters: {}, columns: {} });
+    });
   });
 
   it('goes back to page 1 when the filters change', () => {

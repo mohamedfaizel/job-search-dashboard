@@ -734,6 +734,18 @@ export const RECALCULATE_FIT = /* GraphQL */ `
   }
 `;
 
+export const MY_TABLE_SETTINGS = /* GraphQL */ `
+  query MyTableSettings {
+    myTableSettings
+  }
+`;
+
+export const SAVE_TABLE_SETTINGS = /* GraphQL */ `
+  mutation SaveTableSettings($settings: String!) {
+    saveTableSettings(settings: $settings)
+  }
+`;
+
 export const START_JOBS_VISIT = /* GraphQL */ `
   mutation StartJobsVisit {
     startJobsVisit

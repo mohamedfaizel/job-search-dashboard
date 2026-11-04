@@ -45,9 +45,10 @@ import { StatCards } from './components/StatCards';
 import { Toolbar } from './components/Toolbar';
 import { useColumnVisibility } from './useColumnVisibility';
 import { usePendingApplies } from './usePendingApplies';
+import { useSavedTableSettings } from './useSavedTableSettings';
 
 const NO_JOBS: Job[] = [];
-const STATUS_CARDS: StatCardKey[] = ['SAVED', 'APPLIED', 'INTERVIEWING'];
+const STATUS_CARDS: StatCardKey[] = ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED'];
 
 const ERROR_BOX = 'rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800';
 
@@ -59,7 +60,9 @@ export function JobsDashboard() {
   const tableState = useAppSelector((state) => state.jobsTable);
   const args = useMemo(() => toJobsPageArgs(tableState), [tableState]);
 
-  const jobsQuery = useJobsPage(args);
+  // Your saved filters and sort are put back first, so the table loads once, the way you left it.
+  const settingsReady = useSavedTableSettings();
+  const jobsQuery = useJobsPage(args, { enabled: settingsReady });
   const filterOptions = useJobFilterOptions();
   const updateStatus = useUpdateJobStatus();
   const setHidden = useSetJobHidden();
@@ -80,7 +83,7 @@ export function JobsDashboard() {
     [t],
   );
 
-  // "Jobs found" counts your search and column filters, whatever the status card picked.
+  // "All jobs" counts your search and column filters, whatever the status card picked.
   const foundArgs = useMemo(() => {
     const filters = { ...tableState.filters };
     Reflect.deleteProperty(filters, 'applicationStatuses');
@@ -93,7 +96,7 @@ export function JobsDashboard() {
       pageSize: 1,
     });
   }, [tableState]);
-  const foundQuery = useJobsPage(foundArgs);
+  const foundQuery = useJobsPage(foundArgs, { enabled: settingsReady });
 
   // Opening Job posts starts a visit; jobs imported since the last one are New.
   const visit = useJobsVisit();

@@ -338,7 +338,7 @@
     "title": "Job posts",
     "hiddenTitle": "Hidden jobs",
     "intro": "Search, filter and track the jobs you imported. Click a title for details.",
-    "hiddenIntro": "Only you don’t see these. Unhide a job to put it back in your table, or click “Jobs found” to go back.",
+    "hiddenIntro": "Only you don’t see these. Unhide a job to put it back in your table, or click “All jobs” to go back.",
     "jobName": "{title} at {company}",
     "undo": {
       "hidOne": "Hid “{title}” at {company}.",
@@ -410,10 +410,12 @@
     },
     "cards": {
       "label": "Show jobs by status",
-      "total": "Jobs found",
+      "total": "All jobs",
       "SAVED": "Saved",
       "APPLIED": "Applied",
       "INTERVIEWING": "Interviewing",
+      "OFFER": "Offer",
+      "REJECTED": "Rejected",
       "hidden": "Hidden",
       "new": "New",
       "newHint": "Jobs imported since your last visit",

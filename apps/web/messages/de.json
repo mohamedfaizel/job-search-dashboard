@@ -338,7 +338,7 @@
     "title": "Stellenanzeigen",
     "hiddenTitle": "Ausgeblendete Jobs",
     "intro": "Durchsuche, filtere und verfolge die Jobs, die du importiert hast. Klick auf einen Titel für Details.",
-    "hiddenIntro": "Nur du siehst diese nicht mehr. Blende einen Job wieder ein, um ihn zurück in deine Tabelle zu holen, oder klick auf „Jobs gefunden“, um zurückzugehen.",
+    "hiddenIntro": "Nur du siehst diese nicht mehr. Blende einen Job wieder ein, um ihn zurück in deine Tabelle zu holen, oder klick auf „Alle Jobs“, um zurückzugehen.",
     "jobName": "{title} bei {company}",
     "undo": {
       "hidOne": "„{title}“ bei {company} ausgeblendet.",
@@ -410,10 +410,12 @@
     },
     "cards": {
       "label": "Jobs nach Status zeigen",
-      "total": "Jobs gefunden",
+      "total": "Alle Jobs",
       "SAVED": "Gemerkt",
       "APPLIED": "Beworben",
       "INTERVIEWING": "Im Gespräch",
+      "OFFER": "Angebot",
+      "REJECTED": "Abgesagt",
       "hidden": "Ausgeblendet",
       "new": "Neu",
       "newHint": "Seit deinem letzten Besuch importierte Jobs",

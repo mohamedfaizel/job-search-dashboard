@@ -765,6 +765,11 @@ type Mutation {
   saveMyDesign(reply: String!): DocumentStyle!
 
   """
+  Saves your Job posts filters and sort (JSON text), replacing the ones before
+  """
+  saveTableSettings(settings: String!): Boolean!
+
+  """
   "I have this": adds a missing skill or keyword to the Skills list of My profile (have: true), or takes it off (have: false). It then counts as covered for every job
   """
   setHaveTerm(have: Boolean! = true, jobId: ID!, term: String!): JobInsights!
@@ -1090,6 +1095,11 @@ type Query {
   """
   myMatcherResume: MatcherResume!
   myProfile: Profile!
+
+  """
+  Your saved Job posts filters and sort, as JSON text. Null if you never saved any
+  """
+  myTableSettings: String
   resumeMatcherStatus(
     """
     Also send a test message to the AI provider (costs a fraction of a cent)

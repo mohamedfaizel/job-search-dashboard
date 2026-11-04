@@ -76,6 +76,8 @@ export {
   useJob,
   useJobsPage,
   useJobsVisit,
+  useSaveTableSettings,
+  useTableSettings,
   useMarkFollowedUp,
   useRunSavedSearch,
   useSavedSearches,
