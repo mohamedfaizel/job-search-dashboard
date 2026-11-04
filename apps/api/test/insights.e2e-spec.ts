@@ -130,6 +130,14 @@ const SAVE_TEXT = /* GraphQL */ `
   }
 `;
 
+const REMOVE_SKILLS = /* GraphQL */ `
+  mutation Remove($jobId: ID!) {
+    removeUnsupportedSkills(jobId: $jobId) {
+      ${JOB_RESUME}
+    }
+  }
+`;
+
 const DELETE_RESUME = /* GraphQL */ `
   mutation Delete($jobId: ID!) {
     deleteJobResume(jobId: $jobId) {
@@ -535,6 +543,45 @@ describe('job insights without AI', () => {
       expect(found.find((f) => f.text === '40%')?.context).toBe('Cut costs by 40% with Kafka');
       // Node.js is in your resume as NodeJS.
       expect(found.map((f) => f.text)).not.toContain('Node.js');
+    });
+
+    it('removes the flagged skills from the Skills section and leaves the rest', async () => {
+      const job = await backendJob();
+      await t.asUser(SAVE_TEXT, {
+        jobId: job.id,
+        text: [
+          '=== RESUME ===',
+          '# Ada',
+          '## Skills',
+          '- **Backend:** Node.js, Rust',
+          '## Experience',
+          '- Built Rust tooling with Kafka',
+        ].join('\n'),
+      });
+
+      const res = await t.asUser<{ removeUnsupportedSkills: Insights }>(REMOVE_SKILLS, {
+        jobId: job.id,
+      });
+
+      expect(res.errors).toBeUndefined();
+      const found = res.data!.removeUnsupportedSkills.jobResume!.factCheck!;
+      // The skills line is clean now; "Rust" inside a sentence is left for you to decide.
+      expect(found.filter((f) => f.where === 'RESUME').map((f) => f.context)).not.toContain(
+        'Backend: Node.js, Rust',
+      );
+      const file = await download(job.id).expect(200);
+      const text = (file.body as Buffer).toString();
+      expect(text).toContain('- **Backend:** Node.js');
+      expect(text).not.toContain('Node.js, Rust');
+      expect(text).toContain('- Built Rust tooling with Kafka');
+
+      // Nothing saved for another job: no error, no resume.
+      const other = await addJob({ title: 'Other', skills: ['go'] });
+      const none = await t.asUser<{ removeUnsupportedSkills: Insights }>(REMOVE_SKILLS, {
+        jobId: other.id,
+      });
+      expect(none.errors).toBeUndefined();
+      expect(none.data!.removeUnsupportedSkills.jobResume).toBeNull();
     });
 
     it('has no fact check without a resume of yours to compare with', async () => {
