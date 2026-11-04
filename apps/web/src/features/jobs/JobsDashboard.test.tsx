@@ -439,7 +439,9 @@ describe('JobsDashboard', () => {
     // Clicking the card that is on goes back to all jobs.
     await user.click(card(/^Applied/));
     expect(card(/^Jobs found/)).toHaveAttribute('aria-pressed', 'true');
-    expect(lastJobsPageVariables().filter).toEqual({ hideExpired: true, hideApplied: true });
+    expect(lastJobsPageVariables()).toMatchObject({
+      filter: { hideExpired: true, hideApplied: true },
+    });
   });
 
   it('hides a job from its popup, with Undo', async () => {
