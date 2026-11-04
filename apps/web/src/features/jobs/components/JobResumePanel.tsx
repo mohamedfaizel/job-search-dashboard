@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 import type { DragEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { keywordPrompt } from '../keywordPrompt';
 import { replyParts, startDownload } from '../reply';
 import { useJobFormat } from '../useJobFormat';
 import { Badge } from './Badge';
@@ -337,6 +338,8 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
   const { aiStatus, aiScore, aiError } = jobResume;
   const running = aiStatus === 'PENDING' || start.isPending;
   const ready = aiStatus === 'READY' && aiScore !== null;
+  // Ticks only feed the prompt below; they never touch your profile skills.
+  const [ticked, setTicked] = useState<string[]>([]);
   const run = () => {
     start.mutate(jobId);
   };
@@ -368,16 +371,50 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className="text-slate-600">{t('aiMissing')}</span>
           <ul className="flex flex-wrap gap-1" aria-label={t('aiMissing')}>
-            {missing.map((term) => (
-              <li
-                key={term}
-                className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800 ring-1 ring-amber-200 ring-inset"
-              >
-                {term}
-              </li>
-            ))}
+            {missing.map((term) => {
+              const on = ticked.includes(term);
+              return (
+                <li
+                  key={term}
+                  className={`flex items-center gap-1 rounded py-0.5 pr-0.5 pl-1.5 ring-1 ring-inset ${
+                    on
+                      ? 'bg-emerald-50 text-emerald-800 ring-emerald-300'
+                      : 'bg-amber-50 text-amber-800 ring-amber-200'
+                  }`}
+                >
+                  {term}
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    aria-label={t('aiTick', { term })}
+                    title={t('aiTickHint')}
+                    onClick={() => {
+                      setTicked((list) =>
+                        list.includes(term) ? list.filter((x) => x !== term) : [...list, term],
+                      );
+                    }}
+                    className={`h-5 w-5 cursor-pointer rounded text-xs leading-none font-bold ${
+                      on
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-white/70 text-slate-400 hover:bg-white hover:text-emerald-700'
+                    }`}
+                  >
+                    ✓
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
+      )}
+      {ticked.length > 0 && (
+        <CopyText
+          primary
+          label={t('aiCopyPrompt', { count: ticked.length })}
+          text={keywordPrompt(missing.filter((term) => ticked.includes(term)))}
+          copiedHint={t('aiCopiedHint')}
+          boxLabel={t('aiPromptBox')}
+        />
       )}
       {tips.length > 0 && (
         <details className="text-xs text-slate-700">
