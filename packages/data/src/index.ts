@@ -25,6 +25,7 @@ export {
   useDeleteJobResume,
   useJobInsights,
   useRemoveInsightTerm,
+  useRemoveUnsupportedSkills,
   useSetHaveTerm,
   useRecalculateFit,
   useRestoreInsightTerm,

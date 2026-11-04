@@ -792,7 +792,7 @@
       "downloading": "✓ Dein Lebenslauf wird als PDF geladen. Du findest ihn in deinem Download-Ordner und hängst ihn an die Bewerbung an.",
       "noReply": "Noch keine Antwort gespeichert. Claude in Chrome kann das Formular trotzdem aus deinem Profil ausfüllen.",
       "reviewTitle": "Von Claude wie von Personalverantwortlichen prüfen lassen",
-      "reviewIntro": "Eine zweite Prüfung vor der Bewerbung: Claude vergleicht jede Zeile mit deinem eigenen Lebenslauf, entfernt, was sich nicht belegen lässt, korrigiert Floskeln, Daten und Länge und listet Übertreibungen auf, die du behalten, abschwächen oder streichen kannst.",
+      "reviewIntro": "Schon der erste Prompt lässt Claude den eigenen Entwurf prüfen. Das hier ist eine zweite Meinung: Claude vergleicht jede Zeile mit deinem eigenen Lebenslauf, nimmt heraus, was er nicht belegen kann, und listet Grenzfälle auf, die du behalten, abschwächen oder streichen kannst.",
       "reviewCopy": "Prüf-Prompt kopieren und Claude öffnen",
       "reviewShow": "Prüf-Prompt anzeigen",
       "reviewPaste": "Füge hier Claudes verbesserte Antwort ein. Sie ersetzt den Entwurf.",
@@ -803,7 +803,8 @@
       "copyChrome": "Prompt für Claude in Chrome kopieren",
       "chromeBox": "Prompt für Claude in Chrome",
       "readsKit": "Claude in Chrome liest die <link>Seite des Bewerbungskits</link>",
-      "inQueueSuffix": " · In deiner Bewerbungsliste."
+      "inQueueSuffix": " · In deiner Bewerbungsliste.",
+      "reviewAgain": "Noch einmal von Claude prüfen lassen (der Prompt enthält schon eine Prüfung)"
     },
     "reply": {
       "making": "Dein PDF wird erstellt…",
@@ -865,7 +866,7 @@
       "delete": "Löschen",
       "deleteError": "Konnte nicht gelöscht werden: {error}",
       "pdfTitle": "PDF-Prüfung",
-      "pdfIntro": "Liest das fertige PDF wie ein ATS, nur aus dem Text: Seiten, Name und E-Mail, Daten, seltsame Zeichen und Skills.",
+      "pdfIntro": "Wird nach jedem Speichern für dich geprüft: liest das fertige PDF wie ein ATS, nur aus dem Text (Seiten, Name und E-Mail, Daten, seltsame Zeichen und Skills).",
       "pdfRun": "PDF prüfen",
       "pdfAgain": "Erneut prüfen",
       "pdfChecking": "PDF wird erstellt und gelesen…",
@@ -891,7 +892,10 @@
         "CHARACTERS": "Zeichen, die ein ATS nicht lesen kann ({detail}): Ligaturen oder Icons.",
         "PLACEHOLDERS": "Noch auszufüllen: {detail}. Bitte Claude, es zu entfernen, oder ergänze es vor dem Senden.",
         "SKILLS": "Im PDF-Text verloren: {detail}"
-      }
+      },
+      "removeSkills": "Skills entfernen, die ich nicht habe",
+      "removingSkills": "Wird entfernt…",
+      "removeSkillsHint": "Nimmt die markierten Skills hier aus dem Skills-Abschnitt, ohne Umweg über Claude. Zahlen und Wörter in Sätzen entscheidest du selbst."
     },
     "stillOpen": {
       "never": "Noch nicht geprüft, ob die Anzeige noch online ist",

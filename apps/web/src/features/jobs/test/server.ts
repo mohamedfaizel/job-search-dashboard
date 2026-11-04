@@ -432,6 +432,12 @@ const handlers = [
     haveTerms.splice(0, haveTerms.length, ...others, ...(variables['have'] ? [term] : []));
     return HttpResponse.json({ data: { setHaveTerm: insightsNow() } });
   }),
+  api.mutation('RemoveUnsupportedSkills', ({ variables }) => {
+    requests.push({ operation: 'RemoveUnsupportedSkills', variables });
+    // The skill is gone from the saved resume, so the fact check has nothing left to flag.
+    if (jobResume.current) jobResume.current = { ...jobResume.current, factCheck: [] };
+    return HttpResponse.json({ data: { removeUnsupportedSkills: insightsNow() } });
+  }),
   api.mutation('RestoreInsightTerm', ({ variables }) => {
     requests.push({ operation: 'RestoreInsightTerm', variables });
     const others = removedTerms.filter((r) => r.term !== variables['term']);

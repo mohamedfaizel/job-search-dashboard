@@ -94,6 +94,17 @@ export class InsightsResolver {
     return this.insights.saveJobResume(user.id, jobId, text);
   }
 
+  @Mutation(() => JobInsightsModel, {
+    description:
+      'Takes the skills the fact check flagged out of the Skills section of the resume you wrote for this job, then scores it again',
+  })
+  removeUnsupportedSkills(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+  ) {
+    return this.insights.removeUnsupportedSkills(user.id, jobId);
+  }
+
   @Mutation(() => JobInsightsModel, { description: 'Deletes the resume you wrote for this job' })
   deleteJobResume(
     @CurrentUser() user: SessionUser,

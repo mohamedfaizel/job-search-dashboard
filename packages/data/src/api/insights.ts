@@ -18,6 +18,7 @@ import {
   SAVE_APPLY_QUEUE_REPLY,
   SAVE_INTERVIEW_PREP,
   SAVE_JOB_RESUME_TEXT,
+  REMOVE_UNSUPPORTED_SKILLS,
   SET_HAVE_TERM,
 } from './operations';
 import type { ApplyQueueItem, ApplyQueuePrompt, JobInsights, PdfCheck } from './types';
@@ -83,6 +84,26 @@ export function useSetHaveTerm() {
       // The profile's Skills list changed too. (Its key is ['profile']: importing profileKey from
       // ./profile would make an import cycle, since profile.ts imports from this file.)
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+}
+
+/**
+ * Takes the skills the fact check flagged out of the Skills section of the resume saved for a
+ * job (one click, no Claude round trip), and scores it again.
+ */
+export function useRemoveUnsupportedSkills() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const data = await graphqlClient.request<{ removeUnsupportedSkills: JobInsights }>(
+        REMOVE_UNSUPPORTED_SKILLS,
+        { jobId },
+      );
+      return data.removeUnsupportedSkills;
+    },
+    onSuccess: (insights) => {
+      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
     },
   });
 }

@@ -320,6 +320,15 @@ describe('buildResumePrompt', () => {
     expect(prompt).not.toContain('85%');
   });
 
+  it('reviews its own draft, so one prompt is enough, and only adds skills the ad asks for', () => {
+    const prompt = buildResumePrompt(input);
+    expect(prompt).toContain('review your own draft as the hiring manager');
+    expect(prompt).toContain('Reply only with the fixed version');
+    expect(prompt).toContain('Only the job ad’s own skills may be added');
+    expect(prompt).toContain('Leave out skills from my resume that the ad does not need');
+    expect(prompt).toContain('- Changes: what your own review changed');
+  });
+
   it('asks for ATS-safe dates and bans clichés and em dashes', () => {
     const prompt = buildResumePrompt(input);
     expect(prompt).toContain('City | MM/YYYY - MM/YYYY');

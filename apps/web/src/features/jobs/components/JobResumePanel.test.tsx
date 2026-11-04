@@ -65,7 +65,7 @@ describe('JobResumePanel', () => {
     expect(screen.queryByRole('textbox', { name: 'Claude’s reply' })).toBeNull();
     // The resume PDF downloads straight away.
     expect(downloads).toEqual([`${jobResumeUrl('job-1')}/resume.pdf`]);
-    expect(screen.getByRole('status')).toHaveTextContent('Your resume PDF is downloading');
+    expect(screen.getByText(/Your resume PDF is downloading/)).toBeInTheDocument();
   });
 
   it('✓ on a still-missing skill offers the updated prompt; keywords get no buttons', async () => {
@@ -150,13 +150,32 @@ describe('JobResumePanel', () => {
     });
   });
 
-  it('checks the finished PDF the way an ATS reads it', async () => {
+  it('removes the flagged skills in one click, without a Claude round trip', async () => {
     const user = userEvent.setup();
+    jobResume.current = {
+      ...SAVED_RESUME,
+      factCheck: [
+        { kind: 'SKILL', text: 'Kubernetes', where: 'RESUME', context: 'React, Kubernetes' },
+      ],
+    };
+    renderPanel();
+
+    const box = await screen.findByRole('region', { name: /1 thing is not in your resume/ });
+    await user.click(within(box).getByRole('button', { name: 'Remove the skills I don’t have' }));
+
+    expect(requests).toContainEqual({
+      operation: 'RemoveUnsupportedSkills',
+      variables: { jobId: 'job-1' },
+    });
+    expect(await screen.findByText(/in your resume or profile/)).toBeInTheDocument();
+  });
+
+  it('checks the finished PDF the way an ATS reads it', async () => {
     jobResume.current = { ...SAVED_RESUME };
     renderPanel();
 
+    // It runs by itself when the reply is saved: no button to press first.
     const box = await screen.findByRole('region', { name: 'PDF check' });
-    await user.click(within(box).getByRole('button', { name: 'Check the PDF' }));
 
     expect(await within(box).findByRole('status')).toHaveTextContent('3 things to fix');
     expect(within(box).getByText(/3 pages: keep it to 2/)).toBeInTheDocument();

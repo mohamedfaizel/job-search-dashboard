@@ -176,3 +176,75 @@ export function factCheck({
   }
   return findings;
 }
+
+/** Splits a skills line at commas, semicolons and bullets, but not inside brackets. */
+function splitSkills(text: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of text) {
+    if (ch === '(') depth += 1;
+    if (ch === ')') depth = Math.max(0, depth - 1);
+    if (depth === 0 && /[,;•|·]/.test(ch)) {
+      parts.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  parts.push(current);
+  return parts;
+}
+
+/** The name of one skills item for comparing: no brackets, bold marks or extra spaces. */
+const skillName = (item: string) =>
+  item
+    .replace(/\*\*|`/g, '')
+    .replace(/\s*\(.*?\)\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+/**
+ * Takes skills out of the Skills section of a Markdown resume: only list items on its lines
+ * ("- **Frontend:** React, Vue"), never words inside a sentence, so no line can be cut in half.
+ * A line left without any skill is dropped. Returns the new text and the skills it removed.
+ */
+export function removeSkillItems(
+  resume: string,
+  skills: string[],
+): { text: string; removed: string[] } {
+  const drop = new Set(skills.map((s) => s.trim().toLowerCase()).filter(Boolean));
+  const removed: string[] = [];
+  let inSkills = false;
+  const lines: string[] = [];
+  for (const line of resume.split('\n')) {
+    const heading = /^#{1,3}\s+(.+?)\s*$/.exec(line);
+    if (heading) {
+      const title = heading[1] ?? '';
+      inSkills = SKILL_SECTION.test(title) && !NOT_SKILLS.test(title);
+      lines.push(line);
+      continue;
+    }
+    if (!inSkills || !line.trim()) {
+      lines.push(line);
+      continue;
+    }
+    const [, bullet = '', label = '', rest = ''] =
+      /^(\s*[-*•]\s+)?(\*\*[^*]+\*\*\s*|[^:,]{1,30}:\s*)?(.*)$/.exec(line) ?? [];
+    const kept: string[] = [];
+    let changed = false;
+    for (const part of splitSkills(rest)) {
+      const name = skillName(part);
+      if (name && drop.has(name)) {
+        removed.push(part.replace(/\*\*|`/g, '').trim());
+        changed = true;
+      } else if (part.trim()) {
+        kept.push(part.trim());
+      }
+    }
+    if (!changed) lines.push(line);
+    else if (kept.length) lines.push(`${bullet}${label}${kept.join(', ')}`);
+  }
+  return { text: lines.join('\n'), removed: [...new Set(removed)] };
+}

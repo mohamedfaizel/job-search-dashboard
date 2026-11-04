@@ -4,6 +4,11 @@
 
 """A job on your tracker board"""
 type Application {
+  """Applied, and no change or follow-up for 7 days: time to follow up"""
+  followUpDue: Boolean!
+
+  """When you last marked that you followed up on it"""
+  followedUpAt: DateTime
   job: Job!
   status: ApplicationStatus!
 
@@ -110,7 +115,12 @@ type DocumentStyle {
   """A photo is uploaded (GET /documents/photo shows it)"""
   hasPhoto: Boolean!
 
-  """classic, modern, compact, or mine (your own Word file)"""
+  """Null until you save one"""
+  myDesign: MyDesign
+
+  """
+  A template id from documentTemplates, "design" (My design) or "mine" (your own Word file)
+  """
   resumeTemplate: String!
   showPhoto: Boolean!
 }
@@ -134,6 +144,11 @@ type DocumentTemplates {
   coverLetterLayouts: [DocumentTemplate!]!
 
   """
+  Paste into Claude with your resume file attached: its JSON reply becomes My design
+  """
+  designPrompt: String!
+
+  """
   The pdf-renderer container answers. Without it, PDFs are plain, not templated
   """
   rendererAvailable: Boolean!
@@ -148,6 +163,50 @@ type DocumentTemplates {
   wordTemplate: WordTemplate
 }
 
+"""
+Something in the resume or cover letter Claude wrote that is not in your resume or profile
+"""
+type FactFinding {
+  """The line it is in, shortened"""
+  context: String!
+
+  """NUMBER, SKILL or LEVEL (a language level such as B2)"""
+  kind: String!
+
+  """The number, skill or level as written"""
+  text: String!
+
+  """RESUME or COVER_LETTER"""
+  where: String!
+}
+
+type GmailAccount {
+  connectedAt: DateTime!
+  email: String!
+  id: Int!
+
+  """Why the last check failed, if it did."""
+  lastError: String
+  lastSyncAt: DateTime
+}
+
+type GmailStatus {
+  accounts: [GmailAccount!]!
+
+  """False until GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set."""
+  configured: Boolean!
+}
+
+type GmailSyncResult {
+  accounts: Int!
+
+  """New suggestions waiting for you."""
+  suggestions: Int!
+
+  """Accounts that could not be read, with the reason."""
+  warnings: [String!]!
+}
+
 type ImportBudget {
   """DAILY_CREDIT_CAP: scheduled runs stop before going over it"""
   cap: Int!
@@ -156,11 +215,34 @@ type ImportBudget {
   used: Int!
 }
 
+"""
+Where an import looks for jobs. ARBEITSAGENTUR (Germany only) and COMPANY_BOARDS (Greenhouse, Lever, Ashby) are free.
+"""
+enum ImportSource {
+  ARBEITSAGENTUR
+  COMPANY_BOARDS
+  JOBSPIPE
+}
+
+"""
+What Claude wrote to prepare you for an interview for this job, pasted back
+"""
+type InterviewPrep {
+  text: String!
+  updatedAt: DateTime!
+}
+
 type Job {
   """
   Where you are with this job. Each user has their own; NONE until you act.
   """
   applicationStatus: ApplicationStatus!
+
+  """Why, as a code: NOT_FOUND, SAYS_CLOSED, REDIRECTED, BLOCKED, TIMEOUT…"""
+  checkReason: String
+
+  """When the still-open check last opened the job's link"""
+  checkedAt: DateTime
   city: String
   company: Company!
   countryCode: String
@@ -182,6 +264,9 @@ type Job {
   ISO 639-1 code, e.g. "de"
   """
   language: String
+
+  """What the last still-open check found"""
+  lastCheck: PostingCheck
   location: String
 
   """
@@ -195,7 +280,9 @@ type Job {
   matchStatus: JobMatchStatus
   postedAt: DateTime!
 
-  """Whether the ad is still open ("active" or "closed")"""
+  """
+  "active", "closed" (JobsPipe says so) or "expired" (our still-open check found it closed)
+  """
   postingStatus: String!
 
   """
@@ -294,6 +381,14 @@ type JobInsights {
 
   """False until you upload a resume or type it on your profile"""
   hasResume: Boolean!
+
+  """Claude’s interview prep for this job, if you pasted it back"""
+  interviewPrep: InterviewPrep
+
+  """
+  The interview prep prompt for Claude: likely questions with answers from your resume, your gaps, and questions to ask
+  """
+  interviewPrompt: String!
   jobId: String!
 
   """The resume you wrote for this job, if you uploaded or pasted one"""
@@ -332,6 +427,11 @@ type JobInsights {
   The language the prompt asks Claude to write the resume in: "de" when German is required, else "en"
   """
   resumeLanguage: String!
+
+  """
+  The review prompt for Claude: checks the saved draft as a hiring manager would, against your own resume and the rules, and returns the fixed resume, cover letter and form answers. Null until a reply is saved
+  """
+  reviewPrompt: String
 
   """
   Our own match score, weighted like Resume-Matcher's: keywords 40%, skills 20%, title 15%, sections 15% and dates 10% (both always full). Null without a resume
@@ -423,6 +523,11 @@ type JobResume {
   """The cover letter from the Apply kit reply. Empty when there was none"""
   coverLetter: String!
 
+  """
+  Numbers, skills and language levels that are not in your resume or profile. Null when there is no resume of yours to compare with
+  """
+  factCheck: [FactFinding!]
+
   """Name of the uploaded file. Null when the text was pasted"""
   fileName: String
 
@@ -464,6 +569,8 @@ input JobSortInput {
 }
 
 enum JobSource {
+  ARBEITSAGENTUR
+  COMPANY_BOARD
   JOBSPIPE
   MANUAL
 }
@@ -483,6 +590,24 @@ type LanguageResume {
 input LogInInput {
   email: String!
   password: String!
+}
+
+type MailSuggestion {
+  accountEmail: String!
+  company: String!
+
+  """Where the job is in your tracker now."""
+  currentStatus: ApplicationStatus!
+  fromAddress: String!
+  id: Int!
+  jobId: ID!
+  jobTitle: String!
+  receivedAt: DateTime!
+  snippet: String!
+
+  """Where the email says it should be."""
+  status: ApplicationStatus!
+  subject: String!
 }
 
 type MatcherResume {
@@ -507,9 +632,20 @@ type Mutation {
   """Adds jobs to your Apply queue. Jobs already in it keep their place."""
   addToApplyQueue(jobIds: [ID!]!): [ApplyQueueItem!]!
 
+  """Moves the job to the status the email points to."""
+  approveMailSuggestion(id: Int!): Boolean!
+
+  """
+  Opens the job's link to see if it is still open. A closed job becomes "expired". Checked in the last 10 minutes: returns the saved answer.
+  """
+  checkJobStillOpen(id: ID!): Job!
+
   """Add a job by hand"""
   createJob(input: CreateJobInput!): Job!
   createSavedSearch(input: SavedSearchInput!): SavedSearch!
+
+  """Deletes the interview prep for this job"""
+  deleteInterviewPrep(jobId: ID!): JobInsights!
 
   """Deletes the resume you wrote for this job"""
   deleteJobResume(jobId: ID!): JobInsights!
@@ -517,13 +653,27 @@ type Mutation {
   """Deletes your master resume in a language"""
   deleteLanguageResume(language: String!): Profile!
 
+  """Deletes My design"""
+  deleteMyDesign: DocumentStyle!
+
   """Delete a saved search. Its past imports stay."""
   deleteSavedSearch(id: Int!): Boolean!
+
+  """Removes a Gmail account and its pending suggestions."""
+  disconnectGmail(id: Int!): Boolean!
+
+  """Ignores a suggestion. It will not come back."""
+  dismissMailSuggestion(id: Int!): Boolean!
 
   """Hide a job from your table. Other users still see it."""
   hideJob(id: ID!): Boolean!
   logIn(input: LogInInput!): User!
   logOut: Boolean!
+
+  """
+  Say you followed up on an application. Hides "Follow up?" for another week.
+  """
+  markFollowedUp(jobId: ID!): [Application!]!
 
   """
   Score your resume against a job with Resume-Matcher. Returns at once as PENDING; poll jobMatch until READY or FAILED (a minute or two). Uses AI credits
@@ -546,6 +696,11 @@ type Mutation {
   """
   removeInsightTerm(everywhere: Boolean! = false, jobId: ID!, term: String!): JobInsights!
 
+  """
+  Takes the skills the fact check flagged out of the Skills section of the resume you wrote for this job, then scores it again
+  """
+  removeUnsupportedSkills(jobId: ID!): JobInsights!
+
   """Puts a removed skill or keyword back"""
   restoreInsightTerm(jobId: ID!, term: String!): JobInsights!
 
@@ -561,6 +716,11 @@ type Mutation {
   saveApplyQueueReply(text: String!): [ApplyQueueItem!]!
 
   """
+  Saves Claude's answer to the interview prep prompt for this job (replacing the one before)
+  """
+  saveInterviewPrep(jobId: ID!, text: String!): JobInsights!
+
+  """
   Saves pasted text as the resume you wrote for this job (replacing the one before), and scores it
   """
   saveJobResumeText(jobId: ID!, text: String!): JobInsights!
@@ -569,6 +729,11 @@ type Mutation {
   Saves your master resume in another language (e.g. "de"), replacing the one before
   """
   saveLanguageResume(language: String!, text: String!): Profile!
+
+  """
+  Saves Claude’s reply to the design prompt as My design and makes it your default template
+  """
+  saveMyDesign(reply: String!): DocumentStyle!
 
   """
   "I have this": adds a missing skill or keyword to the Skills list of My profile (have: true), or takes it off (have: false). It then counts as covered for every job
@@ -590,6 +755,9 @@ type Mutation {
   Call when you open Job posts. Returns the time after which jobs are New for this visit (null on your first visit)
   """
   startJobsVisit: DateTime
+
+  """Reads the last two weeks of mail in every connected account, now."""
+  syncGmail: GmailSyncResult!
 
   """Fetch jobs from JobsPipe and save them"""
   syncJobs(input: SyncJobsInput!): SyncJobsResult!
@@ -616,7 +784,83 @@ type Mutation {
   updateSavedSearch(id: Int!, input: SavedSearchInput!): SavedSearch!
 }
 
+"""
+The look of your own resume, as settings: typeset in LaTeX as the template "design"
+"""
+type MyDesign {
+  """Six hex digits"""
+  accent: String!
+
+  """left or centre"""
+  align: String!
+  companyFirst: Boolean!
+
+  """right or below"""
+  dates: String!
+
+  """normal or compact"""
+  density: String!
+
+  """sans, serif or latin"""
+  font: String!
+
+  """normal or upper"""
+  headingCase: String!
+
+  """accent or black"""
+  headingColour: String!
+
+  """rule, bar or plain"""
+  headingStyle: String!
+
+  """accent or black"""
+  nameColour: String!
+
+  """normal, large or huge"""
+  nameSize: String!
+
+  """bold, caps, smallcaps or plain"""
+  nameStyle: String!
+  photo: Boolean!
+  skillsFirst: Boolean!
+
+  """Your resume has two columns; My design always uses one"""
+  twoColumns: Boolean!
+}
+
+"""The finished resume PDF in your template, checked from its text layer"""
+type PdfCheck {
+  items: [PdfCheckItem!]!
+  jobId: String!
+
+  """The template the PDF was made with"""
+  template: String!
+}
+
+"""One check of the finished resume PDF, read the way an ATS reads it"""
+type PdfCheckItem {
+  """PAGES, TEXT, NAME, EMAIL, DATES, CHARACTERS, PLACEHOLDERS or SKILLS"""
+  code: String!
+
+  """
+  What was found: "pages/limit" for PAGES, the word count for TEXT, the name for NAME, the e-mail(s) for EMAIL, else what is wrong (comma separated)
+  """
+  detail: String!
+  ok: Boolean!
+}
+
+enum PostingCheck {
+  CLOSED
+  OPEN
+  UNKNOWN
+}
+
 type Profile {
+  """
+  Your achievements bank: true facts with numbers, one per line. Resume prompts may use them and the fact check trusts them
+  """
+  achievements: String!
+
   """City and country, or the full address forms ask for"""
   address: String!
 
@@ -646,6 +890,11 @@ type Profile {
   gender: String!
   githubUrl: String
   headline: String!
+
+  """
+  Tailored resumes keep every section heading of your resume, in your order
+  """
+  keepMySections: Boolean!
 
   """
   Languages with your real level, e.g. "German A2"
@@ -679,6 +928,15 @@ type Profile {
   The language your master resume is in, e.g. "en"
   """
   resumeLanguage: String!
+
+  """Tailored resumes are at most this many pages: 1, 2 or 3"""
+  resumeMaxPages: Int!
+
+  """A prompt to paste into Claude for a recruiter review of your resume"""
+  resumeReviewPrompt: String!
+
+  """Suggestions for your master resume, worked out without AI"""
+  resumeSuggestions: [ResumeSuggestion!]!
 
   """Plain text of your master resume"""
   resumeText: String!
@@ -720,6 +978,7 @@ input ProfileFieldInput {
 }
 
 input ProfileInput {
+  achievements: String! = ""
   address: String! = ""
   applicationNotes: String! = ""
   customFields: [ProfileFieldInput!]! = []
@@ -730,6 +989,7 @@ input ProfileInput {
   gender: String! = ""
   githubUrl: String
   headline: String! = ""
+  keepMySections: Boolean! = false
   languages: [String!]! = []
   lastName: String! = ""
   linkedinUrl: String
@@ -741,6 +1001,7 @@ input ProfileInput {
 
   """The language your master resume is in. Left out = unchanged"""
   resumeLanguage: String
+  resumeMaxPages: Int! = 2
   resumeText: String! = ""
   salaryExpectation: String! = ""
   skills: [String!]! = []
@@ -758,6 +1019,9 @@ type Query {
   """How your resume and cover letter PDFs look"""
   documentStyle: DocumentStyle!
   documentTemplates: DocumentTemplates!
+
+  """Your connected Gmail accounts."""
+  gmailStatus: GmailStatus!
 
   """How many jobs you have hidden"""
   hiddenJobCount: Int!
@@ -780,6 +1044,9 @@ type Query {
   """Jobs for the dashboard table: filter, sort and paginate"""
   jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!
 
+  """Tracker changes suggested by employer emails, waiting for your answer."""
+  mailSuggestions: [MailSuggestion!]!
+
   """Who is logged in, or null"""
   me: User
 
@@ -800,6 +1067,11 @@ type Query {
     """
     checkAi: Boolean! = false
   ): ResumeMatcherStatus!
+
+  """
+  Makes the resume PDF saved for a job and checks it the way an ATS reads it: pages, text, e-mail, dates, characters and skills
+  """
+  resumePdfCheck(jobId: ID!, template: String): PdfCheck!
 
   """Your saved searches, by name, with their last import"""
   savedSearches: [SavedSearch!]!
@@ -855,12 +1127,27 @@ type ResumeMatcherStatus {
   reachable: Boolean!
 }
 
+"""A suggestion for your master resume"""
+type ResumeSuggestion {
+  """
+  LEVEL, DATES, CLICHES, SYMBOLS, NUMBERS, LENGTH, CONTACT, WORK_PERMIT or ACHIEVEMENTS
+  """
+  code: String!
+
+  """
+  What was found. NUMBERS: "with/bullets"; LENGTH: "words/pages/limit"; ACHIEVEMENTS: the lines
+  """
+  detail: String!
+}
+
 enum Role {
   ADMIN
   USER
 }
 
 type SavedSearch {
+  """Company career pages, for the COMPANY_BOARDS source"""
+  boards: [String!]!
   countryCodes: [String!]!
   createdAt: DateTime!
   employmentTypes: [String!]!
@@ -894,10 +1181,18 @@ type SavedSearch {
   scheduleNote: String
   skills: [String!]!
   skipFluentGerman: Boolean!
+
+  """Where this search looks for jobs"""
+  source: ImportSource!
   titles: [String!]!
 }
 
 input SavedSearchInput {
+  """
+  COMPANY_BOARDS only: the career pages to read, e.g. ["greenhouse:stripe", "lever:netflix", "ashby:ramp"] or their addresses
+  """
+  boards: [String!]
+
   """ISO country codes, e.g. ["DE"]"""
   countryCodes: [String!]
 
@@ -954,6 +1249,11 @@ input SavedSearchInput {
   """
   skipFluentGerman: Boolean! = false
 
+  """
+  Where to look. ARBEITSAGENTUR and COMPANY_BOARDS are free and use titles, locations, job type, remote, age and excludeTitles; COMPANY_BOARDS also needs boards.
+  """
+  source: ImportSource! = JOBSPIPE
+
   """Match any of these job titles, e.g. ["frontend"]"""
   titles: [String!]!
 }
@@ -984,6 +1284,11 @@ enum SortDirection {
 }
 
 input SyncJobsInput {
+  """
+  COMPANY_BOARDS only: the career pages to read, e.g. ["greenhouse:stripe", "lever:netflix", "ashby:ramp"] or their addresses
+  """
+  boards: [String!]
+
   """ISO country codes, e.g. ["DE"]"""
   countryCodes: [String!]
 
@@ -1038,6 +1343,11 @@ input SyncJobsInput {
   """
   skipFluentGerman: Boolean! = false
 
+  """
+  Where to look. ARBEITSAGENTUR and COMPANY_BOARDS are free and use titles, locations, job type, remote, age and excludeTitles; COMPANY_BOARDS also needs boards.
+  """
+  source: ImportSource! = JOBSPIPE
+
   """Match any of these job titles, e.g. ["frontend"]"""
   titles: [String!]!
 }
@@ -1068,6 +1378,9 @@ type SyncJobsResult {
   """Total matches JobsPipe reported"""
   totalAvailable: Int
   updated: Int!
+
+  """Things worth knowing, e.g. a company board that could not be read"""
+  warnings: [String!]!
 }
 
 type SyncRunModel {
