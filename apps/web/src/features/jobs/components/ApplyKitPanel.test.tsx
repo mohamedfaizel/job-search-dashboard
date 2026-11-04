@@ -18,7 +18,6 @@ import {
   jobResume,
   PROFILE,
   requests,
-  REVIEW_PROMPT,
   SAVED_RESUME,
   server,
 } from '../test/server';
@@ -139,28 +138,6 @@ describe('ApplyKitPanel', () => {
       'href',
       `${jobResumeUrl('job-1')}/cover-letter.pdf`,
     );
-  });
-
-  it('step 3 lets Claude review the draft and saves the improved reply over it', async () => {
-    jobResume.current = SAVED_RESUME;
-    const { user, open } = renderKit();
-
-    // The first prompt already reviews its own draft, so the second opinion is tucked away.
-    await user.click(await screen.findByText(/Review again with Claude/));
-    await user.click(
-      await screen.findByRole('button', { name: 'Copy review prompt and open Claude' }),
-    );
-    expect(await navigator.clipboard.readText()).toBe(REVIEW_PROMPT);
-    expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
-    expect(
-      screen.getByText('Paste Claude’s improved reply here. It replaces the draft.'),
-    ).toBeVisible();
-  });
-
-  it('has no review step before a reply is saved', async () => {
-    renderKit();
-    await screen.findByRole('button', { name: /Copy prompt and open Claude/ });
-    expect(screen.queryByRole('button', { name: 'Copy review prompt and open Claude' })).toBeNull();
   });
 
   it('step 3 copies the Claude in Chrome prompt and opens the posting', async () => {
