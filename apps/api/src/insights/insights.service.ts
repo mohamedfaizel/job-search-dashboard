@@ -1,7 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
 import { parseResume } from '../documents/resume-doc';
+import { JobMatchStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from '../profile/custom-fields';
 import { cleanResume, tidy } from '../profile/resume-text';
@@ -53,15 +60,48 @@ export interface JobResumeFile {
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
 
 @Injectable()
-export class InsightsService {
+export class InsightsService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(InsightsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly corpora: CorpusService,
     private readonly documents: DocumentsService,
   ) {}
 
+  /**
+   * Replies saved before the Apply kit score was kept on the row get it now, so the Job posts
+   * table doesn't show a dash until each job is opened. Runs once at start, in the background.
+   */
+  async onApplicationBootstrap(): Promise<void> {
+    await this.backfillScores();
+  }
+
+  async backfillScores(): Promise<number> {
+    const rows = await this.prisma.jobResume.findMany({
+      where: { score: null },
+      select: { userId: true, jobId: true },
+    });
+    for (const { userId, jobId } of rows) {
+      await this.forJob(userId, jobId).catch((e: unknown) => {
+        this.logger.warn(`Could not score the reply of ${userId}:${jobId}: ${String(e)}`);
+      });
+    }
+    return rows.length;
+  }
+
   async forJob(userId: number, jobId: string): Promise<JobInsightsModel> {
-    return (await this.analyse(userId, jobId)).insights;
+    const { insights } = await this.analyse(userId, jobId);
+    // The Job posts table shows the Apply kit score, so it is kept on the row. It is worked out
+    // again here because it moves with your skills list, and rows from before it was stored.
+    const now = insights.jobResume?.score ?? null;
+    if (insights.jobResume && now !== null) {
+      await this.prisma.jobResume.updateMany({
+        where: { userId, jobId, OR: [{ score: null }, { score: { not: now } }] },
+        data: { score: now },
+      });
+    }
+    return insights;
   }
 
   /** The job's insights, and what its Apply kit prompt is built from. */
@@ -115,6 +155,10 @@ export class InsightsService {
             coverLetter: true,
             formAnswers: true,
             updatedAt: true,
+            score: true,
+            aiStatus: true,
+            aiScore: true,
+            aiError: true,
           },
         }),
         this.prisma.languageResume.findMany({
@@ -320,6 +364,11 @@ export class InsightsService {
       fileType: file?.type ?? null,
       coverLetter: reply.coverLetter,
       formAnswers: reply.formAnswers,
+      // A new resume has not been checked by Resume-Matcher yet.
+      aiStatus: null,
+      aiScore: null,
+      aiError: null,
+      aiStartedAt: null,
     };
     await this.prisma.jobResume.upsert({
       where: { userId_jobId: { userId, jobId } },
@@ -349,7 +398,7 @@ export class InsightsService {
     if (removed.length > 0) {
       await this.prisma.jobResume.update({
         where: { userId_jobId: { userId, jobId } },
-        data: { text },
+        data: { text, aiStatus: null, aiScore: null, aiError: null, aiStartedAt: null },
       });
     }
     return this.forJob(userId, jobId);
@@ -662,6 +711,9 @@ export class InsightsService {
       coverLetter: string;
       formAnswers: string;
       updatedAt: Date;
+      aiStatus: JobMatchStatus | null;
+      aiScore: number | null;
+      aiError: string | null;
     },
     terms: Parameters<typeof checkResume>[1],
     before: ResumeCheck,
@@ -679,6 +731,9 @@ export class InsightsService {
       keywordsCoverage: after.keywords,
       titleMatch: after.title,
       score: after.score,
+      aiStatus: jobResume.aiStatus,
+      aiScore: jobResume.aiScore,
+      aiError: jobResume.aiError,
       nowCovered: afterChecks
         .filter((t, i) => t.inResume && !beforeChecks[i]?.inResume)
         .map((t) => t.term),

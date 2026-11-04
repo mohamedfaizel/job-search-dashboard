@@ -21,12 +21,13 @@ function forUser(userId: number) {
     applications: { where: { userId }, select: { status: true } },
     matches: { where: { userId }, select: { status: true, score: true } },
     fits: { where: { userId }, select: { score: true } },
+    jobResumes: { where: { userId }, select: { score: true } },
   } satisfies Prisma.JobInclude;
 }
 type JobForUser = Prisma.JobGetPayload<{ include: ReturnType<typeof forUser> }>;
 
 /** The job as one user sees it: no application row means they haven't acted on it. */
-function withStatus({ applications, matches, fits, ...job }: JobForUser) {
+function withStatus({ applications, matches, fits, jobResumes, ...job }: JobForUser) {
   const match = matches[0];
   return {
     ...job,
@@ -34,6 +35,7 @@ function withStatus({ applications, matches, fits, ...job }: JobForUser) {
     matchStatus: match?.status ?? null,
     matchScore: match?.score ?? null,
     fitScore: fits[0]?.score ?? null,
+    applyScore: jobResumes[0]?.score ?? null,
   };
 }
 

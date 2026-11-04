@@ -1,4 +1,5 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
+import { JobMatchStatus } from '../jobs/models/enums';
 
 @ObjectType('TermCheck')
 export class TermCheckModel {
@@ -83,6 +84,19 @@ export class JobResumeModel {
     description: 'The "after" score: the same weights as the profile resume\'s score',
   })
   score!: number | null;
+
+  @Field(() => JobMatchStatus, {
+    nullable: true,
+    description:
+      "Resume-Matcher's check of this resume. Null until asked, and again after the resume is saved anew",
+  })
+  aiStatus!: JobMatchStatus | null;
+
+  @Field(() => Float, { nullable: true, description: "Resume-Matcher's ATS score (0-100)" })
+  aiScore!: number | null;
+
+  @Field(() => String, { nullable: true, description: 'What went wrong. Null unless FAILED' })
+  aiError!: string | null;
 
   @Field(() => [String], {
     description: 'Skills and keywords this resume has and your profile resume doesn’t',

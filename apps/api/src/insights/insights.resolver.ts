@@ -5,12 +5,14 @@ import { ApplyQueueItemModel, ApplyQueuePromptModel, QueueDirection } from './ap
 import { FitService } from './fit.service';
 import { JobInsightsModel, PdfCheckModel } from './insights.model';
 import { InsightsService } from './insights.service';
+import { ReplyMatchService } from './reply-match.service';
 
 @Resolver()
 export class InsightsResolver {
   constructor(
     private readonly insights: InsightsService,
     private readonly fit: FitService,
+    private readonly replyMatch: ReplyMatchService,
   ) {}
 
   @Mutation(() => Int, {
@@ -42,6 +44,18 @@ export class InsightsResolver {
     @Args('template', { type: () => String, nullable: true }) template?: string | null,
   ): Promise<PdfCheckModel> {
     return this.insights.pdfCheck(user.id, jobId, template ?? undefined);
+  }
+
+  @Mutation(() => JobInsightsModel, {
+    description:
+      'Scores the resume saved for this job with Resume-Matcher (AI match). Returns at once with aiStatus PENDING; poll jobInsights until READY or FAILED (a minute or two). Uses AI credits',
+  })
+  async matchJobResume(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+  ): Promise<JobInsightsModel> {
+    await this.replyMatch.start(user.id, jobId);
+    return this.insights.forJob(user.id, jobId);
   }
 
   @Mutation(() => JobInsightsModel, {

@@ -35,6 +35,7 @@ const JOB_FIELDS = /* GraphQL */ `
     matchStatus
     matchScore
     fitScore
+    applyScore
     createdAt
   }
 `;
@@ -571,6 +572,9 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       keywordsCoverage
       titleMatch
       score
+      aiStatus
+      aiScore
+      aiError
       nowCovered
       stillMissing
       factCheck {
@@ -611,6 +615,15 @@ export const SET_HAVE_TERM = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation SetHaveTerm($jobId: ID!, $term: String!, $have: Boolean) {
     setHaveTerm(jobId: $jobId, term: $term, have: $have) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const MATCH_JOB_RESUME = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation MatchJobResume($jobId: ID!) {
+    matchJobResume(jobId: $jobId) {
       ...JobInsightsFields
     }
   }

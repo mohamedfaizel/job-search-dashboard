@@ -73,6 +73,8 @@ export interface Job {
    * the same score as in the popup. No AI. Null until you add a resume.
    */
   fitScore: number | null;
+  /** Apply kit score (0-100): the Fit % of the resume Claude wrote for this job. Null until a reply is saved. */
+  applyScore: number | null;
   /** When the job was imported or added: after your last visit, it is New. */
   createdAt: string;
 }
@@ -549,6 +551,10 @@ export interface JobResume {
   titleMatch: number | null;
   /** The "after" score. The job's `score` is the "before". */
   score: number | null;
+  /** Resume-Matcher's check of this resume (AI match). Null until asked, and after a new save. */
+  aiStatus: JobMatchStatus | null;
+  aiScore: number | null;
+  aiError: string | null;
   /** Skills and keywords it has and your profile resume doesn't. */
   nowCovered: string[];
   /** Skills and keywords still missing. */

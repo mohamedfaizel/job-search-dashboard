@@ -6,6 +6,7 @@ import {
   useSaveJobResumeText,
   useDocumentStyle,
   useDocumentTemplates,
+  useMatchJobResume,
   useRemoveUnsupportedSkills,
   useSetHaveTerm,
   useUploadJobResume,
@@ -16,8 +17,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { replyParts, startDownload } from '../reply';
 import { useJobFormat } from '../useJobFormat';
+import { Badge } from './Badge';
 import { CopyText } from './CopyText';
 import { HaveChip, MissingChip, ScoreRing } from './InsightsPanel';
+import { scoreTone } from './MatchPanel';
 
 export const BUTTON =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
@@ -398,6 +401,56 @@ function PdfCheck({ jobId, template }: { jobId: string; template: string }) {
 }
 
 /**
+ * Resume-Matcher's ATS score for the resume Claude wrote (the "AI match" of the popup, but for
+ * this resume instead of your master resume). It needs AI credits and a minute or two, so it
+ * runs when you ask. Saving the resume again clears it, as the score would no longer fit.
+ */
+function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScore }) {
+  const t = useTranslations('Jobs.reply');
+  const errorText = useErrorText();
+  const start = useMatchJobResume();
+  const { aiStatus, aiScore, aiError } = jobResume;
+  const running = aiStatus === 'PENDING' || start.isPending;
+  const ready = aiStatus === 'READY' && aiScore !== null;
+  const run = () => {
+    start.mutate(jobId);
+  };
+  return (
+    <section
+      aria-label={t('aiTitle')}
+      className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-slate-900">{t('aiTitle')}</p>
+        <p className="text-xs text-slate-600">{running ? t('aiRunning') : t('aiHint')}</p>
+        {aiStatus === 'FAILED' && (
+          <p role="alert" className="text-xs text-red-700">
+            {aiError ?? t('aiFailed')}
+          </p>
+        )}
+        {start.error && (
+          <p role="alert" className="text-xs text-red-700">
+            {errorText(start.error)}
+          </p>
+        )}
+      </div>
+      {ready && (
+        <Badge tone={scoreTone(aiScore)}>
+          <span aria-label={t('aiScoreLabel', { score: Math.round(aiScore) })}>
+            {Math.round(aiScore)}
+          </span>
+        </Badge>
+      )}
+      <button type="button" className={BUTTON} disabled={running} onClick={run}>
+        {running ? t('aiWait') : ready || aiStatus === 'FAILED' ? t('aiAgain') : t('aiRun')}
+      </button>
+    </section>
+  );
+}
+
+type JobResumeScore = NonNullable<JobInsights['jobResume']>;
+
+/**
  * The reply you saved for this job: the resume scored next to your master resume (before and
  * after), the files to attach, and the cover letter and form answers to copy.
  */
@@ -495,6 +548,8 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
           {t('changeError', { error: errorText(have.error) })}
         </p>
       )}
+
+      <AiMatch jobId={jobId} jobResume={jobResume} />
 
       <FactCheck jobId={jobId} findings={jobResume.factCheck} />
 

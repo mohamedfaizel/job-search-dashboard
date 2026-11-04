@@ -228,6 +228,38 @@ describe('JobsDashboard', () => {
     expect(screen.getByRole('dialog', { name: 'Senior Frontend Engineer' })).toBeInTheDocument();
   });
 
+  it('shows the Apply kit score next to Fit, for jobs with a saved Claude reply', async () => {
+    server.use(
+      api.query('JobsPage', () =>
+        HttpResponse.json({
+          data: {
+            jobsPage: {
+              items: [
+                makeJob({ fitScore: 84, applyScore: 88 }),
+                makeJob({ id: 'job-2', title: 'Backend Developer', fitScore: 60 }),
+              ],
+              total: 2,
+              page: 1,
+              pageSize: 25,
+            },
+          },
+        }),
+      ),
+    );
+    renderDashboard();
+
+    const score = await screen.findByRole('button', {
+      name: 'Apply kit score for Senior Frontend Engineer: 88%',
+    });
+    expect(screen.getByRole('columnheader', { name: /Apply kit/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Apply kit score for Backend Developer/ }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(score);
+    expect(screen.getByRole('dialog', { name: 'Senior Frontend Engineer' })).toBeInTheDocument();
+  });
+
   it('marks jobs imported since your last visit as New, with a chip to show only those', async () => {
     server.use(
       api.mutation('StartJobsVisit', () =>

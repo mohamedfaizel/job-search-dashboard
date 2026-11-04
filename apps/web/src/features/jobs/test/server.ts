@@ -99,6 +99,9 @@ export const SAVED_RESUME: JobResume = {
   keywordsCoverage: 50,
   titleMatch: 100,
   score: 85,
+  aiStatus: null,
+  aiScore: null,
+  aiError: null,
   nowCovered: ['graphql'],
   stillMissing: ['microfrontends'],
   factCheck: [],
@@ -432,6 +435,12 @@ const handlers = [
     // The skill is gone from the saved resume, so the fact check has nothing left to flag.
     if (jobResume.current) jobResume.current = { ...jobResume.current, factCheck: [] };
     return HttpResponse.json({ data: { removeUnsupportedSkills: insightsNow() } });
+  }),
+  api.mutation('MatchJobResume', ({ variables }) => {
+    requests.push({ operation: 'MatchJobResume', variables });
+    // The real server answers at once with PENDING, then finishes in the background.
+    if (jobResume.current) jobResume.current = { ...jobResume.current, aiStatus: 'PENDING' };
+    return HttpResponse.json({ data: { matchJobResume: insightsNow() } });
   }),
   api.mutation('RestoreInsightTerm', ({ variables }) => {
     requests.push({ operation: 'RestoreInsightTerm', variables });

@@ -143,6 +143,13 @@ export class Job {
   })
   fitScore!: number | null;
 
+  @Field(() => Int, {
+    nullable: true,
+    description:
+      'Apply kit score (0-100): the same score as Fit %, but for the resume Claude wrote for this job. Null until you save a reply',
+  })
+  applyScore!: number | null;
+
   @Field(() => GraphQLISODateTime)
   createdAt!: Date;
 
