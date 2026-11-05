@@ -985,7 +985,13 @@
       "replaceFound": "{count, plural, =0 {Not found in your resume.} one {Found in # line.} other {Found in # lines.}}",
       "replaceAll": "Replace all",
       "factWarning": "Fact check: “{term}” is not in your master resume or your profile skills. Only add it if it is true.",
-      "iHaveIt": "I have it"
+      "iHaveIt": "I have it",
+      "short": {
+        "suggest": "+ Skills",
+        "rewrite": "Rewrite",
+        "insert": "Insert",
+        "replace": "Replace"
+      }
     },
     "claudeNotes": {
       "title": "Notes from Claude",

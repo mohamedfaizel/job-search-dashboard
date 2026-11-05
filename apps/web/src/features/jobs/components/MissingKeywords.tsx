@@ -22,7 +22,7 @@ import type { ReplyDraftState } from './ReplyPreview';
 type Mode = 'suggest' | 'rewrite' | 'insert' | 'replace';
 const MODES: Mode[] = ['suggest', 'rewrite', 'insert', 'replace'];
 
-const PILL = 'rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset';
+const CHOICE = 'h-7 rounded-lg border px-2.5 text-xs font-medium';
 const APPLY =
   'h-8 rounded-lg bg-brand-600 px-3 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50';
 const LINK = 'text-xs text-brand-700 hover:underline';
@@ -212,27 +212,24 @@ export function MissingKeywords({
   if (cards.length === 0) return null;
 
   return (
-    <section
-      aria-label={t('title')}
-      className="space-y-3 rounded-xl border border-slate-200 p-3 sm:p-4"
-    >
-      <div className="space-y-1.5">
+    <section aria-label={t('title')} className="space-y-2.5 rounded-xl border border-slate-200 p-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h3 className="text-[15px] font-semibold text-slate-900">{t('title')}</h3>
-        <div className="flex items-center gap-2 text-xs text-slate-600">
-          <span>{t('covered', { covered, total: all.length })}</span>
+        <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs text-emerald-800 ring-1 ring-emerald-200 ring-inset">
+          {t('covered', { covered, total: all.length })}
+        </span>
+        <span
+          aria-hidden="true"
+          className="h-1.5 min-w-16 flex-1 overflow-hidden rounded-full bg-slate-200"
+        >
           <span
-            aria-hidden="true"
-            className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200"
-          >
-            <span
-              className="block h-full rounded-full bg-emerald-500"
-              style={{ width: `${String(all.length ? (covered / all.length) * 100 : 0)}%` }}
-            />
-          </span>
-        </div>
-        <p className="text-xs text-slate-600">{t('intro')}</p>
+            className="block h-full rounded-full bg-emerald-500"
+            style={{ width: `${String(all.length ? (covered / all.length) * 100 : 0)}%` }}
+          />
+        </span>
       </div>
-      <ul className="space-y-2">
+      <p className="text-xs text-slate-600">{t('intro')}</p>
+      <ul className="divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200">
         {cards.map((term) => {
           const check = known.get(term.toLowerCase());
           const isIn = mentionsTerm(resume, term);
@@ -240,110 +237,105 @@ export function MissingKeywords({
           const yours = Boolean(check && (check.youHave || check.inResume || check.relatedTo));
           const mode = open?.term === term ? open.mode : null;
           return (
-            <li
-              key={term}
-              aria-label={term}
-              className={`space-y-2 rounded-lg border p-2.5 ${
-                mode ? 'border-slate-900 ring-2 ring-brand-200' : 'border-slate-200'
-              } ${isIn || isSkipped ? 'opacity-80' : ''}`}
-            >
-              <div className="flex flex-wrap items-center gap-2">
+            <li key={term} aria-label={term} className={mode ? 'bg-slate-50' : undefined}>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2">
                 <span
-                  className={`${PILL} ${
-                    isIn
-                      ? 'bg-emerald-50 text-emerald-800 ring-emerald-200'
-                      : isSkipped
-                        ? 'bg-slate-50 text-slate-500 ring-slate-200'
-                        : 'bg-amber-50 text-amber-800 ring-amber-200'
-                  }`}
+                  className={`min-w-0 flex-1 text-sm ${isSkipped ? 'text-slate-400 line-through' : 'text-slate-900'}`}
                 >
-                  {isIn ? t('added') : isSkipped ? t('skipped') : t('missing')}
+                  <b>{term}</b>
+                  {check?.relatedTo && !isIn && !isSkipped && (
+                    <span className="ml-2 text-xs font-normal text-slate-500 no-underline">
+                      {t('relatedTo', { term: check.relatedTo })}
+                    </span>
+                  )}
                 </span>
-                <b className="text-sm text-slate-900">{term}</b>
-                {check?.relatedTo && !isIn && (
-                  <span className="text-xs text-slate-500">
-                    {t('relatedTo', { term: check.relatedTo })}
-                  </span>
-                )}
+                {isIn && <span className="text-xs text-emerald-700">{t('added')}</span>}
                 {isSkipped && (
-                  <button
-                    type="button"
-                    className={LINK}
-                    onClick={() => {
-                      setSkipped((list) => list.filter((x) => x !== term));
-                    }}
+                  <>
+                    <span className="text-xs text-slate-500">{t('skipped')}</span>
+                    <button
+                      type="button"
+                      className={LINK}
+                      onClick={() => {
+                        setSkipped((list) => list.filter((x) => x !== term));
+                      }}
+                    >
+                      {t('unskip')}
+                    </button>
+                  </>
+                )}
+                {!isIn && !isSkipped && (
+                  <div
+                    className="flex flex-wrap gap-1.5"
+                    role="group"
+                    aria-label={t('ways', { term })}
                   >
-                    {t('unskip')}
-                  </button>
+                    {MODES.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        aria-pressed={mode === m}
+                        aria-label={t(`modes.${m}`)}
+                        title={t(`modes.${m}`)}
+                        onClick={() => {
+                          setOpen(mode === m ? null : { term, mode: m });
+                        }}
+                        className={`${CHOICE} ${
+                          mode === m
+                            ? 'border-slate-900 bg-slate-900 text-white'
+                            : 'border-slate-300 bg-white text-slate-800 hover:bg-slate-50'
+                        }`}
+                      >
+                        {t(`short.${m}`)}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSkipped((list) => [...list, term]);
+                        setOpen(null);
+                      }}
+                      className={`${CHOICE} border-slate-300 bg-white text-slate-800 hover:bg-slate-50`}
+                    >
+                      {t('skip')}
+                    </button>
+                  </div>
                 )}
               </div>
-              {!isIn && !isSkipped && (
-                <div
-                  className="flex flex-wrap gap-1.5"
-                  role="group"
-                  aria-label={t('ways', { term })}
-                >
-                  {MODES.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      aria-pressed={mode === m}
-                      onClick={() => {
-                        setOpen(mode === m ? null : { term, mode: m });
-                      }}
-                      className={`${PILL} ${
-                        mode === m
-                          ? 'bg-brand-600 text-white ring-brand-600'
-                          : 'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      {t(`modes.${m}`)}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSkipped((list) => [...list, term]);
-                      setOpen(null);
-                    }}
-                    className={`${PILL} bg-white text-slate-700 ring-slate-300 hover:bg-slate-50`}
-                  >
-                    {t('skip')}
-                  </button>
-                </div>
-              )}
-              {mode && !isIn && !yours && (
-                <p
-                  role="note"
-                  className="rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-800"
-                >
-                  {t('factWarning', { term })}{' '}
-                  {check && (
-                    <button
-                      type="button"
-                      className="font-medium underline"
-                      onClick={() => {
-                        have.mutate({ jobId: insights.jobId, term, have: true });
-                      }}
-                    >
-                      {t('iHaveIt')}
-                    </button>
-                  )}
-                </p>
-              )}
               {mode && !isIn && (
-                <Action
-                  key={`${term}-${mode}`}
-                  mode={mode}
-                  term={term}
-                  related={check?.relatedTo ?? null}
-                  resume={resume}
-                  onApply={(text) => {
-                    state.change('resume', text);
-                    setOpen(null);
-                    toast(tToast('keywordAdded', { term }), { tone: 'info' });
-                  }}
-                />
+                <div className="space-y-2 px-3 pb-3">
+                  {!yours && (
+                    <p
+                      role="note"
+                      className="rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-800"
+                    >
+                      {t('factWarning', { term })}{' '}
+                      {check && (
+                        <button
+                          type="button"
+                          className="font-medium underline"
+                          onClick={() => {
+                            have.mutate({ jobId: insights.jobId, term, have: true });
+                          }}
+                        >
+                          {t('iHaveIt')}
+                        </button>
+                      )}
+                    </p>
+                  )}
+                  <Action
+                    key={`${term}-${mode}`}
+                    mode={mode}
+                    term={term}
+                    related={check?.relatedTo ?? null}
+                    resume={resume}
+                    onApply={(text) => {
+                      state.change('resume', text);
+                      setOpen(null);
+                      toast(tToast('keywordAdded', { term }), { tone: 'info' });
+                    }}
+                  />
+                </div>
               )}
             </li>
           );
