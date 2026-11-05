@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { SchedulerService } from '../src/saved-searches/scheduler.service';
 import { loadSearchResponse } from './fixtures/load';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
 const JOBSPIPE_URL = 'https://jobspipe.test/v1';
 
@@ -139,6 +139,98 @@ describe('scheduled imports', () => {
     const after = await t.prisma.savedSearch.findUniqueOrThrow({ where: { id: search.id } });
     expect(after.scheduleNote).toMatch(/^Failed at .+: JobsPipe search failed: 402/);
     expect(after.nextRunAt!.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  describe('new matching jobs', () => {
+    const RESUME =
+      'Frontend Softwareentwickler. React, TypeScript, Angular, Vue, Cloud Platform, Self-Service, Benutzeroberflächen, Fullstack, Node.js, KI.';
+    const NOTIFICATIONS = /* GraphQL */ `
+      query {
+        notifications {
+          unread
+          items {
+            kind
+            searchName
+            count
+            fitMin
+            readAt
+            jobs {
+              id
+              title
+              company
+              fit
+            }
+          }
+        }
+      }
+    `;
+
+    beforeEach(async () => {
+      await seedTestUsers(t.prisma);
+    });
+
+    it('tells each user about the new jobs that fit them, best first', async () => {
+      await t.prisma.profile.create({
+        data: { userId: 2, resumeText: RESUME, skills: ['React'], matchFitMin: 1 },
+      });
+      // The admin turned it off.
+      await t.prisma.profile.create({
+        data: { userId: 1, resumeText: RESUME, notifyNewMatches: false },
+      });
+      await dueSearch('Frontend Hamburg');
+
+      expect(await scheduler.runDue(new Date())).toBe(1);
+
+      const res = await t.asUser<{
+        notifications: {
+          unread: number;
+          items: { count: number; jobs: { fit: number }[] }[];
+        };
+      }>(NOTIFICATIONS);
+      expect(res.data!.notifications.unread).toBe(1);
+      const [notice] = res.data!.notifications.items;
+      expect(notice).toMatchObject({
+        kind: 'NEW_MATCHES',
+        searchName: 'Frontend Hamburg',
+        fitMin: 1,
+        readAt: null,
+      });
+      expect(notice!.count).toBeGreaterThan(0);
+      expect(notice!.jobs.length).toBe(Math.min(notice!.count, 3));
+      const fits = notice!.jobs.map((job) => job.fit);
+      expect(fits).toEqual([...fits].sort((a, b) => b - a));
+      expect(await t.prisma.notification.count({ where: { userId: 1 } })).toBe(0);
+    });
+
+    it('stays quiet when no new job reaches your Fit %', async () => {
+      await t.prisma.profile.create({ data: { userId: 2, resumeText: 'Gardener. Roses.' } });
+      await dueSearch();
+
+      expect(await scheduler.runDue(new Date())).toBe(1);
+
+      expect(await t.prisma.notification.count()).toBe(0);
+    });
+
+    it('marks your notifications read, and only yours', async () => {
+      await t.prisma.notification.createMany({
+        data: [
+          { userId: 2, kind: 'NEW_MATCHES', data: { searchName: 'A', count: 1, jobs: [] } },
+          { userId: 1, kind: 'NEW_MATCHES', data: { searchName: 'B', count: 1, jobs: [] } },
+        ],
+      });
+
+      const res = await t.asUser(`mutation { markNotificationsRead }`);
+
+      expect(res.data).toEqual({ markNotificationsRead: 1 });
+      const after = await t.asUser<{ notifications: { unread: number } }>(NOTIFICATIONS);
+      expect(after.data!.notifications.unread).toBe(0);
+      expect(await t.prisma.notification.count({ where: { readAt: null } })).toBe(1);
+    });
+
+    it('needs you to be logged in', async () => {
+      const res = await t.anonymous(NOTIFICATIONS);
+      expect(res.errors?.[0]?.message).toMatch(/log in/i);
+    });
   });
 
   it("reports today's credits against the cap", async () => {

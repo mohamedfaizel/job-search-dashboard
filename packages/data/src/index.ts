@@ -3,6 +3,11 @@ export { API_URL, ApiError, getErrorCode, getErrorMessage } from './api/client';
 export type { ErrorCode } from './api/client';
 export { useLogIn, useLogOut, useMe, useSetLocale, useSignUp } from './api/auth';
 export {
+  NOTIFICATIONS_POLL_MS,
+  useMarkNotificationsRead,
+  useNotifications,
+} from './api/notifications';
+export {
   GMAIL_CONNECT_URL,
   useApproveMailSuggestion,
   useDisconnectGmail,

@@ -2,6 +2,7 @@ import type { JobInsights } from '@jobsearch/data';
 import { useSetHaveTerm } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useToast } from '@/components/Toasts';
 import {
   appendTerm,
   bestLine,
@@ -188,6 +189,8 @@ export function MissingKeywords({
   state: ReplyDraftState;
 }) {
   const t = useTranslations('Jobs.keywordCards');
+  const tToast = useTranslations('Jobs.toasts');
+  const toast = useToast();
   const have = useSetHaveTerm();
   const jobResume = insights.jobResume;
   const [open, setOpen] = useState<{ term: string; mode: Mode } | null>(null);
@@ -338,6 +341,7 @@ export function MissingKeywords({
                   onApply={(text) => {
                     state.change('resume', text);
                     setOpen(null);
+                    toast(tToast('keywordAdded', { term }), { tone: 'info' });
                   }}
                 />
               )}

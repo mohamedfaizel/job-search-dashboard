@@ -2,6 +2,7 @@ import type { JobInsights, JobResume } from '@jobsearch/data';
 import { useEditJobResume } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useToast } from '@/components/Toasts';
 import { useErrorText } from '../../../i18n/useErrorText';
 import type { ReplyLine } from '../replyEdit';
 import {
@@ -260,6 +261,8 @@ export function ReplyPreview({
   const t = useTranslations('Jobs.preview');
   const errorText = useErrorText();
   const save = useEditJobResume();
+  const tToast = useTranslations('Jobs.toasts');
+  const toast = useToast();
   const { draft, dirty } = state;
   const [part, setPart] = useState<ReplyPart>('resume');
   const [asText, setAsText] = useState(false);
@@ -356,7 +359,14 @@ export function ReplyPreview({
           type="button"
           disabled={!dirty || save.isPending}
           onClick={() => {
-            save.mutate({ jobId, ...draft });
+            save.mutate(
+              { jobId, ...draft },
+              {
+                onSuccess: () => {
+                  toast(tToast('changesSaved'));
+                },
+              },
+            );
           }}
           className="h-9 rounded-lg bg-brand-600 px-3 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >

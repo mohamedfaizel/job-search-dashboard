@@ -42,6 +42,8 @@ const empty = (otherResumes: LanguageResumeModel[]): ProfileModel => ({
   achievements: '',
   resumeMaxPages: 2,
   keepMySections: false,
+  notifyNewMatches: true,
+  matchFitMin: 60,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   customFields: [],
@@ -104,6 +106,8 @@ function toModel(
     achievements: profile.achievements,
     resumeMaxPages: profile.resumeMaxPages,
     keepMySections: profile.keepMySections,
+    notifyNewMatches: profile.notifyNewMatches,
+    matchFitMin: profile.matchFitMin,
     resumeSuggestions: reviewResume(review),
     resumeReviewPrompt: profile.resumeText.trim() ? buildMasterReviewPrompt(review) : '',
     customFields: customFieldsOf(profile.customFields),
@@ -165,6 +169,8 @@ export class ProfileService {
       achievements: input.achievements,
       resumeMaxPages: input.resumeMaxPages,
       keepMySections: input.keepMySections,
+      notifyNewMatches: input.notifyNewMatches,
+      matchFitMin: input.matchFitMin,
       // Empty rows from the form are dropped.
       customFields: input.customFields
         .filter((f) => f.label || f.value)

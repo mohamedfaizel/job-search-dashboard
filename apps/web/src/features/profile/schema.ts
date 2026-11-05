@@ -2,6 +2,16 @@ import type { Profile, ProfileInput } from '@jobsearch/data';
 import { z } from 'zod';
 import { splitList } from '../../lib/split-list';
 
+/** The Fit % a new job needs before a scheduled search tells you about it. */
+export const MATCH_FIT_OPTIONS = ['40', '50', '60', '70', '80', '90'] as const;
+
+/** The option nearest a saved Fit %, so the dropdown always shows one. */
+export function closestFitOption(fit: number): (typeof MATCH_FIT_OPTIONS)[number] {
+  return MATCH_FIT_OPTIONS.reduce((best, option) =>
+    Math.abs(Number(option) - fit) < Math.abs(Number(best) - fit) ? option : best,
+  );
+}
+
 /** Turns an error key from messages/<locale>.json ("Profile.errors") into text. */
 export type ErrorText = (key: string, values?: Record<string, string | number>) => string;
 
@@ -55,6 +65,8 @@ export function profileSchema(t: ErrorText) {
     achievements: text(10_000),
     resumeMaxPages: z.enum(['1', '2', '3']),
     keepMySections: z.boolean(),
+    notifyNewMatches: z.boolean(),
+    matchFitMin: z.enum(MATCH_FIT_OPTIONS),
     customFields: z
       .array(
         z
@@ -115,6 +127,8 @@ export function profileToForm(profile: Profile, accountName = ''): ProfileFormVa
     resumeMaxPages:
       (['1', '2', '3'] as const)[Math.min(Math.max(profile.resumeMaxPages, 1), 3) - 1] ?? '2',
     keepMySections: profile.keepMySections,
+    notifyNewMatches: profile.notifyNewMatches,
+    matchFitMin: closestFitOption(profile.matchFitMin),
     customFields: profile.customFields.map((f) => ({ label: f.label, value: f.value })),
   };
 }
@@ -151,6 +165,8 @@ export function toProfileInput(values: ProfileFormValues): ProfileInput {
     achievements: values.achievements,
     resumeMaxPages: Number(values.resumeMaxPages),
     keepMySections: values.keepMySections,
+    notifyNewMatches: values.notifyNewMatches,
+    matchFitMin: Number(values.matchFitMin),
     // Rows left empty are dropped.
     customFields: values.customFields.filter((f) => f.label.trim() || f.value.trim()),
   };

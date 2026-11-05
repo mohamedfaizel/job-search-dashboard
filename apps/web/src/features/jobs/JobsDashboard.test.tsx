@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { Intl } from '@/test/intl';
+import { location, router } from '@/test/navigation';
 import { JobsDashboard } from './JobsDashboard';
 import { makeJob } from './test/fixtures';
 import { api, applyQueue, OFF_PAGE_JOB_ID, requests, server, tableSettings } from './test/server';
@@ -890,6 +891,17 @@ describe('JobsDashboard', () => {
     await user.click(within(queue).getByRole('button', { name: 'Platform Engineer' }));
     expect(await screen.findByRole('dialog', { name: 'Platform Engineer' })).toBeInTheDocument();
     expect(requests).toContainEqual({ operation: 'Job', variables: { id: OFF_PAGE_JOB_ID } });
+  });
+
+  it('opens the job a notification links to (/jobs?job=…) and tidies the URL', async () => {
+    location.search = new URLSearchParams({ job: OFF_PAGE_JOB_ID });
+    try {
+      renderDashboard();
+      expect(await screen.findByRole('dialog', { name: 'Platform Engineer' })).toBeInTheDocument();
+      expect(router.replace).toHaveBeenCalledWith('/jobs', { scroll: false });
+    } finally {
+      location.search = new URLSearchParams();
+    }
   });
 
   it('numbers the Apply queue, moves jobs, and marks queued jobs in the table', async () => {

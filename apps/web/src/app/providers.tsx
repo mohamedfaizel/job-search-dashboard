@@ -3,6 +3,7 @@
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { ToastProvider } from '@/components/Toasts';
 
 /**
  * The Redux store and the query cache live in the browser. useState makes one of each per
@@ -13,7 +14,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(createQueryClient);
   return (
     <DataProvider store={store} queryClient={queryClient}>
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </DataProvider>
   );
 }

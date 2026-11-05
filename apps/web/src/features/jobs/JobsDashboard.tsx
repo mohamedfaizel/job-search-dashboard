@@ -30,6 +30,7 @@ import {
   useSetJobHidden,
   useUpdateJobStatus,
 } from '@jobsearch/data';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
@@ -72,6 +73,19 @@ export function JobsDashboard() {
   const applications = useMyApplications();
   const columnVisibility = useColumnVisibility(DEFAULT_HIDDEN_COLUMNS);
   const [openJobId, setOpenJobId] = useState<string | null>(null);
+  // A link like /jobs?job=<id> (from a notification) opens that job, then the URL is tidied.
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const linkedJob = searchParams.get('job');
+  const [handledLink, setHandledLink] = useState<string | null>(null);
+  if (linkedJob !== handledLink) {
+    setHandledLink(linkedJob);
+    if (linkedJob) setOpenJobId(linkedJob);
+  }
+  useEffect(() => {
+    if (linkedJob) router.replace(pathname, { scroll: false });
+  }, [linkedJob, router, pathname]);
   // The last jobs hidden or brought back, for the "Undo" message.
   const [lastChange, setLastChange] = useState<{ jobs: Job[]; hidden: boolean } | null>(null);
   const [checked, setChecked] = useState<Set<string>>(() => new Set());

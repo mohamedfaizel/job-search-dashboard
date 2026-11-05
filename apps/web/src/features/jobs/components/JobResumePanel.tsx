@@ -12,6 +12,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { DragEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { useToast } from '@/components/Toasts';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { replyParts, startDownload } from '../reply';
 import { useJobFormat } from '../useJobFormat';
@@ -48,6 +49,8 @@ export function ReplyInput({
   const upload = useUploadJobResume();
   const save = useSaveJobResumeText();
   const t = useTranslations('Jobs.reply');
+  const tToast = useTranslations('Jobs.toasts');
+  const toast = useToast();
   const [text, setText] = useState('');
   const [clipboardBlocked, setClipboardBlocked] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -63,6 +66,7 @@ export function ReplyInput({
         onSuccess: () => {
           setText('');
           startDownload(`${jobResumeUrl(jobId)}/resume.pdf`);
+          toast(tToast('replySaved'));
           onSaved({ pdf: true });
         },
       },
@@ -73,6 +77,7 @@ export function ReplyInput({
       { jobId, file },
       {
         onSuccess: () => {
+          toast(tToast('resumeUploaded'));
           onSaved({ pdf: false });
         },
       },

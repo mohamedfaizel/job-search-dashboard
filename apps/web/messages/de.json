@@ -332,6 +332,14 @@
       "askClaude": "Claude nach weiteren Vorschlägen fragen",
       "askClaudeHint": "In Claude einfügen: es prüft deinen Lebenslauf wie ein Recruiter und nennt die wichtigsten Korrekturen.",
       "askClaudeBox": "Prüf-Prompt"
+    },
+    "notify": {
+      "heading": "Benachrichtigungen",
+      "newMatches": "Sag mir Bescheid, wenn eine geplante Suche neue passende Jobs findet",
+      "newMatchesHint": "Du bekommst eine 🔔-Benachrichtigung mit den besten Jobs und einem Link zu jedem.",
+      "fitMin": "Ein Job passt ab",
+      "fitMinHint": "Sein Fit % muss mindestens so hoch sein.",
+      "fitOption": "{fit} % Fit"
     }
   },
   "Jobs": {
@@ -987,6 +995,12 @@
         "UNREACHABLE": "die Website war nicht erreichbar",
         "NO_LINK": "dieser Job hat keinen Link zum Prüfen"
       }
+    },
+    "toasts": {
+      "replySaved": "Antwort gespeichert. Dein Lebenslauf-PDF wird heruntergeladen.",
+      "resumeUploaded": "Lebenslauf gespeichert.",
+      "changesSaved": "Änderungen gespeichert.",
+      "keywordAdded": "„{term}“ ist jetzt in der Vorschau. Klick auf „Änderungen speichern“, um es zu behalten."
     }
   },
   "Tracker": {
@@ -1289,5 +1303,18 @@
     "SUGGESTION_NOT_FOUND": "Dieser Vorschlag wurde nicht gefunden.",
     "SUGGESTION_ANSWERED": "Du hast diesen Vorschlag schon beantwortet.",
     "DESIGN_REPLY": "Füge Claudes ganze Antwort ein: Sie sollte ein JSON-Objekt mit den Design-Einstellungen sein."
+  },
+  "Notifications": {
+    "bell": "Benachrichtigungen",
+    "bellUnread": "Benachrichtigungen, {count} ungelesen",
+    "title": "Benachrichtigungen",
+    "unread": "ungelesen",
+    "empty": "Noch nichts. Wenn eine geplante Suche neue passende Jobs findet, erscheinen sie hier.",
+    "newMatches": "{count, plural, one {# neuer Job passt zu dir} other {# neue Jobs passen zu dir}} aus der Suche „{search}“",
+    "fitAtLeast": "Fit ab {fit} %",
+    "fit": "{fit} % Fit",
+    "more": "{count, plural, one {# weiterer} other {# weitere}} unter Stellenanzeigen (als Neu markiert)",
+    "show": "Anzeigen",
+    "close": "Schließen"
   }
 }
