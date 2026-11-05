@@ -2,7 +2,7 @@ import type { JobInsights } from '@jobsearch/data';
 import { useSetHaveTerm } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useToast } from '@/components/Toasts';
+import { useToast } from '../../../components/Toasts';
 import {
   appendTerm,
   bestLine,

@@ -2,7 +2,7 @@ import type { JobInsights, JobResume } from '@jobsearch/data';
 import { useEditJobResume } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useToast } from '@/components/Toasts';
+import { useToast } from '../../../components/Toasts';
 import { useErrorText } from '../../../i18n/useErrorText';
 import type { ReplyLine } from '../replyEdit';
 import {
