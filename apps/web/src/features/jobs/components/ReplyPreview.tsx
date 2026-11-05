@@ -1,4 +1,4 @@
-import type { JobResume } from '@jobsearch/data';
+import type { JobInsights, JobResume } from '@jobsearch/data';
 import { useEditJobResume } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -8,11 +8,13 @@ import {
   deleteLine,
   insertLine,
   lineLike,
+  markTerms,
   readLine,
   replaceLine,
   rewordLine,
   splitLines,
 } from '../replyEdit';
+import { MissingKeywords } from './MissingKeywords';
 
 const BUTTON =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
@@ -141,10 +143,13 @@ function PageView({
   text,
   onChange,
   label,
+  highlight = [],
 }: {
   text: string;
   onChange: (text: string) => void;
   label: string;
+  /** Terms to mark green where they appear: the job's keywords the text now covers. */
+  highlight?: string[];
 }) {
   const t = useTranslations('Jobs.preview');
   const [editing, setEditing] = useState<number | null>(null);
@@ -198,7 +203,15 @@ function PageView({
                 •
               </span>
             )}
-            {line.text}
+            {markTerms(line.text, highlight).map((part, k) =>
+              part.mark ? (
+                <mark key={k} className="rounded bg-emerald-100 px-0.5 text-emerald-900">
+                  {part.text}
+                </mark>
+              ) : (
+                part.text
+              ),
+            )}
           </button>
         );
       })}
@@ -208,9 +221,26 @@ function PageView({
 }
 
 /** The preview with its own draft, started again from every new save. */
-export function SavedReplyPreview({ jobId, saved }: { jobId: string; saved: JobResume }) {
+export function SavedReplyPreview({
+  insights,
+  saved,
+}: {
+  insights: JobInsights;
+  saved: JobResume;
+}) {
   const state = useReplyDraft(saved);
-  return <ReplyPreview jobId={jobId} state={state} />;
+  // The job's terms (and Resume-Matcher's) are marked where the resume names them.
+  const terms = [
+    ...insights.skills.map((t) => t.term),
+    ...insights.keywords.map((t) => t.term),
+    ...saved.aiMissing,
+  ];
+  return (
+    <>
+      <ReplyPreview jobId={insights.jobId} state={state} highlight={terms} />
+      <MissingKeywords insights={insights} state={state} />
+    </>
+  );
 }
 
 /**
@@ -218,7 +248,15 @@ export function SavedReplyPreview({ jobId, saved }: { jobId: string; saved: JobR
  * and form answers next to it. Click a line to change it, or edit the whole text; Undo, Reset
  * and Save changes. Saving scores the resume again and the PDF follows it.
  */
-export function ReplyPreview({ jobId, state }: { jobId: string; state: ReplyDraftState }) {
+export function ReplyPreview({
+  jobId,
+  state,
+  highlight = [],
+}: {
+  jobId: string;
+  state: ReplyDraftState;
+  highlight?: string[];
+}) {
   const t = useTranslations('Jobs.preview');
   const errorText = useErrorText();
   const save = useEditJobResume();
@@ -299,6 +337,7 @@ export function ReplyPreview({ jobId, state }: { jobId: string; state: ReplyDraf
           key={shown}
           label={t(`parts.${shown}`)}
           text={draft[shown]}
+          highlight={shown === 'resume' ? highlight : []}
           onChange={(text) => {
             state.change(shown, text);
           }}

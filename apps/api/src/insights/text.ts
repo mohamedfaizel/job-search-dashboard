@@ -36,6 +36,7 @@ const JOB_AD_WORDS = [
   'projects platform platforms technology technologies solutions solution customers customer',
   'clients client environment culture growth success values mission goals tasks area areas',
   'hybrid remote office location salary bonus vacation days flexible home',
+  'hiring hire hires build builds building want wants seeking create creates created creating',
   // German
   'erfahrung erfahrungen kenntnisse aufgaben profil bieten suchen bewerbung unternehmen',
   'mitarbeiter mitarbeitende gute sehr jahre bereich idealerweise sowie mwd',

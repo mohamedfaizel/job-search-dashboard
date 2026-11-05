@@ -551,6 +551,8 @@ export interface JobResume {
   /** From the Apply kit reply. Empty when there was none. */
   coverLetter: string;
   formAnswers: string;
+  /** Claude's CHECK part: terms placed or skipped, stretches, questions for you. */
+  claudeCheck: string;
   updatedAt: string;
   skillsCoverage: number | null;
   keywordsCoverage: number | null;

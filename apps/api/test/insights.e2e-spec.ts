@@ -20,6 +20,7 @@ const JOB_RESUME = `jobResume {
   fileName
   coverLetter
   formAnswers
+  claudeCheck
   skillsCoverage
   keywordsCoverage
   titleMatch
@@ -164,6 +165,7 @@ interface JobResume {
   text: string;
   fileName: string | null;
   coverLetter: string;
+  claudeCheck: string;
   formAnswers: string;
   skillsCoverage: number | null;
   keywordsCoverage: number | null;
@@ -246,8 +248,8 @@ describe('job insights without AI', () => {
     ]);
     // Skill tags aren't repeated as keywords, and words in every ad ("building") rank low.
     const keywords = result.keywords.map((k) => k.term);
-    // Tools first (Postgres, Terraform), then the plain word that stands out most.
-    expect(keywords.slice(0, 3)).toEqual(['postgres', 'terraform', 'microservices']);
+    // Known phrases and tools first (microservices, Postgres, Terraform).
+    expect(keywords.slice(0, 3)).toEqual(['microservices', 'postgres', 'terraform']);
     expect(keywords).not.toContain('kafka');
     expect(result.keywords).toContainEqual({ term: 'terraform', inResume: true, relatedTo: null });
     expect(result.keywords).toContainEqual({ term: 'postgres', inResume: false, relatedTo: null });
@@ -415,7 +417,7 @@ describe('job insights without AI', () => {
     ]);
     expect(after.skillsCoverage).toBe(100);
     expect(after.score).toBeGreaterThan(before.score!);
-    expect(after.prompt).toContain('They MUST be in the new resume');
+    expect(after.prompt).toContain('Each MUST be in the new resume');
     expect(after.prompt).toContain('- figma');
     // Saved on your profile, once, next to the skills you had.
     await t.asUser(SET_HAVE, { jobId: job.id, term: 'Figma' });
@@ -729,6 +731,26 @@ Why Acme: I like your product.
 
       await request(t.server).get(`/apply-kit/${job.id}`).expect(401);
       await request(t.server).get('/apply-kit/nope').set('Cookie', t.cookieFor('USER')).expect(404);
+    });
+
+    it('keeps Claude’s CHECK notes, and a resume-only reply keeps the cover letter and answers', async () => {
+      const job = await backendJob();
+      await t.asUser(SAVE_TEXT, {
+        jobId: job.id,
+        text:
+          '=== RESUME ===\n# Ada\n- Node.js\n=== COVER LETTER ===\nDear team\n' +
+          '=== FORM ANSWERS ===\nNotice period: 1 month\n=== CHECK ===\n- Ask me: your school name?',
+      });
+      const res = await t.asUser<{ saveJobResumeText: Insights }>(SAVE_TEXT, {
+        jobId: job.id,
+        text: '# Ada\n- Node.js and Kafka',
+      });
+      expect(res.data!.saveJobResumeText.jobResume).toMatchObject({
+        text: '# Ada\n- Node.js and Kafka',
+        coverLetter: 'Dear team',
+        formAnswers: 'Notice period: 1 month',
+        claudeCheck: '- Ask me: your school name?',
+      });
     });
 
     it('saves your edits from the preview and scores the resume again', async () => {

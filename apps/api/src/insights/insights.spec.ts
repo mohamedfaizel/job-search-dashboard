@@ -358,7 +358,12 @@ describe('buildResumePrompt', () => {
     const reply = splitReply(
       '=== RESUME ===\nNew\n=== COVER LETTER ===\nHi\n=== FORM ANSWERS ===\nQ: A\n=== CHECK ===\n- Changes: x',
     );
-    expect(reply).toEqual({ resume: 'New', coverLetter: 'Hi', formAnswers: 'Q: A' });
+    expect(reply).toEqual({
+      resume: 'New',
+      coverLetter: 'Hi',
+      formAnswers: 'Q: A',
+      check: '- Changes: x',
+    });
   });
 
   it('lets Claude use related terms and the skills on your profile', () => {
@@ -416,8 +421,14 @@ describe('buildResumePrompt', () => {
   it('tells Claude the skills you said you have must be in the resume', () => {
     expect(buildResumePrompt(input)).not.toContain('MUST');
     expect(buildResumePrompt({ ...input, mustAdd: ['figma', 'kanban'] })).toContain(
-      'They MUST be in the new resume: in the Skills section, and next to the experience where I used them when that is clear from my resume:\n- figma\n- kanban',
+      'say where each went (Replace, Restructure or Add).\n- figma\n- kanban',
     );
+    const prompt = buildResumePrompt({ ...input, mustAdd: ['figma'] });
+    expect(prompt).toContain('Each MUST be in the new resume at least once');
+    expect(prompt).toContain('1. Replace:');
+    expect(prompt).toContain('2. Restructure:');
+    expect(prompt).toContain('3. Add:');
+    expect(prompt).toContain('- Placed: each skill or keyword I confirmed I have');
   });
 
   it('starts from your German resume when you have one', () => {
@@ -507,6 +518,7 @@ Notice period: 1 month
       resume: 'Jane Doe\nReact developer',
       coverLetter: 'Dear hiring team,',
       formAnswers: 'Notice period: 1 month',
+      check: '- Related: apollo',
     });
   });
 
@@ -515,6 +527,7 @@ Notice period: 1 month
       resume: 'Jane Doe\nReact developer',
       coverLetter: '',
       formAnswers: '',
+      check: '',
     });
   });
 });
@@ -606,7 +619,7 @@ describe('queue prompt', () => {
     expect(prompt).toContain('=== JOB 1: a ===');
     // "I have this" skills go with their own job.
     expect(prompt.split('MUST')).toHaveLength(2);
-    expect(prompt).toContain('when that is clear from my resume:\n- figma');
+    expect(prompt).toContain('(Replace, Restructure or Add).\n- figma');
     // Long ads are cut, so five jobs fit.
     expect(prompt).toContain(`${'x'.repeat(5000)} […]`);
     expect(buildQueuePrompt([])).toBe('');
@@ -674,6 +687,48 @@ describe('jobTerms', () => {
     expect(terms.skills).toEqual(['frontend', 'react']);
     expect(terms.keywords.map(compact)).not.toContain('frontend');
     expect(terms.keywords).toContain('accessibility');
+  });
+});
+
+describe('jobTerms keywords', () => {
+  const ad = `Build intuitive UIs from Figma mocks. Optimize performance, focusing on Core Web Vitals.
+Define React Query caching, retries, and optimistic updates. Build a component library with Storybook.
+Break fuzzy ideas into clear specs. Represent engineering in roadmap; balance value, effort, and risk.
+Rapid-prototype UI to de-risk big bets. Strong knowledge of TypeScript, React, and React Native.
+Experience creating websites from Figma mocks. Experience with testing frameworks (Jest, Detox, etc.).`;
+  const job = {
+    title: 'Senior Frontend Engineer',
+    description: ad,
+    language: 'en',
+    skills: ['react', 'typescript'],
+    city: null,
+    raw: null,
+    company: { name: 'Matchmatch' },
+  };
+
+  it('finds the ad’s real phrases and tools, not single plain words', () => {
+    const { keywords } = jobTerms(job, new Set(), buildCorpus([job]));
+    expect(keywords).toEqual(
+      expect.arrayContaining([
+        'core web vitals',
+        'react query',
+        'optimistic updates',
+        'component library',
+        'storybook',
+        'react native',
+        'detox',
+        'figma mocks',
+        'testing frameworks',
+      ]),
+    );
+    for (const noise of ['fuzzy', 'bets', 'represent', 'mocks', 'figma'])
+      expect(keywords).not.toContain(noise);
+    expect(keywords.length).toBeLessThanOrEqual(12);
+  });
+
+  it('leaves out a phrase you removed', () => {
+    const { keywords } = jobTerms(job, new Set(['detox']), buildCorpus([job]));
+    expect(keywords).not.toContain('detox');
   });
 });
 

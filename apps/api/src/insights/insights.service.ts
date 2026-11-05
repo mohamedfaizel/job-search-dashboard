@@ -155,6 +155,7 @@ export class InsightsService implements OnApplicationBootstrap {
             fileName: true,
             coverLetter: true,
             formAnswers: true,
+            claudeCheck: true,
             updatedAt: true,
             score: true,
             aiStatus: true,
@@ -360,13 +361,21 @@ export class InsightsService implements OnApplicationBootstrap {
     const reply = splitReply(text);
     const clean = cleanResume(reply.resume);
     await this.assertJob(jobId);
+    // A reply with only a resume (a file, or Claude's answer to a follow-up question) keeps the
+    // cover letter, form answers and notes saved before, instead of wiping them.
+    const resumeOnly = !reply.coverLetter && !reply.formAnswers && !reply.check;
     const data = {
       text: clean,
       fileName: file?.name ?? null,
       file: file ? new Uint8Array(file.bytes) : null,
       fileType: file?.type ?? null,
-      coverLetter: reply.coverLetter,
-      formAnswers: reply.formAnswers,
+      ...(resumeOnly
+        ? {}
+        : {
+            coverLetter: reply.coverLetter,
+            formAnswers: reply.formAnswers,
+            claudeCheck: reply.check,
+          }),
       // A new resume has not been checked by Resume-Matcher yet.
       aiStatus: null,
       aiScore: null,
@@ -768,6 +777,7 @@ export class InsightsService implements OnApplicationBootstrap {
       fileName: string | null;
       coverLetter: string;
       formAnswers: string;
+      claudeCheck: string;
       updatedAt: Date;
       aiStatus: JobMatchStatus | null;
       aiScore: number | null;
@@ -786,6 +796,7 @@ export class InsightsService implements OnApplicationBootstrap {
       text: jobResume.text,
       fileName: jobResume.fileName,
       coverLetter: jobResume.coverLetter,
+      claudeCheck: jobResume.claudeCheck,
       formAnswers: jobResume.formAnswers,
       updatedAt: jobResume.updatedAt,
       skillsCoverage: after.skills,

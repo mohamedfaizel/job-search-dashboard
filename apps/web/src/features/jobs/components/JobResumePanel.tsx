@@ -7,19 +7,18 @@ import {
   useDocumentStyle,
   useDocumentTemplates,
   useMatchJobResume,
-  useSetHaveTerm,
   useUploadJobResume,
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { DragEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
-import { keywordPrompt } from '../keywordPrompt';
 import { replyParts, startDownload } from '../reply';
 import { useJobFormat } from '../useJobFormat';
 import { Badge } from './Badge';
+import { ClaudeNotes } from './ClaudeNotes';
 import { CopyText } from './CopyText';
-import { HaveChip, MissingChip, ScoreRing } from './InsightsPanel';
+import { ScoreRing } from './InsightsPanel';
 import { scoreTone } from './MatchPanel';
 import { SavedReplyPreview } from './ReplyPreview';
 
@@ -339,8 +338,6 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
   const { aiStatus, aiScore, aiError } = jobResume;
   const running = aiStatus === 'PENDING' || start.isPending;
   const ready = aiStatus === 'READY' && aiScore !== null;
-  // Ticks only feed the prompt below; they never touch your profile skills.
-  const [ticked, setTicked] = useState<string[]>([]);
   const run = () => {
     start.mutate(jobId);
   };
@@ -369,53 +366,7 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
         <p className="text-xs text-emerald-700">{t('aiNothingMissing')}</p>
       )}
       {missing.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="text-slate-600">{t('aiMissing')}</span>
-          <ul className="flex flex-wrap gap-1" aria-label={t('aiMissing')}>
-            {missing.map((term) => {
-              const on = ticked.includes(term);
-              return (
-                <li
-                  key={term}
-                  className={`flex items-center gap-1 rounded py-0.5 pr-0.5 pl-1.5 ring-1 ring-inset ${
-                    on
-                      ? 'bg-emerald-50 text-emerald-800 ring-emerald-300'
-                      : 'bg-amber-50 text-amber-800 ring-amber-200'
-                  }`}
-                >
-                  {term}
-                  <button
-                    type="button"
-                    aria-pressed={on}
-                    aria-label={t('aiTick', { term })}
-                    title={t('aiTickHint')}
-                    onClick={() => {
-                      setTicked((list) =>
-                        list.includes(term) ? list.filter((x) => x !== term) : [...list, term],
-                      );
-                    }}
-                    className={`h-5 w-5 cursor-pointer rounded text-xs leading-none font-bold ${
-                      on
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-white/70 text-slate-400 hover:bg-white hover:text-emerald-700'
-                    }`}
-                  >
-                    ✓
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-      {ticked.length > 0 && (
-        <CopyText
-          primary
-          label={t('aiCopyPrompt', { count: ticked.length })}
-          text={keywordPrompt(missing.filter((term) => ticked.includes(term)))}
-          copiedHint={t('aiCopiedHint')}
-          boxLabel={t('aiPromptBox')}
-        />
+        <p className="text-xs text-slate-600">{t('aiMissingCards', { count: missing.length })}</p>
       )}
       {tips.length > 0 && (
         <details className="text-xs text-slate-700">
@@ -453,7 +404,6 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
   const errorText = useErrorText();
   const { jobId, jobResume, score: before } = insights;
   const remove = useDeleteJobResume();
-  const have = useSetHaveTerm();
   const templates = useDocumentTemplates();
   const style = useDocumentStyle();
   const [replacing, setReplacing] = useState(false);
@@ -463,17 +413,15 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
   const chosen = template ?? style.data?.resumeTemplate ?? 'classic';
   if (!jobResume) return null;
   const base = jobResumeUrl(jobId);
-  // Terms you said you have ("I have it") that Claude's resume still leaves out.
-  const yours = new Set(
-    [...insights.skills, ...insights.keywords].filter((t) => t.youHave).map((t) => t.term),
-  );
-  const leftOut = jobResume.stillMissing.filter((term) => yours.has(term));
-  // ✓ is for skills only: keywords are Claude's to work in.
-  const skills = new Set(insights.skills.map((t) => t.term));
 
   return (
     <section aria-label={t('sectionLabel')} className="space-y-3">
-      <SavedReplyPreview key={`preview-${jobResume.updatedAt}`} jobId={jobId} saved={jobResume} />
+      <ClaudeNotes text={jobResume.claudeCheck} />
+      <SavedReplyPreview
+        key={`preview-${jobResume.updatedAt}`}
+        insights={insights}
+        saved={jobResume}
+      />
 
       {jobResume.score !== null && (
         <div
@@ -505,64 +453,11 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
                 </ul>
               </>
             )}
-            {jobResume.stillMissing.length > 0 && (
-              <div className="space-y-1">
-                <p className="text-xs text-slate-600">{t('stillMissing')}</p>
-                <ul className="flex flex-wrap gap-1.5" aria-label={t('stillMissing')}>
-                  {jobResume.stillMissing.map((term) => (
-                    <li key={term}>
-                      {yours.has(term) ? (
-                        <HaveChip
-                          term={term}
-                          onUndo={() => {
-                            have.mutate({ jobId, term, have: false });
-                          }}
-                        />
-                      ) : (
-                        <MissingChip
-                          term={term}
-                          relatedTo={null}
-                          onHave={
-                            skills.has(term)
-                              ? () => {
-                                  have.mutate({ jobId, term, have: true });
-                                }
-                              : undefined
-                          }
-                        />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
       )}
 
-      {have.error && (
-        <p role="alert" className="text-red-700">
-          {t('changeError', { error: errorText(have.error) })}
-        </p>
-      )}
-
       <AiMatch jobId={jobId} jobResume={jobResume} />
-
-      {leftOut.length > 0 && (
-        <div className="rounded-xl border border-sky-200 bg-sky-50/70 px-4 py-3">
-          <CopyText
-            label={t('copyUpdated')}
-            text={insights.prompt}
-            copiedHint={t('updatedHint')}
-            boxLabel={t('updatedBox')}
-            primary
-          >
-            <span className="text-sm text-sky-900">
-              {t('leftOut', { terms: leftOut.join(', '), count: leftOut.length })}
-            </span>
-          </CopyText>
-        </div>
-      )}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <FileRow name={t('resumePdf')}>

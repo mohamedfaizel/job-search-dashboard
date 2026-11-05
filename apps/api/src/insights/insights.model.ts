@@ -73,6 +73,12 @@ export class JobResumeModel {
   @Field({ description: 'The form answers from the Apply kit reply. Empty when there were none' })
   formAnswers!: string;
 
+  @Field({
+    description:
+      "Claude's CHECK part of the reply: terms placed or skipped, stretches and questions for you. Empty when there was none",
+  })
+  claudeCheck!: string;
+
   @Field()
   updatedAt!: Date;
 

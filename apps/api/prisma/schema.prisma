@@ -505,6 +505,8 @@ model JobResume {
   /// From the Apply kit reply: the cover letter and answers Claude wrote next to the resume.
   coverLetter String   @default("")
   formAnswers String   @default("")
+  /// Claude's CHECK part of the reply: terms placed or skipped, stretches, questions for you.
+  claudeCheck String   @default("")
   /// Apply kit score (0-100) of this resume, kept so the Job posts table can show it.
   score       Float?
   /// Resume-Matcher's ATS score for this resume: null until asked, cleared when the resume is saved again.

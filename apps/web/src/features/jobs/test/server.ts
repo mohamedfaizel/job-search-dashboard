@@ -95,6 +95,8 @@ export const SAVED_RESUME: JobResume = {
   fileName: null,
   coverLetter: 'Dear Acme team, I build dashboards.',
   formAnswers: 'Why Acme: I like your product.',
+  claudeCheck:
+    '- Placed: graphql (Replace)\n- Stretches: (1) "Led the team": you were one of three. Keep, soften or drop? (2) React 19: only in a side project.\n- Ask me: Which year did you finish school?',
   updatedAt: '2026-10-28T12:00:00.000Z',
   skillsCoverage: 100,
   keywordsCoverage: 50,
