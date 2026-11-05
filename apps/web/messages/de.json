@@ -985,7 +985,13 @@
       "replaceFound": "{count, plural, =0 {Nicht in deinem Lebenslauf gefunden.} one {In # Zeile gefunden.} other {In # Zeilen gefunden.}}",
       "replaceAll": "Alle ersetzen",
       "factWarning": "Faktencheck: „{term}“ steht nicht in deinem Master-Lebenslauf oder deinen Profil-Skills. Nur ergänzen, wenn es stimmt.",
-      "iHaveIt": "Habe ich"
+      "iHaveIt": "Habe ich",
+      "short": {
+        "suggest": "+ Fähigkeiten",
+        "rewrite": "Umschreiben",
+        "insert": "Einfügen",
+        "replace": "Ersetzen"
+      }
     },
     "claudeNotes": {
       "title": "Hinweise von Claude",

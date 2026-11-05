@@ -127,9 +127,12 @@ describe('JobResumePanel', () => {
 
     // Undo in the preview takes the last change back.
     await user.click(preview().getByRole('button', { name: 'Undo' }));
-    expect(within(card('Vitest')).getByText('missing')).toBeInTheDocument();
+    expect(
+      within(card('Vitest')).getByRole('group', { name: 'Ways to add Vitest' }),
+    ).toBeInTheDocument();
     await user.click(within(card('Vitest')).getByRole('button', { name: 'Skip' }));
     expect(within(card('Vitest')).getByText('skipped')).toBeInTheDocument();
+    expect(within(card('Vitest')).queryByRole('group', { name: 'Ways to add Vitest' })).toBeNull();
 
     await user.click(preview().getByRole('button', { name: 'Save changes' }));
     const sent = requests.find((r) => r.operation === 'EditJobResume');
