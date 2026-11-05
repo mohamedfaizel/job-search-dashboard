@@ -526,7 +526,7 @@ describe('job insights without AI', () => {
       jobId: job.id,
       languages: 'x'.repeat(301),
     });
-    expect(tooLong.errors?.[0]?.extensions).toMatchObject({ apiCode: 'TERM_LENGTH' });
+    expect(tooLong.errors?.[0]?.extensions).toMatchObject({ apiCode: 'LANGUAGES_LENGTH' });
     const missing = await t.asUser<Langs>(SET_LANGUAGES, { jobId: '999999', languages: 'x' });
     expect(missing.errors?.[0]?.extensions).toMatchObject({ apiCode: 'JOB_NOT_FOUND' });
   });

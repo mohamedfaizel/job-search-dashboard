@@ -90,6 +90,18 @@ export class InsightsResolver {
 
   @Mutation(() => JobInsightsModel, {
     description:
+      'Keeps your decisions on Claude’s questions for this job (JSON text). Needs a saved reply',
+  })
+  saveClaudeAnswers(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('answers') answers: string,
+  ): Promise<JobInsightsModel> {
+    return this.insights.saveClaudeAnswers(user.id, jobId, answers);
+  }
+
+  @Mutation(() => JobInsightsModel, {
+    description:
       'Edits the languages line of this job’s Apply kit prompt. Empty = your profile’s Languages again',
   })
   setJobLanguages(

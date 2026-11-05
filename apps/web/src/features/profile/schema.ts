@@ -67,6 +67,8 @@ export function profileSchema(t: ErrorText) {
     resumeMaxPages: z.enum(['1', '2', '3']),
     keepMySections: z.boolean(),
     notifyNewMatches: z.boolean(),
+    fillSavedAnswers: z.boolean(),
+    showStretches: z.boolean(),
     matchFitMin: z.enum(MATCH_FIT_OPTIONS),
     customFields: z
       .array(
@@ -130,6 +132,8 @@ export function profileToForm(profile: Profile, accountName = ''): ProfileFormVa
       (['1', '2', '3'] as const)[Math.min(Math.max(profile.resumeMaxPages, 1), 3) - 1] ?? '2',
     keepMySections: profile.keepMySections,
     notifyNewMatches: profile.notifyNewMatches,
+    fillSavedAnswers: profile.fillSavedAnswers,
+    showStretches: profile.showStretches,
     matchFitMin: closestFitOption(profile.matchFitMin),
     customFields: profile.customFields.map((f) => ({ label: f.label, value: f.value })),
   };
@@ -169,6 +173,8 @@ export function toProfileInput(values: ProfileFormValues): ProfileInput {
     resumeMaxPages: Number(values.resumeMaxPages),
     keepMySections: values.keepMySections,
     notifyNewMatches: values.notifyNewMatches,
+    fillSavedAnswers: values.fillSavedAnswers,
+    showStretches: values.showStretches,
     matchFitMin: Number(values.matchFitMin),
     // Rows left empty are dropped.
     customFields: values.customFields.filter((f) => f.label.trim() || f.value.trim()),

@@ -11,6 +11,7 @@ import {
   mailSuggestions,
   haveTerms,
   jobLanguages,
+  savedAnswers,
   removedTerms,
   requests,
   server,
@@ -34,6 +35,7 @@ afterEach(() => {
   removedTerms.length = 0;
   haveTerms.length = 0;
   jobLanguages.current = null;
+  savedAnswers.length = 0;
   jobResume.current = null;
   interviewPrep.current = null;
   tableSettings.current = null;

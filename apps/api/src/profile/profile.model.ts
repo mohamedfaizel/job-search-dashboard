@@ -169,6 +169,12 @@ export class ProfileModel {
   @Field({ description: 'Tell me when a scheduled search finds new jobs that fit me' })
   notifyNewMatches!: boolean;
 
+  @Field({ description: 'Fill Claude’s questions from your saved answers by themselves' })
+  fillSavedAnswers!: boolean;
+
+  @Field({ description: 'Show the Stretches of Claude’s reply for a decision' })
+  showStretches!: boolean;
+
   @Field(() => Int, { description: 'The Fit % a new job needs to count as a match (1-100)' })
   matchFitMin!: number;
 
@@ -392,6 +398,14 @@ export class ProfileInput {
   @Field({ defaultValue: true })
   @IsBoolean()
   notifyNewMatches: boolean = true;
+
+  @Field({ defaultValue: true })
+  @IsBoolean()
+  fillSavedAnswers: boolean = true;
+
+  @Field({ defaultValue: true })
+  @IsBoolean()
+  showStretches: boolean = true;
 
   @Field(() => Int, { defaultValue: 60 })
   @IsInt()

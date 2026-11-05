@@ -342,6 +342,21 @@
       "fitMin": "A job fits me from",
       "fitMinHint": "Its Fit % must be at least this.",
       "fitOption": "{fit}% Fit"
+    },
+    "claudeAnswers": {
+      "heading": "Answers for Claude",
+      "intro": "Your answers to Claude’s questions, kept for the next job. Edit or delete any.",
+      "fill": "Fill in my saved answers by themselves",
+      "stretches": "Show Stretches (lines that may be hard to explain)",
+      "loading": "Loading your saved answers…",
+      "none": "No saved answers yet. Answer one of Claude’s questions on a job and it shows up here.",
+      "listLabel": "Saved answers",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "editFor": "Edit your answer to: {question}",
+      "deleteFor": "Delete your answer to: {question}",
+      "answerFor": "Your answer to: {question}"
     }
   },
   "Jobs": {
@@ -976,7 +991,32 @@
       "title": "Notes from Claude",
       "titleCount": "Claude asks you {count, plural, one {# thing} other {# things}}",
       "intro": "Check these before you send the resume. Fix a line in the preview below, or tell Claude in the same chat.",
-      "more": "Where Claude placed your keywords, and what it skipped or changed"
+      "more": "Where Claude placed your keywords, and what it skipped or changed",
+      "progress": "{answered} answered · {filled} filled from your saved answers",
+      "stretches": "Stretches: keep, soften or drop",
+      "stretchesList": "Stretches",
+      "questions": "Ask me: type your answer",
+      "questionsList": "Ask me",
+      "keep": "✓ Keep",
+      "soften": "✎ Soften",
+      "drop": "✕ Drop",
+      "done": {
+        "keep": "✓ Kept",
+        "soften": "✎ Softened",
+        "drop": "✕ Dropped"
+      },
+      "change": "Change",
+      "changeFor": "Change your choice for: {item}",
+      "howRead": "How should it read?",
+      "answerPlaceholder": "Your answer",
+      "answerFor": "Your answer to: {question}",
+      "fromSaved": "From your saved answers",
+      "remember": "Remember for next jobs",
+      "rememberFor": "Remember your answer to: {question}",
+      "saveError": "Could not save that: {error}",
+      "copy": "Copy my answers for Claude ↗",
+      "copiedHint": "Paste them in the same Claude chat. Then paste Claude’s new reply in step 2.",
+      "copyBox": "My answers for Claude"
     },
     "stillOpen": {
       "never": "Not checked yet if the ad is still open",
@@ -1308,7 +1348,11 @@
     "GMAIL_ACCOUNT_NOT_FOUND": "That Gmail account was not found.",
     "SUGGESTION_NOT_FOUND": "That suggestion was not found.",
     "SUGGESTION_ANSWERED": "You already answered that suggestion.",
-    "DESIGN_REPLY": "Paste Claude’s whole reply: it should be one JSON object with the design settings."
+    "DESIGN_REPLY": "Paste Claude’s whole reply: it should be one JSON object with the design settings.",
+    "LANGUAGES_LENGTH": "The languages line is at most 300 characters.",
+    "ANSWER_LENGTH": "A question and its answer must each be 1 to {max} characters long.",
+    "ANSWER_NOT_FOUND": "That saved answer was not found.",
+    "ANSWERS_INVALID": "Your answers could not be read."
   },
   "Notifications": {
     "bell": "Notifications",

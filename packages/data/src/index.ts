@@ -41,6 +41,13 @@ export {
   useUploadJobResume,
 } from './api/insights';
 export {
+  savedAnswersKey,
+  useDeleteSavedAnswer,
+  useSaveAnswer,
+  useSaveClaudeAnswers,
+  useSavedAnswers,
+} from './api/answers';
+export {
   RESUME_LANGUAGES,
   RESUME_UPLOAD_URL,
   useDeleteLanguageResume,

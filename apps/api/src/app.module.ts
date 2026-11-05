@@ -16,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
 import { ResumeMatcherModule } from './resume-matcher/resume-matcher.module';
+import { SavedAnswersModule } from './saved-answers/saved-answers.module';
 import { SavedSearchesModule } from './saved-searches/saved-searches.module';
 import { SyncModule } from './sync/sync.module';
 
@@ -47,6 +48,7 @@ import { SyncModule } from './sync/sync.module';
     InsightsModule,
     LivenessModule,
     NotificationsModule,
+    SavedAnswersModule,
     GmailModule,
   ],
 })

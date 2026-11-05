@@ -79,6 +79,12 @@ export class JobResumeModel {
   })
   claudeCheck!: string;
 
+  @Field({
+    description:
+      'Your decisions on Claude’s questions for this job, as JSON text: keep, soften or drop per stretch and an answer per question. "{}" when none',
+  })
+  claudeAnswers!: string;
+
   @Field()
   updatedAt!: Date;
 

@@ -342,6 +342,21 @@
       "fitMin": "Ein Job passt ab",
       "fitMinHint": "Sein Fit % muss mindestens so hoch sein.",
       "fitOption": "{fit} % Fit"
+    },
+    "claudeAnswers": {
+      "heading": "Antworten für Claude",
+      "intro": "Deine Antworten auf Claudes Fragen, für den nächsten Job gemerkt. Bearbeite oder lösche sie.",
+      "fill": "Meine gespeicherten Antworten automatisch einsetzen",
+      "stretches": "Dehnungen anzeigen (Zeilen, die schwer zu erklären sein könnten)",
+      "loading": "Deine gespeicherten Antworten werden geladen…",
+      "none": "Noch keine gespeicherten Antworten. Beantworte eine Frage von Claude bei einem Job, dann erscheint sie hier.",
+      "listLabel": "Gespeicherte Antworten",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "save": "Speichern",
+      "editFor": "Deine Antwort bearbeiten auf: {question}",
+      "deleteFor": "Deine Antwort löschen auf: {question}",
+      "answerFor": "Deine Antwort auf: {question}"
     }
   },
   "Jobs": {
@@ -976,7 +991,32 @@
       "title": "Hinweise von Claude",
       "titleCount": "Claude fragt dich {count, plural, one {# Sache} other {# Dinge}}",
       "intro": "Prüfe das, bevor du den Lebenslauf schickst. Korrigiere eine Zeile unten in der Vorschau oder antworte Claude im selben Chat.",
-      "more": "Wo Claude deine Schlüsselwörter eingebaut hat und was es ausgelassen oder geändert hat"
+      "more": "Wo Claude deine Schlüsselwörter eingebaut hat und was es ausgelassen oder geändert hat",
+      "progress": "{answered} beantwortet · {filled} aus deinen gespeicherten Antworten",
+      "stretches": "Dehnungen: behalten, abschwächen oder streichen",
+      "stretchesList": "Dehnungen",
+      "questions": "Frag mich: Antwort eintippen",
+      "questionsList": "Frag mich",
+      "keep": "✓ Behalten",
+      "soften": "✎ Abschwächen",
+      "drop": "✕ Streichen",
+      "done": {
+        "keep": "✓ Behalten",
+        "soften": "✎ Abgeschwächt",
+        "drop": "✕ Gestrichen"
+      },
+      "change": "Ändern",
+      "changeFor": "Deine Wahl ändern für: {item}",
+      "howRead": "Wie soll es klingen?",
+      "answerPlaceholder": "Deine Antwort",
+      "answerFor": "Deine Antwort auf: {question}",
+      "fromSaved": "Aus deinen gespeicherten Antworten",
+      "remember": "Für die nächsten Jobs merken",
+      "rememberFor": "Deine Antwort merken auf: {question}",
+      "saveError": "Konnte nicht gespeichert werden: {error}",
+      "copy": "Meine Antworten für Claude kopieren ↗",
+      "copiedHint": "Füge sie im selben Claude-Chat ein. Füge danach Claudes neue Antwort in Schritt 2 ein.",
+      "copyBox": "Meine Antworten für Claude"
     },
     "stillOpen": {
       "never": "Noch nicht geprüft, ob die Anzeige noch online ist",
@@ -1308,7 +1348,11 @@
     "GMAIL_ACCOUNT_NOT_FOUND": "Dieses Gmail-Konto wurde nicht gefunden.",
     "SUGGESTION_NOT_FOUND": "Dieser Vorschlag wurde nicht gefunden.",
     "SUGGESTION_ANSWERED": "Du hast diesen Vorschlag schon beantwortet.",
-    "DESIGN_REPLY": "Füge Claudes ganze Antwort ein: Sie sollte ein JSON-Objekt mit den Design-Einstellungen sein."
+    "DESIGN_REPLY": "Füge Claudes ganze Antwort ein: Sie sollte ein JSON-Objekt mit den Design-Einstellungen sein.",
+    "LANGUAGES_LENGTH": "Die Sprachzeile darf höchstens 300 Zeichen lang sein.",
+    "ANSWER_LENGTH": "Frage und Antwort müssen je 1 bis {max} Zeichen lang sein.",
+    "ANSWER_NOT_FOUND": "Diese gespeicherte Antwort wurde nicht gefunden.",
+    "ANSWERS_INVALID": "Deine Antworten konnten nicht gelesen werden."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",

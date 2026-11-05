@@ -11,6 +11,7 @@ import { MATCH_FIT_OPTIONS, profileSchema, profileToForm, toProfileInput } from 
 import { Field, inputClass } from './Field';
 import { ResumeSuggestions } from './ResumeSuggestions';
 import { ResumeUpload } from './ResumeUpload';
+import { SavedAnswers } from './SavedAnswers';
 import { useLanguageName } from './useLanguageName';
 
 /** The tabs of My profile. The first three hold this one form; the others are separate. */
@@ -409,6 +410,32 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
         </section>
 
         <div className="space-y-6">
+          <section aria-labelledby="claude-answers-heading" className={card}>
+            <div>
+              <h2 id="claude-answers-heading" className="text-lg font-semibold text-slate-900">
+                {t('claudeAnswers.heading')}
+              </h2>
+              <p className="text-sm text-slate-600">{t('claudeAnswers.intro')}</p>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                {...register('fillSavedAnswers')}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              {t('claudeAnswers.fill')}
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                {...register('showStretches')}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              {t('claudeAnswers.stretches')}
+            </label>
+            <SavedAnswers />
+          </section>
+
           <section aria-labelledby="more-heading" className={card}>
             <h2 id="more-heading" className="text-lg font-semibold text-slate-900">
               {t('looking.heading')}

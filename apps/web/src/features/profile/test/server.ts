@@ -5,6 +5,7 @@ import type {
   MatcherResume,
   Profile,
   ResumeMatcherStatus,
+  SavedAnswer,
   WordTemplate,
 } from '@jobsearch/data';
 import { API_URL, RESUME_UPLOAD_URL } from '@jobsearch/data';
@@ -13,6 +14,9 @@ import { graphql } from 'msw/graphql';
 import { setupServer } from 'msw/node';
 
 export const api = graphql.link(API_URL);
+
+/** The test user's saved answers to Claude's questions. Tests start with none. */
+export const savedAnswers: SavedAnswer[] = [];
 
 /** Requests made in the current test, so tests can check what was sent. */
 export const requests: { operation: string; variables: Record<string, unknown> }[] = [];
@@ -83,6 +87,8 @@ export const PROFILE: Profile = {
   resumeMaxPages: 2,
   keepMySections: false,
   notifyNewMatches: true,
+  fillSavedAnswers: true,
+  showStretches: true,
   matchFitMin: 60,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
@@ -251,6 +257,30 @@ export const server = setupServer(
     return HttpResponse.json({
       data: { updateDocumentStyle: { ...STYLE, ...(variables['input'] as object) } },
     });
+  }),
+  api.query('SavedAnswers', () => HttpResponse.json({ data: { savedAnswers: [...savedAnswers] } })),
+  api.mutation('SaveAnswer', ({ variables }) => {
+    requests.push({ operation: 'SaveAnswer', variables });
+    const question = variables['question'] as string;
+    const row: SavedAnswer = {
+      id: savedAnswers.find((a) => a.question === question)?.id ?? savedAnswers.length + 1,
+      question,
+      answer: variables['answer'] as string,
+      updatedAt: '2026-11-05T12:00:00.000Z',
+    };
+    savedAnswers.splice(
+      0,
+      savedAnswers.length,
+      ...savedAnswers.filter((a) => a.question !== question),
+      row,
+    );
+    return HttpResponse.json({ data: { saveAnswer: row } });
+  }),
+  api.mutation('DeleteSavedAnswer', ({ variables }) => {
+    requests.push({ operation: 'DeleteSavedAnswer', variables });
+    const rest = savedAnswers.filter((a) => a.id !== variables['id']);
+    savedAnswers.splice(0, savedAnswers.length, ...rest);
+    return HttpResponse.json({ data: { deleteSavedAnswer: variables['id'] } });
   }),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: withOthers() } })),
   api.mutation('SaveLanguageResume', ({ variables }) => {

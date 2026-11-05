@@ -87,6 +87,8 @@ const PROFILE: Profile = {
   resumeMaxPages: 2,
   keepMySections: false,
   notifyNewMatches: true,
+  fillSavedAnswers: true,
+  showStretches: true,
   matchFitMin: 60,
   resumeSuggestions: [],
   resumeReviewPrompt: '',

@@ -371,6 +371,10 @@ export interface Profile {
   keepMySections: boolean;
   /** Tell me when a scheduled search finds new jobs that fit me. */
   notifyNewMatches: boolean;
+  /** Fill Claude's questions from your saved answers by themselves. */
+  fillSavedAnswers: boolean;
+  /** Show the Stretches of Claude's reply for a decision. */
+  showStretches: boolean;
   /** The Fit % a new job needs to count as a match. */
   matchFitMin: number;
   /** Suggestions for your master resume, worked out without AI. */
@@ -563,6 +567,8 @@ export interface JobResume {
   formAnswers: string;
   /** Claude's CHECK part: terms placed or skipped, stretches, questions for you. */
   claudeCheck: string;
+  /** Your decisions on Claude's questions for this job, as JSON text. "{}" when none. */
+  claudeAnswers: string;
   updatedAt: string;
   skillsCoverage: number | null;
   keywordsCoverage: number | null;
@@ -755,4 +761,12 @@ export interface AppNotification {
 export interface Notifications {
   items: AppNotification[];
   unread: number;
+}
+
+/** An answer you gave to one of Claude's questions, kept for the next jobs. */
+export interface SavedAnswer {
+  id: number;
+  question: string;
+  answer: string;
+  updatedAt: string;
 }

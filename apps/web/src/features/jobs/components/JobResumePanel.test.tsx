@@ -8,6 +8,7 @@ import {
   jobResume,
   rejectJobResumeUpload,
   requests,
+  savedAnswers,
   SAVED_RESUME,
   server,
 } from '../test/server';
@@ -138,11 +139,14 @@ describe('JobResumePanel', () => {
     );
   });
 
-  it('shows Claude’s questions from the CHECK part as a to-do list', async () => {
+  it('shows Claude’s questions from the CHECK part as things to answer', async () => {
     jobResume.current = { ...SAVED_RESUME };
     renderPanel();
     const notes = await screen.findByRole('region', { name: 'Notes from Claude' });
     expect(within(notes).getByText('Claude asks you 3 things')).toBeInTheDocument();
+    expect(
+      within(notes).getByText('0 answered · 0 filled from your saved answers'),
+    ).toBeInTheDocument();
     expect(within(notes).getByRole('list', { name: 'Stretches' })).toHaveTextContent(
       'React 19: only in a side project.',
     );
@@ -150,6 +154,88 @@ describe('JobResumePanel', () => {
       'Which year did you finish school?',
     );
     expect(within(notes).getByText(/graphql \(Replace\)/)).toBeInTheDocument();
+    // Nothing answered yet: nothing to copy for Claude.
+    expect(within(notes).queryByRole('button', { name: /Copy my answers/ })).toBeNull();
+  });
+
+  it('keeps, softens or drops a stretch, answers a question and copies it for Claude', async () => {
+    const user = userEvent.setup();
+    jobResume.current = { ...SAVED_RESUME };
+    renderPanel();
+    const notes = within(await screen.findByRole('region', { name: 'Notes from Claude' }));
+    const stretches = within(notes.getByRole('list', { name: 'Stretches' }));
+    const asks = within(notes.getByRole('list', { name: 'Ask me' }));
+    const sent = () =>
+      requests.filter((r) => r.operation === 'SaveClaudeAnswers').at(-1)?.variables;
+
+    // Keep: one click, then "Kept" with Change.
+    const keepLine = stretches.getAllByRole('listitem')[0]!;
+    await user.click(within(keepLine).getByRole('button', { name: '✓ Keep' }));
+    expect(within(keepLine).getByText('✓ Kept')).toBeInTheDocument();
+    expect(JSON.parse(sent()!['answers'] as string)).toEqual({
+      [keepLine.textContent.replace(/✓ Kept.*/, '')]: { choice: 'keep' },
+    });
+
+    // Soften: a box with your own words.
+    const softLine = within(stretches.getAllByRole('listitem')[1]!);
+    await user.click(softLine.getByRole('button', { name: '✎ Soften' }));
+    const box = softLine.getByRole('textbox');
+    await user.clear(box);
+    await user.type(box, 'React 19 (side project)');
+    await user.tab();
+    expect(softLine.getByText('✎ Softened')).toBeInTheDocument();
+
+    // Change takes a Kept line back to the three buttons; Drop is one click.
+    await user.click(within(keepLine).getByRole('button', { name: /Change your choice/ }));
+    await user.click(within(keepLine).getByRole('button', { name: '✕ Drop' }));
+    expect(within(keepLine).getByText('✕ Dropped')).toBeInTheDocument();
+
+    // A question: type, leave the box, and it is kept for the next jobs.
+    const school = asks.getByRole('textbox', { name: /Which year did you finish school/ });
+    await user.type(school, '2012');
+    await user.tab();
+    expect(requests).toContainEqual({
+      operation: 'SaveAnswer',
+      variables: { question: 'Which year did you finish school?', answer: '2012' },
+    });
+    expect(notes.getByText('3 answered · 0 filled from your saved answers')).toBeInTheDocument();
+
+    await user.click(notes.getByRole('button', { name: 'Copy my answers for Claude ↗' }));
+    const text = notes.getByRole<HTMLTextAreaElement>('textbox', {
+      name: 'My answers for Claude',
+    }).value;
+    expect(text).toContain('- Drop: ');
+    expect(text).toContain('Write it like this instead: React 19 (side project)');
+    expect(text).toContain('- Which year did you finish school?\n  2012');
+  });
+
+  it('fills a question from your saved answers, and a ticked-off Remember keeps it to this job', async () => {
+    const user = userEvent.setup();
+    savedAnswers.push({
+      id: 1,
+      question: 'Which year did you finish your school?',
+      answer: '2012',
+      updatedAt: '2026-11-05T12:00:00.000Z',
+    });
+    jobResume.current = { ...SAVED_RESUME };
+    renderPanel();
+    const notes = within(await screen.findByRole('region', { name: 'Notes from Claude' }));
+
+    const school = await notes.findByRole('textbox', { name: /Which year did you finish school/ });
+    await waitFor(() => {
+      expect(school).toHaveValue('2012');
+    });
+    expect(notes.getByText('From your saved answers')).toBeInTheDocument();
+    expect(notes.getByText('1 answered · 1 filled from your saved answers')).toBeInTheDocument();
+
+    // Change the answer and untick Remember: only this job gets the new one.
+    await user.click(notes.getByRole('checkbox', { name: /Remember your answer/ }));
+    await user.clear(school);
+    await user.type(school, '2013');
+    await user.tab();
+    expect(requests.some((r) => r.operation === 'SaveAnswer')).toBe(false);
+    expect(school).toHaveValue('2013');
+    expect(notes.queryByText('From your saved answers')).toBeNull();
   });
 
   it('rewrites a line with the keyword', async () => {
