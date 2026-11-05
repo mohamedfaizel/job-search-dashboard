@@ -101,71 +101,68 @@ function IconButton({
 }
 
 /**
- * A missing term. Skills get ✓ (you have it: the resume just doesn't say so) and ✕ (you don't,
- * or it isn't relevant). Keywords get no buttons: the prompt asks Claude to work in as many as
- * honestly fit. When you have a skill it goes with, the chip says so: a fair term for Claude to
- * add next to that experience.
+ * A missing skill or keyword. The ✓ (with a tooltip) says you have it: the resume just doesn't
+ * name it. There is no ✕: a term you don't have simply stays here and Claude leaves it out.
+ * When you have a skill it goes with, the chip says so: a fair term for Claude to add next to
+ * that experience.
  */
 export function MissingChip({
   term,
   relatedTo,
   onHave,
-  onRemove,
+  haveHint,
 }: {
   term: string;
   relatedTo: string | null;
-  onHave?: (() => void) | undefined;
-  onRemove?: (() => void) | undefined;
+  onHave: () => void;
+  haveHint: string;
 }) {
   const t = useTranslations('Jobs.fit');
   const related = relatedTo !== null;
-  const buttons = onHave !== undefined || onRemove !== undefined;
   return (
     <span
-      className={`${CHIP} ${buttons ? 'pr-0.5' : 'pr-2'} ${related ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-red-50 text-red-700 ring-red-200'}`}
+      className={`${CHIP} pr-0.5 ${related ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-red-50 text-red-700 ring-red-200'}`}
     >
       {term}
       {related && (
         <span className="font-normal opacity-75">{t('relatedTo', { term: relatedTo })}</span>
       )}
-      {onHave && (
-        <IconButton
-          label={t('iHave', { term })}
-          tooltip={t('iHaveHint')}
-          onClick={onHave}
-          className="ml-0.5 font-semibold text-emerald-700 hover:bg-emerald-100"
-        >
-          ✓
-        </IconButton>
-      )}
-      {onRemove && (
-        <IconButton
-          label={t('remove', { term })}
-          tooltip={t('removeHint')}
-          onClick={onRemove}
-          className="text-red-700 hover:bg-red-100"
-        >
-          ✕
-        </IconButton>
-      )}
+      <IconButton
+        label={t('iHave', { term })}
+        tooltip={haveHint}
+        onClick={onHave}
+        className="ml-0.5 font-semibold text-emerald-700 hover:bg-emerald-100"
+      >
+        ✓
+      </IconButton>
     </span>
   );
 }
 
-/** A term you said you have: blue, counted as covered, with Undo. */
-export function HaveChip({ term, onUndo }: { term: string; onUndo: () => void }) {
+/** A term you said you have: blue, counted as covered, with a red ✕ (tooltip) to take it back. */
+export function HaveChip({
+  term,
+  tag,
+  onUndo,
+}: {
+  term: string;
+  /** Marks a keyword, so it can be told from a skill. */
+  tag?: string | undefined;
+  onUndo: () => void;
+}) {
   const t = useTranslations('Jobs.fit');
   return (
-    <span className={`${CHIP} bg-sky-50 pr-0.5 text-sky-800 ring-sky-200`} title={t('haveHint')}>
+    <span className={`${CHIP} bg-sky-50 pr-0.5 text-sky-800 ring-sky-200`}>
       ✓ {term}
-      <button
-        type="button"
+      {tag && <span className="text-[11px] font-normal text-sky-600">{tag}</span>}
+      <IconButton
+        label={t('dontHave', { term })}
+        tooltip={t('dontHaveHint')}
         onClick={onUndo}
-        aria-label={t('dontHave', { term })}
-        className={`${CHIP_BUTTON} text-sky-700`}
+        className="font-semibold text-red-600 hover:bg-red-100"
       >
-        {t('undo')}
-      </button>
+        ✕
+      </IconButton>
     </span>
   );
 }
@@ -173,14 +170,13 @@ export function HaveChip({ term, onUndo }: { term: string; onUndo: () => void })
 function MissingList({
   label,
   terms,
+  haveHint,
   onHave,
-  onRemove,
 }: {
   label: string;
   terms: TermCheck[];
-  /** Left out for keywords: they get no buttons. */
-  onHave?: (term: string) => void;
-  onRemove?: (term: string) => void;
+  haveHint: string;
+  onHave: (term: string) => void;
 }) {
   if (terms.length === 0) return null;
   return (
@@ -190,18 +186,10 @@ function MissingList({
           <MissingChip
             term={t.term}
             relatedTo={t.relatedTo}
-            onHave={
-              onHave &&
-              (() => {
-                onHave(t.term);
-              })
-            }
-            onRemove={
-              onRemove &&
-              (() => {
-                onRemove(t.term);
-              })
-            }
+            haveHint={haveHint}
+            onHave={() => {
+              onHave(t.term);
+            }}
           />
         </li>
       ))}
@@ -371,8 +359,8 @@ function CheckedAgainst({ insights }: { insights: JobInsights }) {
 
 /**
  * The Fit tab: skills and keywords of the job, checked against your resume text. Worked out on
- * our server with plain word matching and TF-IDF, so it is instant and free (no AI). Remove what
- * doesn't apply with × before you copy the Apply kit prompt.
+ * our server with plain word matching and TF-IDF, so it is instant and free (no AI). Tick ✓ what
+ * you really have before you copy the Apply kit prompt.
  */
 export function InsightsPanel({ jobId }: { jobId: string }) {
   const errorText = useErrorText();
@@ -398,14 +386,17 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
   const removeTerm = (term: string, everywhere = false) => {
     remove.mutate({ jobId, term, everywhere });
   };
-  const setHave = (term: string, value: boolean) => {
-    have.mutate({ jobId, term, have: value });
+  const setHave = (term: string, value: boolean, keyword = false) => {
+    have.mutate({ jobId, term, have: value, keyword });
   };
   // Without a resume nothing is "found", so every term counts as missing.
   const isMissing = (t: TermCheck) => !t.youHave && (!hasResume || !t.inResume);
   const missingSkills = data.skills.filter(isMissing);
   const missingKeywords = data.keywords.filter(isMissing);
-  const youHave = [...data.skills, ...data.keywords].filter((t) => t.youHave);
+  const youHave = [
+    ...data.skills.filter((t) => t.youHave).map((t) => ({ ...t, keyword: false })),
+    ...data.keywords.filter((t) => t.youHave).map((t) => ({ ...t, keyword: true })),
+  ];
   const found = hasResume ? [...data.skills, ...data.keywords].filter((t) => t.inResume) : [];
   const changeError = remove.error ?? restore.error ?? have.error;
 
@@ -425,10 +416,10 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
           <MissingList
             label={t('missingSkillsLabel')}
             terms={missingSkills}
+            haveHint={t('iHaveHint')}
             onHave={(term) => {
               setHave(term, true);
             }}
-            onRemove={removeTerm}
           />
         </div>
       )}
@@ -439,7 +430,14 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
             {hasResume ? t('keywordsMissing') : t('keywords')} · {missingKeywords.length}
           </h4>
           <p className="text-xs text-slate-500">{t('keywordsHint')}</p>
-          <MissingList label={t('missingKeywordsLabel')} terms={missingKeywords} />
+          <MissingList
+            label={t('missingKeywordsLabel')}
+            terms={missingKeywords}
+            haveHint={t('iHaveKeywordHint')}
+            onHave={(term) => {
+              setHave(term, true, true);
+            }}
+          />
         </div>
       )}
 
@@ -450,12 +448,13 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
           </h4>
           <p className="text-xs text-slate-500">{t('youHaveHint')}</p>
           <ul className="flex flex-wrap gap-1.5" aria-label={t('youHave')}>
-            {youHave.map((t) => (
-              <li key={t.term}>
+            {youHave.map((item) => (
+              <li key={item.term}>
                 <HaveChip
-                  term={t.term}
+                  term={item.term}
+                  tag={item.keyword ? t('keywordTag') : undefined}
                   onUndo={() => {
-                    setHave(t.term, false);
+                    setHave(item.term, false);
                   }}
                 />
               </li>

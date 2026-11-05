@@ -88,6 +88,11 @@ export class ProfileModel {
   @Field(() => [String])
   skills!: string[];
 
+  @Field(() => [String], {
+    description: 'Words from job ads that are true for you; ✓ on the Fit tab adds them here',
+  })
+  keywords!: string[];
+
   @Field(() => [String], { description: 'Languages with your real level, e.g. "German A2"' })
   languages!: string[];
 
@@ -273,6 +278,13 @@ export class ProfileInput {
   @ArrayMaxSize(60)
   @MaxLength(80, LIST_RULES)
   skills: string[] = [];
+
+  @Field(() => [String], { defaultValue: [] })
+  @Transform(cleanList)
+  @IsArray()
+  @ArrayMaxSize(100)
+  @MaxLength(80, LIST_RULES)
+  keywords: string[] = [];
 
   @Field(() => [String], { defaultValue: [] })
   @Transform(cleanList)

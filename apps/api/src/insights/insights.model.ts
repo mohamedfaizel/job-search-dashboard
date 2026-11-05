@@ -199,6 +199,15 @@ export class JobInsightsModel {
   @Field({ description: 'False until you upload a resume or type it on your profile' })
   hasResume!: boolean;
 
+  @Field({
+    description:
+      'The languages line of the prompt, e.g. "German A2, English C1": your profile’s, or the one you edited for this job',
+  })
+  languages!: string;
+
+  @Field({ description: 'True when languages was edited for this job' })
+  languagesCustom!: boolean;
+
   @Field(() => [TermCheckModel], {
     description: 'The job’s skill tags, minus the ones you removed',
   })

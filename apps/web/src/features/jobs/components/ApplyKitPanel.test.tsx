@@ -70,43 +70,49 @@ describe('ApplyKitPanel', () => {
     expect(screen.getByText(/✓ Prompt copied/)).toBeInTheDocument();
   });
 
-  it('step 1 lets you tick the keywords you have, so the prompt asks Claude to add them', async () => {
-    const { user } = renderKit();
-    const box = await screen.findByRole('region', { name: 'Keywords the job wants' });
-    const missing = within(box).getByRole('list', { name: 'Not in your resume yet' });
-    expect(missing).toHaveTextContent('graphql');
-    expect(missing).toHaveTextContent('microfrontends');
-    expect(missing).not.toHaveTextContent('react');
-    expect(within(box).getByText('0 of 2 ticked')).toBeInTheDocument();
+  it('step 1 no longer repeats the keywords: they are ticked on the Fit tab', async () => {
+    renderKit();
+    await screen.findByRole('list', { name: 'What the prompt uses' });
+    expect(screen.queryByRole('region', { name: 'Keywords the job wants' })).toBeNull();
+  });
 
-    await user.click(within(box).getByRole('button', { name: 'I have graphql' }));
+  it('step 1 shows the languages line as a badge you click to edit for this job', async () => {
+    const { user } = renderKit();
+    const badge = await screen.findByRole('button', { name: /Languages: German A2, English C1/ });
+
+    await user.click(badge);
+    const box = screen.getByRole('textbox', { name: 'Languages on this resume' });
+    expect(box).toHaveValue('German A2, English C1');
+    await user.clear(box);
+    await user.type(box, 'German A2, English C2{Enter}');
     expect(requests).toContainEqual({
-      operation: 'SetHaveTerm',
-      variables: { jobId: 'job-1', term: 'graphql', have: true },
+      operation: 'SetJobLanguages',
+      variables: { jobId: 'job-1', languages: 'German A2, English C2' },
     });
     expect(
-      await within(box).findByRole('list', { name: 'You have these: Claude adds them' }),
-    ).toHaveTextContent('graphql');
-    expect(within(box).getByText('1 of 2 ticked')).toBeInTheDocument();
+      await screen.findByRole('button', { name: /Languages: German A2, English C2/ }),
+    ).toBeInTheDocument();
 
-    await user.click(within(box).getByRole('button', { name: 'Remove microfrontends' }));
+    // Reset goes back to the profile's line; Escape throws a draft away.
+    await user.click(screen.getByRole('button', { name: 'Reset' }));
     expect(requests).toContainEqual({
-      operation: 'RemoveInsightTerm',
-      variables: { jobId: 'job-1', term: 'microfrontends' },
+      operation: 'SetJobLanguages',
+      variables: { jobId: 'job-1', languages: '' },
     });
+    await user.click(
+      await screen.findByRole('button', { name: /Languages: German A2, English C1/ }),
+    );
+    await user.type(screen.getByRole('textbox', { name: 'Languages on this resume' }), 'x{Escape}');
+    expect(screen.queryByRole('textbox', { name: 'Languages on this resume' })).toBeNull();
+    expect(requests.filter((r) => r.operation === 'SetJobLanguages')).toHaveLength(2);
   });
 
   it('says the resume is written in German, with your real German level', async () => {
-    server.use(
-      api.query('MyProfile', () =>
-        HttpResponse.json({ data: { myProfile: { ...PROFILE, languages: ['German A2'] } } }),
-      ),
-    );
     renderKit();
 
     const used = await screen.findByRole('list', { name: 'What the prompt uses' });
     expect(used).toHaveTextContent('Written in German (B2 required)');
-    expect(await within(used).findByText('German A2 on the resume')).toBeInTheDocument();
+    expect(used).toHaveTextContent('Languages: German A2, English C1');
   });
 
   it('step 2 saves Claude’s reply straight from the clipboard', async () => {

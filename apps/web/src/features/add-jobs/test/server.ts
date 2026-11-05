@@ -66,6 +66,7 @@ const PROFILE: Profile = {
   targetRoles: ['Frontend Engineer', 'React Developer'],
   locations: ['Berlin'],
   skills: [],
+  keywords: [],
   languages: [],
   yearsExperience: null,
   linkedinUrl: null,

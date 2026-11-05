@@ -334,6 +334,8 @@ export interface Profile {
   targetRoles: string[];
   locations: string[];
   skills: string[];
+  /** Words from job ads that are true for you; ✓ on the Fit tab adds them. */
+  keywords: string[];
   /** Languages with your real level, e.g. "German A2". */
   languages: string[];
   yearsExperience: number | null;
@@ -516,6 +518,10 @@ export interface JobInsights {
   /** The language of the master resume this job was checked against. */
   checkedAgainst: string;
   hasResume: boolean;
+  /** The languages line of the prompt: your profile's, or the one edited for this job. */
+  languages: string;
+  /** True when `languages` was edited for this job. */
+  languagesCustom: boolean;
   skills: TermCheck[];
   keywords: TermCheck[];
   /** Skills and keywords you removed with ×. */

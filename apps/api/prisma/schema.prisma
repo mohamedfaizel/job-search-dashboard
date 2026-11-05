@@ -87,6 +87,7 @@ model User {
   mailSuggestions MailSuggestion[]
   applyQueue      ApplyQueueItem[]
   jobFits         JobFit[]
+  jobLanguages    JobLanguages[]
   tableSettings   TableSettings?
   notifications   Notification[]
   /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
@@ -116,6 +117,9 @@ model Profile {
   targetRoles       String[]  @default([])
   locations         String[]  @default([])
   skills            String[]  @default([])
+  /// Words from job ads that are true for you ("wcag", "code reviews"), ticked on the Fit tab.
+  /// Counted as covered like skills, but kept apart so Skills stays a list of tools.
+  keywords          String[]  @default([])
   /// Languages you speak with your real level, e.g. "German A2". Copied into the resume prompt.
   languages         String[]  @default([])
   yearsExperience   Int?
@@ -366,6 +370,7 @@ model Job {
   mailSuggestions MailSuggestion[]
   applyQueue      ApplyQueueItem[]
   fits            JobFit[]
+  jobLanguages    JobLanguages[]
 
   @@index([postedAt])
   @@index([companyId])
@@ -549,6 +554,18 @@ model ApplyQueueItem {
   addedAt  DateTime @default(now())
   /// Your order for the queue (1 first). Gaps are fine: the list is numbered 1, 2, 3 when read.
   position Int      @default(0)
+
+  @@id([userId, jobId])
+}
+
+/// The languages line of the Apply kit prompt, edited for one job. No row = your profile's
+/// Languages.
+model JobLanguages {
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId  String
+  text   String
 
   @@id([userId, jobId])
 }

@@ -229,6 +229,14 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               <input {...register('skills')} {...a11y('skills')} className={inputClass} />
             </Field>
             <Field
+              label={t('about.keywords')}
+              htmlFor="keywords"
+              error={errors.keywords?.message}
+              hint={t('about.keywordsHint')}
+            >
+              <input {...register('keywords')} {...a11y('keywords')} className={inputClass} />
+            </Field>
+            <Field
               label={t('about.languages')}
               htmlFor="languages"
               error={errors.languages?.message}

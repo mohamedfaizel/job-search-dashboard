@@ -42,6 +42,7 @@ export function profileSchema(t: ErrorText) {
     targetRoles: list(20),
     locations: list(20),
     skills: list(60),
+    keywords: list(100),
     languages: list(10),
     yearsExperience: z
       .string()
@@ -106,6 +107,7 @@ export function profileToForm(profile: Profile, accountName = ''): ProfileFormVa
     targetRoles: profile.targetRoles.join(', '),
     locations: profile.locations.join(', '),
     skills: profile.skills.join(', '),
+    keywords: profile.keywords.join(', '),
     languages: profile.languages.join(', '),
     yearsExperience: profile.yearsExperience === null ? '' : String(profile.yearsExperience),
     linkedinUrl: profile.linkedinUrl ?? '',
@@ -145,6 +147,7 @@ export function toProfileInput(values: ProfileFormValues): ProfileInput {
     targetRoles: splitList(values.targetRoles),
     locations: splitList(values.locations),
     skills: splitList(values.skills),
+    keywords: splitList(values.keywords),
     languages: splitList(values.languages),
     yearsExperience: values.yearsExperience === '' ? null : Number(values.yearsExperience),
     linkedinUrl: orNull(values.linkedinUrl),

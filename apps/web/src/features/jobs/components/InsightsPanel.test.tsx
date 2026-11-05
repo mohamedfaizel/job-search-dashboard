@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { Intl } from '@/test/intl';
-import { api, INSIGHTS, requests, server } from '../test/server';
+import { api, INSIGHTS, removedTerms, requests, server } from '../test/server';
 import { InsightsPanel } from './InsightsPanel';
 
 function renderPanel() {
@@ -45,30 +45,25 @@ describe('InsightsPanel', () => {
     ).toBeInTheDocument();
     const missingKeywords = screen.getByRole('list', { name: 'Missing keywords' });
     expect(within(missingKeywords).getByText('microfrontends')).toBeInTheDocument();
-    // ✓ and ✕ are for skills only; Claude works the keywords in.
-    expect(within(missingSkills).getByRole('button', { name: 'I have graphql' })).toHaveTextContent(
-      '✓',
-    );
-    expect(
-      within(missingSkills).getByRole('button', { name: 'Remove graphql' }),
-    ).toHaveAccessibleDescription('I don’t have it: remove from this job');
-    expect(within(missingKeywords).queryByRole('button')).toBeNull();
-    expect(screen.getByText(/use as many of these as honestly fit/)).toBeInTheDocument();
+    // Skills and keywords both get a ✓ with a tooltip, and no ✕ or "I have it" text.
+    const tickSkill = within(missingSkills).getByRole('button', { name: 'I have graphql' });
+    expect(tickSkill).toHaveTextContent('✓');
+    expect(tickSkill).toHaveAccessibleDescription('I have this skill');
+    expect(within(missingSkills).queryByRole('button', { name: /Remove/ })).toBeNull();
+    const tickKeyword = within(missingKeywords).getByRole('button', {
+      name: 'I have microfrontends',
+    });
+    expect(tickKeyword).toHaveAccessibleDescription(/add it to my profile’s Keywords/);
+    expect(screen.getByText(/They go to your profile’s Keywords/)).toBeInTheDocument();
   });
 
-  it('removes a term with × and puts it back', async () => {
+  it('folds away what you removed earlier, with "all jobs" and Put back', async () => {
+    removedTerms.push({ term: 'graphql', everywhere: false });
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(await screen.findByRole('button', { name: 'Remove graphql' }));
-
-    expect(requests).toContainEqual({
-      operation: 'RemoveInsightTerm',
-      variables: { jobId: 'job-1', term: 'graphql', everywhere: false },
-    });
     const removed = await screen.findByRole('list', { name: 'Removed terms' });
     expect(within(removed).getByText('graphql')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: '80 percent fit' })).toBeInTheDocument();
     expect(screen.queryByRole('list', { name: 'Missing skills' })).not.toBeInTheDocument();
 
     await user.click(within(removed).getByRole('button', { name: 'Remove graphql from all jobs' }));
@@ -85,7 +80,25 @@ describe('InsightsPanel', () => {
     expect(await screen.findByRole('list', { name: 'Missing skills' })).toBeInTheDocument();
   });
 
-  it('"I have it" moves a missing skill to "You have these", and Undo moves it back', async () => {
+  it('ticking a keyword adds it to your profile’s Keywords, tagged "keyword"', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(await screen.findByRole('button', { name: 'I have microfrontends' }));
+
+    expect(requests).toContainEqual({
+      operation: 'SetHaveTerm',
+      variables: { jobId: 'job-1', term: 'microfrontends', have: true, keyword: true },
+    });
+    const yours = await screen.findByRole('list', { name: 'You have these' });
+    expect(within(yours).getByText(/microfrontends/)).toBeInTheDocument();
+    expect(within(yours).getByText('keyword')).toBeInTheDocument();
+    // The red ✕ takes it back off, with a tooltip.
+    const undo = within(yours).getByRole('button', { name: 'I don’t have microfrontends' });
+    expect(undo).toHaveAccessibleDescription('Remove from my profile');
+  });
+
+  it('"I have it" moves a missing skill to "You have these", and ✕ moves it back', async () => {
     const user = userEvent.setup();
     renderPanel();
 
@@ -93,7 +106,7 @@ describe('InsightsPanel', () => {
 
     expect(requests).toContainEqual({
       operation: 'SetHaveTerm',
-      variables: { jobId: 'job-1', term: 'graphql', have: true },
+      variables: { jobId: 'job-1', term: 'graphql', have: true, keyword: false },
     });
     const yours = await screen.findByRole('list', { name: 'You have these' });
     expect(within(yours).getByText(/graphql/)).toBeInTheDocument();
@@ -104,7 +117,7 @@ describe('InsightsPanel', () => {
     await user.click(within(yours).getByRole('button', { name: 'I don’t have graphql' }));
     expect(requests).toContainEqual({
       operation: 'SetHaveTerm',
-      variables: { jobId: 'job-1', term: 'graphql', have: false },
+      variables: { jobId: 'job-1', term: 'graphql', have: false, keyword: false },
     });
     expect(await screen.findByRole('list', { name: 'Missing skills' })).toBeInTheDocument();
   });
@@ -126,7 +139,7 @@ describe('InsightsPanel', () => {
 
     const missing = await screen.findByRole('list', { name: 'Missing skills' });
     expect(within(missing).getByText('(you have graphql)')).toBeInTheDocument();
-    expect(within(missing).getByRole('button', { name: 'Remove apollo' })).toBeInTheDocument();
+    expect(within(missing).getByRole('button', { name: 'I have apollo' })).toBeInTheDocument();
   });
 
   it('marks a German level read from the ad’s words as an estimate', async () => {

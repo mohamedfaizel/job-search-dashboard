@@ -32,6 +32,7 @@ export {
   useRemoveInsightTerm,
   useMatchJobResume,
   useSetHaveTerm,
+  useSetJobLanguages,
   useRecalculateFit,
   useRestoreInsightTerm,
   useSaveInterviewPrep,

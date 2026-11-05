@@ -70,6 +70,8 @@ export const INSIGHTS: JobInsights = {
   resumeLanguage: 'de',
   checkedAgainst: 'en',
   hasResume: true,
+  languages: 'German A2, English C1',
+  languagesCustom: false,
   skills: [
     { term: 'react', inResume: true, youHave: false, relatedTo: null },
     { term: 'graphql', inResume: false, youHave: false, relatedTo: null },
@@ -125,6 +127,9 @@ export const removedTerms: RemovedTerm[] = [];
 /** Terms the user said they have ("I have it"), like the Skills list on My profile. */
 export const haveTerms: string[] = [];
 
+/** The languages line the user edited for job-1; null = their profile's. */
+export const jobLanguages: { current: string | null } = { current: null };
+
 /** INSIGHTS minus the removed terms, like the real API (score fixed at 80 once any is gone). */
 function insightsNow(): JobInsights {
   const kept = (t: { term: string }) => !removedTerms.some((r) => r.term === t.term);
@@ -134,16 +139,16 @@ function insightsNow(): JobInsights {
   });
   const skills = INSIGHTS.skills.map(mark);
   const keywords = INSIGHTS.keywords.map(mark);
-  if (removedTerms.length === 0 && haveTerms.length === 0)
-    return {
-      ...INSIGHTS,
-      jobResume: jobResume.current,
-      interviewPrep: interviewPrep.current,
-    };
-  return {
+  const common = {
     ...INSIGHTS,
+    languages: jobLanguages.current ?? INSIGHTS.languages,
+    languagesCustom: jobLanguages.current !== null,
     jobResume: jobResume.current,
     interviewPrep: interviewPrep.current,
+  };
+  if (removedTerms.length === 0 && haveTerms.length === 0) return common;
+  return {
+    ...common,
     skills: skills.filter(kept),
     keywords: keywords.filter(kept),
     removed: [...removedTerms],
@@ -211,6 +216,7 @@ export const PROFILE: Profile = {
   targetRoles: [],
   locations: [],
   skills: [],
+  keywords: [],
   languages: ['German A2'],
   yearsExperience: 4,
   linkedinUrl: null,
@@ -449,6 +455,12 @@ const handlers = [
     const others = haveTerms.filter((t) => t !== term);
     haveTerms.splice(0, haveTerms.length, ...others, ...(variables['have'] ? [term] : []));
     return HttpResponse.json({ data: { setHaveTerm: insightsNow() } });
+  }),
+  api.mutation('SetJobLanguages', ({ variables }) => {
+    requests.push({ operation: 'SetJobLanguages', variables });
+    const text = ((variables['languages'] as string | null) ?? '').trim();
+    jobLanguages.current = text || null;
+    return HttpResponse.json({ data: { setJobLanguages: insightsNow() } });
   }),
   api.mutation('MatchJobResume', ({ variables }) => {
     requests.push({ operation: 'MatchJobResume', variables });

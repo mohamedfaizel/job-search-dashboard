@@ -91,6 +91,28 @@ const SET_HAVE = /* GraphQL */ `
   }
 `;
 
+const SET_HAVE_KEYWORD = /* GraphQL */ `
+  mutation SetHaveKeyword($jobId: ID!, $term: String!, $have: Boolean, $keyword: Boolean) {
+    setHaveTerm(jobId: $jobId, term: $term, have: $have, keyword: $keyword) {
+      skills {
+        term
+        youHave
+      }
+      prompt
+    }
+  }
+`;
+
+const SET_LANGUAGES = /* GraphQL */ `
+  mutation SetLanguages($jobId: ID!, $languages: String) {
+    setJobLanguages(jobId: $jobId, languages: $languages) {
+      languages
+      languagesCustom
+      prompt
+    }
+  }
+`;
+
 const REMOVE = /* GraphQL */ `
   mutation Remove($jobId: ID!, $term: String!, $everywhere: Boolean) {
     removeInsightTerm(jobId: $jobId, term: $term, everywhere: $everywhere) {
@@ -434,6 +456,79 @@ describe('job insights without AI', () => {
     expect((await t.prisma.profile.findUniqueOrThrow({ where: { userId: 2 } })).skills).toEqual([
       'TypeScript',
     ]);
+  });
+
+  it('a ticked keyword goes to Keywords, not Skills, and still counts as covered', async () => {
+    const job = await addJob({ title: 'Designer', skills: ['wcag'], description: '' });
+    await t.prisma.profile.create({
+      data: { userId: 2, resumeText: 'Designer.', skills: ['Figma'] },
+    });
+    type Have = { setHaveTerm: { skills: { term: string; youHave: boolean }[]; prompt: string } };
+    const res = await t.asUser<Have>(SET_HAVE_KEYWORD, {
+      jobId: job.id,
+      term: 'wcag',
+      keyword: true,
+    });
+    expect(res.errors).toBeUndefined();
+    expect(res.data!.setHaveTerm.skills).toEqual([{ term: 'wcag', youHave: true }]);
+    expect(res.data!.setHaveTerm.prompt).toContain('- wcag');
+    let profile = await t.prisma.profile.findUniqueOrThrow({ where: { userId: 2 } });
+    expect(profile.keywords).toEqual(['wcag']);
+    expect(profile.skills).toEqual(['Figma']);
+    // Ticking twice keeps one.
+    await t.asUser(SET_HAVE_KEYWORD, { jobId: job.id, term: 'WCAG', keyword: true });
+    profile = await t.prisma.profile.findUniqueOrThrow({ where: { userId: 2 } });
+    expect(profile.keywords).toEqual(['wcag']);
+
+    // Removing it takes it off the Keywords list.
+    const undone = await t.asUser<Have>(SET_HAVE_KEYWORD, {
+      jobId: job.id,
+      term: 'wcag',
+      have: false,
+    });
+    expect(undone.data!.setHaveTerm.skills[0]).toMatchObject({ youHave: false });
+    profile = await t.prisma.profile.findUniqueOrThrow({ where: { userId: 2 } });
+    expect(profile.keywords).toEqual([]);
+  });
+
+  it('edits the languages line for one job and resets it to your profile’s', async () => {
+    const job = await addJob({ title: 'Designer', skills: ['figma'], description: '' });
+    await t.prisma.profile.create({
+      data: { userId: 2, resumeText: 'Designer.', languages: ['German A2', 'English C1'] },
+    });
+    type Langs = {
+      setJobLanguages: { languages: string; languagesCustom: boolean; prompt: string };
+    };
+    const before = await insights(job.id);
+    expect(before.prompt).toContain('German A2');
+
+    const set = await t.asUser<Langs>(SET_LANGUAGES, {
+      jobId: job.id,
+      languages: ' German A2 (B1 course), English C2 ',
+    });
+    expect(set.errors).toBeUndefined();
+    expect(set.data!.setJobLanguages).toMatchObject({
+      languages: 'German A2 (B1 course), English C2',
+      languagesCustom: true,
+    });
+    expect(set.data!.setJobLanguages.prompt).toContain('German A2 (B1 course)');
+    expect(set.data!.setJobLanguages.prompt).not.toContain('English C1');
+    // Another job keeps your profile's line.
+    const other = await addJob({ title: 'Other', skills: ['figma'], description: '' });
+    expect((await insights(other.id)).prompt).toContain('English C1');
+
+    const reset = await t.asUser<Langs>(SET_LANGUAGES, { jobId: job.id, languages: '' });
+    expect(reset.data!.setJobLanguages).toMatchObject({
+      languages: 'German A2, English C1',
+      languagesCustom: false,
+    });
+    const tooLong = await t.asUser<Langs>(SET_LANGUAGES, {
+      jobId: job.id,
+      languages: 'x'.repeat(301),
+    });
+    expect(tooLong.errors?.[0]?.extensions).toMatchObject({ apiCode: 'TERM_LENGTH' });
+    const missing = await t.asUser<Langs>(SET_LANGUAGES, { jobId: '999999', languages: 'x' });
+    expect(missing.errors?.[0]?.extensions).toMatchObject({ apiCode: 'JOB_NOT_FOUND' });
   });
 
   it('checks a German ad against your German resume and starts the prompt from it', async () => {
