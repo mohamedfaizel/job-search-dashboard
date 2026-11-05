@@ -1,4 +1,4 @@
-import type { User } from '@jobsearch/data';
+import type { Notifications, User } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -16,6 +16,9 @@ export const ADMIN: User = {
 
 /** Languages saved with setLocale, in order. */
 export const savedLocales: string[] = [];
+
+/** The fake API's bell list. Tests put notifications in it. */
+export const bell: Notifications = { items: [], unread: 0 };
 
 /** The fake API's session: who the cookie says is logged in. */
 export const session: { user: User | null } = { user: null };
@@ -40,6 +43,13 @@ export const server = setupServer(
     savedLocales.push(locale);
     if (session.user) session.user = { ...session.user, locale };
     return HttpResponse.json({ data: { setLocale: session.user } });
+  }),
+  api.query('Notifications', () => HttpResponse.json({ data: { notifications: bell } })),
+  api.mutation('MarkNotificationsRead', () => {
+    const count = bell.unread;
+    bell.items = bell.items.map((item) => ({ ...item, readAt: item.readAt ?? 'now' }));
+    bell.unread = 0;
+    return HttpResponse.json({ data: { markNotificationsRead: count } });
   }),
   api.mutation('LogOut', () => {
     session.user = null;

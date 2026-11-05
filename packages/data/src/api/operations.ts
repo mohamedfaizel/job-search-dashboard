@@ -371,6 +371,8 @@ const PROFILE_FIELDS = /* GraphQL */ `
   achievements
   resumeMaxPages
   keepMySections
+  notifyNewMatches
+  matchFitMin
   resumeSuggestions {
     code
     detail
@@ -932,5 +934,34 @@ export const RESUME_PDF_CHECK = /* GraphQL */ `
         detail
       }
     }
+  }
+`;
+
+export const NOTIFICATIONS = /* GraphQL */ `
+  query Notifications {
+    notifications {
+      unread
+      items {
+        id
+        kind
+        searchName
+        count
+        fitMin
+        readAt
+        createdAt
+        jobs {
+          id
+          title
+          company
+          fit
+        }
+      }
+    }
+  }
+`;
+
+export const MARK_NOTIFICATIONS_READ = /* GraphQL */ `
+  mutation MarkNotificationsRead {
+    markNotificationsRead
   }
 `;

@@ -7,7 +7,7 @@ import type { FieldErrors } from 'react-hook-form';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useErrorText } from '../../../i18n/useErrorText';
 import type { ProfileFormValues } from '../schema';
-import { profileSchema, profileToForm, toProfileInput } from '../schema';
+import { MATCH_FIT_OPTIONS, profileSchema, profileToForm, toProfileInput } from '../schema';
 import { Field, inputClass } from './Field';
 import { ResumeSuggestions } from './ResumeSuggestions';
 import { ResumeUpload } from './ResumeUpload';
@@ -285,6 +285,35 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               />
             </Field>
           </div>
+          <fieldset className="space-y-3 rounded-md border border-slate-200 p-4">
+            <legend className="px-1 text-sm font-medium text-slate-900">
+              {t('notify.heading')}
+            </legend>
+            <label className="flex items-start gap-2 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                {...register('notifyNewMatches')}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300"
+              />
+              <span>
+                {t('notify.newMatches')}
+                <span className="block text-xs text-slate-500">{t('notify.newMatchesHint')}</span>
+              </span>
+            </label>
+            <Field label={t('notify.fitMin')} htmlFor="matchFitMin" hint={t('notify.fitMinHint')}>
+              <select
+                {...register('matchFitMin')}
+                {...a11y('matchFitMin')}
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
+              >
+                {MATCH_FIT_OPTIONS.map((fit) => (
+                  <option key={fit} value={fit}>
+                    {t('notify.fitOption', { fit: Number(fit) })}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </fieldset>
         </section>
       </div>
 

@@ -88,6 +88,7 @@ model User {
   applyQueue      ApplyQueueItem[]
   jobFits         JobFit[]
   tableSettings   TableSettings?
+  notifications   Notification[]
   /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
   jobsLastSeenAt  DateTime?
   /// Jobs imported after this are "New" for this visit: the end of your previous visit.
@@ -164,6 +165,9 @@ model Profile {
   resumeMaxPages    Int       @default(2)
   /// Tailored resumes keep every section heading of your resume, in your order.
   keepMySections    Boolean   @default(false)
+  /// Tell me when a scheduled search finds new jobs with at least `matchFitMin` Fit %.
+  notifyNewMatches  Boolean   @default(true)
+  matchFitMin       Int       @default(60)
   /// Your own fields for anything else forms ask: [{ "label": "Xing", "value": "…" }].
   customFields      Json      @default("[]")
   updatedAt         DateTime  @updatedAt
@@ -608,4 +612,21 @@ model MailSuggestion {
 
   @@unique([accountId, messageId])
   @@index([userId, state])
+}
+
+/// Something the app tells one user in the bell list, e.g. "3 new jobs match your search".
+/// `kind` says which message it is and `data` holds its numbers and links, so the web app shows
+/// it in the user's own language.
+model Notification {
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  /// NEW_MATCHES: a scheduled search found jobs that fit you.
+  kind      String
+  data      Json      @default("{}")
+  /// When you opened the bell list after it came. Null = unread.
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
 }

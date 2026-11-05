@@ -722,6 +722,9 @@ type Mutation {
   """
   markFollowedUp(jobId: ID!): [Application!]!
 
+  """Mark all your notifications read. Returns how many"""
+  markNotificationsRead: Int!
+
   """
   Score your resume against a job with Resume-Matcher. Returns at once as PENDING; poll jobMatch until READY or FAILED (a minute or two). Uses AI credits
   """
@@ -885,6 +888,47 @@ type MyDesign {
   twoColumns: Boolean!
 }
 
+"""
+Something the app tells you in the bell list. The web app writes the words from `kind` and the numbers, in your language
+"""
+type Notification {
+  """How many jobs it is about"""
+  count: Int!
+  createdAt: DateTime!
+
+  """The Fit % a job needed to count"""
+  fitMin: Int!
+  id: Int!
+
+  """The best few jobs, best fit first"""
+  jobs: [NotificationJob!]!
+
+  """NEW_MATCHES: a scheduled search found new jobs that fit you"""
+  kind: String!
+
+  """When you read it. Null = unread"""
+  readAt: DateTime
+
+  """The saved search that found them. Empty when not about a search"""
+  searchName: String!
+}
+
+"""A job a notification points to"""
+type NotificationJob {
+  company: String!
+
+  """Your Fit % for it when the notification was made"""
+  fit: Int!
+  id: String!
+  title: String!
+}
+
+"""Your latest notifications and how many are unread"""
+type Notifications {
+  items: [Notification!]!
+  unread: Int!
+}
+
 """The finished resume PDF in your template, checked from its text layer"""
 type PdfCheck {
   items: [PdfCheckItem!]!
@@ -960,12 +1004,18 @@ type Profile {
   lastName: String!
   linkedinUrl: String
   locations: [String!]!
+
+  """The Fit % a new job needs to count as a match (1-100)"""
+  matchFitMin: Int!
   nationality: String!
 
   """
   Notice period or earliest start, e.g. "1 month"
   """
   noticePeriod: String!
+
+  """Tell me when a scheduled search finds new jobs that fit me"""
+  notifyNewMatches: Boolean!
 
   """
   Your master resume in other languages, used for jobs in those languages
@@ -1051,8 +1101,10 @@ input ProfileInput {
   lastName: String! = ""
   linkedinUrl: String
   locations: [String!]! = []
+  matchFitMin: Int! = 60
   nationality: String! = ""
   noticePeriod: String! = ""
+  notifyNewMatches: Boolean! = true
   phone: String! = ""
   relocation: String! = ""
 
@@ -1123,6 +1175,9 @@ type Query {
   Your saved Job posts filters and sort, as JSON text. Null if you never saved any
   """
   myTableSettings: String
+
+  """Your bell list, newest first"""
+  notifications: Notifications!
   resumeMatcherStatus(
     """
     Also send a test message to the AI provider (costs a fraction of a cent)

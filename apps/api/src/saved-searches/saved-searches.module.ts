@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { SyncModule } from '../sync/sync.module';
 import { SavedSearchesResolver } from './saved-searches.resolver';
 import { SavedSearchesService } from './saved-searches.service';
 import { SchedulerService } from './scheduler.service';
 
 @Module({
-  imports: [SyncModule],
+  imports: [SyncModule, NotificationsModule],
   providers: [SavedSearchesService, SavedSearchesResolver, SchedulerService],
   exports: [SavedSearchesService],
 })

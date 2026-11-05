@@ -332,6 +332,14 @@
       "askClaude": "Ask Claude for more suggestions",
       "askClaudeHint": "Paste it into Claude: it reviews your resume like a recruiter and lists the top fixes.",
       "askClaudeBox": "Review prompt"
+    },
+    "notify": {
+      "heading": "Notifications",
+      "newMatches": "Tell me when a scheduled search finds new jobs that fit me",
+      "newMatchesHint": "You get a 🔔 notification with the best jobs and a link to each.",
+      "fitMin": "A job fits me from",
+      "fitMinHint": "Its Fit % must be at least this.",
+      "fitOption": "{fit}% Fit"
     }
   },
   "Jobs": {
@@ -987,6 +995,12 @@
         "UNREACHABLE": "the site couldn’t be reached",
         "NO_LINK": "this job has no link to check"
       }
+    },
+    "toasts": {
+      "replySaved": "Reply saved. Your resume PDF is downloading.",
+      "resumeUploaded": "Resume saved.",
+      "changesSaved": "Changes saved.",
+      "keywordAdded": "“{term}” is in the preview now. Press “Save changes” to keep it."
     }
   },
   "Tracker": {
@@ -1289,5 +1303,18 @@
     "SUGGESTION_NOT_FOUND": "That suggestion was not found.",
     "SUGGESTION_ANSWERED": "You already answered that suggestion.",
     "DESIGN_REPLY": "Paste Claude’s whole reply: it should be one JSON object with the design settings."
+  },
+  "Notifications": {
+    "bell": "Notifications",
+    "bellUnread": "Notifications, {count} unread",
+    "title": "Notifications",
+    "unread": "unread",
+    "empty": "Nothing yet. When a scheduled search finds new jobs that fit you, they show up here.",
+    "newMatches": "{count, plural, one {# new job fits you} other {# new jobs fit you}} from the search “{search}”",
+    "fitAtLeast": "Fit {fit}% or more",
+    "fit": "{fit}% fit",
+    "more": "{count, plural, one {# more} other {# more}} in Job posts (marked New)",
+    "show": "Show",
+    "close": "Close"
   }
 }

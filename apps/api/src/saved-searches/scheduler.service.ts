@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { getErrorMessage } from '../common/errors';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SavedSearchesService } from './saved-searches.service';
 import { nextRunAfter, startOfDay } from './schedule';
@@ -19,7 +20,8 @@ const formatTime = (date: Date) =>
 /**
  * Runs saved searches on their schedule. Every minute it picks the searches whose
  * nextRunAt has passed and imports "only new" jobs for each, unless that could push
- * today's credits over DAILY_CREDIT_CAP.
+ * today's credits over DAILY_CREDIT_CAP. When a run finds new jobs, every user they fit
+ * gets a notification.
  */
 @Injectable()
 export class SchedulerService {
@@ -30,6 +32,7 @@ export class SchedulerService {
     private readonly prisma: PrismaService,
     private readonly savedSearches: SavedSearchesService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   get cap(): number {
@@ -83,18 +86,36 @@ export class SchedulerService {
       }
 
       try {
+        const startedAt = new Date();
         const result = await this.savedSearches.run(search.id, false, { scheduled: true });
         await this.note(
           search.id,
           `Ran at ${formatTime(now)}: ${result.created} new, ${result.updated} already saved.`,
         );
         ran += 1;
+        if (result.created > 0) await this.tellUsers(search.name, startedAt);
       } catch (error) {
         this.logger.warn(`Scheduled run of "${search.name}" failed: ${getErrorMessage(error)}`);
         await this.note(search.id, `Failed at ${formatTime(now)}: ${getErrorMessage(error)}`);
       }
     }
     return ran;
+  }
+
+  /** Tells each user about the jobs this run imported that fit them. Never fails the run. */
+  private async tellUsers(searchName: string, startedAt: Date): Promise<void> {
+    try {
+      const created = await this.prisma.job.findMany({
+        where: { createdAt: { gte: startedAt } },
+        select: { id: true },
+      });
+      await this.notifications.newMatches(
+        searchName,
+        created.map((job) => job.id),
+      );
+    } catch (error) {
+      this.logger.warn(`Could not send new-match notifications: ${getErrorMessage(error)}`);
+    }
   }
 
   private async note(id: number, scheduleNote: string): Promise<void> {

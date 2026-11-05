@@ -13,6 +13,7 @@ import { useErrorText } from '../i18n/useErrorText';
 import { FlagStripe } from './FlagStripe';
 import { LanguageSwitch } from './LanguageSwitch';
 import { Logo } from './Logo';
+import { NotificationBell } from './NotificationBell';
 
 interface NavItem {
   href: string;
@@ -166,6 +167,7 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
                 )}
               </span>
               <span className="flex items-center gap-2">
+                <NotificationBell />
                 <LanguageSwitch
                   onDark
                   onPick={(picked) => {

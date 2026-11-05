@@ -81,6 +81,8 @@ export const PROFILE: Profile = {
   achievements: '',
   resumeMaxPages: 2,
   keepMySections: false,
+  notifyNewMatches: true,
+  matchFitMin: 60,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',

@@ -161,6 +161,12 @@ export class ProfileModel {
   })
   keepMySections!: boolean;
 
+  @Field({ description: 'Tell me when a scheduled search finds new jobs that fit me' })
+  notifyNewMatches!: boolean;
+
+  @Field(() => Int, { description: 'The Fit % a new job needs to count as a match (1-100)' })
+  matchFitMin!: number;
+
   @Field(() => [ResumeSuggestionModel], {
     description: 'Suggestions for your master resume, worked out without AI',
   })
@@ -370,6 +376,16 @@ export class ProfileInput {
   @Field({ defaultValue: false })
   @IsBoolean()
   keepMySections: boolean = false;
+
+  @Field({ defaultValue: true })
+  @IsBoolean()
+  notifyNewMatches: boolean = true;
+
+  @Field(() => Int, { defaultValue: 60 })
+  @IsInt()
+  @Min(1, { message: 'Pick a Fit % from 1 to 100' })
+  @Max(100, { message: 'Pick a Fit % from 1 to 100' })
+  matchFitMin: number = 60;
 
   @Field({ defaultValue: '' })
   @Transform(trim)

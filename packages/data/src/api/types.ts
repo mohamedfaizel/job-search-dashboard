@@ -367,6 +367,10 @@ export interface Profile {
   resumeMaxPages: number;
   /** Tailored resumes keep every section heading of your resume, in your order. */
   keepMySections: boolean;
+  /** Tell me when a scheduled search finds new jobs that fit me. */
+  notifyNewMatches: boolean;
+  /** The Fit % a new job needs to count as a match. */
+  matchFitMin: number;
   /** Suggestions for your master resume, worked out without AI. */
   resumeSuggestions: ResumeSuggestion[];
   /** A prompt to paste into Claude for a recruiter review of your resume. Empty without one. */
@@ -717,4 +721,32 @@ export interface GmailSyncResult {
   accounts: number;
   suggestions: number;
   warnings: string[];
+}
+
+/** A job a notification points to. */
+export interface NotificationJob {
+  id: string;
+  title: string;
+  company: string;
+  /** Your Fit % for it when the notification was made. */
+  fit: number;
+}
+
+/** Something the app tells you in the bell list. The words come from `kind`, in your language. */
+export interface AppNotification {
+  id: number;
+  /** NEW_MATCHES: a scheduled search found new jobs that fit you. */
+  kind: string;
+  searchName: string;
+  count: number;
+  fitMin: number;
+  jobs: NotificationJob[];
+  /** ISO time you read it; null = unread. */
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface Notifications {
+  items: AppNotification[];
+  unread: number;
 }
