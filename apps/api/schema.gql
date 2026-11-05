@@ -580,6 +580,11 @@ type JobResume {
 
   """Skills and keywords still missing from this resume"""
   stillMissing: [String!]!
+
+  """
+  The resume as saved: Markdown from the Apply kit reply (or text read out of the file), with your edits
+  """
+  text: String!
   titleMatch: Int
   updatedAt: DateTime!
 }
@@ -696,6 +701,11 @@ type Mutation {
 
   """Ignores a suggestion. It will not come back."""
   dismissMailSuggestion(id: Int!): Boolean!
+
+  """
+  Saves your edits to the resume, cover letter and form answers you saved for this job, and scores the resume again
+  """
+  editJobResume(coverLetter: String!, formAnswers: String!, jobId: ID!, resume: String!): JobInsights!
 
   """Hide a job from your table. Other users still see it."""
   hideJob(id: ID!): Boolean!

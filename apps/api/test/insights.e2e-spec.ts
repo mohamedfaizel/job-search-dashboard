@@ -16,6 +16,7 @@ const CREATE_JOB = /* GraphQL */ `
 `;
 
 const JOB_RESUME = `jobResume {
+  text
   fileName
   coverLetter
   formAnswers
@@ -138,6 +139,19 @@ const REMOVE_SKILLS = /* GraphQL */ `
   }
 `;
 
+const EDIT_RESUME = /* GraphQL */ `
+  mutation Edit($jobId: ID!, $resume: String!, $coverLetter: String!, $formAnswers: String!) {
+    editJobResume(
+      jobId: $jobId
+      resume: $resume
+      coverLetter: $coverLetter
+      formAnswers: $formAnswers
+    ) {
+      ${JOB_RESUME}
+    }
+  }
+`;
+
 const DELETE_RESUME = /* GraphQL */ `
   mutation Delete($jobId: ID!) {
     deleteJobResume(jobId: $jobId) {
@@ -147,6 +161,7 @@ const DELETE_RESUME = /* GraphQL */ `
 `;
 
 interface JobResume {
+  text: string;
   fileName: string | null;
   coverLetter: string;
   formAnswers: string;
@@ -714,6 +729,50 @@ Why Acme: I like your product.
 
       await request(t.server).get(`/apply-kit/${job.id}`).expect(401);
       await request(t.server).get('/apply-kit/nope').set('Cookie', t.cookieFor('USER')).expect(404);
+    });
+
+    it('saves your edits from the preview and scores the resume again', async () => {
+      const job = await backendJob();
+      const none = await t.asUser(EDIT_RESUME, {
+        jobId: job.id,
+        resume: '# Ada',
+        coverLetter: '',
+        formAnswers: '',
+      });
+      expect(none.errors?.[0]?.message).toBe('Save the Apply kit reply for this job first.');
+
+      await t.asUser(SAVE_TEXT, {
+        jobId: job.id,
+        text: '=== RESUME ===\n# Ada\n- Node.js\n=== COVER LETTER ===\nDear team',
+      });
+      const res = await t.asUser<{ editJobResume: Insights }>(EDIT_RESUME, {
+        jobId: job.id,
+        resume: '# Ada\n- Node.js and Kafka',
+        coverLetter: ' Dear Acme team ',
+        formAnswers: 'Notice period: 1 month',
+      });
+      expect(res.errors).toBeUndefined();
+      expect(res.data!.editJobResume.jobResume).toMatchObject({
+        text: '# Ada\n- Node.js and Kafka',
+        coverLetter: 'Dear Acme team',
+        formAnswers: 'Notice period: 1 month',
+        skillsCoverage: 100,
+      });
+
+      const empty = await t.asUser(EDIT_RESUME, {
+        jobId: job.id,
+        resume: '  ',
+        coverLetter: '',
+        formAnswers: '',
+      });
+      expect(empty.errors?.[0]?.message).toBe('The resume is empty');
+      const long = await t.asUser(EDIT_RESUME, {
+        jobId: job.id,
+        resume: '# Ada',
+        coverLetter: 'x'.repeat(20_001),
+        formAnswers: '',
+      });
+      expect(long.errors?.[0]?.extensions).toMatchObject({ apiCode: 'REPLY_PART_TOO_LONG' });
     });
 
     it('refuses empty text, other file types and unknown jobs', async () => {

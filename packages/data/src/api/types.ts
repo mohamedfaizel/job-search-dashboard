@@ -544,6 +544,8 @@ export interface InterviewPrep {
 
 /** The resume you wrote for one job, scored the same way as your profile resume. */
 export interface JobResume {
+  /** The resume as saved (Markdown from Claude's reply), with your edits. */
+  text: string;
   /** Name of the uploaded file. Null when the text was pasted. */
   fileName: string | null;
   /** From the Apply kit reply. Empty when there was none. */

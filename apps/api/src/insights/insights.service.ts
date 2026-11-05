@@ -49,6 +49,7 @@ import { jobTerms } from './terms';
 
 /** Claude's interview prep is long (questions, answers, plans), but it is still text for reading. */
 const MAX_INTERVIEW_PREP_CHARS = 30_000;
+const MAX_REPLY_PART_CHARS = 20_000;
 
 /** A resume file: what was uploaded, or what a download sends. */
 export interface JobResumeFile {
@@ -379,6 +380,51 @@ export class InsightsService implements OnApplicationBootstrap {
       create: { userId, jobId, ...data },
       update: data,
     });
+    return this.forJob(userId, jobId);
+  }
+
+  /**
+   * Saves your edits to the reply you saved for a job: the resume, cover letter and form answers
+   * as you changed them in the preview. The uploaded file (if any) stays as the original; the
+   * resume is scored again, and the old Resume-Matcher check no longer fits, so it is cleared.
+   */
+  async editJobResume(
+    userId: number,
+    jobId: string,
+    edit: { resume: string; coverLetter: string; formAnswers: string },
+  ) {
+    const text = cleanResume(edit.resume);
+    for (const part of [edit.coverLetter, edit.formAnswers]) {
+      if (part.length > MAX_REPLY_PART_CHARS) {
+        throw apiError(
+          BadRequestException,
+          'REPLY_PART_TOO_LONG',
+          `A cover letter or form answers are at most ${String(MAX_REPLY_PART_CHARS)} characters`,
+          { max: MAX_REPLY_PART_CHARS },
+        );
+      }
+    }
+    const { count } = await this.prisma.jobResume.updateMany({
+      where: { userId, jobId },
+      data: {
+        text,
+        coverLetter: edit.coverLetter.trim(),
+        formAnswers: edit.formAnswers.trim(),
+        aiStatus: null,
+        aiScore: null,
+        aiError: null,
+        aiMissing: [],
+        aiTips: [],
+        aiStartedAt: null,
+      },
+    });
+    if (count === 0) {
+      throw apiError(
+        BadRequestException,
+        'JOB_RESUME_MISSING',
+        'Save the Apply kit reply for this job first.',
+      );
+    }
     return this.forJob(userId, jobId);
   }
 
@@ -737,6 +783,7 @@ export class InsightsService implements OnApplicationBootstrap {
     const beforeChecks = [...before.skillChecks, ...before.keywordChecks];
     const afterChecks = [...after.skillChecks, ...after.keywordChecks];
     return {
+      text: jobResume.text,
       fileName: jobResume.fileName,
       coverLetter: jobResume.coverLetter,
       formAnswers: jobResume.formAnswers,

@@ -904,6 +904,32 @@
         "SKILLS": "Lost in the PDF text: {detail}"
       }
     },
+    "preview": {
+      "title": "Preview and edit",
+      "unsaved": "Unsaved changes",
+      "editText": "Edit as text",
+      "showPage": "Show as page",
+      "intro": "This is what goes into your PDF. Click any line to change it, add a line below or delete it.",
+      "partsLabel": "Parts of the reply",
+      "parts": {
+        "resume": "Resume",
+        "coverLetter": "Cover letter",
+        "formAnswers": "Form answers"
+      },
+      "textBox": "{part} text",
+      "clickToEdit": "Click to edit",
+      "lineBox": "Edit this line",
+      "lineDone": "Done",
+      "lineCancel": "Cancel",
+      "lineAdd": "+ Line below",
+      "lineDelete": "Delete line",
+      "empty": "Nothing here yet. Use Edit as text to write it.",
+      "undo": "Undo",
+      "reset": "Reset",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saveError": "Could not save your changes: {error}"
+    },
     "stillOpen": {
       "never": "Not checked yet if the ad is still open",
       "checking": "Checking if the ad is still open…",
@@ -1202,6 +1228,7 @@
     "LANGUAGE_UNKNOWN": "Pick a language from the list.",
     "LANGUAGE_IS_MASTER": "Your master resume is already in this language. Pick another language.",
     "JOB_RESUME_FILE_TYPE": "Upload a PDF, Word (.docx), text or Markdown file.",
+    "REPLY_PART_TOO_LONG": "A cover letter or the form answers are at most {max} characters.",
     "JOB_RESUME_MISSING": "No resume is saved for this job.",
     "COVER_LETTER_MISSING": "No cover letter is saved for this job.",
     "TERM_LENGTH": "A term must be 1 to 100 characters long.",
