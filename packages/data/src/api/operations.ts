@@ -373,6 +373,8 @@ const PROFILE_FIELDS = /* GraphQL */ `
   resumeMaxPages
   keepMySections
   notifyNewMatches
+  fillSavedAnswers
+  showStretches
   matchFitMin
   resumeSuggestions {
     code
@@ -574,6 +576,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       coverLetter
       formAnswers
       claudeCheck
+      claudeAnswers
       updatedAt
       skillsCoverage
       keywordsCoverage
@@ -975,5 +978,42 @@ export const NOTIFICATIONS = /* GraphQL */ `
 export const MARK_NOTIFICATIONS_READ = /* GraphQL */ `
   mutation MarkNotificationsRead {
     markNotificationsRead
+  }
+`;
+
+export const SAVED_ANSWERS = /* GraphQL */ `
+  query SavedAnswers {
+    savedAnswers {
+      id
+      question
+      answer
+      updatedAt
+    }
+  }
+`;
+
+export const SAVE_ANSWER = /* GraphQL */ `
+  mutation SaveAnswer($question: String!, $answer: String!) {
+    saveAnswer(question: $question, answer: $answer) {
+      id
+      question
+      answer
+      updatedAt
+    }
+  }
+`;
+
+export const DELETE_SAVED_ANSWER = /* GraphQL */ `
+  mutation DeleteSavedAnswer($id: Int!) {
+    deleteSavedAnswer(id: $id)
+  }
+`;
+
+export const SAVE_CLAUDE_ANSWERS = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation SaveClaudeAnswers($jobId: ID!, $answers: String!) {
+    saveClaudeAnswers(jobId: $jobId, answers: $answers) {
+      ...JobInsightsFields
+    }
   }
 `;

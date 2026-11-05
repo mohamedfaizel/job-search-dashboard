@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { ProfilePage } from './ProfilePage';
 import { renderWithData } from './test/render';
-import { api, PROFILE, rejectUpload, requests, server, syncs } from './test/server';
+import { api, PROFILE, rejectUpload, requests, savedAnswers, server, syncs } from './test/server';
 
 async function renderProfile() {
   // applyAccept: false lets tests pick a file the input's `accept` would hide, like a user
@@ -21,6 +21,69 @@ const pdf = (name = 'cv.pdf', bytes = 10) =>
   new File(['x'.repeat(bytes)], name, { type: 'application/pdf' });
 
 describe('profile page', () => {
+  it('lists your saved answers for Claude, with the two settings, to edit or delete', async () => {
+    savedAnswers.push(
+      {
+        id: 1,
+        question: 'Salary per year?',
+        answer: '65.000 € gross',
+        updatedAt: '2026-11-05T12:00:00.000Z',
+      },
+      {
+        id: 2,
+        question: 'Real experience with WCAG?',
+        answer: 'Yes: audits',
+        updatedAt: '2026-11-04T12:00:00.000Z',
+      },
+    );
+    const user = await renderProfile();
+    await openTab(user, 'Applications');
+
+    expect(
+      screen.getByRole('checkbox', { name: 'Fill in my saved answers by themselves' }),
+    ).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /Show Stretches/ })).toBeChecked();
+    const list = await screen.findByRole('list', { name: 'Saved answers' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+
+    await user.click(
+      within(list).getByRole('button', { name: 'Edit your answer to: Salary per year?' }),
+    );
+    const box = within(list).getByRole('textbox', { name: 'Your answer to: Salary per year?' });
+    await user.clear(box);
+    await user.type(box, '70.000 € gross{Enter}');
+    expect(requests).toContainEqual({
+      operation: 'SaveAnswer',
+      variables: { question: 'Salary per year?', answer: '70.000 € gross' },
+    });
+    expect(await within(list).findByText('70.000 € gross')).toBeInTheDocument();
+
+    // Escape throws an edit away.
+    await user.click(
+      within(list).getByRole('button', { name: 'Edit your answer to: Salary per year?' }),
+    );
+    await user.type(within(list).getByRole('textbox'), 'x{Escape}');
+    expect(within(list).queryByRole('textbox')).toBeNull();
+
+    await user.click(
+      within(list).getByRole('button', {
+        name: 'Delete your answer to: Real experience with WCAG?',
+      }),
+    );
+    expect(requests).toContainEqual({ operation: 'DeleteSavedAnswer', variables: { id: 2 } });
+    await waitFor(() => {
+      expect(
+        within(screen.getByRole('list', { name: 'Saved answers' })).getAllByRole('listitem'),
+      ).toHaveLength(1);
+    });
+  });
+
+  it('says so when you have no saved answers yet', async () => {
+    const user = await renderProfile();
+    await openTab(user, 'Applications');
+    expect(await screen.findByText(/No saved answers yet/)).toBeInTheDocument();
+  });
+
   it('fills the form from the saved profile', async () => {
     const user = await renderProfile();
     await screen.findByDisplayValue('Ada King');

@@ -9,6 +9,7 @@ import type {
   MailSuggestion,
   Profile,
   RemovedTerm,
+  SavedAnswer,
   TailoredResume,
 } from '@jobsearch/data';
 import { API_URL, jobResumeUrl } from '@jobsearch/data';
@@ -97,6 +98,7 @@ export const SAVED_RESUME: JobResume = {
   fileName: null,
   coverLetter: 'Dear Acme team, I build dashboards.',
   formAnswers: 'Why Acme: I like your product.',
+  claudeAnswers: '{}',
   claudeCheck:
     '- Placed: graphql (Replace)\n- Stretches: (1) "Led the team": you were one of three. Keep, soften or drop? (2) React 19: only in a side project.\n- Ask me: Which year did you finish school?',
   updatedAt: '2026-10-28T12:00:00.000Z',
@@ -126,6 +128,9 @@ export const jobResume: { current: JobResume | null } = { current: null };
 export const removedTerms: RemovedTerm[] = [];
 /** Terms the user said they have ("I have it"), like the Skills list on My profile. */
 export const haveTerms: string[] = [];
+
+/** The test user's saved answers to Claude's questions. Tests start with none. */
+export const savedAnswers: SavedAnswer[] = [];
 
 /** The languages line the user edited for job-1; null = their profile's. */
 export const jobLanguages: { current: string | null } = { current: null };
@@ -237,6 +242,8 @@ export const PROFILE: Profile = {
   resumeMaxPages: 2,
   keepMySections: false,
   notifyNewMatches: true,
+  fillSavedAnswers: true,
+  showStretches: true,
   matchFitMin: 60,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
@@ -455,6 +462,34 @@ const handlers = [
     const others = haveTerms.filter((t) => t !== term);
     haveTerms.splice(0, haveTerms.length, ...others, ...(variables['have'] ? [term] : []));
     return HttpResponse.json({ data: { setHaveTerm: insightsNow() } });
+  }),
+  api.query('SavedAnswers', () => HttpResponse.json({ data: { savedAnswers: [...savedAnswers] } })),
+  api.mutation('SaveAnswer', ({ variables }) => {
+    requests.push({ operation: 'SaveAnswer', variables });
+    const question = variables['question'] as string;
+    const answer = variables['answer'] as string;
+    const found = savedAnswers.find((a) => a.question === question);
+    const row: SavedAnswer = {
+      id: found?.id ?? savedAnswers.length + 1,
+      question,
+      answer,
+      updatedAt: '2026-11-05T12:00:00.000Z',
+    };
+    savedAnswers.splice(0, savedAnswers.length, ...savedAnswers.filter((a) => a !== found), row);
+    return HttpResponse.json({ data: { saveAnswer: row } });
+  }),
+  api.mutation('DeleteSavedAnswer', ({ variables }) => {
+    requests.push({ operation: 'DeleteSavedAnswer', variables });
+    const rest = savedAnswers.filter((a) => a.id !== variables['id']);
+    savedAnswers.splice(0, savedAnswers.length, ...rest);
+    return HttpResponse.json({ data: { deleteSavedAnswer: variables['id'] } });
+  }),
+  api.mutation('SaveClaudeAnswers', ({ variables }) => {
+    requests.push({ operation: 'SaveClaudeAnswers', variables });
+    if (jobResume.current) {
+      jobResume.current = { ...jobResume.current, claudeAnswers: variables['answers'] as string };
+    }
+    return HttpResponse.json({ data: { saveClaudeAnswers: insightsNow() } });
   }),
   api.mutation('SetJobLanguages', ({ variables }) => {
     requests.push({ operation: 'SetJobLanguages', variables });

@@ -421,7 +421,12 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
 
   return (
     <section aria-label={t('sectionLabel')} className="space-y-3">
-      <ClaudeNotes text={jobResume.claudeCheck} />
+      <ClaudeNotes
+        key={jobResume.claudeCheck}
+        jobId={jobId}
+        text={jobResume.claudeCheck}
+        answers={jobResume.claudeAnswers}
+      />
       <SavedReplyPreview
         key={`preview-${jobResume.updatedAt}`}
         insights={insights}

@@ -44,6 +44,8 @@ const empty = (otherResumes: LanguageResumeModel[]): ProfileModel => ({
   resumeMaxPages: 2,
   keepMySections: false,
   notifyNewMatches: true,
+  fillSavedAnswers: true,
+  showStretches: true,
   matchFitMin: 60,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
@@ -109,6 +111,8 @@ function toModel(
     resumeMaxPages: profile.resumeMaxPages,
     keepMySections: profile.keepMySections,
     notifyNewMatches: profile.notifyNewMatches,
+    fillSavedAnswers: profile.fillSavedAnswers,
+    showStretches: profile.showStretches,
     matchFitMin: profile.matchFitMin,
     resumeSuggestions: reviewResume(review),
     resumeReviewPrompt: profile.resumeText.trim() ? buildMasterReviewPrompt(review) : '',
@@ -173,6 +177,8 @@ export class ProfileService {
       resumeMaxPages: input.resumeMaxPages,
       keepMySections: input.keepMySections,
       notifyNewMatches: input.notifyNewMatches,
+      fillSavedAnswers: input.fillSavedAnswers,
+      showStretches: input.showStretches,
       matchFitMin: input.matchFitMin,
       // Empty rows from the form are dropped.
       customFields: input.customFields

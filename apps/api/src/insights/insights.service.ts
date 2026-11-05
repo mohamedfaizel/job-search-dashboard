@@ -165,6 +165,7 @@ export class InsightsService implements OnApplicationBootstrap {
             coverLetter: true,
             formAnswers: true,
             claudeCheck: true,
+            claudeAnswers: true,
             updatedAt: true,
             score: true,
             aiStatus: true,
@@ -376,7 +377,7 @@ export class InsightsService implements OnApplicationBootstrap {
     if (clean.length > 300) {
       throw apiError(
         BadRequestException,
-        'TERM_LENGTH',
+        'LANGUAGES_LENGTH',
         'The languages line is up to 300 characters',
       );
     }
@@ -424,6 +425,7 @@ export class InsightsService implements OnApplicationBootstrap {
             coverLetter: reply.coverLetter,
             formAnswers: reply.formAnswers,
             claudeCheck: reply.check,
+            claudeAnswers: '{}',
           }),
       // A new resume has not been checked by Resume-Matcher yet.
       aiStatus: null,
@@ -819,6 +821,34 @@ export class InsightsService implements OnApplicationBootstrap {
     }
   }
 
+  /**
+   * Keeps your decisions on Claude's questions for a job (keep, soften or drop per stretch, an
+   * answer per question) as JSON text, so they survive a reload. Needs a saved reply.
+   */
+  async saveClaudeAnswers(userId: number, jobId: string, answers: string) {
+    let valid = answers.length <= MAX_REPLY_PART_CHARS;
+    if (valid) {
+      try {
+        const parsed: unknown = JSON.parse(answers);
+        valid = typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+      } catch {
+        valid = false;
+      }
+    }
+    if (!valid) {
+      throw apiError(BadRequestException, 'ANSWERS_INVALID', 'The answers are not valid JSON');
+    }
+    await this.assertJob(jobId);
+    const { count } = await this.prisma.jobResume.updateMany({
+      where: { userId, jobId },
+      data: { claudeAnswers: answers },
+    });
+    if (count === 0) {
+      throw apiError(NotFoundException, 'JOB_RESUME_MISSING', 'No resume is saved for this job');
+    }
+    return this.forJob(userId, jobId);
+  }
+
   /** Scores the resume you wrote for the job, and what changed from your profile resume. */
   private afterScore(
     jobResume: {
@@ -827,6 +857,7 @@ export class InsightsService implements OnApplicationBootstrap {
       coverLetter: string;
       formAnswers: string;
       claudeCheck: string;
+      claudeAnswers: string;
       updatedAt: Date;
       aiStatus: JobMatchStatus | null;
       aiScore: number | null;
@@ -846,6 +877,7 @@ export class InsightsService implements OnApplicationBootstrap {
       fileName: jobResume.fileName,
       coverLetter: jobResume.coverLetter,
       claudeCheck: jobResume.claudeCheck,
+      claudeAnswers: jobResume.claudeAnswers,
       formAnswers: jobResume.formAnswers,
       updatedAt: jobResume.updatedAt,
       skillsCoverage: after.skills,

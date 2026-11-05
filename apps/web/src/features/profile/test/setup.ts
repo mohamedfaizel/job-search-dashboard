@@ -1,5 +1,14 @@
 import '@testing-library/jest-dom/vitest';
-import { gmail, myDesign, otherResumes, requests, server, syncs, wordTemplate } from './server';
+import {
+  gmail,
+  myDesign,
+  otherResumes,
+  requests,
+  savedAnswers,
+  server,
+  syncs,
+  wordTemplate,
+} from './server';
 
 // jsdom doesn't lay out pages, so it has no scrollIntoView.
 Element.prototype.scrollIntoView = () => undefined;
@@ -12,6 +21,7 @@ afterEach(() => {
   requests.length = 0;
   syncs.length = 0;
   otherResumes.length = 0;
+  savedAnswers.length = 0;
   Object.assign(gmail, { configured: true, accounts: [], found: 0 });
   window.history.replaceState(null, '', '/');
   wordTemplate.current = null;
