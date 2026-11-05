@@ -3,15 +3,15 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Locale } from '@/i18n/config';
 import { Intl } from '../test/intl';
-import '../test/navigation';
+import { router } from '../test/navigation';
 import { bell } from '../test/server';
 import { NotificationBell } from './NotificationBell';
 import { ToastProvider } from './Toasts';
 
-function renderBell(locale: Locale = 'en') {
+function renderBell(locale: Locale = 'en', queryClient = createQueryClient()) {
   render(
     <Intl locale={locale}>
-      <DataProvider store={makeStore()} queryClient={createQueryClient()}>
+      <DataProvider store={makeStore()} queryClient={queryClient}>
         <ToastProvider>
           <NotificationBell />
         </ToastProvider>
@@ -72,5 +72,40 @@ describe('NotificationBell', () => {
     await user.click(await screen.findByRole('button', { name: 'Benachrichtigungen' }));
 
     expect(screen.getByText(/Noch nichts\./)).toBeInTheDocument();
+  });
+
+  it('pops up a toast when a notice comes in while the app is open, with a link to the best job', async () => {
+    const queryClient = createQueryClient();
+    const user = userEvent.setup();
+    renderBell('en', queryClient);
+    await vi.waitFor(() => {
+      expect(queryClient.getQueryData(['notifications'])).toBeDefined();
+    });
+    // Notices that were there on load don't pop up.
+    expect(screen.queryByRole('status')).toBeNull();
+
+    bell.items = [NEW_MATCHES];
+    bell.unread = 1;
+    await queryClient.invalidateQueries({ queryKey: ['notifications'] });
+
+    const toast = await screen.findByRole('status');
+    expect(toast).toHaveTextContent('5 new jobs fit you from the search “Frontend Berlin”');
+    await user.click(within(toast).getByRole('button', { name: 'Show' }));
+    expect(router.push).toHaveBeenCalledWith('/jobs?job=job-1');
+  });
+
+  it('closes the list with Escape or a click outside', async () => {
+    const user = userEvent.setup();
+    renderBell();
+    const button = await screen.findByRole('button', { name: 'Notifications' });
+
+    await user.click(button);
+    expect(screen.getByRole('dialog', { name: 'Notifications' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    await user.click(button);
+    await user.click(document.body);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
