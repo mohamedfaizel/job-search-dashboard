@@ -123,6 +123,7 @@ No tables, columns, icons or images, and no styling other than **bold**.`;
 }
 
 const CHECK_PART = `- Related: the terms you added under rule 2, each with the experience it is tied to.
+- Placed: each skill or keyword I confirmed I have, and where it went (Replace, Restructure or Add).
 - Skipped: the terms you left out, each with one line why.
 - Changes: what your own review changed in the draft, one line each.
 - Stretches: each line I might struggle to explain in an interview, with why, and ask me: keep, soften or drop?
@@ -138,7 +139,12 @@ const SELF_REVIEW = `1. Facts: every employer, title, date, degree, number and s
 /** The "I have this" terms, or nothing when there are none (so the prompt stays short). */
 const mustAddPart = (terms: string[], resume = 'my resume') =>
   terms.length
-    ? `\n\nSkills I really have that ${resume} does not show yet. They MUST be in the new resume: in the Skills section, and next to the experience where I used them when that is clear from my resume:\n${list(terms)}`
+    ? `\n\nSkills and keywords of the ad I confirm I really have, which ${resume} does not show yet. Each MUST be in the new resume at least once, in the ad's own words, placed in this order of preference:
+1. Replace: a bullet already describes this work in vaguer words. Use the keyword there, keeping the meaning.
+2. Restructure: no bullet matches, but one is close. Rewrite that bullet so the keyword fits naturally, without inventing tasks, projects or numbers.
+3. Add: it fits no experience. Put it in the Skills section (or my competencies section, when I have one).
+Never weaken a strong result to fit a keyword, and use each one only where it is true. In the CHECK part, under Placed, say where each went (Replace, Restructure or Add).
+${list(terms)}`
     : '';
 
 const languagesRule = (languages: string[]) =>
@@ -326,12 +332,14 @@ const MARKER_LINE = /^[ \t#*_>]*=+\s*(RESUME|COVER LETTER|FORM ANSWERS|CHECK)\s*
 
 /**
  * Splits Claude's Apply kit reply at its marker lines. Text without markers is all resume, so a
- * plain resume can still be pasted. The CHECK part is for you to read, so it is not kept.
+ * plain resume can still be pasted. The CHECK part is kept to show you as notes.
  */
-export function splitReply(text: string): Record<'resume' | 'coverLetter' | 'formAnswers', string> {
+export function splitReply(
+  text: string,
+): Record<'resume' | 'coverLetter' | 'formAnswers' | 'check', string> {
   const found = [...text.matchAll(MARKER_LINE)];
   if (!found.some((m) => m[1]?.toUpperCase() === 'RESUME')) {
-    return { resume: text.trim(), coverLetter: '', formAnswers: '' };
+    return { resume: text.trim(), coverLetter: '', formAnswers: '', check: '' };
   }
   const parts: Partial<Record<ReplyPart, string>> = {};
   found.forEach((match, i) => {
@@ -344,6 +352,7 @@ export function splitReply(text: string): Record<'resume' | 'coverLetter' | 'for
     resume: parts.RESUME ?? '',
     coverLetter: parts['COVER LETTER'] ?? '',
     formAnswers: parts['FORM ANSWERS'] ?? '',
+    check: parts.CHECK ?? '',
   };
 }
 

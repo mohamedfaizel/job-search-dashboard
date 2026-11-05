@@ -14,6 +14,7 @@ import { promptSections } from '../reply';
 import type { JobFormat } from '../useJobFormat';
 import { useJobFormat } from '../useJobFormat';
 import { PRIMARY, ReplyInput, SavedReply } from './JobResumePanel';
+import { KeywordTicks } from './KeywordTicks';
 
 /** The short prompt for Claude in Chrome. The Apply kit page it opens holds the rules and facts. */
 export function chromePrompt(job: Job): string {
@@ -207,10 +208,6 @@ function facts(
   t: (key: string, values?: Record<string, string | number>) => string,
   f: JobFormat,
 ) {
-  const missing = [...insights.skills, ...insights.keywords].filter(
-    (t) => !t.inResume && !t.youHave,
-  ).length;
-  const mustAdd = [...insights.skills, ...insights.keywords].filter((t) => t.youHave).length;
   const german = profile?.languages.find((l) => /german|deutsch/i.test(l));
   const answers =
     profile &&
@@ -220,8 +217,6 @@ function facts(
   const level = f.germanLevel(insights);
   return [
     { text: t('facts.master') },
-    insights.hasResume && missing > 0 && { text: t('facts.missing', { count: missing }) },
-    mustAdd > 0 && { text: t('facts.mustAdd', { count: mustAdd }) },
     insights.germanRequired
       ? {
           text: level ? t('facts.germanLevel', { level }) : t('facts.german'),
@@ -355,6 +350,7 @@ function ApplyKit({
                 </li>
               ))}
             </ul>
+            <KeywordTicks insights={data} />
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <button
                 type="button"

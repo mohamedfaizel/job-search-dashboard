@@ -80,3 +80,40 @@ export function startDownload(url: string) {
   link.click();
   link.remove();
 }
+
+export interface CheckSection {
+  /** "Stretches", "Ask me", "Placed"… as Claude wrote it. */
+  label: string;
+  items: string[];
+}
+
+/**
+ * Claude's CHECK part, by its "- Label: …" lines. Numbered items ("(1) … (2) …") become one item
+ * each; "(none)" leaves the section out. Lines without a label belong to the one above.
+ */
+export function checkSections(text: string): CheckSection[] {
+  const sections: { label: string; body: string }[] = [];
+  let current: { label: string; body: string } | undefined;
+  for (const raw of text.replace(/\r\n?/g, '\n').split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    const head = /^[-*•]\s*\**([^:*]{2,40})\**:\s*(.*)$/.exec(line);
+    if (head) {
+      // Claude may repeat a label ("- Ask me: …" once per question): keep one section for it.
+      const label = head[1]?.trim() ?? '';
+      const same = sections.find((s) => s.label.toLowerCase() === label.toLowerCase());
+      if (same) same.body += `\n${head[2] ?? ''}`;
+      else sections.push({ label, body: head[2] ?? '' });
+      current = same ?? sections[sections.length - 1];
+    } else if (current) current.body += `\n${line.replace(/^[-*•]\s*/, '')}`;
+  }
+  return sections
+    .map(({ label, body }) => ({
+      label,
+      items: body
+        .split(/\s*\(\d+\)\s*|\n/)
+        .map((item) => item.trim())
+        .filter((item) => item && !/^\(?none\)?\.?$/i.test(item)),
+    }))
+    .filter((section) => section.items.length > 0);
+}

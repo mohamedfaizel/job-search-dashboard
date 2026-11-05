@@ -552,6 +552,11 @@ type JobResume {
   """Resume-Matcher's tips for this resume. Empty until READY"""
   aiTips: [String!]!
 
+  """
+  Claude's CHECK part of the reply: terms placed or skipped, stretches and questions for you. Empty when there was none
+  """
+  claudeCheck: String!
+
   """The cover letter from the Apply kit reply. Empty when there was none"""
   coverLetter: String!
 

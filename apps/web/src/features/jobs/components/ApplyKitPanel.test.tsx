@@ -70,6 +70,32 @@ describe('ApplyKitPanel', () => {
     expect(screen.getByText(/✓ Prompt copied/)).toBeInTheDocument();
   });
 
+  it('step 1 lets you tick the keywords you have, so the prompt asks Claude to add them', async () => {
+    const { user } = renderKit();
+    const box = await screen.findByRole('region', { name: 'Keywords the job wants' });
+    const missing = within(box).getByRole('list', { name: 'Not in your resume yet' });
+    expect(missing).toHaveTextContent('graphql');
+    expect(missing).toHaveTextContent('microfrontends');
+    expect(missing).not.toHaveTextContent('react');
+    expect(within(box).getByText('0 of 2 ticked')).toBeInTheDocument();
+
+    await user.click(within(box).getByRole('button', { name: 'I have graphql' }));
+    expect(requests).toContainEqual({
+      operation: 'SetHaveTerm',
+      variables: { jobId: 'job-1', term: 'graphql', have: true },
+    });
+    expect(
+      await within(box).findByRole('list', { name: 'You have these: Claude adds them' }),
+    ).toHaveTextContent('graphql');
+    expect(within(box).getByText('1 of 2 ticked')).toBeInTheDocument();
+
+    await user.click(within(box).getByRole('button', { name: 'Remove microfrontends' }));
+    expect(requests).toContainEqual({
+      operation: 'RemoveInsightTerm',
+      variables: { jobId: 'job-1', term: 'microfrontends' },
+    });
+  });
+
   it('says the resume is written in German, with your real German level', async () => {
     server.use(
       api.query('MyProfile', () =>

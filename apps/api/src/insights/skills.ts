@@ -24,6 +24,12 @@ const ALIASES: Record<string, string[]> = {
   ui: ['user interface'],
   'machine learning': ['ml'],
   'artificial intelligence': ['ai'],
+  'react query': ['tanstack query', 'tanstack react query'],
+  'core web vitals': ['cwv', 'web vitals'],
+  'react native': ['react-native'],
+  'end-to-end testing': ['e2e testing', 'e2e tests', 'end-to-end tests'],
+  'server-side rendering': ['ssr', 'server side rendering'],
+  'ui/ux': ['ui ux', 'ux/ui'],
 };
 
 /** The main spelling of a skill: "reactjs" → "react", "k8s" → "kubernetes". Unknown ones stay. */
@@ -126,7 +132,75 @@ export function relatedTo(term: string, text: string): string | null {
   return (RELATED[term.toLowerCase()] ?? []).find((skill) => mentions(text, skill)) ?? null;
 }
 
-/** Every skill name we know (aliases and related skills), so keywords that are tools rank first. */
-export const KNOWN_SKILLS: ReadonlySet<string> = new Set(
-  [ALIASES, RELATED].flatMap((map) => Object.entries(map).flat(2)),
-);
+/**
+ * Tools and phrases job ads use that a resume should repeat word for word, looked for in the ad
+ * itself (JobsPipe's tags miss many of them): "Figma", "Core Web Vitals", "optimistic updates".
+ * Add a line when a real requirement of an ad does not show up as a keyword.
+ */
+export const AD_PHRASES: readonly string[] = [
+  // Frontend tools and practices
+  'figma',
+  'storybook',
+  'detox',
+  'react native',
+  'react query',
+  'core web vitals',
+  'web performance',
+  'performance optimization',
+  'optimistic updates',
+  'code splitting',
+  'lazy loading',
+  'server-side rendering',
+  'static site generation',
+  'state management',
+  'component library',
+  'design system',
+  'design systems',
+  'ui/ux',
+  'design principles',
+  'responsive design',
+  'accessibility',
+  'wcag',
+  'internationalization',
+  'progressive web app',
+  'websockets',
+  // Testing and delivery
+  'unit testing',
+  'integration testing',
+  'end-to-end testing',
+  'test automation',
+  'testing frameworks',
+  'test-driven development',
+  'code review',
+  'code reviews',
+  'ci-cd',
+  'feature flags',
+  'a/b testing',
+  'observability',
+  'monitoring',
+  // Backend and architecture
+  'rest api',
+  'rest apis',
+  'api design',
+  'microservices',
+  'event-driven',
+  'system design',
+  'distributed systems',
+  'caching',
+  'infrastructure as code',
+  // Ways of working
+  'agile',
+  'scrum',
+  'mentoring',
+  'technical leadership',
+  'cross-functional',
+  'stakeholder management',
+  'rapid prototyping',
+  'product mindset',
+];
+
+/** Every skill name we know (aliases, related skills, ad phrases), so tools rank first. */
+export const KNOWN_SKILLS: ReadonlySet<string> = new Set([
+  ...[ALIASES, RELATED].flatMap((map) => Object.entries(map).flat(2)),
+  ...AD_PHRASES,
+]);

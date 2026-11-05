@@ -568,6 +568,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       fileName
       coverLetter
       formAnswers
+      claudeCheck
       updatedAt
       skillsCoverage
       keywordsCoverage

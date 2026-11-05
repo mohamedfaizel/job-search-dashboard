@@ -1,10 +1,43 @@
-import { compact, KNOWN_SKILLS } from './skills';
-import { detectLanguage, keywordTokens } from './text';
+import { AD_PHRASES, compact, KNOWN_SKILLS, mentions } from './skills';
+import { detectLanguage, keywordTokens, stopwordsFor, tokenize } from './text';
 import type { DocumentFrequencies } from './tfidf';
 import { documentFrequencies, rankTerms } from './tfidf';
 
-/** How many TF-IDF keywords to show for a job. */
-const KEYWORD_COUNT = 15;
+/** How many keywords to show for a job. */
+const KEYWORD_COUNT = 12;
+/** Plain words (not tools, not phrases) a job may add, after the tools and phrases. */
+const PLAIN_WORD_COUNT = 4;
+/** Fewer tools and phrases than this, and plain words used once may fill the list. */
+const FEW_TERMS = 5;
+
+/**
+ * Two-word phrases of the ad that start with a tool or a known skill ("figma mocks", "react query").
+ * Phrases stop at punctuation, so words of two sentences never join. Most used first.
+ */
+export function toolPhrases(text: string, language: string | null, tools: ReadonlySet<string>) {
+  const stop = stopwordsFor(language);
+  const counts = new Map<string, number>();
+  // A full stop ends a chunk only before a space, so "node.js" stays whole.
+  for (const chunk of text.toLowerCase().split(/[,;:!?()[\]\n\r•|/]|\.\s|\s[-–—]\s/)) {
+    const words = chunk.split(/\s+/).filter(Boolean);
+    for (let i = 0; i + 1 < words.length; i++) {
+      const pair = [words[i] ?? '', words[i + 1] ?? ''];
+      const clean = pair.map((w) => tokenize(w, stop));
+      // Each side one real word: no stopword, number or punctuation-only token.
+      if (clean.some((w) => w.length !== 1)) continue;
+      const [first = '', second = ''] = clean.map((w) => w[0] ?? '');
+      // The tool leads ("figma mocks", "apollo client"): "evolve react" is a verb, not a skill.
+      if (!tools.has(first)) continue;
+      const phrase = `${first} ${second}`;
+      counts.set(phrase, (counts.get(phrase) ?? 0) + 1);
+    }
+  }
+  // Said twice, it is a thing the job needs ("Figma mocks"), not a passing pair of words.
+  return [...counts]
+    .filter(([, n]) => n > 1)
+    .sort((a, b) => b[1] - a[1])
+    .map(([phrase]) => phrase);
+}
 
 /** What we learn from all saved jobs at once. */
 export interface Corpus {
@@ -88,18 +121,38 @@ export function jobTerms(job: TermsJob, removed: ReadonlySet<string>, corpus: Co
   ]);
   // "front-end" is the same as the skill "frontend": compare compact forms.
   const knownCompact = new Set([...known].map(compact));
+  const description = job.description ?? '';
+  const words = keywordTokens(description, language);
   const candidates = uniqueByCompact(
-    rankTerms(keywordTokens(job.description ?? '', language), corpus.frequencies).map(
-      (ranked) => ranked.term,
-    ),
+    rankTerms(words, corpus.frequencies).map((ranked) => ranked.term),
   ).filter(
     (term) => !knownCompact.has(compact(term)) && !corpus.cities.has(term) && !removed.has(term),
   );
-  // Tools and technologies first, then the other words, each group in TF-IDF order.
-  const keywords = [
-    ...candidates.filter((term) => corpus.skills.has(term)),
-    ...candidates.filter((term) => !corpus.skills.has(term)),
-  ].slice(0, KEYWORD_COUNT);
+  const fresh = (term: string) => !knownCompact.has(compact(term)) && !removed.has(term);
+  // The ad's own phrases first ("core web vitals", "optimistic updates"): they say what the job
+  // needs more clearly than one word. Then two-word phrases around a tool ("figma mocks").
+  const phrases = AD_PHRASES.filter((phrase) => fresh(phrase) && mentions(description, phrase));
+  const pairs = toolPhrases(description, language, corpus.skills).filter(
+    // "front-end apps" only repeats a skill the job already lists.
+    (pair) => fresh(pair) && !knownCompact.has(compact(pair.split(' ')[0] ?? '')),
+  );
+  const tools = candidates.filter((term) => corpus.skills.has(term));
+  // A plain word ("bets", "fuzzy") is noise when the ad already names enough tools and phrases,
+  // unless it uses the word twice. A short ad with few of those keeps its stand-out words. German
+  // ads keep their nouns, which name the work ("Kundenberatung").
+  const count = (term: string) => words.filter((w) => w === term).length;
+  const few = phrases.length + pairs.length + tools.length < FEW_TERMS;
+  const plain = candidates
+    .filter((term) => !corpus.skills.has(term) && (few || language === 'de' || count(term) > 1))
+    .slice(0, PLAIN_WORD_COUNT);
+  const chosen = uniqueByCompact([...phrases, ...pairs, ...tools, ...plain]);
+  // A word already inside a chosen phrase ("mocks" in "figma mocks") is not shown again.
+  const inPhrase = (term: string) =>
+    !term.includes(' ') &&
+    chosen.some(
+      (other) => other !== term && other.includes(' ') && other.split(' ').includes(term),
+    );
+  const keywords = chosen.filter((term) => !inPhrase(term)).slice(0, KEYWORD_COUNT);
 
   const normalizedTitle =
     raw.normalized_title && raw.normalized_title !== job.title ? raw.normalized_title : null;

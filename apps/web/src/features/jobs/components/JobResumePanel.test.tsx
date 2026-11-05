@@ -61,39 +61,116 @@ describe('JobResumePanel', () => {
     expect(
       within(screen.getByRole('list', { name: 'Now covered' })).getByText('graphql'),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Still missing')).toHaveTextContent('microfrontends');
+    expect(
+      within(screen.getByRole('region', { name: 'Missing keywords' })).getByRole('listitem', {
+        name: 'microfrontends',
+      }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Claude’s reply' })).toBeNull();
     // The resume PDF downloads straight away.
     expect(downloads).toEqual([`${jobResumeUrl('job-1')}/resume.pdf`]);
     expect(screen.getByText(/Your resume PDF is downloading/)).toBeInTheDocument();
   });
 
-  it('✓ on a still-missing skill offers the updated prompt; keywords get no buttons', async () => {
+  it('works a missing keyword into the preview: suggestion, rewrite, insert, replace, skip', async () => {
     const user = userEvent.setup();
     jobResume.current = {
       ...SAVED_RESUME,
-      nowCovered: [],
-      stillMissing: ['graphql', 'microfrontends'],
+      stillMissing: ['graphql', 'microfrontends', 'storybook'],
+      aiMissing: ['Vitest'],
     };
     renderPanel();
 
-    const missing = await screen.findByRole('list', { name: 'Still missing' });
-    expect(screen.queryByRole('button', { name: 'Copy updated prompt' })).toBeNull();
-    // microfrontends is a keyword: Claude works it in, so there is nothing to pick.
-    expect(within(missing).queryByRole('button', { name: 'I have microfrontends' })).toBeNull();
-    const tick = within(missing).getByRole('button', { name: 'I have graphql' });
-    expect(tick).toHaveAccessibleDescription('I have this skill: add it to my resume');
-    await user.click(tick);
+    const box = await screen.findByRole('region', { name: 'Missing keywords' });
+    const card = (term: string) => within(box).getByRole('listitem', { name: term });
+    const preview = () => within(screen.getByRole('region', { name: 'Preview and edit' }));
+    // react and graphql are in the resume text; microfrontends, storybook and Vitest are not.
+    expect(within(box).getByText('2 of 5 covered')).toBeInTheDocument();
 
-    expect(requests).toContainEqual({
-      operation: 'SetHaveTerm',
-      variables: { jobId: 'job-1', term: 'graphql', have: true },
-    });
-    expect(await screen.findByRole('button', { name: 'Copy updated prompt' })).toBeInTheDocument();
-    expect(screen.getByText(/leaves out graphql, which you have/)).toBeInTheDocument();
+    // Use suggestion: added to the Skills section.
+    await user.click(
+      within(card('microfrontends')).getByRole('button', { name: 'Use suggestion' }),
+    );
     expect(
-      screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Updated prompt' }).value,
-    ).toContain('MUST: graphql');
+      within(card('microfrontends')).getByText('React, TypeScript, microfrontends'),
+    ).toBeInTheDocument();
+    await user.click(
+      within(card('microfrontends')).getByRole('button', { name: 'Apply to resume' }),
+    );
+    expect(within(card('microfrontends')).getByText('✓ added')).toBeInTheDocument();
+    expect(within(box).getByText('3 of 5 covered')).toBeInTheDocument();
+    expect(preview().getByText('Unsaved changes')).toBeInTheDocument();
+
+    // Insert a new line under a bullet: it becomes a bullet too.
+    await user.click(within(card('storybook')).getByRole('button', { name: 'Insert new line' }));
+    const line = within(card('storybook')).getByRole('textbox', { name: 'New line' });
+    await user.clear(line);
+    await user.type(line, 'Documented UI components in Storybook');
+    await user.click(within(card('storybook')).getByRole('button', { name: 'Insert' }));
+    expect(
+      preview().getByRole('button', { name: /Documented UI components in Storybook/ }),
+    ).toBeInTheDocument();
+
+    // Replace a word, everywhere it appears.
+    await user.click(within(card('Vitest')).getByRole('button', { name: 'Replace a word' }));
+    // Not one of your terms: the fact check warns before you add it.
+    expect(within(card('Vitest')).getByRole('note')).toHaveTextContent(
+      'Fact check: “Vitest” is not in your master resume',
+    );
+    await user.type(within(card('Vitest')).getByRole('textbox'), 'GraphQL');
+    expect(within(card('Vitest')).getByText('Found in 1 line.')).toBeInTheDocument();
+    await user.click(within(card('Vitest')).getByRole('button', { name: 'Replace all' }));
+    expect(
+      preview().getByRole('button', { name: /Built dashboards in React and Vitest/ }),
+    ).toBeInTheDocument();
+
+    // Undo in the preview takes the last change back.
+    await user.click(preview().getByRole('button', { name: 'Undo' }));
+    expect(within(card('Vitest')).getByText('missing')).toBeInTheDocument();
+    await user.click(within(card('Vitest')).getByRole('button', { name: 'Skip' }));
+    expect(within(card('Vitest')).getByText('skipped')).toBeInTheDocument();
+
+    await user.click(preview().getByRole('button', { name: 'Save changes' }));
+    const sent = requests.find((r) => r.operation === 'EditJobResume');
+    expect(sent?.variables['resume']).toContain('- React, TypeScript, microfrontends');
+    expect(sent?.variables['resume']).toContain(
+      '- Built dashboards in React and GraphQL\n- Documented UI components in Storybook',
+    );
+  });
+
+  it('shows Claude’s questions from the CHECK part as a to-do list', async () => {
+    jobResume.current = { ...SAVED_RESUME };
+    renderPanel();
+    const notes = await screen.findByRole('region', { name: 'Notes from Claude' });
+    expect(within(notes).getByText('Claude asks you 3 things')).toBeInTheDocument();
+    expect(within(notes).getByRole('list', { name: 'Stretches' })).toHaveTextContent(
+      'React 19: only in a side project.',
+    );
+    expect(within(notes).getByRole('list', { name: 'Ask me' })).toHaveTextContent(
+      'Which year did you finish school?',
+    );
+    expect(within(notes).getByText(/graphql \(Replace\)/)).toBeInTheDocument();
+  });
+
+  it('rewrites a line with the keyword', async () => {
+    const user = userEvent.setup();
+    jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
+    renderPanel();
+    const card = within(
+      within(await screen.findByRole('region', { name: 'Missing keywords' })).getByRole(
+        'listitem',
+        { name: 'storybook' },
+      ),
+    );
+    await user.click(card.getByRole('button', { name: 'Rewrite a line' }));
+    const box = card.getByRole('textbox', { name: 'New words for this line' });
+    expect(box).toHaveValue('Built dashboards in React and GraphQL');
+    expect(card.getByText('Your words don’t name “storybook” yet.')).toBeInTheDocument();
+    await user.type(box, ', documented in Storybook');
+    await user.click(card.getByRole('button', { name: 'Apply to resume' }));
+    expect(
+      screen.getByRole('button', { name: /GraphQL, documented in Storybook/ }),
+    ).toBeInTheDocument();
   });
 
   it('checks the AI match of the saved resume when asked, and shows the score', async () => {
@@ -124,7 +201,12 @@ describe('JobResumePanel', () => {
       await screen.findByLabelText('AI match 71', undefined, { timeout: 8000 }),
     ).toBeInTheDocument();
     const card = within(screen.getByRole('region', { name: 'AI match (Resume-Matcher)' }));
-    expect(card.getByRole('list', { name: 'Still missing' })).toHaveTextContent('Kubernetes');
+    expect(card.getByText(/Resume-Matcher misses 1 keyword/)).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'Missing keywords' })).getByRole('listitem', {
+        name: 'Kubernetes',
+      }),
+    ).toBeInTheDocument();
     expect(card.getByText('Tips from Resume-Matcher (1)')).toBeInTheDocument();
     expect(card.getByText('Add Kubernetes to your skills.')).toBeInTheDocument();
     expect(
@@ -136,33 +218,6 @@ describe('JobResumePanel', () => {
       ),
     ).toBeEnabled();
   }, 15000);
-
-  it('lets you tick missing keywords and copy a prompt for them, without touching your skills', async () => {
-    const user = userEvent.setup();
-    jobResume.current = {
-      ...SAVED_RESUME,
-      aiStatus: 'READY',
-      aiScore: 71.4,
-      aiMissing: ['Kubernetes', 'Terraform'],
-    };
-    renderPanel();
-
-    expect(screen.queryByRole('button', { name: /^Copy prompt for/ })).not.toBeInTheDocument();
-    await user.click(await screen.findByRole('button', { name: 'I have Terraform' }));
-    expect(screen.getByRole('button', { name: 'I have Terraform' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await user.click(screen.getByRole('button', { name: 'Copy prompt for 1 keyword' }));
-    const text = await navigator.clipboard.readText();
-    expect(text).toContain('- Terraform');
-    expect(text).not.toContain('Kubernetes');
-    // Ticks are only for the prompt: nothing is sent to the server.
-    expect(requests.some((r) => r.operation === 'SetHaveTerm')).toBe(false);
-
-    await user.click(screen.getByRole('button', { name: 'I have Terraform' }));
-    expect(screen.queryByRole('button', { name: /^Copy prompt for/ })).not.toBeInTheDocument();
-  });
 
   it('says why the AI match failed', async () => {
     jobResume.current = { ...SAVED_RESUME, aiStatus: 'FAILED', aiError: 'Resume-Matcher is off.' };
