@@ -73,18 +73,31 @@ export class InsightsResolver {
 
   @Mutation(() => JobInsightsModel, {
     description:
-      '"I have this": adds a missing skill or keyword to the Skills list of My profile (have: true), or takes it off (have: false). It then counts as covered for every job',
+      '"I have this": adds a missing skill to the Skills list of My profile, or a keyword (keyword: true) to its Keywords list (have: true), or takes it off (have: false). It then counts as covered for every job',
   })
   async setHaveTerm(
     @CurrentUser() user: SessionUser,
     @Args('jobId', { type: () => ID }) jobId: string,
     @Args('term') term: string,
     @Args('have', { defaultValue: true }) have: boolean,
+    @Args('keyword', { defaultValue: false }) keyword: boolean,
   ): Promise<JobInsightsModel> {
-    const insights = await this.insights.setHaveTerm(user.id, jobId, term, have);
+    const insights = await this.insights.setHaveTerm(user.id, jobId, term, have, keyword);
     // Every job's Fit % changes with your skills: start working it out now.
     this.fit.warm(user.id);
     return insights;
+  }
+
+  @Mutation(() => JobInsightsModel, {
+    description:
+      'Edits the languages line of this job’s Apply kit prompt. Empty = your profile’s Languages again',
+  })
+  setJobLanguages(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('languages', { type: () => String, nullable: true }) languages: string | null,
+  ): Promise<JobInsightsModel> {
+    return this.insights.setJobLanguages(user.id, jobId, languages);
   }
 
   @Mutation(() => JobInsightsModel, { description: 'Puts a removed skill or keyword back' })

@@ -21,6 +21,7 @@ import {
   SAVE_INTERVIEW_PREP,
   SAVE_JOB_RESUME_TEXT,
   SET_HAVE_TERM,
+  SET_JOB_LANGUAGES,
 } from './operations';
 import type { ApplyQueueItem, ApplyQueuePrompt, JobInsights, PdfCheck } from './types';
 
@@ -92,7 +93,7 @@ export function useRemoveInsightTerm() {
 export function useSetHaveTerm() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (vars: { jobId: string; term: string; have: boolean }) => {
+    mutationFn: async (vars: { jobId: string; term: string; have: boolean; keyword?: boolean }) => {
       const data = await graphqlClient.request<{ setHaveTerm: JobInsights }>(SET_HAVE_TERM, vars);
       return data.setHaveTerm;
     },
@@ -103,6 +104,23 @@ export function useSetHaveTerm() {
       // The profile's Skills list changed too. (Its key is ['profile']: importing profileKey from
       // ./profile would make an import cycle, since profile.ts imports from this file.)
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+}
+
+/** Edits the languages line of one job's prompt. Empty text = your profile's Languages again. */
+export function useSetJobLanguages() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { jobId: string; languages: string }) => {
+      const data = await graphqlClient.request<{ setJobLanguages: JobInsights }>(
+        SET_JOB_LANGUAGES,
+        vars,
+      );
+      return data.setJobLanguages;
+    },
+    onSuccess: (insights) => {
+      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
     },
   });
 }

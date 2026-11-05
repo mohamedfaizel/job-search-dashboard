@@ -344,6 +344,7 @@ const PROFILE_FIELDS = /* GraphQL */ `
   targetRoles
   locations
   skills
+  keywords
   languages
   yearsExperience
   linkedinUrl
@@ -545,6 +546,8 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     resumeLanguage
     checkedAgainst
     hasResume
+    languages
+    languagesCustom
     skills {
       term
       inResume
@@ -613,8 +616,17 @@ export const REMOVE_INSIGHT_TERM = /* GraphQL */ `
 
 export const SET_HAVE_TERM = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
-  mutation SetHaveTerm($jobId: ID!, $term: String!, $have: Boolean) {
-    setHaveTerm(jobId: $jobId, term: $term, have: $have) {
+  mutation SetHaveTerm($jobId: ID!, $term: String!, $have: Boolean, $keyword: Boolean) {
+    setHaveTerm(jobId: $jobId, term: $term, have: $have, keyword: $keyword) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const SET_JOB_LANGUAGES = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation SetJobLanguages($jobId: ID!, $languages: String) {
+    setJobLanguages(jobId: $jobId, languages: $languages) {
       ...JobInsightsFields
     }
   }

@@ -106,7 +106,9 @@
       "yearsExperience": "Years of experience",
       "linkedin": "LinkedIn",
       "github": "GitHub",
-      "website": "Website"
+      "website": "Website",
+      "keywords": "Keywords",
+      "keywordsHint": "Words from job ads that are true for you. ✓ on the Fit tab adds them here."
     },
     "answers": {
       "heading": "Application answers",
@@ -662,7 +664,7 @@
       "ringLabel": "{score} percent fit",
       "relatedTo": "(you have {term})",
       "iHave": "I have {term}",
-      "iHaveHint": "I have this skill: add it to my resume",
+      "iHaveHint": "I have this skill",
       "remove": "Remove {term}",
       "removeHint": "I don’t have it: remove from this job",
       "haveHint": "On your profile’s Skills list: counted as covered, and the prompt asks Claude to add it",
@@ -711,14 +713,17 @@
       "missingSkillsLabel": "Missing skills",
       "keywordsMissing": "Keywords missing from your resume",
       "keywords": "Keywords",
-      "keywordsHint": "Nothing to pick here: the prompt asks Claude to use as many of these as honestly fit, as natural words in your resume, so ATS keyword checks find them.",
+      "keywordsHint": "Tick ✓ the ones you really have. They go to your profile’s Keywords, so they count for every job. The prompt asks Claude to work each ticked one in.",
       "missingKeywordsLabel": "Missing keywords",
       "youHave": "You have these",
-      "youHaveHint": "On your profile’s Skills list, so they count for every job. Your resume doesn’t name them yet: the prompt asks Claude to add them.",
+      "youHaveHint": "From your profile’s Skills and Keywords. Your resume doesn’t name them yet: the prompt asks Claude to work each one in.",
       "inResume": "Already in your resume",
       "inResumeLabel": "In your resume",
       "titleRead": "Title read as <b>{title}</b>",
-      "changeError": "Could not change that: {error}"
+      "changeError": "Could not change that: {error}",
+      "iHaveKeywordHint": "I have this: add it to my profile’s Keywords",
+      "dontHaveHint": "Remove from my profile",
+      "keywordTag": "keyword"
     },
     "match": {
       "hints": {
@@ -781,7 +786,6 @@
         "german": "Written in German",
         "germanLevel": "Written in German ({level} required)",
         "english": "Written in English",
-        "languageOnResume": "{language} on the resume",
         "answers": "Application answers"
       },
       "loadError": "Could not load the kit: {error}",
@@ -816,13 +820,15 @@
       "chromeBox": "Prompt for Claude in Chrome",
       "readsKit": "Claude in Chrome reads the <link>Apply kit page</link>",
       "inQueueSuffix": " · In your Apply queue.",
-      "keywords": {
-        "title": "Keywords the job wants",
-        "count": "{ticked} of {total} ticked",
-        "intro": "Tick ✓ the ones you really have: Claude must work each into your resume (replace a vague word, rewrite a bullet, or add it to Skills). × removes one you don’t have.",
-        "missingLabel": "Not in your resume yet",
-        "tickedLabel": "You have these: Claude adds them",
-        "error": "Could not change that: {error}"
+      "languages": {
+        "label": "Languages on this resume",
+        "placeholder": "German A2, English C1",
+        "badge": "Languages: {languages}",
+        "none": "none",
+        "edit": "Edit for this job",
+        "hint": "Click to edit the languages line for this job",
+        "customHint": "Edited for this job only. Reset goes back to your profile’s Languages.",
+        "reset": "Reset"
       }
     },
     "reply": {

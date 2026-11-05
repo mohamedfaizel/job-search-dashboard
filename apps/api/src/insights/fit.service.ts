@@ -97,7 +97,7 @@ export class FitService {
     const [profile, others, removedRows] = await Promise.all([
       this.prisma.profile.findUnique({
         where: { userId },
-        select: { resumeText: true, resumeLanguage: true, skills: true },
+        select: { resumeText: true, resumeLanguage: true, skills: true, keywords: true },
       }),
       this.prisma.languageResume.findMany({
         where: { userId },
@@ -113,7 +113,7 @@ export class FitService {
       others: new Map(others.map((r) => [r.language, r.text])),
     };
     // Skills you said you have ("I have this") count as covered, like in the job popup.
-    const skills = profile?.skills ?? [];
+    const skills = [...(profile?.skills ?? []), ...(profile?.keywords ?? [])];
     if (!resume.trim()) {
       // No resume, nothing to score: the Fit column shows a dash.
       await this.prisma.jobFit.deleteMany({ where: { userId } });

@@ -48,6 +48,9 @@ describe('profile page', () => {
     const skills = screen.getByRole('textbox', { name: 'Skills' });
     await user.clear(skills);
     await user.type(skills, 'React,  Node.js , ,GraphQL');
+    const keywords = screen.getByRole('textbox', { name: 'Keywords' });
+    expect(keywords).toHaveValue('accessibility');
+    await user.type(keywords, ', wcag');
     const languages = screen.getByRole('textbox', { name: 'Languages' });
     await user.clear(languages);
     await user.type(languages, 'German A2, English C1');
@@ -61,6 +64,7 @@ describe('profile page', () => {
       variables: {
         input: {
           skills: ['React', 'Node.js', 'GraphQL'],
+          keywords: ['accessibility', 'wcag'],
           languages: ['German A2', 'English C1'],
           yearsExperience: 4,
           githubUrl: 'https://github.com/ada',

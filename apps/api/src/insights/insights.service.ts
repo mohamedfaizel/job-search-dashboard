@@ -48,6 +48,14 @@ import { mentions, relatedTo } from './skills';
 import { jobTerms } from './terms';
 
 /** Claude's interview prep is long (questions, answers, plans), but it is still text for reading. */
+/** "German A2, English C1" as the list the prompt uses. */
+export function splitLanguages(text: string): string[] {
+  return text
+    .split(/[,;\n]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 const MAX_INTERVIEW_PREP_CHARS = 30_000;
 const MAX_REPLY_PART_CHARS = 20_000;
 
@@ -110,7 +118,7 @@ export class InsightsService implements OnApplicationBootstrap {
     userId: number,
     jobId: string,
   ): Promise<{ insights: JobInsightsModel; promptInput: PromptInput }> {
-    const [job, profile, removedRows, jobResume, languageResumes, interviewPrep] =
+    const [job, profile, removedRows, jobResume, languageResumes, interviewPrep, jobLanguages] =
       await Promise.all([
         this.prisma.job.findUnique({
           where: { id: jobId },
@@ -131,6 +139,7 @@ export class InsightsService implements OnApplicationBootstrap {
             resumeLanguage: true,
             headline: true,
             skills: true,
+            keywords: true,
             languages: true,
             yearsExperience: true,
             address: true,
@@ -173,6 +182,10 @@ export class InsightsService implements OnApplicationBootstrap {
           where: { userId_jobId: { userId, jobId } },
           select: { text: true, updatedAt: true },
         }),
+        this.prisma.jobLanguages.findUnique({
+          where: { userId_jobId: { userId, jobId } },
+          select: { text: true },
+        }),
       ]);
     if (!job)
       throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
@@ -183,6 +196,12 @@ export class InsightsService implements OnApplicationBootstrap {
       others: new Map(languageResumes.map((r) => [r.language, r.text])),
     };
     const otherSkills = profile?.skills ?? [];
+    // Skills and ticked keywords both count as "you have it".
+    const haveList = [...otherSkills, ...(profile?.keywords ?? [])];
+    // The languages line of the prompt: edited for this job, else your profile's.
+    const languageList = jobLanguages
+      ? splitLanguages(jobLanguages.text)
+      : (profile?.languages ?? []);
 
     // Terms you removed with × leave both lists. One removed everywhere wins over this job's.
     const removed = new Map<string, RemovedTermModel>();
@@ -204,9 +223,9 @@ export class InsightsService implements OnApplicationBootstrap {
     const scored = resumeFor(resumes, language);
     const forPrompt = resumeFor(resumes, resumeLanguage);
     const resume = scored.text;
-    const before = checkResume(resume, terms, otherSkills);
+    const before = checkResume(resume, terms, haveList);
     // A missing term next to a skill you have ("apollo" with "graphql") gets a hint.
-    const yourSkills = [resume, ...otherSkills].join('\n');
+    const yourSkills = [resume, ...haveList].join('\n');
     const withHint = (checks: TermCheckModel[]) =>
       checks.map(({ term, inResume, youHave }) => ({
         term,
@@ -225,7 +244,7 @@ export class InsightsService implements OnApplicationBootstrap {
       resumeLanguage,
       // "about C1" when the ad only says "fluent": Claude should know it is a reading.
       germanLevel: german.level && german.levelEstimated ? `about ${german.level}` : german.level,
-      languages: profile?.languages ?? [],
+      languages: languageList,
       missingSkills: missing(before.skillChecks),
       missingKeywords: missing(before.keywordChecks),
       mustAdd: [...before.skillChecks, ...before.keywordChecks]
@@ -248,7 +267,7 @@ export class InsightsService implements OnApplicationBootstrap {
       ? {
           sources: [
             ...factTexts,
-            ...otherSkills,
+            ...haveList,
             profile?.achievements ?? '',
             ...(profile?.languages ?? []),
             profile?.headline ?? '',
@@ -269,6 +288,8 @@ export class InsightsService implements OnApplicationBootstrap {
       resumeLanguage,
       checkedAgainst: scored.language,
       hasResume,
+      languages: languageList.join(', '),
+      languagesCustom: !!jobLanguages,
       skills: withHint(before.skillChecks),
       keywords: withHint(before.keywordChecks),
       removed: [...removed.values()],
@@ -316,7 +337,7 @@ export class InsightsService implements OnApplicationBootstrap {
    * as covered in every job's score and the prompt tells Claude to put it in the resume.
    * `have: false` takes it off the list again. Saving it twice keeps one.
    */
-  async setHaveTerm(userId: number, jobId: string, term: string, have: boolean) {
+  async setHaveTerm(userId: number, jobId: string, term: string, have: boolean, keyword = false) {
     const clean = term.trim();
     if (!clean || clean.length > 100) {
       throw apiError(BadRequestException, 'TERM_LENGTH', 'A term is 1 to 100 characters');
@@ -324,21 +345,49 @@ export class InsightsService implements OnApplicationBootstrap {
     await this.assertJob(jobId);
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
-      select: { skills: true },
+      select: { skills: true, keywords: true },
     });
+    const same = (a: string) => a.trim().toLowerCase() === clean.toLowerCase();
+    const without = (list: string[]) => list.filter((item) => !same(item));
     const skills = profile?.skills ?? [];
-    const same = (skill: string) => skill.trim().toLowerCase() === clean.toLowerCase();
-    const next = have
-      ? skills.some(same)
-        ? skills
-        : [...skills, clean]
-      : skills.filter((skill) => !same(skill));
-    if (next !== skills) {
-      await this.prisma.profile.upsert({
-        where: { userId },
-        create: { userId, skills: next },
-        update: { skills: next },
+    const keywords = profile?.keywords ?? [];
+    // Ticked keywords go to Keywords, skills to Skills. Undo takes it off both.
+    const add = (list: string[]) => (list.some(same) ? list : [...list, clean]);
+    const data = have
+      ? keyword
+        ? { keywords: add(keywords) }
+        : { skills: add(skills) }
+      : { skills: without(skills), keywords: without(keywords) };
+    await this.prisma.profile.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: data,
+    });
+    return this.forJob(userId, jobId);
+  }
+
+  /**
+   * Edits the languages line of one job's prompt ("German A2, English C1"). Empty or equal to
+   * nothing new = back to your profile's Languages.
+   */
+  async setJobLanguages(userId: number, jobId: string, text: string | null) {
+    await this.assertJob(jobId);
+    const clean = (text ?? '').trim();
+    if (clean.length > 300) {
+      throw apiError(
+        BadRequestException,
+        'TERM_LENGTH',
+        'The languages line is up to 300 characters',
+      );
+    }
+    if (clean) {
+      await this.prisma.jobLanguages.upsert({
+        where: { userId_jobId: { userId, jobId } },
+        create: { userId, jobId, text: clean },
+        update: { text: clean },
       });
+    } else {
+      await this.prisma.jobLanguages.deleteMany({ where: { userId, jobId } });
     }
     return this.forJob(userId, jobId);
   }

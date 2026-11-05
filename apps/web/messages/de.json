@@ -106,7 +106,9 @@
       "yearsExperience": "Jahre Berufserfahrung",
       "linkedin": "LinkedIn",
       "github": "GitHub",
-      "website": "Website"
+      "website": "Website",
+      "keywords": "Schlüsselwörter",
+      "keywordsHint": "Wörter aus Stellenanzeigen, die auf dich zutreffen. ✓ im Reiter Passung fügt sie hier hinzu."
     },
     "answers": {
       "heading": "Antworten für Bewerbungen",
@@ -662,7 +664,7 @@
       "ringLabel": "{score} Prozent Fit",
       "relatedTo": "(du hast {term})",
       "iHave": "Ich habe {term}",
-      "iHaveHint": "Diese Fähigkeit habe ich: in meinen Lebenslauf aufnehmen",
+      "iHaveHint": "Diese Fähigkeit habe ich",
       "remove": "{term} entfernen",
       "removeHint": "Habe ich nicht: aus diesem Job entfernen",
       "haveHint": "Steht in der Fähigkeiten-Liste deines Profils: zählt als abgedeckt, und der Prompt bittet Claude, es aufzunehmen",
@@ -711,14 +713,17 @@
       "missingSkillsLabel": "Fehlende Fähigkeiten",
       "keywordsMissing": "Schlagwörter, die in deinem Lebenslauf fehlen",
       "keywords": "Schlagwörter",
-      "keywordsHint": "Hier musst du nichts auswählen: Der Prompt bittet Claude, so viele davon zu nutzen, wie ehrlich passen, als natürliche Wörter in deinem Lebenslauf, damit ATS-Prüfungen sie finden.",
+      "keywordsHint": "Hake ✓ an, was du wirklich hast. Es kommt in die Schlüsselwörter deines Profils und zählt für jeden Job. Der Prompt bittet Claude, jedes angehakte einzuarbeiten.",
       "missingKeywordsLabel": "Fehlende Schlagwörter",
       "youHave": "Das hast du",
-      "youHaveHint": "Stehen in der Fähigkeiten-Liste deines Profils und zählen daher für jeden Job. Dein Lebenslauf nennt sie noch nicht: Der Prompt bittet Claude, sie aufzunehmen.",
+      "youHaveHint": "Aus den Fähigkeiten und Schlüsselwörtern deines Profils. Dein Lebenslauf nennt sie noch nicht: der Prompt bittet Claude, jedes einzuarbeiten.",
       "inResume": "Schon in deinem Lebenslauf",
       "inResumeLabel": "In deinem Lebenslauf",
       "titleRead": "Titel gelesen als <b>{title}</b>",
-      "changeError": "Das konnte nicht geändert werden: {error}"
+      "changeError": "Das konnte nicht geändert werden: {error}",
+      "iHaveKeywordHint": "Habe ich: zu den Schlüsselwörtern in meinem Profil hinzufügen",
+      "dontHaveHint": "Aus meinem Profil entfernen",
+      "keywordTag": "Schlüsselwort"
     },
     "match": {
       "hints": {
@@ -781,7 +786,6 @@
         "german": "Auf Deutsch geschrieben",
         "germanLevel": "Auf Deutsch geschrieben ({level} erforderlich)",
         "english": "Auf Englisch geschrieben",
-        "languageOnResume": "{language} im Lebenslauf",
         "answers": "Bewerbungsangaben"
       },
       "loadError": "Das Kit konnte nicht geladen werden: {error}",
@@ -816,13 +820,15 @@
       "chromeBox": "Prompt für Claude in Chrome",
       "readsKit": "Claude in Chrome liest die <link>Seite des Bewerbungskits</link>",
       "inQueueSuffix": " · In deiner Bewerbungsliste.",
-      "keywords": {
-        "title": "Schlüsselwörter der Stelle",
-        "count": "{ticked} von {total} abgehakt",
-        "intro": "Hake ✓ ab, was du wirklich kannst: Claude muss es in deinen Lebenslauf einbauen (ungenaues Wort ersetzen, Punkt umschreiben oder bei Skills ergänzen). × entfernt, was du nicht hast.",
-        "missingLabel": "Noch nicht im Lebenslauf",
-        "tickedLabel": "Hast du: Claude ergänzt sie",
-        "error": "Konnte das nicht ändern: {error}"
+      "languages": {
+        "label": "Sprachen im Lebenslauf",
+        "placeholder": "Deutsch A2, Englisch C1",
+        "badge": "Sprachen: {languages}",
+        "none": "keine",
+        "edit": "Für diesen Job ändern",
+        "hint": "Klicken, um die Sprachzeile für diesen Job zu ändern",
+        "customHint": "Nur für diesen Job geändert. Zurücksetzen nimmt wieder die Sprachen aus deinem Profil.",
+        "reset": "Zurücksetzen"
       }
     },
     "reply": {

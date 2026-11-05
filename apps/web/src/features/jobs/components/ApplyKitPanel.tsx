@@ -14,7 +14,7 @@ import { promptSections } from '../reply';
 import type { JobFormat } from '../useJobFormat';
 import { useJobFormat } from '../useJobFormat';
 import { PRIMARY, ReplyInput, SavedReply } from './JobResumePanel';
-import { KeywordTicks } from './KeywordTicks';
+import { LanguagesBadge } from './LanguagesBadge';
 
 /** The short prompt for Claude in Chrome. The Apply kit page it opens holds the rules and facts. */
 export function chromePrompt(job: Job): string {
@@ -208,7 +208,6 @@ function facts(
   t: (key: string, values?: Record<string, string | number>) => string,
   f: JobFormat,
 ) {
-  const german = profile?.languages.find((l) => /german|deutsch/i.test(l));
   const answers =
     profile &&
     [profile.phone, profile.workPermit, profile.noticePeriod, profile.salaryExpectation].some(
@@ -223,7 +222,6 @@ function facts(
           warn: true,
         }
       : { text: t('facts.english') },
-    german && { text: t('facts.languageOnResume', { language: german }) },
     answers && { text: t('facts.answers') },
   ].filter((f): f is { text: string; warn?: boolean } => Boolean(f));
 }
@@ -349,8 +347,10 @@ function ApplyKit({
                   {text}
                 </li>
               ))}
+              <li>
+                <LanguagesBadge insights={data} />
+              </li>
             </ul>
-            <KeywordTicks insights={data} />
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <button
                 type="button"

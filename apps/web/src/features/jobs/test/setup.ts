@@ -10,6 +10,7 @@ import {
   jobResume,
   mailSuggestions,
   haveTerms,
+  jobLanguages,
   removedTerms,
   requests,
   server,
@@ -32,6 +33,7 @@ afterEach(() => {
   applyQueue.length = 0;
   removedTerms.length = 0;
   haveTerms.length = 0;
+  jobLanguages.current = null;
   jobResume.current = null;
   interviewPrep.current = null;
   tableSettings.current = null;
