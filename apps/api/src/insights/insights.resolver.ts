@@ -110,6 +110,20 @@ export class InsightsResolver {
 
   @Mutation(() => JobInsightsModel, {
     description:
+      'Saves your edits to the resume, cover letter and form answers you saved for this job, and scores the resume again',
+  })
+  editJobResume(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('resume') resume: string,
+    @Args('coverLetter') coverLetter: string,
+    @Args('formAnswers') formAnswers: string,
+  ): Promise<JobInsightsModel> {
+    return this.insights.editJobResume(user.id, jobId, { resume, coverLetter, formAnswers });
+  }
+
+  @Mutation(() => JobInsightsModel, {
+    description:
       'Takes the skills the fact check flagged out of the Skills section of the resume you wrote for this job, then scores it again',
   })
   removeUnsupportedSkills(

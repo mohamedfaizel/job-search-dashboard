@@ -904,6 +904,32 @@
         "SKILLS": "Im PDF-Text verloren: {detail}"
       }
     },
+    "preview": {
+      "title": "Vorschau und Bearbeiten",
+      "unsaved": "Nicht gespeichert",
+      "editText": "Als Text bearbeiten",
+      "showPage": "Als Seite zeigen",
+      "intro": "So kommt es in dein PDF. Klicke auf eine Zeile, um sie zu ändern, darunter eine Zeile einzufügen oder sie zu löschen.",
+      "partsLabel": "Teile der Antwort",
+      "parts": {
+        "resume": "Lebenslauf",
+        "coverLetter": "Anschreiben",
+        "formAnswers": "Formularantworten"
+      },
+      "textBox": "Text: {part}",
+      "clickToEdit": "Zum Bearbeiten klicken",
+      "lineBox": "Diese Zeile bearbeiten",
+      "lineDone": "Fertig",
+      "lineCancel": "Abbrechen",
+      "lineAdd": "+ Zeile darunter",
+      "lineDelete": "Zeile löschen",
+      "empty": "Noch leer. Mit „Als Text bearbeiten“ schreiben.",
+      "undo": "Rückgängig",
+      "reset": "Zurücksetzen",
+      "save": "Änderungen speichern",
+      "saving": "Speichert…",
+      "saveError": "Änderungen nicht gespeichert: {error}"
+    },
     "stillOpen": {
       "never": "Noch nicht geprüft, ob die Anzeige noch online ist",
       "checking": "Prüfe, ob die Anzeige noch online ist…",
@@ -1202,6 +1228,7 @@
     "LANGUAGE_UNKNOWN": "Wähle eine Sprache aus der Liste.",
     "LANGUAGE_IS_MASTER": "Dein Haupt-Lebenslauf ist schon in dieser Sprache. Wähle eine andere Sprache.",
     "JOB_RESUME_FILE_TYPE": "Lade eine PDF-, Word- (.docx), Text- oder Markdown-Datei hoch.",
+    "REPLY_PART_TOO_LONG": "Anschreiben und Formularantworten haben höchstens {max} Zeichen.",
     "JOB_RESUME_MISSING": "Für diesen Job ist kein Lebenslauf gespeichert.",
     "COVER_LETTER_MISSING": "Für diesen Job ist kein Anschreiben gespeichert.",
     "TERM_LENGTH": "Ein Begriff muss 1 bis 100 Zeichen lang sein.",

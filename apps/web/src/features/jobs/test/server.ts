@@ -91,6 +91,7 @@ export const INSIGHTS: JobInsights = {
 
 /** The resume the test user saved for job-1, once they upload or paste one. */
 export const SAVED_RESUME: JobResume = {
+  text: '# Ada Lovelace\nFrontend Engineer\nBerlin | ada@example.com\n\n## Experience\n### Frontend Engineer | Acme\n01/2021 - today\n- Built dashboards in React and GraphQL\n\n## Skills\n- React, TypeScript',
   fileName: null,
   coverLetter: 'Dear Acme team, I build dashboards.',
   formAnswers: 'Why Acme: I like your product.',
@@ -400,6 +401,17 @@ const handlers = [
     requests.push({ operation: 'SaveJobResumeText', variables });
     jobResume.current = SAVED_RESUME;
     return HttpResponse.json({ data: { saveJobResumeText: insightsNow() } });
+  }),
+  api.mutation('EditJobResume', ({ variables }) => {
+    requests.push({ operation: 'EditJobResume', variables });
+    jobResume.current = {
+      ...(jobResume.current ?? SAVED_RESUME),
+      text: (variables['resume'] as string).trim(),
+      coverLetter: (variables['coverLetter'] as string).trim(),
+      formAnswers: (variables['formAnswers'] as string).trim(),
+      updatedAt: '2026-11-05T12:00:00.000Z',
+    };
+    return HttpResponse.json({ data: { editJobResume: insightsNow() } });
   }),
   api.mutation('SaveInterviewPrep', ({ variables }) => {
     requests.push({ operation: 'SaveInterviewPrep', variables });

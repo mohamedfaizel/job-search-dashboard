@@ -21,6 +21,7 @@ import { Badge } from './Badge';
 import { CopyText } from './CopyText';
 import { HaveChip, MissingChip, ScoreRing } from './InsightsPanel';
 import { scoreTone } from './MatchPanel';
+import { SavedReplyPreview } from './ReplyPreview';
 
 export const BUTTON =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
@@ -472,6 +473,8 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
 
   return (
     <section aria-label={t('sectionLabel')} className="space-y-3">
+      <SavedReplyPreview key={`preview-${jobResume.updatedAt}`} jobId={jobId} saved={jobResume} />
+
       {jobResume.score !== null && (
         <div
           className={`flex items-center gap-4 rounded-xl border px-4 py-3 ${

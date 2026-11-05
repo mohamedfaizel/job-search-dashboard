@@ -31,6 +31,7 @@ export {
   useRestoreInsightTerm,
   useSaveInterviewPrep,
   useSaveJobResumeText,
+  useEditJobResume,
   useUploadJobResume,
 } from './api/insights';
 export {

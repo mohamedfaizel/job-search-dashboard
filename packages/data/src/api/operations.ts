@@ -564,6 +564,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     titleMatch
     score
     jobResume {
+      text
       fileName
       coverLetter
       formAnswers
@@ -629,6 +630,25 @@ export const RESTORE_INSIGHT_TERM = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation RestoreInsightTerm($jobId: ID!, $term: String!) {
     restoreInsightTerm(jobId: $jobId, term: $term) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const EDIT_JOB_RESUME = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation EditJobResume(
+    $jobId: ID!
+    $resume: String!
+    $coverLetter: String!
+    $formAnswers: String!
+  ) {
+    editJobResume(
+      jobId: $jobId
+      resume: $resume
+      coverLetter: $coverLetter
+      formAnswers: $formAnswers
+    ) {
       ...JobInsightsFields
     }
   }

@@ -55,6 +55,12 @@ export class FactFindingModel {
     'The resume you wrote for this job, uploaded or pasted, scored the same way as your profile resume',
 })
 export class JobResumeModel {
+  @Field({
+    description:
+      'The resume as saved: Markdown from the Apply kit reply (or text read out of the file), with your edits',
+  })
+  text!: string;
+
   @Field(() => String, {
     nullable: true,
     description: 'Name of the uploaded file. Null when the text was pasted',

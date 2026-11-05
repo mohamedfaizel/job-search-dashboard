@@ -8,6 +8,7 @@ import {
   APPLY_QUEUE_PROMPT,
   DELETE_INTERVIEW_PREP,
   DELETE_JOB_RESUME,
+  EDIT_JOB_RESUME,
   JOB_INSIGHTS,
   MATCH_JOB_RESUME,
   RECALCULATE_FIT,
@@ -294,6 +295,28 @@ export function useSaveJobResumeText() {
         vars,
       );
       return data.saveJobResumeText;
+    },
+    onSuccess: (insights) => {
+      savedReply(queryClient, insights);
+    },
+  });
+}
+
+/** Saves your edits from the reply preview: resume, cover letter and form answers. */
+export function useEditJobResume() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: {
+      jobId: string;
+      resume: string;
+      coverLetter: string;
+      formAnswers: string;
+    }) => {
+      const data = await graphqlClient.request<{ editJobResume: JobInsights }>(
+        EDIT_JOB_RESUME,
+        vars,
+      );
+      return data.editJobResume;
     },
     onSuccess: (insights) => {
       savedReply(queryClient, insights);
