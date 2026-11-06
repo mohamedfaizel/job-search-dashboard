@@ -498,7 +498,9 @@
       "hiddenCount": "{count} ausgeblendet",
       "menuLabel": "Spalten ein- oder ausblenden",
       "alwaysShown": "(immer sichtbar)",
-      "showAll": "Alle Spalten zeigen"
+      "showAll": "Alle Spalten zeigen",
+      "scores": "Bewertungen",
+      "details": "Details"
     },
     "filter": {
       "button": "{column} filtern",
@@ -546,7 +548,11 @@
       "postingHint": "Die Original-Anzeige öffnen",
       "posting": "Anzeige",
       "expired": "Abgelaufen",
-      "expiredHint": "Die Anzeige ist geschlossen (laut Prüfung oder Jobbörse)"
+      "expiredHint": "Die Anzeige ist geschlossen (laut Prüfung oder Jobbörse)",
+      "fitShort": "Fit",
+      "applyShort": "Kit",
+      "matchShort": "KI",
+      "matchHint": "Bewertung des KI-Matchers (Resume-Matcher) für deinen Lebenslauf. Klick für Details"
     },
     "queue": {
       "heading": "Bewerbungsliste ({count})",

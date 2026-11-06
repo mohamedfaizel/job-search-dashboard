@@ -168,6 +168,22 @@ export function JobsTable({
                             }}
                           />
                         )}
+                        {controls.filters && (
+                          <ColumnFilter
+                            column={controls.filters.map((c) => t(c.name)).join(' · ')}
+                            groups={controls.filters.map((c) => ({
+                              name: t(c.name),
+                              options: c.options(filterOptions, f),
+                              selected: filters[c.key] ?? [],
+                              onToggle: (value) => {
+                                onToggleFilter(c.key, value);
+                              },
+                            }))}
+                            onClear={() => {
+                              for (const c of controls.filters ?? []) onClearFilter(c.key);
+                            }}
+                          />
+                        )}
                       </div>
                     </th>
                   );

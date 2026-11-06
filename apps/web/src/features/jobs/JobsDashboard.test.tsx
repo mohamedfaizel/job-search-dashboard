@@ -72,7 +72,8 @@ describe('JobsDashboard', () => {
       }),
     ).toBeInTheDocument();
 
-    expect(screen.getByRole('columnheader', { name: /Gehalt/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Details/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Bewertungen/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Alle Jobs/ })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Veröffentlicht' })).toHaveDisplayValue(
       'Veröffentlicht: jederzeit',
@@ -96,13 +97,14 @@ describe('JobsDashboard', () => {
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
 
-    await userEvent.click(screen.getByRole('button', { name: /salary/i }));
+    // Details sorts by salary.
+    await userEvent.click(screen.getByRole('button', { name: /details/i }));
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({
         sort: { field: 'SALARY', direction: 'ASC' },
       });
     });
-    expect(screen.getByRole('columnheader', { name: /salary/i })).toHaveAttribute(
+    expect(screen.getByRole('columnheader', { name: /details/i })).toHaveAttribute(
       'aria-sort',
       'ascending',
     );
@@ -133,12 +135,17 @@ describe('JobsDashboard', () => {
     expect(within(table).getByText('Visa support')).toBeInTheDocument();
     expect(within(table).getByText('No sponsorship')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Filter Visa' }));
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Visa support' }));
+    // One funnel on the Details column filters seniority and visa.
+    await userEvent.click(screen.getByRole('button', { name: 'Filter Seniority · Visa' }));
+    const visaList = screen.getByRole('list', { name: 'Visa' });
+    await userEvent.click(within(visaList).getByRole('checkbox', { name: 'Visa support' }));
 
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({ filter: { visas: ['OFFERS'] } });
     });
+    expect(
+      screen.getByRole('button', { name: 'Filter Seniority · Visa (1 selected)' }),
+    ).toBeInTheDocument();
   });
 
   it('shows the job popup in German', async () => {
@@ -260,7 +267,9 @@ describe('JobsDashboard', () => {
     const score = await screen.findByRole('button', {
       name: 'Apply kit score for Senior Frontend Engineer: 88%',
     });
-    expect(screen.getByRole('columnheader', { name: /Apply kit/ })).toBeInTheDocument();
+    // Shown in the Scores column, labelled Kit, next to Fit.
+    expect(screen.getByRole('columnheader', { name: /Scores/ })).toBeInTheDocument();
+    expect(score).toHaveTextContent('Kit88%');
     expect(
       screen.queryByRole('button', { name: /Apply kit score for Backend Developer/ }),
     ).not.toBeInTheDocument();
@@ -334,7 +343,7 @@ describe('JobsDashboard', () => {
         postedWithinDays: 7,
         minFit: 70,
         pageSize: 50,
-        columns: { salary: false },
+        columns: { details: false },
       });
       renderDashboard();
 
@@ -344,7 +353,7 @@ describe('JobsDashboard', () => {
         sort: { field: 'SALARY', direction: 'DESC' },
         filter: { countryCodes: ['DE'], workplaces: ['REMOTE'], minFit: 70 },
       });
-      expect(screen.queryByRole('columnheader', { name: /Salary/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /Details/ })).not.toBeInTheDocument();
       // The defaults were never asked for first.
       expect(
         requests.filter((r) => r.operation === 'JobsPage' && r.variables['sort'] !== undefined),
@@ -388,10 +397,10 @@ describe('JobsDashboard', () => {
     });
 
     it('keeps the columns this browser remembered when nothing is saved yet', async () => {
-      localStorage.setItem('jobsearch.dashboard.columns', '{"salary":false}');
+      localStorage.setItem('jobsearch.dashboard.columns', '{"details":false}');
       renderDashboard();
       await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
-      expect(screen.queryByRole('columnheader', { name: /Salary/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /Details/ })).not.toBeInTheDocument();
     });
   });
 
@@ -405,8 +414,7 @@ describe('JobsDashboard', () => {
     });
   });
 
-  it('shows your match score in the Match column', async () => {
-    localStorage.setItem('jobsearch.dashboard.columns', '{"match":true}');
+  it('shows your AI matcher score in the Scores column', async () => {
     server.use(
       api.query('JobsPage', () =>
         HttpResponse.json({
@@ -438,33 +446,33 @@ describe('JobsDashboard', () => {
   it('hides and shows columns from the Columns menu, and remembers the choice', async () => {
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
-    expect(screen.getByRole('columnheader', { name: /Salary/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Details/ })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /Columns/ }));
     const menu = screen.getByRole('dialog', { name: 'Show or hide columns' });
     // The title opens the popup, so it can't be switched off.
     expect(within(menu).getByRole('checkbox', { name: /^Job/ })).toBeDisabled();
-    await userEvent.click(within(menu).getByRole('checkbox', { name: 'Salary' }));
+    await userEvent.click(within(menu).getByRole('checkbox', { name: 'Details' }));
 
-    expect(screen.queryByRole('columnheader', { name: /Salary/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /Details/ })).not.toBeInTheDocument();
     expect(screen.queryByText('$90k - $120k')).not.toBeInTheDocument();
-    // Salary plus the eight columns that start hidden.
-    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('9 hidden');
+    // Details plus the six columns that start hidden.
+    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('7 hidden');
     await waitFor(
       () => {
-        expect(JSON.parse(tableSettings.current!)).toMatchObject({ columns: { salary: false } });
+        expect(JSON.parse(tableSettings.current!)).toMatchObject({ columns: { details: false } });
       },
       { timeout: 3000 },
     );
 
     await userEvent.click(within(menu).getByRole('button', { name: 'Show all columns' }));
-    expect(screen.getByRole('columnheader', { name: /Salary/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Details/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /Industry/ })).toBeInTheDocument();
 
     // Columns that read a field (Skills) have ids too, so only that one goes.
     await userEvent.click(within(menu).getByRole('checkbox', { name: 'Skills' }));
     expect(screen.queryByRole('columnheader', { name: /Skills/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /Seniority/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Function/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('1 hidden');
   });
 
@@ -476,6 +484,8 @@ describe('JobsDashboard', () => {
       /Match/,
       /Skills/,
       /Seniority/,
+      /Salary/,
+      /Visa/,
       /Language/,
       /Source/,
       /Workplace/,
@@ -483,7 +493,7 @@ describe('JobsDashboard', () => {
     ]) {
       expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument();
     }
-    for (const name of [/^Job/, /Fit/, /Location/, /Posted/, /Salary/, /Status/]) {
+    for (const name of [/^Job/, /Scores/, /Location/, /Posted/, /Details/, /Status/]) {
       expect(screen.getByRole('columnheader', { name })).toBeInTheDocument();
     }
 
