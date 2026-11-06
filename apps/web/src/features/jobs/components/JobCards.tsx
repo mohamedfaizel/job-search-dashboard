@@ -31,7 +31,7 @@ export function JobCards({ jobs, isFetching }: { jobs: Job[]; isFetching: boolea
             <SelectCell job={job} />
           </div>
           {(job.fitScore !== null || job.applyScore !== null || job.matchStatus) && (
-            <ScoresCell job={job} />
+            <ScoresCell job={job} inline />
           )}
           <div className="flex flex-wrap items-start gap-x-6 gap-y-2 text-[13px]">
             <LocationCell job={job} />

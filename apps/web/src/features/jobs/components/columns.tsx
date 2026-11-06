@@ -357,15 +357,15 @@ export function MatchCell({ job, labelled = false }: { job: Job; labelled?: bool
 }
 
 /**
- * Fit %, Apply kit % and the AI matcher's score side by side, each with a short label. Scores a
- * job doesn't have yet are left out, so the cell stays short.
+ * Fit %, Apply kit % and the AI matcher's score, each with a short label: stacked one under
+ * another in the table, side by side on phone cards. Scores a job doesn't have yet are left out.
  */
-export function ScoresCell({ job }: { job: Job }) {
+export function ScoresCell({ job, inline = false }: { job: Job; inline?: boolean }) {
   if (job.fitScore === null && job.applyScore === null && !job.matchStatus) {
     return <FitCell job={job} />;
   }
   return (
-    <div className="flex items-center gap-1">
+    <div className={inline ? 'flex items-center gap-1' : 'flex flex-col items-start gap-1'}>
       {job.fitScore !== null && <FitCell job={job} labelled />}
       {job.applyScore !== null && <ApplyKitCell job={job} labelled />}
       {job.matchStatus && <MatchCell job={job} labelled />}
