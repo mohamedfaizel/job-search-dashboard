@@ -61,6 +61,8 @@ function toneFor(text: string): BadgeTone {
 /** Every column name and filter name the table translates. */
 export type ColumnNameKey =
   | 'title'
+  | 'scores'
+  | 'details'
   | 'fit'
   | 'apply'
   | 'match'
@@ -267,7 +269,12 @@ export function StatusCell({ job }: { job: Job }) {
  * Fit %: how much of the job's skills, keywords and title your profile resume covers, the same
  * score as in the popup. Clicking it opens the popup with the breakdown.
  */
-export function FitCell({ job }: { job: Job }) {
+/** The small "Fit" / "Kit" / "AI" word in front of a score in the Scores column. */
+function ScoreLabel({ text }: { text: string | undefined }) {
+  return text ? <span className="mr-1 text-[10px] font-semibold opacity-70">{text}</span> : null;
+}
+
+export function FitCell({ job, labelled = false }: { job: Job; labelled?: boolean }) {
   const { openJob } = useRowActions();
   const t = useTranslations('Jobs.row');
   if (job.fitScore === null) {
@@ -283,7 +290,10 @@ export function FitCell({ job }: { job: Job }) {
       title={t('fitHint')}
       className="rounded"
     >
-      <Badge tone={scoreTone(job.fitScore)}>{job.fitScore}%</Badge>
+      <Badge tone={scoreTone(job.fitScore)}>
+        <ScoreLabel text={labelled ? t('fitShort') : undefined} />
+        {job.fitScore}%
+      </Badge>
     </button>
   );
 }
@@ -292,7 +302,7 @@ export function FitCell({ job }: { job: Job }) {
  * Apply kit score: the same score as Fit %, for the resume Claude wrote for this job. It shows
  * what the Apply kit gained, next to the Fit % of your own resume. Click for the popup.
  */
-export function ApplyKitCell({ job }: { job: Job }) {
+export function ApplyKitCell({ job, labelled = false }: { job: Job; labelled?: boolean }) {
   const { openJob } = useRowActions();
   const t = useTranslations('Jobs.row');
   if (job.applyScore === null) return <span title={t('applyEmpty')}>{dash}</span>;
@@ -306,13 +316,16 @@ export function ApplyKitCell({ job }: { job: Job }) {
       title={t('applyHint')}
       className="rounded"
     >
-      <Badge tone={scoreTone(job.applyScore)}>{job.applyScore}%</Badge>
+      <Badge tone={scoreTone(job.applyScore)}>
+        <ScoreLabel text={labelled ? t('applyShort') : undefined} />
+        {job.applyScore}%
+      </Badge>
     </button>
   );
 }
 
 /** Resume-Matcher's ATS score for the job; clicking it opens the popup with the breakdown. */
-export function MatchCell({ job }: { job: Job }) {
+export function MatchCell({ job, labelled = false }: { job: Job; labelled?: boolean }) {
   const { openJob } = useRowActions();
   const t = useTranslations('Jobs.row');
   const { matchStatus, matchScore } = job;
@@ -332,10 +345,62 @@ export function MatchCell({ job }: { job: Job }) {
         openJob(job);
       }}
       aria-label={t('matchLabel', { title: job.title, label })}
+      title={t('matchHint')}
       className="rounded"
     >
-      <Badge tone={tone}>{label}</Badge>
+      <Badge tone={tone}>
+        <ScoreLabel text={labelled ? t('matchShort') : undefined} />
+        {label}
+      </Badge>
     </button>
+  );
+}
+
+/**
+ * Fit %, Apply kit % and the AI matcher's score side by side, each with a short label. Scores a
+ * job doesn't have yet are left out, so the cell stays short.
+ */
+export function ScoresCell({ job }: { job: Job }) {
+  if (job.fitScore === null && job.applyScore === null && !job.matchStatus) {
+    return <FitCell job={job} />;
+  }
+  return (
+    <div className="flex items-center gap-1">
+      {job.fitScore !== null && <FitCell job={job} labelled />}
+      {job.applyScore !== null && <ApplyKitCell job={job} labelled />}
+      {job.matchStatus && <MatchCell job={job} labelled />}
+    </div>
+  );
+}
+
+export function SeniorityBadge({ seniority }: { seniority: Job['seniority'] }) {
+  const t = useTranslations('Jobs.columns');
+  return seniority ? (
+    <Badge tone="orange" title={t('seniority')}>
+      {capitalize(seniority)}
+    </Badge>
+  ) : null;
+}
+
+/** Seniority and salary on one line, the ad's visa stance under them. */
+export function DetailsCell({ job }: { job: Job }) {
+  const hasSalary = job.salaryMinUsd !== null || job.salaryMaxUsd !== null;
+  const hasVisa = job.visa === 'OFFERS' || job.visa === 'NO';
+  if (!job.seniority && !hasSalary && !hasVisa) return dash;
+  return (
+    <div className="space-y-1">
+      {(job.seniority || hasSalary) && (
+        <div className="flex items-center gap-1.5">
+          <SeniorityBadge seniority={job.seniority} />
+          {hasSalary && <SalaryCell job={job} />}
+        </div>
+      )}
+      {hasVisa && (
+        <div>
+          <VisaCell visa={job.visa} hideUnknown />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -458,22 +523,11 @@ export const columns = helper.columns([
     enableHiding: false,
     cell: ({ row }) => <JobCell job={row.original} />,
   }),
-  // Next to the title, so the score is visible without scrolling the wide table sideways.
+  // Next to the title, so the scores are visible without scrolling the wide table sideways.
   helper.display({
-    id: 'fit',
-    header: () => <ColumnName id="fit" />,
-    cell: ({ row }) => <FitCell job={row.original} />,
-  }),
-  helper.display({
-    id: 'apply',
-    header: () => <ColumnName id="apply" />,
-    cell: ({ row }) => <ApplyKitCell job={row.original} />,
-  }),
-  // Resume-Matcher's score needs AI and one run per job, so it starts hidden (Columns menu).
-  helper.display({
-    id: 'match',
-    header: () => <ColumnName id="match" />,
-    cell: ({ row }) => <MatchCell job={row.original} />,
+    id: 'scores',
+    header: () => <ColumnName id="scores" />,
+    cell: ({ row }) => <ScoresCell job={row.original} />,
   }),
   helper.display({
     id: 'location',
@@ -485,24 +539,13 @@ export const columns = helper.columns([
     cell: ({ row }) => <PostedCell job={row.original} />,
   }),
   helper.display({
-    id: 'salary',
-    header: () => <ColumnName id="salary" />,
-    cell: ({ row }) => <SalaryCell job={row.original} />,
-  }),
-  helper.accessor('visa', {
-    header: () => <ColumnName id="visa" />,
-    cell: (info) => <VisaCell visa={info.getValue()} />,
+    id: 'details',
+    header: () => <ColumnName id="details" />,
+    cell: ({ row }) => <DetailsCell job={row.original} />,
   }),
   helper.accessor('skills', {
     header: () => <ColumnName id="skills" />,
     cell: (info) => <SkillsCell skills={info.getValue()} />,
-  }),
-  helper.accessor('seniority', {
-    header: () => <ColumnName id="seniority" />,
-    cell: (info) => {
-      const value = info.getValue();
-      return value ? <Badge tone="orange">{capitalize(value)}</Badge> : dash;
-    },
   }),
   helper.accessor('jobFunction', {
     header: () => <ColumnName id="jobFunction" />,
@@ -564,9 +607,7 @@ export const columns = helper.columns([
  * stay in the Columns menu, so you can turn them back on.
  */
 export const DEFAULT_HIDDEN_COLUMNS = [
-  'match',
   'skills',
-  'seniority',
   'jobFunction',
   'language',
   'workplace',
@@ -588,15 +629,19 @@ export const MENU_COLUMNS = columns.flatMap((column) => {
 /** How each column header sorts and filters. Columns not listed here do neither. */
 export interface ColumnControls {
   sortField?: JobSortField;
-  filter?: {
-    key: ListFilterKey;
-    /** What the filter picks, when it isn't the column's name: the Job column filters companies. */
-    name?: ColumnNameKey;
-    options: (
-      opts: JobFilterOptions | undefined,
-      format: JobFormat,
-    ) => { value: string; label: string }[];
-  };
+  filter?: ColumnFilterControl;
+  /** Several filters in one funnel, each with its own titled list (Details: Seniority and Visa). */
+  filters?: (ColumnFilterControl & { name: ColumnNameKey })[];
+}
+
+export interface ColumnFilterControl {
+  key: ListFilterKey;
+  /** What the filter picks, when it isn't the column's name: the Job column filters companies. */
+  name?: ColumnNameKey;
+  options: (
+    opts: JobFilterOptions | undefined,
+    format: JobFormat,
+  ) => { value: string; label: string }[];
 }
 
 const plain = (values: string[] | undefined) => (values ?? []).map((v) => ({ value: v, label: v }));
@@ -612,13 +657,9 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
     sortField: 'CITY',
     filter: { key: 'cities', name: 'city', options: (o) => plain(o?.cities) },
   },
-  fit: { sortField: 'FIT' },
+  scores: { sortField: 'FIT' },
   postedAt: { sortField: 'POSTED_AT' },
   jobFunction: { filter: { key: 'jobFunctions', options: (o) => plain(o?.jobFunctions) } },
-  seniority: {
-    sortField: 'SENIORITY',
-    filter: { key: 'seniorities', options: (o) => capitalized(o?.seniorities) },
-  },
   skills: { filter: { key: 'skills', options: (o) => plain(o?.skills) } },
   language: {
     filter: {
@@ -626,7 +667,18 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
       options: (o, f) => (o?.languages ?? []).map((v) => ({ value: v, label: f.language(v) })),
     },
   },
-  salary: { sortField: 'SALARY' },
+  // Sorts by salary; the funnel filters seniority and visa.
+  details: {
+    sortField: 'SALARY',
+    filters: [
+      { key: 'seniorities', name: 'seniority', options: (o) => capitalized(o?.seniorities) },
+      {
+        key: 'visas',
+        name: 'visa',
+        options: (_, f) => VISA_SPONSORSHIPS.map((v) => ({ value: v, label: f.visa(v) })),
+      },
+    ],
+  },
   provider: { filter: { key: 'providers', options: (o) => capitalized(o?.providers) } },
   workplace: {
     sortField: 'WORKPLACE',
@@ -636,12 +688,6 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
     },
   },
   industry: { filter: { key: 'industries', options: (o) => plain(o?.industries) } },
-  visa: {
-    filter: {
-      key: 'visas',
-      options: (_, f) => VISA_SPONSORSHIPS.map((v) => ({ value: v, label: f.visa(v) })),
-    },
-  },
   // Statuses are per user (a separate table), so the server doesn't sort by them.
   status: {
     filter: {

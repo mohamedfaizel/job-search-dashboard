@@ -498,7 +498,9 @@
       "hiddenCount": "{count} hidden",
       "menuLabel": "Show or hide columns",
       "alwaysShown": "(always shown)",
-      "showAll": "Show all columns"
+      "showAll": "Show all columns",
+      "scores": "Scores",
+      "details": "Details"
     },
     "filter": {
       "button": "Filter {column}",
@@ -546,7 +548,11 @@
       "postingHint": "Open the original posting",
       "posting": "Posting",
       "expired": "Expired",
-      "expiredHint": "The ad is closed (found by the still-open check or the job board)"
+      "expiredHint": "The ad is closed (found by the still-open check or the job board)",
+      "fitShort": "Fit",
+      "applyShort": "Kit",
+      "matchShort": "AI",
+      "matchHint": "AI matcher (Resume-Matcher) score for your resume. Click for details"
     },
     "queue": {
       "heading": "Apply queue ({count})",

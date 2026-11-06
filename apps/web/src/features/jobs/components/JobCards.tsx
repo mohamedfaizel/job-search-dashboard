@@ -2,16 +2,13 @@ import type { Job } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import {
   ActionsCell,
-  ApplyKitCell,
-  FitCell,
+  DetailsCell,
   JobCell,
   LocationCell,
-  MatchCell,
   PostedCell,
-  SalaryCell,
+  ScoresCell,
   SelectCell,
   StatusCell,
-  VisaCell,
 } from './columns';
 
 /**
@@ -31,16 +28,15 @@ export function JobCards({ jobs, isFetching }: { jobs: Job[]; isFetching: boolea
             <div className="min-w-0 flex-1 text-[13px]">
               <JobCell job={job} />
             </div>
-            {job.fitScore !== null && <FitCell job={job} />}
-            {job.applyScore !== null && <ApplyKitCell job={job} />}
-            {job.matchStatus && <MatchCell job={job} />}
             <SelectCell job={job} />
           </div>
+          {(job.fitScore !== null || job.applyScore !== null || job.matchStatus) && (
+            <ScoresCell job={job} />
+          )}
           <div className="flex flex-wrap items-start gap-x-6 gap-y-2 text-[13px]">
             <LocationCell job={job} />
-            <SalaryCell job={job} />
             <PostedCell job={job} />
-            <VisaCell visa={job.visa} hideUnknown />
+            <DetailsCell job={job} />
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
             <StatusCell job={job} />
