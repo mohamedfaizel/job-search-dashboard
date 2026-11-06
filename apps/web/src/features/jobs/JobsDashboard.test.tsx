@@ -851,10 +851,10 @@ describe('JobsDashboard', () => {
     await user.click(within(dialog).getByRole('tab', { name: /^Apply/ }));
 
     await user.click(await within(dialog).findByRole('button', { name: 'Add to Apply queue' }));
-    expect(
-      await within(dialog).findByRole('button', { name: 'Remove from Apply queue' }),
-    ).toBeInTheDocument();
-    expect(within(dialog).getByText('In your Apply queue.')).toBeInTheDocument();
+    // The button sits in the popup's bottom bar, next to Mark Applied.
+    const inQueue = await within(dialog).findByRole('button', { name: '✓ In Apply queue' });
+    expect(inQueue).toHaveAttribute('aria-pressed', 'true');
+    expect(inQueue.closest('footer')).not.toBeNull();
   });
 
   it('opens the job popup from its title in the Apply queue, even when it is on another page', async () => {

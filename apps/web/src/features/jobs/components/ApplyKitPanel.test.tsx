@@ -120,7 +120,7 @@ describe('ApplyKitPanel', () => {
     await user.click(await screen.findByRole('button', { name: /Save the reply/ }));
 
     await navigator.clipboard.writeText('=== RESUME ===\nGraphQL');
-    await user.click(screen.getByRole('button', { name: 'Paste reply and get PDF' }));
+    await user.click(screen.getByRole('button', { name: 'Paste reply and save' }));
 
     await waitFor(() => {
       expect(requests).toContainEqual({
@@ -132,9 +132,8 @@ describe('ApplyKitPanel', () => {
     const saved = await screen.findByRole('region', { name: 'Your resume for this job' });
     expect(currentStep()).toHaveTextContent('Fill the form');
     expect(within(saved).getByLabelText('Score before and after')).toHaveTextContent('was 50%');
-    // Pasting once gives you the file: the resume PDF downloads straight away.
-    expect(downloads).toEqual([`${jobResumeUrl('job-1')}/resume.pdf`]);
-    expect(screen.getByRole('status')).toHaveTextContent('Your resume PDF is downloading');
+    // Saving only saves and scores: you check and download the PDF here in step 3.
+    expect(downloads).toEqual([]);
     // In your template (Modern); another one can be picked for this download.
     await waitFor(() => {
       expect(within(saved).getByRole('link', { name: 'Download PDF' })).toHaveAttribute(

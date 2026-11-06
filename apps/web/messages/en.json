@@ -635,7 +635,11 @@
       "apply": "Apply →",
       "markApplied": "✓ Mark Applied",
       "aiIntro": "Scores your <b>master resume</b> (the one on My profile) with Resume-Matcher. It does not use the resume Claude wrote in the Apply tab. <b>Each run uses your Claude API credits.</b> The Fit tab gives the same kind of score for free.",
-      "noDescription": "This job has no description, so there is nothing to match."
+      "noDescription": "This job has no description, so there is nothing to match.",
+      "addQueue": "Add to Apply queue",
+      "inQueue": "✓ In Apply queue",
+      "removeQueue": "Click to remove from the Apply queue",
+      "addQueueHint": "Apply to several jobs later in one go"
     },
     "ad": {
       "inResume": "In your resume",
@@ -805,8 +809,6 @@
       },
       "loadError": "Could not load the kit: {error}",
       "loading": "Loading the Apply kit…",
-      "removeQueue": "Remove from Apply queue",
-      "addQueue": "Add to Apply queue",
       "kitLabel": "Apply kit",
       "applied": "✓ On your tracker as applied.",
       "askOpened": "You opened this posting. Did you apply?",
@@ -818,15 +820,12 @@
       "copyOpen": "Copy prompt and open Claude ↗",
       "step1Hint": "Claude opens in a new tab with the prompt on your clipboard: paste it and send. When Claude answers, copy its whole reply and come back for step 2.",
       "noAnswers": "Add your Application answers on “My profile” (phone, work permit, notice period, salary) so Claude and the form get them.",
-      "inQueue": "In your Apply queue.",
-      "several": "Applying to several jobs?",
-      "step2Title": "Paste Claude’s reply, get your PDF",
-      "step2Intro": "In Claude, copy the whole reply (the copy button under it). One click here saves it, scores it and downloads the resume PDF.",
+      "step2Title": "Paste Claude’s reply",
+      "step2Intro": "In Claude, copy the whole reply (the copy button under it). One click here saves it and scores it. You check and download the PDF in step 3.",
       "copyFailed": "Could not copy the prompt. ",
       "copied": "✓ Prompt copied · ",
       "copyAgain": "Copy again",
       "openClaude": "Open Claude ↗",
-      "downloading": "✓ Your resume PDF is downloading. Find it in your Downloads folder and attach it to the application.",
       "noReply": "No reply saved yet. Claude in Chrome can still fill in the form from your profile.",
       "step3Title": "Let Claude in Chrome fill in the form",
       "step3Intro": "It reads your Apply kit, fills in the posting’s form and stops before Submit. You attach the PDF, check it and press Submit.",
@@ -834,7 +833,6 @@
       "copyChrome": "Copy prompt for Claude in Chrome",
       "chromeBox": "Prompt for Claude in Chrome",
       "readsKit": "Claude in Chrome reads the <link>Apply kit page</link>",
-      "inQueueSuffix": " · In your Apply queue.",
       "languages": {
         "label": "Languages on this resume",
         "placeholder": "German A2, English C1",
@@ -847,9 +845,9 @@
       }
     },
     "reply": {
-      "making": "Making your PDF…",
-      "paste": "Paste reply and get PDF",
-      "pasteHint": "One click: saves the reply, downloads the PDF.",
+      "making": "Saving…",
+      "paste": "Paste reply and save",
+      "pasteHint": "One click: saves and scores the reply.",
       "blocked": "The browser didn’t let us read the clipboard. Paste the reply in the box below instead (Ctrl+V).",
       "boxLabel": "Claude’s reply",
       "placeholder": "Or paste Claude’s whole reply here, or drop a PDF, Word, text or Markdown file",
@@ -860,7 +858,7 @@
       "found": " found",
       "notFound": " not found",
       "saving": "Saving…",
-      "saveDownload": "Save and download PDF",
+      "saveDownload": "Save reply",
       "haveFile": "Have a file instead?",
       "uploading": "Uploading…",
       "upload": "Upload a file",
@@ -900,7 +898,6 @@
       "delete": "Delete",
       "deleteError": "Could not delete it: {error}",
       "pdfTitle": "PDF check",
-      "pdfIntro": "Checked for you after every save: reads the finished PDF the way an ATS does, from its text only (pages, your name and e-mail, dates, odd characters and skills).",
       "pdfRun": "Check the PDF",
       "pdfAgain": "Check again",
       "pdfChecking": "Making and reading the PDF…",
@@ -926,7 +923,10 @@
         "CHARACTERS": "Characters an ATS can’t read ({detail}): ligatures or icons.",
         "PLACEHOLDERS": "Text left to fill in: {detail}. Ask Claude to remove it, or fill it in before you send.",
         "SKILLS": "Lost in the PDF text: {detail}"
-      }
+      },
+      "pdfDetails": "Show the {count, plural, one {# passed check} other {# passed checks}}",
+      "pdfProblemsLabel": "What to fix",
+      "pdfAllLabel": "Passed checks"
     },
     "preview": {
       "title": "Preview and edit",
@@ -1017,12 +1017,14 @@
       "answerPlaceholder": "Your answer",
       "answerFor": "Your answer to: {question}",
       "fromSaved": "From your saved answers",
-      "remember": "Remember for next jobs",
-      "rememberFor": "Remember your answer to: {question}",
       "saveError": "Could not save that: {error}",
       "copy": "Copy my answers for Claude ↗",
       "copiedHint": "Paste them in the same Claude chat. Then paste Claude’s new reply in step 2.",
-      "copyBox": "My answers for Claude"
+      "copyBox": "My answers for Claude",
+      "howReadHint": "Type the softer wording for this line",
+      "keptHint": "Your answers are kept in Profile › Applications and filled in on the next jobs.",
+      "answeredBefore": "✓ {count, plural, one {# question} other {# questions}} answered before (from your saved answers)",
+      "answeredBeforeList": "Answered before"
     },
     "stillOpen": {
       "never": "Not checked yet if the ad is still open",

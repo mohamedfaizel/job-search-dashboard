@@ -1,5 +1,5 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
-import { useJobInsights } from '@jobsearch/data';
+import { useApplyQueue, useChangeApplyQueue, useJobInsights } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -114,6 +114,9 @@ function JobDetails({
   const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
   const saved = job.applicationStatus !== 'NONE';
   const sent = SENT.has(job.applicationStatus);
+  const queue = useApplyQueue();
+  const changeQueue = useChangeApplyQueue();
+  const queued = queue.data?.some((item) => item.jobId === job.id) ?? false;
 
   // Arrow keys move between tabs, as screen reader users expect from a tab list.
   const onTabKey = (e: KeyboardEvent) => {
@@ -304,6 +307,20 @@ function JobDetails({
           </button>
         )}
         <span className="flex-1" />
+        {tab === 'apply' && !sent && (
+          <button
+            type="button"
+            disabled={changeQueue.isPending}
+            aria-pressed={queued}
+            title={queued ? t('removeQueue') : t('addQueueHint')}
+            onClick={() => {
+              changeQueue.mutate({ jobIds: [job.id], remove: queued });
+            }}
+            className={`${BUTTON} disabled:opacity-50 ${queued ? 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100' : ''}`}
+          >
+            {queued ? t('inQueue') : t('addQueue')}
+          </button>
+        )}
         {job.url && (
           <a
             href={job.url}

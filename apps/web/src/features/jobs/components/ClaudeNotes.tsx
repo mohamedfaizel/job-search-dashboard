@@ -8,7 +8,13 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import type { NoteAnswers, NoteEntry } from '../claudeAnswers';
-import { effectiveAnswer, followUpPrompt, parseAnswers, progress } from '../claudeAnswers';
+import {
+  effectiveAnswer,
+  followUpPrompt,
+  parseAnswers,
+  progress,
+  stretchLine,
+} from '../claudeAnswers';
 import { checkSections } from '../reply';
 import { CopyText } from './CopyText';
 
@@ -23,18 +29,22 @@ const INPUT =
 /**
  * Claude's CHECK part of the reply, as things to answer here: for each stretch (a line you may
  * struggle to explain in an interview) Keep, Soften with your own words, or Drop; for each
- * question a box for your answer, filled from your saved answers when you gave one before.
- * Your choices are kept on the job. "Copy my answers for Claude" makes the message to paste in
+ * question a box for your answer. Every answer is kept in one place (Profile > Applications) and
+ * fills in the same question on the next jobs: a question answered before is folded away, so only
+ * new ones show. Your choices are kept on the job. "Copy my answers for Claude" makes the message to paste in
  * the same chat. Where Claude placed your keywords and what it skipped or changed are folded
  * away below.
  */
 export function ClaudeNotes({
   jobId,
   text,
+  resume,
   answers: saved,
 }: {
   jobId: string;
   text: string;
+  /** The resume saved for this job: Soften starts from the line a stretch is about. */
+  resume: string;
   /** Your decisions saved for this job (JSON text). */
   answers: string;
 }) {
@@ -46,20 +56,32 @@ export function ClaudeNotes({
   const remember = useSaveAnswer();
   const [answers, setAnswers] = useState<NoteAnswers>(() => parseAnswers(saved));
   const [softening, setSoftening] = useState<string | null>(null);
+  /** Questions that already had an answer when this opened: folded away, not asked again. */
+  const [known, setKnown] = useState<ReadonlySet<string> | null>(null);
 
   const sections = checkSections(text);
-  if (sections.length === 0) return null;
   const showStretches = profile.data?.showStretches ?? true;
   const fill = profile.data?.fillSavedAnswers ?? true;
   const savedBank = bank.data ?? [];
+  const questions = sections.filter((s) => QUESTIONS.test(s.label)).flatMap((s) => s.items);
+  // Decided once your saved answers are in, so a box does not vanish while you type in it.
+  if (known === null && (bank.data || bank.isError) && (profile.data || profile.isError)) {
+    setKnown(
+      new Set(
+        questions.filter((q) => effectiveAnswer(q, answers[q], savedBank, fill).answer.trim()),
+      ),
+    );
+  }
+  if (sections.length === 0) return null;
 
   const stretches = showStretches
     ? sections.filter((s) => STRETCHES.test(s.label)).flatMap((s) => s.items)
     : [];
-  const questions = sections.filter((s) => QUESTIONS.test(s.label)).flatMap((s) => s.items);
+  const answeredBefore = questions.filter((q) => known?.has(q));
+  const open = questions.filter((q) => !known?.has(q));
   const rest = sections.filter((s) => !STRETCHES.test(s.label) && !QUESTIONS.test(s.label));
   const hidden = !showStretches ? sections.filter((s) => STRETCHES.test(s.label)) : [];
-  const count = stretches.length + questions.length;
+  const count = stretches.length + open.length;
   const { answered, filled } = progress({ stretches, questions }, answers, savedBank, fill);
 
   /** Changes one item and keeps all decisions on the job. */
@@ -72,17 +94,50 @@ export function ClaudeNotes({
     setSoftening(choice === 'soften' ? item : null);
     change(item, {
       choice,
-      ...(choice === 'soften' ? { text: answers[item]?.text ?? item } : {}),
+      ...(choice === 'soften' ? { text: answers[item]?.text ?? stretchLine(item, resume) } : {}),
     });
   };
-  /** Saves an answer on the job and, unless you untick Remember, for the next jobs. */
+  /** Saves an answer on the job and in your saved answers, for the next jobs. */
   const answer = (question: string, value: string) => {
     change(question, { answer: value });
-    if (value.trim() && answers[question]?.remember !== false) {
-      remember.mutate({ question, answer: value });
-    }
+    if (value.trim()) remember.mutate({ question, answer: value });
   };
   const error = keep.error ?? remember.error;
+
+  const questionRow = (question: string) => {
+    const entry = answers[question];
+    const current = effectiveAnswer(question, entry, savedBank, fill);
+    return (
+      <li
+        key={question}
+        className="space-y-1.5 rounded-lg border border-amber-200 bg-white px-3 py-2.5"
+      >
+        <label className="block space-y-1.5 text-sm text-slate-800">
+          {question}
+          <input
+            value={current.answer}
+            placeholder={t('answerPlaceholder')}
+            aria-label={t('answerFor', { question })}
+            onChange={(e) => {
+              setAnswers({ ...answers, [question]: { ...entry, answer: e.target.value } });
+            }}
+            onBlur={(e) => {
+              // Leaving a filled-in saved answer as it is still counts as answering.
+              if (current.saved && e.target.value === current.answer) {
+                change(question, { answer: e.target.value });
+              } else answer(question, e.target.value);
+            }}
+            className={INPUT}
+          />
+        </label>
+        {current.saved && (
+          <span className="inline-block rounded-md bg-indigo-50 px-2 py-0.5 text-xs text-indigo-800">
+            {t('fromSaved')}
+          </span>
+        )}
+      </li>
+    );
+  };
 
   return (
     <section
@@ -171,7 +226,8 @@ export function ClaudeNotes({
                       <input
                         // eslint-disable-next-line jsx-a11y/no-autofocus -- opened by clicking Soften
                         autoFocus
-                        value={entry?.text ?? item}
+                        value={entry?.text ?? ''}
+                        placeholder={t('howReadHint')}
                         onChange={(e) => {
                           setAnswers({ ...answers, [item]: { ...entry, text: e.target.value } });
                         }}
@@ -190,65 +246,27 @@ export function ClaudeNotes({
         </div>
       )}
 
-      {questions.length > 0 && (
+      {open.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-xs font-semibold tracking-wide text-amber-900 uppercase">
             {t('questions')}
           </h4>
           <ul aria-label={t('questionsList')} className="space-y-2">
-            {questions.map((question) => {
-              const entry = answers[question];
-              const current = effectiveAnswer(question, entry, savedBank, fill);
-              return (
-                <li
-                  key={question}
-                  className="space-y-2 rounded-lg border border-amber-200 bg-white px-3 py-2.5"
-                >
-                  <label className="block space-y-1.5 text-sm text-slate-800">
-                    {question}
-                    <input
-                      value={current.answer}
-                      placeholder={t('answerPlaceholder')}
-                      aria-label={t('answerFor', { question })}
-                      onChange={(e) => {
-                        setAnswers({
-                          ...answers,
-                          [question]: { ...entry, answer: e.target.value },
-                        });
-                      }}
-                      onBlur={(e) => {
-                        // Leaving a filled-in saved answer as it is still counts as answering.
-                        if (current.saved && e.target.value === current.answer) {
-                          change(question, { answer: e.target.value });
-                        } else answer(question, e.target.value);
-                      }}
-                      className={INPUT}
-                    />
-                  </label>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
-                    {current.saved && (
-                      <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-indigo-800">
-                        {t('fromSaved')}
-                      </span>
-                    )}
-                    <label className="flex items-center gap-1.5">
-                      <input
-                        type="checkbox"
-                        checked={entry?.remember !== false}
-                        onChange={(e) => {
-                          change(question, { remember: e.target.checked });
-                        }}
-                        aria-label={t('rememberFor', { question })}
-                        className="h-3.5 w-3.5 rounded border-slate-300"
-                      />
-                      {t('remember')}
-                    </label>
-                  </div>
-                </li>
-              );
-            })}
+            {open.map(questionRow)}
           </ul>
+          <p className="text-xs text-slate-600">{t('keptHint')}</p>
         </div>
+      )}
+
+      {answeredBefore.length > 0 && (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-emerald-800">
+            {t('answeredBefore', { count: answeredBefore.length })}
+          </summary>
+          <ul aria-label={t('answeredBeforeList')} className="mt-2 space-y-2">
+            {answeredBefore.map(questionRow)}
+          </ul>
+        </details>
       )}
 
       {error && (

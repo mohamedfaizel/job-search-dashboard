@@ -8,7 +8,7 @@ export interface NoteEntry {
   text?: string | undefined;
   /** Your answer to a question. An empty answer on purpose stops a saved answer being filled in. */
   answer?: string | undefined;
-  /** Keep the answer for the next jobs. Defaults to yes. */
+  /** No longer used: every answer is kept for the next jobs. Old saved decisions may have it. */
   remember?: boolean | undefined;
 }
 
@@ -144,8 +144,13 @@ export function followUpPrompt(
     const entry = answers[item];
     if (entry?.choice === 'keep') lines.push(`- Keep: ${item}`);
     if (entry?.choice === 'drop') lines.push(`- Drop: ${item}`);
-    if (entry?.choice === 'soften' && entry.text?.trim()) {
-      lines.push(`- Soften: ${item}\n  Write it like this instead: ${entry.text.trim()}`);
+    if (entry?.choice === 'soften') {
+      const wording = entry.text?.trim();
+      lines.push(
+        wording
+          ? `- Soften: ${item}\n  Write it like this instead: ${wording}`
+          : `- Soften: ${item}\n  Make it more modest, using only what my resume supports.`,
+      );
     }
   }
   const answered: string[] = [];
@@ -155,7 +160,7 @@ export function followUpPrompt(
   }
   return `Thanks. Here are my answers to the questions in your CHECK part.
 
-${lines.length ? `Lines you flagged as stretches:\n${lines.join('\n')}\n\n` : ''}${answered.length ? `Your questions:\n${answered.join('\n')}\n\n` : ''}Please update the resume, cover letter and form answers where this applies. Never add anything beyond what I wrote here. Then send the whole reply again in the same format as before (the same === markers and the CHECK part), so I can paste it back.`;
+${lines.length ? `Lines you flagged as stretches:\n${lines.join('\n')}\n\n` : ''}${answered.length ? `Your questions:\n${answered.join('\n')}\n\n` : ''}Please update the resume, cover letter and form answers where this applies. Never add anything beyond what I wrote here. Then send the whole reply again in the same format as before (the same === markers and the CHECK part), so I can paste it back. In the CHECK part, list only what is still open (write "none" when nothing is), never anything I answered here.`;
 }
 
 /** How many of the notes have a decision or an answer, and how many answers came from the bank. */
@@ -173,4 +178,34 @@ export function progress(
     if (saved && answer.trim()) filled += 1;
   }
   return { answered, filled };
+}
+
+/** The quoted bits of a stretch ("ATM operators at six banks"), longest first. */
+function quotes(item: string): string[] {
+  const found = [...item.matchAll(/["“„«]([^"”“»]{4,})["”“»]/g)].map((m) => m[1] ?? '');
+  return found.filter(Boolean).sort((a, b) => b.length - a.length);
+}
+
+/**
+ * The resume line a stretch is about, to start the Soften box with: the line of your resume that
+ * holds the words Claude quoted, without its list marker. Just the quoted words when no line has
+ * them, and empty when Claude quoted nothing (the box then shows a hint instead).
+ */
+export function stretchLine(item: string, resume: string): string {
+  const quoted = quotes(item);
+  const lines = resume
+    .split('\n')
+    .map((line) =>
+      line
+        .replace(/^\s*(?:[-*•]|#{1,6})\s*/, '')
+        .replace(/\*\*/g, '')
+        .trim(),
+    )
+    .filter(Boolean);
+  for (const words of quoted) {
+    const lower = words.toLowerCase();
+    const line = lines.find((l) => l.toLowerCase().includes(lower));
+    if (line) return line;
+  }
+  return quoted[0] ?? '';
 }

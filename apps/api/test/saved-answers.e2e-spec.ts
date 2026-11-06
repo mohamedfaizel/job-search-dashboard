@@ -57,6 +57,24 @@ describe('saved answers', () => {
     expect((await t.asUser<Saved>(LIST)).data!.savedAnswers).toEqual([]);
   });
 
+  it('gives your saved answers to Claude in the Apply kit prompt, so it does not ask again', async () => {
+    await t.asUser(SAVE, {
+      question: 'Is the salary 65,000 EUR gross per year?',
+      answer: 'Yes, 65,000 EUR gross',
+    });
+    const job = await t.gql<{ createJob: { id: string } }>(CREATE_JOB, {
+      input: { title: 'Frontend Engineer', companyName: 'Acme' },
+    });
+    const insights = await t.asUser<{ jobInsights: { prompt: string } }>(
+      `query ($jobId: ID!) { jobInsights(jobId: $jobId) { prompt } }`,
+      { jobId: job.data!.createJob.id },
+    );
+    expect(insights.errors).toBeUndefined();
+    expect(insights.data!.jobInsights.prompt).toContain(
+      'Questions I answered before:\n- Is the salary 65,000 EUR gross per year?\n  Yes, 65,000 EUR gross',
+    );
+  });
+
   it('refuses an empty or too long question or answer', async () => {
     const empty = await t.asUser(SAVE, { question: '  ', answer: 'x' });
     const noAnswer = await t.asUser(SAVE, { question: 'Why?', answer: ' ' });

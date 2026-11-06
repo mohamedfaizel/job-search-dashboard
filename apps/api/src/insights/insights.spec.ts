@@ -10,6 +10,7 @@ import {
   splitReply,
   buildQueuePrompt,
   splitQueueReply,
+  savedAnswersText,
 } from './prompt';
 import { checkResume, coverage, matchScore, titleMatch } from './score';
 import { compact, KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
@@ -389,6 +390,9 @@ describe('buildResumePrompt', () => {
       expect(prompt).toContain(`=== ${part} ===`);
     }
     expect(buildResumePrompt({ ...input, savedAnswers: ' ' })).not.toContain('My saved answers');
+    // Claude uses your answers instead of asking again, and says "none" when nothing is open.
+    expect(prompt).toContain('Never ask what my application facts or saved answers already answer');
+    expect(prompt).toContain('Write "none" for Stretches or Ask me when there is nothing to ask.');
     expect(prompt).toContain('My achievements bank');
     expect(prompt).toContain('Never name the company or say that I am applying');
     expect(prompt).toContain('never write "(fill in)"');
@@ -754,5 +758,19 @@ describe('germanRequirement levels', () => {
       level: null,
       levelEstimated: false,
     });
+  });
+});
+
+describe('savedAnswersText', () => {
+  it('puts your notes and your answers to Claude’s earlier questions in one block', () => {
+    expect(
+      savedAnswersText('I like products people use.', [
+        { question: 'Is the salary 65,000 EUR gross per year?', answer: 'Yes, 65,000 EUR' },
+        { question: 'Empty?', answer: ' ' },
+      ]),
+    ).toBe(
+      'I like products people use.\n\nQuestions I answered before:\n- Is the salary 65,000 EUR gross per year?\n  Yes, 65,000 EUR',
+    );
+    expect(savedAnswersText(' ', [])).toBe('');
   });
 });

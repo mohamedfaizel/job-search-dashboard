@@ -5,6 +5,7 @@ import {
   matchSaved,
   parseAnswers,
   progress,
+  stretchLine,
 } from './claudeAnswers';
 
 const saved = (id: number, question: string, answer: string): SavedAnswer => ({
@@ -94,14 +95,32 @@ describe('followUpPrompt', () => {
   });
 
   it('leaves out undecided lines and unanswered questions', () => {
+    const prompt = followUpPrompt(sections, {}, [], true);
+    expect(prompt).not.toContain('stretches');
+    expect(prompt).not.toContain('Your questions');
+  });
+
+  it('asks Claude for the softer words when you chose Soften without writing them', () => {
     const prompt = followUpPrompt(
       sections,
       { 'React 19': { choice: 'soften', text: ' ' } },
       [],
       true,
     );
-    expect(prompt).not.toContain('stretches');
-    expect(prompt).not.toContain('Your questions');
+    expect(prompt).toContain('- Soften: React 19\n  Make it more modest');
+  });
+});
+
+describe('stretchLine', () => {
+  const resume = '## Experience\n- **Led the team** of three on the checkout\n- Built dashboards';
+  it('finds the resume line holding the words Claude quoted', () => {
+    expect(stretchLine('"Led the team": you were one of three.', resume)).toBe(
+      'Led the team of three on the checkout',
+    );
+  });
+  it('gives the quoted words, or nothing, when no line holds them', () => {
+    expect(stretchLine('Is “six banks” right?', resume)).toBe('six banks');
+    expect(stretchLine('React 19: only in a side project.', resume)).toBe('');
   });
 });
 

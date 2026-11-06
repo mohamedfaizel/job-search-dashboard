@@ -55,6 +55,28 @@ export function achievementsPart(achievements: string[]): string {
 }
 
 /** The marker lines Claude is asked to put between the parts of its reply, in this order. */
+/** How many of your saved answers go into a prompt (the newest). */
+export const SAVED_ANSWERS_IN_PROMPT = 40;
+
+/**
+ * Your free-text answers (Profile > Applications) and your answers to Claude's earlier questions,
+ * as one block, so Claude uses them instead of asking again.
+ */
+export function savedAnswersText(
+  notes: string,
+  bank: { question: string; answer: string }[],
+): string {
+  const answered = bank
+    .filter((item) => item.question.trim() && item.answer.trim())
+    .map((item) => `- ${item.question.trim()}\n  ${item.answer.trim()}`);
+  return [
+    notes.trim(),
+    answered.length ? `Questions I answered before:\n${answered.join('\n')}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
+
 export const REPLY_PARTS = ['RESUME', 'COVER LETTER', 'FORM ANSWERS', 'CHECK'] as const;
 export type ReplyPart = (typeof REPLY_PARTS)[number];
 const marker = (part: ReplyPart) => `=== ${part} ===`;
@@ -127,7 +149,8 @@ const CHECK_PART = `- Related: the terms you added under rule 2, each with the e
 - Skipped: the terms you left out, each with one line why.
 - Changes: what your own review changed in the draft, one line each.
 - Stretches: each line I might struggle to explain in an interview, with why, and ask me: keep, soften or drop?
-- Ask me: details you left out because you did not know them (a school name, a date).`;
+- Ask me: details you left out because you did not know them (a school name, a date). Never ask what my application facts or saved answers already answer: use those answers.
+Write "none" for Stretches or Ask me when there is nothing to ask.`;
 
 /** The review Claude does on its own draft before replying, so one prompt is enough. */
 const SELF_REVIEW = `1. Facts: every employer, title, date, degree, number and skill must be supported by my resume, my other skills or my achievements. Remove or rewrite anything that is not.

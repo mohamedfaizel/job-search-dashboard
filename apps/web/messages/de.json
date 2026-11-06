@@ -635,7 +635,11 @@
       "apply": "Bewerben →",
       "markApplied": "✓ Als Beworben markieren",
       "aiIntro": "Bewertet deinen <b>Master-Lebenslauf</b> (den unter Mein Profil) mit Resume-Matcher. Den Lebenslauf, den Claude im Tab Bewerben geschrieben hat, nutzt es nicht. <b>Jeder Lauf verbraucht dein Claude-API-Guthaben.</b> Der Tab Fit gibt dieselbe Art Bewertung kostenlos.",
-      "noDescription": "Dieser Job hat keine Beschreibung, also gibt es nichts abzugleichen."
+      "noDescription": "Dieser Job hat keine Beschreibung, also gibt es nichts abzugleichen.",
+      "addQueue": "Zur Bewerbungs-Warteschlange",
+      "inQueue": "✓ In der Warteschlange",
+      "removeQueue": "Klicken, um es aus der Warteschlange zu nehmen",
+      "addQueueHint": "Später mehrere Jobs auf einmal bewerben"
     },
     "ad": {
       "inResume": "In deinem Lebenslauf",
@@ -805,8 +809,6 @@
       },
       "loadError": "Das Kit konnte nicht geladen werden: {error}",
       "loading": "Das Bewerbungskit wird geladen…",
-      "removeQueue": "Aus der Bewerbungsliste nehmen",
-      "addQueue": "Zur Bewerbungsliste hinzufügen",
       "kitLabel": "Bewerbungskit",
       "applied": "✓ In deinen Bewerbungen als beworben.",
       "askOpened": "Du hast diese Anzeige geöffnet. Hast du dich beworben?",
@@ -818,15 +820,12 @@
       "copyOpen": "Prompt kopieren und Claude öffnen ↗",
       "step1Hint": "Claude öffnet sich in einem neuen Tab, der Prompt liegt in deiner Zwischenablage: einfügen und senden. Wenn Claude antwortet, kopiere die ganze Antwort und komm für Schritt 2 zurück.",
       "noAnswers": "Füge deine Bewerbungsangaben unter „Mein Profil“ hinzu (Telefon, Arbeitserlaubnis, Kündigungsfrist, Gehalt), damit Claude und das Formular sie bekommen.",
-      "inQueue": "In deiner Bewerbungsliste.",
-      "several": "Bewirbst du dich auf mehrere Jobs?",
-      "step2Title": "Claudes Antwort einfügen, PDF bekommen",
-      "step2Intro": "Kopiere in Claude die ganze Antwort (der Kopieren-Knopf darunter). Ein Klick hier speichert sie, bewertet sie und lädt den Lebenslauf als PDF.",
+      "step2Title": "Claudes Antwort einfügen",
+      "step2Intro": "Kopiere in Claude die ganze Antwort (der Kopieren-Knopf darunter). Ein Klick hier speichert und bewertet sie. Das PDF prüfst und lädst du in Schritt 3.",
       "copyFailed": "Der Prompt konnte nicht kopiert werden. ",
       "copied": "✓ Prompt kopiert · ",
       "copyAgain": "Nochmal kopieren",
       "openClaude": "Claude öffnen ↗",
-      "downloading": "✓ Dein Lebenslauf wird als PDF geladen. Du findest ihn in deinem Download-Ordner und hängst ihn an die Bewerbung an.",
       "noReply": "Noch keine Antwort gespeichert. Claude in Chrome kann das Formular trotzdem aus deinem Profil ausfüllen.",
       "step3Title": "Claude in Chrome das Formular ausfüllen lassen",
       "step3Intro": "Es liest dein Bewerbungskit, füllt das Formular der Anzeige aus und stoppt vor dem Absenden. Du hängst das PDF an, prüfst alles und klickst auf Absenden.",
@@ -834,7 +833,6 @@
       "copyChrome": "Prompt für Claude in Chrome kopieren",
       "chromeBox": "Prompt für Claude in Chrome",
       "readsKit": "Claude in Chrome liest die <link>Seite des Bewerbungskits</link>",
-      "inQueueSuffix": " · In deiner Bewerbungsliste.",
       "languages": {
         "label": "Sprachen im Lebenslauf",
         "placeholder": "Deutsch A2, Englisch C1",
@@ -847,9 +845,9 @@
       }
     },
     "reply": {
-      "making": "Dein PDF wird erstellt…",
-      "paste": "Antwort einfügen und PDF holen",
-      "pasteHint": "Ein Klick: speichert die Antwort, lädt das PDF.",
+      "making": "Wird gespeichert…",
+      "paste": "Antwort einfügen und speichern",
+      "pasteHint": "Ein Klick: speichert und bewertet die Antwort.",
       "blocked": "Der Browser hat das Lesen der Zwischenablage nicht erlaubt. Füge die Antwort stattdessen unten ins Feld ein (Strg+V).",
       "boxLabel": "Claudes Antwort",
       "placeholder": "Oder füge hier Claudes ganze Antwort ein oder zieh eine PDF-, Word-, Text- oder Markdown-Datei hierher",
@@ -860,7 +858,7 @@
       "found": " gefunden",
       "notFound": " nicht gefunden",
       "saving": "Wird gespeichert…",
-      "saveDownload": "Speichern und PDF laden",
+      "saveDownload": "Antwort speichern",
       "haveFile": "Hast du stattdessen eine Datei?",
       "uploading": "Wird hochgeladen…",
       "upload": "Datei hochladen",
@@ -900,7 +898,6 @@
       "delete": "Löschen",
       "deleteError": "Konnte nicht gelöscht werden: {error}",
       "pdfTitle": "PDF-Prüfung",
-      "pdfIntro": "Wird nach jedem Speichern für dich geprüft: liest das fertige PDF wie ein ATS, nur aus dem Text (Seiten, Name und E-Mail, Daten, seltsame Zeichen und Skills).",
       "pdfRun": "PDF prüfen",
       "pdfAgain": "Erneut prüfen",
       "pdfChecking": "PDF wird erstellt und gelesen…",
@@ -926,7 +923,10 @@
         "CHARACTERS": "Zeichen, die ein ATS nicht lesen kann ({detail}): Ligaturen oder Icons.",
         "PLACEHOLDERS": "Noch auszufüllen: {detail}. Bitte Claude, es zu entfernen, oder ergänze es vor dem Senden.",
         "SKILLS": "Im PDF-Text verloren: {detail}"
-      }
+      },
+      "pdfDetails": "{count, plural, one {# bestandene Prüfung} other {# bestandene Prüfungen}} zeigen",
+      "pdfProblemsLabel": "Zu beheben",
+      "pdfAllLabel": "Bestandene Prüfungen"
     },
     "preview": {
       "title": "Vorschau und Bearbeiten",
@@ -1017,12 +1017,14 @@
       "answerPlaceholder": "Deine Antwort",
       "answerFor": "Deine Antwort auf: {question}",
       "fromSaved": "Aus deinen gespeicherten Antworten",
-      "remember": "Für die nächsten Jobs merken",
-      "rememberFor": "Deine Antwort merken auf: {question}",
       "saveError": "Konnte nicht gespeichert werden: {error}",
       "copy": "Meine Antworten für Claude kopieren ↗",
       "copiedHint": "Füge sie im selben Claude-Chat ein. Füge danach Claudes neue Antwort in Schritt 2 ein.",
-      "copyBox": "Meine Antworten für Claude"
+      "copyBox": "Meine Antworten für Claude",
+      "howReadHint": "Schreib die vorsichtigere Formulierung für diese Zeile",
+      "keptHint": "Deine Antworten liegen unter Profil › Bewerbungsangaben und werden bei den nächsten Jobs eingesetzt.",
+      "answeredBefore": "✓ {count, plural, one {# Frage} other {# Fragen}} schon beantwortet (aus deinen gespeicherten Antworten)",
+      "answeredBeforeList": "Schon beantwortet"
     },
     "stillOpen": {
       "never": "Noch nicht geprüft, ob die Anzeige noch online ist",

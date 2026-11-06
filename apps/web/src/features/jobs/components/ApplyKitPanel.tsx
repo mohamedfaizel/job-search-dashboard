@@ -1,11 +1,5 @@
 import type { ApplicationStatus, Job, JobInsights, Profile } from '@jobsearch/data';
-import {
-  applyKitUrl,
-  useApplyQueue,
-  useChangeApplyQueue,
-  useJobInsights,
-  useMyProfile,
-} from '@jobsearch/data';
+import { applyKitUrl, useJobInsights, useMyProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -35,21 +29,17 @@ export function useApplyStep(jobId: string) {
   const insights = useJobInsights(jobId);
   const [copied, setCopied] = useState(false);
   const [chosen, setChosen] = useState<ApplyStep | null>(null);
-  const [pdfStarted, setPdfStarted] = useState(false);
   const suggested: ApplyStep = insights.data?.jobResume ? 3 : copied ? 2 : 1;
   return {
     step: chosen ?? suggested,
     copied,
-    /** The resume PDF started downloading when the reply was saved. */
-    pdfStarted,
     choose: setChosen,
     markCopied: () => {
       setCopied(true);
       setChosen(null);
     },
     /** A reply was saved: go on to step 3. */
-    saved: ({ pdf }: { pdf: boolean }) => {
-      setPdfStarted(pdf);
+    saved: () => {
       setChosen(null);
     },
   };
@@ -266,9 +256,6 @@ function ApplyKit({
   const noAnswers =
     p && ![p.phone, p.address, p.workPermit, p.noticePeriod, p.salaryExpectation].some(Boolean);
   const applied = !['NONE', 'SAVED'].includes(job.applicationStatus);
-  const queue = useApplyQueue();
-  const changeQueue = useChangeApplyQueue();
-  const queued = queue.data?.some((item) => item.jobId === job.id) ?? false;
   const [copyFailed, setCopyFailed] = useState(false);
   const data = insights.data;
 
@@ -285,19 +272,6 @@ function ApplyKit({
     setCopyFailed(!(await copyAndOpen(data.prompt, CLAUDE_URL)));
     steps.markCopied();
   };
-
-  const queueButton = !applied && (
-    <button
-      type="button"
-      disabled={changeQueue.isPending}
-      onClick={() => {
-        changeQueue.mutate({ jobIds: [job.id], remove: queued });
-      }}
-      className="h-9 rounded-lg px-3 text-sm font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50 disabled:opacity-50"
-    >
-      {queued ? t('removeQueue') : t('addQueue')}
-    </button>
-  );
 
   return (
     <section aria-label={t('kitLabel')} className="space-y-5 text-sm">
@@ -371,12 +345,6 @@ function ApplyKit({
               {t('noAnswers')}
             </p>
           )}
-          {!applied && (
-            <p className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              {queued ? t('inQueue') : t('several')}
-              {queueButton}
-            </p>
-          )}
         </>
       )}
 
@@ -410,11 +378,6 @@ function ApplyKit({
 
       {steps.step === 3 && (
         <>
-          {steps.pdfStarted && data.jobResume && (
-            <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">
-              {t('downloading')}
-            </p>
-          )}
           {data.jobResume ? (
             <SavedReply insights={data} />
           ) : (
@@ -434,8 +397,6 @@ function ApplyKit({
                 {job.url ? t('copyPosting') : t('copyChrome')}
               </button>
               <ShowText label={t('chromeBox')} text={chromePrompt(job)} />
-              <span className="flex-1" />
-              {queueButton}
             </div>
             <p className="text-xs text-slate-500">
               {t.rich('readsKit', {
@@ -445,7 +406,6 @@ function ApplyKit({
                   </a>
                 ),
               })}
-              {queued && t('inQueueSuffix')}
             </p>
           </Card>
         </>

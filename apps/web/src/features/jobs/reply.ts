@@ -70,26 +70,24 @@ export function promptSections(prompt: string): PromptSection[] {
   });
 }
 
-/** Starts a file download from the API (it sends the file name). */
-export function startDownload(url: string) {
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', '');
-  link.rel = 'noopener';
-  document.body.append(link);
-  link.click();
-  link.remove();
-}
-
 export interface CheckSection {
   /** "Stretches", "Ask me", "Placed"… as Claude wrote it. */
   label: string;
   items: string[];
 }
 
+/** "none", "none open. You decided on all of them.", "keine": nothing to answer. */
+const NOTHING_OPEN = /^\(?(?:none|n\/a|keine|nichts)\)?(?:\s+(?:open|offen))?\s*(?:[.:!]|$)/i;
+/**
+ * A note about earlier questions, not a question ("You did not answer these earlier questions,
+ * so I left the related lines unchanged."): the questions themselves follow it.
+ */
+const LEFTOVER =
+  /\b(?:did not|didn't|have not|haven't) (?:yet )?answer|left (?:the )?(?:related )?lines? unchanged|nicht beantwortet|unverändert gelassen/i;
+
 /**
  * Claude's CHECK part, by its "- Label: …" lines. Numbered items ("(1) … (2) …") become one item
- * each; "(none)" leaves the section out. Lines without a label belong to the one above.
+ * each; "none" and notes about earlier answers leave the section out. Lines without a label belong to the one above.
  */
 export function checkSections(text: string): CheckSection[] {
   const sections: { label: string; body: string }[] = [];
@@ -113,7 +111,7 @@ export function checkSections(text: string): CheckSection[] {
       items: body
         .split(/\s*\(\d+\)\s*|\n/)
         .map((item) => item.trim())
-        .filter((item) => item && !/^\(?none\)?\.?$/i.test(item)),
+        .filter((item) => item && !NOTHING_OPEN.test(item) && !LEFTOVER.test(item)),
     }))
     .filter((section) => section.items.length > 0);
 }

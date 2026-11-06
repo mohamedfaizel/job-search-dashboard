@@ -425,6 +425,14 @@ type JobInsights {
   """
   languageDetected: Boolean!
 
+  """
+  The languages line of the prompt, e.g. "German A2, English C1": your profile’s, or the one you edited for this job
+  """
+  languages: String!
+
+  """True when languages was edited for this job"""
+  languagesCustom: Boolean!
+
   """JobsPipe’s cleaned-up title, when it differs from the posted one"""
   normalizedTitle: String
 
@@ -551,6 +559,11 @@ type JobResume {
 
   """Resume-Matcher's tips for this resume. Empty until READY"""
   aiTips: [String!]!
+
+  """
+  Your decisions on Claude’s questions for this job, as JSON text: keep, soften or drop per stretch and an answer per question. "{}" when none
+  """
+  claudeAnswers: String!
 
   """
   Claude's CHECK part of the reply: terms placed or skipped, stretches and questions for you. Empty when there was none
@@ -698,6 +711,9 @@ type Mutation {
   """Deletes My design"""
   deleteMyDesign: DocumentStyle!
 
+  """Deletes a saved answer. Returns its id"""
+  deleteSavedAnswer(id: Int!): Int!
+
   """Delete a saved search. Its past imports stay."""
   deleteSavedSearch(id: Int!): Boolean!
 
@@ -767,8 +783,18 @@ type Mutation {
     resume: Boolean! = false
   ): SyncJobsResult!
 
+  """
+  Keeps an answer for the next jobs. The same question again replaces its answer
+  """
+  saveAnswer(answer: String!, question: String!): SavedAnswer!
+
   """Saves Claude's reply to the queue prompt, each part to its own job"""
   saveApplyQueueReply(text: String!): [ApplyQueueItem!]!
+
+  """
+  Keeps your decisions on Claude’s questions for this job (JSON text). Needs a saved reply
+  """
+  saveClaudeAnswers(answers: String!, jobId: ID!): JobInsights!
 
   """
   Saves Claude's answer to the interview prep prompt for this job (replacing the one before)
@@ -796,9 +822,14 @@ type Mutation {
   saveTableSettings(settings: String!): Boolean!
 
   """
-  "I have this": adds a missing skill or keyword to the Skills list of My profile (have: true), or takes it off (have: false). It then counts as covered for every job
+  "I have this": adds a missing skill to the Skills list of My profile, or a keyword (keyword: true) to its Keywords list (have: true), or takes it off (have: false). It then counts as covered for every job
   """
-  setHaveTerm(have: Boolean! = true, jobId: ID!, term: String!): JobInsights!
+  setHaveTerm(have: Boolean! = true, jobId: ID!, keyword: Boolean! = false, term: String!): JobInsights!
+
+  """
+  Edits the languages line of this job’s Apply kit prompt. Empty = your profile’s Languages again
+  """
+  setJobLanguages(jobId: ID!, languages: String): JobInsights!
 
   """
   Show the app in this language: "en" or "de"
@@ -984,6 +1015,9 @@ type Profile {
   """
   employmentType: String!
 
+  """Fill Claude’s questions from your saved answers by themselves"""
+  fillSavedAnswers: Boolean!
+
   """Empty until saved; the form suggests it from your account name"""
   firstName: String!
 
@@ -996,6 +1030,11 @@ type Profile {
   Tailored resumes keep every section heading of your resume, in your order
   """
   keepMySections: Boolean!
+
+  """
+  Words from job ads that are true for you; ✓ on the Fit tab adds them here
+  """
+  keywords: [String!]!
 
   """
   Languages with your real level, e.g. "German A2"
@@ -1052,6 +1091,9 @@ type Profile {
   Salary expectation, e.g. "€65,000 a year"
   """
   salaryExpectation: String!
+
+  """Show the Stretches of Claude’s reply for a decision"""
+  showStretches: Boolean!
   skills: [String!]!
   targetRoles: [String!]!
 
@@ -1092,11 +1134,13 @@ input ProfileInput {
   dateOfBirth: String! = ""
   drivingLicence: String! = ""
   employmentType: String! = ""
+  fillSavedAnswers: Boolean! = true
   firstName: String! = ""
   gender: String! = ""
   githubUrl: String
   headline: String! = ""
   keepMySections: Boolean! = false
+  keywords: [String!]! = []
   languages: [String!]! = []
   lastName: String! = ""
   linkedinUrl: String
@@ -1113,6 +1157,7 @@ input ProfileInput {
   resumeMaxPages: Int! = 2
   resumeText: String! = ""
   salaryExpectation: String! = ""
+  showStretches: Boolean! = true
   skills: [String!]! = []
   targetRoles: [String!]! = []
   websiteUrl: String
@@ -1190,6 +1235,9 @@ type Query {
   """
   resumePdfCheck(jobId: ID!, template: String): PdfCheck!
 
+  """Your saved answers, newest first"""
+  savedAnswers: [SavedAnswer!]!
+
   """Your saved searches, by name, with their last import"""
   savedSearches: [SavedSearch!]!
 
@@ -1260,6 +1308,18 @@ type ResumeSuggestion {
 enum Role {
   ADMIN
   USER
+}
+
+"""
+An answer you gave to one of Claude’s questions, kept for the next jobs
+"""
+type SavedAnswer {
+  answer: String!
+  id: Int!
+
+  """The question, as Claude asked it the first time"""
+  question: String!
+  updatedAt: DateTime!
 }
 
 type SavedSearch {
