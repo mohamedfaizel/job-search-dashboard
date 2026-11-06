@@ -357,8 +357,9 @@ export function MatchCell({ job, labelled = false }: { job: Job; labelled?: bool
 }
 
 /**
- * Fit %, Apply kit % and the AI matcher's score, each with a short label: stacked one under
- * another in the table, side by side on phone cards. Scores a job doesn't have yet are left out.
+ * Fit %, Apply kit % and the AI matcher's score, each with a short label. In the table Fit and Kit
+ * share the first line and AI sits under them; phone cards keep all three on one line. Scores a
+ * job doesn't have yet are left out.
  */
 export function ScoresCell({ job, inline = false }: { job: Job; inline?: boolean }) {
   if (job.fitScore === null && job.applyScore === null && !job.matchStatus) {
@@ -366,8 +367,12 @@ export function ScoresCell({ job, inline = false }: { job: Job; inline?: boolean
   }
   return (
     <div className={inline ? 'flex items-center gap-1' : 'flex flex-col items-start gap-1'}>
-      {job.fitScore !== null && <FitCell job={job} labelled />}
-      {job.applyScore !== null && <ApplyKitCell job={job} labelled />}
+      {(job.fitScore !== null || job.applyScore !== null) && (
+        <div className="flex items-center gap-1">
+          {job.fitScore !== null && <FitCell job={job} labelled />}
+          {job.applyScore !== null && <ApplyKitCell job={job} labelled />}
+        </div>
+      )}
       {job.matchStatus && <MatchCell job={job} labelled />}
     </div>
   );
