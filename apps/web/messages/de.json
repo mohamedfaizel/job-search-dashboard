@@ -1003,8 +1003,12 @@
       },
       "fitsHere": "{term} passt hier",
       "showLine": "Zeile zeigen, in die es am besten passt",
-      "sharedWords": "Beste Zeile: teilt {words} mit der Anzeige",
-      "noSharedWords": "Keine Zeile teilt hier Wörter mit der Anzeige: wähle selbst eine Zeile"
+      "sharedWords": "teilt {words} mit der Anzeige",
+      "noSharedWords": "Keine Zeile teilt hier Wörter mit der Anzeige: wähle selbst eine Zeile",
+      "bestLines": "Beste Zeilen:",
+      "bestLineN": "Beste Zeile {n}",
+      "closeSpelling": "Dein Lebenslauf schreibt „{word}“.",
+      "useSpelling": "„{term}“ aus der Anzeige verwenden"
     },
     "claudeNotes": {
       "title": "Hinweise von Claude",

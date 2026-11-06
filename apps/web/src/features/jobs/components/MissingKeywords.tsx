@@ -3,7 +3,8 @@ import { useSetHaveTerm } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../../components/Toasts';
-import { placeFor } from '../keywordPlace';
+import { closeSpelling, placeFor, placesFor } from '../keywordPlace';
+import type { KeywordPlace } from '../keywordPlace';
 import {
   appendTerm,
   contentLines,
@@ -183,6 +184,57 @@ function Action({
   );
 }
 
+/** Up to 3 lines the keyword fits, best first: pick one to point at it and work it in there. */
+function BestLines({
+  places,
+  current,
+  resume,
+  onPick,
+}: {
+  places: KeywordPlace[];
+  current: number | null;
+  resume: string;
+  onPick: (line: number) => void;
+}) {
+  const t = useTranslations('Jobs.keywordCards');
+  const lines = splitLines(resume);
+  if (places.length === 0) {
+    return (
+      <span className="order-last basis-full text-xs text-amber-800">{t('noSharedWords')}</span>
+    );
+  }
+  const shown = places.find((p) => p.line === current) ?? places[0];
+  return (
+    <span className="order-last flex basis-full flex-wrap items-center gap-1.5 text-xs text-amber-800">
+      <span role="group" aria-label={t('bestLines')} className="flex items-center gap-1">
+        {t('bestLines')}
+        {places.map((place, i) => (
+          <button
+            key={place.line}
+            type="button"
+            aria-pressed={place.line === current}
+            aria-label={t('bestLineN', { n: i + 1 })}
+            title={short(readLine(lines[place.line] ?? '').text)}
+            onClick={() => {
+              onPick(place.line);
+            }}
+            className={`h-6 w-6 rounded-full text-xs font-semibold ring-1 ring-amber-300 ${
+              place.line === current
+                ? 'bg-amber-500 text-white'
+                : 'bg-white text-amber-800 hover:bg-amber-50'
+            }`}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </span>
+      {shown && shown.words.length > 0 && (
+        <span>{t('sharedWords', { words: shown.words.join(', ') })}</span>
+      )}
+    </span>
+  );
+}
+
 /** The keywords the saved resume still leaves out, each once: the cards Missing keywords shows. */
 export function missingTerms(insights: JobInsights): string[] {
   const jobResume = insights.jobResume;
@@ -230,8 +282,8 @@ export function MissingKeywords({
   const all = [...new Set([...checks.map((c) => c.term), ...cards])];
   const resume = state.draft.resume;
   const covered = all.filter((term) => mentionsTerm(resume, term)).length;
-  const placeOf = (term: string) =>
-    placeFor(resume, term, adText, known.get(term.toLowerCase())?.relatedTo ?? null);
+  const relatedOf = (term: string) => known.get(term.toLowerCase())?.relatedTo ?? null;
+  const placeOf = (term: string) => placeFor(resume, term, adText, relatedOf(term));
 
   // Where the focused keyword goes: the skills line for "Add to skills", the line you picked,
   // else the line that fits best. Nothing once it is in the resume.
@@ -280,6 +332,7 @@ export function MissingKeywords({
           const isSkipped = skipped.includes(term);
           const yours = Boolean(check && (check.youHave || check.inResume || check.relatedTo));
           const mode = open?.term === term ? open.mode : null;
+          const close = isIn || isSkipped ? null : closeSpelling(resume, term);
           return (
             <li key={term} aria-label={term} className={mode ? 'bg-slate-50' : undefined}>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2">
@@ -311,13 +364,28 @@ export function MissingKeywords({
                 </span>
                 {isIn && <span className="text-xs text-emerald-700">{t('added')}</span>}
                 {focus === term && !isIn && !isSkipped && (
-                  <span className="order-last basis-full text-xs text-amber-800">
-                    {(() => {
-                      const words = placeOf(term).words;
-                      return words.length
-                        ? t('sharedWords', { words: words.join(', ') })
-                        : t('noSharedWords');
-                    })()}
+                  <BestLines
+                    places={placesFor(resume, term, adText, relatedOf(term))}
+                    current={pointLine}
+                    resume={resume}
+                    onPick={(line) => {
+                      setPicked({ term, line });
+                    }}
+                  />
+                )}
+                {!isIn && !isSkipped && close && (
+                  <span className="order-last basis-full text-xs text-slate-700">
+                    {t('closeSpelling', { word: close })}{' '}
+                    <button
+                      type="button"
+                      className={LINK}
+                      onClick={() => {
+                        state.change('resume', replaceWord(resume, close, term).text);
+                        toast(tToast('keywordAdded', { term }), { tone: 'info' });
+                      }}
+                    >
+                      {t('useSpelling', { term })}
+                    </button>
                   </span>
                 )}
                 {isSkipped && (
@@ -396,10 +464,10 @@ export function MissingKeywords({
                     </p>
                   )}
                   <Action
-                    key={`${term}-${mode}`}
+                    key={`${term}-${mode}-${String(picked?.term === term ? picked.line : '')}`}
                     mode={mode}
                     term={term}
-                    related={check?.relatedTo ?? null}
+                    related={close ?? check?.relatedTo ?? null}
                     resume={resume}
                     start={picked?.term === term ? picked.line : placeOf(term).line}
                     onLine={(line) => {

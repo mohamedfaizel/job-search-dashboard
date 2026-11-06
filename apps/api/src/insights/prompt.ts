@@ -120,6 +120,7 @@ const TERM_RULES = `How to handle each skill or keyword:
 1. Supported: my resume or my other skills show it. Use it, in the job ad's own words.
 2. Related: it is closely tied to something I have done (same ecosystem, or the usual tool for it), for example Apollo with GraphQL, Next.js with React, Jest with unit testing, Kubernetes with Docker. Add it next to that experience, e.g. "GraphQL APIs with Apollo Client".
 3. Keywords from the job ad (the ad's own phrases): use the ad's exact word where it means the same as what I really did, because ATS keyword matching is often literal (the ad says "reusable UI components" and I built reusable React components: write "reusable UI components with React"). Put them in the summary, the first bullet of each job and the skills, as normal words in real sentences. Never use a keyword only to raise a score, and never stuff, repeat or hide them.
+   Spelling: write each keyword exactly as the ad spells it. When my resume has the same thing in another spelling or form (Javascript or JS for JavaScript, NodeJS for Node.js, CICD for CI/CD, React.js for React, a German or English form of the same word), change my word to the ad's spelling. A short form gets the ad's full form once, with the short form after it if the ad uses both: "Kubernetes (K8s)". Words that only look alike but mean something else (Java and JavaScript) are not the same keyword.
 4. A skill with no connection to my experience: leave it out.
 5. Only the job ad’s own skills may be added. A tool the ad does not ask for, and my resume and skills list do not show, must not appear in the new resume, however common it is (for example Kubernetes when the ad never names it).
 
@@ -190,7 +191,10 @@ const SELF_REVIEW = `1. Facts: every employer, title, date, degree, number and s
 3. Requirements: each must-have of the ad that my experience covers is shown in the resume.
 4. Eye: the summary is specific to this role, the first lines show proof for the ad's top needs, and nothing is vague, repeated or a cliché.
 5. Rules: the writing, keyword, layout, date, length and language rules above are followed.
-6. Keywords, word by word: read the finished resume again, word by word. Each keyword of the ad you used must sit in the line whose work it really describes (the line that shares the most words with the ad's sentence about it): move it there if it does not. Each one still missing that my resume truly supports goes into that best-fitting line.`;
+6. Keywords, word by word: read the finished resume again, word by word, next to the ad.
+   a. Spelling: any word that is a close spelling, short form or other form of an ad keyword (see rule 3) is changed to the ad's exact spelling.
+   b. Place: for each keyword, find up to 3 lines that could hold it, ranked by how many words they share with the ad's sentence about it and whether the work is really the same. Use the best true one, and move the keyword there if it sits somewhere weaker.
+   c. Missing: each keyword still missing that my resume truly supports goes into its best line. In the CHECK part, under Placed, name the line you chose for each one and, when the choice was close, the other 1 or 2 lines you considered.`;
 
 /** The "I have this" terms, or nothing when there are none (so the prompt stays short). */
 const mustAddPart = (terms: string[], resume = 'my resume') =>

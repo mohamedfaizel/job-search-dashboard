@@ -1003,8 +1003,12 @@
       },
       "fitsHere": "{term} fits here",
       "showLine": "Show the line where it fits best",
-      "sharedWords": "Best line: shares {words} with the ad",
-      "noSharedWords": "No line shares words with the ad here: pick a line yourself"
+      "sharedWords": "shares {words} with the ad",
+      "noSharedWords": "No line shares words with the ad here: pick a line yourself",
+      "bestLines": "Best lines:",
+      "bestLineN": "Best line {n}",
+      "closeSpelling": "Your resume writes “{word}”.",
+      "useSpelling": "Use the ad’s “{term}”"
     },
     "claudeNotes": {
       "title": "Notes from Claude",

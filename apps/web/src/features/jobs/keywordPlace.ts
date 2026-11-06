@@ -47,24 +47,13 @@ export interface KeywordPlace {
   words: string[];
 }
 
-/**
- * The resume line a keyword fits best: the bullet sharing the most words with the ad's sentences
- * about it; a bullet naming the related skill counts extra. With no shared word at all, the old
- * guess (the bullet naming the related skill, else the first).
- */
-export function placeFor(
-  resume: string,
-  term: string,
-  ad: string,
-  related: string | null = null,
-): KeywordPlace {
+/** How well each candidate line fits: shared words, plus extra for the related skill. */
+function scoreLines(resume: string, term: string, ad: string, related: string | null) {
   const lines = splitLines(resume);
   const bullets = contentLines(resume).filter((i) => readLine(lines[i] ?? '').kind === 'bullet');
   const candidates = bullets.length ? bullets : contentLines(resume);
   const context = adContext(ad, term);
-  let best: KeywordPlace | null = null;
-  let bestScore = 0;
-  for (const i of candidates) {
+  return candidates.map((i) => {
     const text = readLine(lines[i] ?? '').text;
     const words: string[] = [];
     const stems = new Set<string>();
@@ -78,11 +67,101 @@ export function placeFor(
     if (hasRelated && !words.some((w) => w.toLowerCase() === related.toLowerCase())) {
       words.unshift(related);
     }
-    const score = words.length + (hasRelated ? 2 : 0);
-    if (score > bestScore) {
-      bestScore = score;
-      best = { line: i, words: words.slice(0, 5) };
+    return { line: i, words: words.slice(0, 5), score: words.length + (hasRelated ? 2 : 0) };
+  });
+}
+
+/**
+ * Up to 3 resume lines a keyword fits, best first: the bullets sharing the most words with the
+ * ad's sentences about it; a bullet naming the related skill counts extra. Empty when no line
+ * shares a word.
+ */
+export function placesFor(
+  resume: string,
+  term: string,
+  ad: string,
+  related: string | null = null,
+): KeywordPlace[] {
+  return scoreLines(resume, term, ad, related)
+    .filter((place) => place.score > 0)
+    .sort((a, b) => b.score - a.score || a.line - b.line)
+    .slice(0, 3)
+    .map(({ line, words }) => ({ line, words }));
+}
+
+/** The line a keyword fits best; with no shared word, the old guess (related skill, else first). */
+export function placeFor(
+  resume: string,
+  term: string,
+  ad: string,
+  related: string | null = null,
+): KeywordPlace {
+  return placesFor(resume, term, ad, related)[0] ?? { line: bestLine(resume, related), words: [] };
+}
+
+// Short forms people write for a keyword, by the keyword written without spaces or marks.
+const SHORT_FORMS: Record<string, string[]> = {
+  kubernetes: ['k8s', 'kube'],
+  javascript: ['js', 'ecmascript', 'es6'],
+  typescript: ['ts'],
+  postgresql: ['postgres', 'psql'],
+  continuousintegration: ['ci'],
+  cicd: ['ci', 'cd'],
+  amazonwebservices: ['aws'],
+  googlecloudplatform: ['gcp'],
+  googlecloud: ['gcp'],
+  microsoftazure: ['azure'],
+  machinelearning: ['ml'],
+  artificialintelligence: ['ai'],
+  userexperience: ['ux'],
+  userinterface: ['ui'],
+  testdrivendevelopment: ['tdd'],
+  reactnative: ['rn'],
+  terraform: ['tf'],
+  elasticsearch: ['elastic'],
+};
+
+const flat = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}+#]/gu, '');
+
+/** How many letters must change to turn a into b (stops early past `max`). */
+function distance(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      next[j] = Math.min((row[j] ?? 0) + 1, (next[j - 1] ?? 0) + 1, (row[j - 1] ?? 0) + cost);
+    }
+    if (Math.min(...next) > max) return max + 1;
+    row = next;
+  }
+  return row[b.length] ?? max + 1;
+}
+
+/**
+ * A word (or words) of the resume that is the keyword in another spelling or a short form:
+ * "Kubernets" or "K8s" for Kubernetes, "Javascript" is already the same word. Null when the resume
+ * has none, or already names the keyword. Words that only look alike (Java, JavaScript) don't count.
+ */
+export function closeSpelling(resume: string, term: string): string | null {
+  if (mentionsTerm(resume, term)) return null;
+  const target = flat(term);
+  if (target.length < 2) return null;
+  const size = term.trim().split(/\s+/).length;
+  const tokens = resume.match(/[\p{L}\p{N}][\p{L}\p{N}+#./-]*[\p{L}\p{N}+#]|[\p{L}\p{N}]/gu) ?? [];
+  const shorts = SHORT_FORMS[target] ?? [];
+  const max = target.length >= 8 ? 2 : target.length >= 5 ? 1 : 0;
+  for (let n = size; n >= 1; n--) {
+    for (let i = 0; i + n <= tokens.length; i++) {
+      const phrase = tokens.slice(i, i + n).join(' ');
+      const word = flat(phrase);
+      if (n === 1 && shorts.includes(word)) return phrase;
+      if (max === 0 || word.length < 4 || word === target) continue;
+      // A longer or shorter word that only starts the same is another thing (Java, JavaScript).
+      if (target.startsWith(word) || word.startsWith(target)) continue;
+      if (distance(word, target, max) <= max) return phrase;
     }
   }
-  return best ?? { line: bestLine(resume, related), words: [] };
+  return null;
 }

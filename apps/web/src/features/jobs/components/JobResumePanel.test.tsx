@@ -317,7 +317,11 @@ describe('JobResumePanel', () => {
     // Click the keyword: the resume line it fits best is pointed at, with the shared words.
     const card = within(screen.getByRole('listitem', { name: 'storybook' }));
     await user.click(card.getByRole('button', { name: 'storybook' }));
-    expect(card.getByText('Best line: shares dashboards, React with the ad')).toBeInTheDocument();
+    expect(card.getByText('shares dashboards, React with the ad')).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Best line 1' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     expect(
       screen.getByRole('button', {
         name: /Built dashboards in React and GraphQL.*storybook fits here/,
