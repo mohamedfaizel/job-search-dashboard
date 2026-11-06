@@ -7,7 +7,7 @@ import {
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { capitalize } from '../format';
 import { useJobFormat } from '../useJobFormat';
 import { ApplyKitPanel, useApplyStep } from './ApplyKitPanel';
@@ -16,6 +16,7 @@ import { InsightsPanel } from './InsightsPanel';
 import { InterviewPanel } from './InterviewPanel';
 import { JobAdPanel } from './JobAdPanel';
 import { MatchPanel, scoreTone } from './MatchPanel';
+import { PopupLayoutContext } from './popupLayout';
 import { StatusSelect } from './StatusSelect';
 import { StillOpen } from './StillOpen';
 import { TailorPanel } from './TailorPanel';
@@ -125,6 +126,10 @@ function JobDetails({
   // A failed PDF check shows on the Apply tab too, so you see it from any tab.
   const pdfCheck = useLastPdfCheck(job.id);
   const pdfProblem = pdfCheck?.items.some((item) => !item.ok) ?? false;
+  const layout = useMemo(
+    () => ({ wide: maximized, adText: job.description ?? '' }),
+    [maximized, job.description],
+  );
 
   // Arrow keys move between tabs, as screen reader users expect from a tab list.
   const onTabKey = (e: KeyboardEvent) => {
@@ -276,31 +281,33 @@ function JobDetails({
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {/* Every tab stays mounted, so a half-done Apply step survives a look at the ad. */}
-        <TabPanel id="fit" active={tab}>
-          <InsightsPanel jobId={job.id} />
-        </TabPanel>
-        <TabPanel id="apply" active={tab}>
-          <ApplyKitPanel
-            steps={applySteps}
-            job={job}
-            onStatusChange={onStatusChange}
-            asking={asking}
-            onApplyStarted={onApplyStarted}
-            onAnswered={onApplyAnswered}
-          />
-        </TabPanel>
-        <TabPanel id="interview" active={tab}>
-          <InterviewPanel jobId={job.id} />
-        </TabPanel>
-        <TabPanel id="ad" active={tab}>
-          <JobAdPanel jobId={job.id} description={job.description} />
-        </TabPanel>
-        <TabPanel id="match" active={tab}>
-          <AiMatch jobId={job.id} hasDescription={Boolean(job.description)} />
-        </TabPanel>
-      </div>
+      <PopupLayoutContext.Provider value={layout}>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {/* Every tab stays mounted, so a half-done Apply step survives a look at the ad. */}
+          <TabPanel id="fit" active={tab}>
+            <InsightsPanel jobId={job.id} />
+          </TabPanel>
+          <TabPanel id="apply" active={tab}>
+            <ApplyKitPanel
+              steps={applySteps}
+              job={job}
+              onStatusChange={onStatusChange}
+              asking={asking}
+              onApplyStarted={onApplyStarted}
+              onAnswered={onApplyAnswered}
+            />
+          </TabPanel>
+          <TabPanel id="interview" active={tab}>
+            <InterviewPanel jobId={job.id} />
+          </TabPanel>
+          <TabPanel id="ad" active={tab}>
+            <JobAdPanel jobId={job.id} description={job.description} />
+          </TabPanel>
+          <TabPanel id="match" active={tab}>
+            <AiMatch jobId={job.id} hasDescription={Boolean(job.description)} />
+          </TabPanel>
+        </div>
+      </PopupLayoutContext.Provider>
 
       <footer className="flex flex-wrap items-center gap-2 border-t border-slate-200 px-4 py-3 sm:px-5">
         <span className="flex items-center gap-2 text-sm text-slate-600">

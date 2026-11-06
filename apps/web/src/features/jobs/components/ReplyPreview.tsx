@@ -1,8 +1,8 @@
 import type { JobInsights, JobResume } from '@jobsearch/data';
 import { useEditJobResume } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
-import type { ReactNode } from 'react';
-import { useState } from 'react';
+import type { KeyboardEvent, PointerEvent, ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useToast } from '../../../components/Toasts';
 import { useErrorText } from '../../../i18n/useErrorText';
 import type { ReplyLine } from '../replyEdit';
@@ -16,7 +16,8 @@ import {
   rewordLine,
   splitLines,
 } from '../replyEdit';
-import { MissingKeywords } from './MissingKeywords';
+import { MissingKeywords, missingTerms } from './MissingKeywords';
+import { usePopupLayout } from './popupLayout';
 
 const BUTTON =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
@@ -152,21 +153,36 @@ function PageView({
   onChange,
   label,
   highlight = [],
+  pointed = null,
+  tall = false,
 }: {
   text: string;
   onChange: (text: string) => void;
   label: string;
   /** Terms to mark green where they appear: the job's keywords the text now covers. */
   highlight?: string[];
+  /** A line to point at, e.g. where a missing keyword fits best. */
+  pointed?: PointedLine | null;
+  /** Taller, for the maximized popup. */
+  tall?: boolean;
 }) {
   const t = useTranslations('Jobs.preview');
   const [editing, setEditing] = useState<number | null>(null);
   const lines = splitLines(text);
+  const pointedRef = useRef<HTMLButtonElement | null>(null);
+  const pointedLine = pointed?.line ?? null;
+  // The pointed line scrolls into view, so you see it next to the keyword you clicked.
+  useEffect(() => {
+    if (pointedLine === null) return;
+    // Test browsers (jsdom) have no scrollIntoView.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    pointedRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [pointedLine]);
   return (
     <div
       role="group"
       aria-label={label}
-      className="max-h-[32rem] overflow-y-auto rounded-lg border border-slate-200 bg-white px-5 py-4 text-sm leading-relaxed shadow-sm sm:px-8 sm:py-6"
+      className={`${tall ? 'max-h-[70vh]' : 'max-h-[32rem]'} overflow-y-auto rounded-lg border border-slate-200 bg-white px-5 py-4 text-sm leading-relaxed shadow-sm sm:px-8 sm:py-6`}
     >
       {lines.map((raw, i) => {
         const line = readLine(raw);
@@ -196,15 +212,19 @@ function PageView({
           );
         }
         if (line.kind === 'blank') return <div key={i} aria-hidden="true" className="h-2" />;
+        const isPointed = pointed?.line === i;
         return (
           <button
             key={i}
+            ref={isPointed ? pointedRef : undefined}
             type="button"
             title={t('clickToEdit')}
             onClick={() => {
               setEditing(i);
             }}
-            className={`block w-full cursor-text rounded px-1 -mx-1 text-left hover:bg-amber-50 hover:ring-1 hover:ring-amber-200 ${LINE_STYLE[line.kind]}`}
+            className={`block w-full cursor-text rounded px-1 -mx-1 text-left hover:bg-amber-50 hover:ring-1 hover:ring-amber-200 ${LINE_STYLE[line.kind]} ${
+              isPointed ? 'bg-amber-50 ring-2 ring-amber-300' : ''
+            }`}
           >
             {line.kind === 'bullet' && (
               <span aria-hidden="true" className="-ml-3 mr-1.5 inline-block w-1.5 text-slate-500">
@@ -220,10 +240,102 @@ function PageView({
                 part.text
               ),
             )}
+            {isPointed && (
+              <span className="ml-2 text-xs font-semibold whitespace-nowrap text-amber-700">
+                ← {pointed.note}
+              </span>
+            )}
           </button>
         );
       })}
       {text.trim() === '' && <p className="text-slate-500">{t('empty')}</p>}
+    </div>
+  );
+}
+
+/** A line of the resume to point at, with a short note next to it. */
+export interface PointedLine {
+  line: number;
+  note: string;
+}
+
+const SPLIT_KEY = 'applyKit.split';
+const SPLIT_MIN = 30;
+const SPLIT_MAX = 75;
+const SPLIT_DEFAULT = 58;
+
+/** Your side-by-side choice and divider place, kept in this browser (it may be blocked). */
+function readSplit(): { on: boolean; pct: number } {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SPLIT_KEY) ?? 'null') as {
+      on?: unknown;
+      pct?: unknown;
+    } | null;
+    const pct = typeof saved?.pct === 'number' ? saved.pct : SPLIT_DEFAULT;
+    return {
+      on: saved?.on !== false,
+      pct: Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, pct)),
+    };
+  } catch {
+    return { on: true, pct: SPLIT_DEFAULT };
+  }
+}
+
+function writeSplit(value: { on: boolean; pct: number }) {
+  try {
+    localStorage.setItem(SPLIT_KEY, JSON.stringify(value));
+  } catch {
+    // Private window or blocked storage: the choice just isn't remembered.
+  }
+}
+
+/** The bar between the resume and Missing keywords: drag it, or use the arrow keys. */
+function Divider({
+  pct,
+  onPct,
+  box,
+}: {
+  pct: number;
+  onPct: (pct: number) => void;
+  box: { current: HTMLDivElement | null };
+}) {
+  const t = useTranslations('Jobs.preview');
+  const clamp = (v: number) => Math.round(Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, v)));
+  const move = (e: PointerEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    const rect = box.current?.getBoundingClientRect();
+    if (!rect?.width) return;
+    onPct(clamp(((e.clientX - rect.left) / rect.width) * 100));
+  };
+  const key = (e: KeyboardEvent<HTMLDivElement>) => {
+    const step = { ArrowLeft: -5, ArrowRight: 5 }[e.key];
+    if (step) onPct(clamp(pct + step));
+    else if (e.key === 'Home') onPct(SPLIT_MIN);
+    else if (e.key === 'End') onPct(SPLIT_MAX);
+    else return;
+    e.preventDefault();
+  };
+  // A focusable separator is a widget in ARIA (like a slider), which the lint rule doesn't know.
+  return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <div
+      role="separator"
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+      tabIndex={0}
+      aria-orientation="vertical"
+      aria-label={t('resize')}
+      title={t('resize')}
+      aria-valuenow={pct}
+      aria-valuemin={SPLIT_MIN}
+      aria-valuemax={SPLIT_MAX}
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={move}
+      onKeyDown={key}
+      className="group flex w-4 shrink-0 cursor-col-resize touch-none items-center justify-center self-stretch focus-visible:outline-2 focus-visible:outline-brand-600"
+    >
+      <span className="h-12 w-1.5 rounded-full bg-slate-300 group-hover:bg-brand-500" />
     </div>
   );
 }
@@ -252,26 +364,90 @@ export function SavedReplyPreview({
   insights: JobInsights;
   saved: JobResume;
 } & PartExtras) {
+  const t = useTranslations('Jobs.preview');
   const state = useReplyDraft(saved);
   const [part, setPart] = useState<ReplyPart>('resume');
+  const [pointed, setPointed] = useState<PointedLine | null>(null);
+  const { wide } = usePopupLayout();
+  const [split, setSplit] = useState(readSplit);
+  const box = useRef<HTMLDivElement | null>(null);
+  const changeSplit = (next: { on: boolean; pct: number }) => {
+    setSplit(next);
+    writeSplit(next);
+  };
   // The job's terms (and Resume-Matcher's) are marked where the resume names them.
   const terms = [
     ...insights.skills.map((t) => t.term),
     ...insights.keywords.map((t) => t.term),
     ...saved.aiMissing,
   ];
+  const onResume = part === 'resume';
+  const hasMissing = onResume && missingTerms(insights).length > 0;
+  // In the maximized popup the resume and Missing keywords sit side by side, to compare.
+  const canSplit = wide && hasMissing;
+  const sideBySide = canSplit && split.on;
+  const splitToggle = canSplit && (
+    <button
+      type="button"
+      aria-pressed={split.on}
+      aria-label={t('sideBySide')}
+      title={t('sideBySide')}
+      className={`${ICON} ${split.on ? 'bg-white text-slate-900 ring-1 ring-slate-200' : ''}`}
+      onClick={() => {
+        changeSplit({ ...split, on: !split.on });
+      }}
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24" className={SVG}>
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M12 4v16" />
+      </svg>
+    </button>
+  );
+  const preview = (
+    <ReplyPreview
+      jobId={insights.jobId}
+      state={state}
+      highlight={terms}
+      part={part}
+      onPart={setPart}
+      pointed={onResume ? pointed : null}
+      tall={sideBySide}
+      {...extras}
+      tabsEnd={
+        splitToggle || extras.tabsEnd ? (
+          <>
+            {splitToggle}
+            {extras.tabsEnd}
+          </>
+        ) : undefined
+      }
+    />
+  );
+  const missing = hasMissing && (
+    <MissingKeywords insights={insights} state={state} onPoint={setPointed} />
+  );
+  if (!sideBySide) {
+    return (
+      <>
+        {preview}
+        {missing}
+      </>
+    );
+  }
   return (
-    <>
-      <ReplyPreview
-        jobId={insights.jobId}
-        state={state}
-        highlight={terms}
-        part={part}
-        onPart={setPart}
-        {...extras}
+    <div ref={box} className="flex items-start">
+      <div className="min-w-0 shrink-0" style={{ flexBasis: `${String(split.pct)}%` }}>
+        {preview}
+      </div>
+      <Divider
+        pct={split.pct}
+        onPct={(pct) => {
+          changeSplit({ ...split, pct });
+        }}
+        box={box}
       />
-      {part === 'resume' && <MissingKeywords insights={insights} state={state} />}
-    </>
+      <div className="sticky top-0 max-h-[85vh] min-w-0 flex-1 overflow-y-auto">{missing}</div>
+    </div>
   );
 }
 
@@ -290,12 +466,16 @@ export function ReplyPreview({
   notice,
   flagged = [],
   tabsEnd,
+  pointed = null,
+  tall = false,
 }: {
   jobId: string;
   state: ReplyDraftState;
   highlight?: string[];
   part?: ReplyPart;
   onPart?: (part: ReplyPart) => void;
+  pointed?: PointedLine | null;
+  tall?: boolean;
 } & PartExtras) {
   const t = useTranslations('Jobs.preview');
   const errorText = useErrorText();
@@ -391,6 +571,8 @@ export function ReplyPreview({
             label={t(`parts.${shown}`)}
             text={draft[shown]}
             highlight={shown === 'resume' ? highlight : []}
+            pointed={shown === 'resume' ? pointed : null}
+            tall={tall}
             onChange={(text) => {
               state.change(shown, text);
             }}

@@ -58,16 +58,48 @@ export function achievementsPart(achievements: string[]): string {
 /** How many of your saved answers go into a prompt (the newest). */
 export const SAVED_ANSWERS_IN_PROMPT = 40;
 
+// Small words that say nothing about a job, in English and German.
+const COMMON = new Set(
+  `about after also been before does from have here into just more most much only over same
+  some such than that them then they this very were what when where which will with would
+  your yours could should there their these those other each years year work works working
+  job jobs role team teams company aber auch bitte dann dass denn diese dieser dies doch
+  eine einen einem einer eines haben hast hier ihre ihren jahre jahren mehr noch oder schon
+  sein seit sich sind sowie über unter vom von wenn werden wird wurde zum zur`.split(/\s+/),
+);
+
+/** The meaningful words of a text, roughly stemmed ("deployments" meets "deployment"). */
+const wordsOf = (text: string) =>
+  new Set(
+    (text.toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}+#]*/gu) ?? [])
+      .filter((w) => w.length > 3 && !COMMON.has(w))
+      .map((w) => (w.length > 5 ? w.replace(/(?:ing|ed|es|s|en|er|ung)$/u, '') : w)),
+  );
+
+/** The saved answers whose question or answer shares a word with the job ad. */
+export function answersForJob<T extends { question: string; answer: string }>(
+  bank: T[],
+  ad: string,
+): T[] {
+  const adWords = wordsOf(ad);
+  return bank.filter((item) =>
+    [...wordsOf(`${item.question} ${item.answer}`)].some((w) => adWords.has(w)),
+  );
+}
+
 /**
  * Your free-text answers (Profile > Applications) and your answers to Claude's earlier questions,
- * as one block, so Claude uses them instead of asking again.
+ * as one block, so Claude uses them instead of asking again. With the job ad, only the answers
+ * that fit this job go in, so the prompt stays short.
  */
 export function savedAnswersText(
   notes: string,
   bank: { question: string; answer: string }[],
+  ad?: string,
 ): string {
-  const answered = bank
+  const answered = (ad === undefined ? bank : answersForJob(bank, ad))
     .filter((item) => item.question.trim() && item.answer.trim())
+    .slice(0, SAVED_ANSWERS_IN_PROMPT)
     .map((item) => `- ${item.question.trim()}\n  ${item.answer.trim()}`);
   return [
     notes.trim(),
@@ -157,7 +189,8 @@ const SELF_REVIEW = `1. Facts: every employer, title, date, degree, number and s
 2. Skills: remove any skill that is not in my resume, my other skills or the job ad's list above.
 3. Requirements: each must-have of the ad that my experience covers is shown in the resume.
 4. Eye: the summary is specific to this role, the first lines show proof for the ad's top needs, and nothing is vague, repeated or a cliché.
-5. Rules: the writing, keyword, layout, date, length and language rules above are followed.`;
+5. Rules: the writing, keyword, layout, date, length and language rules above are followed.
+6. Keywords, word by word: read the finished resume again, word by word. Each keyword of the ad you used must sit in the line whose work it really describes (the line that shares the most words with the ad's sentence about it): move it there if it does not. Each one still missing that my resume truly supports goes into that best-fitting line.`;
 
 /** The "I have this" terms, or nothing when there are none (so the prompt stays short). */
 const mustAddPart = (terms: string[], resume = 'my resume') =>

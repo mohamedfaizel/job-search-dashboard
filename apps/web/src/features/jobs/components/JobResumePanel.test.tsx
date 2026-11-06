@@ -13,20 +13,23 @@ import {
   server,
 } from '../test/server';
 import { ApplyKitPanel } from './ApplyKitPanel';
+import { PopupLayoutContext } from './popupLayout';
 
-function renderPanel() {
+function renderPanel(layout = { wide: false, adText: '' }) {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   render(
     <Intl>
       <DataProvider store={makeStore()} queryClient={queryClient}>
-        <ApplyKitPanel
-          job={makeJob()}
-          onStatusChange={() => undefined}
-          asking={false}
-          onApplyStarted={() => undefined}
-          onAnswered={() => undefined}
-        />
+        <PopupLayoutContext.Provider value={layout}>
+          <ApplyKitPanel
+            job={makeJob()}
+            onStatusChange={() => undefined}
+            asking={false}
+            onApplyStarted={() => undefined}
+            onAnswered={() => undefined}
+          />
+        </PopupLayoutContext.Provider>
       </DataProvider>
     </Intl>,
   );
@@ -297,6 +300,45 @@ describe('JobResumePanel', () => {
     expect(screen.queryByRole('region', { name: 'Missing keywords' })).toBeNull();
     await user.click(screen.getByRole('tab', { name: /^Resume/ }));
     expect(screen.getByRole('region', { name: 'Missing keywords' })).toBeInTheDocument();
+  });
+
+  it('puts the resume and Missing keywords side by side in the maximized popup', async () => {
+    const user = userEvent.setup();
+    localStorage.clear();
+    jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
+    renderPanel({ wide: true, adText: 'You document React dashboards in Storybook.' });
+    await screen.findByRole('region', { name: 'Missing keywords' });
+    const divider = screen.getByRole('separator', { name: 'Drag to resize' });
+    expect(divider).toHaveAttribute('aria-valuenow', '58');
+    divider.focus();
+    await user.keyboard('{ArrowLeft}');
+    expect(divider).toHaveAttribute('aria-valuenow', '53');
+
+    // Click the keyword: the resume line it fits best is pointed at, with the shared words.
+    const card = within(screen.getByRole('listitem', { name: 'storybook' }));
+    await user.click(card.getByRole('button', { name: 'storybook' }));
+    expect(card.getByText('Best line: shares dashboards, React with the ad')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: /Built dashboards in React and GraphQL.*storybook fits here/,
+      }),
+    ).toBeInTheDocument();
+
+    // Turn side by side off: stacked again, and remembered.
+    await user.click(screen.getByRole('button', { name: 'Side by side' }));
+    expect(screen.queryByRole('separator')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('applyKit.split') ?? '{}')).toEqual({
+      on: false,
+      pct: 53,
+    });
+  });
+
+  it('keeps the resume and Missing keywords stacked in the normal popup', async () => {
+    jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
+    renderPanel();
+    await screen.findByRole('region', { name: 'Missing keywords' });
+    expect(screen.queryByRole('separator')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Side by side' })).toBeNull();
   });
 
   it('rewrites a line with the keyword', async () => {

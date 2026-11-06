@@ -959,7 +959,9 @@
       "save": "Änderungen speichern",
       "saving": "Speichert…",
       "saveError": "Änderungen nicht gespeichert: {error}",
-      "flagged": "Die PDF-Prüfung hat etwas gefunden"
+      "flagged": "Die PDF-Prüfung hat etwas gefunden",
+      "resize": "Ziehen zum Anpassen",
+      "sideBySide": "Nebeneinander"
     },
     "keywordCards": {
       "title": "Fehlende Schlüsselwörter",
@@ -998,7 +1000,11 @@
         "rewrite": "Umschreiben",
         "insert": "Einfügen",
         "replace": "Ersetzen"
-      }
+      },
+      "fitsHere": "{term} passt hier",
+      "showLine": "Zeile zeigen, in die es am besten passt",
+      "sharedWords": "Beste Zeile: teilt {words} mit der Anzeige",
+      "noSharedWords": "Keine Zeile teilt hier Wörter mit der Anzeige: wähle selbst eine Zeile"
     },
     "claudeNotes": {
       "title": "Hinweise von Claude",

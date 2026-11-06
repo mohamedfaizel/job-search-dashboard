@@ -267,7 +267,11 @@ export class InsightsService implements OnApplicationBootstrap {
       resumeIn: forPrompt.language,
       description: job.description,
       facts: applicationFacts(profile),
-      savedAnswers: savedAnswersText(profile?.applicationNotes ?? '', answerBank),
+      savedAnswers: savedAnswersText(
+        profile?.applicationNotes ?? '',
+        answerBank,
+        job.description ?? '',
+      ),
       achievements: achievementLines(profile?.achievements ?? ''),
       settings: profile
         ? { maxPages: profile.resumeMaxPages, keepSections: profile.keepMySections }
@@ -642,7 +646,8 @@ export class InsightsService implements OnApplicationBootstrap {
       where: { userId },
       select: { question: true, answer: true },
       orderBy: { updatedAt: 'desc' },
-      take: SAVED_ANSWERS_IN_PROMPT,
+      // More than go into a prompt: only those that fit the job are kept.
+      take: SAVED_ANSWERS_IN_PROMPT * 5,
     });
   }
 

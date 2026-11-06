@@ -959,7 +959,9 @@
       "save": "Save changes",
       "saving": "Saving…",
       "saveError": "Could not save your changes: {error}",
-      "flagged": "The PDF check found something to fix"
+      "flagged": "The PDF check found something to fix",
+      "resize": "Drag to resize",
+      "sideBySide": "Side by side"
     },
     "keywordCards": {
       "title": "Missing keywords",
@@ -998,7 +1000,11 @@
         "rewrite": "Rewrite",
         "insert": "Insert",
         "replace": "Replace"
-      }
+      },
+      "fitsHere": "{term} fits here",
+      "showLine": "Show the line where it fits best",
+      "sharedWords": "Best line: shares {words} with the ad",
+      "noSharedWords": "No line shares words with the ad here: pick a line yourself"
     },
     "claudeNotes": {
       "title": "Notes from Claude",
