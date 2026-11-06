@@ -10,6 +10,7 @@ import {
   splitReply,
   buildQueuePrompt,
   splitQueueReply,
+  answersForJob,
   savedAnswersText,
 } from './prompt';
 import { checkResume, coverage, matchScore, titleMatch } from './score';
@@ -772,5 +773,16 @@ describe('savedAnswersText', () => {
       'I like products people use.\n\nQuestions I answered before:\n- Is the salary 65,000 EUR gross per year?\n  Yes, 65,000 EUR',
     );
     expect(savedAnswersText(' ', [])).toBe('');
+  });
+
+  it('keeps only the answers that fit the job ad when the ad is given', () => {
+    const bank = [
+      { question: 'Which Kubernetes clusters did you run?', answer: 'Two clusters on AWS' },
+      { question: 'Did you fly drones?', answer: 'No' },
+    ];
+    expect(answersForJob(bank, 'You deploy services to Kubernetes on AWS.')).toEqual([bank[0]]);
+    const text = savedAnswersText('', bank, 'You deploy services to Kubernetes on AWS.');
+    expect(text).toContain('Kubernetes clusters');
+    expect(text).not.toContain('drones');
   });
 });

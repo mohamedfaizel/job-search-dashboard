@@ -58,16 +58,48 @@ export function achievementsPart(achievements: string[]): string {
 /** How many of your saved answers go into a prompt (the newest). */
 export const SAVED_ANSWERS_IN_PROMPT = 40;
 
+// Small words that say nothing about a job, in English and German.
+const COMMON = new Set(
+  `about after also been before does from have here into just more most much only over same
+  some such than that them then they this very were what when where which will with would
+  your yours could should there their these those other each years year work works working
+  job jobs role team teams company aber auch bitte dann dass denn diese dieser dies doch
+  eine einen einem einer eines haben hast hier ihre ihren jahre jahren mehr noch oder schon
+  sein seit sich sind sowie über unter vom von wenn werden wird wurde zum zur`.split(/\s+/),
+);
+
+/** The meaningful words of a text, roughly stemmed ("deployments" meets "deployment"). */
+const wordsOf = (text: string) =>
+  new Set(
+    (text.toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}+#]*/gu) ?? [])
+      .filter((w) => w.length > 3 && !COMMON.has(w))
+      .map((w) => (w.length > 5 ? w.replace(/(?:ing|ed|es|s|en|er|ung)$/u, '') : w)),
+  );
+
+/** The saved answers whose question or answer shares a word with the job ad. */
+export function answersForJob<T extends { question: string; answer: string }>(
+  bank: T[],
+  ad: string,
+): T[] {
+  const adWords = wordsOf(ad);
+  return bank.filter((item) =>
+    [...wordsOf(`${item.question} ${item.answer}`)].some((w) => adWords.has(w)),
+  );
+}
+
 /**
  * Your free-text answers (Profile > Applications) and your answers to Claude's earlier questions,
- * as one block, so Claude uses them instead of asking again.
+ * as one block, so Claude uses them instead of asking again. With the job ad, only the answers
+ * that fit this job go in, so the prompt stays short.
  */
 export function savedAnswersText(
   notes: string,
   bank: { question: string; answer: string }[],
+  ad?: string,
 ): string {
-  const answered = bank
+  const answered = (ad === undefined ? bank : answersForJob(bank, ad))
     .filter((item) => item.question.trim() && item.answer.trim())
+    .slice(0, SAVED_ANSWERS_IN_PROMPT)
     .map((item) => `- ${item.question.trim()}\n  ${item.answer.trim()}`);
   return [
     notes.trim(),
@@ -88,6 +120,7 @@ const TERM_RULES = `How to handle each skill or keyword:
 1. Supported: my resume or my other skills show it. Use it, in the job ad's own words.
 2. Related: it is closely tied to something I have done (same ecosystem, or the usual tool for it), for example Apollo with GraphQL, Next.js with React, Jest with unit testing, Kubernetes with Docker. Add it next to that experience, e.g. "GraphQL APIs with Apollo Client".
 3. Keywords from the job ad (the ad's own phrases): use the ad's exact word where it means the same as what I really did, because ATS keyword matching is often literal (the ad says "reusable UI components" and I built reusable React components: write "reusable UI components with React"). Put them in the summary, the first bullet of each job and the skills, as normal words in real sentences. Never use a keyword only to raise a score, and never stuff, repeat or hide them.
+   Spelling: write each keyword exactly as the ad spells it. When my resume has the same thing in another spelling or form (Javascript or JS for JavaScript, NodeJS for Node.js, CICD for CI/CD, React.js for React, a German or English form of the same word), change my word to the ad's spelling. A short form gets the ad's full form once, with the short form after it if the ad uses both: "Kubernetes (K8s)". Words that only look alike but mean something else (Java and JavaScript) are not the same keyword.
 4. A skill with no connection to my experience: leave it out.
 5. Only the job ad’s own skills may be added. A tool the ad does not ask for, and my resume and skills list do not show, must not appear in the new resume, however common it is (for example Kubernetes when the ad never names it).
 
@@ -157,7 +190,11 @@ const SELF_REVIEW = `1. Facts: every employer, title, date, degree, number and s
 2. Skills: remove any skill that is not in my resume, my other skills or the job ad's list above.
 3. Requirements: each must-have of the ad that my experience covers is shown in the resume.
 4. Eye: the summary is specific to this role, the first lines show proof for the ad's top needs, and nothing is vague, repeated or a cliché.
-5. Rules: the writing, keyword, layout, date, length and language rules above are followed.`;
+5. Rules: the writing, keyword, layout, date, length and language rules above are followed.
+6. Keywords, word by word: read the finished resume again, word by word, next to the ad.
+   a. Spelling: any word that is a close spelling, short form or other form of an ad keyword (see rule 3) is changed to the ad's exact spelling.
+   b. Place: for each keyword, find up to 3 lines that could hold it, ranked by how many words they share with the ad's sentence about it and whether the work is really the same. Use the best true one, and move the keyword there if it sits somewhere weaker.
+   c. Missing: each keyword still missing that my resume truly supports goes into its best line. In the CHECK part, under Placed, name the line you chose for each one and, when the choice was close, the other 1 or 2 lines you considered.`;
 
 /** The "I have this" terms, or nothing when there are none (so the prompt stays short). */
 const mustAddPart = (terms: string[], resume = 'my resume') =>
