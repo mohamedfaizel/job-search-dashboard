@@ -847,7 +847,6 @@
     "reply": {
       "making": "Saving…",
       "paste": "Paste reply and save",
-      "pasteHint": "One click: saves and scores the reply.",
       "blocked": "The browser didn’t let us read the clipboard. Paste the reply in the box below instead (Ctrl+V).",
       "boxLabel": "Claude’s reply",
       "placeholder": "Or paste Claude’s whole reply here, or drop a PDF, Word, text or Markdown file",

@@ -122,7 +122,6 @@ export function ReplyInput({ jobId, onSaved }: { jobId: string; onSaved: () => v
           </svg>
           {save.isPending ? t('making') : t('paste')}
         </button>
-        <span className="text-sm text-slate-600">{t('pasteHint')}</span>
       </div>
       {clipboardBlocked && <p className="text-xs text-slate-500">{t('blocked')}</p>}
 

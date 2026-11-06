@@ -847,7 +847,6 @@
     "reply": {
       "making": "Wird gespeichert…",
       "paste": "Antwort einfügen und speichern",
-      "pasteHint": "Ein Klick: speichert und bewertet die Antwort.",
       "blocked": "Der Browser hat das Lesen der Zwischenablage nicht erlaubt. Füge die Antwort stattdessen unten ins Feld ein (Strg+V).",
       "boxLabel": "Claudes Antwort",
       "placeholder": "Oder füge hier Claudes ganze Antwort ein oder zieh eine PDF-, Word-, Text- oder Markdown-Datei hierher",
