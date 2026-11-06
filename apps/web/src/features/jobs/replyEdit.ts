@@ -16,6 +16,8 @@ const HEADING = /^(#{1,6})\s+(.*?)\s*#*$/;
 const BULLET = /^\s*[-*•–]\s+(.*)$/;
 const BOLD_LINE = /^\*\*([^*]+)\*\*:?$/;
 
+const HEADLINE_LABEL = /^\*{0,2}(?:headline|überschrift|titel)\*{0,2}\s*:\s*/i;
+
 /** What one line of the resume is, and its words without Markdown. */
 export function readLine(line: string): ReplyLine {
   const trimmed = line.trim();
@@ -30,7 +32,8 @@ export function readLine(line: string): ReplyLine {
   if (bold) return { kind: 'section', text: bold[1] ?? '' };
   const bullet = BULLET.exec(line);
   if (bullet) return { kind: 'bullet', text: bullet[1] ?? '' };
-  return { kind: 'text', text: trimmed };
+  // "Headline: Senior Web Engineer" is only a label for the PDF: the PDF shows the title alone.
+  return { kind: 'text', text: trimmed.replace(HEADLINE_LABEL, '') };
 }
 
 export const splitLines = (text: string): string[] => text.replace(/\r\n?/g, '\n').split('\n');

@@ -14,7 +14,7 @@ import type { DragEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '../../../components/Toasts';
 import { useErrorText } from '../../../i18n/useErrorText';
-import { replyParts, startDownload } from '../reply';
+import { replyParts } from '../reply';
 import { useJobFormat } from '../useJobFormat';
 import { Badge } from './Badge';
 import { ClaudeNotes } from './ClaudeNotes';
@@ -34,17 +34,10 @@ const isResumeFile = (file: File) => /\.(pdf|docx|txt|md)$/i.test(file.name);
 
 /**
  * Brings Claude's reply back: one click reads it from the clipboard, or paste it in the box,
- * upload a file or drop one. Each replaces the reply saved before. A pasted reply downloads
- * its resume PDF straight away, so pasting once gives you the file to attach.
+ * upload a file or drop one. Each replaces the reply saved before and is scored. Nothing
+ * downloads here: you check the PDF and download it in step 3.
  */
-export function ReplyInput({
-  jobId,
-  onSaved,
-}: {
-  jobId: string;
-  /** pdf is true when the resume PDF started downloading. */
-  onSaved: (result: { pdf: boolean }) => void;
-}) {
+export function ReplyInput({ jobId, onSaved }: { jobId: string; onSaved: () => void }) {
   const errorText = useErrorText();
   const upload = useUploadJobResume();
   const save = useSaveJobResumeText();
@@ -65,9 +58,8 @@ export function ReplyInput({
       {
         onSuccess: () => {
           setText('');
-          startDownload(`${jobResumeUrl(jobId)}/resume.pdf`);
           toast(tToast('replySaved'));
-          onSaved({ pdf: true });
+          onSaved();
         },
       },
     );
@@ -78,7 +70,7 @@ export function ReplyInput({
       {
         onSuccess: () => {
           toast(tToast('resumeUploaded'));
-          onSaved({ pdf: false });
+          onSaved();
         },
       },
     );
@@ -130,7 +122,6 @@ export function ReplyInput({
           </svg>
           {save.isPending ? t('making') : t('paste')}
         </button>
-        <span className="text-sm text-slate-600">{t('pasteHint')}</span>
       </div>
       {clipboardBlocked && <p className="text-xs text-slate-500">{t('blocked')}</p>}
 
@@ -274,58 +265,90 @@ function PdfCheck({ jobId, template }: { jobId: string; template: string }) {
     const values = { detail: item.detail, pages, limit };
     return t(item.ok ? `pdfOk.${item.code}` : `pdfBad.${item.code}`, values);
   };
-  const problems = result?.items.filter((item) => !item.ok).length ?? 0;
+  const items = result
+    ? PDF_CHECKS.map((code) => result.items.find((item) => item.code === code)).filter(
+        (item): item is PdfCheckItem => item !== undefined,
+      )
+    : [];
+  const problems = items.filter((item) => !item.ok);
+  const passed = items.filter((item) => item.ok);
+  const row = (item: PdfCheckItem) => (
+    <li
+      key={item.code}
+      className={`flex gap-2 text-sm ${item.ok ? 'text-slate-700' : 'text-amber-900'}`}
+    >
+      <span aria-hidden="true" className={item.ok ? 'text-emerald-600' : 'text-amber-600'}>
+        {item.ok ? '✓' : '!'}
+      </span>
+      <span>{line(item)}</span>
+    </li>
+  );
   return (
     <section
       aria-label={t('pdfTitle')}
-      className="space-y-2 rounded-xl border border-slate-200 bg-white px-4 py-3"
+      className={`space-y-1.5 rounded-xl border px-3 py-2 ${
+        result && problems.length > 0
+          ? 'border-amber-200 bg-amber-50/60'
+          : 'border-slate-200 bg-white'
+      }`}
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h3 className="text-sm font-semibold text-slate-900">{t('pdfTitle')}</h3>
+      <div className="flex items-center gap-2 text-sm">
+        <span className="font-semibold text-slate-900">{t('pdfTitle')}</span>
+        <span
+          role="status"
+          className={`min-w-0 flex-1 truncate ${
+            !result ? 'text-slate-500' : problems.length ? 'text-amber-800' : 'text-emerald-700'
+          }`}
+        >
+          {check.isPending
+            ? t('pdfChecking')
+            : result
+              ? problems.length
+                ? t('pdfProblems', { count: problems.length })
+                : `✓ ${t('pdfAllOk')}`
+              : ''}
+        </span>
         <button
           type="button"
-          className={BUTTON}
+          title={result ? t('pdfAgain') : t('pdfRun')}
+          aria-label={result ? t('pdfAgain') : t('pdfRun')}
           disabled={check.isPending}
           onClick={() => {
             check.mutate({ jobId, template });
           }}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
         >
-          {check.isPending ? t('pdfChecking') : result ? t('pdfAgain') : t('pdfRun')}
-        </button>
-        {result && (
-          <span
-            role="status"
-            className={`text-sm ${problems ? 'text-amber-800' : 'text-emerald-700'}`}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className={`h-4 w-4 fill-none stroke-current stroke-2 ${check.isPending ? 'animate-spin' : ''}`}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            {problems ? t('pdfProblems', { count: problems }) : t('pdfAllOk')}
-          </span>
-        )}
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
+        </button>
       </div>
-      {!result && !check.isPending && <p className="text-xs text-slate-600">{t('pdfIntro')}</p>}
       {check.error && (
         <p role="alert" className="text-sm text-red-700">
           {t('pdfError', { error: errorText(check.error) })}
         </p>
       )}
-      {result && (
-        <ul className="space-y-1" aria-label={t('pdfTitle')}>
-          {PDF_CHECKS.map((code) => result.items.find((item) => item.code === code))
-            .filter((item): item is PdfCheckItem => item !== undefined)
-            .map((item) => (
-              <li
-                key={item.code}
-                className={`flex gap-2 text-sm ${item.ok ? 'text-slate-700' : 'text-amber-900'}`}
-              >
-                <span
-                  aria-hidden="true"
-                  className={item.ok ? 'text-emerald-600' : 'text-amber-600'}
-                >
-                  {item.ok ? '✓' : '!'}
-                </span>
-                <span>{line(item)}</span>
-              </li>
-            ))}
+      {problems.length > 0 && (
+        <ul className="space-y-1" aria-label={t('pdfProblemsLabel')}>
+          {problems.map(row)}
         </ul>
+      )}
+      {passed.length > 0 && (
+        <details className="text-xs">
+          <summary className="cursor-pointer text-slate-500 hover:text-slate-800">
+            {t('pdfDetails', { count: passed.length })}
+          </summary>
+          <ul className="mt-1.5 space-y-1" aria-label={t('pdfAllLabel')}>
+            {passed.map(row)}
+          </ul>
+        </details>
       )}
     </section>
   );
@@ -425,6 +448,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
         key={jobResume.claudeCheck}
         jobId={jobId}
         text={jobResume.claudeCheck}
+        resume={jobResume.text}
         answers={jobResume.claudeAnswers}
       />
       <SavedReplyPreview

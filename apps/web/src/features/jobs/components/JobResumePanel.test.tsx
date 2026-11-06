@@ -49,7 +49,7 @@ describe('JobResumePanel', () => {
     expect(screen.getByRole('list', { name: 'Found in the reply' })).toHaveTextContent(
       '✓ Resume found– Cover letter not found– Form answers not found',
     );
-    await user.click(screen.getByRole('button', { name: 'Save and download PDF' }));
+    await user.click(screen.getByRole('button', { name: 'Save reply' }));
 
     expect(requests).toContainEqual({
       operation: 'SaveJobResumeText',
@@ -68,9 +68,8 @@ describe('JobResumePanel', () => {
       }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Claude’s reply' })).toBeNull();
-    // The resume PDF downloads straight away.
-    expect(downloads).toEqual([`${jobResumeUrl('job-1')}/resume.pdf`]);
-    expect(screen.getByText(/Your resume PDF is downloading/)).toBeInTheDocument();
+    // Nothing downloads: the PDF is checked and downloaded in step 3.
+    expect(downloads).toEqual([]);
   });
 
   it('works a missing keyword into the preview: suggestion, rewrite, insert, replace, skip', async () => {
@@ -212,7 +211,7 @@ describe('JobResumePanel', () => {
     expect(text).toContain('- Which year did you finish school?\n  2012');
   });
 
-  it('fills a question from your saved answers, and a ticked-off Remember keeps it to this job', async () => {
+  it('does not ask again what you answered before: it is filled in and folded away', async () => {
     const user = userEvent.setup();
     savedAnswers.push({
       id: 1,
@@ -224,21 +223,69 @@ describe('JobResumePanel', () => {
     renderPanel();
     const notes = within(await screen.findByRole('region', { name: 'Notes from Claude' }));
 
-    const school = await notes.findByRole('textbox', { name: /Which year did you finish school/ });
-    await waitFor(() => {
-      expect(school).toHaveValue('2012');
-    });
-    expect(notes.getByText('From your saved answers')).toBeInTheDocument();
+    // Only the two stretches are open; the school question is answered from your saved answers.
+    expect(await notes.findByText('Claude asks you 2 things')).toBeInTheDocument();
+    expect(notes.queryByRole('list', { name: 'Ask me' })).toBeNull();
     expect(notes.getByText('1 answered · 1 filled from your saved answers')).toBeInTheDocument();
+    await user.click(notes.getByText(/1 question answered before/));
+    const school = within(notes.getByRole('list', { name: 'Answered before' })).getByRole(
+      'textbox',
+      { name: /Which year did you finish school/ },
+    );
+    expect(school).toHaveValue('2012');
+    expect(notes.getByText('From your saved answers')).toBeInTheDocument();
 
-    // Change the answer and untick Remember: only this job gets the new one.
-    await user.click(notes.getByRole('checkbox', { name: /Remember your answer/ }));
+    // Changing it updates the one saved answer, for every job.
     await user.clear(school);
     await user.type(school, '2013');
     await user.tab();
-    expect(requests.some((r) => r.operation === 'SaveAnswer')).toBe(false);
-    expect(school).toHaveValue('2013');
-    expect(notes.queryByText('From your saved answers')).toBeNull();
+    expect(requests).toContainEqual({
+      operation: 'SaveAnswer',
+      variables: { question: 'Which year did you finish school?', answer: '2013' },
+    });
+    // Claude gets the saved answer with your copied answers.
+    await user.click(notes.getByRole('button', { name: 'Copy my answers for Claude ↗' }));
+    expect(
+      notes.getByRole<HTMLTextAreaElement>('textbox', { name: 'My answers for Claude' }).value,
+    ).toContain('- Which year did you finish school?\n  2013');
+  });
+
+  it('starts Soften with the resume line the stretch is about', async () => {
+    const user = userEvent.setup();
+    jobResume.current = {
+      ...SAVED_RESUME,
+      claudeCheck:
+        '- Stretches: (1) The Acme job uses "dashboards in React" as the main result. Is that wording OK? (2) React 19: only in a side project.',
+    };
+    renderPanel();
+    const stretches = within(await screen.findByRole('list', { name: 'Stretches' })).getAllByRole(
+      'listitem',
+    );
+
+    await user.click(within(stretches[0]!).getByRole('button', { name: '✎ Soften' }));
+    expect(within(stretches[0]!).getByRole('textbox')).toHaveValue(
+      'Built dashboards in React and GraphQL',
+    );
+    await user.tab();
+    // No quoted words: an empty box with a hint, not the question again.
+    await user.click(within(stretches[1]!).getByRole('button', { name: '✎ Soften' }));
+    const box = within(stretches[1]!).getByRole('textbox');
+    expect(box).toHaveValue('');
+    expect(box).toHaveAttribute('placeholder', 'Type the softer wording for this line');
+  });
+
+  it('shows nothing to decide when Claude’s second reply has no open stretches', async () => {
+    jobResume.current = {
+      ...SAVED_RESUME,
+      claudeCheck:
+        '- Placed: graphql (Replace)\n- Stretches: none open. You decided on all of them.\n- Ask me: You did not answer these earlier questions, so I left the related lines unchanged.\n- Ask me: Which year did you finish school?',
+    };
+    renderPanel();
+    const notes = within(await screen.findByRole('region', { name: 'Notes from Claude' }));
+    expect(notes.getByText('Claude asks you 1 thing')).toBeInTheDocument();
+    expect(notes.queryByRole('list', { name: 'Stretches' })).toBeNull();
+    expect(notes.getByRole('list', { name: 'Ask me' }).children).toHaveLength(1);
+    expect(notes.queryByText(/did not answer these earlier questions/)).toBeNull();
   });
 
   it('rewrites a line with the keyword', async () => {

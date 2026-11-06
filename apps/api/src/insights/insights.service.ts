@@ -35,6 +35,8 @@ import {
   achievementLines,
   DEFAULT_RESUME_SETTINGS,
   applicationFacts,
+  SAVED_ANSWERS_IN_PROMPT,
+  savedAnswersText,
   buildQueuePrompt,
   buildResumePrompt,
   buildReviewPrompt,
@@ -118,76 +120,85 @@ export class InsightsService implements OnApplicationBootstrap {
     userId: number,
     jobId: string,
   ): Promise<{ insights: JobInsightsModel; promptInput: PromptInput }> {
-    const [job, profile, removedRows, jobResume, languageResumes, interviewPrep, jobLanguages] =
-      await Promise.all([
-        this.prisma.job.findUnique({
-          where: { id: jobId },
-          select: {
-            title: true,
-            description: true,
-            language: true,
-            skills: true,
-            city: true,
-            raw: true,
-            company: { select: { name: true } },
-          },
-        }),
-        this.prisma.profile.findUnique({
-          where: { userId },
-          select: {
-            resumeText: true,
-            resumeLanguage: true,
-            headline: true,
-            skills: true,
-            keywords: true,
-            languages: true,
-            yearsExperience: true,
-            address: true,
-            workPermit: true,
-            noticePeriod: true,
-            salaryExpectation: true,
-            relocation: true,
-            applicationNotes: true,
-            achievements: true,
-            resumeMaxPages: true,
-            keepMySections: true,
-          },
-        }),
-        this.prisma.removedTerm.findMany({
-          where: { userId, OR: [{ jobId }, { jobId: null }] },
-          orderBy: { createdAt: 'asc' },
-        }),
-        this.prisma.jobResume.findUnique({
-          where: { userId_jobId: { userId, jobId } },
-          select: {
-            text: true,
-            fileName: true,
-            coverLetter: true,
-            formAnswers: true,
-            claudeCheck: true,
-            claudeAnswers: true,
-            updatedAt: true,
-            score: true,
-            aiStatus: true,
-            aiScore: true,
-            aiError: true,
-            aiMissing: true,
-            aiTips: true,
-          },
-        }),
-        this.prisma.languageResume.findMany({
-          where: { userId },
-          select: { language: true, text: true },
-        }),
-        this.prisma.interviewPrep.findUnique({
-          where: { userId_jobId: { userId, jobId } },
-          select: { text: true, updatedAt: true },
-        }),
-        this.prisma.jobLanguages.findUnique({
-          where: { userId_jobId: { userId, jobId } },
-          select: { text: true },
-        }),
-      ]);
+    const [
+      job,
+      profile,
+      removedRows,
+      jobResume,
+      languageResumes,
+      interviewPrep,
+      jobLanguages,
+      answerBank,
+    ] = await Promise.all([
+      this.prisma.job.findUnique({
+        where: { id: jobId },
+        select: {
+          title: true,
+          description: true,
+          language: true,
+          skills: true,
+          city: true,
+          raw: true,
+          company: { select: { name: true } },
+        },
+      }),
+      this.prisma.profile.findUnique({
+        where: { userId },
+        select: {
+          resumeText: true,
+          resumeLanguage: true,
+          headline: true,
+          skills: true,
+          keywords: true,
+          languages: true,
+          yearsExperience: true,
+          address: true,
+          workPermit: true,
+          noticePeriod: true,
+          salaryExpectation: true,
+          relocation: true,
+          applicationNotes: true,
+          achievements: true,
+          resumeMaxPages: true,
+          keepMySections: true,
+        },
+      }),
+      this.prisma.removedTerm.findMany({
+        where: { userId, OR: [{ jobId }, { jobId: null }] },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.jobResume.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: {
+          text: true,
+          fileName: true,
+          coverLetter: true,
+          formAnswers: true,
+          claudeCheck: true,
+          claudeAnswers: true,
+          updatedAt: true,
+          score: true,
+          aiStatus: true,
+          aiScore: true,
+          aiError: true,
+          aiMissing: true,
+          aiTips: true,
+        },
+      }),
+      this.prisma.languageResume.findMany({
+        where: { userId },
+        select: { language: true, text: true },
+      }),
+      this.prisma.interviewPrep.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { text: true, updatedAt: true },
+      }),
+      this.prisma.jobLanguages.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { text: true },
+      }),
+      this.savedAnswerBank(userId),
+    ]);
     if (!job)
       throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
 
@@ -256,7 +267,7 @@ export class InsightsService implements OnApplicationBootstrap {
       resumeIn: forPrompt.language,
       description: job.description,
       facts: applicationFacts(profile),
-      savedAnswers: profile?.applicationNotes ?? '',
+      savedAnswers: savedAnswersText(profile?.applicationNotes ?? '', answerBank),
       achievements: achievementLines(profile?.achievements ?? ''),
       settings: profile
         ? { maxPages: profile.resumeMaxPages, keepSections: profile.keepMySections }
@@ -625,9 +636,19 @@ export class InsightsService implements OnApplicationBootstrap {
     };
   }
 
+  /** Your answers to Claude's earlier questions (Profile > Applications), newest first. */
+  private savedAnswerBank(userId: number) {
+    return this.prisma.savedAnswer.findMany({
+      where: { userId },
+      select: { question: true, answer: true },
+      orderBy: { updatedAt: 'desc' },
+      take: SAVED_ANSWERS_IN_PROMPT,
+    });
+  }
+
   /** The Apply kit page for one job: your details, the form answers, cover letter and resume. */
   async applyKit(userId: number, jobId: string, resumeUrl: string): Promise<string> {
-    const [job, user, jobResume] = await Promise.all([
+    const [job, user, jobResume, answerBank] = await Promise.all([
       this.prisma.job.findUnique({
         where: { id: jobId },
         select: { title: true, url: true, company: { select: { name: true } } },
@@ -640,6 +661,7 @@ export class InsightsService implements OnApplicationBootstrap {
         where: { userId_jobId: { userId, jobId } },
         select: { text: true, coverLetter: true, formAnswers: true },
       }),
+      this.savedAnswerBank(userId),
     ]);
     if (!job)
       throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
@@ -668,7 +690,7 @@ export class InsightsService implements OnApplicationBootstrap {
         employmentType: p?.employmentType ?? '',
         workplacePreference: p?.workplacePreference ?? '',
         drivingLicence: p?.drivingLicence ?? '',
-        applicationNotes: p?.applicationNotes ?? '',
+        applicationNotes: savedAnswersText(p?.applicationNotes ?? '', answerBank),
         customFields: customFieldsOf(p?.customFields),
       },
       jobResume,

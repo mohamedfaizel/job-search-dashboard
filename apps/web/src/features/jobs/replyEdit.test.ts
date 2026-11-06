@@ -3,6 +3,11 @@ import { deleteLine, insertLine, lineLike, readLine, replaceLine, rewordLine } f
 describe('replyEdit', () => {
   it('reads each Markdown line as name, section, entry, bullet or text', () => {
     expect(readLine('# Ada Lovelace')).toEqual({ kind: 'name', text: 'Ada Lovelace' });
+    // The headline's label is not shown, as in the PDF.
+    expect(readLine('Headline: Senior Web Engineer')).toEqual({
+      kind: 'text',
+      text: 'Senior Web Engineer',
+    });
     expect(readLine('## Experience')).toEqual({ kind: 'section', text: 'Experience' });
     expect(readLine('**BERUFSERFAHRUNG**')).toEqual({ kind: 'section', text: 'BERUFSERFAHRUNG' });
     expect(readLine('### Engineer | Acme')).toEqual({ kind: 'entry', text: 'Engineer | Acme' });
