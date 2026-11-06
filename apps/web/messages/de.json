@@ -639,7 +639,8 @@
       "addQueue": "Zur Bewerbungs-Warteschlange",
       "inQueue": "✓ In der Warteschlange",
       "removeQueue": "Klicken, um es aus der Warteschlange zu nehmen",
-      "addQueueHint": "Später mehrere Jobs auf einmal bewerben"
+      "addQueueHint": "Später mehrere Jobs auf einmal bewerben",
+      "pdfProblem": "Im Lebenslauf-PDF ist etwas zu beheben"
     },
     "ad": {
       "inResume": "In deinem Lebenslauf",
@@ -925,7 +926,13 @@
       },
       "pdfDetails": "{count, plural, one {# bestandene Prüfung} other {# bestandene Prüfungen}} zeigen",
       "pdfProblemsLabel": "Zu beheben",
-      "pdfAllLabel": "Bestandene Prüfungen"
+      "pdfAllLabel": "Bestandene Prüfungen",
+      "pdfNotYet": "PDF noch nicht geprüft",
+      "pdfOkShort": "ATS OK",
+      "words": "{count, plural, one {# Wort} other {# Wörter}}",
+      "coverPdf": "Anschreiben als PDF laden",
+      "copiedToast": "Kopiert",
+      "copyBlocked": "Dein Browser hat das Kopieren blockiert. Nutze „Als Text bearbeiten“ und kopiere es selbst."
     },
     "preview": {
       "title": "Vorschau und Bearbeiten",
@@ -951,7 +958,8 @@
       "reset": "Zurücksetzen",
       "save": "Änderungen speichern",
       "saving": "Speichert…",
-      "saveError": "Änderungen nicht gespeichert: {error}"
+      "saveError": "Änderungen nicht gespeichert: {error}",
+      "flagged": "Die PDF-Prüfung hat etwas gefunden"
     },
     "keywordCards": {
       "title": "Fehlende Schlüsselwörter",

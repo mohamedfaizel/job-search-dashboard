@@ -1,6 +1,7 @@
 import type { JobInsights, JobResume } from '@jobsearch/data';
 import { useEditJobResume } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useToast } from '../../../components/Toasts';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -19,6 +20,12 @@ import { MissingKeywords } from './MissingKeywords';
 
 const BUTTON =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
+
+/** A small icon button; its name shows as a tooltip. */
+export const ICON =
+  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-white hover:text-slate-900 hover:ring-1 hover:ring-slate-200 disabled:opacity-40';
+export const SVG =
+  'h-4 w-4 fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]';
 
 export type ReplyPart = 'resume' | 'coverLetter' | 'formAnswers';
 export type ReplyDraft = Record<ReplyPart, string>;
@@ -221,15 +228,32 @@ function PageView({
   );
 }
 
-/** The preview with its own draft, started again from every new save. */
+/** What the Apply tab puts on each tab of the preview: its buttons, a notice, a flag. */
+export interface PartExtras {
+  /** Buttons for this part (download, copy…), on the bar under the tabs. */
+  tools?: (part: ReplyPart) => ReactNode;
+  /** A line under the bar, e.g. what the PDF check found. */
+  notice?: (part: ReplyPart) => ReactNode;
+  /** Parts whose tab gets an orange "!". */
+  flagged?: ReplyPart[];
+  /** On the right of the tabs, e.g. when the reply was saved. */
+  tabsEnd?: ReactNode;
+}
+
+/**
+ * The preview with its own draft, started again from every new save. Missing keywords sits in
+ * its own card under it, only while the Resume tab is open.
+ */
 export function SavedReplyPreview({
   insights,
   saved,
+  ...extras
 }: {
   insights: JobInsights;
   saved: JobResume;
-}) {
+} & PartExtras) {
   const state = useReplyDraft(saved);
+  const [part, setPart] = useState<ReplyPart>('resume');
   // The job's terms (and Resume-Matcher's) are marked where the resume names them.
   const terms = [
     ...insights.skills.map((t) => t.term),
@@ -238,8 +262,15 @@ export function SavedReplyPreview({
   ];
   return (
     <>
-      <ReplyPreview jobId={insights.jobId} state={state} highlight={terms} />
-      <MissingKeywords insights={insights} state={state} />
+      <ReplyPreview
+        jobId={insights.jobId}
+        state={state}
+        highlight={terms}
+        part={part}
+        onPart={setPart}
+        {...extras}
+      />
+      {part === 'resume' && <MissingKeywords insights={insights} state={state} />}
     </>
   );
 }
@@ -253,18 +284,28 @@ export function ReplyPreview({
   jobId,
   state,
   highlight = [],
+  part: controlledPart,
+  onPart,
+  tools,
+  notice,
+  flagged = [],
+  tabsEnd,
 }: {
   jobId: string;
   state: ReplyDraftState;
   highlight?: string[];
-}) {
+  part?: ReplyPart;
+  onPart?: (part: ReplyPart) => void;
+} & PartExtras) {
   const t = useTranslations('Jobs.preview');
   const errorText = useErrorText();
   const save = useEditJobResume();
   const tToast = useTranslations('Jobs.toasts');
   const toast = useToast();
   const { draft, dirty } = state;
-  const [part, setPart] = useState<ReplyPart>('resume');
+  const [ownPart, setOwnPart] = useState<ReplyPart>('resume');
+  const part = controlledPart ?? ownPart;
+  const setPart = onPart ?? setOwnPart;
   const [asText, setAsText] = useState(false);
   // The cover letter and form answers get a tab when the reply has them.
   const parts = (['resume', 'coverLetter', 'formAnswers'] as const).filter(
@@ -273,37 +314,9 @@ export function ReplyPreview({
   const shown = part;
 
   return (
-    <section
-      aria-label={t('title')}
-      className="space-y-3 rounded-xl border border-slate-200 p-3 sm:p-4"
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-slate-900">{t('title')}</h3>
-        {dirty && (
-          <span className="rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-800 ring-1 ring-amber-200 ring-inset">
-            {t('unsaved')}
-          </span>
-        )}
-        <span className="flex-1" />
-        <button
-          type="button"
-          aria-pressed={asText}
-          className={BUTTON}
-          onClick={() => {
-            setAsText((v) => !v);
-          }}
-        >
-          {asText ? t('showPage') : t('editText')}
-        </button>
-      </div>
-      <p className="text-xs text-slate-600">{t('intro')}</p>
-
-      {parts.length > 1 && (
-        <div
-          role="tablist"
-          aria-label={t('partsLabel')}
-          className="flex gap-1 border-b border-slate-200"
-        >
+    <section aria-label={t('title')} className="overflow-hidden rounded-xl border border-slate-200">
+      <div className="flex flex-wrap items-end gap-x-2 border-b border-slate-200 px-3">
+        <div role="tablist" aria-label={t('partsLabel')} className="flex gap-1">
           {parts.map((p) => (
             <button
               key={p}
@@ -313,71 +326,109 @@ export function ReplyPreview({
               onClick={() => {
                 setPart(p);
               }}
-              className={`-mb-px border-b-2 px-3 py-1.5 text-sm ${
+              className={`-mb-px border-b-2 px-3 py-2 text-sm ${
                 p === shown
                   ? 'border-brand-600 font-medium text-slate-900'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               {t(`parts.${p}`)}
+              {flagged.includes(p) && (
+                <span className="ml-1 font-bold text-amber-600" title={t('flagged')}>
+                  !<span className="sr-only"> {t('flagged')}</span>
+                </span>
+              )}
             </button>
           ))}
         </div>
-      )}
-
-      {asText ? (
-        <textarea
-          value={draft[shown]}
-          aria-label={t('textBox', { part: t(`parts.${shown}`) })}
-          rows={16}
-          onChange={(e) => {
-            state.change(shown, e.target.value);
-          }}
-          className="w-full rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs"
-        />
-      ) : (
-        <PageView
-          key={shown}
-          label={t(`parts.${shown}`)}
-          text={draft[shown]}
-          highlight={shown === 'resume' ? highlight : []}
-          onChange={(text) => {
-            state.change(shown, text);
-          }}
-        />
-      )}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className={BUTTON} disabled={!state.canUndo} onClick={state.undo}>
-          {t('undo')}
-        </button>
-        <button type="button" className={BUTTON} disabled={!dirty} onClick={state.reset}>
-          {t('reset')}
-        </button>
+        {dirty && (
+          <span className="mb-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-800 ring-1 ring-amber-200 ring-inset">
+            {t('unsaved')}
+          </span>
+        )}
         <span className="flex-1" />
+        {tabsEnd && <span className="mb-1 flex items-center gap-1">{tabsEnd}</span>}
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 bg-slate-50 px-3 py-1.5">
+        {tools ? tools(shown) : <span className="flex-1" />}
         <button
           type="button"
-          disabled={!dirty || save.isPending}
+          aria-pressed={asText}
+          aria-label={asText ? t('showPage') : t('editText')}
+          title={asText ? t('showPage') : t('editText')}
+          className={ICON}
           onClick={() => {
-            save.mutate(
-              { jobId, ...draft },
-              {
-                onSuccess: () => {
-                  toast(tToast('changesSaved'));
-                },
-              },
-            );
+            setAsText((v) => !v);
           }}
-          className="h-9 rounded-lg bg-brand-600 px-3 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
-          {save.isPending ? t('saving') : t('save')}
+          <svg aria-hidden="true" viewBox="0 0 24 24" className={SVG}>
+            {asText ? (
+              <>
+                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </>
+            ) : (
+              <path d="M4 20h4L19 9l-4-4L4 16z" />
+            )}
+          </svg>
         </button>
       </div>
-      {save.error && (
-        <p role="alert" className="text-sm text-red-700">
-          {t('saveError', { error: errorText(save.error) })}
-        </p>
-      )}
+      {notice?.(shown)}
+      <div className="space-y-3 p-3 sm:p-4">
+        {asText ? (
+          <textarea
+            value={draft[shown]}
+            aria-label={t('textBox', { part: t(`parts.${shown}`) })}
+            rows={16}
+            onChange={(e) => {
+              state.change(shown, e.target.value);
+            }}
+            className="w-full rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs"
+          />
+        ) : (
+          <PageView
+            key={shown}
+            label={t(`parts.${shown}`)}
+            text={draft[shown]}
+            highlight={shown === 'resume' ? highlight : []}
+            onChange={(text) => {
+              state.change(shown, text);
+            }}
+          />
+        )}
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className={BUTTON} disabled={!state.canUndo} onClick={state.undo}>
+            {t('undo')}
+          </button>
+          <button type="button" className={BUTTON} disabled={!dirty} onClick={state.reset}>
+            {t('reset')}
+          </button>
+          <span className="flex-1" />
+          <button
+            type="button"
+            disabled={!dirty || save.isPending}
+            onClick={() => {
+              save.mutate(
+                { jobId, ...draft },
+                {
+                  onSuccess: () => {
+                    toast(tToast('changesSaved'));
+                  },
+                },
+              );
+            }}
+            className="h-9 rounded-lg bg-brand-600 px-3 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+          >
+            {save.isPending ? t('saving') : t('save')}
+          </button>
+        </div>
+        {save.error && (
+          <p role="alert" className="text-sm text-red-700">
+            {t('saveError', { error: errorText(save.error) })}
+          </p>
+        )}
+      </div>
     </section>
   );
 }

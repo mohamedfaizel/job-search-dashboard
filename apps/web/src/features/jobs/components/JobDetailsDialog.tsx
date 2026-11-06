@@ -1,5 +1,10 @@
 import type { ApplicationStatus, Job } from '@jobsearch/data';
-import { useApplyQueue, useChangeApplyQueue, useJobInsights } from '@jobsearch/data';
+import {
+  useApplyQueue,
+  useChangeApplyQueue,
+  useJobInsights,
+  useLastPdfCheck,
+} from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -117,6 +122,9 @@ function JobDetails({
   const queue = useApplyQueue();
   const changeQueue = useChangeApplyQueue();
   const queued = queue.data?.some((item) => item.jobId === job.id) ?? false;
+  // A failed PDF check shows on the Apply tab too, so you see it from any tab.
+  const pdfCheck = useLastPdfCheck(job.id);
+  const pdfProblem = pdfCheck?.items.some((item) => !item.ok) ?? false;
 
   // Arrow keys move between tabs, as screen reader users expect from a tab list.
   const onTabKey = (e: KeyboardEvent) => {
@@ -253,6 +261,14 @@ function JobDetails({
               {id === 'apply' && !SENT.has(job.applicationStatus) && (
                 <span className="ml-1.5 rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] font-medium text-brand-700 max-sm:hidden">
                   {t('stepOf', { step: applySteps.step })}
+                </span>
+              )}
+              {id === 'apply' && pdfProblem && (
+                <span
+                  title={t('pdfProblem')}
+                  className="ml-1 rounded-full bg-amber-100 px-1.5 text-[11px] font-bold text-amber-800"
+                >
+                  !<span className="sr-only"> {t('pdfProblem')}</span>
                 </span>
               )}
             </button>

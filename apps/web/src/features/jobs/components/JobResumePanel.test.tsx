@@ -58,7 +58,7 @@ describe('JobResumePanel', () => {
     const scores = await within(section()).findByLabelText('Score before and after');
     expect(scores).toHaveTextContent('85%');
     expect(scores).toHaveTextContent('was 50%');
-    expect(within(section()).getByText(/Pasted text/)).toBeInTheDocument();
+    expect(within(section()).getByTitle('Pasted text')).toHaveTextContent(/^saved /);
     expect(
       within(screen.getByRole('list', { name: 'Now covered' })).getByText('graphql'),
     ).toBeInTheDocument();
@@ -288,6 +288,17 @@ describe('JobResumePanel', () => {
     expect(notes.queryByText(/did not answer these earlier questions/)).toBeNull();
   });
 
+  it('shows Missing keywords only on the Resume tab', async () => {
+    const user = userEvent.setup();
+    jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
+    renderPanel();
+    expect(await screen.findByRole('region', { name: 'Missing keywords' })).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Cover letter' }));
+    expect(screen.queryByRole('region', { name: 'Missing keywords' })).toBeNull();
+    await user.click(screen.getByRole('tab', { name: /^Resume/ }));
+    expect(screen.getByRole('region', { name: 'Missing keywords' })).toBeInTheDocument();
+  });
+
   it('rewrites a line with the keyword', async () => {
     const user = userEvent.setup();
     jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
@@ -366,9 +377,13 @@ describe('JobResumePanel', () => {
     renderPanel();
 
     // It runs by itself when the reply is saved: no button to press first.
-    const box = await screen.findByRole('region', { name: 'PDF check' });
-
-    expect(await within(box).findByRole('status')).toHaveTextContent('3 things to fix');
+    // A small pill on the Resume tab's bar; what to fix right under it; the tab gets a "!".
+    const pill = await screen.findByRole('status', { name: 'PDF check' });
+    await waitFor(() => {
+      expect(pill).toHaveTextContent('! 3 things to fix');
+    });
+    const box = screen.getByRole('region', { name: 'PDF check' });
+    expect(screen.getByRole('tab', { name: /^Resume!/ })).toBeInTheDocument();
     expect(within(box).getByText(/3 pages: keep it to 2/)).toBeInTheDocument();
     expect(within(box).getByText(/Long dashes in dates \(01\/2020 – today\)/)).toBeInTheDocument();
     expect(within(box).getByText(/412 words/)).toBeInTheDocument();
@@ -381,7 +396,7 @@ describe('JobResumePanel', () => {
       operation: 'ResumePdfCheck',
       variables: { jobId: 'job-1', template: 'modern' },
     });
-    expect(within(box).getByRole('button', { name: 'Check again' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Check again' })).toBeInTheDocument();
   });
 
   it('uploads a file and offers it for download', async () => {
@@ -393,11 +408,9 @@ describe('JobResumePanel', () => {
     await user.upload(screen.getByLabelText('Upload resume for this job'), file);
 
     expect(requests).toContainEqual({ operation: 'UploadJobResume', variables: { sent: true } });
-    expect(await within(section()).findByText(/resume-acme\.pdf/)).toBeInTheDocument();
-    expect(within(section()).getByRole('link', { name: 'Original' })).toHaveAttribute(
-      'href',
-      jobResumeUrl('job-1'),
-    );
+    expect(
+      await within(section()).findByRole('link', { name: 'Original: resume-acme.pdf' }),
+    ).toHaveAttribute('href', jobResumeUrl('job-1'));
     // You already have that file, so nothing downloads.
     expect(downloads).toEqual([]);
   });

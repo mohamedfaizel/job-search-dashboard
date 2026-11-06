@@ -161,14 +161,17 @@ describe('ApplyKitPanel', () => {
     jobResume.current = SAVED_RESUME;
     const { user } = renderKit();
 
-    await user.click(await screen.findByRole('button', { name: 'Copy cover letter' }));
+    // Each part has its own tab with its buttons.
+    await user.click(await screen.findByRole('tab', { name: 'Cover letter' }));
+    await user.click(screen.getByRole('button', { name: 'Copy cover letter' }));
     expect(await navigator.clipboard.readText()).toBe(SAVED_RESUME.coverLetter);
-    await user.click(screen.getByRole('button', { name: 'Copy form answers' }));
-    expect(await navigator.clipboard.readText()).toBe(SAVED_RESUME.formAnswers);
-    expect(screen.getByRole('link', { name: 'PDF' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Download the cover letter as PDF' })).toHaveAttribute(
       'href',
       `${jobResumeUrl('job-1')}/cover-letter.pdf`,
     );
+    await user.click(screen.getByRole('tab', { name: 'Form answers' }));
+    await user.click(screen.getByRole('button', { name: 'Copy form answers' }));
+    expect(await navigator.clipboard.readText()).toBe(SAVED_RESUME.formAnswers);
   });
 
   it('step 3 copies the Claude in Chrome prompt and opens the posting', async () => {
