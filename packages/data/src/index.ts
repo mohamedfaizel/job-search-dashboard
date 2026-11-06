@@ -22,6 +22,7 @@ export {
   useApplyQueue,
   useApplyQueuePrompt,
   useCheckResumePdf,
+  useLastPdfCheck,
   useChangeApplyQueue,
   useMoveInApplyQueue,
   useSaveApplyQueueReply,

@@ -212,7 +212,10 @@ export function MissingKeywords({
   if (cards.length === 0) return null;
 
   return (
-    <section aria-label={t('title')} className="space-y-2.5 rounded-xl border border-slate-200 p-3">
+    <section
+      aria-label={t('title')}
+      className="space-y-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3"
+    >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h3 className="text-[15px] font-semibold text-slate-900">{t('title')}</h3>
         <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs text-emerald-800 ring-1 ring-emerald-200 ring-inset">

@@ -639,7 +639,8 @@
       "addQueue": "Add to Apply queue",
       "inQueue": "✓ In Apply queue",
       "removeQueue": "Click to remove from the Apply queue",
-      "addQueueHint": "Apply to several jobs later in one go"
+      "addQueueHint": "Apply to several jobs later in one go",
+      "pdfProblem": "The resume PDF has something to fix"
     },
     "ad": {
       "inResume": "In your resume",
@@ -925,7 +926,13 @@
       },
       "pdfDetails": "Show the {count, plural, one {# passed check} other {# passed checks}}",
       "pdfProblemsLabel": "What to fix",
-      "pdfAllLabel": "Passed checks"
+      "pdfAllLabel": "Passed checks",
+      "pdfNotYet": "PDF not checked yet",
+      "pdfOkShort": "ATS OK",
+      "words": "{count, plural, one {# word} other {# words}}",
+      "coverPdf": "Download the cover letter as PDF",
+      "copiedToast": "Copied",
+      "copyBlocked": "Your browser blocked copying. Use Edit as text and copy it by hand."
     },
     "preview": {
       "title": "Preview and edit",
@@ -951,7 +958,8 @@
       "reset": "Reset",
       "save": "Save changes",
       "saving": "Saving…",
-      "saveError": "Could not save your changes: {error}"
+      "saveError": "Could not save your changes: {error}",
+      "flagged": "The PDF check found something to fix"
     },
     "keywordCards": {
       "title": "Missing keywords",

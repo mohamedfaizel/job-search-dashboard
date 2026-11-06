@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_URL, apiErrorFrom, graphqlClient } from './client';
 import { queryKeys } from './hooks';
 import {
@@ -397,8 +397,26 @@ export function useDeleteJobResume() {
  * Makes the resume PDF for a job (in `template`, or your default) and checks what an ATS reads
  * from it. A mutation hook because it runs when you press the button: it typesets a PDF.
  */
+const PDF_CHECK_KEY = ['resumePdfCheck'] as const;
+
+/**
+ * The newest PDF check of a job's resume, wherever it ran (the popup's tab badge reads the one
+ * the Apply tab ran). Null until one has finished.
+ */
+export function useLastPdfCheck(jobId: string): PdfCheck | null {
+  const results = useMutationState({
+    filters: { mutationKey: PDF_CHECK_KEY, status: 'success' },
+    select: (mutation) => ({
+      jobId: (mutation.state.variables as { jobId?: string } | undefined)?.jobId,
+      data: mutation.state.data as PdfCheck | undefined,
+    }),
+  });
+  return results.filter((r) => r.jobId === jobId).at(-1)?.data ?? null;
+}
+
 export function useCheckResumePdf() {
   return useMutation({
+    mutationKey: PDF_CHECK_KEY,
     mutationFn: async ({ jobId, template }: { jobId: string; template?: string | null }) => {
       const data = await graphqlClient.request<{ resumePdfCheck: PdfCheck }>(RESUME_PDF_CHECK, {
         jobId,
