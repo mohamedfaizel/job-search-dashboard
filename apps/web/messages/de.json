@@ -618,7 +618,6 @@
         "match": "KI-Score"
       },
       "tabsLabel": "Bereiche der Jobdetails",
-      "stepOf": "Schritt {step} von 3",
       "fitPill": "{score} % Fit",
       "posted": "Veröffentlicht am {date}",
       "estimated": "{salary} (geschätzt)",

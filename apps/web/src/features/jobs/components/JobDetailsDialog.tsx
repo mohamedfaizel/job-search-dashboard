@@ -297,11 +297,6 @@ function JobDetails({
                   <AiStateTag />
                 </span>
               )}
-              {id === 'apply' && !SENT.has(job.applicationStatus) && (
-                <span className="ml-1.5 rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] font-medium text-brand-700 max-sm:hidden">
-                  {t('stepOf', { step: applySteps.step })}
-                </span>
-              )}
               {id === 'apply' && pdfProblem && (
                 <span
                   title={t('pdfProblem')}

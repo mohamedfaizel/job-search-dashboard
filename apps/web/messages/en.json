@@ -618,7 +618,6 @@
         "match": "AI score"
       },
       "tabsLabel": "Job details sections",
-      "stepOf": "step {step} of 3",
       "fitPill": "{score}% fit",
       "posted": "Posted {date}",
       "estimated": "{salary} (est.)",
