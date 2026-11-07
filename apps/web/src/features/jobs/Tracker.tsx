@@ -84,6 +84,9 @@ export function TrackerPage() {
 
       <JobDetailsDialog
         job={openJob}
+        onOpen={(job) => {
+          setOpenJobId(job.id);
+        }}
         onClose={() => {
           setOpenJobId(null);
         }}

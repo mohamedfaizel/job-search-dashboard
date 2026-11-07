@@ -3,6 +3,8 @@ import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../useJobFormat';
+import { AiTag } from './AiLabels';
+import { CLAUDE_URL } from './ApplyKitPanel';
 import { CopyText } from './CopyText';
 import { BUTTON, PRIMARY } from './JobResumePanel';
 
@@ -145,6 +147,8 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
             text={data.interviewPrompt}
             copiedHint={t('copiedHint')}
             boxLabel={t('promptBox')}
+            openUrl={CLAUDE_URL}
+            icon={<AiTag kind="chat" />}
             primary
           >
             <span className="text-sm text-slate-600">{t('copyHint')}</span>

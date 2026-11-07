@@ -483,6 +483,9 @@ export function JobsDashboard() {
 
       <JobDetailsDialog
         job={openJob}
+        onOpen={(job) => {
+          setOpenJobId(job.id);
+        }}
         onClose={() => {
           setOpenJobId(null);
         }}

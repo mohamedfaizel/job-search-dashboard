@@ -66,13 +66,13 @@ describe('InterviewPanel', () => {
     expect(await screen.findByText(/Add your resume on My profile/)).toBeInTheDocument();
   });
 
-  it('offers the prompt to copy, then saves the reply you paste', async () => {
+  it('copies the prompt and opens Claude, then saves the reply you paste', async () => {
     const user = userEvent.setup();
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
     renderPanel();
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Copy interview prompt for Claude' }),
-    );
+    await user.click(await screen.findByRole('button', { name: 'Copy prompt and open Claude' }));
+    expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
     expect(
       screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Interview prompt' }).value,
     ).toBe(INSIGHTS.interviewPrompt);
@@ -98,7 +98,7 @@ describe('InterviewPanel', () => {
   it('saves the reply straight from the clipboard', async () => {
     const user = userEvent.setup();
     renderPanel();
-    await screen.findByRole('button', { name: 'Copy interview prompt for Claude' });
+    await screen.findByRole('button', { name: 'Copy prompt and open Claude' });
     await navigator.clipboard.writeText('From the clipboard');
 
     await user.click(
@@ -117,12 +117,10 @@ describe('InterviewPanel', () => {
 
     const saved = await screen.findByRole('region', { name: 'Saved interview prep' });
     expect(saved).toHaveTextContent('1. What they care about');
-    expect(screen.queryByRole('button', { name: 'Copy interview prompt for Claude' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Copy prompt and open Claude' })).toBeNull();
 
     await user.click(screen.getByRole('button', { name: 'Replace' }));
-    expect(
-      screen.getByRole('button', { name: 'Copy interview prompt for Claude' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Copy prompt and open Claude' })).toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: 'Claude’s interview prep' }), 'New');
     await user.click(screen.getByRole('button', { name: 'Save interview prep' }));
     expect(await screen.findByRole('region', { name: 'Saved interview prep' })).toHaveTextContent(
@@ -131,7 +129,7 @@ describe('InterviewPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(
-      await screen.findByRole('button', { name: 'Copy interview prompt for Claude' }),
+      await screen.findByRole('button', { name: 'Copy prompt and open Claude' }),
     ).toBeInTheDocument();
     expect(requests.map((r) => r.operation)).toContain('DeleteInterviewPrep');
   });

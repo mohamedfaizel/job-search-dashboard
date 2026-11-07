@@ -6,7 +6,7 @@ import {
   useLastPdfCheck,
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
-import type { KeyboardEvent, ReactNode } from 'react';
+import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAiState } from '../../../lib/ai-status';
 import { capitalize } from '../format';
@@ -26,6 +26,8 @@ import { TailorPanel } from './TailorPanel';
 interface Props {
   job: Job | null;
   onClose: () => void;
+  /** Opens a minimized job again (makes it the open job). */
+  onOpen: (job: Job) => void;
   onStatusChange: (status: ApplicationStatus) => void;
   /** Hides the job (or brings it back, in Hidden jobs). No Hide button without it. */
   onToggleHidden?: ((job: Job) => void) | undefined;
@@ -110,7 +112,7 @@ function JobDetails({
   asking,
   onApplyStarted,
   onApplyAnswered,
-}: Omit<Required<Props>, 'job' | 'asking' | 'onToggleHidden'> & {
+}: Omit<Required<Props>, 'job' | 'asking' | 'onToggleHidden' | 'onOpen'> & {
   job: Job;
   asking: boolean;
   onToggleHidden: Props['onToggleHidden'];
@@ -153,7 +155,7 @@ function JobDetails({
           <div className="min-w-0 flex-1 space-y-1 pt-1.5 sm:pt-1">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <h2
-                id="job-dialog-title"
+                id={`job-dialog-title-${job.id}`}
                 className="text-base font-semibold text-slate-900 sm:text-lg"
               >
                 {job.title}
@@ -452,13 +454,21 @@ function AiMatch({ jobId, hasDescription }: { jobId: string; hasDescription: boo
   );
 }
 
+/** How many jobs can wait as small bars at the bottom, like chats on LinkedIn. */
+export const MAX_DOCKED = 5;
+
 /**
  * The job popup. Uses the native <dialog> element, which gives focus trapping,
  * Escape-to-close and a backdrop for free.
+ *
+ * Minimize turns the popup into a small bar at the bottom right, and the page works again. Up
+ * to five jobs can wait there side by side; a sixth pushes out the oldest. Each job keeps its
+ * own popup mounted, so a half-done Apply step is still there when you open it again.
  */
 export function JobDetailsDialog({
   job,
   onClose,
+  onOpen,
   onStatusChange,
   onToggleHidden,
   showingHidden = false,
@@ -466,18 +476,107 @@ export function JobDetailsDialog({
   onApplyStarted = noop,
   onApplyAnswered = noop,
 }: Props) {
-  const ref = useRef<HTMLDialogElement>(null);
   // Stays as you left it for the next job you open.
   const [maximized, setMaximized] = useState(false);
-  // Minimized: the popup shrinks to a small bar at the bottom and the page works again. Its
-  // content stays mounted, so a half-done Apply step is still there when you open it again.
-  const [minimized, setMinimized] = useState(false);
-  const [shownId, setShownId] = useState(job?.id);
-  if (job?.id !== shownId) {
-    // Another job opens full size.
-    setShownId(job?.id);
-    setMinimized(false);
+  // Every job with a popup (open or minimized), in the order they came. The order never
+  // changes, because moving an open <dialog> in the page closes it.
+  const [windows, setWindows] = useState<Job[]>([]);
+  // The minimized ones, oldest first.
+  const [docked, setDocked] = useState<string[]>([]);
+
+  if (job) {
+    const known = windows.find((w) => w.id === job.id);
+    if (known !== job) {
+      setWindows(known ? windows.map((w) => (w.id === job.id ? job : w)) : [...windows, job]);
+    }
+    // Opened again (from its bar or the table): no longer a bar.
+    if (docked.includes(job.id)) setDocked(docked.filter((id) => id !== job.id));
   }
+
+  const forget = (ids: string[]) => {
+    setWindows((list) => list.filter((w) => !ids.includes(w.id)));
+    setDocked((list) => list.filter((id) => !ids.includes(id)));
+  };
+  const minimize = (id: string) => {
+    const next = [...docked.filter((d) => d !== id), id];
+    const pushedOut = next.slice(0, Math.max(0, next.length - MAX_DOCKED));
+    setDocked(next.slice(pushedOut.length));
+    if (pushedOut.length) setWindows((list) => list.filter((w) => !pushedOut.includes(w.id)));
+    onClose();
+  };
+
+  return (
+    <>
+      {windows.map((w) => {
+        const isOpen = w.id === job?.id;
+        const slot = docked.indexOf(w.id);
+        if (!isOpen && slot < 0) return null;
+        const shown = isOpen ? job : w;
+        return (
+          <JobWindow
+            key={w.id}
+            job={shown}
+            // Newest bar on the right, older ones to its left.
+            slot={isOpen ? null : docked.length - 1 - slot}
+            maximized={maximized}
+            onToggleMaximized={() => {
+              setMaximized((m) => !m);
+            }}
+            onMinimize={() => {
+              minimize(w.id);
+            }}
+            onOpen={() => {
+              onOpen(w);
+            }}
+            onClose={() => {
+              forget([w.id]);
+              if (isOpen) onClose();
+            }}
+            onStatusChange={onStatusChange}
+            onToggleHidden={onToggleHidden}
+            showingHidden={showingHidden}
+            asking={asking.has(w.id)}
+            onApplyStarted={onApplyStarted}
+            onApplyAnswered={onApplyAnswered}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+/** One job's popup: full size, or a small bar at the bottom when `slot` is set. */
+function JobWindow({
+  job,
+  slot,
+  maximized,
+  onToggleMaximized,
+  onMinimize,
+  onOpen,
+  onClose,
+  onStatusChange,
+  onToggleHidden,
+  showingHidden,
+  asking,
+  onApplyStarted,
+  onApplyAnswered,
+}: {
+  job: Job;
+  slot: number | null;
+  maximized: boolean;
+  onToggleMaximized: () => void;
+  onMinimize: () => void;
+  onOpen: () => void;
+  onClose: () => void;
+  onStatusChange: Props['onStatusChange'];
+  onToggleHidden: Props['onToggleHidden'];
+  showingHidden: boolean;
+  asking: boolean;
+  onApplyStarted: (job: Job) => void;
+  onApplyAnswered: (job: Job) => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const minimized = slot !== null;
   const modal = useRef(false);
   // Swapping between modal and the small bar closes the dialog for a moment: not a real close.
   const swapping = useRef(false);
@@ -485,10 +584,6 @@ export function JobDetailsDialog({
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (!job) {
-      if (dialog.open) dialog.close();
-      return;
-    }
     const wantModal = !minimized;
     if (dialog.open && modal.current === wantModal) return;
     if (dialog.open) {
@@ -498,8 +593,9 @@ export function JobDetailsDialog({
     if (wantModal) dialog.showModal();
     else dialog.show();
     modal.current = wantModal;
-  }, [job, minimized]);
+  }, [minimized]);
 
+  const titleId = `job-dock-title-${job.id}`;
   return (
     <dialog
       ref={ref}
@@ -510,10 +606,12 @@ export function JobDetailsDialog({
         }
         onClose();
       }}
-      aria-labelledby={minimized ? 'job-dock-title' : 'job-dialog-title'}
+      aria-labelledby={minimized ? titleId : `job-dialog-title-${job.id}`}
+      style={minimized ? ({ '--slot': slot } as CSSProperties) : undefined}
       className={
         minimized
-          ? 'fixed top-auto right-[5.5rem] bottom-5 left-auto z-50 m-0 w-[min(18rem,calc(100vw-7rem))] rounded-lg p-0 shadow-xl ring-1 ring-slate-200'
+          ? // Side by side on wide screens, stacked on small ones.
+            'fixed top-auto right-4 bottom-[calc(1.25rem+var(--slot)*3.5rem)] left-auto z-50 m-0 w-[min(14rem,calc(100vw-2rem))] rounded-lg p-0 shadow-xl ring-1 ring-slate-200 lg:right-[calc(5.5rem+var(--slot)*14.5rem)] lg:bottom-5'
           : `p-0 shadow-2xl backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm max-sm:m-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:rounded-none ${
               maximized
                 ? 'm-0 h-dvh max-h-none w-screen max-w-none rounded-none'
@@ -521,43 +619,38 @@ export function JobDetailsDialog({
             }`
       }
     >
-      {job && minimized && (
-        <JobDock
+      {minimized && <JobDock job={job} titleId={titleId} onOpen={onOpen} onClose={onClose} />}
+      <div hidden={minimized} className={maximized && !minimized ? 'h-full' : undefined}>
+        <JobDetails
           job={job}
-          onOpen={() => {
-            setMinimized(false);
-          }}
           onClose={onClose}
+          onStatusChange={onStatusChange}
+          onToggleHidden={onToggleHidden}
+          showingHidden={showingHidden}
+          maximized={maximized}
+          onToggleMaximized={onToggleMaximized}
+          onMinimize={onMinimize}
+          asking={asking}
+          onApplyStarted={onApplyStarted}
+          onApplyAnswered={onApplyAnswered}
         />
-      )}
-      {job && (
-        <div hidden={minimized} className={maximized && !minimized ? 'h-full' : undefined}>
-          <JobDetails
-            key={job.id}
-            job={job}
-            onClose={onClose}
-            onStatusChange={onStatusChange}
-            onToggleHidden={onToggleHidden}
-            showingHidden={showingHidden}
-            maximized={maximized}
-            onToggleMaximized={() => {
-              setMaximized((m) => !m);
-            }}
-            onMinimize={() => {
-              setMinimized(true);
-            }}
-            asking={asking.has(job.id)}
-            onApplyStarted={onApplyStarted}
-            onApplyAnswered={onApplyAnswered}
-          />
-        </div>
-      )}
+      </div>
     </dialog>
   );
 }
 
 /** The minimized popup: a small bar with the job's title, to open it again or close it. */
-function JobDock({ job, onOpen, onClose }: { job: Job; onOpen: () => void; onClose: () => void }) {
+function JobDock({
+  job,
+  titleId,
+  onOpen,
+  onClose,
+}: {
+  job: Job;
+  titleId: string;
+  onOpen: () => void;
+  onClose: () => void;
+}) {
   const t = useTranslations('Jobs.popup');
   const ICON =
     'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900';
@@ -569,7 +662,7 @@ function JobDock({ job, onOpen, onClose }: { job: Job; onOpen: () => void; onClo
         title={`${job.title} · ${job.company.name}`}
         className="flex min-w-0 flex-1 flex-col text-left leading-tight"
       >
-        <span id="job-dock-title" className="truncate text-sm font-medium text-slate-900">
+        <span id={titleId} className="truncate text-sm font-medium text-slate-900">
           {job.title}
         </span>
         <span className="truncate text-xs text-slate-500">{job.company.name}</span>
