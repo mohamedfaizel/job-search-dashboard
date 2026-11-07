@@ -7,6 +7,7 @@ import {
   applyQueue,
   hiddenIds,
   interviewPrep,
+  interviewAt,
   tableSettings,
   jobResume,
   mailSuggestions,
@@ -42,6 +43,7 @@ afterEach(() => {
   savedAnswers.length = 0;
   jobResume.current = null;
   interviewPrep.current = null;
+  interviewAt.current = null;
   tableSettings.current = null;
   downloads.length = 0;
   localStorage.clear();

@@ -21,6 +21,7 @@ import {
   SAVE_INTERVIEW_PREP,
   SAVE_JOB_RESUME_TEXT,
   SET_HAVE_TERM,
+  SET_INTERVIEW_DATE,
   SET_JOB_LANGUAGES,
 } from './operations';
 import type { ApplyQueueItem, ApplyQueuePrompt, JobInsights, PdfCheck } from './types';
@@ -355,6 +356,27 @@ export function useSaveInterviewPrep() {
     },
     onSuccess: (insights) => {
       queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+    },
+  });
+}
+
+/**
+ * Sets when your interview for a job is (null clears it). The job moves to Interviewing, so the
+ * jobs list and tracker refresh too.
+ */
+export function useSetInterviewDate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { jobId: string; at: string | null }) => {
+      const data = await graphqlClient.request<{ setInterviewDate: JobInsights }>(
+        SET_INTERVIEW_DATE,
+        vars,
+      );
+      return data.setInterviewDate;
+    },
+    onSuccess: (insights) => {
+      queryClient.setQueryData(jobInsightsKey(insights.jobId), insights);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
     },
   });
 }

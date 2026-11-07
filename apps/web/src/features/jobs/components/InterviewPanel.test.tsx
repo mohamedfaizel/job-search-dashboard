@@ -235,6 +235,28 @@ describe('InterviewPanel', () => {
     expect(await navigator.clipboard.readText()).toBe("Let's do a mock interview.");
   });
 
+  it('keeps the interview date, with a reminder note, and removes it', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(await screen.findByRole('button', { name: '📅 Add the interview date' }));
+    await user.type(screen.getByLabelText('Interview date and time'), '2026-11-12T10:00');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText(/Interview: Thu, Nov 12, 10:00/)).toBeInTheDocument();
+    expect(screen.getByText('Reminder in the bell 1 day before')).toBeInTheDocument();
+    const sent = requests.find((r) => r.operation === 'SetInterviewDate');
+    expect(sent?.variables).toEqual({
+      jobId: 'job-1',
+      at: new Date('2026-11-12T10:00').toISOString(),
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(
+      await screen.findByRole('button', { name: '📅 Add the interview date' }),
+    ).toBeInTheDocument();
+  });
+
   it('says why saving failed', async () => {
     const user = userEvent.setup();
     server.use(

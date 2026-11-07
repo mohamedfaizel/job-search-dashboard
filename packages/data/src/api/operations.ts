@@ -594,6 +594,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     interviewPrompt
     mockInterviewPrompt
     mockInterviewPromptDe
+    interviewAt
     interviewPrep {
       text
       updatedAt
@@ -687,6 +688,15 @@ export const SAVE_INTERVIEW_PREP = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation SaveInterviewPrep($jobId: ID!, $text: String!) {
     saveInterviewPrep(jobId: $jobId, text: $text) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const SET_INTERVIEW_DATE = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation SetInterviewDate($jobId: ID!, $at: DateTime) {
+    setInterviewDate(jobId: $jobId, at: $at) {
       ...JobInsightsFields
     }
   }
@@ -964,6 +974,7 @@ export const NOTIFICATIONS = /* GraphQL */ `
         searchName
         count
         fitMin
+        at
         readAt
         createdAt
         jobs {

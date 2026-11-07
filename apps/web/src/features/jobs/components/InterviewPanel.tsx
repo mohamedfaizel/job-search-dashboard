@@ -1,4 +1,9 @@
-import { useDeleteInterviewPrep, useJobInsights, useSaveInterviewPrep } from '@jobsearch/data';
+import {
+  useDeleteInterviewPrep,
+  useJobInsights,
+  useSaveInterviewPrep,
+  useSetInterviewDate,
+} from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -85,6 +90,8 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
       <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-700">
         {t('intro')}
       </p>
+
+      <InterviewDate jobId={jobId} at={data.interviewAt} />
 
       <section aria-label={t('gapsTitle')} className="space-y-2">
         <h3 className="text-sm font-semibold text-slate-900">{t('gapsTitle')}</h3>
@@ -275,5 +282,116 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
         </p>
       )}
     </div>
+  );
+}
+
+/** The ISO time as the value of a datetime-local box, in your time zone. */
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${String(d.getFullYear())}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * When the interview is. Saving it moves the job to Interviewing, and the bell reminds you a day
+ * before.
+ */
+function InterviewDate({ jobId, at }: { jobId: string; at: string | null }) {
+  const t = useTranslations('Jobs.interview.date');
+  const errorText = useErrorText();
+  const f = useJobFormat();
+  const set = useSetInterviewDate();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState('');
+
+  const save = (next: string | null) => {
+    set.mutate(
+      { jobId, at: next },
+      {
+        onSuccess: () => {
+          setEditing(false);
+        },
+      },
+    );
+  };
+
+  return (
+    <section aria-label={t('title')} className="space-y-1.5">
+      {at && !editing ? (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <span className="rounded-md bg-brand-50 px-2 py-0.5 font-medium text-brand-800 ring-1 ring-brand-200 ring-inset">
+            📅 {t('on', { when: f.dateTime(at) })}
+          </span>
+          <span className="text-xs text-slate-500">{t('reminder')}</span>
+          <button
+            type="button"
+            className={LINK + ' text-xs'}
+            onClick={() => {
+              setValue(toLocalInput(at));
+              setEditing(true);
+            }}
+          >
+            {t('change')}
+          </button>
+          <button
+            type="button"
+            className="text-xs text-red-700 hover:underline disabled:opacity-50"
+            disabled={set.isPending}
+            onClick={() => {
+              save(null);
+            }}
+          >
+            {t('clear')}
+          </button>
+        </p>
+      ) : editing ? (
+        <form
+          className="flex flex-wrap items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (value) save(new Date(value).toISOString());
+          }}
+        >
+          <input
+            type="datetime-local"
+            aria-label={t('label')}
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+            }}
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+          />
+          <button type="submit" className={BUTTON} disabled={!value || set.isPending}>
+            {t('save')}
+          </button>
+          <button
+            type="button"
+            className={LINK + ' text-xs'}
+            onClick={() => {
+              setEditing(false);
+            }}
+          >
+            {t('cancel')}
+          </button>
+          <span className="basis-full text-xs text-slate-500">{t('hint')}</span>
+        </form>
+      ) : (
+        <button
+          type="button"
+          className={LINK + ' text-sm'}
+          onClick={() => {
+            setValue('');
+            setEditing(true);
+          }}
+        >
+          📅 {t('add')}
+        </button>
+      )}
+      {set.error && (
+        <p role="alert" className="text-sm text-red-700">
+          {t('error', { error: errorText(set.error) })}
+        </p>
+      )}
+    </section>
   );
 }

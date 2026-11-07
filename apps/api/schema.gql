@@ -395,6 +395,11 @@ type JobInsights {
   """False until you upload a resume or type it on your profile"""
   hasResume: Boolean!
 
+  """
+  When your interview for this job is, if you set it on the Interview tab
+  """
+  interviewAt: DateTime
+
   """Claude’s interview prep for this job, if you pasted it back"""
   interviewPrep: InterviewPrep
 
@@ -837,6 +842,11 @@ type Mutation {
   setHaveTerm(have: Boolean! = true, jobId: ID!, keyword: Boolean! = false, term: String!): JobInsights!
 
   """
+  Sets when your interview for this job is (null clears it). Moves the job to Interviewing
+  """
+  setInterviewDate(at: DateTime, jobId: ID!): JobInsights!
+
+  """
   Edits the languages line of this job’s Apply kit prompt. Empty = your profile’s Languages again
   """
   setJobLanguages(jobId: ID!, languages: String): JobInsights!
@@ -933,6 +943,9 @@ type MyDesign {
 Something the app tells you in the bell list. The web app writes the words from `kind` and the numbers, in your language
 """
 type Notification {
+  """INTERVIEW_SOON: when the interview is. Null for other kinds"""
+  at: DateTime
+
   """How many jobs it is about"""
   count: Int!
   createdAt: DateTime!
@@ -944,7 +957,9 @@ type Notification {
   """The best few jobs, best fit first"""
   jobs: [NotificationJob!]!
 
-  """NEW_MATCHES: a scheduled search found new jobs that fit you"""
+  """
+  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day
+  """
   kind: String!
 
   """When you read it. Null = unread"""

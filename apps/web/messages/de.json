@@ -724,6 +724,19 @@
         "copy": "Probe-Interview kopieren und Claude öffnen",
         "copiedHint": "Claude ist in einem neuen Tab offen: dort einfügen (Strg+V) und die Fragen beantworten.",
         "promptBox": "Prompt für das Probe-Interview"
+      },
+      "date": {
+        "title": "Interviewtermin",
+        "add": "Interviewtermin eintragen",
+        "label": "Datum und Uhrzeit des Interviews",
+        "on": "Interview: {when}",
+        "reminder": "Erinnerung in der Glocke 1 Tag vorher",
+        "change": "Ändern",
+        "clear": "Entfernen",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "hint": "Beim Speichern wandert der Job zu „Im Gespräch“. Die Glocke erinnert dich einen Tag vorher.",
+        "error": "Der Termin konnte nicht gespeichert werden: {error}"
       }
     },
     "fit": {
@@ -1462,6 +1475,8 @@
     "fit": "{fit} % Fit",
     "more": "{count, plural, one {# weiterer} other {# weitere}} unter Stellenanzeigen (als Neu markiert)",
     "show": "Anzeigen",
-    "close": "Schließen"
+    "close": "Schließen",
+    "interviewSoon": "Interview bald: {when}",
+    "interviewHint": "Öffne den Job und übe im Tab Interview"
   }
 }

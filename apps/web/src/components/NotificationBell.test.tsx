@@ -26,6 +26,7 @@ const NEW_MATCHES = {
   searchName: 'Frontend Berlin',
   count: 5,
   fitMin: 60,
+  at: null,
   readAt: null,
   createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
   jobs: [
@@ -63,6 +64,33 @@ describe('NotificationBell', () => {
     // Opening the list reads them: the badge goes.
     expect(await screen.findByRole('button', { name: 'Notifications' })).toBeInTheDocument();
     expect(bell.unread).toBe(0);
+  });
+
+  it('reminds you of an interview, with a link to the job', async () => {
+    bell.items = [
+      {
+        ...NEW_MATCHES,
+        id: 2,
+        kind: 'INTERVIEW_SOON',
+        searchName: '',
+        count: 1,
+        fitMin: 0,
+        at: '2026-11-12T10:00:00.000Z',
+        jobs: [{ id: 'job-1', title: 'React Developer', company: 'Acme', fit: 82 }],
+      },
+    ];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    const list = screen.getByRole('dialog', { name: 'Notifications' });
+    expect(within(list).getByText(/^Interview soon: Thu/)).toBeInTheDocument();
+    expect(within(list).getByText(/Open the job to practise/)).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: /React Developer.*Acme/ })).toHaveAttribute(
+      'href',
+      '/jobs?job=job-1',
+    );
   });
 
   it('says so when there is nothing yet, in German too', async () => {

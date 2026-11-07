@@ -178,6 +178,18 @@ export class InsightsResolver {
     return this.insights.saveInterviewPrep(user.id, jobId, text);
   }
 
+  @Mutation(() => JobInsightsModel, {
+    description:
+      'Sets when your interview for this job is (null clears it). Moves the job to Interviewing',
+  })
+  setInterviewDate(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId', { type: () => ID }) jobId: string,
+    @Args('at', { type: () => Date, nullable: true }) at: Date | null,
+  ): Promise<JobInsightsModel> {
+    return this.insights.setInterviewDate(user.id, jobId, at);
+  }
+
   @Mutation(() => JobInsightsModel, { description: 'Deletes the interview prep for this job' })
   deleteInterviewPrep(
     @CurrentUser() user: SessionUser,

@@ -285,6 +285,12 @@ export class JobInsightsModel {
   })
   mockInterviewPromptDe!: string;
 
+  @Field(() => Date, {
+    nullable: true,
+    description: 'When your interview for this job is, if you set it on the Interview tab',
+  })
+  interviewAt!: Date | null;
+
   @Field(() => InterviewPrepModel, {
     nullable: true,
     description: 'Claude’s interview prep for this job, if you pasted it back',

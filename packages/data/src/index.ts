@@ -37,6 +37,7 @@ export {
   useRecalculateFit,
   useRestoreInsightTerm,
   useSaveInterviewPrep,
+  useSetInterviewDate,
   useSaveJobResumeText,
   useEditJobResume,
   useUploadJobResume,

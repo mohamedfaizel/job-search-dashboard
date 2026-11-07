@@ -724,6 +724,19 @@
         "copy": "Copy mock interview and open Claude",
         "copiedHint": "Claude opened in a new tab: paste it there (Ctrl+V) and answer its questions.",
         "promptBox": "Mock interview prompt"
+      },
+      "date": {
+        "title": "Interview date",
+        "add": "Add the interview date",
+        "label": "Interview date and time",
+        "on": "Interview: {when}",
+        "reminder": "Reminder in the bell 1 day before",
+        "change": "Change",
+        "clear": "Remove",
+        "save": "Save",
+        "cancel": "Cancel",
+        "hint": "Saving moves the job to Interviewing. The bell reminds you a day before.",
+        "error": "Could not save the date: {error}"
       }
     },
     "fit": {
@@ -1462,6 +1475,8 @@
     "fit": "{fit}% fit",
     "more": "{count, plural, one {# more} other {# more}} in Job posts (marked New)",
     "show": "Show",
-    "close": "Close"
+    "close": "Close",
+    "interviewSoon": "Interview soon: {when}",
+    "interviewHint": "Open the job to practise on the Interview tab"
   }
 }
