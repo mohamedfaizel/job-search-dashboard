@@ -678,7 +678,6 @@
       "copiedHint": "Claude ist in einem neuen Tab offen: dort einfügen (Strg+V), dann die Antwort unten zurückbringen.",
       "promptBox": "Interview-Prompt",
       "paste": "Claudes Antwort aus der Zwischenablage einfügen",
-      "pasteHint": "Oder füge sie in das Feld ein.",
       "blocked": "Der Browser hat das Lesen der Zwischenablage blockiert. Füge die Antwort stattdessen in das Feld ein.",
       "boxLabel": "Claudes Interview-Vorbereitung",
       "placeholder": "Claudes Antwort hier einfügen",
@@ -689,7 +688,33 @@
       "savedAt": "Gespeichert am {date}",
       "replace": "Ersetzen",
       "delete": "Löschen",
-      "error": "Das hat nicht geklappt: {error}"
+      "error": "Das hat nicht geklappt: {error}",
+      "gapsHintSaved": "Skills aus der Anzeige, die dein Lebenslauf nicht zeigt. Klick einen an, um zu sehen, was du sagen kannst.",
+      "gapJumpHint": "Zeigen, was du dazu sagen kannst",
+      "pasteInBox": "oder füge sie in ein Feld ein",
+      "prep": {
+        "tabsLabel": "Teile deiner Interview-Vorbereitung",
+        "tabs": {
+          "care": "Was sie wollen",
+          "about": "Über mich",
+          "questions": "Fragen",
+          "gaps": "Meine Lücken",
+          "ask": "Frag sie",
+          "research": "Recherche"
+        },
+        "card": "Frage {n} von {total}",
+        "known": "Das kannst du",
+        "why": "Warum sie fragen: {why}",
+        "showAnswer": "Antwort zeigen",
+        "noAnswer": "Claude hat hierzu keine Musterantwort gegeben.",
+        "iKnowIt": "Kann ich",
+        "practiseAgain": "Nochmal üben",
+        "prev": "Vorherige Frage",
+        "next": "Nächste Frage",
+        "say": "Sag: {say}",
+        "learn": "Diese Woche lernen: {learn}",
+        "wholeReply": "Claudes ganze Antwort zeigen"
+      }
     },
     "fit": {
       "ringLabel": "{score} Prozent Fit",

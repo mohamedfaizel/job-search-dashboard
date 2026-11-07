@@ -678,7 +678,6 @@
       "copiedHint": "Claude opened in a new tab: paste it there (Ctrl+V), then bring the reply back below.",
       "promptBox": "Interview prompt",
       "paste": "Paste Claude’s reply from the clipboard",
-      "pasteHint": "Or paste it in the box.",
       "blocked": "The browser blocked reading the clipboard. Paste the reply in the box instead.",
       "boxLabel": "Claude’s interview prep",
       "placeholder": "Paste Claude’s reply here",
@@ -689,7 +688,33 @@
       "savedAt": "Saved {date}",
       "replace": "Replace",
       "delete": "Delete",
-      "error": "Could not do that: {error}"
+      "error": "Could not do that: {error}",
+      "gapsHintSaved": "Skills the ad asks for that your resume doesn’t show. Click one to see what to say.",
+      "gapJumpHint": "Show what to say about it",
+      "pasteInBox": "or paste it in a box",
+      "prep": {
+        "tabsLabel": "Parts of your interview prep",
+        "tabs": {
+          "care": "What they want",
+          "about": "About me",
+          "questions": "Questions",
+          "gaps": "My gaps",
+          "ask": "Ask them",
+          "research": "Research"
+        },
+        "card": "Question {n} of {total}",
+        "known": "You know this",
+        "why": "Why they ask: {why}",
+        "showAnswer": "Show answer",
+        "noAnswer": "Claude gave no model answer for this one.",
+        "iKnowIt": "I know it",
+        "practiseAgain": "Practise again",
+        "prev": "Previous question",
+        "next": "Next question",
+        "say": "Say: {say}",
+        "learn": "Learn this week: {learn}",
+        "wholeReply": "Show Claude’s whole reply"
+      }
     },
     "fit": {
       "ringLabel": "{score} percent fit",

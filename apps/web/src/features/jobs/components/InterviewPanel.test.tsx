@@ -20,6 +20,28 @@ function renderPanel() {
 
 const SAVED = { text: '1. What they care about\nGraphQL.', updatedAt: '2026-11-03T12:00:00.000Z' };
 
+const FULL = `## 1. What they care about
+- Fast React apps
+- GraphQL
+## 2. Tell me about yourself
+I build dashboards.
+## 3. Likely questions
+Q1. How do you keep a React app fast?
+Why they ask: the ad says Core Web Vitals.
+Answer: I split the bundle at Bank X.
+Q2. **Tell me about a hard bug.**
+Why they ask: to see how you think.
+Answer: A race in the payments form.
+## 4. My gaps
+Gap: GraphQL
+Say: I used REST APIs, and I know the GraphQL ideas.
+Learn this week: the Apollo tutorial.
+## 5. Questions for them
+- What does a good first month look like?
+## 6. Research checklist
+- [ ] Read the About us page
+- [ ] Try their app`;
+
 describe('InterviewPanel', () => {
   it('lists the skills your resume lacks and the German level the ad asks for', async () => {
     renderPanel();
@@ -77,6 +99,9 @@ describe('InterviewPanel', () => {
       screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Interview prompt' }).value,
     ).toBe(INSIGHTS.interviewPrompt);
 
+    // The box shows only when you ask for it.
+    expect(screen.queryByRole('textbox', { name: 'Claude’s interview prep' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'or paste it in a box' }));
     await user.type(
       screen.getByRole('textbox', { name: 'Claude’s interview prep' }),
       'GraphQL answers',
@@ -121,6 +146,7 @@ describe('InterviewPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'Replace' }));
     expect(screen.getByRole('button', { name: 'Copy prompt and open Claude' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'or paste it in a box' }));
     await user.type(screen.getByRole('textbox', { name: 'Claude’s interview prep' }), 'New');
     await user.click(screen.getByRole('button', { name: 'Save interview prep' }));
     expect(await screen.findByRole('region', { name: 'Saved interview prep' })).toHaveTextContent(
@@ -132,6 +158,65 @@ describe('InterviewPanel', () => {
       await screen.findByRole('button', { name: 'Copy prompt and open Claude' }),
     ).toBeInTheDocument();
     expect(requests.map((r) => r.operation)).toContain('DeleteInterviewPrep');
+  });
+
+  it('splits the saved prep into tabs, with the questions as flash cards', async () => {
+    const user = userEvent.setup();
+    localStorage.clear();
+    interviewPrep.current = { text: FULL, updatedAt: SAVED.updatedAt };
+    renderPanel();
+
+    const tabs = await screen.findByRole('tablist', { name: 'Parts of your interview prep' });
+    expect(
+      within(tabs)
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent),
+    ).toEqual(['What they want', 'About me', 'Questions0/2', 'My gaps', 'Ask them', 'Research']);
+
+    // The answer stays hidden until you ask for it.
+    const card = screen.getByRole('article', { name: 'Question 1 of 2' });
+    expect(card).toHaveTextContent('How do you keep a React app fast?');
+    expect(card).toHaveTextContent('Why they ask: the ad says Core Web Vitals.');
+    expect(card).not.toHaveTextContent('I split the bundle');
+    await user.click(within(card).getByRole('button', { name: 'Show answer' }));
+    expect(card).toHaveTextContent('I split the bundle at Bank X.');
+
+    // "I know it" counts it and moves on.
+    await user.click(within(card).getByRole('button', { name: '✓ I know it' }));
+    expect(screen.getByRole('article', { name: 'Question 2 of 2' })).toBeInTheDocument();
+    expect(within(tabs).getByRole('tab', { name: /Questions/ })).toHaveTextContent('1/2');
+
+    await user.click(within(tabs).getByRole('tab', { name: 'Ask them' }));
+    expect(screen.getByRole('tabpanel', { name: 'Ask them' })).toHaveTextContent(
+      'What does a good first month look like?',
+    );
+  });
+
+  it('jumps from a gap chip to what to say about it', async () => {
+    const user = userEvent.setup();
+    interviewPrep.current = { text: FULL, updatedAt: SAVED.updatedAt };
+    renderPanel();
+
+    await user.click(await screen.findByRole('button', { name: 'graphql ›' }));
+    const panel = screen.getByRole('tabpanel', { name: 'My gaps' });
+    const gap = within(panel).getByText('GraphQL').closest('li');
+    expect(gap).toHaveAttribute('aria-current', 'true');
+    expect(gap).toHaveTextContent('Say: I used REST APIs');
+    expect(gap).toHaveTextContent('Learn this week: the Apollo tutorial');
+  });
+
+  it('keeps research ticks for the job', async () => {
+    const user = userEvent.setup();
+    localStorage.clear();
+    interviewPrep.current = { text: FULL, updatedAt: SAVED.updatedAt };
+    renderPanel();
+
+    await user.click(await screen.findByRole('tab', { name: 'Research' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Read the About us page' }));
+    expect(screen.getByRole('checkbox', { name: 'Read the About us page' })).toBeChecked();
+    expect(JSON.parse(localStorage.getItem('interview.research.job-1') ?? '[]')).toEqual([
+      'Read the About us page',
+    ]);
   });
 
   it('says why saving failed', async () => {
@@ -149,7 +234,8 @@ describe('InterviewPanel', () => {
       ),
     );
     renderPanel();
-    await user.type(await screen.findByRole('textbox', { name: 'Claude’s interview prep' }), 'x');
+    await user.click(await screen.findByRole('button', { name: 'or paste it in a box' }));
+    await user.type(screen.getByRole('textbox', { name: 'Claude’s interview prep' }), 'x');
 
     await user.click(screen.getByRole('button', { name: 'Save interview prep' }));
 

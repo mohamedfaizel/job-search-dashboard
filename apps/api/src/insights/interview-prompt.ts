@@ -39,13 +39,25 @@ Rules: use only what is in my resume and my achievements below. Never invent emp
 Skills and keywords in the job ad that my resume does not show (my likely gaps):
 ${list(gaps)}
 
-Write these six parts, each with a heading:
-1. What they care about: the five things in the ad that matter most, one line each.
-2. Tell me about yourself: a 60-second answer for this role, built from my resume.
-3. Likely questions: eight questions. Three about the technical skills of the role, three behavioural (situation, what I did, result, using real examples from my resume) and two about my gaps. For each one: why they ask, and a short model answer from my resume.
-4. My gaps: for each gap above, an honest way to answer if they ask, and one thing I can learn this week to close it.
-5. Questions for them: five good questions I can ask the interviewer.
-6. Research checklist: what to read about ${input.company} before the interview.
+Write these six parts. Start each with its heading exactly as shown, and keep the headings and the labels (Q1., Why they ask:, Answer:, Gap:, Say:, Learn this week:) in English even when you write the rest in German: the app splits your reply by them.
+## 1. What they care about
+The five things in the ad that matter most, one line each.
+## 2. Tell me about yourself
+A 60-second answer for this role, built from my resume.
+## 3. Likely questions
+Eight questions: three about the technical skills of the role, three behavioural (situation, what I did, result, using real examples from my resume) and two about my gaps. Write each one like this:
+Q1. <the question>
+Why they ask: <one line>
+Answer: <a short model answer from my resume>
+## 4. My gaps
+For each gap above, write:
+Gap: <the skill>
+Say: <an honest way to answer if they ask>
+Learn this week: <one thing I can do to close it>
+## 5. Questions for them
+Five good questions I can ask the interviewer, one per line starting with "- ".
+## 6. Research checklist
+What to read about ${input.company} before the interview, one item per line starting with "- [ ] ".
 
 My resume:
 """
@@ -57,5 +69,5 @@ The job ad:
 ${input.description?.trim() || '(No description saved.)'}
 """
 
-Reply with the six parts in plain text or Markdown and nothing before them.`;
+Reply with the six parts and nothing before them.`;
 }

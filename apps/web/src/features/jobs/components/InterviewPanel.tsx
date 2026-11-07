@@ -1,11 +1,13 @@
 import { useDeleteInterviewPrep, useJobInsights, useSaveInterviewPrep } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../useJobFormat';
 import { AiTag } from './AiLabels';
 import { CLAUDE_URL } from './ApplyKitPanel';
 import { CopyText } from './CopyText';
+import type { GapFocus } from './InterviewPrepView';
+import { InterviewPrepView } from './InterviewPrepView';
 import { BUTTON, PRIMARY } from './JobResumePanel';
 
 const LINK = 'text-brand-700 hover:underline';
@@ -26,7 +28,14 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
   const [text, setText] = useState('');
   const [replacing, setReplacing] = useState(false);
   const [clipboardBlocked, setClipboardBlocked] = useState(false);
+  // The paste box only shows when you ask for it (or the clipboard is blocked).
+  const [boxOpen, setBoxOpen] = useState(false);
+  const [focus, setFocus] = useState<GapFocus | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
+  const savedRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (boxOpen) box.current?.focus();
+  }, [boxOpen]);
 
   if (insights.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
   if (insights.isError) {
@@ -64,7 +73,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
     } catch {
       setClipboardBlocked(true);
     }
-    box.current?.focus();
+    setBoxOpen(true);
   };
 
   const showInput = !prep || replacing;
@@ -84,15 +93,28 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
           <>
             <ul aria-label={t('gapsTitle')} className="flex flex-wrap gap-1.5">
               {gaps.map((term) => (
-                <li
-                  key={term}
-                  className="rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-800 ring-1 ring-amber-200 ring-inset"
-                >
-                  {term}
+                <li key={term}>
+                  {prep ? (
+                    <button
+                      type="button"
+                      title={t('gapJumpHint')}
+                      onClick={() => {
+                        setFocus({ term, at: Date.now() });
+                        savedRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                      }}
+                      className="rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-800 ring-1 ring-amber-200 ring-inset hover:bg-amber-100"
+                    >
+                      {term} ›
+                    </button>
+                  ) : (
+                    <span className="rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-800 ring-1 ring-amber-200 ring-inset">
+                      {term}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-slate-500">{t('gapsHint')}</p>
+            <p className="text-xs text-slate-500">{prep ? t('gapsHintSaved') : t('gapsHint')}</p>
           </>
         )}
         {data.germanRequired && (
@@ -103,14 +125,10 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
       </section>
 
       {prep && (
-        <section aria-label={t('savedTitle')} className="space-y-2">
+        <section ref={savedRef} aria-label={t('savedTitle')} className="scroll-mt-4 space-y-2">
           <h3 className="text-sm font-semibold text-slate-900">{t('savedTitle')}</h3>
-          <div
-            role="region"
-            aria-label={t('savedBox')}
-            className="whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-3 text-sm leading-relaxed text-slate-800"
-          >
-            {prep.text}
+          <div role="region" aria-label={t('savedBox')}>
+            <InterviewPrepView jobId={jobId} text={prep.text} focus={focus} />
           </div>
           <p className="text-xs text-slate-500">
             {t('savedAt', { date: f.date(prep.updatedAt) })} ·{' '}
@@ -166,10 +184,21 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
               >
                 {save.isPending ? t('saving') : t('paste')}
               </button>
-              <span className="text-sm text-slate-600">{t('pasteHint')}</span>
+              {!boxOpen && (
+                <button
+                  type="button"
+                  className={LINK + ' text-sm'}
+                  onClick={() => {
+                    setBoxOpen(true);
+                  }}
+                >
+                  {t('pasteInBox')}
+                </button>
+              )}
             </div>
             {clipboardBlocked && <p className="text-xs text-slate-500">{t('blocked')}</p>}
             <form
+              hidden={!boxOpen}
               className="space-y-2"
               onSubmit={(e) => {
                 e.preventDefault();

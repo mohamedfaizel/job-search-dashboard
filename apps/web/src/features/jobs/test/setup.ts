@@ -23,6 +23,9 @@ import {
 // a test that is about to fail anyway.
 configure({ asyncUtilTimeout: 5000 });
 
+// jsdom doesn't lay out pages, so it has no scrollIntoView.
+Element.prototype.scrollIntoView = () => undefined;
+
 beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
 });

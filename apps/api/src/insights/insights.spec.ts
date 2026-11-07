@@ -264,7 +264,7 @@ describe('buildInterviewPrompt', () => {
     expect(prompt).toContain('Wir suchen …');
     expect(prompt).toContain('What they care about');
     expect(prompt).toContain('Questions for them');
-    expect(prompt).toContain('what to read about Acme');
+    expect(prompt).toContain('What to read about Acme');
   });
 
   it('writes in English for an English job, without a city, resume or description', () => {
