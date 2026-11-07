@@ -613,7 +613,7 @@ describe('JobsDashboard', () => {
     // Still open (no close), now the small bar with the job's title.
     expect(dialog).toHaveAttribute('open');
     expect(within(dialog).queryByRole('tablist')).toBeNull();
-    expect(dialog).toHaveClass('bottom-4');
+    expect(dialog).toHaveClass('bottom-5');
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Open the job again' }));
     expect(within(dialog).getByRole('tab', { name: 'Job ad' })).toHaveAttribute(

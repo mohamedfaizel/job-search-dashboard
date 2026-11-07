@@ -518,7 +518,7 @@ export function JobDetailsDialog({
       aria-labelledby={minimized ? 'job-dock-title' : 'job-dialog-title'}
       className={
         minimized
-          ? 'fixed inset-x-auto top-auto bottom-4 left-1/2 z-50 m-0 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl p-0 shadow-2xl ring-1 ring-slate-200'
+          ? 'fixed top-auto right-[5.5rem] bottom-5 left-auto z-50 m-0 w-[min(18rem,calc(100vw-7rem))] rounded-lg p-0 shadow-xl ring-1 ring-slate-200'
           : `p-0 shadow-2xl backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm max-sm:m-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:rounded-none ${
               maximized
                 ? 'm-0 h-dvh max-h-none w-screen max-w-none rounded-none'
@@ -564,46 +564,43 @@ export function JobDetailsDialog({
 /** The minimized popup: a small bar with the job's title, to open it again or close it. */
 function JobDock({ job, onOpen, onClose }: { job: Job; onOpen: () => void; onClose: () => void }) {
   const t = useTranslations('Jobs.popup');
+  const ICON =
+    'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900';
   return (
-    <div className="flex items-center gap-2 bg-white py-1.5 pr-1.5 pl-3">
+    <div className="flex h-10 items-center gap-0.5 bg-white pr-1 pl-2.5">
       <button
         type="button"
         onClick={onOpen}
-        title={t('openAgain')}
-        className="flex min-w-0 flex-1 flex-col items-start rounded-md px-1 py-0.5 text-left hover:bg-slate-50"
+        title={`${job.title} · ${job.company.name}`}
+        className="min-w-0 flex-1 truncate text-left text-sm"
       >
-        <span id="job-dock-title" className="w-full truncate text-sm font-semibold text-slate-900">
+        <span id="job-dock-title" className="font-medium text-slate-900">
           {job.title}
         </span>
-        <span className="w-full truncate text-xs text-slate-500">{job.company.name}</span>
+        <span className="text-xs text-slate-500"> · {job.company.name}</span>
       </button>
       <button
         type="button"
         onClick={onOpen}
         aria-label={t('openAgain')}
         title={t('openAgain')}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+        className={ICON}
       >
         <svg
           aria-hidden="true"
           viewBox="0 0 16 16"
-          className="h-4 w-4 fill-none stroke-current stroke-[1.6]"
+          className="h-3.5 w-3.5 fill-none stroke-current stroke-[1.6]"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
           <path d="M4 10l4-4 4 4" />
         </svg>
       </button>
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label={t('close')}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-      >
+      <button type="button" onClick={onClose} aria-label={t('close')} className={ICON}>
         <svg
           aria-hidden="true"
           viewBox="0 0 16 16"
-          className="h-4 w-4 fill-none stroke-current stroke-[1.6]"
+          className="h-3.5 w-3.5 fill-none stroke-current stroke-[1.6]"
           strokeLinecap="round"
         >
           <path d="M3 3l10 10M13 3L3 13" />
