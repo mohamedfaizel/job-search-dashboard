@@ -71,3 +71,49 @@ ${input.description?.trim() || '(No description saved.)'}
 
 Reply with the six parts and nothing before them.`;
 }
+
+/**
+ * The mock interview prompt: Claude plays the interviewer, asks one question at a time and gives
+ * feedback after each answer. Works in Claude's voice mode too. In German it speaks simple German
+ * at your real level, for jobs whose interview will be in German.
+ */
+export function buildMockInterviewPrompt(input: PromptInput, language: 'en' | 'de'): string {
+  const where = input.city ? ` in ${input.city}` : '';
+  const resume = input.resume.trim()
+    ? input.resume.trim()
+    : '(I have not added my resume here yet. Ask me for it before you start.)';
+  const gaps = [...new Set([...input.missingSkills, ...input.missingKeywords.slice(0, 5)])];
+  const languages = input.languages.length
+    ? `\n\nMy languages, with my real levels:\n${list(input.languages)}`
+    : '';
+  const languageRule =
+    language === 'de'
+      ? 'Run the whole interview in German. Speak simple German that matches my real German level below: short sentences, common words, no slang. When I make a German mistake, show the corrected sentence after your feedback. When I write "help", repeat your last question in English.'
+      : 'Run the whole interview in English.';
+
+  return `Let's do a mock interview. You are the interviewer for this job, and I am the candidate.
+
+Job: ${input.title} at ${input.company}${where}
+
+How to run it:
+- Ask one question at a time, then wait for my answer. Never answer for me.
+- Ask eight questions: three about the technical skills of the role, three behavioural ones (situation, what I did, result) and two about my likely gaps.
+- After each answer give short feedback: one thing that was good, one thing to improve, and a better version of my answer that uses only facts from my resume. Never invent employers, projects, numbers or skills for me.
+- After the eighth answer, end the interview: give each answer a score out of 10 and name the three things I should practise most.
+- ${languageRule}${languages}
+
+My likely gaps (skills in the ad that my resume does not show):
+${list(gaps)}
+
+My resume:
+"""
+${resume}
+"""${achievementsPart(input.achievements)}
+
+The job ad:
+"""
+${input.description?.trim() || '(No description saved.)'}
+"""
+
+Start now: say hello as the interviewer and ask the first question.`;
+}

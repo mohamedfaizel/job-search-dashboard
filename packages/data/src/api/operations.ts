@@ -592,6 +592,8 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     }
     prompt
     interviewPrompt
+    mockInterviewPrompt
+    mockInterviewPromptDe
     interviewPrep {
       text
       updatedAt

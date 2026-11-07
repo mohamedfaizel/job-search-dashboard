@@ -714,6 +714,16 @@
         "say": "Say: {say}",
         "learn": "Learn this week: {learn}",
         "wholeReply": "Show Claude’s whole reply"
+      },
+      "mock": {
+        "title": "Practise a mock interview",
+        "intro": "Claude plays the interviewer: one question at a time, with feedback after each answer and a score at the end. Try it in Claude’s voice mode to practise speaking.",
+        "language": "Interview language",
+        "de": "Deutsch (simple, at your level)",
+        "en": "English",
+        "copy": "Copy mock interview and open Claude",
+        "copiedHint": "Claude opened in a new tab: paste it there (Ctrl+V) and answer its questions.",
+        "promptBox": "Mock interview prompt"
       }
     },
     "fit": {

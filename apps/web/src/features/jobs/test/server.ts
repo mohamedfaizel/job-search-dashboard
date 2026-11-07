@@ -89,6 +89,8 @@ export const INSIGHTS: JobInsights = {
   jobResume: null,
   prompt: 'Please tailor my resume for this job.\n- graphql',
   interviewPrompt: 'Please prepare me for an interview.\n- graphql',
+  mockInterviewPrompt: "Let's do a mock interview.",
+  mockInterviewPromptDe: "Let's do a mock interview. Run the whole interview in German.",
   interviewPrep: null,
 };
 

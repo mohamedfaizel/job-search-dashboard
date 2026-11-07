@@ -28,7 +28,7 @@ import type {
   RemovedTermModel,
   TermCheckModel,
 } from './insights.model';
-import { buildInterviewPrompt } from './interview-prompt';
+import { buildInterviewPrompt, buildMockInterviewPrompt } from './interview-prompt';
 import { checkPdf, readPdf } from './pdf-check';
 import type { PromptInput } from './prompt';
 import {
@@ -323,6 +323,8 @@ export class InsightsService implements OnApplicationBootstrap {
           })
         : null,
       interviewPrompt: buildInterviewPrompt(promptInput),
+      mockInterviewPrompt: buildMockInterviewPrompt(promptInput, 'en'),
+      mockInterviewPromptDe: buildMockInterviewPrompt(promptInput, 'de'),
       interviewPrep,
     };
     return { insights, promptInput };

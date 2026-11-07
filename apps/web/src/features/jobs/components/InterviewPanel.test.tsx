@@ -219,6 +219,22 @@ describe('InterviewPanel', () => {
     ]);
   });
 
+  it('copies a mock interview in German for a German job, or in English', async () => {
+    const user = userEvent.setup();
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    renderPanel();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Copy mock interview and open Claude' }),
+    );
+    expect(await navigator.clipboard.readText()).toContain('in German');
+    expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
+
+    await user.click(screen.getByRole('radio', { name: 'English' }));
+    await user.click(screen.getByRole('button', { name: 'Copy mock interview and open Claude' }));
+    expect(await navigator.clipboard.readText()).toBe("Let's do a mock interview.");
+  });
+
   it('says why saving failed', async () => {
     const user = userEvent.setup();
     server.use(

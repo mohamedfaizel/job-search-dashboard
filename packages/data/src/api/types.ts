@@ -546,6 +546,8 @@ export interface JobInsights {
   prompt: string;
   /** The interview prep prompt: paste into Claude for questions, answers and your gaps. */
   interviewPrompt: string;
+  mockInterviewPrompt: string;
+  mockInterviewPromptDe: string;
   /** What Claude answered to it, if you pasted it back. */
   interviewPrep: InterviewPrep | null;
 }

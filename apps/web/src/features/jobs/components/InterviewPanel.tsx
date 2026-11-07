@@ -31,6 +31,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
   // The paste box only shows when you ask for it (or the clipboard is blocked).
   const [boxOpen, setBoxOpen] = useState(false);
   const [focus, setFocus] = useState<GapFocus | null>(null);
+  const [mockLanguage, setMockLanguage] = useState<'en' | 'de' | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const savedRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -223,6 +224,50 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
           </div>
         </section>
       )}
+
+      <section aria-label={t('mock.title')} className="space-y-2">
+        <h3 className="text-sm font-semibold text-slate-900">{t('mock.title')}</h3>
+        <p className="text-sm text-slate-600">{t('mock.intro')}</p>
+        {data.germanRequired && (
+          <div
+            role="radiogroup"
+            aria-label={t('mock.language')}
+            className="inline-flex rounded-md ring-1 ring-slate-200"
+          >
+            {(['de', 'en'] as const).map((lang) => {
+              const on = (mockLanguage ?? 'de') === lang;
+              return (
+                <button
+                  key={lang}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => {
+                    setMockLanguage(lang);
+                  }}
+                  className={`px-3 py-1 text-xs font-medium first:rounded-l-md last:rounded-r-md ${
+                    on ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {t(`mock.${lang}`)}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <CopyText
+          label={t('mock.copy')}
+          text={
+            data.germanRequired && (mockLanguage ?? 'de') === 'de'
+              ? data.mockInterviewPromptDe
+              : data.mockInterviewPrompt
+          }
+          copiedHint={t('mock.copiedHint')}
+          boxLabel={t('mock.promptBox')}
+          openUrl={CLAUDE_URL}
+          icon={<AiTag kind="chat" />}
+        />
+      </section>
 
       {error && (
         <p role="alert" className="text-sm text-red-700">

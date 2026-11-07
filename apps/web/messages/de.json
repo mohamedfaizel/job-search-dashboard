@@ -714,6 +714,16 @@
         "say": "Sag: {say}",
         "learn": "Diese Woche lernen: {learn}",
         "wholeReply": "Claudes ganze Antwort zeigen"
+      },
+      "mock": {
+        "title": "Probe-Interview üben",
+        "intro": "Claude spielt die Person, die dich interviewt: eine Frage nach der anderen, mit Feedback nach jeder Antwort und einer Bewertung am Ende. Probier es im Sprachmodus von Claude, um das Sprechen zu üben.",
+        "language": "Sprache des Interviews",
+        "de": "Deutsch (einfach, auf deinem Niveau)",
+        "en": "Englisch",
+        "copy": "Probe-Interview kopieren und Claude öffnen",
+        "copiedHint": "Claude ist in einem neuen Tab offen: dort einfügen (Strg+V) und die Fragen beantworten.",
+        "promptBox": "Prompt für das Probe-Interview"
       }
     },
     "fit": {
