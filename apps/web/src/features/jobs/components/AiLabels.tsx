@@ -4,9 +4,9 @@ import type { AiState } from '../../../lib/ai-status';
 import { markKeyFailed, noteAiResult, useAiState } from '../../../lib/ai-status';
 
 const TAG = {
-  chat: 'bg-amber-100 text-amber-600 ring-amber-300',
-  ai: 'bg-violet-100 text-violet-600 ring-violet-300',
-  off: 'bg-slate-100 text-slate-400 ring-slate-200',
+  chat: 'text-amber-500',
+  ai: 'text-violet-600',
+  off: 'text-slate-400',
 } as const;
 
 /**
@@ -21,7 +21,7 @@ export function AiTag({ kind }: { kind: keyof typeof TAG }) {
     <span
       aria-hidden="true"
       title={t(`${kind}Hint`)}
-      className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] leading-none ring-1 ring-inset ${TAG[kind]}`}
+      className={`inline-block text-sm leading-none ${TAG[kind]}`}
     >
       ✦
     </span>
