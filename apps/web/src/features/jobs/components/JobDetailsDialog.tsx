@@ -567,17 +567,17 @@ function JobDock({ job, onOpen, onClose }: { job: Job; onOpen: () => void; onClo
   const ICON =
     'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900';
   return (
-    <div className="flex h-10 items-center gap-0.5 bg-white pr-1 pl-2.5">
+    <div className="flex items-center gap-0.5 bg-white py-1 pr-1 pl-2.5">
       <button
         type="button"
         onClick={onOpen}
         title={`${job.title} · ${job.company.name}`}
-        className="min-w-0 flex-1 truncate text-left text-sm"
+        className="flex min-w-0 flex-1 flex-col text-left leading-tight"
       >
-        <span id="job-dock-title" className="font-medium text-slate-900">
+        <span id="job-dock-title" className="truncate text-sm font-medium text-slate-900">
           {job.title}
         </span>
-        <span className="text-xs text-slate-500"> · {job.company.name}</span>
+        <span className="truncate text-xs text-slate-500">{job.company.name}</span>
       </button>
       <button
         type="button"
