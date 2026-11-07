@@ -451,10 +451,14 @@ export function MissingKeywords({
                       onClick={() => {
                         setFocus(focus === term ? null : term);
                       }}
-                      className={`cursor-grab rounded px-1 -mx-1 font-bold hover:bg-amber-50 active:cursor-grabbing ${
+                      className={`inline-flex cursor-grab items-center gap-1 rounded px-1 -mx-1 font-bold hover:bg-amber-50 active:cursor-grabbing ${
                         focus === term ? 'bg-amber-100 text-amber-900 ring-1 ring-amber-300' : ''
                       }`}
                     >
+                      {/* The grip says it can be dragged onto a resume line. */}
+                      <span aria-hidden="true" className="text-xs font-normal text-slate-400">
+                        ⠿
+                      </span>
                       {term}
                     </button>
                   )}
