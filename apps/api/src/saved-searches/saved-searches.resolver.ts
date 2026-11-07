@@ -11,7 +11,7 @@ import {
 import { SavedSearchesService } from './saved-searches.service';
 import { SchedulerService } from './scheduler.service';
 
-// Saved searches and imports spend the server's JobsPipe credits, so they are admin-only.
+// Saved searches and imports spend the server's JobHunter credits, so they are admin-only.
 @Roles('ADMIN')
 @Resolver(() => SavedSearch)
 export class SavedSearchesResolver {
@@ -66,7 +66,7 @@ export class SavedSearchesResolver {
     return this.service.remove(id);
   }
 
-  @Mutation(() => SyncJobsResult, { description: 'Import from JobsPipe with a saved search' })
+  @Mutation(() => SyncJobsResult, { description: 'Import from JobHunter with a saved search' })
   runSavedSearch(
     @Args('id', { type: () => Int }) id: number,
     @Args('resume', { defaultValue: false, description: 'Continue its last import instead' })

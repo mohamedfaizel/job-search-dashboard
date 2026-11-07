@@ -3,7 +3,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mohamedfaizel_job-search-dashboard&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=mohamedfaizel_job-search-dashboard)
 
 A full-stack job search dashboard. It pulls live job postings from the
-[JobsPipe](https://jobspipe.dev) API, stores them in PostgreSQL, and shows them in a
+JobHunter API, stores them in PostgreSQL, and shows them in a
 sortable, filterable table. You can also add jobs by hand.
 
 > **Status:** step 3 of 4 (dashboard UI). See the [roadmap](#roadmap).
@@ -17,16 +17,16 @@ flowchart LR
   end
   api["api (NestJS)<br/>:3000"]
   db[(PostgreSQL<br/>:5432)]
-  jobspipe[[JobsPipe API]]
+  jobhunter[[JobHunter API]]
   web -- GraphQL + uploads --> api
   api -- Prisma --> db
-  api -- sync --> jobspipe
+  api -- sync --> jobhunter
 ```
 
 | App              | What it is                                                               | Port |
 | ---------------- | ------------------------------------------------------------------------ | ---- |
 | `apps/web`       | The app: Next.js (App Router). Job posts, Tracker, Add jobs, My profile. | 3001 |
-| `apps/api`       | NestJS backend. Holds the JobsPipe token so it never hits the UI.        | 3000 |
+| `apps/api`       | NestJS backend. Holds the JobHunter token so it never hits the UI.       | 3000 |
 | `apps/storybook` | Storybook: a catalogue of the UI components, used by Chromatic.          | 6006 |
 | `packages/data`  | Shared data layer: GraphQL client, TanStack Query hooks, Redux.          |      |
 
@@ -58,7 +58,7 @@ the table stays fast with thousands of jobs.
 - **Backend:** NestJS, GraphQL (Apollo, code-first), Prisma 7, PostgreSQL (Docker)
 - **Quality:** ESLint (typescript-eslint, react-hooks, jsx-a11y, import-x), Prettier,
   Husky + lint-staged, GitHub Actions CI
-- **Tests:** Vitest + React Testing Library, MSW (mocks the GraphQL API and JobsPipe), API
+- **Tests:** Vitest + React Testing Library, MSW (mocks the GraphQL API and JobHunter), API
   end-to-end tests against a real PostgreSQL, Storybook + Chromatic visual tests; Playwright
   arrives in step 4
 - **Monorepo:** pnpm workspaces + Turborepo
@@ -95,7 +95,7 @@ When VS Code opens the folder, accept the prompt to install the recommended exte
 cp .env.example .env      # Windows PowerShell: Copy-Item .env.example .env
 ```
 
-`.env` is git-ignored. Put your JobsPipe API token in `JOBSPIPE_API_TOKEN`. Never commit it.
+`.env` is git-ignored. Put your JobHunter API token in `JOBHUNTER_API_TOKEN`. Never commit it.
 
 ### 4. Run everything
 
@@ -109,7 +109,7 @@ Open <http://localhost:3001>. Check the API at <http://localhost:3000/health>.
 
 **Log in:** the first time, click _Create an account_. The first account on a server becomes the
 **admin**: only the admin sees **Add jobs**, because imports and saved searches spend the server's
-JobsPipe credits. Accounts created after that are regular users who can browse the jobs and track
+JobHunter credits. Accounts created after that are regular users who can browse the jobs and track
 their status. Passwords are stored as argon2 hashes, and the session lives in an httpOnly cookie
 for 7 days. Set `JWT_SECRET` in `.env` (see `.env.example`); `ALLOW_SIGNUP=false` closes sign-up.
 
@@ -125,13 +125,13 @@ after hiding fixes a slip.
 **My profile** holds your headline, the roles and places you want, your skills and links, and your
 **master resume**. Upload a PDF or Word (.docx) file and the API reads the text out of it (scanned
 images can't be read); you can fix that text by hand. Match scores and tailored resumes will start
-from it. On _Import from JobsPipe_, **Fill from my profile** copies your roles, skills and places
+from it. On _Import from JobHunter_, **Fill from my profile** copies your roles, skills and places
 into the search.
 
-The **Add jobs** page has three tabs: _Saved searches_, _Import from JobsPipe_ and _Add a job by hand_.
+The **Add jobs** page has three tabs: _Saved searches_, _Import from JobHunter_ and _Add a job by hand_.
 _Import history_ sits below the tabs, so it shows on all three.
 
-**Fill the table:** either open **Add jobs** and use _Import from JobsPipe_ (needs your token
+**Fill the table:** either open **Add jobs** and use _Import from JobHunter_ (needs your token
 in `.env`, and each job costs one credit), or load 36 made-up demo jobs for free while the API
 is running. Adding jobs is admin-only, so the script logs in as your admin account (PowerShell):
 
@@ -140,13 +140,13 @@ $env:SEED_EMAIL="you@example.com"; $env:SEED_PASSWORD="your password"
 pnpm --filter @jobsearch/api db:seed
 ```
 
-**Importing again** only asks JobsPipe for postings it found since your last import of the same
+**Importing again** only asks JobHunter for postings it found since your last import of the same
 search (the _Only jobs new since my last import_ box). Untick it to fetch everything again. A job
-is never stored twice: each JobsPipe posting has a stable id, saved in a unique `externalId`
-column, so a re-import updates the row instead. JobsPipe also doesn't charge twice for the same
+is never stored twice: each JobHunter posting has a stable id, saved in a unique `externalId`
+column, so a re-import updates the row instead. JobHunter also doesn't charge twice for the same
 job in one calendar month.
 
-**Bigger imports:** JobsPipe returns jobs newest first, one page at a time. _Jobs per page_ is
+**Bigger imports:** JobHunter returns jobs newest first, one page at a time. _Jobs per page_ is
 capped by your plan (Free 25, Builder/Growth 100, Scale/Business 500) and _Max pages_ limits how
 many pages one import fetches. When an import stops with pages left, the panel shows how many jobs
 match in total and a **Continue import** button that picks up from the next page.
@@ -281,9 +281,9 @@ exactly that.
 
 Every job popup starts with a free, instant check that needs no AI and no Resume-Matcher:
 
-- **Title and language** come from JobsPipe. For jobs you add by hand, the language is guessed
+- **Title and language** come from JobHunter. For jobs you add by hand, the language is guessed
   from the description with [tinyld](https://github.com/komodojp/tinyld).
-- **Skills** are JobsPipe's skill tags, checked against your resume text (from **My profile**).
+- **Skills** are JobHunter's skill tags, checked against your resume text (from **My profile**).
   Different spellings count (`NodeJS` = `node.js`); add more in
   [`apps/api/src/insights/skills.ts`](apps/api/src/insights/skills.ts).
 - **Keywords** are the words that make this description stand out from your other jobs
@@ -336,7 +336,7 @@ Open <http://localhost:3000/graphql> in your browser. It shows Apollo Sandbox, w
 browse the whole schema and run operations. The schema is also written to
 [`apps/api/schema.gql`](apps/api/schema.gql).
 
-**Fetch jobs from JobsPipe** (each job fetched costs one JobsPipe credit):
+**Fetch jobs from JobHunter** (each job fetched costs one JobHunter credit):
 
 ```graphql
 mutation {
@@ -465,10 +465,10 @@ unformatted code never lands in the repo.
 ## Roadmap
 
 1. **Foundation:** monorepo, apps, tooling, CI
-2. **Backend:** Prisma schema, JobsPipe sync into PostgreSQL, GraphQL API
+2. **Backend:** Prisma schema, JobHunter sync into PostgreSQL, GraphQL API
    (jobs query with filters/sorting, add-job and status mutations)
 3. **Frontend** (this step): sortable table with column filters, job description popup,
-   application status button, add-job form, JobsPipe import, TanStack Query + Redux Toolkit,
+   application status button, add-job form, JobHunter import, TanStack Query + Redux Toolkit,
    Storybook + Chromatic, MSW
 4. **End-to-end and publish:** Playwright tests, screenshots, live deploy
 

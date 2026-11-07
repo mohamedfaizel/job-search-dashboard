@@ -516,7 +516,7 @@
       "newHint": "Imported since your last visit",
       "queue": "Queue #{n}",
       "queueHint": "Number {n} in your Apply queue",
-      "salaryEstimated": "Estimated by JobsPipe",
+      "salaryEstimated": "Estimated by JobHunter",
       "salaryStated": "Stated in the posting",
       "estimated": "est.",
       "statusFor": "Status for {job}",
@@ -1122,7 +1122,7 @@
       "savedCount": "Saved searches ({count})",
       "savedShort": "Saved",
       "savedShortCount": "Saved ({count})",
-      "import": "Import from JobsPipe",
+      "import": "Import from JobHunter",
       "importShort": "Import",
       "manual": "Add a job by hand",
       "manualShort": "By hand"
@@ -1188,8 +1188,8 @@
       "none": "No country found"
     },
     "sync": {
-      "heading": "Import from JobsPipe",
-      "intro": "Each job fetched uses one JobsPipe credit. Jobs you already have are updated, never added twice, and fetching them again in the same month is free.",
+      "heading": "Import from JobHunter",
+      "intro": "Each job fetched uses one JobHunter credit. Jobs you already have are updated, never added twice, and fetching them again in the same month is free.",
       "fillProfile": "Fill from my profile",
       "titles": "Job titles",
       "commaSeparated": "Comma separated",
@@ -1247,8 +1247,8 @@
       "introFree": "The German Federal Employment Agency’s job board. Free, no credits. Germany only. Only some filters apply, so the rest are hidden.",
       "source": "Where to look",
       "sources": {
-        "JOBSPIPE": {
-          "name": "JobsPipe",
+        "JOBHUNTER": {
+          "name": "JobHunter",
           "hint": "Worldwide. Each job uses one credit."
         },
         "ARBEITSAGENTUR": {
@@ -1319,7 +1319,7 @@
       "loading": "Loading import history…",
       "loadError": "Could not load import history: {error}",
       "none": "No imports yet.",
-      "caption": "The last 20 imports from JobsPipe",
+      "caption": "The last 20 imports from JobHunter",
       "when": "When",
       "search": "Search",
       "new": "New",

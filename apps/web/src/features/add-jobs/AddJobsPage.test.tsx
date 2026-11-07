@@ -27,8 +27,8 @@ describe('App tabs', () => {
 
     saved.focus();
     await userEvent.keyboard('{ArrowRight}');
-    expect(screen.getByRole('tab', { name: 'Import from JobsPipe' })).toHaveFocus();
-    expect(screen.getByRole('heading', { name: 'Import from JobsPipe' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Import from JobHunter' })).toHaveFocus();
+    expect(screen.getByRole('heading', { name: 'Import from JobHunter' })).toBeVisible();
 
     await userEvent.keyboard('{End}');
     expect(screen.getByRole('tab', { name: 'Add a job by hand' })).toHaveAttribute(
@@ -55,7 +55,7 @@ describe('App tabs', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Edit' }));
 
-    expect(screen.getByRole('tab', { name: 'Import from JobsPipe' })).toHaveAttribute(
+    expect(screen.getByRole('tab', { name: 'Import from JobHunter' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
@@ -65,7 +65,7 @@ describe('App tabs', () => {
   it('shows the import history under every tab', async () => {
     renderWithData(<App />);
 
-    for (const name of [/^Saved searches/, 'Import from JobsPipe', 'Add a job by hand']) {
+    for (const name of [/^Saved searches/, 'Import from JobHunter', 'Add a job by hand']) {
       await userEvent.click(await screen.findByRole('tab', { name }));
       expect(screen.getByRole('heading', { name: 'Import history' })).toBeVisible();
     }

@@ -155,7 +155,7 @@ export class InterviewPrepModel {
 
 @ObjectType('JobInsights', {
   description:
-    'What the job asks for, worked out without AI: JobsPipe tags, TF-IDF and word matching against your resume text.',
+    'What the job asks for, worked out without AI: JobHunter tags, TF-IDF and word matching against your resume text.',
 })
 export class JobInsightsModel {
   @Field()
@@ -166,14 +166,16 @@ export class JobInsightsModel {
 
   @Field(() => String, {
     nullable: true,
-    description: 'JobsPipe’s cleaned-up title, when it differs from the posted one',
+    description: 'JobHunter’s cleaned-up title, when it differs from the posted one',
   })
   normalizedTitle!: string | null;
 
   @Field(() => String, { nullable: true, description: 'ISO 639-1 code, e.g. "de"' })
   language!: string | null;
 
-  @Field({ description: 'True when the language was guessed from the text, not given by JobsPipe' })
+  @Field({
+    description: 'True when the language was guessed from the text, not given by JobHunter',
+  })
   languageDetected!: boolean;
 
   @Field({

@@ -6,7 +6,7 @@ describe('ImportHistory', () => {
   it('lists past imports with their counts', async () => {
     renderWithData(<ImportHistory />);
 
-    const table = await screen.findByRole('table', { name: 'The last 20 imports from JobsPipe' });
+    const table = await screen.findByRole('table', { name: 'The last 20 imports from JobHunter' });
     const rows = within(table).getAllByRole('row');
     expect(rows).toHaveLength(3);
     expect(rows[1]).toHaveTextContent('Frontend in Berlin: frontend · react · DE · Berlin');

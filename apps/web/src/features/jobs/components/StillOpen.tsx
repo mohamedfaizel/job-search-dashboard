@@ -22,7 +22,7 @@ const REASONS = [
 type Reason = (typeof REASONS)[number];
 const isReason = (code: string | null): code is Reason => REASONS.includes((code ?? '') as Reason);
 
-/** Closed by JobsPipe, or found closed by our still-open check. */
+/** Closed by JobHunter, or found closed by our still-open check. */
 export function isExpired(job: Pick<Job, 'postingStatus'>): boolean {
   return job.postingStatus === 'expired' || job.postingStatus === 'closed';
 }

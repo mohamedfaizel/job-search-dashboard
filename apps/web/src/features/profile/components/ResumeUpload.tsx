@@ -2,6 +2,7 @@ import type { Profile } from '@jobsearch/data';
 import { useResumeMatcherStatus, useSyncResumeToMatcher, useUploadResume } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
+import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -61,9 +62,11 @@ export function ResumeUpload({ fileName, onUploaded }: Props) {
         </span>
       </div>
       {upload.isSuccess && (
-        <p role="status" className="text-sm text-emerald-700">
-          {t('read')}
-        </p>
+        <AutoHide key={upload.submittedAt}>
+          <p role="status" className="text-sm text-emerald-700">
+            {t('read')}
+          </p>
+        </AutoHide>
       )}
       {(tooBig || upload.isError) && (
         <p role="alert" className="text-sm text-red-700">

@@ -1,7 +1,7 @@
 import { JobSource } from '../generated/prisma/enums';
 import { detectLanguage } from '../insights/text';
+import type { MappedJob } from '../jobhunter/jobhunter.mapper';
 import { visaSponsorship } from '../jobs/visa';
-import type { MappedJob } from '../jobspipe/jobspipe.mapper';
 import type { BaDetail, BaListing } from './arbeitsagentur.types';
 
 /** Our id for a posting: prefixed, so it can never equal an id from another source. */

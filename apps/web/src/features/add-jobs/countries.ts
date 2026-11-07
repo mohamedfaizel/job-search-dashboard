@@ -1,4 +1,4 @@
-/** The countries JobsPipe suggests, in its own order: [2-letter code, name]. */
+/** The countries JobHunter suggests, in its own order: [2-letter code, name]. */
 const COUNTRIES: readonly (readonly [string, string])[] = [
   ['US', 'United States'],
   ['GB', 'United Kingdom'],
@@ -50,7 +50,7 @@ const COUNTRIES: readonly (readonly [string, string])[] = [
 const NAMES = new Map(COUNTRIES);
 
 /**
- * "DE" → "Germany" / "Deutschland". English keeps JobsPipe's names; other languages get the
+ * "DE" → "Germany" / "Deutschland". English keeps JobHunter's names; other languages get the
  * browser's. A code nobody knows stays as it is.
  */
 export function countryName(code: string, locale = 'en'): string {
@@ -64,7 +64,7 @@ export function countryName(code: string, locale = 'en'): string {
   }
 }
 
-/** JobsPipe's countries in its own order, named in your language. */
+/** JobHunter's countries in its own order, named in your language. */
 export function countriesIn(locale: string): (readonly [string, string])[] {
   return COUNTRIES.map(([code]) => [code, countryName(code, locale)] as const);
 }

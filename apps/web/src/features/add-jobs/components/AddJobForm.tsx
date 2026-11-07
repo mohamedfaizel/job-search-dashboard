@@ -3,6 +3,7 @@ import { APPLICATION_STATUSES, useCreateJob, WORKPLACES } from '@jobsearch/data'
 import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
 import { countriesIn } from '../countries';
@@ -59,9 +60,11 @@ export function AddJobForm() {
       </h2>
 
       {savedTitle && (
-        <p role="status" className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">
-          {t('form.saved', { title: savedTitle })}
-        </p>
+        <AutoHide key={createJob.submittedAt}>
+          <p role="status" className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">
+            {t('form.saved', { title: savedTitle })}
+          </p>
+        </AutoHide>
       )}
       {createJob.isError && (
         <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">

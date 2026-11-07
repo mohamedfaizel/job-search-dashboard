@@ -20,7 +20,7 @@ const value = () => screen.getByRole('status', { name: 'Value' }).textContent;
 const input = () => screen.getByRole('combobox', { name: 'Countries' });
 
 describe('CountrySelect', () => {
-  it('starts on Worldwide and lists JobsPipe’s countries', async () => {
+  it('starts on Worldwide and lists JobHunter’s countries', async () => {
     render(<Harness />);
     await userEvent.click(input());
 

@@ -1,6 +1,6 @@
-// The parts of the JobsPipe API we use. Docs: https://docs.jobspipe.dev/api-reference
+// The parts of the JobHunter API we use.
 
-export interface JobsPipeSearchRequest {
+export interface JobHunterSearchRequest {
   job_title_or?: string[];
   skills_or?: string[];
   job_country_code_or?: string[];
@@ -18,28 +18,28 @@ export interface JobsPipeSearchRequest {
   min_salary_usd?: number;
   /** Keep postings whose value is unknown for these filtered fields. */
   include_unknown?: string[];
-  /** Only postings JobsPipe first found at or after this UTC time, "YYYY-MM-DD HH:mm:ss". */
+  /** Only postings JobHunter first found at or after this UTC time, "YYYY-MM-DD HH:mm:ss". */
   discovered_at_gte?: string;
   limit?: number;
   cursor?: string;
   include_total_results?: boolean;
-  /** JobsPipe only supports newest first; sending it makes the order explicit. */
+  /** JobHunter only supports newest first; sending it makes the order explicit. */
   order_by?: { field: 'posted_at'; desc: true }[];
 }
 
-export interface JobsPipeSource {
+export interface JobHunterSource {
   provider: string;
   url: string | null;
 }
 
-export interface JobsPipeCompany {
+export interface JobHunterCompany {
   name: string | null;
   domain: string | null;
   logo: string | null;
 }
 
-/** One posting. JobsPipe returns ~75 fields; only the ones we map are typed here. */
-export interface JobsPipeJob {
+/** One posting. JobHunter returns ~75 fields; only the ones we map are typed here. */
+export interface JobHunterJob {
   id: string;
   job_title: string;
   company: string;
@@ -63,16 +63,16 @@ export interface JobsPipeJob {
   job_function: string | null;
   status: string | null;
   company_domain: string | null;
-  company_object: JobsPipeCompany | null;
+  company_object: JobHunterCompany | null;
   technology_slugs: string[] | null;
   isic_division_label: string | null;
-  /** "offers", "no" or "citizenship_required", read by JobsPipe from the text. Rarely set. */
+  /** "offers", "no" or "citizenship_required", read by JobHunter from the text. Rarely set. */
   visa_sponsorship?: string | null;
   description: string | null;
-  sources: JobsPipeSource[] | null;
+  sources: JobHunterSource[] | null;
 }
 
-export interface JobsPipeSearchResponse {
+export interface JobHunterSearchResponse {
   metadata: {
     total_results: number | null;
     next_cursor: string | null;
@@ -81,5 +81,5 @@ export interface JobsPipeSearchResponse {
     jobs_already_paid: number;
     credits_remaining: number;
   };
-  data: JobsPipeJob[];
+  data: JobHunterJob[];
 }

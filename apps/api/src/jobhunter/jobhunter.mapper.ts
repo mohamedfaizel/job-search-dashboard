@@ -2,7 +2,7 @@ import type { Prisma } from '../generated/prisma/client';
 import { JobSource, Workplace } from '../generated/prisma/enums';
 import { detectLanguage } from '../insights/text';
 import { visaSponsorship } from '../jobs/visa';
-import type { JobsPipeJob } from './jobspipe.types';
+import type { JobHunterJob } from './jobhunter.types';
 
 export interface MappedCompany {
   name: string;
@@ -15,7 +15,7 @@ export interface MappedJob {
   job: Omit<Prisma.JobUncheckedCreateInput, 'companyId'> & { externalId: string };
 }
 
-function toWorkplace(raw: JobsPipeJob): Workplace | null {
+function toWorkplace(raw: JobHunterJob): Workplace | null {
   switch (raw.work_arrangement) {
     case 'remote':
       return Workplace.REMOTE;
@@ -31,8 +31,8 @@ function toWorkplace(raw: JobsPipeJob): Workplace | null {
   return null;
 }
 
-/** Prefer the salary stated in the ad; fall back to JobsPipe's estimate and flag it. */
-function toSalary(raw: JobsPipeJob) {
+/** Prefer the salary stated in the ad; fall back to JobHunter's estimate and flag it. */
+function toSalary(raw: JobHunterJob) {
   if (raw.min_annual_salary_usd !== null || raw.max_annual_salary_usd !== null) {
     return {
       salaryMinUsd: raw.min_annual_salary_usd,
@@ -45,8 +45,8 @@ function toSalary(raw: JobsPipeJob) {
   return { salaryMinUsd: min, salaryMaxUsd: max, salaryEstimated: min !== null || max !== null };
 }
 
-/** Converts one JobsPipe posting into the shape we store. Pure function: easy to unit test. */
-export function mapJobsPipeJob(raw: JobsPipeJob): MappedJob {
+/** Converts one JobHunter posting into the shape we store. Pure function: easy to unit test. */
+export function mapJobHunterJob(raw: JobHunterJob): MappedJob {
   return {
     company: {
       name: raw.company_object?.name ?? raw.company,
@@ -55,7 +55,7 @@ export function mapJobsPipeJob(raw: JobsPipeJob): MappedJob {
     },
     job: {
       externalId: raw.id,
-      source: JobSource.JOBSPIPE,
+      source: JobSource.JOBHUNTER,
       title: raw.job_title,
       url: raw.url,
       postedAt: new Date(raw.date_posted),

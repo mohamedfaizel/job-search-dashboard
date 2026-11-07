@@ -102,7 +102,7 @@ function SavedSearchCard({ search, onLoad }: { search: SavedSearch; onLoad: Prop
   const describe = useDescribeSearch();
   const [confirming, setConfirming] = useState(false);
   const last = search.lastRun;
-  const free = search.source !== 'JOBSPIPE';
+  const free = search.source !== 'JOBHUNTER';
 
   return (
     <article

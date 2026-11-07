@@ -234,7 +234,7 @@ describe('Arbeitsagentur import', () => {
       data: { schedule: 'DAILY', nextRunAt: new Date(Date.now() - 60_000) },
     });
 
-    // DAILY_CREDIT_CAP is 1 and this search could "use" 10: a JobsPipe search would be skipped.
+    // DAILY_CREDIT_CAP is 1 and this search could "use" 10: a JobHunter search would be skipped.
     const ran = await scheduler.runDue(new Date());
 
     expect(ran).toBe(1);

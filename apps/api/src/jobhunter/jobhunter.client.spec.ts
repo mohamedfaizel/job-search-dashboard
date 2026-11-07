@@ -4,9 +4,9 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { loadSearchResponse } from '../../test/fixtures/load';
-import { JobsPipeClient } from './jobspipe.client';
+import { JobHunterClient } from './jobhunter.client';
 
-const BASE_URL = 'https://jobspipe.test/v1';
+const BASE_URL = 'https://jobhunter.test/v1';
 
 // MSW intercepts fetch() calls, so the real client runs without hitting the network.
 const server = setupServer();
@@ -21,12 +21,12 @@ afterAll(() => {
 });
 
 function clientWith(token: string | undefined) {
-  return new JobsPipeClient(
-    new ConfigService({ JOBSPIPE_API_URL: BASE_URL, JOBSPIPE_API_TOKEN: token }),
+  return new JobHunterClient(
+    new ConfigService({ JOBHUNTER_API_URL: BASE_URL, JOBHUNTER_API_TOKEN: token }),
   );
 }
 
-describe('JobsPipeClient', () => {
+describe('JobHunterClient', () => {
   it('sends the token and search body, and returns the response', async () => {
     let seen: { auth: string | null; body: unknown } | undefined;
     server.use(
@@ -49,7 +49,7 @@ describe('JobsPipeClient', () => {
   });
 
   it('fails clearly when the token is missing', async () => {
-    await expect(clientWith(undefined).searchJobs({})).rejects.toThrow('JOBSPIPE_API_TOKEN');
+    await expect(clientWith(undefined).searchJobs({})).rejects.toThrow('JOBHUNTER_API_TOKEN');
   });
 
   it('turns an HTTP error into a ServiceUnavailableException', async () => {

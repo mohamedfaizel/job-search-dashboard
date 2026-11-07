@@ -44,7 +44,7 @@ export interface Corpus {
   frequencies: DocumentFrequencies;
   /** Every city a job is in: a place is never a keyword, for any job. */
   cities: Set<string>;
-  /** Every skill tag JobsPipe gave any job, plus the skills we know: tools rank first. */
+  /** Every skill tag JobHunter gave any job, plus the skills we know: tools rank first. */
   skills: Set<string>;
 }
 
@@ -82,9 +82,9 @@ export interface TermsJob {
 export interface JobTerms {
   skills: string[];
   keywords: string[];
-  /** JobsPipe's cleaned-up title, or the ad's own. */
+  /** JobHunter's cleaned-up title, or the ad's own. */
   title: string;
-  /** JobsPipe's cleaned-up title when it differs from the ad's, else null. */
+  /** JobHunter's cleaned-up title when it differs from the ad's, else null. */
   normalizedTitle: string | null;
   language: string | null;
 }
@@ -109,7 +109,7 @@ export function jobTerms(job: TermsJob, removed: ReadonlySet<string>, corpus: Co
   const raw = (job.raw ?? {}) as { normalized_title?: string; keyword_slugs?: string[] };
   const language = job.language ?? detectLanguage(job.description);
 
-  // JobsPipe's technology tags first, then its wider keyword tags ("mentoring", "ecommerce").
+  // JobHunter's technology tags first, then its wider keyword tags ("mentoring", "ecommerce").
   const skills = uniqueByCompact(
     [...job.skills, ...(raw.keyword_slugs ?? [])].map((s) => s.toLowerCase()),
   ).filter((tag) => !removed.has(tag));

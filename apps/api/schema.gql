@@ -221,7 +221,7 @@ Where an import looks for jobs. ARBEITSAGENTUR (Germany only) and COMPANY_BOARDS
 enum ImportSource {
   ARBEITSAGENTUR
   COMPANY_BOARDS
-  JOBSPIPE
+  JOBHUNTER
 }
 
 """
@@ -254,7 +254,7 @@ type Job {
   createdAt: DateTime!
   description: String
 
-  """JobsPipe posting id; null for manual jobs"""
+  """JobHunter posting id; null for manual jobs"""
   externalId: String
 
   """
@@ -286,7 +286,7 @@ type Job {
   postedAt: DateTime!
 
   """
-  "active", "closed" (JobsPipe says so) or "expired" (our still-open check found it closed)
+  "active", "closed" (JobHunter says so) or "expired" (our still-open check found it closed)
   """
   postingStatus: String!
 
@@ -369,7 +369,7 @@ type JobFilterOptions {
 }
 
 """
-What the job asks for, worked out without AI: JobsPipe tags, TF-IDF and word matching against your resume text.
+What the job asks for, worked out without AI: JobHunter tags, TF-IDF and word matching against your resume text.
 """
 type JobInsights {
   """
@@ -421,11 +421,11 @@ type JobInsights {
   language: String
 
   """
-  True when the language was guessed from the text, not given by JobsPipe
+  True when the language was guessed from the text, not given by JobHunter
   """
   languageDetected: Boolean!
 
-  """JobsPipe’s cleaned-up title, when it differs from the posted one"""
+  """JobHunter’s cleaned-up title, when it differs from the posted one"""
   normalizedTitle: String
 
   """
@@ -613,7 +613,7 @@ input JobSortInput {
 enum JobSource {
   ARBEITSAGENTUR
   COMPANY_BOARD
-  JOBSPIPE
+  JOBHUNTER
   MANUAL
 }
 
@@ -759,7 +759,7 @@ type Mutation {
   """Puts a removed skill or keyword back"""
   restoreInsightTerm(jobId: ID!, term: String!): JobInsights!
 
-  """Import from JobsPipe with a saved search"""
+  """Import from JobHunter with a saved search"""
   runSavedSearch(
     id: Int!
 
@@ -819,7 +819,7 @@ type Mutation {
   """Reads the last two weeks of mail in every connected account, now."""
   syncGmail: GmailSyncResult!
 
-  """Fetch jobs from JobsPipe and save them"""
+  """Fetch jobs from JobHunter and save them"""
   syncJobs(input: SyncJobsInput!): SyncJobsResult!
 
   """
@@ -1346,12 +1346,12 @@ input SavedSearchInput {
   name: String!
 
   """
-  Only ask for postings JobsPipe found since the last complete run of this search
+  Only ask for postings JobHunter found since the last complete run of this search
   """
   onlyNew: Boolean! = true
 
   """
-  Jobs per page (each job costs a credit). JobsPipe caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.
+  Jobs per page (each job costs a credit). JobHunter caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.
   """
   pageSize: Int! = 25
 
@@ -1369,7 +1369,7 @@ input SavedSearchInput {
   """
   Where to look. ARBEITSAGENTUR and COMPANY_BOARDS are free and use titles, locations, job type, remote, age and excludeTitles; COMPANY_BOARDS also needs boards.
   """
-  source: ImportSource! = JOBSPIPE
+  source: ImportSource! = JOBHUNTER
 
   """Match any of these job titles, e.g. ["frontend"]"""
   titles: [String!]!
@@ -1437,12 +1437,12 @@ input SyncJobsInput {
   minSalaryEur: Int
 
   """
-  Only ask for postings JobsPipe found since the last complete run of this search
+  Only ask for postings JobHunter found since the last complete run of this search
   """
   onlyNew: Boolean! = true
 
   """
-  Jobs per page (each job costs a credit). JobsPipe caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.
+  Jobs per page (each job costs a credit). JobHunter caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.
   """
   pageSize: Int! = 25
 
@@ -1463,7 +1463,7 @@ input SyncJobsInput {
   """
   Where to look. ARBEITSAGENTUR and COMPANY_BOARDS are free and use titles, locations, job type, remote, age and excludeTitles; COMPANY_BOARDS also needs boards.
   """
-  source: ImportSource! = JOBSPIPE
+  source: ImportSource! = JOBHUNTER
 
   """Match any of these job titles, e.g. ["frontend"]"""
   titles: [String!]!
@@ -1492,7 +1492,7 @@ type SyncJobsResult {
   """True when this run continued an earlier import from its saved cursor"""
   resumed: Boolean!
 
-  """Total matches JobsPipe reported"""
+  """Total matches JobHunter reported"""
   totalAvailable: Int
   updated: Int!
 
