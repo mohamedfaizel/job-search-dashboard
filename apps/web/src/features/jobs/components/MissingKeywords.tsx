@@ -9,6 +9,7 @@ import {
   appendTerm,
   contentLines,
   insertLine,
+  KEYWORD_DRAG,
   lineLike,
   mentionsTerm,
   readLine,
@@ -189,18 +190,13 @@ function BestLines({
   places,
   current,
   resume,
-  open,
   onPick,
-  onAct,
 }: {
   places: KeywordPlace[];
   current: number | null;
   resume: string;
-  /** The way of working it in that is open now, if any. */
-  open: Mode | null;
+  /** Picks the line and opens the editor on it. */
   onPick: (line: number) => void;
-  /** Opens Rewrite or Insert on the line the preview points at. */
-  onAct: (mode: 'rewrite' | 'insert') => void;
 }) {
   const t = useTranslations('Jobs.keywordCards');
   const lines = splitLines(resume);
@@ -236,31 +232,6 @@ function BestLines({
       </span>
       {shown && shown.words.length > 0 && (
         <span>{t('sharedWords', { words: shown.words.join(', ') })}</span>
-      )}
-      {(open === null || open === 'replace') && current !== null && current >= 0 && (
-        <span className="flex basis-full flex-wrap items-center gap-1.5 text-slate-600 sm:basis-auto">
-          {t('onThisLine')}
-          <button
-            type="button"
-            className={`${CHOICE} border-amber-300 bg-white text-amber-900 hover:bg-amber-50`}
-            title={t('rewriteHereHint')}
-            onClick={() => {
-              onAct('rewrite');
-            }}
-          >
-            {t('rewriteHere')}
-          </button>
-          <button
-            type="button"
-            className={`${CHOICE} border-amber-300 bg-white text-amber-900 hover:bg-amber-50`}
-            title={t('insertHereHint')}
-            onClick={() => {
-              onAct('insert');
-            }}
-          >
-            {t('insertHere')}
-          </button>
-        </span>
       )}
     </span>
   );
@@ -413,10 +384,17 @@ export function MissingKeywords({
                       type="button"
                       aria-pressed={focus === term}
                       title={t('showLine')}
+                      draggable
+                      onDragStart={(e) => {
+                        // Drop it on a line of the resume preview to work it in there.
+                        e.dataTransfer.setData(KEYWORD_DRAG, term);
+                        e.dataTransfer.setData('text/plain', term);
+                        e.dataTransfer.effectAllowed = 'copy';
+                      }}
                       onClick={() => {
                         setFocus(focus === term ? null : term);
                       }}
-                      className={`rounded px-1 -mx-1 font-bold hover:bg-amber-50 ${
+                      className={`cursor-grab rounded px-1 -mx-1 font-bold hover:bg-amber-50 active:cursor-grabbing ${
                         focus === term ? 'bg-amber-100 text-amber-900 ring-1 ring-amber-300' : ''
                       }`}
                     >
@@ -436,14 +414,10 @@ export function MissingKeywords({
                     places={placesFor(resume, term, adText, relatedOf(term))}
                     current={pointLine}
                     resume={resume}
-                    open={mode}
                     onPick={(line) => {
+                      // One click: the editor opens on that line (Rewrite, or Insert if open).
                       setPicked({ term, line });
-                    }}
-                    onAct={(m) => {
-                      // Keeps the line you picked: Rewrite and Insert start on it.
-                      if (pointLine !== null) setPicked({ term, line: pointLine });
-                      setOpen({ term, mode: m });
+                      if (mode !== 'insert') setOpen({ term, mode: 'rewrite' });
                     }}
                   />
                 )}

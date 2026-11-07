@@ -1,5 +1,5 @@
 import { createQueryClient, DataProvider, jobResumeUrl, makeStore } from '@jobsearch/data';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Intl } from '@/test/intl';
 import { markKeyFailed } from '../../../lib/ai-status';
@@ -318,7 +318,7 @@ describe('JobResumePanel', () => {
     // Click the keyword: the resume line it fits best is pointed at, with the shared words.
     const card = within(screen.getByRole('listitem', { name: 'storybook' }));
     await user.click(card.getByRole('button', { name: 'storybook' }));
-    expect(card.getByText('shares dashboards, React with the ad')).toBeInTheDocument();
+    expect(card.getByText('Why: it says dashboards, React, like the ad')).toBeInTheDocument();
     expect(card.getByRole('button', { name: 'Best line 1' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -338,7 +338,7 @@ describe('JobResumePanel', () => {
     });
   });
 
-  it('rewrites or inserts on the best line you picked, and copies the keyword', async () => {
+  it('opens the editor on the best line you click, and copies the keyword', async () => {
     const user = userEvent.setup();
     jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
     renderPanel({ wide: false, adText: 'You document React dashboards in Storybook.' });
@@ -348,18 +348,34 @@ describe('JobResumePanel', () => {
     await user.click(card.getByRole('button', { name: 'Copy “storybook”' }));
     expect(await navigator.clipboard.readText()).toBe('storybook');
 
+    // One click on a best line opens Rewrite on that line.
     await user.click(card.getByRole('button', { name: 'storybook' }));
     await user.click(card.getByRole('button', { name: 'Best line 1' }));
-    await user.click(card.getByRole('button', { name: 'Insert below' }));
+    expect(card.getByRole('textbox', { name: 'New words for this line' })).toHaveValue(
+      'Built dashboards in React and GraphQL',
+    );
+    // Switching to Insert keeps that line.
+    await user.click(card.getByRole('button', { name: 'Insert new line' }));
     expect(card.getByRole('combobox', { name: 'Insert under' })).toHaveDisplayValue(
       /Built dashboards in React and GraphQL/,
     );
     expect(card.getByRole('textbox', { name: 'New line' })).toHaveValue('storybook');
+  });
 
-    // Rewrite from the row of buttons keeps the line you picked too.
-    await user.click(card.getByRole('button', { name: 'Rewrite a line' }));
-    expect(card.getByRole('textbox', { name: 'New words for this line' })).toHaveValue(
-      'Built dashboards in React and GraphQL',
+  it('adds a keyword dropped on a resume line, ready to edit there', async () => {
+    jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
+    renderPanel();
+    await screen.findByRole('region', { name: 'Missing keywords' });
+    const line = screen.getByRole('button', { name: /^Built dashboards in React and GraphQL/ });
+    const dataTransfer = {
+      types: ['text/x-jobsearch-keyword'],
+      getData: (type: string) => (type === 'text/x-jobsearch-keyword' ? 'storybook' : ''),
+      dropEffect: 'none',
+    };
+    fireEvent.dragOver(line, { dataTransfer });
+    fireEvent.drop(line, { dataTransfer });
+    expect(await screen.findByRole('textbox', { name: 'Edit this line' })).toHaveValue(
+      'Built dashboards in React and GraphQL, storybook',
     );
   });
 

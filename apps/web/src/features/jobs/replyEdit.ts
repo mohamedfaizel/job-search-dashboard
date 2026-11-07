@@ -171,3 +171,14 @@ export function markTerms(line: string, terms: string[]): { text: string; mark: 
   if (last < line.length) parts.push({ text: line.slice(last), mark: false });
   return parts;
 }
+
+/** The drag type of a missing keyword, dropped on a resume line to work it in there. */
+export const KEYWORD_DRAG = 'text/x-jobsearch-keyword';
+
+/** The line with the keyword added at its end (before a closing full stop). */
+export function withKeyword(line: string, term: string): string {
+  const trimmed = line.trimEnd();
+  const stop = /[.;]$/.exec(trimmed)?.[0] ?? '';
+  const body = stop ? trimmed.slice(0, -1) : trimmed;
+  return `${body}${body ? ', ' : ''}${term}${stop}`;
+}
