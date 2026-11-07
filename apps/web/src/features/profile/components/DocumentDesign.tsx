@@ -19,6 +19,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
+import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
 
 const BUTTON =
@@ -548,9 +549,11 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
           {update.isPending ? t('saving') : t('save')}
         </button>
         {done && !changed && (
-          <p role="status" className="text-sm text-emerald-700">
-            {t('saved')}
-          </p>
+          <AutoHide key={update.submittedAt}>
+            <p role="status" className="text-sm text-emerald-700">
+              {t('saved')}
+            </p>
+          </AutoHide>
         )}
         {update.isError && (
           <p role="alert" className="text-sm text-red-700">

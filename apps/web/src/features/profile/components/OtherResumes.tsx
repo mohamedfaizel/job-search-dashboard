@@ -8,6 +8,7 @@ import {
 } from '@jobsearch/data';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
+import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { inputClass } from './Field';
 import { useLanguageName } from './useLanguageName';
@@ -117,11 +118,13 @@ function SavedResume({
         className={`${inputClass} font-mono`}
       />
       {justSaved && text === resume.text && (
-        <p role="status" className="text-sm text-emerald-700">
-          {resume.fileName
-            ? t('savedNoteFile', { language: name, file: resume.fileName })
-            : t('savedNote', { language: name })}
-        </p>
+        <AutoHide key={resume.text}>
+          <p role="status" className="text-sm text-emerald-700">
+            {resume.fileName
+              ? t('savedNoteFile', { language: name, file: resume.fileName })
+              : t('savedNote', { language: name })}
+          </p>
+        </AutoHide>
       )}
       <div className="flex flex-wrap items-center gap-2">
         {/* Only when there is something to save: a grey button next to a saved resume looks broken. */}

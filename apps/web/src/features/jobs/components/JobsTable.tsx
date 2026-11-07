@@ -34,6 +34,15 @@ export interface JobsTableProps extends RowActions {
   onSelectionChange?: (selected: Set<string>) => void;
 }
 
+/**
+ * The tick box and the Job column stay put while you scroll the table sideways, so you always
+ * know which job a row is. The Job column's right edge gets a thin line to show where it ends.
+ */
+const STICKY: Record<string, string> = {
+  select: 'sticky left-0 z-[1]',
+  title: 'sticky left-10 z-[1] min-w-52 shadow-[inset_-1px_0_0_var(--color-slate-200)]',
+};
+
 const NO_HIDDEN_COLUMNS: Record<string, boolean> = {};
 const NO_SELECTION: ReadonlySet<string> = new Set();
 const noop = () => undefined;
@@ -140,7 +149,9 @@ export function JobsTable({
                             ? 'descending'
                             : undefined
                       }
-                      className="px-3 py-3 font-medium whitespace-nowrap first:w-10 first:pl-4"
+                      className={`px-2.5 py-3 font-medium whitespace-nowrap first:w-10 first:pl-4 ${
+                        STICKY[header.column.id] ? `${STICKY[header.column.id]} z-20 bg-white` : ''
+                      }`}
                     >
                       <div className="flex items-center gap-1">
                         {controls.sortField ? (
@@ -193,14 +204,14 @@ export function JobsTable({
           </thead>
           <tbody className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
             {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className={`border-t border-slate-100 transition-colors hover:bg-slate-50 ${
-                  selected.has(row.id) ? 'bg-brand-50/60' : ''
-                }`}
-              >
+              <tr key={row.id} className="group">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-3 py-3 align-middle text-slate-700 first:pl-4">
+                  <td
+                    key={cell.id}
+                    className={`border-t border-slate-100 px-2.5 py-3 align-middle text-slate-700 transition-colors first:pl-4 ${
+                      selected.has(row.id) ? 'bg-brand-50' : 'bg-white group-hover:bg-slate-50'
+                    } ${STICKY[cell.column.id] ?? ''}`}
+                  >
                     <table.FlexRender cell={cell} />
                   </td>
                 ))}

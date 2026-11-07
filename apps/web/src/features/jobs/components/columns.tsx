@@ -139,12 +139,12 @@ export function JobCell({ job }: { job: Job }) {
           onClick={() => {
             openJob(job);
           }}
-          className="block max-w-[22rem] cursor-pointer truncate rounded-sm text-left text-sm font-semibold text-slate-900 decoration-brand-400 decoration-2 underline-offset-4 transition-colors hover:text-brand-700 hover:underline focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+          className="line-clamp-2 block max-w-[15rem] cursor-pointer rounded-sm text-left text-sm font-semibold text-slate-900 decoration-brand-400 decoration-2 underline-offset-4 transition-colors hover:text-brand-700 hover:underline focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
           title={job.title}
         >
           {job.title}
         </button>
-        <span className="flex max-w-[22rem] items-center gap-1.5 text-slate-500">
+        <span className="flex max-w-[15rem] items-center gap-1.5 text-slate-500">
           {fresh && (
             <Badge tone="flag" title={t('newHint')}>
               {t('new')}
@@ -179,9 +179,15 @@ export function LocationCell({ job }: { job: Job }) {
     .join(' · ');
   if (!top && !below) return dash;
   return (
-    <div className="whitespace-nowrap">
-      <span className="block text-slate-700">{top ?? f.workplace('REMOTE')}</span>
-      {below && top && <span className="block text-xs text-slate-500">{below}</span>}
+    <div className="max-w-40 whitespace-nowrap">
+      <span className="block truncate text-slate-700" title={top ?? undefined}>
+        {top ?? f.workplace('REMOTE')}
+      </span>
+      {below && top && (
+        <span className="block truncate text-xs text-slate-500" title={below}>
+          {below}
+        </span>
+      )}
     </div>
   );
 }

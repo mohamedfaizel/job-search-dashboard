@@ -48,6 +48,8 @@ import { useColumnVisibility } from './useColumnVisibility';
 import { usePendingApplies } from './usePendingApplies';
 import { useSavedTableSettings } from './useSavedTableSettings';
 
+/** How long the "Job hidden · Undo" bar stays before it goes away by itself. */
+const UNDO_SHOW_MS = 8000;
 const NO_JOBS: Job[] = [];
 const STATUS_CARDS: StatCardKey[] = ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED'];
 
@@ -88,6 +90,16 @@ export function JobsDashboard() {
   }, [linkedJob, router, pathname]);
   // The last jobs hidden or brought back, for the "Undo" message.
   const [lastChange, setLastChange] = useState<{ jobs: Job[]; hidden: boolean } | null>(null);
+  // The "Job hidden · Undo" bar goes away by itself after a while.
+  useEffect(() => {
+    if (!lastChange) return;
+    const timer = setTimeout(() => {
+      setLastChange(null);
+    }, UNDO_SHOW_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [lastChange]);
   const [checked, setChecked] = useState<Set<string>>(() => new Set());
   const applying = usePendingApplies();
   const askingIds = useMemo(() => new Set(applying.pending.map((p) => p.id)), [applying.pending]);

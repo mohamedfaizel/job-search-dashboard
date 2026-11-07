@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import type { FieldErrors } from 'react-hook-form';
 import { useFieldArray, useForm } from 'react-hook-form';
+import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
 import type { ProfileFormValues } from '../schema';
 import { MATCH_FIT_OPTIONS, profileSchema, profileToForm, toProfileInput } from '../schema';
@@ -656,9 +657,11 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
           {isSubmitting ? t('saving') : t('save')}
         </button>
         {saved && !isDirty && (
-          <p role="status" className="text-sm text-emerald-700">
-            {t('saved')}
-          </p>
+          <AutoHide key={update.submittedAt}>
+            <p role="status" className="text-sm text-emerald-700">
+              {t('saved')}
+            </p>
+          </AutoHide>
         )}
         {update.isError && (
           <p role="alert" className="text-sm text-red-700">
