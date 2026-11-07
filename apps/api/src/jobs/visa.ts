@@ -34,15 +34,15 @@ const OFFERS = new RegExp(
 
 /**
  * What a job ad says about visa sponsorship, read with plain patterns (no AI, no credits).
- * JobsPipe's own label wins when it has one; it labels only about 2% of ads, so the description
+ * JobHunter's own label wins when it has one; it labels only about 2% of ads, so the description
  * decides the rest. "No sponsorship" is checked first, because those ads name visas too.
  */
 export function visaSponsorship(
   description: string | null,
-  jobsPipeValue?: string | null,
+  jobHunterValue?: string | null,
 ): VisaSponsorship {
-  if (jobsPipeValue === 'offers') return VisaSponsorship.OFFERS;
-  if (jobsPipeValue === 'no' || jobsPipeValue === 'citizenship_required') {
+  if (jobHunterValue === 'offers') return VisaSponsorship.OFFERS;
+  if (jobHunterValue === 'no' || jobHunterValue === 'citizenship_required') {
     return VisaSponsorship.NO;
   }
   const text = description ?? '';

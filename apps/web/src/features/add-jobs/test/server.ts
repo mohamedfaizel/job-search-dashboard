@@ -27,7 +27,7 @@ const LAST_RUN: SyncRun = {
 
 export const SAVED: SavedSearch = {
   id: 1,
-  source: 'JOBSPIPE',
+  source: 'JOBHUNTER',
   boards: [],
   name: 'Frontend in Berlin',
   titles: ['frontend'],

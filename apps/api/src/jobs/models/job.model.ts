@@ -29,7 +29,10 @@ export class Job {
   @Field(() => ID)
   id!: string;
 
-  @Field(() => String, { nullable: true, description: 'JobsPipe posting id; null for manual jobs' })
+  @Field(() => String, {
+    nullable: true,
+    description: 'JobHunter posting id; null for manual jobs',
+  })
   externalId!: string | null;
 
   @Field(() => JobSource)
@@ -97,7 +100,7 @@ export class Job {
 
   @Field({
     description:
-      '"active", "closed" (JobsPipe says so) or "expired" (our still-open check found it closed)',
+      '"active", "closed" (JobHunter says so) or "expired" (our still-open check found it closed)',
   })
   postingStatus!: string;
 

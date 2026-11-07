@@ -5,7 +5,7 @@ import type { Prisma } from '../generated/prisma/client';
 import { ApplicationStatus, JobSource } from '../generated/prisma/enums';
 import { FitService } from '../insights/fit.service';
 import { detectLanguage } from '../insights/text';
-import type { MappedJob } from '../jobspipe/jobspipe.mapper';
+import type { MappedJob } from '../jobhunter/jobhunter.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateJobInput } from './dto/create-job.input';
 import type { JobFilterInput, JobsArgs, JobSortInput } from './dto/jobs.args';
@@ -346,7 +346,7 @@ export class JobsService implements OnApplicationBootstrap {
   }
 
   /**
-   * Saves JobsPipe postings. Re-running with the same postings updates them in place
+   * Saves JobHunter postings. Re-running with the same postings updates them in place
    * (matched on externalId). Application statuses live in their own table, so they stay.
    */
   async upsertMany(mapped: MappedJob[]): Promise<UpsertResult> {

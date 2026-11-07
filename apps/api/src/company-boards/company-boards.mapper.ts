@@ -1,7 +1,7 @@
 import { JobSource, Workplace } from '../generated/prisma/enums';
 import { detectLanguage } from '../insights/text';
+import type { MappedJob } from '../jobhunter/jobhunter.mapper';
 import { visaSponsorship } from '../jobs/visa';
-import type { MappedJob } from '../jobspipe/jobspipe.mapper';
 import type { SyncJobsInput } from '../sync/sync.input';
 import { boardKey, companyNameFromSlug } from './board-ref';
 import type { BoardPosting, BoardRef } from './company-boards.types';

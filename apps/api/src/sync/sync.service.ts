@@ -3,22 +3,22 @@ import { ArbeitsagenturSyncService } from '../arbeitsagentur/arbeitsagentur-sync
 import { apiError } from '../common/api-error';
 import { CompanyBoardsSyncService } from '../company-boards/company-boards-sync.service';
 import { ImportSource } from '../generated/prisma/enums';
+import { JobHunterClient } from '../jobhunter/jobhunter.client';
+import { mapJobHunterJob } from '../jobhunter/jobhunter.mapper';
+import type { JobHunterSearchRequest } from '../jobhunter/jobhunter.types';
 import { JobsService } from '../jobs/jobs.service';
-import { JobsPipeClient } from '../jobspipe/jobspipe.client';
-import { mapJobsPipeJob } from '../jobspipe/jobspipe.mapper';
-import type { JobsPipeSearchRequest } from '../jobspipe/jobspipe.types';
 import { PrismaService } from '../prisma/prisma.service';
 import type { SyncJobsInput, SyncJobsResult } from './sync.input';
 
 /**
  * Start an incremental run this long before the previous one started, so a posting
- * JobsPipe indexed while that run was in progress is not missed. The overlap is free:
- * JobsPipe doesn't charge twice for a job in the same month, and the upsert skips it.
+ * JobHunter indexed while that run was in progress is not missed. The overlap is free:
+ * JobHunter doesn't charge twice for a job in the same month, and the upsert skips it.
  */
 const OVERLAP_MS = 60 * 60 * 1000;
 
 /**
- * Phrases a German ad uses when it needs fluent German. JobsPipe matches every word of a phrase,
+ * Phrases a German ad uses when it needs fluent German. JobHunter matches every word of a phrase,
  * in any order, so each one names Deutschkenntnisse itself to avoid skipping English ads.
  */
 const FLUENT_GERMAN_PHRASES = [
@@ -34,7 +34,7 @@ const FLUENT_GERMAN_PHRASES = [
 ];
 
 /**
- * JobsPipe's salary filter is in US dollars. A rough rate is enough for a minimum; update it if
+ * JobHunter's salary filter is in US dollars. A rough rate is enough for a minimum; update it if
  * the euro moves a lot.
  */
 const EUR_TO_USD = 1.08;
@@ -64,13 +64,13 @@ function searchKey(input: SyncJobsInput): string {
   });
 }
 
-/** JobsPipe's date-time format: "2026-10-26 14:05:00" in UTC. */
-function toJobsPipeTime(date: Date): string {
+/** JobHunter's date-time format: "2026-10-26 14:05:00" in UTC. */
+function toJobHunterTime(date: Date): string {
   return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 
 /** The search filters, without paging. Every page of a run sends the same ones. */
-function toFilters(input: SyncJobsInput, discoveredAtGte: string | null): JobsPipeSearchRequest {
+function toFilters(input: SyncJobsInput, discoveredAtGte: string | null): JobHunterSearchRequest {
   const unknown = [
     ...(input.languages?.length ? ['language'] : []),
     ...(input.employmentTypes?.length ? ['employment_type'] : []),
@@ -94,7 +94,7 @@ function toFilters(input: SyncJobsInput, discoveredAtGte: string | null): JobsPi
     // Most postings have no language or job type yet; dropping them all would hide good jobs.
     ...(unknown.length ? { include_unknown: unknown } : {}),
     ...(discoveredAtGte ? { discovered_at_gte: discoveredAtGte } : {}),
-    // Newest first is the only order JobsPipe supports; it keeps the cursor stable.
+    // Newest first is the only order JobHunter supports; it keeps the cursor stable.
     order_by: [{ field: 'posted_at', desc: true }],
   };
 }
@@ -107,13 +107,13 @@ interface StartPoint {
   cursor: string | null;
 }
 
-/** Pulls postings from JobsPipe page by page and saves them. */
+/** Pulls postings from JobHunter page by page and saves them. */
 @Injectable()
 export class SyncService {
   private readonly logger = new Logger(SyncService.name);
 
   constructor(
-    private readonly jobsPipe: JobsPipeClient,
+    private readonly jobHunter: JobHunterClient,
     private readonly jobs: JobsService,
     private readonly prisma: PrismaService,
     private readonly arbeitsagentur: ArbeitsagenturSyncService,
@@ -152,14 +152,14 @@ export class SyncService {
     const filters = toFilters(input, start.discoveredAtGte);
     let cursor = start.cursor;
     do {
-      const page = await this.jobsPipe.searchJobs({
+      const page = await this.jobHunter.searchJobs({
         ...filters,
         limit: input.pageSize,
         include_total_results: result.pages === 0,
         ...(cursor ? { cursor } : {}),
       });
 
-      const saved = await this.jobs.upsertMany(page.data.map(mapJobsPipeJob));
+      const saved = await this.jobs.upsertMany(page.data.map(mapJobHunterJob));
       result.pages += 1;
       result.fetched += page.data.length;
       result.created += saved.created;
@@ -221,7 +221,7 @@ export class SyncService {
     return {
       startedAt: new Date(),
       newSince,
-      discoveredAtGte: newSince ? toJobsPipeTime(new Date(newSince.getTime() - OVERLAP_MS)) : null,
+      discoveredAtGte: newSince ? toJobHunterTime(new Date(newSince.getTime() - OVERLAP_MS)) : null,
       cursor: null,
     };
   }

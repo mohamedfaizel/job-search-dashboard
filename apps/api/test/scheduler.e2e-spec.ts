@@ -6,7 +6,7 @@ import { loadSearchResponse } from './fixtures/load';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
-const JOBSPIPE_URL = 'https://jobspipe.test/v1';
+const JOBHUNTER_URL = 'https://jobhunter.test/v1';
 
 const SET_SCHEDULE = /* GraphQL */ `
   mutation ($id: Int!, $input: ScheduleInput!) {
@@ -19,12 +19,12 @@ const SET_SCHEDULE = /* GraphQL */ `
   }
 `;
 
-let jobsPipeStatus = 200;
+let jobHunterStatus = 200;
 const server = setupServer(
-  http.post(`${JOBSPIPE_URL}/jobs/search`, () =>
-    jobsPipeStatus === 200
+  http.post(`${JOBHUNTER_URL}/jobs/search`, () =>
+    jobHunterStatus === 200
       ? HttpResponse.json(loadSearchResponse())
-      : new HttpResponse(null, { status: jobsPipeStatus, statusText: 'Payment Required' }),
+      : new HttpResponse(null, { status: jobHunterStatus, statusText: 'Payment Required' }),
   ),
 );
 
@@ -35,8 +35,8 @@ describe('scheduled imports', () => {
   beforeAll(async () => {
     server.listen({ onUnhandledFrame: 'bypass' });
     t = await createTestApp({
-      JOBSPIPE_API_URL: JOBSPIPE_URL,
-      JOBSPIPE_API_TOKEN: 'jp_test',
+      JOBHUNTER_API_URL: JOBHUNTER_URL,
+      JOBHUNTER_API_TOKEN: 'jp_test',
       DAILY_CREDIT_CAP: '60',
     });
     scheduler = t.app.get(SchedulerService);
@@ -46,7 +46,7 @@ describe('scheduled imports', () => {
     server.close();
   });
   beforeEach(async () => {
-    jobsPipeStatus = 200;
+    jobHunterStatus = 200;
     await resetDatabase(t.prisma);
   });
 
@@ -131,13 +131,13 @@ describe('scheduled imports', () => {
   });
 
   it('notes a failed run and still books the next one', async () => {
-    jobsPipeStatus = 402;
+    jobHunterStatus = 402;
     const search = await dueSearch();
 
     expect(await scheduler.runDue(new Date())).toBe(0);
 
     const after = await t.prisma.savedSearch.findUniqueOrThrow({ where: { id: search.id } });
-    expect(after.scheduleNote).toMatch(/^Failed at .+: JobsPipe search failed: 402/);
+    expect(after.scheduleNote).toMatch(/^Failed at .+: JobHunter search failed: 402/);
     expect(after.nextRunAt!.getTime()).toBeGreaterThan(Date.now());
   });
 

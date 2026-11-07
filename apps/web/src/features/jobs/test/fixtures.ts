@@ -3,7 +3,7 @@ import type { Job, JobFilterOptions } from '@jobsearch/data';
 export function makeJob(overrides: Partial<Job> = {}): Job {
   return {
     id: 'job-1',
-    source: 'JOBSPIPE',
+    source: 'JOBHUNTER',
     title: 'Senior Frontend Engineer',
     company: { id: 1, name: 'Acme', logoUrl: null },
     url: 'https://example.com/jobs/1',

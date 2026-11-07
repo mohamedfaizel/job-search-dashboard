@@ -173,7 +173,7 @@ describe('Jobs GraphQL API', () => {
       companies: ['Acme', 'Beta'],
       skills: ['node', 'react'],
       cities: ['Aachen', 'Berlin'],
-      // Stored in lower case, the way JobsPipe sends it.
+      // Stored in lower case, the way JobHunter sends it.
       languages: ['de'],
     });
   });

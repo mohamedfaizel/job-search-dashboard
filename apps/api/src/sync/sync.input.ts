@@ -14,19 +14,19 @@ import {
 } from 'class-validator';
 import { ImportSource } from './import-source';
 
-/** The job types JobsPipe's employment_type_or accepts. */
+/** The job types JobHunter's employment_type_or accepts. */
 const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
 
-/** What to fetch from JobsPipe. Also the shape a scheduled search will reuse later. */
+/** What to fetch from JobHunter. Also the shape a scheduled search will reuse later. */
 @InputType()
 export class SyncJobsInput {
   @Field(() => ImportSource, {
-    defaultValue: ImportSource.JOBSPIPE,
+    defaultValue: ImportSource.JOBHUNTER,
     description:
       'Where to look. ARBEITSAGENTUR and COMPANY_BOARDS are free and use titles, locations, job type, remote, age and excludeTitles; COMPANY_BOARDS also needs boards.',
   })
   @IsEnum(ImportSource)
-  source: ImportSource = ImportSource.JOBSPIPE;
+  source: ImportSource = ImportSource.JOBHUNTER;
 
   @Field(() => [String], {
     nullable: true,
@@ -135,7 +135,7 @@ export class SyncJobsInput {
   @Field(() => Int, {
     defaultValue: 25,
     description:
-      'Jobs per page (each job costs a credit). JobsPipe caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.',
+      'Jobs per page (each job costs a credit). JobHunter caps it by plan: Free 25, Builder/Growth 100, Scale/Business 500.',
   })
   @IsInt()
   @Min(1)
@@ -153,7 +153,7 @@ export class SyncJobsInput {
 
   @Field(() => Boolean, {
     defaultValue: true,
-    description: 'Only ask for postings JobsPipe found since the last complete run of this search',
+    description: 'Only ask for postings JobHunter found since the last complete run of this search',
   })
   @IsBoolean()
   onlyNew = true;
@@ -180,7 +180,7 @@ export class SyncJobsResult {
   @Field(() => Int)
   updated!: number;
 
-  @Field(() => Int, { nullable: true, description: 'Total matches JobsPipe reported' })
+  @Field(() => Int, { nullable: true, description: 'Total matches JobHunter reported' })
   totalAvailable!: number | null;
 
   @Field({ description: 'True when more pages were left unfetched' })

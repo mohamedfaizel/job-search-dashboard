@@ -209,7 +209,7 @@ describe('SyncPanel', () => {
 
   it('imports from the free German board, hiding filters it ignores', async () => {
     renderWithData(<SyncPanel />);
-    expect(screen.getByRole('radio', { name: /JobsPipe/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /JobHunter/ })).toBeChecked();
     await userEvent.type(screen.getByLabelText(/cities or regions/i), 'Berlin');
 
     await userEvent.click(screen.getByRole('radio', { name: /Arbeitsagentur \(free\)/ }));

@@ -1,22 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { loadSearchResponse } from '../../test/fixtures/load';
-import { mapJobsPipeJob } from './jobspipe.mapper';
-import type { JobsPipeJob } from './jobspipe.types';
+import { mapJobHunterJob } from './jobhunter.mapper';
+import type { JobHunterJob } from './jobhunter.types';
 
 const [remoteJob, hybridJob, plainJob] = loadSearchResponse().data as [
-  JobsPipeJob,
-  JobsPipeJob,
-  JobsPipeJob,
+  JobHunterJob,
+  JobHunterJob,
+  JobHunterJob,
 ];
 
-describe('mapJobsPipeJob', () => {
+describe('mapJobHunterJob', () => {
   it('maps the core fields of a posting', () => {
-    const { company, job } = mapJobsPipeJob(remoteJob);
+    const { company, job } = mapJobHunterJob(remoteJob);
 
     expect(company).toEqual({ name: 'Protofy GmbH & Co. KG', domain: null, logoUrl: null });
     expect(job).toMatchObject({
       externalId: '8a5adb17ca3a27ec',
-      source: 'JOBSPIPE',
+      source: 'JOBHUNTER',
       title: 'Lead Frontend / Fullstack Engineer',
       city: 'Berlin',
       countryCode: 'DE',
@@ -32,27 +32,27 @@ describe('mapJobsPipeJob', () => {
   });
 
   it('reads the workplace from work_arrangement', () => {
-    expect(mapJobsPipeJob(remoteJob).job.workplace).toBe('REMOTE');
-    expect(mapJobsPipeJob(hybridJob).job.workplace).toBe('HYBRID');
+    expect(mapJobHunterJob(remoteJob).job.workplace).toBe('REMOTE');
+    expect(mapJobHunterJob(hybridJob).job.workplace).toBe('HYBRID');
   });
 
   it('falls back to the remote/hybrid flags, then to unknown', () => {
-    expect(mapJobsPipeJob({ ...plainJob, remote: true }).job.workplace).toBe('REMOTE');
-    expect(mapJobsPipeJob(plainJob).job.workplace).toBeNull();
+    expect(mapJobHunterJob({ ...plainJob, remote: true }).job.workplace).toBe('REMOTE');
+    expect(mapJobHunterJob(plainJob).job.workplace).toBeNull();
   });
 
-  it('uses the company logo when JobsPipe has one', () => {
-    expect(mapJobsPipeJob(hybridJob).company.logoUrl).toMatch(/^https:\/\//);
+  it('uses the company logo when JobHunter has one', () => {
+    expect(mapJobHunterJob(hybridJob).company.logoUrl).toMatch(/^https:\/\//);
   });
 
   it('flags estimated salaries', () => {
-    const { job } = mapJobsPipeJob(remoteJob);
+    const { job } = mapJobHunterJob(remoteJob);
     expect(job.salaryEstimated).toBe(true);
     expect(job.salaryMinUsd).toBe(remoteJob.estimated_min_annual_salary_usd);
   });
 
   it('prefers the salary stated in the ad', () => {
-    const { job } = mapJobsPipeJob({
+    const { job } = mapJobHunterJob({
       ...remoteJob,
       min_annual_salary_usd: 70_000,
       max_annual_salary_usd: 95_000,

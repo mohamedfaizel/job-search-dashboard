@@ -37,7 +37,7 @@ describe('visaSponsorship', () => {
     expect(visaSponsorship('Our piano visa programme… we offer visa sponsorship.')).toBe('OFFERS');
   });
 
-  it("prefers JobsPipe's own label", () => {
+  it("prefers JobHunter's own label", () => {
     expect(visaSponsorship('We offer visa sponsorship.', 'no')).toBe('NO');
     expect(visaSponsorship('', 'offers')).toBe('OFFERS');
     expect(visaSponsorship('', 'citizenship_required')).toBe('NO');

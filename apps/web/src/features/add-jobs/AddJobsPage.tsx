@@ -13,7 +13,7 @@ import { Tabs } from './components/Tabs';
 
 type TabId = 'saved' | 'import' | 'manual';
 
-/** Add jobs: saved searches, imports from JobsPipe and adding a job by hand. */
+/** Add jobs: saved searches, imports from JobHunter and adding a job by hand. */
 export function AddJobsPage() {
   const errorText = useErrorText();
   const { data: me, isPending, error } = useMe();
@@ -26,7 +26,7 @@ export function AddJobsPage() {
       </p>
     );
   }
-  // Imports spend the server's JobsPipe credits, so only the admin may add jobs. The API checks
+  // Imports spend the server's JobHunter credits, so only the admin may add jobs. The API checks
   // this too; here we just say so instead of showing forms that would fail.
   if (me?.role !== 'ADMIN') {
     return (

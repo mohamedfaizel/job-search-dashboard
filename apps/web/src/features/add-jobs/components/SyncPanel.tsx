@@ -39,7 +39,7 @@ interface Props {
   loaded?: SavedSearch | null;
 }
 
-/** Pull fresh postings from JobsPipe into the database, and save searches to reuse. */
+/** Pull fresh postings from JobHunter into the database, and save searches to reuse. */
 export function SyncPanel({ loaded = null }: Props) {
   const errorText = useErrorText();
   const t = useTranslations('AddJobs');
@@ -68,7 +68,7 @@ export function SyncPanel({ loaded = null }: Props) {
 
   const source = useWatch({ control, name: 'source' });
   // The free sources: no credits, and only some of the filters apply.
-  const free = source !== 'JOBSPIPE';
+  const free = source !== 'JOBHUNTER';
   const boards = source === 'COMPANY_BOARDS';
   const [pageSize, maxPages, maxAgeDays] = useWatch({
     control,
@@ -510,7 +510,7 @@ export function SyncPanel({ loaded = null }: Props) {
           {sync.data.totalAvailable !== null && !sync.data.resumed && (
             <p>{t('sync.total', { jobs: t('jobs', { count: sync.data.totalAvailable }) })}</p>
           )}
-          {lastInput?.source && lastInput.source !== 'JOBSPIPE' ? (
+          {lastInput?.source && lastInput.source !== 'JOBHUNTER' ? (
             <p>{t('sync.usedFree')}</p>
           ) : (
             <p>
@@ -545,7 +545,7 @@ export function SyncPanel({ loaded = null }: Props) {
             }}
             className="rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
-            {lastInput.source && lastInput.source !== 'JOBSPIPE'
+            {lastInput.source && lastInput.source !== 'JOBHUNTER'
               ? t('sync.continueFree')
               : t('sync.continueUpTo', { credits: t('credits', { count: continueCredits }) })}
           </button>

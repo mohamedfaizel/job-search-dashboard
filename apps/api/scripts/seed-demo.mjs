@@ -1,5 +1,5 @@
 // Adds fictional demo jobs through the GraphQL API, so you can try the dashboard
-// without spending JobsPipe credits. Adding jobs is admin-only, so it logs in as your admin
+// without spending JobHunter credits. Adding jobs is admin-only, so it logs in as your admin
 // account. Start the API first (pnpm dev), then run (PowerShell):
 //   $env:SEED_EMAIL="you@example.com"; $env:SEED_PASSWORD="your password"
 //   pnpm --filter @jobsearch/api db:seed

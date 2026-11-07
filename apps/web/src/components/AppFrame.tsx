@@ -25,7 +25,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: '/jobs', label: 'jobs' },
   { href: '/tracker', label: 'tracker' },
-  // Imports spend the server's JobsPipe credits, so only the admin sees this page.
+  // Imports spend the server's JobHunter credits, so only the admin sees this page.
   { href: '/jobs/add', label: 'addJobs', adminOnly: true },
   { href: '/profile', label: 'profile' },
 ];

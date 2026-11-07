@@ -15,7 +15,7 @@ interface Props {
 }
 
 /**
- * Pick several countries from JobsPipe's list, or Worldwide. Type to filter by name or code;
+ * Pick several countries from JobHunter's list, or Worldwide. Type to filter by name or code;
  * a 2-letter code that isn't in the list can still be added. Chips show what's picked.
  */
 export function CountrySelect({ id, value, onChange, invalid, describedBy }: Props) {

@@ -146,7 +146,7 @@ export function syncFormSchema(t: ErrorText) {
         message: t('minSalary'),
       }),
     maxAgeDays: positiveInt(90),
-    // JobsPipe caps the page size by plan (Free 25, Builder/Growth 100, Scale/Business 500).
+    // JobHunter caps the page size by plan (Free 25, Builder/Growth 100, Scale/Business 500).
     pageSize: positiveInt(500),
     maxPages: positiveInt(50),
     onlyNew: z.boolean(),
@@ -161,7 +161,7 @@ export function syncFormSchema(t: ErrorText) {
 export type SyncFormValues = z.infer<ReturnType<typeof syncFormSchema>>;
 
 export const defaultSyncForm: SyncFormValues = {
-  source: 'JOBSPIPE',
+  source: 'JOBHUNTER',
   boards: '',
   titles: 'frontend',
   skills: 'react',
@@ -187,7 +187,7 @@ export function toSyncJobsInput(values: SyncFormValues): SyncJobsInput {
   const minSalary = values.minSalaryEur.trim();
   // The free sources look at titles, places, job type, remote, skipped titles and age.
   // Fields they ignore are left out, so a value hidden in the form is never sent.
-  const free = values.source !== 'JOBSPIPE';
+  const free = values.source !== 'JOBHUNTER';
   const boards = splitBoards(values.boards);
   return {
     ...(free ? { source: values.source } : {}),

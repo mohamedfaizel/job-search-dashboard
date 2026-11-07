@@ -516,7 +516,7 @@
       "newHint": "Seit deinem letzten Besuch importiert",
       "queue": "Liste #{n}",
       "queueHint": "Nummer {n} in deiner Bewerbungsliste",
-      "salaryEstimated": "Von JobsPipe geschätzt",
+      "salaryEstimated": "Von JobHunter geschätzt",
       "salaryStated": "Steht in der Anzeige",
       "estimated": "geschätzt",
       "statusFor": "Status für {job}",
@@ -1122,7 +1122,7 @@
       "savedCount": "Gespeicherte Suchen ({count})",
       "savedShort": "Gespeichert",
       "savedShortCount": "Gespeichert ({count})",
-      "import": "Aus JobsPipe importieren",
+      "import": "Aus JobHunter importieren",
       "importShort": "Import",
       "manual": "Job von Hand hinzufügen",
       "manualShort": "Von Hand"
@@ -1188,8 +1188,8 @@
       "none": "Kein Land gefunden"
     },
     "sync": {
-      "heading": "Aus JobsPipe importieren",
-      "intro": "Jeder geholte Job kostet einen JobsPipe-Credit. Jobs, die du schon hast, werden aktualisiert, nie doppelt hinzugefügt, und im selben Monat erneut zu holen ist kostenlos.",
+      "heading": "Aus JobHunter importieren",
+      "intro": "Jeder geholte Job kostet einen JobHunter-Credit. Jobs, die du schon hast, werden aktualisiert, nie doppelt hinzugefügt, und im selben Monat erneut zu holen ist kostenlos.",
       "fillProfile": "Aus meinem Profil übernehmen",
       "titles": "Jobtitel",
       "commaSeparated": "Mit Kommas getrennt",
@@ -1247,8 +1247,8 @@
       "introFree": "Die Jobbörse der Bundesagentur für Arbeit. Kostenlos, ohne Credits. Nur Deutschland. Es gelten nur einige Filter, die anderen sind ausgeblendet.",
       "source": "Wo suchen",
       "sources": {
-        "JOBSPIPE": {
-          "name": "JobsPipe",
+        "JOBHUNTER": {
+          "name": "JobHunter",
           "hint": "Weltweit. Jeder Job kostet einen Credit."
         },
         "ARBEITSAGENTUR": {
@@ -1319,7 +1319,7 @@
       "loading": "Import-Verlauf wird geladen…",
       "loadError": "Der Import-Verlauf konnte nicht geladen werden: {error}",
       "none": "Noch keine Importe.",
-      "caption": "Die letzten 20 Importe aus JobsPipe",
+      "caption": "Die letzten 20 Importe aus JobHunter",
       "when": "Wann",
       "search": "Suche",
       "new": "Neu",

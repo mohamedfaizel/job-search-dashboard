@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { apiError } from '../common/api-error';
 import { ImportSource } from '../generated/prisma/enums';
+import type { MappedJob } from '../jobhunter/jobhunter.mapper';
 import { JobsService } from '../jobs/jobs.service';
-import type { MappedJob } from '../jobspipe/jobspipe.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import type { SyncJobsInput, SyncJobsResult } from '../sync/sync.input';
 import { ArbeitsagenturClient } from './arbeitsagentur.client';

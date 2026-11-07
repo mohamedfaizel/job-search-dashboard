@@ -5,7 +5,7 @@ import { loadSearchResponse } from './fixtures/load';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
-const JOBSPIPE_URL = 'https://jobspipe.test/v1';
+const JOBHUNTER_URL = 'https://jobhunter.test/v1';
 
 const SYNC = /* GraphQL */ `
   mutation Sync($input: SyncJobsInput!) {
@@ -25,10 +25,10 @@ const SYNC = /* GraphQL */ `
   }
 `;
 
-// Fake JobsPipe: the fixture's 3 jobs split over two pages (2 + 1) linked by a cursor.
+// Fake JobHunter: the fixture's 3 jobs split over two pages (2 + 1) linked by a cursor.
 const requests: Record<string, unknown>[] = [];
 const server = setupServer(
-  http.post(`${JOBSPIPE_URL}/jobs/search`, async ({ request }) => {
+  http.post(`${JOBHUNTER_URL}/jobs/search`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     requests.push(body);
     const fixture = loadSearchResponse();
@@ -44,9 +44,9 @@ describe('syncJobs', () => {
   let t: TestApp;
 
   beforeAll(async () => {
-    // Let local requests (supertest -> our API) through; only JobsPipe is faked.
+    // Let local requests (supertest -> our API) through; only JobHunter is faked.
     server.listen({ onUnhandledFrame: 'bypass' });
-    t = await createTestApp({ JOBSPIPE_API_URL: JOBSPIPE_URL, JOBSPIPE_API_TOKEN: 'jp_test' });
+    t = await createTestApp({ JOBHUNTER_API_URL: JOBHUNTER_URL, JOBHUNTER_API_TOKEN: 'jp_test' });
   });
   afterAll(async () => {
     await t.app.close();
@@ -124,7 +124,7 @@ describe('syncJobs', () => {
 
       const newSince = new Date(res.data!.syncJobs.newSince).getTime();
       expect(newSince).toBeGreaterThanOrEqual(before - 1000);
-      // Starts one hour before the previous run, in JobsPipe's "YYYY-MM-DD HH:mm:ss" UTC format.
+      // Starts one hour before the previous run, in JobHunter's "YYYY-MM-DD HH:mm:ss" UTC format.
       const expected = new Date(newSince - 60 * 60 * 1000)
         .toISOString()
         .slice(0, 19)
@@ -210,7 +210,7 @@ describe('syncJobs', () => {
     }
   });
 
-  it('refuses a job type JobsPipe does not know', async () => {
+  it('refuses a job type JobHunter does not know', async () => {
     const res = await t.gql(SYNC, { input: { titles: ['frontend'], employmentTypes: ['gig'] } });
     expect(res.errors?.[0]?.message).toBeDefined();
     expect(requests).toHaveLength(0);

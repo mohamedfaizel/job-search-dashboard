@@ -20,7 +20,7 @@ export const APPLICATION_STATUSES = [
 ] as const;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 
-export type JobSource = 'JOBSPIPE' | 'MANUAL' | 'ARBEITSAGENTUR' | 'COMPANY_BOARD';
+export type JobSource = 'JOBHUNTER' | 'MANUAL' | 'ARBEITSAGENTUR' | 'COMPANY_BOARD';
 
 export type JobSortField =
   'POSTED_AT' | 'TITLE' | 'COMPANY' | 'SENIORITY' | 'CITY' | 'SALARY' | 'WORKPLACE' | 'FIT';
@@ -56,7 +56,7 @@ export interface Job {
   visa: VisaSponsorship | null;
   industry: string | null;
   description: string | null;
-  /** "active", "closed" (JobsPipe says so) or "expired" (our still-open check found it closed). */
+  /** "active", "closed" (JobHunter says so) or "expired" (our still-open check found it closed). */
   postingStatus: string;
   /** When the still-open check last opened the job's link. Null until it has been checked. */
   checkedAt: string | null;
@@ -170,7 +170,7 @@ export interface CreateJobInput {
   applicationStatus?: ApplicationStatus;
 }
 
-/** The job types the import can filter on (JobsPipe's employment_type_or). */
+/** The job types the import can filter on (JobHunter's employment_type_or). */
 export const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
 export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
 
@@ -178,11 +178,11 @@ export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
  * Where an import looks for jobs. ARBEITSAGENTUR (Germany only) and COMPANY_BOARDS (companies'
  * own career pages on Greenhouse, Lever and Ashby) are free.
  */
-export const IMPORT_SOURCES = ['JOBSPIPE', 'ARBEITSAGENTUR', 'COMPANY_BOARDS'] as const;
+export const IMPORT_SOURCES = ['JOBHUNTER', 'ARBEITSAGENTUR', 'COMPANY_BOARDS'] as const;
 export type ImportSource = (typeof IMPORT_SOURCES)[number];
 
 export interface SyncJobsInput {
-  /** Default JOBSPIPE. */
+  /** Default JOBHUNTER. */
   source?: ImportSource;
   /** COMPANY_BOARDS only: "greenhouse:stripe", "lever:netflix", "ashby:ramp" or career page addresses. */
   boards?: string[];
@@ -505,7 +505,7 @@ export interface TermCheck {
 export interface JobInsights {
   jobId: string;
   title: string;
-  /** JobsPipe's cleaned-up title, when it differs from the posted one. */
+  /** JobHunter's cleaned-up title, when it differs from the posted one. */
   normalizedTitle: string | null;
   /** ISO 639-1 code, e.g. "de". */
   language: string | null;

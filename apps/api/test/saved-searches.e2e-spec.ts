@@ -5,7 +5,7 @@ import { loadSearchResponse } from './fixtures/load';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase } from './helpers';
 
-const JOBSPIPE_URL = 'https://jobspipe.test/v1';
+const JOBHUNTER_URL = 'https://jobhunter.test/v1';
 
 const FIELDS = /* GraphQL */ `
   id
@@ -37,7 +37,7 @@ const HISTORY = `query { syncRuns { fetched savedSearchId savedSearchName summar
 
 const requests: Record<string, unknown>[] = [];
 const server = setupServer(
-  http.post(`${JOBSPIPE_URL}/jobs/search`, async ({ request }) => {
+  http.post(`${JOBHUNTER_URL}/jobs/search`, async ({ request }) => {
     requests.push((await request.json()) as Record<string, unknown>);
     return HttpResponse.json(loadSearchResponse());
   }),
@@ -62,7 +62,7 @@ describe('saved searches', () => {
 
   beforeAll(async () => {
     server.listen({ onUnhandledFrame: 'bypass' });
-    t = await createTestApp({ JOBSPIPE_API_URL: JOBSPIPE_URL, JOBSPIPE_API_TOKEN: 'jp_test' });
+    t = await createTestApp({ JOBHUNTER_API_URL: JOBHUNTER_URL, JOBHUNTER_API_TOKEN: 'jp_test' });
   });
   afterAll(async () => {
     await t.app.close();

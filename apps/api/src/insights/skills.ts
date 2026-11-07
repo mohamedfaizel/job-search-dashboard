@@ -1,5 +1,5 @@
 /**
- * Other ways people write a skill. JobsPipe tags use one spelling ("node.js"); resumes use many
+ * Other ways people write a skill. JobHunter tags use one spelling ("node.js"); resumes use many
  * ("NodeJS", "Node"). Add a line here when a skill you have shows up as missing.
  */
 const ALIASES: Record<string, string[]> = {
@@ -134,7 +134,7 @@ export function relatedTo(term: string, text: string): string | null {
 
 /**
  * Tools and phrases job ads use that a resume should repeat word for word, looked for in the ad
- * itself (JobsPipe's tags miss many of them): "Figma", "Core Web Vitals", "optimistic updates".
+ * itself (JobHunter's tags miss many of them): "Figma", "Core Web Vitals", "optimistic updates".
  * Add a line when a real requirement of an ad does not show up as a keyword.
  */
 export const AD_PHRASES: readonly string[] = [
