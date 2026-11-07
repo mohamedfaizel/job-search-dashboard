@@ -509,6 +509,22 @@ const handlers = [
     removedTerms.splice(0, removedTerms.length, ...others);
     return HttpResponse.json({ data: { restoreInsightTerm: insightsNow() } });
   }),
+  // Resume-Matcher is running, so the AI parts are on.
+  api.query('ResumeMatcherStatus', () =>
+    HttpResponse.json({
+      data: {
+        resumeMatcherStatus: {
+          configured: true,
+          reachable: true,
+          aiConfigured: null,
+          aiHealthy: null,
+          aiProvider: 'anthropic',
+          aiModel: 'claude-sonnet-5-5',
+          message: 'Resume-Matcher is running.',
+        },
+      },
+    }),
+  ),
   // By default no job has been matched yet.
   api.query('JobMatch', () => HttpResponse.json({ data: { jobMatch: null } })),
   api.mutation('MatchJob', ({ variables }) => {

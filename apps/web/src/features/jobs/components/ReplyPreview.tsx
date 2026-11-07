@@ -9,12 +9,14 @@ import type { ReplyLine } from '../replyEdit';
 import {
   deleteLine,
   insertLine,
+  KEYWORD_DRAG,
   lineLike,
   markTerms,
   readLine,
   replaceLine,
   rewordLine,
   splitLines,
+  withKeyword,
 } from '../replyEdit';
 import { MissingKeywords, missingTerms } from './MissingKeywords';
 import { usePopupLayout } from './popupLayout';
@@ -168,6 +170,9 @@ function PageView({
 }) {
   const t = useTranslations('Jobs.preview');
   const [editing, setEditing] = useState<number | null>(null);
+  // A keyword dropped on a line: the line opens with it added, to place it right.
+  const [seed, setSeed] = useState<string | null>(null);
+  const [dropOn, setDropOn] = useState<number | null>(null);
   const lines = splitLines(text);
   const pointedRef = useRef<HTMLButtonElement | null>(null);
   const pointedLine = pointed?.line ?? null;
@@ -189,16 +194,18 @@ function PageView({
         if (editing === i) {
           return (
             <LineEditor
-              key={i}
-              value={line.text}
+              key={`${String(i)}-${seed ?? ''}`}
+              value={seed ?? line.text}
               onSave={(words) => {
                 onChange(
                   words.trim() ? replaceLine(text, i, rewordLine(raw, words)) : deleteLine(text, i),
                 );
                 setEditing(null);
+                setSeed(null);
               }}
               onCancel={() => {
                 setEditing(null);
+                setSeed(null);
               }}
               onAddBelow={() => {
                 onChange(insertLine(text, i, lineLike(raw, '')));
@@ -220,10 +227,32 @@ function PageView({
             type="button"
             title={t('clickToEdit')}
             onClick={() => {
+              setSeed(null);
+              setEditing(i);
+            }}
+            onDragOver={(e) => {
+              if (!e.dataTransfer.types.includes(KEYWORD_DRAG)) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+              setDropOn(i);
+            }}
+            onDragLeave={() => {
+              setDropOn((on) => (on === i ? null : on));
+            }}
+            onDrop={(e) => {
+              const term = e.dataTransfer.getData(KEYWORD_DRAG);
+              setDropOn(null);
+              if (!term) return;
+              e.preventDefault();
+              setSeed(withKeyword(line.text, term));
               setEditing(i);
             }}
             className={`block w-full cursor-text rounded px-1 -mx-1 text-left hover:bg-amber-50 hover:ring-1 hover:ring-amber-200 ${LINE_STYLE[line.kind]} ${
-              isPointed ? 'bg-amber-50 ring-2 ring-amber-300' : ''
+              dropOn === i
+                ? 'bg-emerald-50 ring-2 ring-emerald-400'
+                : isPointed
+                  ? 'bg-amber-50 ring-2 ring-amber-300'
+                  : ''
             }`}
           >
             {line.kind === 'bullet' && (

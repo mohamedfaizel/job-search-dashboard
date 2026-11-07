@@ -615,10 +615,9 @@
         "apply": "Apply",
         "interview": "Interview",
         "ad": "Job ad",
-        "match": "AI match"
+        "match": "AI score"
       },
       "tabsLabel": "Job details sections",
-      "stepOf": "step {step} of 3",
       "fitPill": "{score}% fit",
       "posted": "Posted {date}",
       "estimated": "{salary} (est.)",
@@ -634,19 +633,25 @@
       "hide": "Hide",
       "restore": "Restore size",
       "maximize": "Maximize",
+      "minimize": "Minimize",
+      "minimizeHint": "Minimize: keep it in a small bar at the bottom and open it again later",
+      "openAgain": "Open the job again",
       "close": "Close",
       "status": "Status",
       "statusLabel": "Application status",
       "openPosting": "Open original posting ↗",
       "apply": "Apply →",
       "markApplied": "✓ Mark Applied",
-      "aiIntro": "Scores your <b>master resume</b> (the one on My profile) with Resume-Matcher. It does not use the resume Claude wrote in the Apply tab. <b>Each run uses your Claude API credits.</b> The Fit tab gives the same kind of score for free.",
+      "aiIntro": "<b>AI score</b> uses Resume-Matcher with your <b>Claude API key</b> (console.anthropic.com), so <b>each run costs credits</b>. It scores your <b>master resume</b> (My profile), not the resume Claude wrote in Apply. The Fit tab gives the same kind of score for free.",
       "noDescription": "This job has no description, so there is nothing to match.",
       "addQueue": "Add to Apply queue",
       "inQueue": "✓ In Apply queue",
       "removeQueue": "Click to remove from the Apply queue",
       "addQueueHint": "Apply to several jobs later in one go",
-      "pdfProblem": "The resume PDF has something to fix"
+      "pdfProblem": "The resume PDF has something to fix",
+      "fitPillHint": "Free: our own keyword check of your master resume against this ad. No AI.",
+      "fitTabHint": "Free: our own keyword check. No AI, no cost.",
+      "matchTabHint": "Resume-Matcher scores your master resume with your Claude API key. Costs a few cents."
     },
     "ad": {
       "inResume": "In your resume",
@@ -759,7 +764,7 @@
         "sections": "Contact details, summary, experience, education and skills present",
         "dates": "All dates written in one format"
       },
-      "title": "Resume match",
+      "title": "AI score of your master resume",
       "again": "Match again",
       "loading": "Loading…",
       "pending": "Matching your resume against this job… This usually takes one to two minutes. You can close this popup; the score will appear in the Match column.",
@@ -872,12 +877,12 @@
       "fileTypes": "(PDF, Word, text or Markdown).",
       "saveError": "Could not save it: {error}",
       "sectionLabel": "Your resume for this job",
-      "aiTitle": "AI match (Resume-Matcher)",
-      "aiHint": "Scores this resume the way the AI match tab scores your master resume. Uses AI credits and takes a minute or two.",
+      "aiTitle": "AI score",
+      "aiHint": "Scores the resume Claude wrote, like the AI score tab does for your master resume. A minute or two, a few cents.",
       "aiRunning": "Resume-Matcher is reading this resume…",
       "aiFailed": "Could not check it.",
-      "aiScoreLabel": "AI match {score}",
-      "aiRun": "Check AI match",
+      "aiScoreLabel": "AI score {score}",
+      "aiRun": "Get AI score",
       "aiAgain": "Check again",
       "aiWait": "Checking…",
       "aiTips": "Tips from Resume-Matcher ({count})",
@@ -938,7 +943,9 @@
       "words": "{count, plural, one {# word} other {# words}}",
       "coverPdf": "Download the cover letter as PDF",
       "copiedToast": "Copied",
-      "copyBlocked": "Your browser blocked copying. Use Edit as text and copy it by hand."
+      "copyBlocked": "Your browser blocked copying. Use Edit as text and copy it by hand.",
+      "aiTitleHint": "Resume-Matcher scores this resume with your Claude API key. A second opinion: the free Fit score above is ours.",
+      "beforeAfterHint": "Free: our own keyword check of this resume (no AI). \"was\" is the score of your master resume."
     },
     "preview": {
       "title": "Preview and edit",
@@ -982,7 +989,7 @@
       "modes": {
         "suggest": "Use suggestion",
         "rewrite": "Rewrite a line",
-        "insert": "Insert new line",
+        "insert": "Add to the end of a line",
         "replace": "Replace a word"
       },
       "skip": "Skip",
@@ -991,9 +998,9 @@
       "apply": "Apply to resume",
       "insert": "Insert",
       "rewriteLine": "Line to rewrite",
-      "insertUnder": "Insert under",
+      "insertUnder": "Add to the end of",
       "rewriteBox": "New words for this line",
-      "insertBox": "New line",
+      "insertBox": "Line with the keyword",
       "notInText": "Your words don’t name “{term}” yet.",
       "replaceLabel": "Replace",
       "replaceWith": "with “{term}”",
@@ -1008,13 +1015,21 @@
         "replace": "Replace"
       },
       "fitsHere": "{term} fits here",
-      "showLine": "Show the line where it fits best",
-      "sharedWords": "shares {words} with the ad",
+      "showLine": "Click: show where it fits. Drag: drop it on a resume line",
+      "sharedWords": "Why: it says {words}, like the ad",
       "noSharedWords": "No line shares words with the ad here: pick a line yourself",
       "bestLines": "Best lines:",
       "bestLineN": "Best line {n}",
+      "copyTerm": "Copy “{term}”",
+      "copied": "Copied “{term}”",
       "closeSpelling": "Your resume writes “{word}”.",
-      "useSpelling": "Use the ad’s “{term}”"
+      "useSpelling": "Use the ad’s “{term}”",
+      "skillsGroup": "Skills group",
+      "replaceWhere": "Where to replace",
+      "replaceOnlyLine": "Only this line",
+      "replaceAllLines": "All lines ({count})",
+      "replaceInLine": "Line",
+      "replaceOne": "Replace"
     },
     "claudeNotes": {
       "title": "Notes from Claude",
@@ -1078,6 +1093,22 @@
       "resumeUploaded": "Resume saved.",
       "changesSaved": "Changes saved.",
       "keywordAdded": "“{term}” is in the preview now. Press “Save changes” to keep it."
+    },
+    "aiLabels": {
+      "aiHint": "AI credits: uses your Claude API key (a few cents a run)",
+      "offHint": "AI credits are off now: see the note for why",
+      "offTitle": "AI score is off.",
+      "freeStillWorks": "Fit and Missing keywords are free and still work.",
+      "test": "Test key again",
+      "testing": "Testing…",
+      "testHint": "Sends one tiny message to check the key (a fraction of a cent).",
+      "openProfile": "Open Profile › Resume-Matcher ↗",
+      "offReason": {
+        "notSetUp": "Resume-Matcher is switched off: set RESUME_MATCHER_URL in .env.",
+        "notRunning": "Resume-Matcher is not running: start it with pnpm rm:up.",
+        "keyFailed": "Your Claude API key is missing, expired or out of credits."
+      },
+      "chatHint": "AI chat: you paste a prompt into Claude, ChatGPT or any AI chat"
     }
   },
   "Tracker": {

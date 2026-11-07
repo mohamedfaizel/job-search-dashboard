@@ -1,7 +1,8 @@
 import { createQueryClient, DataProvider, jobResumeUrl, makeStore } from '@jobsearch/data';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Intl } from '@/test/intl';
+import { markKeyFailed } from '../../../lib/ai-status';
 import { makeJob } from '../test/fixtures';
 import {
   downloads,
@@ -104,24 +105,28 @@ describe('JobResumePanel', () => {
     expect(within(box).getByText('3 of 5 covered')).toBeInTheDocument();
     expect(preview().getByText('Unsaved changes')).toBeInTheDocument();
 
-    // Insert a new line under a bullet: it becomes a bullet too.
-    await user.click(within(card('storybook')).getByRole('button', { name: 'Insert new line' }));
-    const line = within(card('storybook')).getByRole('textbox', { name: 'New line' });
+    // Insert: the keyword goes at the end of the best line, ready to word it well.
+    await user.click(
+      within(card('storybook')).getByRole('button', { name: 'Add to the end of a line' }),
+    );
+    const line = within(card('storybook')).getByRole('textbox', { name: 'Line with the keyword' });
+    expect(line).toHaveValue('Built dashboards in React and GraphQL, storybook');
     await user.clear(line);
-    await user.type(line, 'Documented UI components in Storybook');
+    await user.type(line, 'Built dashboards in React and GraphQL, documented in Storybook');
     await user.click(within(card('storybook')).getByRole('button', { name: 'Insert' }));
     expect(
-      preview().getByRole('button', { name: /Documented UI components in Storybook/ }),
+      preview().getByRole('button', { name: /GraphQL, documented in Storybook/ }),
     ).toBeInTheDocument();
 
-    // Replace a word, everywhere it appears.
+    // Replace a word: only in one line, or in all lines.
     await user.click(within(card('Vitest')).getByRole('button', { name: 'Replace a word' }));
     // Not one of your terms: the fact check warns before you add it.
     expect(within(card('Vitest')).getByRole('note')).toHaveTextContent(
       'Fact check: “Vitest” is not in your master resume',
     );
     await user.type(within(card('Vitest')).getByRole('textbox'), 'GraphQL');
-    expect(within(card('Vitest')).getByText('Found in 1 line.')).toBeInTheDocument();
+    expect(within(card('Vitest')).getByRole('radio', { name: 'Only this line' })).toBeChecked();
+    await user.click(within(card('Vitest')).getByRole('radio', { name: 'All lines (1)' }));
     await user.click(within(card('Vitest')).getByRole('button', { name: 'Replace all' }));
     expect(
       preview().getByRole('button', { name: /Built dashboards in React and Vitest/ }),
@@ -140,7 +145,7 @@ describe('JobResumePanel', () => {
     const sent = requests.find((r) => r.operation === 'EditJobResume');
     expect(sent?.variables['resume']).toContain('- React, TypeScript, microfrontends');
     expect(sent?.variables['resume']).toContain(
-      '- Built dashboards in React and GraphQL\n- Documented UI components in Storybook',
+      '- Built dashboards in React and GraphQL, documented in Storybook',
     );
   });
 
@@ -317,7 +322,7 @@ describe('JobResumePanel', () => {
     // Click the keyword: the resume line it fits best is pointed at, with the shared words.
     const card = within(screen.getByRole('listitem', { name: 'storybook' }));
     await user.click(card.getByRole('button', { name: 'storybook' }));
-    expect(card.getByText('shares dashboards, React with the ad')).toBeInTheDocument();
+    expect(card.getByText('Why: it says dashboards, React, like the ad')).toBeInTheDocument();
     expect(card.getByRole('button', { name: 'Best line 1' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -335,6 +340,65 @@ describe('JobResumePanel', () => {
       on: false,
       pct: 53,
     });
+  });
+
+  it('opens the editor on the best line you click, and copies the keyword', async () => {
+    const user = userEvent.setup();
+    jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
+    renderPanel({ wide: false, adText: 'You document React dashboards in Storybook.' });
+    await screen.findByRole('region', { name: 'Missing keywords' });
+    const card = within(screen.getByRole('listitem', { name: 'storybook' }));
+
+    await user.click(card.getByRole('button', { name: 'Copy “storybook”' }));
+    expect(await navigator.clipboard.readText()).toBe('storybook');
+
+    // One click on a best line opens Rewrite on that line.
+    await user.click(card.getByRole('button', { name: 'storybook' }));
+    await user.click(card.getByRole('button', { name: 'Best line 1' }));
+    expect(card.getByRole('textbox', { name: 'New words for this line' })).toHaveValue(
+      'Built dashboards in React and GraphQL',
+    );
+    // Insert keeps that line and adds the keyword to its end.
+    await user.click(card.getByRole('button', { name: 'Add to the end of a line' }));
+    expect(card.getByRole('combobox', { name: 'Add to the end of' })).toHaveDisplayValue(
+      /Built dashboards in React and GraphQL/,
+    );
+    expect(card.getByRole('textbox', { name: 'Line with the keyword' })).toHaveValue(
+      'Built dashboards in React and GraphQL, storybook',
+    );
+  });
+
+  it('adds a keyword dropped on a resume line, ready to edit there', async () => {
+    jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
+    renderPanel();
+    await screen.findByRole('region', { name: 'Missing keywords' });
+    const line = screen.getByRole('button', { name: /^Built dashboards in React and GraphQL/ });
+    const dataTransfer = {
+      types: ['text/x-jobsearch-keyword'],
+      getData: (type: string) => (type === 'text/x-jobsearch-keyword' ? 'storybook' : ''),
+      dropEffect: 'none',
+    };
+    fireEvent.dragOver(line, { dataTransfer });
+    fireEvent.drop(line, { dataTransfer });
+    expect(await screen.findByRole('textbox', { name: 'Edit this line' })).toHaveValue(
+      'Built dashboards in React and GraphQL, storybook',
+    );
+  });
+
+  it('turns the AI score off when the API key failed, and says why', async () => {
+    markKeyFailed('401 invalid x-api-key');
+    jobResume.current = { ...SAVED_RESUME };
+    renderPanel();
+    const card = within(await screen.findByRole('region', { name: 'AI score' }));
+    expect(card.getByRole('button', { name: 'Get AI score' })).toBeDisabled();
+    expect(
+      card.getByText(/Your Claude API key is missing, expired or out of credits/),
+    ).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Test key again' })).toBeInTheDocument();
+    expect(card.getByRole('link', { name: /Open Profile/ })).toHaveAttribute(
+      'href',
+      '/profile?tab=matcher',
+    );
   });
 
   it('keeps the resume and Missing keywords stacked in the normal popup', async () => {
@@ -371,7 +435,7 @@ describe('JobResumePanel', () => {
     jobResume.current = { ...SAVED_RESUME };
     renderPanel();
 
-    await user.click(await screen.findByRole('button', { name: 'Check AI match' }));
+    await user.click(await screen.findByRole('button', { name: 'Get AI score' }));
 
     await waitFor(() => {
       expect(requests).toContainEqual({
@@ -391,9 +455,9 @@ describe('JobResumePanel', () => {
     };
     // The panel looks again every few seconds while Resume-Matcher works.
     expect(
-      await screen.findByLabelText('AI match 71', undefined, { timeout: 8000 }),
+      await screen.findByLabelText('AI score 71', undefined, { timeout: 8000 }),
     ).toBeInTheDocument();
-    const card = within(screen.getByRole('region', { name: 'AI match (Resume-Matcher)' }));
+    const card = within(screen.getByRole('region', { name: 'AI score' }));
     expect(card.getByText(/Resume-Matcher misses 1 keyword/)).toBeInTheDocument();
     expect(
       within(screen.getByRole('region', { name: 'Missing keywords' })).getByRole('listitem', {
@@ -403,12 +467,9 @@ describe('JobResumePanel', () => {
     expect(card.getByText('Tips from Resume-Matcher (1)')).toBeInTheDocument();
     expect(card.getByText('Add Kubernetes to your skills.')).toBeInTheDocument();
     expect(
-      within(screen.getByRole('region', { name: 'AI match (Resume-Matcher)' })).getByRole(
-        'button',
-        {
-          name: 'Check again',
-        },
-      ),
+      within(screen.getByRole('region', { name: 'AI score' })).getByRole('button', {
+        name: 'Check again',
+      }),
     ).toBeEnabled();
   }, 15000);
 

@@ -1,4 +1,5 @@
-import { adContext, closeSpelling, placeFor, placesFor } from './keywordPlace';
+import { adContext, bestSkillsLine, closeSpelling, placeFor, placesFor } from './keywordPlace';
+import { linesWith, replaceWordInLine } from './replyEdit';
 
 const RESUME = `# Ada
 ## Experience
@@ -51,5 +52,33 @@ describe('closeSpelling', () => {
     expect(closeSpelling('- Wrote Java services', 'JavaScript')).toBeNull();
     expect(closeSpelling('- Wrote Node.js services', 'NodeJS')).toBeNull();
     expect(closeSpelling('- Built React apps', 'Redux')).toBeNull();
+  });
+});
+
+describe('bestSkillsLine', () => {
+  const GROUPED = `# Ada
+## Skills
+- Frontend: React, TypeScript, Next.js
+- Testing: Jest, Playwright
+## Experience
+- Built dashboards in React`;
+
+  it('picks the Skills group whose words the ad uses around the keyword', () => {
+    const ad = 'You write tests with Vitest and Playwright.';
+    expect(bestSkillsLine(GROUPED, 'Vitest', ad)).toBe(3);
+    expect(bestSkillsLine(GROUPED, 'Svelte', 'You build Svelte and React apps.')).toBe(2);
+  });
+
+  it('falls back to the first Skills line, or -1 without a Skills section', () => {
+    expect(bestSkillsLine(GROUPED, 'Kafka', 'Kafka streams.')).toBe(2);
+    expect(bestSkillsLine('# Ada\n## Experience\n- Built apps', 'Kafka', '')).toBe(-1);
+  });
+});
+
+describe('replaceWordInLine', () => {
+  it('changes only the chosen line', () => {
+    const text = '- Jest tests\n- More Jest tests';
+    expect(linesWith(text, 'jest')).toEqual([0, 1]);
+    expect(replaceWordInLine(text, 1, 'Jest', 'Vitest')).toBe('- Jest tests\n- More Vitest tests');
   });
 });

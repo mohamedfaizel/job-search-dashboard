@@ -14,8 +14,11 @@ import type { DragEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '../../../components/Toasts';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { useAiState } from '../../../lib/ai-status';
 import { replyParts } from '../reply';
 import { useJobFormat } from '../useJobFormat';
+import { AiOffNote, AiStateTag } from './AiLabels';
+import { useNoteAiRun } from './AiRunSection';
 import { Badge } from './Badge';
 import { ClaudeNotes } from './ClaudeNotes';
 import { ScoreRing } from './InsightsPanel';
@@ -452,13 +455,22 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
   };
   const missing = ready ? jobResume.aiMissing : [];
   const tips = ready ? jobResume.aiTips : [];
+  const aiState = useAiState();
+  const off = aiState !== 'on';
+  useNoteAiRun(aiStatus, aiError);
   return (
     <section
       aria-label={t('aiTitle')}
-      className="space-y-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5"
+      className={`space-y-2 rounded-xl border border-slate-200 px-3 py-2.5 ${off ? 'bg-slate-50' : 'bg-white'}`}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-sm font-semibold text-slate-900">{t('aiTitle')}</p>
+        <p
+          className={`text-sm font-semibold ${off ? 'text-slate-500' : 'text-slate-900'}`}
+          title={t('aiTitleHint')}
+        >
+          {t('aiTitle')}
+        </p>
+        <AiStateTag />
         {ready && (
           <Badge tone={scoreTone(aiScore)}>
             <span aria-label={t('aiScoreLabel', { score: Math.round(aiScore) })}>
@@ -466,11 +478,20 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
             </span>
           </Badge>
         )}
-        <button type="button" className={`${BUTTON} ml-auto`} disabled={running} onClick={run}>
+        <button
+          type="button"
+          className={`${BUTTON} ml-auto`}
+          disabled={running || off}
+          onClick={run}
+        >
           {running ? t('aiWait') : ready || aiStatus === 'FAILED' ? t('aiAgain') : t('aiRun')}
         </button>
       </div>
-      {!ready && <p className="text-xs text-slate-600">{running ? t('aiRunning') : t('aiHint')}</p>}
+      {off ? (
+        <AiOffNote state={aiState} compact />
+      ) : (
+        !ready && <p className="text-xs text-slate-600">{running ? t('aiRunning') : t('aiHint')}</p>
+      )}
       {ready && missing.length === 0 && tips.length === 0 && (
         <p className="text-xs text-emerald-700">{t('aiNothingMissing')}</p>
       )}
@@ -650,7 +671,11 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
                 : 'border-slate-200 bg-slate-50'
             }`}
           >
-            <div className="flex flex-col items-center" aria-label={t('beforeAfter')}>
+            <div
+              className="flex flex-col items-center"
+              aria-label={t('beforeAfter')}
+              title={t('beforeAfterHint')}
+            >
               <ScoreRing score={jobResume.score} size={44} />
               <span className="text-xs text-slate-600">
                 {t('was', { before: before === null ? '–' : `${String(before)}%` })}
