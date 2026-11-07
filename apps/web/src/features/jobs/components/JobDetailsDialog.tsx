@@ -287,13 +287,13 @@ function JobDetails({
               }`}
             >
               {t(`tabs.${id}`)}
-              {id === 'fit' && (
-                <span className="ml-1.5 max-sm:hidden">
-                  <AiTag kind="free" />
+              {id === 'apply' && (
+                <span className="ml-1 align-middle max-sm:hidden">
+                  <AiTag kind="chat" />
                 </span>
               )}
               {id === 'match' && (
-                <span className="ml-1.5 max-sm:hidden">
+                <span className="ml-1 align-middle max-sm:hidden">
                   <AiStateTag />
                 </span>
               )}

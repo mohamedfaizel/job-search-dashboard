@@ -4,33 +4,34 @@ import type { AiState } from '../../../lib/ai-status';
 import { markKeyFailed, noteAiResult, useAiState } from '../../../lib/ai-status';
 
 const TAG = {
-  free: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  ai: 'bg-violet-50 text-violet-700 ring-violet-200',
-  off: 'bg-slate-100 text-slate-500 ring-slate-200',
+  chat: 'bg-amber-100 text-amber-600 ring-amber-300',
+  ai: 'bg-violet-100 text-violet-600 ring-violet-300',
+  off: 'bg-slate-100 text-slate-400 ring-slate-200',
 } as const;
 
 /**
- * Who does the work, as a small tag: "Free" is our own keyword check (no AI), "✦" is
- * Resume-Matcher with your Claude API key (costs credits), "Off" when that can't run now.
- * The tooltip says it in words; screen readers read the label of the thing it sits on instead.
+ * Who does the work, as a small ✦: yellow is an AI chat you paste into (Claude, ChatGPT…),
+ * purple uses AI credits (Resume-Matcher with your Claude API key), grey when that is off.
+ * Our own free checks get no mark. The tooltip says it in words; screen readers read the
+ * label of the thing it sits on instead.
  */
-export function AiTag({ kind, long = false }: { kind: keyof typeof TAG; long?: boolean }) {
+export function AiTag({ kind }: { kind: keyof typeof TAG }) {
   const t = useTranslations('Jobs.aiLabels');
   return (
     <span
       aria-hidden="true"
       title={t(`${kind}Hint`)}
-      className={`inline-flex h-5 items-center rounded-full px-1.5 text-[11px] leading-none font-semibold ring-1 ring-inset ${TAG[kind]}`}
+      className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] leading-none ring-1 ring-inset ${TAG[kind]}`}
     >
-      {kind === 'ai' ? (long ? t('aiLong') : '✦') : t(kind)}
+      ✦
     </span>
   );
 }
 
-/** The AI tag for the AI parts: "✦" when they can run, "Off" when they can't. */
-export function AiStateTag({ long = false }: { long?: boolean }) {
+/** The AI credits mark: purple when the AI parts can run, grey when they can't. */
+export function AiStateTag() {
   const state = useAiState();
-  return <AiTag kind={state === 'on' ? 'ai' : 'off'} long={long} />;
+  return <AiTag kind={state === 'on' ? 'ai' : 'off'} />;
 }
 
 /**

@@ -1096,12 +1096,8 @@
       "keywordAdded": "„{term}“ ist jetzt in der Vorschau. Klick auf „Änderungen speichern“, um es zu behalten."
     },
     "aiLabels": {
-      "free": "Gratis",
-      "freeHint": "Kostenlos: unsere eigene Stichwort-Prüfung. Keine KI, keine Kosten.",
-      "aiLong": "✦ KI · Guthaben",
-      "aiHint": "Nutzt Resume-Matcher mit deinem Claude-API-Schlüssel: kostet pro Lauf ein paar Cent.",
-      "off": "Aus",
-      "offHint": "KI ist gerade aus: der Hinweis sagt warum.",
+      "aiHint": "KI-Guthaben: nutzt deinen Claude-API-Schlüssel (ein paar Cent pro Lauf)",
+      "offHint": "KI-Guthaben ist gerade aus: der Hinweis sagt warum",
       "offTitle": "KI-Score ist aus.",
       "freeStillWorks": "Fit und Fehlende Stichwörter sind kostenlos und funktionieren weiter.",
       "test": "Schlüssel erneut testen",
@@ -1112,7 +1108,8 @@
         "notSetUp": "Resume-Matcher ist ausgeschaltet: setze RESUME_MATCHER_URL in .env.",
         "notRunning": "Resume-Matcher läuft nicht: starte ihn mit pnpm rm:up.",
         "keyFailed": "Dein Claude-API-Schlüssel fehlt, ist abgelaufen oder hat kein Guthaben mehr."
-      }
+      },
+      "chatHint": "KI-Chat: du fügst einen Prompt in Claude, ChatGPT oder einen anderen KI-Chat ein"
     }
   },
   "Tracker": {

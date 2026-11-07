@@ -7,6 +7,7 @@ import { useErrorText } from '../../../i18n/useErrorText';
 import { promptSections } from '../reply';
 import type { JobFormat } from '../useJobFormat';
 import { useJobFormat } from '../useJobFormat';
+import { AiTag } from './AiLabels';
 import { PRIMARY, ReplyInput, SavedReply } from './JobResumePanel';
 import { LanguagesBadge } from './LanguagesBadge';
 
@@ -100,6 +101,11 @@ function Stepper({ step, onChoose }: { step: ApplyStep; onChoose: (s: ApplyStep)
               </span>
               <span className={state === 'current' ? '' : 'max-sm:sr-only'}>
                 {t(`steps.${n}`)}
+                {n === 1 && (
+                  <span className="ml-1 align-middle">
+                    <AiTag kind="chat" />
+                  </span>
+                )}
                 {state === 'done' && <span className="sr-only"> {t('done')}</span>}
               </span>
             </button>

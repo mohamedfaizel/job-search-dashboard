@@ -470,7 +470,7 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
         >
           {t('aiTitle')}
         </p>
-        <AiStateTag long />
+        <AiStateTag />
         {ready && (
           <Badge tone={scoreTone(aiScore)}>
             <span aria-label={t('aiScoreLabel', { score: Math.round(aiScore) })}>

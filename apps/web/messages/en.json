@@ -1096,12 +1096,8 @@
       "keywordAdded": "“{term}” is in the preview now. Press “Save changes” to keep it."
     },
     "aiLabels": {
-      "free": "Free",
-      "freeHint": "Free: our own keyword check. No AI, no cost.",
-      "aiLong": "✦ AI · credits",
-      "aiHint": "Uses Resume-Matcher with your Claude API key: costs a few cents each run.",
-      "off": "Off",
-      "offHint": "AI is off now: see the note for why.",
+      "aiHint": "AI credits: uses your Claude API key (a few cents a run)",
+      "offHint": "AI credits are off now: see the note for why",
       "offTitle": "AI score is off.",
       "freeStillWorks": "Fit and Missing keywords are free and still work.",
       "test": "Test key again",
@@ -1112,7 +1108,8 @@
         "notSetUp": "Resume-Matcher is switched off: set RESUME_MATCHER_URL in .env.",
         "notRunning": "Resume-Matcher is not running: start it with pnpm rm:up.",
         "keyFailed": "Your Claude API key is missing, expired or out of credits."
-      }
+      },
+      "chatHint": "AI chat: you paste a prompt into Claude, ChatGPT or any AI chat"
     }
   },
   "Tracker": {
