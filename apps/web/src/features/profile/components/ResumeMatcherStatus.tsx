@@ -7,6 +7,7 @@ import {
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { markKeyFailed, noteAiResult } from '../../../lib/ai-status';
 
 /** Shows whether Resume-Matcher, which scores jobs against this resume, is ready to use. */
 export function ResumeMatcherStatus() {
@@ -70,7 +71,13 @@ export function ResumeMatcherStatus() {
           <button
             type="button"
             onClick={() => {
-              testAi.mutate();
+              testAi.mutate(undefined, {
+                // The job popup turns its AI parts off (or on again) from this result.
+                onSuccess: (result) => {
+                  if (result.aiConfigured && result.aiHealthy) noteAiResult(true);
+                  else markKeyFailed(result.message);
+                },
+              });
             }}
             disabled={testAi.isPending}
             className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"

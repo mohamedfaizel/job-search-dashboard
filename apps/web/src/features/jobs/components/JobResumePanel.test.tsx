@@ -2,6 +2,7 @@ import { createQueryClient, DataProvider, jobResumeUrl, makeStore } from '@jobse
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Intl } from '@/test/intl';
+import { markKeyFailed } from '../../../lib/ai-status';
 import { makeJob } from '../test/fixtures';
 import {
   downloads,
@@ -337,6 +338,47 @@ describe('JobResumePanel', () => {
     });
   });
 
+  it('rewrites or inserts on the best line you picked, and copies the keyword', async () => {
+    const user = userEvent.setup();
+    jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
+    renderPanel({ wide: false, adText: 'You document React dashboards in Storybook.' });
+    await screen.findByRole('region', { name: 'Missing keywords' });
+    const card = within(screen.getByRole('listitem', { name: 'storybook' }));
+
+    await user.click(card.getByRole('button', { name: 'Copy “storybook”' }));
+    expect(await navigator.clipboard.readText()).toBe('storybook');
+
+    await user.click(card.getByRole('button', { name: 'storybook' }));
+    await user.click(card.getByRole('button', { name: 'Best line 1' }));
+    await user.click(card.getByRole('button', { name: 'Insert below' }));
+    expect(card.getByRole('combobox', { name: 'Insert under' })).toHaveDisplayValue(
+      /Built dashboards in React and GraphQL/,
+    );
+    expect(card.getByRole('textbox', { name: 'New line' })).toHaveValue('storybook');
+
+    // Rewrite from the row of buttons keeps the line you picked too.
+    await user.click(card.getByRole('button', { name: 'Rewrite a line' }));
+    expect(card.getByRole('textbox', { name: 'New words for this line' })).toHaveValue(
+      'Built dashboards in React and GraphQL',
+    );
+  });
+
+  it('turns the AI score off when the API key failed, and says why', async () => {
+    markKeyFailed('401 invalid x-api-key');
+    jobResume.current = { ...SAVED_RESUME };
+    renderPanel();
+    const card = within(await screen.findByRole('region', { name: 'AI score' }));
+    expect(card.getByRole('button', { name: 'Get AI score' })).toBeDisabled();
+    expect(
+      card.getByText(/Your Claude API key is missing, expired or out of credits/),
+    ).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Test key again' })).toBeInTheDocument();
+    expect(card.getByRole('link', { name: /Open Profile/ })).toHaveAttribute(
+      'href',
+      '/profile?tab=matcher',
+    );
+  });
+
   it('keeps the resume and Missing keywords stacked in the normal popup', async () => {
     jobResume.current = { ...SAVED_RESUME, stillMissing: ['storybook'] };
     renderPanel();
@@ -371,7 +413,7 @@ describe('JobResumePanel', () => {
     jobResume.current = { ...SAVED_RESUME };
     renderPanel();
 
-    await user.click(await screen.findByRole('button', { name: 'Check AI match' }));
+    await user.click(await screen.findByRole('button', { name: 'Get AI score' }));
 
     await waitFor(() => {
       expect(requests).toContainEqual({
@@ -391,9 +433,9 @@ describe('JobResumePanel', () => {
     };
     // The panel looks again every few seconds while Resume-Matcher works.
     expect(
-      await screen.findByLabelText('AI match 71', undefined, { timeout: 8000 }),
+      await screen.findByLabelText('AI score 71', undefined, { timeout: 8000 }),
     ).toBeInTheDocument();
-    const card = within(screen.getByRole('region', { name: 'AI match (Resume-Matcher)' }));
+    const card = within(screen.getByRole('region', { name: 'AI score' }));
     expect(card.getByText(/Resume-Matcher misses 1 keyword/)).toBeInTheDocument();
     expect(
       within(screen.getByRole('region', { name: 'Missing keywords' })).getByRole('listitem', {
@@ -403,12 +445,9 @@ describe('JobResumePanel', () => {
     expect(card.getByText('Tips from Resume-Matcher (1)')).toBeInTheDocument();
     expect(card.getByText('Add Kubernetes to your skills.')).toBeInTheDocument();
     expect(
-      within(screen.getByRole('region', { name: 'AI match (Resume-Matcher)' })).getByRole(
-        'button',
-        {
-          name: 'Check again',
-        },
-      ),
+      within(screen.getByRole('region', { name: 'AI score' })).getByRole('button', {
+        name: 'Check again',
+      }),
     ).toBeEnabled();
   }, 15000);
 

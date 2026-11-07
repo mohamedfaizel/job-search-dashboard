@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { configure } from '@testing-library/react';
+import { resetAiStatus } from '../../../lib/ai-status';
 import {
   applications,
   downloads,
@@ -41,14 +42,18 @@ afterEach(() => {
   tableSettings.current = null;
   downloads.length = 0;
   localStorage.clear();
+  resetAiStatus();
 });
 afterAll(() => {
   server.close();
 });
 
-// jsdom doesn't implement <dialog> fully yet; give it the two methods we use.
+// jsdom doesn't implement <dialog> fully yet; give it the methods we use.
 Object.assign(HTMLDialogElement.prototype, {
   showModal(this: HTMLDialogElement) {
+    this.open = true;
+  },
+  show(this: HTMLDialogElement) {
     this.open = true;
   },
   close(this: HTMLDialogElement) {

@@ -615,7 +615,7 @@
         "apply": "Bewerben",
         "interview": "Interview",
         "ad": "Anzeige",
-        "match": "KI-Match"
+        "match": "KI-Score"
       },
       "tabsLabel": "Bereiche der Jobdetails",
       "stepOf": "Schritt {step} von 3",
@@ -634,19 +634,25 @@
       "hide": "Ausblenden",
       "restore": "Normale Größe",
       "maximize": "Maximieren",
+      "minimize": "Minimieren",
+      "minimizeHint": "Minimieren: als kleine Leiste unten behalten und später wieder öffnen",
+      "openAgain": "Job wieder öffnen",
       "close": "Schließen",
       "status": "Status",
       "statusLabel": "Bewerbungsstatus",
       "openPosting": "Original-Anzeige öffnen ↗",
       "apply": "Bewerben →",
       "markApplied": "✓ Als Beworben markieren",
-      "aiIntro": "Bewertet deinen <b>Master-Lebenslauf</b> (den unter Mein Profil) mit Resume-Matcher. Den Lebenslauf, den Claude im Tab Bewerben geschrieben hat, nutzt es nicht. <b>Jeder Lauf verbraucht dein Claude-API-Guthaben.</b> Der Tab Fit gibt dieselbe Art Bewertung kostenlos.",
+      "aiIntro": "<b>KI-Score</b> nutzt Resume-Matcher mit deinem <b>Claude-API-Schlüssel</b> (console.anthropic.com), also <b>kostet jeder Lauf Guthaben</b>. Er bewertet deinen <b>Master-Lebenslauf</b> (Mein Profil), nicht den Lebenslauf, den Claude unter Bewerben geschrieben hat. Der Tab Fit gibt dieselbe Art Bewertung kostenlos.",
       "noDescription": "Dieser Job hat keine Beschreibung, also gibt es nichts abzugleichen.",
       "addQueue": "Zur Bewerbungs-Warteschlange",
       "inQueue": "✓ In der Warteschlange",
       "removeQueue": "Klicken, um es aus der Warteschlange zu nehmen",
       "addQueueHint": "Später mehrere Jobs auf einmal bewerben",
-      "pdfProblem": "Im Lebenslauf-PDF ist etwas zu beheben"
+      "pdfProblem": "Im Lebenslauf-PDF ist etwas zu beheben",
+      "fitPillHint": "Kostenlos: unsere eigene Stichwort-Prüfung deines Master-Lebenslaufs gegen diese Anzeige. Keine KI.",
+      "fitTabHint": "Kostenlos: unsere eigene Stichwort-Prüfung. Keine KI, keine Kosten.",
+      "matchTabHint": "Resume-Matcher bewertet deinen Master-Lebenslauf mit deinem Claude-API-Schlüssel. Kostet ein paar Cent."
     },
     "ad": {
       "inResume": "In deinem Lebenslauf",
@@ -759,7 +765,7 @@
         "sections": "Kontaktdaten, Zusammenfassung, Erfahrung, Ausbildung und Fähigkeiten vorhanden",
         "dates": "Alle Daten im gleichen Format"
       },
-      "title": "Lebenslauf-Match",
+      "title": "KI-Score deines Master-Lebenslaufs",
       "again": "Erneut abgleichen",
       "loading": "Wird geladen…",
       "pending": "Dein Lebenslauf wird mit diesem Job abgeglichen… Das dauert meist ein bis zwei Minuten. Du kannst dieses Fenster schließen; die Bewertung erscheint in der Spalte Match.",
@@ -872,12 +878,12 @@
       "fileTypes": "(PDF, Word, Text oder Markdown).",
       "saveError": "Konnte nicht gespeichert werden: {error}",
       "sectionLabel": "Dein Lebenslauf für diesen Job",
-      "aiTitle": "KI-Match (Resume-Matcher)",
-      "aiHint": "Bewertet diesen Lebenslauf so wie der Tab KI-Match deinen Haupt-Lebenslauf. Braucht KI-Guthaben und dauert ein bis zwei Minuten.",
+      "aiTitle": "KI-Score",
+      "aiHint": "Bewertet den Lebenslauf, den Claude geschrieben hat, wie der Tab KI-Score deinen Master-Lebenslauf. Ein bis zwei Minuten, ein paar Cent.",
       "aiRunning": "Resume-Matcher liest diesen Lebenslauf…",
       "aiFailed": "Die Prüfung ist fehlgeschlagen.",
-      "aiScoreLabel": "KI-Match {score}",
-      "aiRun": "KI-Match prüfen",
+      "aiScoreLabel": "KI-Score {score}",
+      "aiRun": "KI-Score holen",
       "aiAgain": "Nochmal prüfen",
       "aiWait": "Prüft…",
       "aiTips": "Tipps von Resume-Matcher ({count})",
@@ -938,7 +944,9 @@
       "words": "{count, plural, one {# Wort} other {# Wörter}}",
       "coverPdf": "Anschreiben als PDF laden",
       "copiedToast": "Kopiert",
-      "copyBlocked": "Dein Browser hat das Kopieren blockiert. Nutze „Als Text bearbeiten“ und kopiere es selbst."
+      "copyBlocked": "Dein Browser hat das Kopieren blockiert. Nutze „Als Text bearbeiten“ und kopiere es selbst.",
+      "aiTitleHint": "Resume-Matcher bewertet diesen Lebenslauf mit deinem Claude-API-Schlüssel. Eine zweite Meinung: der kostenlose Fit-Wert oben ist unserer.",
+      "beforeAfterHint": "Kostenlos: unsere eigene Stichwort-Prüfung dieses Lebenslaufs (keine KI). „vorher“ ist der Wert deines Master-Lebenslaufs."
     },
     "preview": {
       "title": "Vorschau und Bearbeiten",
@@ -1013,6 +1021,13 @@
       "noSharedWords": "Keine Zeile teilt hier Wörter mit der Anzeige: wähle selbst eine Zeile",
       "bestLines": "Beste Zeilen:",
       "bestLineN": "Beste Zeile {n}",
+      "copyTerm": "„{term}“ kopieren",
+      "copied": "„{term}“ kopiert",
+      "onThisLine": "In dieser Zeile:",
+      "rewriteHere": "Umschreiben",
+      "rewriteHereHint": "Diese Zeile mit dem Stichwort neu schreiben",
+      "insertHere": "Darunter einfügen",
+      "insertHereHint": "Eine neue Zeile mit dem Stichwort direkt unter dieser Zeile einfügen",
       "closeSpelling": "Dein Lebenslauf schreibt „{word}“.",
       "useSpelling": "„{term}“ aus der Anzeige verwenden"
     },
@@ -1078,6 +1093,25 @@
       "resumeUploaded": "Lebenslauf gespeichert.",
       "changesSaved": "Änderungen gespeichert.",
       "keywordAdded": "„{term}“ ist jetzt in der Vorschau. Klick auf „Änderungen speichern“, um es zu behalten."
+    },
+    "aiLabels": {
+      "free": "Gratis",
+      "freeHint": "Kostenlos: unsere eigene Stichwort-Prüfung. Keine KI, keine Kosten.",
+      "aiLong": "✦ KI · Guthaben",
+      "aiHint": "Nutzt Resume-Matcher mit deinem Claude-API-Schlüssel: kostet pro Lauf ein paar Cent.",
+      "off": "Aus",
+      "offHint": "KI ist gerade aus: der Hinweis sagt warum.",
+      "offTitle": "KI-Score ist aus.",
+      "freeStillWorks": "Fit und Fehlende Stichwörter sind kostenlos und funktionieren weiter.",
+      "test": "Schlüssel erneut testen",
+      "testing": "Teste…",
+      "testHint": "Schickt eine winzige Nachricht, um den Schlüssel zu prüfen (Bruchteil eines Cents).",
+      "openProfile": "Profil › Resume-Matcher öffnen ↗",
+      "offReason": {
+        "notSetUp": "Resume-Matcher ist ausgeschaltet: setze RESUME_MATCHER_URL in .env.",
+        "notRunning": "Resume-Matcher läuft nicht: starte ihn mit pnpm rm:up.",
+        "keyFailed": "Dein Claude-API-Schlüssel fehlt, ist abgelaufen oder hat kein Guthaben mehr."
+      }
     }
   },
   "Tracker": {

@@ -174,8 +174,8 @@ describe('JobsDashboard', () => {
       within(dialog).getByRole('link', { name: 'Original-Anzeige öffnen ↗' }),
     ).toBeInTheDocument();
 
-    await userEvent.click(within(dialog).getByRole('tab', { name: 'KI-Match' }));
-    expect(within(dialog).getByText(/Jeder Lauf verbraucht/)).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'KI-Score' }));
+    expect(within(dialog).getByText(/kostet jeder Lauf Guthaben/)).toBeInTheDocument();
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Schließen' }));
     expect(
@@ -601,6 +601,32 @@ describe('JobsDashboard', () => {
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Restore size' }));
     expect(dialog).toHaveClass('max-w-3xl');
+  });
+
+  it('minimizes the job popup to a small bar and opens it again where you left it', async () => {
+    renderDashboard();
+    await userEvent.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'Job ad' }));
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Minimize' }));
+    // Still open (no close), now the small bar with the job's title.
+    expect(dialog).toHaveAttribute('open');
+    expect(within(dialog).queryByRole('tablist')).toBeNull();
+    expect(dialog).toHaveClass('bottom-4');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Open the job again' }));
+    expect(within(dialog).getByRole('tab', { name: 'Job ad' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+
+    // The bar's X closes the job.
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Minimize' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(
+      screen.queryByRole('dialog', { name: 'Senior Frontend Engineer' }),
+    ).not.toBeInTheDocument();
   });
 
   it('updates the application status from the table', async () => {

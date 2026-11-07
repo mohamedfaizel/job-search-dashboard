@@ -8,8 +8,10 @@ import {
 import { useTranslations } from 'next-intl';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useAiState } from '../../../lib/ai-status';
 import { capitalize } from '../format';
 import { useJobFormat } from '../useJobFormat';
+import { AiOffNote, AiStateTag, AiTag } from './AiLabels';
 import { ApplyKitPanel, useApplyStep } from './ApplyKitPanel';
 import { BookmarkIcon, EyeIcon, EyeSlashIcon } from './icons';
 import { InsightsPanel } from './InsightsPanel';
@@ -104,6 +106,7 @@ function JobDetails({
   showingHidden,
   maximized,
   onToggleMaximized,
+  onMinimize,
   asking,
   onApplyStarted,
   onApplyAnswered,
@@ -113,6 +116,7 @@ function JobDetails({
   onToggleHidden: Props['onToggleHidden'];
   maximized: boolean;
   onToggleMaximized: () => void;
+  onMinimize: () => void;
 }) {
   const t = useTranslations('Jobs.popup');
   const [tab, setTab] = useState<Tab>('fit');
@@ -156,6 +160,7 @@ function JobDetails({
               </h2>
               {job.fitScore !== null && (
                 <span
+                  title={t('fitPillHint')}
                   className={`inline-flex h-6 items-center rounded-full px-2 text-xs font-medium ring-1 ring-inset ${FIT_PILL[scoreTone(job.fitScore) as keyof typeof FIT_PILL]}`}
                 >
                   {t('fitPill', { score: job.fitScore })}
@@ -198,6 +203,22 @@ function JobDetails({
               </button>
             )}
             <span aria-hidden="true" className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
+            <button
+              type="button"
+              onClick={onMinimize}
+              aria-label={t('minimize')}
+              title={t('minimizeHint')}
+              className={`${ICON_BUTTON} inline-flex`}
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                className="h-4 w-4 fill-none stroke-current stroke-[1.6]"
+                strokeLinecap="round"
+              >
+                <path d="M3 12.5h10" />
+              </svg>
+            </button>
             <button
               type="button"
               onClick={onToggleMaximized}
@@ -252,6 +273,9 @@ function JobDetails({
               aria-selected={tab === id}
               aria-controls={`job-panel-${id}`}
               tabIndex={tab === id ? 0 : -1}
+              title={
+                id === 'fit' ? t('fitTabHint') : id === 'match' ? t('matchTabHint') : undefined
+              }
               onKeyDown={onTabKey}
               onClick={() => {
                 setTab(id);
@@ -263,6 +287,16 @@ function JobDetails({
               }`}
             >
               {t(`tabs.${id}`)}
+              {id === 'fit' && (
+                <span className="ml-1.5 max-sm:hidden">
+                  <AiTag kind="free" />
+                </span>
+              )}
+              {id === 'match' && (
+                <span className="ml-1.5 max-sm:hidden">
+                  <AiStateTag />
+                </span>
+              )}
               {id === 'apply' && !SENT.has(job.applicationStatus) && (
                 <span className="ml-1.5 rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] font-medium text-brand-700 max-sm:hidden">
                   {t('stepOf', { step: applySteps.step })}
@@ -401,11 +435,13 @@ function TabPanel({ id, active, children }: { id: Tab; active: Tab; children: Re
   );
 }
 
-/** The AI match tab: Resume-Matcher's score and tailoring, with what they read and cost. */
+/** The AI score tab: Resume-Matcher's score and tailoring, with what they read and cost. */
 function AiMatch({ jobId, hasDescription }: { jobId: string; hasDescription: boolean }) {
   const t = useTranslations('Jobs.popup');
+  const aiState = useAiState();
   return (
     <div className="space-y-4">
+      <AiOffNote state={aiState} />
       <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-700">
         {t.rich('aiIntro', { b: (chunks) => <strong>{chunks}</strong> })}
       </p>
@@ -438,42 +474,141 @@ export function JobDetailsDialog({
   const ref = useRef<HTMLDialogElement>(null);
   // Stays as you left it for the next job you open.
   const [maximized, setMaximized] = useState(false);
+  // Minimized: the popup shrinks to a small bar at the bottom and the page works again. Its
+  // content stays mounted, so a half-done Apply step is still there when you open it again.
+  const [minimized, setMinimized] = useState(false);
+  const [shownId, setShownId] = useState(job?.id);
+  if (job?.id !== shownId) {
+    // Another job opens full size.
+    setShownId(job?.id);
+    setMinimized(false);
+  }
+  const modal = useRef(false);
+  // Swapping between modal and the small bar closes the dialog for a moment: not a real close.
+  const swapping = useRef(false);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (job && !dialog.open) dialog.showModal();
-    if (!job && dialog.open) dialog.close();
-  }, [job]);
+    if (!job) {
+      if (dialog.open) dialog.close();
+      return;
+    }
+    const wantModal = !minimized;
+    if (dialog.open && modal.current === wantModal) return;
+    if (dialog.open) {
+      swapping.current = true;
+      dialog.close();
+    }
+    if (wantModal) dialog.showModal();
+    else dialog.show();
+    modal.current = wantModal;
+  }, [job, minimized]);
 
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
-      aria-labelledby="job-dialog-title"
-      className={`p-0 shadow-2xl backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm max-sm:m-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:rounded-none ${
-        maximized
-          ? 'm-0 h-dvh max-h-none w-screen max-w-none rounded-none'
-          : 'm-auto w-full max-w-3xl rounded-2xl'
-      }`}
+      onClose={() => {
+        if (swapping.current) {
+          swapping.current = false;
+          return;
+        }
+        onClose();
+      }}
+      aria-labelledby={minimized ? 'job-dock-title' : 'job-dialog-title'}
+      className={
+        minimized
+          ? 'fixed inset-x-auto top-auto bottom-4 left-1/2 z-50 m-0 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl p-0 shadow-2xl ring-1 ring-slate-200'
+          : `p-0 shadow-2xl backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm max-sm:m-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:rounded-none ${
+              maximized
+                ? 'm-0 h-dvh max-h-none w-screen max-w-none rounded-none'
+                : 'm-auto w-full max-w-3xl rounded-2xl'
+            }`
+      }
     >
-      {job && (
-        <JobDetails
-          key={job.id}
+      {job && minimized && (
+        <JobDock
           job={job}
-          onClose={onClose}
-          onStatusChange={onStatusChange}
-          onToggleHidden={onToggleHidden}
-          showingHidden={showingHidden}
-          maximized={maximized}
-          onToggleMaximized={() => {
-            setMaximized((m) => !m);
+          onOpen={() => {
+            setMinimized(false);
           }}
-          asking={asking.has(job.id)}
-          onApplyStarted={onApplyStarted}
-          onApplyAnswered={onApplyAnswered}
+          onClose={onClose}
         />
       )}
+      {job && (
+        <div hidden={minimized} className={maximized && !minimized ? 'h-full' : undefined}>
+          <JobDetails
+            key={job.id}
+            job={job}
+            onClose={onClose}
+            onStatusChange={onStatusChange}
+            onToggleHidden={onToggleHidden}
+            showingHidden={showingHidden}
+            maximized={maximized}
+            onToggleMaximized={() => {
+              setMaximized((m) => !m);
+            }}
+            onMinimize={() => {
+              setMinimized(true);
+            }}
+            asking={asking.has(job.id)}
+            onApplyStarted={onApplyStarted}
+            onApplyAnswered={onApplyAnswered}
+          />
+        </div>
+      )}
     </dialog>
+  );
+}
+
+/** The minimized popup: a small bar with the job's title, to open it again or close it. */
+function JobDock({ job, onOpen, onClose }: { job: Job; onOpen: () => void; onClose: () => void }) {
+  const t = useTranslations('Jobs.popup');
+  return (
+    <div className="flex items-center gap-2 bg-white py-1.5 pr-1.5 pl-3">
+      <button
+        type="button"
+        onClick={onOpen}
+        title={t('openAgain')}
+        className="flex min-w-0 flex-1 flex-col items-start rounded-md px-1 py-0.5 text-left hover:bg-slate-50"
+      >
+        <span id="job-dock-title" className="w-full truncate text-sm font-semibold text-slate-900">
+          {job.title}
+        </span>
+        <span className="w-full truncate text-xs text-slate-500">{job.company.name}</span>
+      </button>
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={t('openAgain')}
+        title={t('openAgain')}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          className="h-4 w-4 fill-none stroke-current stroke-[1.6]"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M4 10l4-4 4 4" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label={t('close')}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          className="h-4 w-4 fill-none stroke-current stroke-[1.6]"
+          strokeLinecap="round"
+        >
+          <path d="M3 3l10 10M13 3L3 13" />
+        </svg>
+      </button>
+    </div>
   );
 }

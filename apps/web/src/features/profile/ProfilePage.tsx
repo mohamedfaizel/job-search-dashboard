@@ -39,11 +39,13 @@ export function ProfilePage() {
   const { data: profile, isPending, error } = useMyProfile();
   const { data: me } = useMe();
   // Coming back from Google's sign-in (?gmail=...) opens the Email tab to show the result.
-  const [tab, setTab] = useState<ProfileTab>(() =>
-    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('gmail')
-      ? 'mail'
-      : savedTab(),
-  );
+  // A link can open a tab too (?tab=matcher, from the job popup's AI score).
+  const [tab, setTab] = useState<ProfileTab>(() => {
+    if (typeof window === 'undefined') return savedTab();
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('gmail')) return 'mail';
+    return TAB_IDS.find((id) => id === params.get('tab')) ?? savedTab();
+  });
 
   const selectTab = (next: ProfileTab) => {
     setTab(next);

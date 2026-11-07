@@ -189,12 +189,18 @@ function BestLines({
   places,
   current,
   resume,
+  open,
   onPick,
+  onAct,
 }: {
   places: KeywordPlace[];
   current: number | null;
   resume: string;
+  /** The way of working it in that is open now, if any. */
+  open: Mode | null;
   onPick: (line: number) => void;
+  /** Opens Rewrite or Insert on the line the preview points at. */
+  onAct: (mode: 'rewrite' | 'insert') => void;
 }) {
   const t = useTranslations('Jobs.keywordCards');
   const lines = splitLines(resume);
@@ -231,7 +237,68 @@ function BestLines({
       {shown && shown.words.length > 0 && (
         <span>{t('sharedWords', { words: shown.words.join(', ') })}</span>
       )}
+      {(open === null || open === 'replace') && current !== null && current >= 0 && (
+        <span className="flex basis-full flex-wrap items-center gap-1.5 text-slate-600 sm:basis-auto">
+          {t('onThisLine')}
+          <button
+            type="button"
+            className={`${CHOICE} border-amber-300 bg-white text-amber-900 hover:bg-amber-50`}
+            title={t('rewriteHereHint')}
+            onClick={() => {
+              onAct('rewrite');
+            }}
+          >
+            {t('rewriteHere')}
+          </button>
+          <button
+            type="button"
+            className={`${CHOICE} border-amber-300 bg-white text-amber-900 hover:bg-amber-50`}
+            title={t('insertHereHint')}
+            onClick={() => {
+              onAct('insert');
+            }}
+          >
+            {t('insertHere')}
+          </button>
+        </span>
+      )}
     </span>
+  );
+}
+
+/** Copies the keyword, to type or paste it anywhere (Claude, the form, your notes). */
+function CopyTerm({ term }: { term: string }) {
+  const t = useTranslations('Jobs.keywordCards');
+  const tReply = useTranslations('Jobs.reply');
+  const toast = useToast();
+  return (
+    <button
+      type="button"
+      aria-label={t('copyTerm', { term })}
+      title={t('copyTerm', { term })}
+      onClick={() => {
+        navigator.clipboard.writeText(term).then(
+          () => {
+            toast(t('copied', { term }), { tone: 'info' });
+          },
+          () => {
+            toast(tReply('copyBlocked'));
+          },
+        );
+      }}
+      className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded align-middle text-slate-400 hover:bg-slate-100 hover:text-slate-800"
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-3.5 w-3.5 fill-none stroke-current stroke-2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="9" y="9" width="11" height="11" rx="2" />
+        <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+      </svg>
+    </button>
   );
 }
 
@@ -356,6 +423,7 @@ export function MissingKeywords({
                       {term}
                     </button>
                   )}
+                  <CopyTerm term={term} />
                   {check?.relatedTo && !isIn && !isSkipped && (
                     <span className="ml-2 text-xs font-normal text-slate-500 no-underline">
                       {t('relatedTo', { term: check.relatedTo })}
@@ -368,8 +436,14 @@ export function MissingKeywords({
                     places={placesFor(resume, term, adText, relatedOf(term))}
                     current={pointLine}
                     resume={resume}
+                    open={mode}
                     onPick={(line) => {
                       setPicked({ term, line });
+                    }}
+                    onAct={(m) => {
+                      // Keeps the line you picked: Rewrite and Insert start on it.
+                      if (pointLine !== null) setPicked({ term, line: pointLine });
+                      setOpen({ term, mode: m });
                     }}
                   />
                 )}
@@ -418,7 +492,8 @@ export function MissingKeywords({
                         onClick={() => {
                           setOpen(mode === m ? null : { term, mode: m });
                           setFocus(term);
-                          setPicked(null);
+                          // A best line you picked for this keyword stays picked.
+                          if (picked?.term !== term) setPicked(null);
                         }}
                         className={`${CHOICE} ${
                           mode === m

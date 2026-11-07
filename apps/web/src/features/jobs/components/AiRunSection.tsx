@@ -1,6 +1,8 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { noteAiResult, useAiState } from '../../../lib/ai-status';
 
 const BUTTON =
   'rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100 disabled:opacity-60';
@@ -39,9 +41,11 @@ export function AiRunSection<T extends Run>({
   const errorText = useErrorText();
   const t = useTranslations(namespace);
   const pending = start.isPending || data?.status === 'PENDING';
+  const off = useAiState() !== 'on';
+  useNoteAiRun(data?.status, data?.error);
 
   const startButton = (label: string) => (
-    <button type="button" disabled={pending} onClick={start.mutate} className={BUTTON}>
+    <button type="button" disabled={pending || off} onClick={start.mutate} className={BUTTON}>
       {label}
     </button>
   );
@@ -82,4 +86,20 @@ export function AiRunSection<T extends Run>({
       </div>
     </section>
   );
+}
+
+/**
+ * Tells the AI status what a run you watched ended with: a run that works clears "key failed",
+ * a key or credit error sets it. Old runs loaded from the server don't count.
+ */
+export function useNoteAiRun(
+  status: Run['status'] | null | undefined,
+  error: string | null | undefined,
+) {
+  const last = useRef(status);
+  useEffect(() => {
+    if (last.current === 'PENDING' && status === 'READY') noteAiResult(true);
+    if (last.current === 'PENDING' && status === 'FAILED') noteAiResult(false, error);
+    last.current = status;
+  }, [status, error]);
 }
