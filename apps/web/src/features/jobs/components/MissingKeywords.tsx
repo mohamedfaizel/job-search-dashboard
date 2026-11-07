@@ -3,21 +3,22 @@ import { useSetHaveTerm } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../../components/Toasts';
-import { closeSpelling, placeFor, placesFor } from '../keywordPlace';
+import { bestSkillsLine, closeSpelling, placeFor, placesFor } from '../keywordPlace';
 import type { KeywordPlace } from '../keywordPlace';
 import {
   appendTerm,
   contentLines,
-  insertLine,
   KEYWORD_DRAG,
-  lineLike,
+  linesWith,
   mentionsTerm,
   readLine,
   replaceLine,
   replaceWord,
+  replaceWordInLine,
   rewordLine,
-  skillsLine,
+  skillsLines,
   splitLines,
+  withKeyword,
 } from '../replyEdit';
 import { usePopupLayout } from './popupLayout';
 import type { PointedLine, ReplyDraftState } from './ReplyPreview';
@@ -38,11 +39,14 @@ function LinePicker({
   text,
   value,
   onChange,
+  only,
 }: {
   label: string;
   text: string;
   value: number;
   onChange: (i: number) => void;
+  /** Just these lines (default: every line with words). */
+  only?: number[];
 }) {
   const lines = splitLines(text);
   return (
@@ -55,7 +59,7 @@ function LinePicker({
         }}
         className="h-8 rounded-md border border-slate-300 bg-white px-1 text-xs text-slate-800"
       >
-        {contentLines(text).map((i) => (
+        {(only ?? contentLines(text)).map((i) => (
           <option key={i} value={i}>
             {short(readLine(lines[i] ?? '').text)}
           </option>
@@ -71,6 +75,7 @@ function Action({
   term,
   related,
   resume,
+  ad,
   start,
   onLine,
   onApply,
@@ -79,6 +84,8 @@ function Action({
   term: string;
   related: string | null;
   resume: string;
+  /** The job ad's text, to find the Skills group the keyword suits. */
+  ad: string;
   /** The line to start on: the one that fits the keyword best. */
   start: number;
   /** Tells which line is picked, so the preview can point at it. */
@@ -87,26 +94,51 @@ function Action({
 }) {
   const t = useTranslations('Jobs.keywordCards');
   const lines = splitLines(resume);
-  const [line, setLine] = useState(start);
+  const skills = skillsLines(resume);
+  const [line, setLine] = useState(() =>
+    mode === 'suggest'
+      ? skills.includes(start)
+        ? start
+        : bestSkillsLine(resume, term, ad, related)
+      : start,
+  );
   const raw = lines[line] ?? '';
-  const [words, setWords] = useState(() => (mode === 'insert' ? term : readLine(raw).text));
+  const [words, setWords] = useState(() =>
+    mode === 'insert' ? withKeyword(readLine(raw).text, term) : readLine(raw).text,
+  );
   const [word, setWord] = useState(related ?? '');
+  const [scope, setScope] = useState<'line' | 'all'>('line');
+  const pick = (i: number) => {
+    setLine(i);
+    onLine(i);
+    const text = readLine(lines[i] ?? '').text;
+    if (mode === 'rewrite') setWords(text);
+    if (mode === 'insert') setWords(withKeyword(text, term));
+  };
 
   if (mode === 'suggest') {
-    const at = skillsLine(resume);
-    if (at < 0) return <p className="text-xs text-slate-600">{t('noSkills')}</p>;
-    const before = lines[at] ?? '';
-    const after = appendTerm(before, term);
+    if (line < 0) return <p className="text-xs text-slate-600">{t('noSkills')}</p>;
+    const after = appendTerm(raw, term);
     return (
       <div className="space-y-1.5 rounded-md bg-slate-50 p-2 text-xs">
-        <p className="text-slate-600">{t('suggestIntro')}</p>
-        <p className="text-slate-500 line-through">{readLine(before).text}</p>
+        {skills.length > 1 ? (
+          <LinePicker
+            label={t('skillsGroup')}
+            text={resume}
+            value={line}
+            onChange={pick}
+            only={skills}
+          />
+        ) : (
+          <p className="text-slate-600">{t('suggestIntro')}</p>
+        )}
+        <p className="text-slate-500 line-through">{readLine(raw).text}</p>
         <p className="text-slate-800">{readLine(after).text}</p>
         <button
           type="button"
           className={APPLY}
           onClick={() => {
-            onApply(replaceLine(resume, at, after));
+            onApply(replaceLine(resume, line, after));
           }}
         >
           {t('apply')}
@@ -116,7 +148,9 @@ function Action({
   }
 
   if (mode === 'replace') {
-    const result = replaceWord(resume, word, term);
+    const withWord = linesWith(resume, word);
+    const target = withWord.includes(line) ? line : (withWord[0] ?? -1);
+    const all = replaceWord(resume, word, term);
     return (
       <div className="space-y-1.5 rounded-md bg-slate-50 p-2 text-xs">
         <label className="flex flex-wrap items-center gap-1.5 text-slate-600">
@@ -130,16 +164,45 @@ function Action({
           />
           {t('replaceWith', { term })}
         </label>
-        <p className="text-slate-600">{t('replaceFound', { count: result.lines })}</p>
+        {withWord.length === 0 ? (
+          <p className="text-slate-600">{t('replaceFound', { count: 0 })}</p>
+        ) : (
+          <>
+            <div role="radiogroup" aria-label={t('replaceWhere')} className="flex flex-wrap gap-3">
+              {(['line', 'all'] as const).map((s) => (
+                <label key={s} className="flex items-center gap-1 text-slate-700">
+                  <input
+                    type="radio"
+                    name={`replace-${term}`}
+                    checked={scope === s}
+                    onChange={() => {
+                      setScope(s);
+                    }}
+                  />
+                  {s === 'line' ? t('replaceOnlyLine') : t('replaceAllLines', { count: all.lines })}
+                </label>
+              ))}
+            </div>
+            {scope === 'line' && (
+              <LinePicker
+                label={t('replaceInLine')}
+                text={resume}
+                value={target}
+                onChange={pick}
+                only={withWord}
+              />
+            )}
+          </>
+        )}
         <button
           type="button"
           className={APPLY}
-          disabled={result.lines === 0}
+          disabled={withWord.length === 0}
           onClick={() => {
-            onApply(result.text);
+            onApply(scope === 'line' ? replaceWordInLine(resume, target, word, term) : all.text);
           }}
         >
-          {t('replaceAll')}
+          {scope === 'line' ? t('replaceOne') : t('replaceAll')}
         </button>
       </div>
     );
@@ -151,11 +214,7 @@ function Action({
         label={mode === 'rewrite' ? t('rewriteLine') : t('insertUnder')}
         text={resume}
         value={line}
-        onChange={(i) => {
-          setLine(i);
-          onLine(i);
-          if (mode === 'rewrite') setWords(readLine(lines[i] ?? '').text);
-        }}
+        onChange={pick}
       />
       <textarea
         value={words}
@@ -172,11 +231,7 @@ function Action({
         className={APPLY}
         disabled={!words.trim()}
         onClick={() => {
-          onApply(
-            mode === 'rewrite'
-              ? replaceLine(resume, line, rewordLine(raw, words))
-              : insertLine(resume, line, lineLike(raw, words.trim())),
-          );
+          onApply(replaceLine(resume, line, rewordLine(raw, words)));
         }}
       >
         {mode === 'rewrite' ? t('apply') : t('insert')}
@@ -231,7 +286,7 @@ function BestLines({
         ))}
       </span>
       {shown && shown.words.length > 0 && (
-        <span>{t('sharedWords', { words: shown.words.join(', ') })}</span>
+        <span className="basis-full">{t('sharedWords', { words: shown.words.join(', ') })}</span>
       )}
     </span>
   );
@@ -331,7 +386,9 @@ export function MissingKeywords({
     focus === null || focusIn
       ? null
       : focusMode === 'suggest'
-        ? skillsLine(resume)
+        ? picked?.term === focus && skillsLines(resume).includes(picked.line)
+          ? picked.line
+          : bestSkillsLine(resume, focus, adText, relatedOf(focus))
         : picked?.term === focus
           ? picked.line
           : placeOf(focus).line;
@@ -518,6 +575,7 @@ export function MissingKeywords({
                     term={term}
                     related={close ?? check?.relatedTo ?? null}
                     resume={resume}
+                    ad={adText}
                     start={picked?.term === term ? picked.line : placeOf(term).line}
                     onLine={(line) => {
                       setPicked({ term, line });

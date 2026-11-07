@@ -990,7 +990,7 @@
       "modes": {
         "suggest": "Vorschlag nutzen",
         "rewrite": "Zeile umschreiben",
-        "insert": "Neue Zeile",
+        "insert": "Ans Ende einer Zeile anfügen",
         "replace": "Wort ersetzen"
       },
       "skip": "Überspringen",
@@ -999,9 +999,9 @@
       "apply": "In Lebenslauf übernehmen",
       "insert": "Einfügen",
       "rewriteLine": "Zeile zum Umschreiben",
-      "insertUnder": "Einfügen unter",
+      "insertUnder": "Ans Ende von",
       "rewriteBox": "Neue Worte für diese Zeile",
-      "insertBox": "Neue Zeile",
+      "insertBox": "Zeile mit dem Stichwort",
       "notInText": "Deine Worte nennen „{term}“ noch nicht.",
       "replaceLabel": "Ersetze",
       "replaceWith": "durch „{term}“",
@@ -1024,7 +1024,13 @@
       "copyTerm": "„{term}“ kopieren",
       "copied": "„{term}“ kopiert",
       "closeSpelling": "Dein Lebenslauf schreibt „{word}“.",
-      "useSpelling": "„{term}“ aus der Anzeige verwenden"
+      "useSpelling": "„{term}“ aus der Anzeige verwenden",
+      "skillsGroup": "Skills-Gruppe",
+      "replaceWhere": "Wo ersetzen",
+      "replaceOnlyLine": "Nur diese Zeile",
+      "replaceAllLines": "Alle Zeilen ({count})",
+      "replaceInLine": "Zeile",
+      "replaceOne": "Ersetzen"
     },
     "claudeNotes": {
       "title": "Hinweise von Claude",

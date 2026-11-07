@@ -115,14 +115,38 @@ const SKILLS_HEADING = /skill|kenntnis|kompetenz|competenc|technolog|tools/i;
 
 /** The first line of the resume's Skills section (or -1): the place to add a plain keyword. */
 export function skillsLine(text: string): number {
+  return skillsLines(text)[0] ?? -1;
+}
+
+/** Every line of the Skills section (one per group, e.g. "Frontend: React, Vue"). */
+export function skillsLines(text: string): number[] {
   const lines = splitLines(text);
+  const found: number[] = [];
   let inSkills = false;
   for (const [i, line] of lines.entries()) {
     const { kind, text: words } = readLine(line);
     if (kind === 'section' || kind === 'name') inSkills = SKILLS_HEADING.test(words);
-    else if (inSkills && (kind === 'bullet' || kind === 'text')) return i;
+    else if (inSkills && (kind === 'bullet' || kind === 'text')) found.push(i);
   }
-  return -1;
+  return found;
+}
+
+/** Line `i` with every whole-word `word` replaced by `term` (other lines untouched). */
+export function replaceWordInLine(text: string, i: number, word: string, term: string): string {
+  if (!word.trim()) return text;
+  const lines = splitLines(text);
+  const line = lines[i];
+  if (line === undefined) return text;
+  lines[i] = line.replace(termPattern(word, 'giu'), term);
+  return lines.join('\n');
+}
+
+/** The lines that name `word`, as whole words. */
+export function linesWith(text: string, word: string): number[] {
+  if (!word.trim()) return [];
+  return splitLines(text).flatMap((line, i) =>
+    termPattern(word, 'iu').test(readLine(line).text) ? [i] : [],
+  );
 }
 
 /** The term added to the end of a line: "- **Tools:** React, Jest" + "detox" → "…, Jest, detox". */

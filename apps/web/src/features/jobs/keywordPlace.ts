@@ -1,4 +1,11 @@
-import { bestLine, contentLines, mentionsTerm, readLine, splitLines } from './replyEdit';
+import {
+  bestLine,
+  contentLines,
+  mentionsTerm,
+  readLine,
+  skillsLines,
+  splitLines,
+} from './replyEdit';
 
 /**
  * Where in the finished resume a missing keyword fits best, found word by word: every bullet is
@@ -48,10 +55,16 @@ export interface KeywordPlace {
 }
 
 /** How well each candidate line fits: shared words, plus extra for the related skill. */
-function scoreLines(resume: string, term: string, ad: string, related: string | null) {
+function scoreLines(
+  resume: string,
+  term: string,
+  ad: string,
+  related: string | null,
+  only?: number[],
+) {
   const lines = splitLines(resume);
   const bullets = contentLines(resume).filter((i) => readLine(lines[i] ?? '').kind === 'bullet');
-  const candidates = bullets.length ? bullets : contentLines(resume);
+  const candidates = only ?? (bullets.length ? bullets : contentLines(resume));
   const context = adContext(ad, term);
   return candidates.map((i) => {
     const text = readLine(lines[i] ?? '').text;
@@ -164,4 +177,23 @@ export function closeSpelling(resume: string, term: string): string | null {
     }
   }
   return null;
+}
+
+/**
+ * The Skills line a keyword suits best, when the section has groups ("Frontend: …",
+ * "Testing: …"): the one naming the related skill or sharing the most words with the ad around
+ * the keyword. The first Skills line when none stands out; -1 without a Skills section.
+ */
+export function bestSkillsLine(
+  resume: string,
+  term: string,
+  ad: string,
+  related: string | null = null,
+): number {
+  const lines = skillsLines(resume);
+  if (lines.length === 0) return -1;
+  const best = scoreLines(resume, term, ad, related, lines)
+    .filter((place) => place.score > 0)
+    .sort((a, b) => b.score - a.score || a.line - b.line)[0];
+  return best?.line ?? lines[0] ?? -1;
 }

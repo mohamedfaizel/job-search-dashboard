@@ -105,24 +105,28 @@ describe('JobResumePanel', () => {
     expect(within(box).getByText('3 of 5 covered')).toBeInTheDocument();
     expect(preview().getByText('Unsaved changes')).toBeInTheDocument();
 
-    // Insert a new line under a bullet: it becomes a bullet too.
-    await user.click(within(card('storybook')).getByRole('button', { name: 'Insert new line' }));
-    const line = within(card('storybook')).getByRole('textbox', { name: 'New line' });
+    // Insert: the keyword goes at the end of the best line, ready to word it well.
+    await user.click(
+      within(card('storybook')).getByRole('button', { name: 'Add to the end of a line' }),
+    );
+    const line = within(card('storybook')).getByRole('textbox', { name: 'Line with the keyword' });
+    expect(line).toHaveValue('Built dashboards in React and GraphQL, storybook');
     await user.clear(line);
-    await user.type(line, 'Documented UI components in Storybook');
+    await user.type(line, 'Built dashboards in React and GraphQL, documented in Storybook');
     await user.click(within(card('storybook')).getByRole('button', { name: 'Insert' }));
     expect(
-      preview().getByRole('button', { name: /Documented UI components in Storybook/ }),
+      preview().getByRole('button', { name: /GraphQL, documented in Storybook/ }),
     ).toBeInTheDocument();
 
-    // Replace a word, everywhere it appears.
+    // Replace a word: only in one line, or in all lines.
     await user.click(within(card('Vitest')).getByRole('button', { name: 'Replace a word' }));
     // Not one of your terms: the fact check warns before you add it.
     expect(within(card('Vitest')).getByRole('note')).toHaveTextContent(
       'Fact check: “Vitest” is not in your master resume',
     );
     await user.type(within(card('Vitest')).getByRole('textbox'), 'GraphQL');
-    expect(within(card('Vitest')).getByText('Found in 1 line.')).toBeInTheDocument();
+    expect(within(card('Vitest')).getByRole('radio', { name: 'Only this line' })).toBeChecked();
+    await user.click(within(card('Vitest')).getByRole('radio', { name: 'All lines (1)' }));
     await user.click(within(card('Vitest')).getByRole('button', { name: 'Replace all' }));
     expect(
       preview().getByRole('button', { name: /Built dashboards in React and Vitest/ }),
@@ -141,7 +145,7 @@ describe('JobResumePanel', () => {
     const sent = requests.find((r) => r.operation === 'EditJobResume');
     expect(sent?.variables['resume']).toContain('- React, TypeScript, microfrontends');
     expect(sent?.variables['resume']).toContain(
-      '- Built dashboards in React and GraphQL\n- Documented UI components in Storybook',
+      '- Built dashboards in React and GraphQL, documented in Storybook',
     );
   });
 
@@ -354,12 +358,14 @@ describe('JobResumePanel', () => {
     expect(card.getByRole('textbox', { name: 'New words for this line' })).toHaveValue(
       'Built dashboards in React and GraphQL',
     );
-    // Switching to Insert keeps that line.
-    await user.click(card.getByRole('button', { name: 'Insert new line' }));
-    expect(card.getByRole('combobox', { name: 'Insert under' })).toHaveDisplayValue(
+    // Insert keeps that line and adds the keyword to its end.
+    await user.click(card.getByRole('button', { name: 'Add to the end of a line' }));
+    expect(card.getByRole('combobox', { name: 'Add to the end of' })).toHaveDisplayValue(
       /Built dashboards in React and GraphQL/,
     );
-    expect(card.getByRole('textbox', { name: 'New line' })).toHaveValue('storybook');
+    expect(card.getByRole('textbox', { name: 'Line with the keyword' })).toHaveValue(
+      'Built dashboards in React and GraphQL, storybook',
+    );
   });
 
   it('adds a keyword dropped on a resume line, ready to edit there', async () => {

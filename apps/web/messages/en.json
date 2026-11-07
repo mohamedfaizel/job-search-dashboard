@@ -990,7 +990,7 @@
       "modes": {
         "suggest": "Use suggestion",
         "rewrite": "Rewrite a line",
-        "insert": "Insert new line",
+        "insert": "Add to the end of a line",
         "replace": "Replace a word"
       },
       "skip": "Skip",
@@ -999,9 +999,9 @@
       "apply": "Apply to resume",
       "insert": "Insert",
       "rewriteLine": "Line to rewrite",
-      "insertUnder": "Insert under",
+      "insertUnder": "Add to the end of",
       "rewriteBox": "New words for this line",
-      "insertBox": "New line",
+      "insertBox": "Line with the keyword",
       "notInText": "Your words don’t name “{term}” yet.",
       "replaceLabel": "Replace",
       "replaceWith": "with “{term}”",
@@ -1024,7 +1024,13 @@
       "copyTerm": "Copy “{term}”",
       "copied": "Copied “{term}”",
       "closeSpelling": "Your resume writes “{word}”.",
-      "useSpelling": "Use the ad’s “{term}”"
+      "useSpelling": "Use the ad’s “{term}”",
+      "skillsGroup": "Skills group",
+      "replaceWhere": "Where to replace",
+      "replaceOnlyLine": "Only this line",
+      "replaceAllLines": "All lines ({count})",
+      "replaceInLine": "Line",
+      "replaceOne": "Replace"
     },
     "claudeNotes": {
       "title": "Notes from Claude",
