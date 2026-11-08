@@ -1208,3 +1208,42 @@ export const IMPROVE_SECTION = /* GraphQL */ `
     }
   }
 `;
+
+const JOB_COVER_LETTER_FIELDS = `jobId title company language text hasCopy savedAt`;
+
+export const JOB_COVER_LETTER = /* GraphQL */ `
+  query JobCoverLetter($jobId: String!) {
+    jobCoverLetter(jobId: $jobId) {
+      ${JOB_COVER_LETTER_FIELDS}
+    }
+  }
+`;
+
+export const SAVE_JOB_COVER_LETTER = /* GraphQL */ `
+  mutation SaveJobCoverLetter($jobId: String!, $text: String!) {
+    saveJobCoverLetter(jobId: $jobId, text: $text) {
+      ${JOB_COVER_LETTER_FIELDS}
+    }
+  }
+`;
+
+export const IMPROVE_LETTER_PROMPT = /* GraphQL */ `
+  query ImproveLetterPrompt($input: ImproveLetterInput!) {
+    improveLetterPrompt(input: $input)
+  }
+`;
+
+export const IMPROVE_LETTER = /* GraphQL */ `
+  mutation ImproveLetter($input: ImproveLetterInput!) {
+    improveLetter(input: $input) {
+      before
+      after
+      findings {
+        kind
+        text
+        where
+        context
+      }
+    }
+  }
+`;

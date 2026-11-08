@@ -1,5 +1,5 @@
 import type { BuilderDoc, JobInsights, JobResumeBuild, ResumeBuild } from '@jobsearch/data';
-import { jobResumeBuildPdfUrl, resumeBuildPdfUrl } from '@jobsearch/data';
+import { jobCoverLetterPdfUrl, jobResumeBuildPdfUrl, resumeBuildPdfUrl } from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
 import { api, apiKeys, requests } from '../../profile/test/server';
 
@@ -159,12 +159,15 @@ export const jobBuild = {
   current: { ...JOB_START },
   /** The terms the user ticked "I have this" for. */
   have: [] as string[],
+  /** The cover letter saved for the job. */
+  letter: '',
   /** What the fact check found in the saved copy. */
   facts: [] as { kind: string; text: string; where: string; context: string }[],
   reset() {
     this.current = { ...JOB_START };
     this.have = [];
     this.facts = [];
+    this.letter = '';
   },
 };
 
@@ -185,6 +188,16 @@ const insights = (): JobInsights =>
     ],
     keywords: [{ term: 'storybook', inResume: false, youHave: false, relatedTo: null }],
   }) as unknown as JobInsights;
+
+const letterOf = () => ({
+  jobId: 'j1',
+  title: 'Frontend Engineer',
+  company: 'Acme GmbH',
+  language: 'en',
+  text: jobBuild.letter,
+  hasCopy: jobBuild.current.hasCopy,
+  savedAt: null,
+});
 
 export const jobBuilderHandlers = [
   ...builderHandlers,
@@ -228,6 +241,47 @@ export const jobBuilderHandlers = [
     requests.push({ operation: 'SetHaveTerm', variables });
     jobBuild.have.push(variables['term'] as string);
     return HttpResponse.json({ data: { setHaveTerm: insights() } });
+  }),
+  api.query('JobCoverLetter', ({ variables }) => {
+    requests.push({ operation: 'JobCoverLetter', variables });
+    return HttpResponse.json({ data: { jobCoverLetter: letterOf() } });
+  }),
+  api.mutation('SaveJobCoverLetter', ({ variables }) => {
+    requests.push({ operation: 'SaveJobCoverLetter', variables });
+    jobBuild.letter = variables['text'] as string;
+    return HttpResponse.json({ data: { saveJobCoverLetter: letterOf() } });
+  }),
+  api.query('ImproveLetterPrompt', ({ variables }) => {
+    requests.push({ operation: 'ImproveLetterPrompt', variables });
+    return HttpResponse.json({ data: { improveLetterPrompt: 'Please write my letter.' } });
+  }),
+  api.mutation('ImproveLetter', ({ variables }) => {
+    requests.push({ operation: 'ImproveLetter', variables });
+    const reply = (variables['input'] as { reply: string | null }).reply ?? 'Dear team,\n\nHi.';
+    return HttpResponse.json({
+      data: {
+        improveLetter: {
+          before: jobBuild.letter,
+          after: reply,
+          findings: reply.includes('90%')
+            ? [
+                {
+                  kind: 'NUMBER',
+                  text: '90%',
+                  where: 'COVER_LETTER',
+                  context: 'raised sales by 90%',
+                },
+              ]
+            : [],
+        },
+      },
+    });
+  }),
+  http.get(jobCoverLetterPdfUrl('j1'), () => {
+    requests.push({ operation: 'JobLetterPdf', variables: {} });
+    return new HttpResponse('%PDF-1.7', {
+      headers: { 'Content-Type': 'application/pdf', 'X-Pdf-Pages': '1', 'X-Pdf-Styled': '1' },
+    });
   }),
   api.query('ResumePdfCheck', ({ variables }) => {
     requests.push({ operation: 'ResumePdfCheck', variables });

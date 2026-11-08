@@ -22,6 +22,11 @@ const IMPROVE_PROMPT = `query ($input: ImproveSectionInput!) { improveSectionPro
 const HAVE_TERM = `mutation ($jobId: ID!, $term: String!) { setHaveTerm(jobId: $jobId, term: $term, have: true) { jobId } }`;
 const SAVE_KEY = `mutation ($value: String!) { saveApiKey(input: { kind: ANTHROPIC, value: $value }) { kind } }`;
 
+const LETTER = `query ($jobId: String!) { jobCoverLetter(jobId: $jobId) { jobId title company language text hasCopy savedAt } }`;
+const SAVE_LETTER = `mutation ($jobId: String!, $text: String!) { saveJobCoverLetter(jobId: $jobId, text: $text) { jobId text hasCopy savedAt } }`;
+const LETTER_PROMPT = `query ($input: ImproveLetterInput!) { improveLetterPrompt(input: $input) }`;
+const IMPROVE_LETTER = `mutation ($input: ImproveLetterInput!) { improveLetter(input: $input) { before after findings { kind text where context } } }`;
+
 interface Suggestion {
   sectionId: string;
   before: string;
@@ -408,6 +413,93 @@ Berlin | 01/2020 – today
         } finally {
           stub.mockRestore();
         }
+      });
+    });
+
+    describe('cover letter', () => {
+      const letter = async () => {
+        const res = await t.asUser<{
+          jobCoverLetter: { text: string; hasCopy: boolean; title: string; savedAt: string | null };
+        }>(LETTER, { jobId });
+        expect(res.errors).toBeUndefined();
+        return res.data!.jobCoverLetter;
+      };
+
+      it('belongs to the resume copy: none before, saved as clean paragraphs after', async () => {
+        expect(await letter()).toMatchObject({
+          hasCopy: false,
+          text: '',
+          title: 'Frontend Engineer',
+        });
+        const early = await t.asUser(SAVE_LETTER, { jobId, text: 'Dear team' });
+        expect(early.errors?.[0]?.extensions?.['apiCode']).toBe('JOB_RESUME_MISSING');
+
+        await t.asUser(START_JOB, { jobId });
+        const saved = await t.asUser<{ saveJobCoverLetter: { text: string } }>(SAVE_LETTER, {
+          jobId,
+          text: '```\nDear team,\n\n\n\nI like this role.\n\n---\n\nBest,\nAda\n```',
+        });
+        expect(saved.errors).toBeUndefined();
+        expect(saved.data!.saveJobCoverLetter.text).toBe(
+          'Dear team,\n\nI like this role.\n\nBest,\nAda',
+        );
+        expect(await letter()).toMatchObject({
+          hasCopy: true,
+          text: expect.stringContaining('Dear team'),
+        });
+        // The resume copy itself is untouched.
+        expect(JSON.parse((await getJob()).doc)).toEqual(JSON.parse((await getJob()).masterDoc));
+
+        const tooLong = await t.asUser(SAVE_LETTER, { jobId, text: 'x'.repeat(20_001) });
+        expect(tooLong.errors?.[0]?.extensions?.['apiCode']).toBe('REPLY_PART_TOO_LONG');
+      });
+
+      it('sends the letter as a PDF, once there is one', async () => {
+        await t.asUser(START_JOB, { jobId });
+        const none = await request(t.server)
+          .get(`/resume-builder/job/${jobId}/cover-letter.pdf`)
+          .set('Cookie', t.cookieFor('USER'));
+        expect(none.status).toBe(404);
+        await t.asUser(SAVE_LETTER, { jobId, text: 'Dear team,\n\nI like this role.\n\nAda' });
+        const res = await request(t.server)
+          .get(`/resume-builder/job/${jobId}/cover-letter.pdf?download=1`)
+          .set('Cookie', t.cookieFor('USER'));
+        expect(res.status).toBe(200);
+        expect(res.headers['x-pdf-pages']).toBe('1');
+        expect(res.headers['content-disposition']).toContain('attachment');
+      });
+
+      it('writes a prompt from the resume and the ad, and checks a pasted letter for new facts', async () => {
+        await t.asUser(START_JOB, { jobId });
+        await t.asUser(SAVE_LETTER, { jobId, text: 'Dear team,\n\nI like this role.\n\nAda' });
+        const res = await t.asUser<{ improveLetterPrompt: string }>(LETTER_PROMPT, {
+          input: { jobId, instruction: 'Warmer' },
+        });
+        expect(res.errors).toBeUndefined();
+        expect(res.data!.improveLetterPrompt).toContain('Please improve my English cover letter');
+        expect(res.data!.improveLetterPrompt).toContain('Built the design system');
+        expect(res.data!.improveLetterPrompt).toContain('I like this role.');
+        expect(res.data!.improveLetterPrompt).toContain('Also: Warmer');
+
+        const out = await t.asUser<{
+          improveLetter: { before: string; after: string; findings: Suggestion['findings'] };
+        }>(IMPROVE_LETTER, {
+          input: {
+            jobId,
+            reply: 'Dear team,\n\nI built the design system and cut load time by 55%.\n\nAda',
+          },
+        });
+        expect(out.errors).toBeUndefined();
+        expect(out.data!.improveLetter.before).toContain('I like this role.');
+        expect(out.data!.improveLetter.after).toContain('cut load time by 55%');
+        expect(out.data!.improveLetter.findings).toEqual([
+          expect.objectContaining({ kind: 'NUMBER', text: '55%', where: 'COVER_LETTER' }),
+        ]);
+        // Nothing is saved until you keep it.
+        expect((await letter()).text).toContain('I like this role.');
+
+        const empty = await t.asUser(IMPROVE_LETTER, { input: { jobId, reply: '```\n```' } });
+        expect(empty.errors?.[0]?.extensions?.['apiCode']).toBe('SUGGESTION_UNREADABLE');
       });
     });
 

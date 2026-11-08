@@ -48,4 +48,21 @@ export class ResumeBuilderController {
     });
     return send(res, file, download === '1' ? 'attachment' : 'inline');
   }
+
+  /** A job's cover letter as a PDF, the same way. */
+  @Get('job/:jobId/cover-letter.pdf')
+  async letterPdf(
+    @CurrentUser() user: SessionUser,
+    @Param('jobId') jobId: string,
+    @Query('download') download: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const file = await this.builder.letterPdf(user.id, jobId);
+    res.set({
+      'Cache-Control': 'no-store',
+      'X-Pdf-Pages': String(file.pages),
+      'X-Pdf-Styled': file.styled === false ? '0' : '1',
+    });
+    return send(res, file, download === '1' ? 'attachment' : 'inline');
+  }
 }

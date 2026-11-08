@@ -1,5 +1,5 @@
 import type { BuilderPdf } from '@jobsearch/data';
-import { useJobResumeBuildPdf, useResumeBuildPdf } from '@jobsearch/data';
+import { useJobCoverLetterPdf, useJobResumeBuildPdf, useResumeBuildPdf } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -11,19 +11,31 @@ interface Props {
   /** Changes after every save, so the preview shows the saved resume. */
   version: string;
   maxPages: number;
+  /** Show the job's cover letter instead of its resume. */
+  letter?: boolean;
+  /** False while there is nothing to typeset yet (no letter written). */
+  enabled?: boolean;
 }
 
 /**
  * The real PDF, the same file the download gives you, typeset in your template. It is made
  * again after each save. The meter shows the pages against your page limit from My profile.
  */
-export function PdfPreview({ language, jobId, version, maxPages }: Props) {
+export function PdfPreview({
+  language,
+  jobId,
+  version,
+  maxPages,
+  letter = false,
+  enabled = true,
+}: Props) {
   const t = useTranslations('Resume');
   const errorText = useErrorText();
   // Both hooks always run; only one of them has a request to make.
   const master = useResumeBuildPdf(jobId ? '' : language, version, !jobId);
-  const job = useJobResumeBuildPdf(jobId ?? '', version, !!jobId);
-  const pdf = jobId ? job : master;
+  const job = useJobResumeBuildPdf(jobId ?? '', version, !!jobId && !letter);
+  const letterPdf = useJobCoverLetterPdf(jobId ?? '', version, !!jobId && letter && enabled);
+  const pdf = jobId ? (letter ? letterPdf : job) : master;
   const url = useObjectUrl(pdf.data);
   const pages = pdf.data?.pages ?? 0;
   const over = pages > maxPages;
@@ -53,7 +65,7 @@ export function PdfPreview({ language, jobId, version, maxPages }: Props) {
       </div>
       {over && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-800">
-          {t('tooLong', { max: maxPages })}
+          {t(letter ? 'letterTooLong' : 'tooLong', { max: maxPages })}
         </p>
       )}
       {pdf.data && !pdf.data.styled && (
@@ -74,7 +86,7 @@ export function PdfPreview({ language, jobId, version, maxPages }: Props) {
         />
       ) : (
         <div className="flex h-[60vh] items-center justify-center rounded-md border border-dashed border-slate-300 text-sm text-slate-500">
-          {pdf.isError ? '' : t('makingPdf')}
+          {pdf.isError ? '' : letter && !enabled ? t('noLetterYet') : t('makingPdf')}
         </div>
       )}
     </div>

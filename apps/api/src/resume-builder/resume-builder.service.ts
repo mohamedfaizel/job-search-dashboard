@@ -5,7 +5,7 @@ import { ApiKeysService } from '../api-keys/api-keys.service';
 import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
 import type { DocumentFile } from '../documents/documents.service';
-import { parseResume } from '../documents/resume-doc';
+import { letterParagraphs, parseResume } from '../documents/resume-doc';
 import { Prisma } from '../generated/prisma/client';
 import { factCheck } from '../insights/fact-check';
 import { FitService } from '../insights/fit.service';
@@ -25,9 +25,13 @@ import {
   toMarkdown,
 } from './builder-doc';
 import { buildImprovePrompt, readSuggestion, sectionMarkdown } from './improve-section';
+import { buildLetterPrompt, readLetter } from './letter';
 import type {
+  ImproveLetterInput,
   ImproveSectionInput,
+  JobCoverLetterModel,
   JobResumeBuildModel,
+  LetterSuggestionModel,
   ResumeBuildModel,
   SectionSuggestionModel,
 } from './resume-builder.model';
@@ -36,6 +40,9 @@ import type {
 export interface BuilderPdf extends DocumentFile {
   pages: number;
 }
+
+/** A cover letter is a page; this is far more than any real one needs. */
+const MAX_LETTER_CHARS = 20_000;
 
 /** Whitespace differences (a trailing newline) don't make the resume "changed". */
 const same = (a: string, b: string) => a.trim() === b.trim();
@@ -215,17 +222,8 @@ export class ResumeBuilderService {
       throw apiError(NotFoundException, 'SECTION_NOT_FOUND', 'That section is not in this resume');
     }
     const before = sectionMarkdown(section);
-    const profile = await this.prisma.profile.findUnique({
-      where: { userId },
-      select: {
-        achievements: true,
-        skills: true,
-        keywords: true,
-        headline: true,
-        yearsExperience: true,
-      },
-    });
     const have = terms.filter((t) => t.youHave).map((t) => t.term);
+    const facts = await this.factSources(userId, me, doc, have);
     return {
       section,
       before,
@@ -236,10 +234,31 @@ export class ResumeBuilderService {
         job: jobAd,
         // Only terms you ticked or your profile has: never a skill the resume would invent.
         mustAdd: [...new Set(have)].filter((term) => !mentions(before, term)),
-        achievements: achievementLines(profile?.achievements ?? ''),
+        achievements: facts.achievements,
         instruction: input.instruction ?? '',
       }),
-      // What you have told us: the fact check flags anything in the suggestion beyond it.
+      sources: facts.sources,
+    };
+  }
+
+  /**
+   * What you have told us, which the fact check compares a suggestion with: this resume, your
+   * master resumes, the terms you ticked, your profile and your achievements. Anything in a
+   * suggestion beyond it gets flagged.
+   */
+  private async factSources(userId: number, me: Me, doc: BuilderDoc, have: string[]) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        achievements: true,
+        skills: true,
+        keywords: true,
+        headline: true,
+        yearsExperience: true,
+      },
+    });
+    return {
+      achievements: achievementLines(profile?.achievements ?? ''),
       sources: [
         toMarkdown(doc),
         me.mainText,
@@ -252,6 +271,121 @@ export class ResumeBuilderService {
         profile?.headline ?? '',
         profile?.yearsExperience ? `${String(profile.yearsExperience)} years` : '',
       ],
+    };
+  }
+
+  /** This job's cover letter. A letter belongs to the job's resume copy. */
+  async getLetter(userId: number, jobId: string): Promise<JobCoverLetterModel> {
+    const [me, job, row] = await Promise.all([
+      this.me(userId),
+      this.job(jobId),
+      this.prisma.jobResume.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { coverLetter: true, updatedAt: true },
+      }),
+    ]);
+    const text = letterParagraphs(row?.coverLetter ?? '').join('\n\n');
+    return {
+      jobId,
+      title: job.title,
+      company: job.company.name,
+      language: this.pick(me, job.language),
+      text,
+      hasCopy: !!row,
+      savedAt: row?.updatedAt ?? null,
+    };
+  }
+
+  /** Saves the letter for this job. Needs a resume copy first: the letter is stored with it. */
+  async saveLetter(userId: number, jobId: string, text: string): Promise<JobCoverLetterModel> {
+    await this.job(jobId);
+    if (text.length > MAX_LETTER_CHARS) {
+      throw apiError(
+        BadRequestException,
+        'REPLY_PART_TOO_LONG',
+        `A cover letter is at most ${String(MAX_LETTER_CHARS)} characters`,
+        { max: MAX_LETTER_CHARS },
+      );
+    }
+    const { count } = await this.prisma.jobResume.updateMany({
+      where: { userId, jobId },
+      data: { coverLetter: letterParagraphs(text).join('\n\n') },
+    });
+    if (count === 0) {
+      throw apiError(
+        BadRequestException,
+        'JOB_RESUME_MISSING',
+        'Start a resume copy for this job first',
+      );
+    }
+    return this.getLetter(userId, jobId);
+  }
+
+  /** The saved letter as a PDF in your cover letter layout, with its page count. */
+  async letterPdf(userId: number, jobId: string): Promise<BuilderPdf> {
+    const file = await this.documents.jobPdf(userId, jobId, 'cover-letter');
+    const pages = (await PDFDocument.load(file.bytes, { updateMetadata: false })).getPageCount();
+    return { ...file, pages };
+  }
+
+  /** The AI chat prompt that writes or improves this job's cover letter. */
+  async letterPrompt(userId: number, input: ImproveLetterInput): Promise<string> {
+    return (await this.letterContext(userId, input)).prompt;
+  }
+
+  /**
+   * Writes or improves the cover letter: from the AI chat reply you pasted, or, without one, by
+   * asking your own saved AI key. Nothing is saved here: you keep or discard it on screen.
+   */
+  async improveLetter(userId: number, input: ImproveLetterInput): Promise<LetterSuggestionModel> {
+    const ctx = await this.letterContext(userId, input);
+    const reply = input.reply?.trim()
+      ? input.reply.slice(0, 60_000)
+      : await this.askOwnKey(userId, ctx.prompt);
+    const after = readLetter(reply);
+    if (!after) {
+      throw apiError(BadRequestException, 'SUGGESTION_UNREADABLE', 'The reply has no letter in it');
+    }
+    return {
+      before: ctx.before,
+      after,
+      findings: factCheck({
+        resume: '',
+        coverLetter: after,
+        sources: ctx.sources,
+        jobSkills: ctx.jobSkills,
+      }),
+    };
+  }
+
+  private async letterContext(userId: number, input: ImproveLetterInput) {
+    const [built, job, found, letter, me] = await Promise.all([
+      this.getJob(userId, input.jobId),
+      this.prisma.job.findUniqueOrThrow({
+        where: { id: input.jobId },
+        select: { title: true, description: true, company: { select: { name: true } } },
+      }),
+      this.insights.forJob(userId, input.jobId),
+      this.getLetter(userId, input.jobId),
+      this.me(userId),
+    ]);
+    const doc = read(built.doc);
+    const have = [...found.skills, ...found.keywords].filter((t) => t.youHave).map((t) => t.term);
+    const facts = await this.factSources(userId, me, doc, have);
+    const resume = toMarkdown(doc);
+    return {
+      before: letter.text,
+      jobSkills: found.skills.map((s) => s.term),
+      sources: facts.sources,
+      prompt: buildLetterPrompt({
+        language: letter.language,
+        job: { title: job.title, company: job.company.name, description: job.description ?? '' },
+        resume,
+        letter: letter.text,
+        mustAdd: [...new Set(have)],
+        achievements: facts.achievements,
+        instruction: input.instruction ?? '',
+      }),
     };
   }
 

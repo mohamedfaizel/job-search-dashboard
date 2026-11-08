@@ -4,19 +4,31 @@ import { queryKeys } from './hooks';
 import { jobInsightsPrefix } from './insights';
 import {
   COPY_SECTION_TO_MASTER,
+  IMPROVE_LETTER,
+  IMPROVE_LETTER_PROMPT,
   IMPROVE_SECTION,
   IMPROVE_SECTION_PROMPT,
+  JOB_COVER_LETTER,
   JOB_RESUME_BUILD,
   RESET_JOB_RESUME_BUILD,
   RESTART_RESUME_BUILD,
   RESUME_BUILD,
   RESUME_BUILD_PROMPT,
+  SAVE_JOB_COVER_LETTER,
   SAVE_JOB_RESUME_BUILD,
   SAVE_RESUME_BUILD,
   START_JOB_RESUME_BUILD,
 } from './operations';
 import { profileKey } from './profile';
-import type { ImproveSectionInput, JobResumeBuild, ResumeBuild, SectionSuggestion } from './types';
+import type {
+  ImproveLetterInput,
+  ImproveSectionInput,
+  JobCoverLetter,
+  JobResumeBuild,
+  LetterSuggestion,
+  ResumeBuild,
+  SectionSuggestion,
+} from './types';
 
 export const resumeBuildKey = (language: string | null) => ['resumeBuild', language] as const;
 
@@ -45,6 +57,15 @@ export async function fetchResumeBuildPdf(language: string): Promise<BuilderPdf>
 
 export async function fetchJobResumeBuildPdf(jobId: string): Promise<BuilderPdf> {
   return fetchPdf(jobResumeBuildPdfUrl(jobId));
+}
+
+/** A job's cover letter as a PDF. */
+export function jobCoverLetterPdfUrl(jobId: string, download = false): string {
+  return `${API_ROOT}/resume-builder/job/${encodeURIComponent(jobId)}/cover-letter.pdf${download ? '?download=1' : ''}`;
+}
+
+export async function fetchJobCoverLetterPdf(jobId: string): Promise<BuilderPdf> {
+  return fetchPdf(jobCoverLetterPdfUrl(jobId));
 }
 
 async function fetchPdf(url: string): Promise<BuilderPdf> {
@@ -278,5 +299,74 @@ export function useImproveSection() {
           input,
         })
       ).improveSection,
+  });
+}
+
+export const jobCoverLetterKey = (jobId: string) => ['jobCoverLetter', jobId] as const;
+
+/** The cover letter saved for a job. The editor keeps its own copy while you type. */
+export function useJobCoverLetter(jobId: string, enabled = true) {
+  return useQuery({
+    queryKey: jobCoverLetterKey(jobId),
+    enabled,
+    queryFn: async () =>
+      (await graphqlClient.request<{ jobCoverLetter: JobCoverLetter }>(JOB_COVER_LETTER, { jobId }))
+        .jobCoverLetter,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/** Saves the letter. The Apply kit reads the same text, so its readers are refreshed. */
+export function useSaveJobCoverLetter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { jobId: string; text: string }) =>
+      (
+        await graphqlClient.request<{ saveJobCoverLetter: JobCoverLetter }>(
+          SAVE_JOB_COVER_LETTER,
+          vars,
+        )
+      ).saveJobCoverLetter,
+    onSuccess: (letter) => {
+      queryClient.setQueryData(jobCoverLetterKey(letter.jobId), letter);
+      void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
+    },
+  });
+}
+
+/** A job's letter PDF for one saved version (see useResumeBuildPdf). */
+export function useJobCoverLetterPdf(jobId: string, version: string, enabled = true) {
+  return useQuery({
+    queryKey: ['jobCoverLetter', 'pdf', jobId, version],
+    queryFn: () => fetchJobCoverLetterPdf(jobId),
+    enabled,
+    placeholderData: (previous) => previous,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/** The AI chat prompt that writes or improves the letter; fetched when you copy it. */
+export function useImproveLetterPrompt() {
+  return useMutation({
+    mutationFn: async (input: ImproveLetterInput) =>
+      (
+        await graphqlClient.request<{ improveLetterPrompt: string }>(IMPROVE_LETTER_PROMPT, {
+          input,
+        })
+      ).improveLetterPrompt,
+  });
+}
+
+/**
+ * A letter from the AI chat reply you pasted, or (no reply) from your own saved AI key. It
+ * changes nothing: you keep or discard it on screen.
+ */
+export function useImproveLetter() {
+  return useMutation({
+    mutationFn: async (input: ImproveLetterInput) =>
+      (await graphqlClient.request<{ improveLetter: LetterSuggestion }>(IMPROVE_LETTER, { input }))
+        .improveLetter,
   });
 }

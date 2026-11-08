@@ -281,6 +281,17 @@ enum ImportSource {
   JOBHUNTER
 }
 
+input ImproveLetterInput {
+  """What you want from this pass"""
+  instruction: String
+  jobId: String!
+
+  """
+  An AI chat’s reply pasted back. Left out, your own saved AI key answers instead
+  """
+  reply: String
+}
+
 input ImproveSectionInput {
   """What you want from this pass"""
   instruction: String
@@ -385,6 +396,25 @@ type Job {
   """What the ad says about visa sponsorship or relocation help"""
   visa: VisaSponsorship
   workplace: Workplace
+}
+
+"""The cover letter saved for one job"""
+type JobCoverLetter {
+  company: String!
+
+  """
+  False until you start a resume copy for this job: a letter belongs to it
+  """
+  hasCopy: Boolean!
+  jobId: String!
+
+  """ISO 639-1 code of the language the letter is written in"""
+  language: String!
+  savedAt: DateTime
+
+  """Paragraphs separated by a blank line; empty until you write one"""
+  text: String!
+  title: String!
 }
 
 input JobFilterInput {
@@ -769,6 +799,22 @@ type LanguageResume {
   updatedAt: DateTime!
 }
 
+"""
+A written or improved cover letter to keep or discard, with its fact check
+"""
+type LetterSuggestion {
+  """The new letter, paragraphs separated by a blank line"""
+  after: String!
+
+  """The letter as it is now"""
+  before: String!
+
+  """
+  Numbers, skills and levels in the new letter that are in nothing you told us
+  """
+  findings: [FactFinding!]!
+}
+
 input LogInInput {
   email: String!
   password: String!
@@ -865,6 +911,11 @@ type Mutation {
   hideJob(id: ID!): Boolean!
 
   """
+  A written or improved letter, from the AI chat reply you pasted or from your own saved AI key. Changes nothing
+  """
+  improveLetter(input: ImproveLetterInput!): LetterSuggestion!
+
+  """
   An improved section, from the AI chat reply you pasted or from your own saved AI key. Changes nothing
   """
   improveSection(input: ImproveSectionInput!): SectionSuggestion!
@@ -949,6 +1000,9 @@ type Mutation {
   Saves Claude's answer to the interview prep prompt for this job (replacing the one before)
   """
   saveInterviewPrep(jobId: ID!, text: String!): JobInsights!
+
+  """Saves the cover letter for a job (needs a resume copy for it first)"""
+  saveJobCoverLetter(jobId: String!, text: String!): JobCoverLetter!
 
   """Saves a job’s resume (JSON text)"""
   saveJobResumeBuild(doc: String!, jobId: String!): JobResumeBuild!
@@ -1378,11 +1432,17 @@ type Query {
   """Today's credits you used against DAILY_CREDIT_CAP"""
   importBudget: ImportBudget!
 
+  """AI chat prompt that writes or improves a job’s cover letter"""
+  improveLetterPrompt(input: ImproveLetterInput!): String!
+
   """
   AI chat prompt that improves one section of your resume (master or a job copy)
   """
   improveSectionPrompt(input: ImproveSectionInput!): String!
   job(id: ID!): Job!
+
+  """The cover letter saved for one job"""
+  jobCoverLetter(jobId: String!): JobCoverLetter!
 
   """Values to offer in each column filter"""
   jobFilterOptions: JobFilterOptions!
