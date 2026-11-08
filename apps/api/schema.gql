@@ -281,6 +281,25 @@ enum ImportSource {
   JOBHUNTER
 }
 
+input ImproveSectionInput {
+  """What you want from this pass"""
+  instruction: String
+
+  """The job whose copy is improved; null improves your master resume"""
+  jobId: String
+
+  """Master resume language; ignored with a job"""
+  language: String
+
+  """
+  An AI chat’s reply pasted back. Left out, your own saved AI key answers instead
+  """
+  reply: String
+
+  """The section to improve (its id in the resume)"""
+  sectionId: String!
+}
+
 """
 What Claude wrote to prepare you for an interview for this job, pasted back
 """
@@ -844,6 +863,11 @@ type Mutation {
 
   """Hide a job from your table. Other users still see it."""
   hideJob(id: ID!): Boolean!
+
+  """
+  An improved section, from the AI chat reply you pasted or from your own saved AI key. Changes nothing
+  """
+  improveSection(input: ImproveSectionInput!): SectionSuggestion!
   logIn(input: LogInInput!): User!
   logOut: Boolean!
 
@@ -1353,6 +1377,11 @@ type Query {
 
   """Today's credits you used against DAILY_CREDIT_CAP"""
   importBudget: ImportBudget!
+
+  """
+  AI chat prompt that improves one section of your resume (master or a job copy)
+  """
+  improveSectionPrompt(input: ImproveSectionInput!): String!
   job(id: ID!): Job!
 
   """Values to offer in each column filter"""
@@ -1670,6 +1699,26 @@ input ScheduleInput {
   """"HH:mm", 24-hour, server local time"""
   runAt: String! = "07:00"
   schedule: ScheduleFrequency!
+}
+
+"""
+An improved version of one section, to keep or discard, with its fact check
+"""
+type SectionSuggestion {
+  """The improved section as Markdown"""
+  after: String!
+
+  """The section as it is now, as Markdown"""
+  before: String!
+
+  """
+  Numbers, skills and levels in the improved text that are not in anything you told us
+  """
+  findings: [FactFinding!]!
+
+  """The improved section as JSON text, ready to put into the resume"""
+  section: String!
+  sectionId: String!
 }
 
 input SignUpInput {

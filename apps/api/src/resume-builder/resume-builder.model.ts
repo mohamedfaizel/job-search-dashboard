@@ -1,4 +1,5 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { FactFindingModel } from '../insights/insights.model';
 
 @ObjectType('ResumeBuild', {
   description: 'Your master resume in one language, as the Resume builder edits it',
@@ -73,4 +74,54 @@ export class JobResumeBuildModel {
 
   @Field(() => Date, { nullable: true, description: 'Null until you first save this copy' })
   savedAt!: Date | null;
+}
+
+@InputType('ImproveSectionInput')
+export class ImproveSectionInput {
+  @Field({ description: 'The section to improve (its id in the resume)' })
+  sectionId!: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'The job whose copy is improved; null improves your master resume',
+  })
+  jobId?: string | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'Master resume language; ignored with a job',
+  })
+  language?: string | null;
+
+  @Field(() => String, { nullable: true, description: 'What you want from this pass' })
+  instruction?: string | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'An AI chat’s reply pasted back. Left out, your own saved AI key answers instead',
+  })
+  reply?: string | null;
+}
+
+@ObjectType('SectionSuggestion', {
+  description: 'An improved version of one section, to keep or discard, with its fact check',
+})
+export class SectionSuggestionModel {
+  @Field()
+  sectionId!: string;
+
+  @Field({ description: 'The section as it is now, as Markdown' })
+  before!: string;
+
+  @Field({ description: 'The improved section as Markdown' })
+  after!: string;
+
+  @Field({ description: 'The improved section as JSON text, ready to put into the resume' })
+  section!: string;
+
+  @Field(() => [FactFindingModel], {
+    description:
+      'Numbers, skills and levels in the improved text that are not in anything you told us',
+  })
+  findings!: FactFindingModel[];
 }

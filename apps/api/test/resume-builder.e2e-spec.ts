@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
@@ -15,6 +15,20 @@ const START_JOB = `mutation ($jobId: String!) { startJobResumeBuild(jobId: $jobI
 const SAVE_JOB = `mutation ($jobId: String!, $doc: String!) { saveJobResumeBuild(jobId: $jobId, doc: $doc) { ${JOB_FIELDS} } }`;
 const RESET_JOB = `mutation ($jobId: String!) { resetJobResumeBuild(jobId: $jobId) { ${JOB_FIELDS} } }`;
 const COPY_SECTION = `mutation ($jobId: String!, $sectionId: String!) { copySectionToMaster(jobId: $jobId, sectionId: $sectionId) { ${JOB_FIELDS} } }`;
+
+const SECTION_FIELDS = 'sectionId before after section findings { kind text where context }';
+const IMPROVE = `mutation ($input: ImproveSectionInput!) { improveSection(input: $input) { ${SECTION_FIELDS} } }`;
+const IMPROVE_PROMPT = `query ($input: ImproveSectionInput!) { improveSectionPrompt(input: $input) }`;
+const HAVE_TERM = `mutation ($jobId: ID!, $term: String!) { setHaveTerm(jobId: $jobId, term: $term, have: true) { jobId } }`;
+const SAVE_KEY = `mutation ($value: String!) { saveApiKey(input: { kind: ANTHROPIC, value: $value }) { kind } }`;
+
+interface Suggestion {
+  sectionId: string;
+  before: string;
+  after: string;
+  section: string;
+  findings: { kind: string; text: string; where: string; context: string }[];
+}
 
 interface Build {
   language: string;
@@ -296,6 +310,105 @@ Berlin | 01/2020 – today
         headline: 'Only for this job',
       });
       expect(reset.data!.resetJobResumeBuild.doc).toBe(reset.data!.resetJobResumeBuild.masterDoc);
+    });
+
+    describe('Improve with AI', () => {
+      const experienceId = async () => exp(JSON.parse((await getJob()).doc) as Doc).id;
+
+      it('writes a prompt with the job ad, and only the terms you ticked as yours', async () => {
+        const job = await t.gql<{ createJob: { id: string } }>(CREATE_JOB, {
+          input: {
+            title: 'Platform Engineer',
+            companyName: 'Beta AG',
+            description: 'You run Kubernetes and GraphQL in production.',
+            skills: ['Kubernetes', 'GraphQL'],
+          },
+        });
+        const id = job.data!.createJob.id;
+        await t.asUser(START_JOB, { jobId: id });
+        await t.asUser(HAVE_TERM, { jobId: id, term: 'GraphQL' });
+        const built = await t.asUser<{ jobResumeBuild: JobBuild }>(GET_JOB, { jobId: id });
+        const sectionId = exp(JSON.parse(built.data!.jobResumeBuild.doc) as Doc).id;
+
+        const res = await t.asUser<{ improveSectionPrompt: string }>(IMPROVE_PROMPT, {
+          input: { jobId: id, sectionId, instruction: 'Keep it short' },
+        });
+        expect(res.errors).toBeUndefined();
+        const prompt = res.data!.improveSectionPrompt;
+        expect(prompt).toContain('Platform Engineer');
+        expect(prompt).toContain('Kubernetes and GraphQL in production');
+        expect(prompt).toContain('in my own words: graphql');
+        expect(prompt).not.toMatch(/in my own words:.*kubernetes/i);
+        expect(prompt).toContain('Also: Keep it short');
+        expect(prompt).toContain('Built the design system');
+      });
+
+      it('shows a pasted reply next to the section, flags new facts and changes nothing', async () => {
+        await t.asUser(START_JOB, { jobId });
+        const before = await getJob();
+        const sectionId = await experienceId();
+        const res = await t.asUser<{ improveSection: Suggestion }>(IMPROVE, {
+          input: {
+            jobId,
+            sectionId,
+            reply:
+              '```markdown\n## Experience\n- Built the design system and cut load time by 40%\n```',
+          },
+        });
+        expect(res.errors).toBeUndefined();
+        const out = res.data!.improveSection;
+        expect(out.sectionId).toBe(sectionId);
+        expect(out.before).toContain('Built the design system');
+        expect(out.after).toContain('cut load time by 40%');
+        expect(out.findings).toEqual([expect.objectContaining({ kind: 'NUMBER', text: '40%' })]);
+        expect(JSON.parse(out.section)).toMatchObject({ id: sectionId, title: 'EXPERIENCE' });
+        // Keep or discard happens on screen: the saved copy is as it was.
+        expect((await getJob()).doc).toBe(before.doc);
+      });
+
+      it('works on your master resume too, and refuses unreadable replies and unknown sections', async () => {
+        const master = JSON.parse((await get()).doc) as Doc;
+        const sectionId = exp(master).id;
+        const ok = await t.asUser<{ improveSection: Suggestion }>(IMPROVE, {
+          input: { sectionId, reply: '- Built the design system with the team' },
+        });
+        expect(ok.errors).toBeUndefined();
+        expect(ok.data!.improveSection.findings).toEqual([]);
+        const empty = await t.asUser(IMPROVE, { input: { sectionId, reply: '```\n```\n' } });
+        expect(empty.errors?.[0]?.extensions?.['apiCode']).toBe('SUGGESTION_UNREADABLE');
+        const none = await t.asUser(IMPROVE, { input: { sectionId: 'nope', reply: 'text' } });
+        expect(none.errors?.[0]?.extensions?.['apiCode']).toBe('SECTION_NOT_FOUND');
+      });
+
+      it('asks your own AI key when there is no reply, and says when it is missing', async () => {
+        const sectionId = (JSON.parse((await get()).doc) as Doc).sections[1]!.id;
+        const missing = await t.asUser(IMPROVE, { input: { sectionId } });
+        expect(missing.errors?.[0]?.extensions?.['apiCode']).toBe('AI_KEY_MISSING');
+
+        const real = globalThis.fetch;
+        const calls: string[] = [];
+        const stub = vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+          const url = String(input instanceof Request ? input.url : input);
+          if (!url.includes('api.anthropic.com')) return real(input, init);
+          calls.push(url);
+          const body = url.includes('/v1/models')
+            ? { data: [{ id: 'claude-sonnet-5-5' }] }
+            : { content: [{ type: 'text', text: '- Led the design system rollout' }] };
+          return Promise.resolve(Response.json(body));
+        });
+        try {
+          const saved = await t.asUser(SAVE_KEY, { value: 'sk-ant-test-key-1234' });
+          expect(saved.errors).toBeUndefined();
+          const res = await t.asUser<{ improveSection: Suggestion }>(IMPROVE, {
+            input: { sectionId },
+          });
+          expect(res.errors).toBeUndefined();
+          expect(res.data!.improveSection.after).toContain('Led the design system rollout');
+          expect(calls.some((url) => url.endsWith('/v1/messages'))).toBe(true);
+        } finally {
+          stub.mockRestore();
+        }
+      });
     });
 
     it('keeps another user out, and sends the copy as a PDF', async () => {

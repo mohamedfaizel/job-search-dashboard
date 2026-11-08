@@ -65,6 +65,8 @@ export const API_ERROR_CODES = [
   'RESUME_BUILD_INVALID',
   'RESUME_REPLY_EMPTY',
   'SECTION_NOT_FOUND',
+  'AI_CALL_FAILED',
+  'SUGGESTION_UNREADABLE',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

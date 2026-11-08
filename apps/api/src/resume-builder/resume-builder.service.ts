@@ -1,11 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
+import { AI_PROVIDERS, AiCallError, completeWithKey } from '../api-keys/ai-providers';
+import { ApiKeysService } from '../api-keys/api-keys.service';
 import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
 import type { DocumentFile } from '../documents/documents.service';
 import { parseResume } from '../documents/resume-doc';
 import { Prisma } from '../generated/prisma/client';
+import { factCheck } from '../insights/fact-check';
 import { FitService } from '../insights/fit.service';
+import { InsightsService } from '../insights/insights.service';
+import { achievementLines } from '../insights/prompt';
+import { mentions } from '../insights/skills';
 import { PrismaService } from '../prisma/prisma.service';
 import { RESUME_LANGUAGES } from '../profile/resumes';
 import type { BuilderDoc } from './builder-doc';
@@ -18,7 +24,13 @@ import {
   textToBuilderDoc,
   toMarkdown,
 } from './builder-doc';
-import type { JobResumeBuildModel, ResumeBuildModel } from './resume-builder.model';
+import { buildImprovePrompt, readSuggestion, sectionMarkdown } from './improve-section';
+import type {
+  ImproveSectionInput,
+  JobResumeBuildModel,
+  ResumeBuildModel,
+  SectionSuggestionModel,
+} from './resume-builder.model';
 
 /** The builder's PDF, with what the preview shows next to it. */
 export interface BuilderPdf extends DocumentFile {
@@ -39,6 +51,8 @@ export class ResumeBuilderService {
     private readonly prisma: PrismaService,
     private readonly fit: FitService,
     private readonly documents: DocumentsService,
+    private readonly insights: InsightsService,
+    private readonly apiKeys: ApiKeysService,
   ) {}
 
   async get(userId: number, language?: string | null): Promise<ResumeBuildModel> {
@@ -107,6 +121,138 @@ export class ResumeBuilderService {
     const me = await this.me(userId);
     const lang = this.pick(me, language);
     return structurePrompt(this.masterText(me, lang), lang);
+  }
+
+  /** The AI chat prompt that improves one section of this resume (master or a job's copy). */
+  async improvePrompt(userId: number, input: ImproveSectionInput): Promise<string> {
+    return (await this.improveContext(userId, input)).prompt;
+  }
+
+  /**
+   * Improves one section: from the AI chat reply you pasted, or, without one, by asking your own
+   * saved AI key. Nothing is changed here: the suggestion comes back with its fact check, and
+   * you keep or discard it on screen.
+   */
+  async improve(userId: number, input: ImproveSectionInput): Promise<SectionSuggestionModel> {
+    const ctx = await this.improveContext(userId, input);
+    const reply = input.reply?.trim()
+      ? input.reply.slice(0, 60_000)
+      : await this.askOwnKey(userId, ctx.prompt);
+    const section = readSuggestion(reply, ctx.section);
+    if (!section) {
+      throw apiError(BadRequestException, 'SUGGESTION_UNREADABLE', 'The reply has no resume text');
+    }
+    const after = sectionMarkdown(section);
+    return {
+      sectionId: ctx.section.id,
+      before: ctx.before,
+      after,
+      section: JSON.stringify(section),
+      findings: factCheck({
+        resume: after,
+        coverLetter: '',
+        sources: ctx.sources,
+        jobSkills: ctx.jobSkills,
+      }),
+    };
+  }
+
+  private async askOwnKey(userId: number, prompt: string): Promise<string> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { aiProvider: true },
+    });
+    const provider = AI_PROVIDERS[user.aiProvider];
+    const saved = await this.apiKeys.aiKey(userId, provider.kind);
+    if (!saved) {
+      throw apiError(BadRequestException, 'AI_KEY_MISSING', 'Save your AI key in Settings first');
+    }
+    try {
+      return await completeWithKey(
+        user.aiProvider,
+        saved.key,
+        saved.model ?? provider.defaultModel,
+        prompt,
+      );
+    } catch (error) {
+      if (!(error instanceof AiCallError)) throw error;
+      throw apiError(BadRequestException, 'AI_CALL_FAILED', error.message, {
+        reason: error.message,
+      });
+    }
+  }
+
+  /** The section, its prompt and what the fact check compares with, for one resume. */
+  private async improveContext(userId: number, input: ImproveSectionInput) {
+    const jobId = input.jobId ?? null;
+    const me = await this.me(userId);
+    let doc: BuilderDoc;
+    let language: string;
+    let jobAd: { title: string; company: string; description: string } | null = null;
+    const terms: { term: string; youHave: boolean }[] = [];
+    let jobSkills: string[] = [];
+    if (jobId) {
+      const [built, job, found] = await Promise.all([
+        this.getJob(userId, jobId),
+        this.prisma.job.findUniqueOrThrow({
+          where: { id: jobId },
+          select: { title: true, description: true, company: { select: { name: true } } },
+        }),
+        this.insights.forJob(userId, jobId),
+      ]);
+      doc = read(built.doc);
+      language = built.language;
+      jobAd = { title: job.title, company: job.company.name, description: job.description ?? '' };
+      terms.push(...found.skills, ...found.keywords);
+      jobSkills = found.skills.map((s) => s.term);
+    } else {
+      const built = await this.get(userId, input.language);
+      doc = read(built.doc);
+      language = built.language;
+    }
+    const section = doc.sections.find((s) => s.id === input.sectionId);
+    if (!section) {
+      throw apiError(NotFoundException, 'SECTION_NOT_FOUND', 'That section is not in this resume');
+    }
+    const before = sectionMarkdown(section);
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        achievements: true,
+        skills: true,
+        keywords: true,
+        headline: true,
+        yearsExperience: true,
+      },
+    });
+    const have = terms.filter((t) => t.youHave).map((t) => t.term);
+    return {
+      section,
+      before,
+      jobSkills,
+      prompt: buildImprovePrompt({
+        section: before,
+        language,
+        job: jobAd,
+        // Only terms you ticked or your profile has: never a skill the resume would invent.
+        mustAdd: [...new Set(have)].filter((term) => !mentions(before, term)),
+        achievements: achievementLines(profile?.achievements ?? ''),
+        instruction: input.instruction ?? '',
+      }),
+      // What you have told us: the fact check flags anything in the suggestion beyond it.
+      sources: [
+        toMarkdown(doc),
+        me.mainText,
+        ...me.others.values(),
+        ...have,
+        ...(profile?.skills ?? []),
+        ...(profile?.keywords ?? []),
+        profile?.achievements ?? '',
+        ...me.languages,
+        profile?.headline ?? '',
+        profile?.yearsExperience ? `${String(profile.yearsExperience)} years` : '',
+      ],
+    };
   }
 
   /** The builder's resume as a PDF in your template (what you see is what you download). */

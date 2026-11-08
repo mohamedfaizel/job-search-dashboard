@@ -590,6 +590,12 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       aiTips
       nowCovered
       stillMissing
+      factCheck {
+        kind
+        text
+        where
+        context
+      }
     }
     prompt
     interviewPrompt
@@ -1176,6 +1182,29 @@ export const COPY_SECTION_TO_MASTER = /* GraphQL */ `
   mutation CopySectionToMaster($jobId: String!, $sectionId: String!) {
     copySectionToMaster(jobId: $jobId, sectionId: $sectionId) {
       ${JOB_RESUME_BUILD_FIELDS}
+    }
+  }
+`;
+
+export const IMPROVE_SECTION_PROMPT = /* GraphQL */ `
+  query ImproveSectionPrompt($input: ImproveSectionInput!) {
+    improveSectionPrompt(input: $input)
+  }
+`;
+
+export const IMPROVE_SECTION = /* GraphQL */ `
+  mutation ImproveSection($input: ImproveSectionInput!) {
+    improveSection(input: $input) {
+      sectionId
+      before
+      after
+      section
+      findings {
+        kind
+        text
+        where
+        context
+      }
     }
   }
 `;
