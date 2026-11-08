@@ -38,6 +38,7 @@ interface JobBuild {
 }
 interface Doc {
   name: string;
+  headline?: string;
   sections: { id: string; title: string; hidden: boolean; blocks: Record<string, unknown>[] }[];
 }
 
