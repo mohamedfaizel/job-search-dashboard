@@ -600,6 +600,14 @@ export interface InterviewPrep {
 }
 
 /** The resume you wrote for one job, scored the same way as your profile resume. */
+/** Something in a resume that is not in anything you told us (NUMBER, SKILL or LEVEL). */
+export interface FactFinding {
+  kind: string;
+  text: string;
+  where: string;
+  context: string;
+}
+
 export interface JobResume {
   /** The resume as saved (Markdown from Claude's reply), with your edits. */
   text: string;
@@ -629,6 +637,8 @@ export interface JobResume {
   nowCovered: string[];
   /** Skills and keywords still missing. */
   stillMissing: string[];
+  /** Numbers, skills and levels that are in the resume but in nothing you told us. */
+  factCheck?: FactFinding[] | null;
 }
 
 /** One check of the finished resume PDF, read the way an ATS reads it. */
@@ -886,4 +896,22 @@ export interface JobResumeBuild {
   profileLanguages: string[];
   maxPages: number;
   savedAt: string | null;
+}
+
+/** What "Improve with AI" asks for: one section, with a pasted reply or without (own key). */
+export interface ImproveSectionInput {
+  sectionId: string;
+  jobId?: string | null;
+  language?: string | null;
+  instruction?: string | null;
+  reply?: string | null;
+}
+
+/** An improved section to keep or discard (section is JSON text). */
+export interface SectionSuggestion {
+  sectionId: string;
+  before: string;
+  after: string;
+  section: string;
+  findings: FactFinding[];
 }

@@ -64,3 +64,8 @@ export const LockIcon = () => (
     <path d="M5.5 7V5a2.5 2.5 0 015 0v2" />
   </svg>
 );
+export const TickIcon = () => (
+  <svg {...base}>
+    <path d="M3 8.5l3.2 3.2L13 4.8" />
+  </svg>
+);

@@ -64,3 +64,62 @@ export async function checkAiKey(
   }
   return null;
 }
+
+const COMPLETE_TIMEOUT_MS = 90_000;
+
+/** Why an AI call did not give an answer, in one sentence the screen can show. */
+export class AiCallError extends Error {}
+
+/**
+ * Asks the provider one question with the user's own key and returns the answer as text. This is
+ * what "Improve with my key" uses; it costs the user's credits, so it runs only on a click.
+ */
+export async function completeWithKey(
+  provider: AiProvider,
+  key: string,
+  model: string,
+  prompt: string,
+): Promise<string> {
+  const anthropic = provider === AiProvider.ANTHROPIC;
+  let res: Response;
+  try {
+    res = await fetch(
+      anthropic
+        ? 'https://api.anthropic.com/v1/messages'
+        : 'https://api.openai.com/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(anthropic
+            ? { 'x-api-key': key, 'anthropic-version': '2023-06-01' }
+            : { Authorization: `Bearer ${key}` }),
+        },
+        body: JSON.stringify(
+          anthropic
+            ? { model, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }
+            : { model, messages: [{ role: 'user', content: prompt }] },
+        ),
+        signal: AbortSignal.timeout(COMPLETE_TIMEOUT_MS),
+      },
+    );
+  } catch {
+    throw new AiCallError('The AI provider is not reachable. Try again in a minute.');
+  }
+  if (res.status === 401 || res.status === 403) {
+    throw new AiCallError('The key was refused (401): it is wrong, revoked or has no access.');
+  }
+  if (!res.ok) throw new AiCallError(`The AI provider answered ${String(res.status)}.`);
+  const body = (await res.json().catch(() => null)) as {
+    content?: { type?: string; text?: string }[];
+    choices?: { message?: { content?: string } }[];
+  } | null;
+  const text = anthropic
+    ? (body?.content ?? [])
+        .filter((part) => part.type === 'text')
+        .map((part) => part.text ?? '')
+        .join('')
+    : (body?.choices?.[0]?.message?.content ?? '');
+  if (!text.trim()) throw new AiCallError('The AI provider sent an empty answer.');
+  return text;
+}

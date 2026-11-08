@@ -15,6 +15,7 @@ import {
   TrashIcon,
   UpIcon,
 } from './icons';
+import { ImprovePanel } from './ImprovePanel';
 import { GRIP, ICON_BUTTON, SMALL_BUTTON } from './ui';
 
 interface Props {
@@ -32,6 +33,8 @@ interface Props {
    * button puts it into the master.
    */
   master?: { changed: boolean; busy: boolean; onCopy: () => void };
+  /** Offers "Improve with AI" for this section: the job it is for (null = master) and language. */
+  improve?: { jobId: string | null; language: string };
   /** From the section list's drag: the grip starts a drag, the card takes a drop. */
   gripProps: HTMLAttributes<HTMLElement>;
   rowProps: HTMLAttributes<HTMLElement>;
@@ -49,12 +52,14 @@ export function SectionCard({
   onDuplicate,
   onDelete,
   master,
+  improve,
   gripProps,
   rowProps,
   dropHere,
 }: Props) {
   const t = useTranslations('Resume');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [improving, setImproving] = useState(false);
   const title = section.title || t('untitled');
   const locked = isLanguagesSection(section.title) && profileLanguages.length > 0;
   const setBlocks = (blocks: BuilderBlock[], field: string | null) => {
@@ -97,6 +102,20 @@ export function SectionCard({
             onClick={master.onCopy}
           >
             {t('changedForJob')} · {t('copyToMasterShort')}
+          </button>
+        )}
+        {improve && !locked && (
+          <button
+            type="button"
+            className={`${ICON_BUTTON} font-bold text-amber-600`}
+            aria-expanded={improving}
+            aria-label={t('improve.open', { title })}
+            title={t('improve.openShort')}
+            onClick={() => {
+              setImproving((open) => !open);
+            }}
+          >
+            ✦
           </button>
         )}
         <button
@@ -156,6 +175,20 @@ export function SectionCard({
           <TrashIcon />
         </button>
       </div>
+
+      {improve && improving && !locked && (
+        <ImprovePanel
+          section={section}
+          jobId={improve.jobId}
+          language={improve.language}
+          onKeep={(next) => {
+            onChange(next, null);
+          }}
+          onClose={() => {
+            setImproving(false);
+          }}
+        />
+      )}
 
       {confirmDelete && (
         <div

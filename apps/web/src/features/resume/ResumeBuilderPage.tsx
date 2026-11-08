@@ -20,6 +20,7 @@ import { useErrorText } from '../../i18n/useErrorText';
 import type { TabItem } from '../profile/components/TabList';
 import { TabList } from '../profile/components/TabList';
 import { useLanguageName } from '../profile/components/useLanguageName';
+import { CheckPanel } from './components/CheckPanel';
 import { HeaderCard } from './components/HeaderCard';
 import { JobMatchPanel } from './components/JobMatchPanel';
 import { LookPanel } from './components/LookPanel';
@@ -48,10 +49,10 @@ import {
 /** Wait this long after the last keystroke before saving (and making a new preview). */
 const AUTOSAVE_MS = 1000;
 
-export type BuilderTab = 'edit' | 'look' | 'match';
-/** The Job match tab only exists for a job's resume copy. */
+export type BuilderTab = 'edit' | 'look' | 'match' | 'check';
+/** The Job match and Check tabs only exist for a job's resume copy. */
 const tabsFor = (job: boolean): BuilderTab[] =>
-  job ? ['edit', 'look', 'match'] : ['edit', 'look'];
+  job ? ['edit', 'look', 'match', 'check'] : ['edit', 'look'];
 
 const param = (name: string) =>
   typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get(name);
@@ -539,6 +540,7 @@ function Builder({
               }}
             />
           )}
+          {job && tab === 'check' && <CheckPanel jobId={job.jobId} version={version} />}
           <div hidden={tab === 'look'} className="space-y-3">
             <p className="text-xs text-slate-500">{t('intro')}</p>
             <HeaderCard doc={doc} onChange={change} />
@@ -552,6 +554,7 @@ function Builder({
                 gripProps={sectionDrag.grip(index)}
                 rowProps={sectionDrag.row(index)}
                 dropHere={sectionDrag.over === index}
+                improve={{ jobId, language }}
                 onChange={(next, field) => {
                   change(
                     updateSection(doc, section.id, () => next),

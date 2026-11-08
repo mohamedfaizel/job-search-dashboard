@@ -430,6 +430,47 @@
     "plainPreview": "This is the plain PDF. Start the PDF box (pnpm pdf:up) to see your template here.",
     "previewTitle": "PDF preview of your resume",
     "makingPdf": "Making your PDF…",
+    "improve": {
+      "open": "Improve {title} with AI",
+      "openShort": "Improve with AI",
+      "title": "Improve this section with AI",
+      "close": "Close",
+      "hint": "Same facts, better words. You see the changes first and keep or discard them. Nothing is added that is not in your resume, your profile or your achievements.",
+      "instruction": "What should change? (optional)",
+      "instructionExample": "e.g. shorter, more about testing",
+      "copyPrompt": "Copy prompt and open {ai}",
+      "gettingPrompt": "Getting the prompt…",
+      "copied": "Copied. Paste it into {ai}.",
+      "copyFailed": "Couldn’t copy. Allow clipboard access and try again.",
+      "withKey": "Improve with my key",
+      "withKeyHint": "Uses your own AI key and its credits",
+      "noKey": "Add an AI key in Settings to use this",
+      "addKey": "Add a key in Settings",
+      "asking": "Asking…",
+      "paste": "{ai}’s reply",
+      "showChanges": "Show the changes",
+      "reading": "Reading…",
+      "changes": "Changes",
+      "diff": "Lines before and after",
+      "keep": "Keep the changes",
+      "discard": "Discard",
+      "line": {
+        "same": "Unchanged:",
+        "removed": "Removed:",
+        "added": "Added:"
+      },
+      "flagged": "{count, plural, one {# thing is} other {# things are}} not in anything you told us. Check before you keep it:",
+      "flaggedHint": "Keep it only if it is true. Otherwise discard, or keep and delete the line.",
+      "factsOk": "Every number, skill and level is already in your resume or profile."
+    },
+    "check": {
+      "title": "Check this resume",
+      "facts": "Facts",
+      "pdf": "PDF (what an ATS reads)",
+      "noFacts": "Nothing to compare with yet. Save your master resume first.",
+      "factsOk": "Every number, skill and level is in your master resume or profile.",
+      "factsHint": "In this resume but in nothing you told us. Keep each only if it is true:"
+    },
     "readAgain": {
       "title": "Read my resume into sections again",
       "outOfDate": "Your resume on My profile changed (a new upload?). Read it into sections again, or keep the builder’s version?",
@@ -452,7 +493,8 @@
     "tabs": {
       "edit": "Edit",
       "look": "Look",
-      "match": "Job match"
+      "match": "Job match",
+      "check": "Check"
     },
     "tabsLabel": "Builder tabs",
     "look": {
@@ -1701,7 +1743,9 @@
     "API_KEY_NOT_FOUND": "Save the key first.",
     "RESUME_BUILD_INVALID": "This resume could not be saved. Reload the page and try again.",
     "RESUME_REPLY_EMPTY": "Paste the AI chat’s reply first.",
-    "SECTION_NOT_FOUND": "That section is not in this resume."
+    "SECTION_NOT_FOUND": "That section is not in this resume.",
+    "AI_CALL_FAILED": "The AI provider did not answer: {reason}",
+    "SUGGESTION_UNREADABLE": "The AI reply has no resume text in it. Paste the whole reply."
   },
   "Notifications": {
     "bell": "Notifications",

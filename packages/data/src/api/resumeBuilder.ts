@@ -4,6 +4,8 @@ import { queryKeys } from './hooks';
 import { jobInsightsPrefix } from './insights';
 import {
   COPY_SECTION_TO_MASTER,
+  IMPROVE_SECTION,
+  IMPROVE_SECTION_PROMPT,
   JOB_RESUME_BUILD,
   RESET_JOB_RESUME_BUILD,
   RESTART_RESUME_BUILD,
@@ -14,7 +16,7 @@ import {
   START_JOB_RESUME_BUILD,
 } from './operations';
 import { profileKey } from './profile';
-import type { JobResumeBuild, ResumeBuild } from './types';
+import type { ImproveSectionInput, JobResumeBuild, ResumeBuild, SectionSuggestion } from './types';
 
 export const resumeBuildKey = (language: string | null) => ['resumeBuild', language] as const;
 
@@ -249,5 +251,32 @@ export function useJobResumeBuildPdf(jobId: string, version: string, enabled = t
     placeholderData: (previous) => previous,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
+  });
+}
+
+/** The AI chat prompt that improves one section; fetched when you copy it. */
+export function useImproveSectionPrompt() {
+  return useMutation({
+    mutationFn: async (input: ImproveSectionInput) =>
+      (
+        await graphqlClient.request<{ improveSectionPrompt: string }>(IMPROVE_SECTION_PROMPT, {
+          input,
+        })
+      ).improveSectionPrompt,
+  });
+}
+
+/**
+ * An improved section from the AI chat reply you pasted, or (no reply) from your own saved AI
+ * key. It changes nothing: you keep or discard the suggestion on screen.
+ */
+export function useImproveSection() {
+  return useMutation({
+    mutationFn: async (input: ImproveSectionInput) =>
+      (
+        await graphqlClient.request<{ improveSection: SectionSuggestion }>(IMPROVE_SECTION, {
+          input,
+        })
+      ).improveSection,
   });
 }

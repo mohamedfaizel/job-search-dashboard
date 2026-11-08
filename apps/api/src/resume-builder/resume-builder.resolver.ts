@@ -1,7 +1,12 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
-import { JobResumeBuildModel, ResumeBuildModel } from './resume-builder.model';
+import {
+  ImproveSectionInput,
+  JobResumeBuildModel,
+  ResumeBuildModel,
+  SectionSuggestionModel,
+} from './resume-builder.model';
 import { ResumeBuilderService } from './resume-builder.service';
 
 /** Each user edits only their own resumes: the id comes from the session cookie. */
@@ -49,6 +54,27 @@ export class ResumeBuilderResolver {
     @Args('reply', { type: () => String, nullable: true }) reply?: string | null,
   ): Promise<ResumeBuildModel> {
     return this.builder.restart(user.id, language, reply?.slice(0, 60_000));
+  }
+
+  @Query(() => String, {
+    description: 'AI chat prompt that improves one section of your resume (master or a job copy)',
+  })
+  improveSectionPrompt(
+    @CurrentUser() user: SessionUser,
+    @Args('input') input: ImproveSectionInput,
+  ): Promise<string> {
+    return this.builder.improvePrompt(user.id, input);
+  }
+
+  @Mutation(() => SectionSuggestionModel, {
+    description:
+      'An improved section, from the AI chat reply you pasted or from your own saved AI key. Changes nothing',
+  })
+  improveSection(
+    @CurrentUser() user: SessionUser,
+    @Args('input') input: ImproveSectionInput,
+  ): Promise<SectionSuggestionModel> {
+    return this.builder.improve(user.id, input);
   }
 
   @Query(() => JobResumeBuildModel, {

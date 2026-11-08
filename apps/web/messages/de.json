@@ -430,6 +430,47 @@
     "plainPreview": "Das ist das einfache PDF. Starte die PDF-Box (pnpm pdf:up), um hier deine Vorlage zu sehen.",
     "previewTitle": "PDF-Vorschau deines Lebenslaufs",
     "makingPdf": "Dein PDF wird erstellt…",
+    "improve": {
+      "open": "{title} mit KI verbessern",
+      "openShort": "Mit KI verbessern",
+      "title": "Diesen Abschnitt mit KI verbessern",
+      "close": "Schließen",
+      "hint": "Gleiche Fakten, bessere Worte. Du siehst die Änderungen zuerst und behältst oder verwirfst sie. Nichts kommt dazu, was nicht in deinem Lebenslauf, Profil oder deinen Erfolgen steht.",
+      "instruction": "Was soll sich ändern? (optional)",
+      "instructionExample": "z. B. kürzer, mehr zu Tests",
+      "copyPrompt": "Prompt kopieren und {ai} öffnen",
+      "gettingPrompt": "Prompt wird geholt…",
+      "copied": "Kopiert. Füge ihn in {ai} ein.",
+      "copyFailed": "Kopieren hat nicht geklappt. Erlaube den Zugriff auf die Zwischenablage und versuche es noch einmal.",
+      "withKey": "Mit meinem Schlüssel verbessern",
+      "withKeyHint": "Nutzt deinen eigenen KI-Schlüssel und dessen Guthaben",
+      "noKey": "Hinterlege einen KI-Schlüssel in den Einstellungen",
+      "addKey": "Schlüssel in den Einstellungen hinterlegen",
+      "asking": "Frage läuft…",
+      "paste": "Antwort von {ai}",
+      "showChanges": "Änderungen zeigen",
+      "reading": "Wird gelesen…",
+      "changes": "Änderungen",
+      "diff": "Zeilen vorher und nachher",
+      "keep": "Änderungen behalten",
+      "discard": "Verwerfen",
+      "line": {
+        "same": "Unverändert:",
+        "removed": "Entfernt:",
+        "added": "Neu:"
+      },
+      "flagged": "{count, plural, one {# Angabe steht} other {# Angaben stehen}} in nichts, was du uns gesagt hast. Prüfe sie, bevor du sie behältst:",
+      "flaggedHint": "Behalte sie nur, wenn sie stimmt. Sonst verwirf, oder behalte und lösche die Zeile.",
+      "factsOk": "Jede Zahl, jede Fähigkeit und jedes Niveau steht schon in deinem Lebenslauf oder Profil."
+    },
+    "check": {
+      "title": "Diesen Lebenslauf prüfen",
+      "facts": "Fakten",
+      "pdf": "PDF (was ein ATS liest)",
+      "noFacts": "Noch nichts zum Vergleichen. Speichere zuerst deinen Haupt-Lebenslauf.",
+      "factsOk": "Jede Zahl, jede Fähigkeit und jedes Niveau steht in deinem Haupt-Lebenslauf oder Profil.",
+      "factsHint": "Steht in diesem Lebenslauf, aber in nichts, was du uns gesagt hast. Behalte nur, was stimmt:"
+    },
     "readAgain": {
       "title": "Lebenslauf neu in Abschnitte einlesen",
       "outOfDate": "Dein Lebenslauf in Mein Profil hat sich geändert (neuer Upload?). Neu in Abschnitte einlesen oder die Version aus dem Editor behalten?",
@@ -452,7 +493,8 @@
     "tabs": {
       "edit": "Bearbeiten",
       "look": "Aussehen",
-      "match": "Stellen-Abgleich"
+      "match": "Stellen-Abgleich",
+      "check": "Prüfen"
     },
     "tabsLabel": "Bereiche des Editors",
     "look": {
@@ -1701,7 +1743,9 @@
     "API_KEY_NOT_FOUND": "Speichere zuerst den Schlüssel.",
     "RESUME_BUILD_INVALID": "Dieser Lebenslauf konnte nicht gespeichert werden. Lade die Seite neu und versuch es erneut.",
     "RESUME_REPLY_EMPTY": "Füge zuerst die Antwort des KI-Chats ein.",
-    "SECTION_NOT_FOUND": "Dieser Abschnitt ist nicht in diesem Lebenslauf."
+    "SECTION_NOT_FOUND": "Dieser Abschnitt ist nicht in diesem Lebenslauf.",
+    "AI_CALL_FAILED": "Der KI-Anbieter hat nicht geantwortet: {reason}",
+    "SUGGESTION_UNREADABLE": "In der KI-Antwort steht kein Lebenslauftext. Füge die ganze Antwort ein."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",

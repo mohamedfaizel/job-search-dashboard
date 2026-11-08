@@ -14,6 +14,6 @@ import { ReplyMatchService } from './reply-match.service';
   imports: [DocumentsModule, ResumeMatcherModule],
   controllers: [JobResumeController, ApplyKitController, ApplyQueueController],
   providers: [InsightsService, InsightsResolver, CorpusService, FitService, ReplyMatchService],
-  exports: [FitService],
+  exports: [FitService, InsightsService],
 })
 export class InsightsModule {}

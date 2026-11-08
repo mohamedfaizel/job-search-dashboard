@@ -299,3 +299,45 @@ const PRESET_TITLES: Record<string, Record<SectionPreset, string>> = {
 export function presetTitle(preset: SectionPreset, language: string): string {
   return (PRESET_TITLES[language] ?? PRESET_TITLES['en'])?.[preset] ?? preset;
 }
+
+export interface DiffLine {
+  kind: 'same' | 'removed' | 'added';
+  text: string;
+}
+
+/**
+ * The lines of a section before and after, in one list: lines in both are `same`, the rest were
+ * `removed` or are `added`. A plain longest-common-subsequence, enough for a section's size.
+ */
+export function lineDiff(before: string, after: string): DiffLine[] {
+  const a = before.split('\n');
+  const b = after.split('\n');
+  // lengths[i][j] = longest common run of a[i..] and b[j..]
+  const lengths = Array.from({ length: a.length + 1 }, () =>
+    new Array<number>(b.length + 1).fill(0),
+  );
+  const at = (i: number, j: number) => lengths[i]?.[j] ?? 0;
+  for (let i = a.length - 1; i >= 0; i--) {
+    const row = lengths[i] ?? [];
+    for (let j = b.length - 1; j >= 0; j--) {
+      row[j] = a[i] === b[j] ? at(i + 1, j + 1) + 1 : Math.max(at(i + 1, j), at(i, j + 1));
+    }
+  }
+  const out: DiffLine[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      out.push({ kind: 'same', text: a[i] ?? '' });
+      i++;
+      j++;
+    } else if (at(i + 1, j) >= at(i, j + 1)) {
+      out.push({ kind: 'removed', text: a[i++] ?? '' });
+    } else {
+      out.push({ kind: 'added', text: b[j++] ?? '' });
+    }
+  }
+  while (i < a.length) out.push({ kind: 'removed', text: a[i++] ?? '' });
+  while (j < b.length) out.push({ kind: 'added', text: b[j++] ?? '' });
+  return out.filter((line) => line.kind !== 'same' || line.text.trim() !== '');
+}

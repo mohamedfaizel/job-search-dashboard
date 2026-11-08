@@ -128,6 +128,8 @@ export {
   resumeBuildKey,
   resumeBuildPdfUrl,
   useCopySectionToMaster,
+  useImproveSection,
+  useImproveSectionPrompt,
   useJobResumeBuild,
   useJobResumeBuildPdf,
   useResetJobResumeBuild,

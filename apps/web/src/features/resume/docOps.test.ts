@@ -1,5 +1,12 @@
 import type { BuilderDoc } from '@jobsearch/data';
-import { historyReducer, isLanguagesSection, move, presetTitle, startHistory } from './docOps';
+import {
+  historyReducer,
+  isLanguagesSection,
+  lineDiff,
+  move,
+  presetTitle,
+  startHistory,
+} from './docOps';
 
 const doc = (name: string): BuilderDoc => ({ name, headline: '', contact: [], sections: [] });
 
@@ -29,5 +36,28 @@ describe('builder edits', () => {
     expect(presetTitle('experience', 'de')).toBe('Berufserfahrung');
     expect(presetTitle('experience', 'fr')).toBe('Experience');
     expect(isLanguagesSection(' Sprachen ')).toBe(true);
+  });
+});
+
+describe('lineDiff', () => {
+  it('marks what was removed and added, and keeps the lines that stayed', () => {
+    expect(lineDiff('## Skills\n- React\n- Redux', '## Skills\n- React\n- TypeScript')).toEqual([
+      { kind: 'same', text: '## Skills' },
+      { kind: 'same', text: '- React' },
+      { kind: 'removed', text: '- Redux' },
+      { kind: 'added', text: '- TypeScript' },
+    ]);
+  });
+
+  it('shows a new line in the middle and ignores blank lines', () => {
+    expect(lineDiff('a\n\nc', 'a\nb\n\nc')).toEqual([
+      { kind: 'same', text: 'a' },
+      { kind: 'added', text: 'b' },
+      { kind: 'same', text: 'c' },
+    ]);
+  });
+
+  it('is all removed and all added for unrelated texts', () => {
+    expect(lineDiff('x', 'y').map((l) => l.kind)).toEqual(['removed', 'added']);
   });
 });

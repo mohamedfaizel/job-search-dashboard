@@ -1,7 +1,7 @@
 import type { BuilderDoc, JobInsights, JobResumeBuild, ResumeBuild } from '@jobsearch/data';
 import { jobResumeBuildPdfUrl, resumeBuildPdfUrl } from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
-import { api, requests } from '../../profile/test/server';
+import { api, apiKeys, requests } from '../../profile/test/server';
 
 export const DOC: BuilderDoc = {
   name: 'Ada Lovelace',
@@ -67,7 +67,45 @@ export function lastSaved(): BuilderDoc | null {
   return last ? (JSON.parse(last.variables['doc'] as string) as BuilderDoc) : null;
 }
 
+/** The Experience section as Markdown, which "Improve with AI" shows as the "before". */
+const EXPERIENCE_BEFORE =
+  '## Experience\n\n### Frontend Engineer | Acme GmbH\nBerlin | 01/2021 - today\n- Cut load time by 40%\n- Built the design system';
+
 export const builderHandlers = [
+  api.query('ImproveSectionPrompt', ({ variables }) => {
+    requests.push({ operation: 'ImproveSectionPrompt', variables });
+    return HttpResponse.json({ data: { improveSectionPrompt: 'Please improve my section.' } });
+  }),
+  api.mutation('ImproveSection', ({ variables }) => {
+    requests.push({ operation: 'ImproveSection', variables });
+    const input = variables['input'] as { sectionId: string; reply: string | null };
+    if (input.reply === null && apiKeys.length === 0) {
+      return HttpResponse.json({
+        errors: [{ message: 'no key', extensions: { apiCode: 'AI_KEY_MISSING', apiParams: {} } }],
+      });
+    }
+    const reply = input.reply ?? '- Cut load time by 40%\n- Led the design system';
+    const items = reply.split('\n').map((line) => line.replace(/^-\s*/, ''));
+    const section = {
+      id: input.sectionId,
+      title: 'Experience',
+      hidden: false,
+      blocks: [{ id: 'n1', kind: 'bullets', items }],
+    };
+    return HttpResponse.json({
+      data: {
+        improveSection: {
+          sectionId: input.sectionId,
+          before: EXPERIENCE_BEFORE,
+          after: `## Experience\n\n${reply}`,
+          section: JSON.stringify(section),
+          findings: reply.includes('90%')
+            ? [{ kind: 'NUMBER', text: '90%', where: 'RESUME', context: 'Raised sales by 90%' }]
+            : [],
+        },
+      },
+    });
+  }),
   api.query('ResumeBuild', ({ variables }) => {
     requests.push({ operation: 'ResumeBuild', variables });
     const language = (variables['language'] as string | null) ?? 'en';
@@ -121,9 +159,12 @@ export const jobBuild = {
   current: { ...JOB_START },
   /** The terms the user ticked "I have this" for. */
   have: [] as string[],
+  /** What the fact check found in the saved copy. */
+  facts: [] as { kind: string; text: string; where: string; context: string }[],
   reset() {
     this.current = { ...JOB_START };
     this.have = [];
+    this.facts = [];
   },
 };
 
@@ -131,7 +172,7 @@ const insights = (): JobInsights =>
   ({
     jobId: 'j1',
     score: 52,
-    jobResume: jobBuild.current.hasCopy ? { score: 61 } : null,
+    jobResume: jobBuild.current.hasCopy ? { score: 61, factCheck: jobBuild.facts } : null,
     skills: [
       { term: 'react', inResume: false, youHave: false, relatedTo: null },
       {
@@ -187,6 +228,21 @@ export const jobBuilderHandlers = [
     requests.push({ operation: 'SetHaveTerm', variables });
     jobBuild.have.push(variables['term'] as string);
     return HttpResponse.json({ data: { setHaveTerm: insights() } });
+  }),
+  api.query('ResumePdfCheck', ({ variables }) => {
+    requests.push({ operation: 'ResumePdfCheck', variables });
+    return HttpResponse.json({
+      data: {
+        resumePdfCheck: {
+          jobId: variables['jobId'],
+          template: 'classic',
+          items: [
+            { code: 'PAGES', ok: false, detail: '3/2' },
+            { code: 'TEXT', ok: true, detail: '412' },
+          ],
+        },
+      },
+    });
   }),
   http.get(jobResumeBuildPdfUrl('j1'), () => {
     requests.push({ operation: 'JobResumePdf', variables: {} });
