@@ -33,6 +33,11 @@ const STYLE = {
   fontSize: null as number | null,
   margin: null as number | null,
   lineSpacing: 1,
+  skillsStyle: 'index',
+  skillsBold: true,
+  headingStyle: 'auto',
+  datesSide: 'auto',
+  bulletStyle: 'dot',
   compact: false,
 };
 

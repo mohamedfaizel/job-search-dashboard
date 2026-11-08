@@ -127,7 +127,29 @@ export interface ResumeLayout {
   lineSpacing: number;
   /** Less space between jobs, bullets and sections. */
   compact: boolean;
+  /** Skills lines like "Frontend: React, Vue": an aligned index, bold label with flowing text, or as written. */
+  skillsStyle: SkillsStyle;
+  /** The label before the colon in bold. */
+  skillsBold: boolean;
+  /** The section titles: the template's own, a rule under, bold only, or a coloured bar. */
+  headingStyle: HeadingChoice;
+  /** Where the dates of a job go: the template's own, on the right, or below. */
+  datesSide: DatesChoice;
+  /** The shape in front of each bullet. */
+  bulletStyle: BulletChoice;
 }
+
+export const SKILLS_STYLES = ['index', 'lines', 'plain'] as const;
+export type SkillsStyle = (typeof SKILLS_STYLES)[number];
+export const HEADING_CHOICES = ['auto', 'rule', 'bold', 'bar'] as const;
+export type HeadingChoice = (typeof HEADING_CHOICES)[number];
+export const DATES_CHOICES = ['auto', 'right', 'below'] as const;
+export type DatesChoice = (typeof DATES_CHOICES)[number];
+export const BULLET_CHOICES = ['dot', 'dash', 'none'] as const;
+export type BulletChoice = (typeof BULLET_CHOICES)[number];
+
+const pick = <T extends string>(list: readonly T[], value: unknown, fallback: T): T =>
+  list.find((v) => v === value) ?? fallback;
 
 /** What the sliders allow: readable text and margins a printer can print. */
 export const LAYOUT_LIMITS = {
@@ -144,6 +166,11 @@ export function toLayout(value: {
   margin?: number | null;
   lineSpacing?: number | null;
   compact?: boolean | null;
+  skillsStyle?: string | null;
+  skillsBold?: boolean | null;
+  headingStyle?: string | null;
+  datesSide?: string | null;
+  bulletStyle?: string | null;
 }): ResumeLayout {
   const { fontSize, margin, lineSpacing } = LAYOUT_LIMITS;
   const size = value.fontSize;
@@ -160,6 +187,11 @@ export function toLayout(value: {
         ? 1
         : Math.round(clamp(value.lineSpacing, lineSpacing.min, lineSpacing.max) * 20) / 20,
     compact: value.compact ?? false,
+    skillsStyle: pick(SKILLS_STYLES, value.skillsStyle, 'index'),
+    skillsBold: value.skillsBold ?? true,
+    headingStyle: pick(HEADING_CHOICES, value.headingStyle, 'auto'),
+    datesSide: pick(DATES_CHOICES, value.datesSide, 'auto'),
+    bulletStyle: pick(BULLET_CHOICES, value.bulletStyle, 'dot'),
   };
 }
 
@@ -434,6 +466,9 @@ function preamble(
   // character. Title and author go into the PDF properties; the API sets them again after.
   const style = styleOf(look);
   const accent = style.colour ? hexColor(look.accent) : '222222';
+  const bullet = { dot: '\\textbullet', dash: '\\textendash', none: '' }[
+    layout?.bulletStyle ?? 'dot'
+  ];
   const items = layout?.compact
     ? 'itemsep=0pt,parsep=0pt,topsep=1pt'
     : 'itemsep=1pt,parsep=0pt,topsep=2pt';
@@ -445,7 +480,8 @@ function preamble(
 \\definecolor{accent}{HTML}{${accent}}
 \\definecolor{muted}{HTML}{555B66}
 \\usepackage{enumitem}
-\\setlist[itemize]{leftmargin=1.1em,label={\\color{accent}\\textbullet},${items}}
+\\setlist[itemize]{leftmargin=${bullet ? '1.1em' : '0pt'},label={\\color{accent}${bullet}},${items}}
+\\newlength{\\skillw}\\newlength{\\tmpw}
 \\usepackage{graphicx}
 \\usepackage{tabularx}
 \\usepackage[hidelinks]{hyperref}
@@ -534,13 +570,77 @@ function skillsBeforeExperience(sections: ResumeDoc['sections']): ResumeDoc['sec
   return out;
 }
 
+/** Section titles from the Look tab, in place of the template's own. */
+const HEADINGS: Record<Exclude<HeadingChoice, 'auto'>, (title: string) => string> = {
+  rule: (t) =>
+    `\\vspace{9pt}{\\large\\bfseries\\color{accent}${t}}\\par\\vspace{1pt}{\\color{accent}\\rule{\\linewidth}{0.6pt}}\\par\\vspace{4pt}\n`,
+  bold: (t) => `\\vspace{9pt}{\\large\\bfseries ${t}}\\par\\vspace{4pt}\n`,
+  bar: (t) =>
+    `\\vspace{9pt}{\\color{accent}\\rule[-1pt]{3pt}{11pt}}\\hspace{6pt}{\\bfseries ${t}}\\par\\vspace{4pt}\n`,
+};
+
+/** A job's title line with the dates on the right or below, for the Look tab's dates choice. */
+function datesEntry(side: 'right' | 'below'): TemplateStyle['entry'] {
+  return (t, o, m) =>
+    side === 'right'
+      ? `\\textbf{${t}}${sep(o)}${metaRight(m)}\\par\n`
+      : `\\textbf{${t}}${sep(o)}\\par\n${metaLine(m)}`;
+}
+
+/** "Frontend: React, Vue" or "**Frontend**: React" → label and the rest. */
+const SKILL_ROW = /^\s*(?:\*\*)?([^:*]{1,40}?)(?:\*\*)?\s*:(?:\*\*)?\s+(.+)$/;
+
+/**
+ * The lines of a Skills section as an index: the bold label, then the list in one column, a
+ * long list wrapping under itself. One block, so it never splits across two pages. Null when
+ * the section has no "Label: list" line, which is then set as written.
+ */
+function skillsTex(blocks: ResumeBlock[], layout: ResumeLayout): string | null {
+  const rows: string[] = [];
+  for (const b of blocks) {
+    if (b.kind === 'paragraph') rows.push(b.text);
+    else if (b.kind === 'bullets') rows.push(...b.items);
+    else return null;
+  }
+  const parsed = rows.map((text) => ({ text, m: SKILL_ROW.exec(text) }));
+  if (!parsed.some((r) => r.m)) return null;
+  const label = (l: string) =>
+    layout.skillsBold ? `\\textbf{${inline(l.trim())}}` : inline(l.trim());
+  const index = layout.skillsStyle === 'index';
+  const widths = parsed
+    .flatMap((r) => (r.m ? [r.m[1] ?? ''] : []))
+    .map(
+      (l) =>
+        `\\settowidth{\\tmpw}{${label(l)}}\\ifdim\\tmpw>\\skillw\\setlength{\\skillw}{\\tmpw}\\fi\n`,
+    )
+    .join('');
+  const measure = index
+    ? `\\setlength{\\skillw}{0pt}\n${widths}\\addtolength{\\skillw}{10pt}\n`
+    : '';
+  const lines = parsed
+    .map(({ text, m }) => {
+      if (!m) return `${inline(text)}\\par\\vspace{2pt}\n`;
+      const [, l = '', rest = ''] = m;
+      return index
+        ? `{\\hangindent=\\skillw\\hangafter=1\\noindent\\makebox[\\skillw][l]{${label(l)}}${inline(rest)}\\par}\\vspace{2pt}\n`
+        : `${label(l)}: ${inline(rest)}\\par\\vspace{2pt}\n`;
+    })
+    .join('');
+  return `\\noindent\\begin{minipage}{\\linewidth}\\raggedright\n${measure}${lines}\\end{minipage}\\par\n`;
+}
+
 /** A resume as a complete .tex file in the chosen template. */
 export function resumeTex(doc: ResumeDoc, look: DocumentLook): string {
   const layout = look.layout ?? null;
   const base = styleOf(look);
-  const s: TemplateStyle = layout?.compact
-    ? { ...base, entryGap: `${String(Math.max(2, parseFloat(base.entryGap) / 2))}pt` }
-    : base;
+  const s: TemplateStyle = {
+    ...base,
+    ...(layout?.compact
+      ? { entryGap: `${String(Math.max(2, parseFloat(base.entryGap) / 2))}pt` }
+      : {}),
+    ...(layout && layout.headingStyle !== 'auto' ? { section: HEADINGS[layout.headingStyle] } : {}),
+    ...(layout && layout.datesSide !== 'auto' ? { entry: datesEntry(layout.datesSide) } : {}),
+  };
   const margin = layout?.margin != null ? `${String(layout.margin)}mm` : null;
   const side = margin ?? s.margin;
   const top = margin ?? s.top;
@@ -553,9 +653,13 @@ export function resumeTex(doc: ResumeDoc, look: DocumentLook): string {
         /^(summary|profile|professional summary|profil|kurzprofil|zusammenfassung)$/i.test(
           section.title.trim(),
         );
+      const skills =
+        layout && layout.skillsStyle !== 'plain' && SKILLS_TITLE.test(section.title.trim())
+          ? skillsTex(section.blocks, layout)
+          : null;
       return (
         (section.title ? s.section(inline(section.title)) : '') +
-        section.blocks.map((b) => block(s, b, first)).join('')
+        (skills ?? section.blocks.map((b) => block(s, b, first)).join(''))
       );
     })
     .join('');

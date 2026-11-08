@@ -10,12 +10,16 @@ import {
   Min,
 } from 'class-validator';
 import {
+  BULLET_CHOICES,
+  DATES_CHOICES,
   FONTS,
+  HEADING_CHOICES,
   LAYOUT_LIMITS,
   LETTER_LAYOUTS,
   MY_DESIGN,
   MY_WORD_FILE,
   RESUME_TEMPLATES,
+  SKILLS_STYLES,
 } from './templates';
 
 @ObjectType('MyDesign', {
@@ -114,6 +118,21 @@ export class DocumentStyleModel {
 
   @Field({ description: 'Less space between jobs, bullets and sections' })
   compact!: boolean;
+
+  @Field({ description: 'Skills lines: index, lines or plain' })
+  skillsStyle!: string;
+
+  @Field({ description: 'The label of a skills line in bold' })
+  skillsBold!: boolean;
+
+  @Field({ description: 'Section titles: auto, rule, bold or bar' })
+  headingStyle!: string;
+
+  @Field({ description: 'Dates of a job: auto, right or below' })
+  datesSide!: string;
+
+  @Field({ description: 'Bullet shape: dot, dash or none' })
+  bulletStyle!: string;
 }
 
 @InputType()
@@ -167,6 +186,31 @@ export class DocumentStyleInput {
   @IsOptional()
   @IsBoolean()
   compact?: boolean | null;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsIn([...SKILLS_STYLES], { message: 'Skills are index, lines or plain' })
+  skillsStyle?: string | null;
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  skillsBold?: boolean | null;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsIn([...HEADING_CHOICES], { message: 'Titles are auto, rule, bold or bar' })
+  headingStyle?: string | null;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsIn([...DATES_CHOICES], { message: 'Dates are auto, right or below' })
+  datesSide?: string | null;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsIn([...BULLET_CHOICES], { message: 'Bullets are dot, dash or none' })
+  bulletStyle?: string | null;
 }
 
 @ObjectType('DocumentTemplate')

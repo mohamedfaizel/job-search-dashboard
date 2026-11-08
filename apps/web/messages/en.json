@@ -607,6 +607,54 @@
       "compact": "Compact: less space between jobs and bullets",
       "templateValue": "{value} (template)",
       "reset": "Back to the template’s own",
+      "details": {
+        "title": "Details",
+        "skills": {
+          "label": "Skills lines",
+          "index": "Index",
+          "indexHint": "Bold label, then the list in one aligned column",
+          "lines": "Lines",
+          "linesHint": "Bold label, then the list flowing on",
+          "plain": "As written",
+          "plainHint": "Exactly as you typed the lines"
+        },
+        "skillsLabel": {
+          "label": "Label",
+          "bold": "Bold",
+          "boldHint": "Bold label before the colon",
+          "normal": "Normal",
+          "normalHint": "Label in normal type"
+        },
+        "headings": {
+          "label": "Section titles",
+          "auto": "Template",
+          "autoHint": "The template’s own",
+          "rule": "Rule",
+          "ruleHint": "Coloured line under the title",
+          "bold": "Bold",
+          "boldHint": "Bold title, no line",
+          "bar": "Bar",
+          "barHint": "Small coloured bar before the title"
+        },
+        "dates": {
+          "label": "Dates",
+          "auto": "Template",
+          "autoHint": "The template’s own",
+          "right": "Right",
+          "rightHint": "Dates on the right of the job title",
+          "below": "Below",
+          "belowHint": "Dates on a line under the job title"
+        },
+        "bullets": {
+          "label": "Bullets",
+          "dot": "Dot",
+          "dotHint": "A dot before each point",
+          "dash": "Dash",
+          "dashHint": "A dash before each point",
+          "none": "None",
+          "noneHint": "No sign before each point"
+        }
+      },
       "wordSpacing": "Your Word file keeps its own size and spacing.",
       "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file on My profile > Resume, and “My own Word file” appears here.",
       "templateUsed": "Your next PDF downloads use it."

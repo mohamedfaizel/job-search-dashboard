@@ -251,6 +251,16 @@ model DocumentStyle {
   lineSpacing       Float    @default(1)
   /// Less space between jobs, bullets and sections, to fit more on a page.
   compact           Boolean  @default(false)
+  /// Skills lines: index (aligned), lines (bold label, flowing text) or plain (as written).
+  skillsStyle       String   @default("index")
+  /// The label before the colon in a skills line in bold.
+  skillsBold        Boolean  @default(true)
+  /// Section titles: auto (the template's own), rule, bold or bar.
+  headingStyle      String   @default("auto")
+  /// Dates of a job: auto (the template's own), right or below.
+  datesSide         String   @default("auto")
+  /// Bullet shape: dot, dash or none.
+  bulletStyle       String   @default("dot")
   updatedAt         DateTime @updatedAt
 }
 
