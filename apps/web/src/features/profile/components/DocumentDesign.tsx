@@ -21,6 +21,7 @@ import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
 import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { useAiChat } from '../../../lib/ai-chat';
 
 const BUTTON =
   'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
@@ -208,6 +209,7 @@ function designChips(d: MyDesign, t: ReturnType<typeof useTranslations<'Profile.
 function MyDesignCard({ saved }: { saved: DocumentStyle }) {
   const errorText = useErrorText();
   const t = useTranslations('Profile.design');
+  const chat = useAiChat();
   const templates = useDocumentTemplates();
   const save = useSaveMyDesign();
   const remove = useDeleteMyDesign();
@@ -225,7 +227,7 @@ function MyDesignCard({ saved }: { saved: DocumentStyle }) {
     } catch {
       setCopied('failed');
     }
-    window.open('https://claude.ai/new', '_blank', 'noopener');
+    window.open(chat.url, '_blank', 'noopener');
   };
 
   if (design && !redo) {

@@ -60,6 +60,8 @@ export const API_ERROR_CODES = [
   'DESIGN_REPLY',
   'API_KEY_INVALID',
   'JOBHUNTER_TOKEN_MISSING',
+  'API_KEY_NOT_FOUND',
+  'AI_KEY_MISSING',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

@@ -50,6 +50,17 @@ const SYNC = /* GraphQL */ `
 // Fake JobHunter that remembers which token each search came with.
 const tokens: (string | null)[] = [];
 const server = setupServer(
+  // Free key checks: the providers list their models, or refuse the key.
+  http.get('https://api.anthropic.com/v1/models', ({ request }) =>
+    request.headers.get('x-api-key') === 'sk-ant-good-key'
+      ? HttpResponse.json({
+          data: [{ id: 'claude-sonnet-5-5-20261001' }, { id: 'claude-haiku-5-5' }],
+        })
+      : new HttpResponse(null, { status: 401 }),
+  ),
+  http.get('https://api.openai.com/v1/models', () =>
+    HttpResponse.json({ data: [{ id: 'gpt-5-mini' }, { id: 'gpt-5' }] }),
+  ),
   http.post(`${JOBHUNTER_URL}/jobs/search`, ({ request }) => {
     tokens.push(request.headers.get('authorization'));
     return HttpResponse.json(loadSearchResponse());
@@ -64,6 +75,8 @@ describe('API keys (Settings)', () => {
     t = await createTestApp({
       JOBHUNTER_API_URL: JOBHUNTER_URL,
       JOBHUNTER_API_TOKEN: 'jp_from_env',
+      ANTHROPIC_API_KEY: 'sk-ant-from-env',
+      RM_LLM_MODEL: 'claude-haiku-5-5',
     });
   });
   afterAll(async () => {
@@ -114,12 +127,63 @@ describe('API keys (Settings)', () => {
 
   it('copies the .env token into the first account once, never to others', async () => {
     const admin = await t.gql(MY_KEYS);
-    expect(admin.data).toMatchObject({ myApiKeys: [{ kind: 'JOBHUNTER', last4: '_env' }] });
+    expect(admin.data).toMatchObject({
+      myApiKeys: [
+        { kind: 'JOBHUNTER', last4: '_env' },
+        { kind: 'ANTHROPIC', last4: '-env', model: 'claude-haiku-5-5' },
+      ],
+    });
     expect((await t.asUser(MY_KEYS)).data).toEqual({ myApiKeys: [] });
 
     // Deleted stays deleted, even while .env still has the token.
     expect((await t.gql(DELETE, { kind: 'JOBHUNTER' })).data).toEqual({ deleteApiKey: true });
-    expect((await t.gql(MY_KEYS)).data).toEqual({ myApiKeys: [] });
+    expect((await t.gql(MY_KEYS)).data).toMatchObject({ myApiKeys: [{ kind: 'ANTHROPIC' }] });
+  });
+
+  it('copies a .env key added later once, after the others were copied', async () => {
+    await t.prisma.user.update({ where: { id: 1 }, data: { adoptedEnvKeys: ['JOBHUNTER'] } });
+
+    const admin = await t.gql<{ myApiKeys: { kind: string }[] }>(MY_KEYS);
+
+    expect(admin.data?.myApiKeys.map((key) => key.kind)).toEqual(['ANTHROPIC']);
+  });
+
+  it('tests a Claude key for free and checks the model exists', async () => {
+    await t.asUser(SAVE, { input: { kind: 'ANTHROPIC', value: 'sk-ant-good-key' } });
+    // The default model is an alias of a dated id in the list.
+    expect((await t.asUser(TEST, { kind: 'ANTHROPIC' })).data).toEqual({
+      testApiKey: { ok: true, credits: null, error: null },
+    });
+
+    await t.asUser(`mutation { setApiKeyModel(kind: ANTHROPIC, model: "claude-nope") { model } }`);
+    const wrongModel = await t.asUser<{ testApiKey: { ok: boolean; error: string } }>(TEST, {
+      kind: 'ANTHROPIC',
+    });
+    expect(wrongModel.data?.testApiKey).toMatchObject({ ok: false });
+    expect(wrongModel.data?.testApiKey.error).toContain('claude-nope');
+
+    await t.asUser(SAVE, { input: { kind: 'ANTHROPIC', value: 'sk-ant-bad-key' } });
+    const refused = await t.asUser<{ testApiKey: { ok: boolean; error: string } }>(TEST, {
+      kind: 'ANTHROPIC',
+    });
+    expect(refused.data?.testApiKey.error).toContain('refused');
+  });
+
+  it('tests an OpenAI key with the model you typed', async () => {
+    await t.asUser(SAVE, { input: { kind: 'OPENAI', value: 'sk-openai-key', model: 'gpt-5' } });
+
+    const res = await t.asUser(TEST, { kind: 'OPENAI' });
+
+    expect(res.data).toEqual({ testApiKey: { ok: true, credits: null, error: null } });
+  });
+
+  it('remembers which AI you picked', async () => {
+    const me = `query { me { aiProvider } }`;
+    expect((await t.asUser(me)).data).toEqual({ me: { aiProvider: 'ANTHROPIC' } });
+
+    await t.asUser(`mutation { setAiProvider(provider: OPENAI) { aiProvider } }`);
+
+    expect((await t.asUser(me)).data).toEqual({ me: { aiProvider: 'OPENAI' } });
   });
 
   it('tests a JobHunter token with a one-job search', async () => {

@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import {
   apiKeys,
   gmail,
+  me,
   myDesign,
   otherResumes,
   requests,
@@ -21,6 +22,7 @@ afterEach(() => {
   server.resetHandlers();
   requests.length = 0;
   apiKeys.length = 0;
+  me.aiProvider = 'ANTHROPIC';
   syncs.length = 0;
   otherResumes.length = 0;
   savedAnswers.length = 0;

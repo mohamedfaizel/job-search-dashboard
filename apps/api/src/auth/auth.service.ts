@@ -80,5 +80,12 @@ export class AuthService {
 }
 
 export function toUserModel(user: User): UserModel {
-  return { id: user.id, email: user.email, name: user.name, role: user.role, locale: user.locale };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    locale: user.locale,
+    aiProvider: user.aiProvider,
+  };
 }

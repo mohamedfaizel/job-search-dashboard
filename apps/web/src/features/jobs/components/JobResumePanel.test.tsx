@@ -7,6 +7,7 @@ import { makeJob } from '../test/fixtures';
 import {
   downloads,
   jobResume,
+  me,
   rejectJobResumeUpload,
   requests,
   savedAnswers,
@@ -391,14 +392,23 @@ describe('JobResumePanel', () => {
     renderPanel();
     const card = within(await screen.findByRole('region', { name: 'AI score' }));
     expect(card.getByRole('button', { name: 'Get AI score' })).toBeDisabled();
-    expect(
-      card.getByText(/Your Claude API key is missing, expired or out of credits/),
-    ).toBeInTheDocument();
+    expect(card.getByText(/Your AI key is missing, expired or out of credits/)).toBeInTheDocument();
     expect(card.getByRole('button', { name: 'Test key again' })).toBeInTheDocument();
-    expect(card.getByRole('link', { name: /Open Profile/ })).toHaveAttribute(
+    expect(card.getByRole('link', { name: /Open Settings/ })).toHaveAttribute(
       'href',
-      '/profile?tab=matcher',
+      '/settings?tab=keys',
     );
+  });
+
+  it('turns the AI score off until you add a key for the AI you picked', async () => {
+    me.keys = [];
+    jobResume.current = { ...SAVED_RESUME };
+    renderPanel();
+    const card = within(await screen.findByRole('region', { name: 'AI score' }));
+    expect(await card.findByText(/You have no AI key yet/)).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Get AI score' })).toBeDisabled();
+    expect(card.queryByRole('button', { name: 'Test key again' })).not.toBeInTheDocument();
+    expect(card.getByRole('link', { name: /Open Settings/ })).toBeInTheDocument();
   });
 
   it('keeps the resume and Missing keywords stacked in the normal popup', async () => {

@@ -16,14 +16,15 @@ import {
   downloads,
   INSIGHTS,
   jobResume,
+  me,
   PROFILE,
   requests,
   SAVED_RESUME,
   server,
 } from '../test/server';
-import { ApplyKitPanel, chromePrompt, CLAUDE_URL } from './ApplyKitPanel';
+import { ApplyKitPanel, chromePrompt } from './ApplyKitPanel';
 
-function renderKit(job: Job = makeJob(), asking = false) {
+function renderKit(job: Job = makeJob(), asking = false, ai = 'Claude') {
   const calls: { status: ApplicationStatus[]; started: string[]; answered: string[] } = {
     status: [],
     started: [],
@@ -34,7 +35,7 @@ function renderKit(job: Job = makeJob(), asking = false) {
   const open = vi.spyOn(window, 'open').mockReturnValue(null);
   const user = userEvent.setup();
   render(
-    <Intl>
+    <Intl ai={ai}>
       <DataProvider store={makeStore()} queryClient={queryClient}>
         <ApplyKitPanel
           job={job}
@@ -65,9 +66,19 @@ describe('ApplyKitPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Copy prompt and open Claude ↗' }));
 
     expect(await navigator.clipboard.readText()).toBe(INSIGHTS.prompt);
-    expect(open).toHaveBeenCalledWith(CLAUDE_URL, '_blank', 'noopener');
+    expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
     expect(currentStep()).toHaveTextContent('Save the reply');
     expect(screen.getByText(/✓ Prompt copied/)).toBeInTheDocument();
+  });
+
+  it('opens ChatGPT instead when you picked OpenAI in Settings', async () => {
+    me.aiProvider = 'OPENAI';
+    const { user, open } = renderKit(makeJob(), false, 'ChatGPT');
+
+    await user.click(await screen.findByRole('button', { name: 'Copy prompt and open ChatGPT ↗' }));
+
+    expect(open).toHaveBeenCalledWith('https://chatgpt.com/', '_blank', 'noopener');
+    expect(currentStep()).toHaveTextContent('Save the reply');
   });
 
   it('step 1 no longer repeats the keywords: they are ticked on the Fit tab', async () => {

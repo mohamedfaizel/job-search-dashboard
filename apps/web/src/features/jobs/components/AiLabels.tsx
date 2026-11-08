@@ -11,7 +11,7 @@ const TAG = {
 
 /**
  * Who does the work, as a small ✦: yellow is an AI chat you paste into (Claude, ChatGPT…),
- * purple uses AI credits (Resume-Matcher with your Claude API key), grey when that is off.
+ * purple uses AI credits (Resume-Matcher with your own AI key), grey when that is off.
  * Our own free checks get no mark. The tooltip says it in words; screen readers read the
  * label of the thing it sits on instead.
  */
@@ -36,7 +36,7 @@ export function AiStateTag() {
 
 /**
  * Why the AI parts are off, and what to do: test the key again (one tiny message) or open
- * Profile > Resume-Matcher. The free parts (Fit, Missing keywords) keep working.
+ * Settings > API keys. The free parts (Fit, Missing keywords) keep working.
  */
 export function AiOffNote({ state, compact = false }: { state: AiState; compact?: boolean }) {
   const t = useTranslations('Jobs.aiLabels');
@@ -70,12 +70,12 @@ export function AiOffNote({ state, compact = false }: { state: AiState; compact?
           </button>
         )}
         <a
-          href="/profile?tab=matcher"
+          href="/settings?tab=keys"
           target="_blank"
           rel="noreferrer"
           className="text-xs font-medium text-brand-700 hover:underline"
         >
-          {t('openProfile')}
+          {t('openSettings')}
         </a>
         {test.data && !(test.data.aiConfigured && test.data.aiHealthy) && (
           <span className="basis-full text-xs text-red-700">{test.data.message}</span>

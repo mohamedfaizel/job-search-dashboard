@@ -59,12 +59,6 @@ export interface RmImprovePreviewResponse {
   };
 }
 
-/** GET /api/v1/config/llm-api-key: the provider and model it really uses (key masked). */
-export interface RmLlmConfigResponse {
-  provider: string;
-  model: string;
-}
-
 /** POST /api/v1/resumes/improve: tailors the resume and saves it as a new resume. */
 export interface RmImproveResponse {
   data: {

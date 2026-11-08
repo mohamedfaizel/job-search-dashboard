@@ -294,6 +294,7 @@ const USER_FIELDS = /* GraphQL */ `
   name
   role
   locale
+  aiProvider
 `;
 
 export const SET_LOCALE = /* GraphQL */ `
@@ -1075,6 +1076,26 @@ export const UPDATE_NOTIFICATION_SETTINGS = /* GraphQL */ `
   mutation UpdateNotificationSettings($input: NotificationSettingsInput!) {
     updateNotificationSettings(input: $input) {
       ${PROFILE_FIELDS}
+    }
+  }
+`;
+
+export const SET_API_KEY_MODEL = /* GraphQL */ `
+  mutation SetApiKeyModel($kind: ApiKeyKind!, $model: String) {
+    setApiKeyModel(kind: $kind, model: $model) {
+      kind
+      last4
+      model
+      credits
+      updatedAt
+    }
+  }
+`;
+
+export const SET_AI_PROVIDER = /* GraphQL */ `
+  mutation SetAiProvider($provider: AiProvider!) {
+    setAiProvider(provider: $provider) {
+      ${USER_FIELDS}
     }
   }
 `;

@@ -5,7 +5,13 @@ import { setupServer } from 'msw/node';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import {
+  createTestApp,
+  resetDatabase,
+  seedTestUsers,
+  rmConfigHandlers,
+  saveAiKey,
+} from './helpers';
 
 const RM_URL = 'http://resume-matcher.test';
 const FIELDS = 'state fileName syncedAt message';
@@ -36,6 +42,7 @@ const uploadOk = http.post(`${RM_URL}/api/v1/resumes/upload`, async ({ request: 
   });
 });
 const server = setupServer(
+  ...rmConfigHandlers(RM_URL),
   uploadOk,
   http.delete(`${RM_URL}/api/v1/resumes/:id`, ({ params }) => {
     rm.deleted.push(params['id'] as string);
@@ -60,6 +67,8 @@ describe('sending the master resume to Resume-Matcher', () => {
     rm = { uploads: [], deleted: [], nextId: 0 };
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
+    await saveAiKey(t.asUser);
+    await saveAiKey(t.gql);
   });
 
   const upload = (name = 'resume.pdf') =>

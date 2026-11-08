@@ -3,7 +3,13 @@ import { setupServer } from 'msw/node';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { JobMatchService } from '../src/resume-matcher/job-match.service';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import {
+  createTestApp,
+  resetDatabase,
+  seedTestUsers,
+  rmConfigHandlers,
+  saveAiKey,
+} from './helpers';
 
 const RM_URL = 'http://resume-matcher.test';
 const CREATE_JOB = `mutation ($input: CreateJobInput!) { createJob(input: $input) { id } }`;
@@ -42,6 +48,7 @@ let rm: {
   previews: { resume_id: string; job_id: string; prompt_id: string }[];
 };
 const server = setupServer(
+  ...rmConfigHandlers(RM_URL),
   http.post(`${RM_URL}/api/v1/jobs/upload`, async ({ request }) => {
     const body = (await request.json()) as { job_descriptions: string[]; resume_id: string };
     rm.jobs.push({ text: body.job_descriptions[0]!, resumeId: body.resume_id });
@@ -77,6 +84,8 @@ describe('matching your resume against a job', () => {
     rm = { jobs: [], previews: [] };
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
+    await saveAiKey(t.asUser);
+    await saveAiKey(t.gql);
     const res = await t.gql<{ createJob: { id: string } }>(CREATE_JOB, {
       input: { title: 'Frontend Engineer', companyName: 'Acme', description: 'React and GraphQL.' },
     });
@@ -102,6 +111,15 @@ describe('matching your resume against a job', () => {
       },
       { timeout: 3000, interval: 20 },
     );
+
+  it('asks you to add an AI key in Settings first', async () => {
+    await t.prisma.apiKey.deleteMany({ where: { userId: 2 } });
+
+    const res = await t.asUser(MATCH, { jobId });
+
+    expect(res.errors?.[0]?.extensions?.['apiCode']).toBe('AI_KEY_MISSING');
+    expect(rm.previews).toEqual([]);
+  });
 
   it('needs your resume in Resume-Matcher first', async () => {
     expect(await match()).toMatch(/Send your resume to Resume-Matcher on My profile first/);

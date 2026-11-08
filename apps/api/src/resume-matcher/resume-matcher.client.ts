@@ -6,7 +6,6 @@ import type {
   RmImprovePreviewResponse,
   RmImproveResponse,
   RmJobUploadResponse,
-  RmLlmConfigResponse,
   RmResumeUploadResponse,
   RmStatusResponse,
 } from './resume-matcher.types';
@@ -68,9 +67,24 @@ export class ResumeMatcherClient {
     await this.request('DELETE', `/resumes/${encodeURIComponent(resumeId)}`, DELETE_TIMEOUT_MS);
   }
 
-  /** The provider and model it really uses: ones saved in its own Settings page beat .env. */
-  llmConfig(): Promise<RmLlmConfigResponse> {
-    return this.request<RmLlmConfigResponse>('GET', '/config/llm-api-key', HEALTH_TIMEOUT_MS);
+  /**
+   * Puts one key into Resume-Matcher's key store; an empty string removes it. Resume-Matcher
+   * keeps one key per provider, for everyone, so the AI queue sets the right one per run.
+   */
+  async setApiKeys(keys: { anthropic?: string; openai?: string }): Promise<void> {
+    await this.request('POST', '/config/api-keys', HEALTH_TIMEOUT_MS, keys);
+  }
+
+  /** Picks the provider and model Resume-Matcher's next AI calls use (on their own endpoint). */
+  async setLlm(provider: string, model: string, apiKey: string): Promise<void> {
+    await this.request('PUT', '/config/llm-api-key', HEALTH_TIMEOUT_MS, {
+      provider,
+      model,
+      // Proves we know the key; it is not stored by this call.
+      api_key: apiKey,
+      // Null clears any custom endpoint, so the key only ever goes to the provider itself.
+      api_base: null,
+    });
   }
 
   /** Stores a job description (no AI yet) and returns Resume-Matcher's id for it. */
@@ -143,7 +157,7 @@ export class ResumeMatcherClient {
   }
 
   private async request<T>(
-    method: 'GET' | 'POST' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     path: string,
     timeoutMs: number,
     body?: FormData | Record<string, unknown>,
@@ -154,7 +168,7 @@ export class ResumeMatcherClient {
 
   /** Sends one request; throws a message for the user unless the answer is 2xx. */
   private async send(
-    method: 'GET' | 'POST' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     path: string,
     timeoutMs: number,
     body?: FormData | Record<string, unknown>,

@@ -9,10 +9,13 @@ import { useTranslations } from 'next-intl';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { markKeyFailed, noteAiResult } from '../../../lib/ai-status';
 
-/** Shows whether Resume-Matcher, which scores jobs against this resume, is ready to use. */
+/**
+ * Shows whether Resume-Matcher, which scores jobs against your resume with your AI key, is
+ * ready to use. Sits under the AI key in Settings > API keys.
+ */
 export function ResumeMatcherStatus() {
   const errorText = useErrorText();
-  const t = useTranslations('Profile.matcher');
+  const t = useTranslations('Settings.matcher');
   const status = useResumeMatcherStatus();
   const testAi = useTestAiConnection();
   // The test result lives on the mutation, so the regular status refresh doesn't hide it.
@@ -44,28 +47,6 @@ export function ResumeMatcherStatus() {
       ) : (
         status.data && <p className="text-sm text-slate-700">{status.data.message}</p>
       )}
-      {status.data?.aiProvider && (
-        <p className="text-xs text-slate-500">
-          {t('ai')} <span className="font-medium text-slate-700">{status.data.aiProvider}</span>
-          {status.data.aiModel && (
-            <>
-              {' · '}
-              <span className="font-medium text-slate-700">{status.data.aiModel}</span>
-            </>
-          )}
-          {t('changeAi')}{' '}
-          <a
-            href="http://localhost:3100/settings"
-            target="_blank"
-            rel="noreferrer"
-            className="text-brand-700 underline"
-          >
-            {t('settings')}
-          </a>{' '}
-          {t('settingsWins')}
-        </p>
-      )}
-
       {ready && (
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -104,7 +85,7 @@ export function ResumeMatcherStatus() {
 /** Your resume's copy inside Resume-Matcher: what it has, and a button to send it again. */
 function MatcherResumePanel() {
   const errorText = useErrorText();
-  const t = useTranslations('Profile.matcher');
+  const t = useTranslations('Settings.matcher');
   const resume = useMyMatcherResume();
   const sync = useSyncResumeToMatcher();
   // Also true when the upload above started the send.

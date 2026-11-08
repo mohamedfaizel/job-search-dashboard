@@ -8,11 +8,10 @@ import { DocumentDesign } from './components/DocumentDesign';
 import { OtherResumes } from './components/OtherResumes';
 import type { ProfileTab } from './components/ProfileForm';
 import { ProfileForm } from './components/ProfileForm';
-import { ResumeMatcherStatus } from './components/ResumeMatcherStatus';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
 
-const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume', 'design', 'matcher'];
+const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume', 'design'];
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
@@ -37,13 +36,14 @@ export function ProfilePage() {
   const tabs: TabItem<ProfileTab>[] = TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) }));
   const { data: profile, isPending, error } = useMyProfile();
   const { data: me } = useMe();
-  // A link can open a tab (?tab=matcher, from the job popup's AI score).
+  // A link can open a tab (?tab=design).
   const [tab, setTab] = useState<ProfileTab>(() => {
     if (typeof window === 'undefined') return savedTab();
     const params = new URLSearchParams(window.location.search);
     return TAB_IDS.find((id) => id === params.get('tab')) ?? savedTab();
   });
-  // Email moved to Settings: an old link (?tab=mail, ?gmail=...) goes there.
+  // Email and Resume-Matcher moved to Settings: an old link (?tab=mail, ?gmail=..., ?tab=matcher)
+  // goes there.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'mail' || params.has('gmail')) {
@@ -51,6 +51,8 @@ export function ProfilePage() {
       window.location.replace(
         `/settings?tab=gmail${gmail ? `&gmail=${encodeURIComponent(gmail)}` : ''}`,
       );
+    } else if (params.get('tab') === 'matcher') {
+      window.location.replace('/settings?tab=keys');
     }
   }, []);
 
@@ -75,7 +77,6 @@ export function ProfilePage() {
           <p role="alert" className="text-sm text-red-700">
             {t('loadFailed', { error: errorText(error) })}
           </p>
-          <ResumeMatcherStatus />
         </>
       ) : (
         // The form starts from the saved profile, so it waits until that has loaded.
@@ -104,14 +105,10 @@ export function ProfilePage() {
               <div hidden={tab !== 'design'}>
                 <DocumentDesign />
               </div>
-              <div hidden={tab !== 'matcher'}>
-                <ResumeMatcherStatus />
-              </div>
             </div>
           </div>
         </>
       )}
-      {isPending && <ResumeMatcherStatus />}
     </section>
   );
 }

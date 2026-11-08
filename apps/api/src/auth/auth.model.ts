@@ -1,9 +1,10 @@
 import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
 import { IsEmail, IsString, Length } from 'class-validator';
-import { Role } from '../generated/prisma/client';
+import { AiProvider, Role } from '../generated/prisma/client';
 
 registerEnumType(Role, { name: 'Role' });
+registerEnumType(AiProvider, { name: 'AiProvider' });
 
 @ObjectType('User')
 export class UserModel {
@@ -21,6 +22,11 @@ export class UserModel {
 
   @Field({ description: 'The language the app is shown in: "en" or "de"' })
   locale!: string;
+
+  @Field(() => AiProvider, {
+    description: 'Your AI for the AI score and the copy-and-open buttons (Settings > API keys)',
+  })
+  aiProvider!: AiProvider;
 }
 
 /** The languages the app is translated into. The first is the default. */

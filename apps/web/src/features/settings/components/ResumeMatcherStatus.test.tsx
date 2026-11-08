@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
-import { renderWithData } from '../test/render';
-import { api, MATCHER_RESUME, RM_RUNNING, server, syncs } from '../test/server';
+import { renderWithData } from '../../profile/test/render';
+import { api, MATCHER_RESUME, RM_RUNNING, server, syncs } from '../../profile/test/server';
 import { ResumeMatcherStatus } from './ResumeMatcherStatus';
 
 describe('ResumeMatcherStatus', () => {
@@ -12,14 +12,10 @@ describe('ResumeMatcherStatus', () => {
 
     expect(await screen.findByText('Running')).toBeInTheDocument();
     expect(screen.getByText('Resume-Matcher is running.')).toBeInTheDocument();
-    // Which AI it really uses, since Resume-Matcher's own settings can override .env.
-    expect(screen.getByText('anthropic')).toBeInTheDocument();
-    expect(screen.getByText('claude-sonnet-5-5')).toBeInTheDocument();
-
     await user.click(screen.getByRole('button', { name: 'Test AI connection' }));
 
     expect(
-      await screen.findByText('Resume-Matcher is running and the AI provider answered.'),
+      await screen.findByText('Resume-Matcher is running and Claude answered.'),
     ).toBeInTheDocument();
   });
 

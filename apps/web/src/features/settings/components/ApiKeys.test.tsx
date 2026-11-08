@@ -1,27 +1,31 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithData } from '../../profile/test/render';
-import { apiKeys, PROFILE, requests } from '../../profile/test/server';
+import { apiKeys, me, PROFILE, requests } from '../../profile/test/server';
 import { SettingsPage } from '../SettingsPage';
+
+/** One key's card, found by its heading ("JobHunter token", "Claude API key"…). */
+async function card(name: string) {
+  const heading = await screen.findByRole('heading', { name });
+  return within(heading.closest('div.rounded-md') as HTMLElement);
+}
 
 describe('Settings > API keys', () => {
   it('saves a JobHunter token, then shows only its last 4 characters', async () => {
     const user = userEvent.setup();
     renderWithData(<SettingsPage />);
-    const section = await screen.findByRole('region', { name: 'API keys' });
-    expect(await within(section).findByText('Not set')).toBeVisible();
+    const jobHunter = await card('JobHunter token');
+    expect(jobHunter.getByText('Not set')).toBeVisible();
 
-    await user.type(within(section).getByLabelText('JobHunter token'), 'jp_secret_a9F2');
-    await user.click(within(section).getByRole('button', { name: 'Save' }));
+    await user.type(jobHunter.getByLabelText('JobHunter token'), 'jp_secret_a9F2');
+    await user.click(jobHunter.getByRole('button', { name: 'Save' }));
 
     expect(requests).toContainEqual({
       operation: 'SaveApiKey',
-      variables: { input: { kind: 'JOBHUNTER', value: 'jp_secret_a9F2' } },
+      variables: { input: { kind: 'JOBHUNTER', value: 'jp_secret_a9F2', model: null } },
     });
-    expect(await within(section).findByLabelText('Saved key ending in a9F2')).toHaveTextContent(
-      /•+a9F2/,
-    );
-    expect(within(section).queryByText(/jp_secret/)).not.toBeInTheDocument();
+    expect(await jobHunter.findByLabelText('Saved key ending in a9F2')).toHaveTextContent(/•+a9F2/);
+    expect(jobHunter.queryByText(/jp_secret/)).not.toBeInTheDocument();
   });
 
   it('tests a saved token and shows the credits left', async () => {
@@ -56,13 +60,86 @@ describe('Settings > API keys', () => {
       operation: 'DeleteApiKey',
       variables: { kind: 'JOBHUNTER' },
     });
-    expect(await screen.findByText('Not set')).toBeVisible();
+    expect(await (await card('JobHunter token')).findByText('Not set')).toBeVisible();
   });
 
   it('shows in German', async () => {
     renderWithData(<SettingsPage />, 'de');
     expect(await screen.findByRole('heading', { name: 'API-Schlüssel' })).toBeVisible();
-    expect(await screen.findByText('Nicht gesetzt')).toBeVisible();
+    expect((await card('JobHunter-Token')).getByText('Nicht gesetzt')).toBeVisible();
+    expect((await card('Claude-API-Schlüssel')).getByText('Nicht gesetzt')).toBeVisible();
+  });
+});
+
+describe('Settings > API keys > AI', () => {
+  it('saves a Claude key with a model and tests it for free', async () => {
+    const user = userEvent.setup();
+    renderWithData(<SettingsPage />);
+    const claude = await card('Claude API key');
+    expect(screen.getByRole('radio', { name: 'Claude' })).toBeChecked();
+    expect(screen.getByText('Copy-and-open buttons open Claude.')).toBeVisible();
+
+    await user.type(claude.getByLabelText('Claude API key'), 'sk-ant-secret-Zx9q');
+    await user.type(claude.getByLabelText('Model'), 'claude-haiku-5-5');
+    await user.click(claude.getByRole('button', { name: 'Save' }));
+
+    expect(requests).toContainEqual({
+      operation: 'SaveApiKey',
+      variables: {
+        input: { kind: 'ANTHROPIC', value: 'sk-ant-secret-Zx9q', model: 'claude-haiku-5-5' },
+      },
+    });
+    expect(await claude.findByLabelText('Saved key ending in Zx9q')).toBeVisible();
+    expect(claude.getByLabelText('Model')).toHaveValue('claude-haiku-5-5');
+
+    await user.click(claude.getByRole('button', { name: 'Test' }));
+    expect(await claude.findByRole('status')).toHaveTextContent('Works');
+    expect(requests).toContainEqual({ operation: 'TestApiKey', variables: { kind: 'ANTHROPIC' } });
+  });
+
+  it('changes the model of a saved key without pasting the key again', async () => {
+    apiKeys.push({
+      kind: 'ANTHROPIC',
+      last4: 'Zx9q',
+      model: null,
+      credits: null,
+      updatedAt: '2026-11-08T12:00:00.000Z',
+    });
+    const user = userEvent.setup();
+    renderWithData(<SettingsPage />);
+    const claude = await card('Claude API key');
+    const model = await claude.findByLabelText('Model');
+    expect(model).toHaveAttribute('placeholder', 'claude-sonnet-5-5');
+
+    await user.type(model, 'claude-opus-5-5');
+    await user.click(claude.getByRole('button', { name: 'Save model' }));
+
+    expect(requests).toContainEqual({
+      operation: 'SetApiKeyModel',
+      variables: { kind: 'ANTHROPIC', model: 'claude-opus-5-5' },
+    });
+  });
+
+  it('switches to OpenAI, whose chat the copy-and-open buttons then open', async () => {
+    const user = userEvent.setup();
+    renderWithData(<SettingsPage />);
+    await card('Claude API key');
+
+    await user.click(screen.getByRole('radio', { name: 'OpenAI (ChatGPT)' }));
+
+    expect(requests).toContainEqual({
+      operation: 'SetAiProvider',
+      variables: { provider: 'OPENAI' },
+    });
+    expect(me.aiProvider).toBe('OPENAI');
+    const openai = await card('OpenAI API key');
+    expect(openai.getByLabelText('Model')).toHaveAttribute('placeholder', 'gpt-5-mini');
+    expect(screen.getByText('Copy-and-open buttons open ChatGPT.')).toBeVisible();
+  });
+
+  it('shows Resume-Matcher under the AI key', async () => {
+    renderWithData(<SettingsPage />);
+    expect(await screen.findByRole('heading', { name: 'Resume-Matcher' })).toBeVisible();
   });
 });
 

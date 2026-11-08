@@ -1,17 +1,22 @@
 import { createHash } from 'node:crypto';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { apiError } from '../common/api-error';
 import { decryptToken, encryptToken } from '../gmail/token-crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ApiKeyKind, ApiKeyModel } from './api-keys.model';
 
+const SELECT = { kind: true, last4: true, model: true, credits: true, updatedAt: true } as const;
+
 /**
- * Before Settings existed, the server had one JobHunter token in .env. The first account (the
- * admin) gets it copied into their own Settings the first time they need it; after that .env is
- * not read again and the line can be deleted.
+ * Before Settings existed, the server had one JobHunter token and one Claude key in .env. The
+ * first account (the admin) gets each copied into their own Settings the first time they need
+ * it; after that .env is not read again and the lines can be deleted.
  */
-const ENV_KEYS: Partial<Record<ApiKeyKind, string>> = { JOBHUNTER: 'JOBHUNTER_API_TOKEN' };
+const ENV_KEYS: Partial<Record<ApiKeyKind, string>> = {
+  JOBHUNTER: 'JOBHUNTER_API_TOKEN',
+  ANTHROPIC: 'ANTHROPIC_API_KEY',
+};
 
 /**
  * Each user's own keys for paid services (JobHunter, Claude, OpenAI). The key itself is stored
@@ -41,7 +46,7 @@ export class ApiKeysService {
     return this.prisma.apiKey.findMany({
       where: { userId },
       orderBy: { kind: 'asc' },
-      select: { kind: true, last4: true, model: true, credits: true, updatedAt: true },
+      select: SELECT,
     });
   }
 
@@ -74,7 +79,7 @@ export class ApiKeysService {
       where: { userId_kind: { userId, kind } },
       create: { userId, kind, ...data },
       update: data,
-      select: { kind: true, last4: true, model: true, credits: true, updatedAt: true },
+      select: SELECT,
     });
   }
 
@@ -100,31 +105,77 @@ export class ApiKeysService {
     }
   }
 
+  /** An AI key with its model, for a call from the server. Null when this user has none. */
+  async aiKey(
+    userId: number,
+    kind: ApiKeyKind,
+  ): Promise<{ key: string; model: string | null } | null> {
+    const key = await this.secret(userId, kind);
+    if (!key) return null;
+    const row = await this.prisma.apiKey.findUnique({
+      where: { userId_kind: { userId, kind } },
+      select: { model: true },
+    });
+    return { key, model: row?.model ?? null };
+  }
+
+  /** Changes the AI model used with a saved key; null goes back to the default model. */
+  async setModel(userId: number, kind: ApiKeyKind, model: string | null): Promise<ApiKeyModel> {
+    const row = await this.prisma.apiKey.findUnique({ where: { userId_kind: { userId, kind } } });
+    if (!row) throw apiError(NotFoundException, 'API_KEY_NOT_FOUND', 'Save the key first.');
+    return this.prisma.apiKey.update({
+      where: { userId_kind: { userId, kind } },
+      data: { model: model?.trim() || null },
+      select: SELECT,
+    });
+  }
+
   /** Remembers JobHunter's "credits left", so Settings can show it without a paid call. */
   async noteCredits(userId: number, kind: ApiKeyKind, credits: number | null): Promise<void> {
     if (credits === null) return;
     await this.prisma.apiKey.updateMany({ where: { userId, kind }, data: { credits } });
   }
 
-  /** Copies the old .env keys into the first account's Settings, once. */
+  /** Copies each old .env key into the first account's Settings, once. */
   private async adoptEnvKeys(userId: number): Promise<void> {
-    const pending = Object.entries(ENV_KEYS).filter(([, name]) => this.config.get<string>(name));
-    if (pending.length === 0) return;
+    const present = (Object.entries(ENV_KEYS) as [ApiKeyKind, string][]).filter(([, name]) =>
+      this.config.get<string>(name)?.trim(),
+    );
+    if (present.length === 0) return;
     // ADMIN sorts before USER: the first admin, or the first account when there is none.
     const first = await this.prisma.user.findFirst({
       orderBy: [{ role: 'asc' }, { id: 'asc' }],
-      select: { id: true, envKeysAdopted: true },
+      select: { id: true, adoptedEnvKeys: true },
     });
-    if (first?.id !== userId || first.envKeysAdopted) return;
-    for (const [kind, name] of pending as [ApiKeyKind, string][]) {
+    if (first?.id !== userId) return;
+    const pending = present.filter(([kind]) => !first.adoptedEnvKeys.includes(kind));
+    if (pending.length === 0) return;
+    for (const [kind, name] of pending) {
       const exists = await this.prisma.apiKey.findUnique({
         where: { userId_kind: { userId, kind } },
         select: { kind: true },
       });
-      if (!exists) await this.store(userId, kind, this.config.get<string>(name)?.trim() ?? '');
+      if (!exists) {
+        await this.store(
+          userId,
+          kind,
+          this.config.get<string>(name)?.trim() ?? '',
+          envModel(this.config, kind),
+        );
+      }
       this.logger.log(`Copied ${name} from .env into the Settings of user ${userId}`);
     }
     // Only once: a key you delete later stays deleted, even while .env still has it.
-    await this.prisma.user.update({ where: { id: userId }, data: { envKeysAdopted: true } });
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { adoptedEnvKeys: { push: pending.map(([kind]) => kind) } },
+    });
   }
+}
+
+/** The Claude model Resume-Matcher used from .env (RM_LLM_MODEL), copied with the key. */
+function envModel(config: ConfigService, kind: ApiKeyKind): string | null {
+  if (kind !== 'ANTHROPIC') return null;
+  const provider = config.get<string>('RM_LLM_PROVIDER')?.trim() || 'anthropic';
+  return provider === 'anthropic' ? config.get<string>('RM_LLM_MODEL')?.trim() || null : null;
 }

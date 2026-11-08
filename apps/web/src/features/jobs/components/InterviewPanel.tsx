@@ -7,9 +7,9 @@ import {
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { useAiChat } from '../../../lib/ai-chat';
 import { useJobFormat } from '../useJobFormat';
 import { AiTag } from './AiLabels';
-import { CLAUDE_URL } from './ApplyKitPanel';
 import { CopyText } from './CopyText';
 import type { GapFocus } from './InterviewPrepView';
 import { InterviewPrepView } from './InterviewPrepView';
@@ -30,6 +30,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
   const errorText = useErrorText();
   const f = useJobFormat();
   const t = useTranslations('Jobs.interview');
+  const chat = useAiChat();
   const [text, setText] = useState('');
   const [replacing, setReplacing] = useState(false);
   const [clipboardBlocked, setClipboardBlocked] = useState(false);
@@ -173,7 +174,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
             text={data.interviewPrompt}
             copiedHint={t('copiedHint')}
             boxLabel={t('promptBox')}
-            openUrl={CLAUDE_URL}
+            openUrl={chat.url}
             icon={<AiTag kind="chat" />}
             primary
           >
@@ -271,7 +272,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
           }
           copiedHint={t('mock.copiedHint')}
           boxLabel={t('mock.promptBox')}
-          openUrl={CLAUDE_URL}
+          openUrl={chat.url}
           icon={<AiTag kind="chat" />}
         />
       </section>

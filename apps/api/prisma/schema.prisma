@@ -133,8 +133,9 @@ model User {
   /// Which AI the app uses for you: the AI score and the copy-and-open buttons.
   aiProvider      AiProvider       @default(ANTHROPIC)
   apiKeys         ApiKey[]
-  /// True once the old .env keys were copied into this account's Settings (first account only).
-  envKeysAdopted  Boolean          @default(false)
+  /// The old .env keys already copied into this account's Settings (first account only), so
+  /// each is copied once and a key you delete stays deleted.
+  adoptedEnvKeys  ApiKeyKind[]     @default([])
   savedSearches   SavedSearch[]
   syncRuns        SyncRun[]
   createdAt       DateTime         @default(now())

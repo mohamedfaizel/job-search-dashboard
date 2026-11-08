@@ -138,6 +138,8 @@ _Import history_ sits below the tabs, so it shows on all three.
   `SETTINGS_KEY`, else `JWT_SECRET`) and only its last 4 characters are ever shown. _Test_ runs a
   one-job search (at most 1 credit) and shows the credits you have left. A token from an older
   `.env` is copied once into the first account's Settings, then `.env` is not read for it again.
+  Below it, pick your AI (**Claude** or **OpenAI**) and paste its key and model, for the AI score
+  (see Resume-Matcher below) and the copy-and-open buttons. Resume-Matcher's status sits there too.
 - _Gmail_: connect or remove the Gmail accounts the app reads replies from. _Check now_ is on the
   **Tracker**, next to the suggestions it finds.
 - _Notifications_: the 🔔 for new jobs that fit you, and from which Fit %.
@@ -194,24 +196,27 @@ pnpm rm:up      # the first run downloads the image, which takes a while
 pnpm rm:down    # stop it
 ```
 
-It uses Anthropic's **Claude Sonnet 5.5** by default. Put your key in `.env` (create one at
-[console.anthropic.com](https://console.anthropic.com), Settings > API Keys) and run `pnpm rm:up`
-again so the container picks it up:
+Its AI runs on **your own key**. In **Settings > API keys**, pick **Claude** or **OpenAI**, paste
+your key (from [console.anthropic.com](https://console.anthropic.com) or
+[platform.openai.com](https://platform.openai.com/api-keys)) and, if you like, a model
+(`claude-sonnet-5-5` and `gpt-5-mini` are the defaults). **Test** lists the provider's models,
+which is free, and checks that your key works and your model exists. Each user pays with their
+own credits.
 
-```bash
-ANTHROPIC_API_KEY=sk-ant-...        # keep this secret: .env is git-ignored
-RM_LLM_MODEL=claude-sonnet-5-5      # or claude-haiku-5-5 (cheaper), claude-opus-5-5 (smartest)
-```
+Resume-Matcher itself has one AI setting for everyone. So our API keeps a queue: before each AI
+run it puts your key and model into Resume-Matcher, and right after, it takes the key out again.
+Runs go one at a time, so a run can never use someone else's key; when several people score jobs
+at once, the later ones wait a minute or two. An old `ANTHROPIC_API_KEY` in `.env` is copied once
+into the first account's Settings and not read again.
 
-For a free local model, install [Ollama](https://ollama.com), run `ollama pull gemma3:4b` and set
-`RM_LLM_PROVIDER=ollama`, `RM_LLM_MODEL=gemma3:4b` and
-`RM_LLM_API_BASE=http://host.docker.internal:11434`. It is slower and less accurate.
+The same choice also decides which chat the **copy and open** buttons open (Apply kit, Interview,
+the queue, My design, other-language resumes): Claude opens <https://claude.ai/new>, OpenAI opens
+<https://chatgpt.com/>. The steps for **Claude in Chrome** stay Claude.
 
-Our API talks to Resume-Matcher at `RESUME_MATCHER_URL` (default `http://localhost:3100`). The
-**My profile** page shows whether it is running, and **Test AI connection** sends one tiny message
-to the AI provider to check the key and model. Resume-Matcher has no logins, so the port is bound
+Our API talks to Resume-Matcher at `RESUME_MATCHER_URL` (default `http://localhost:3100`).
+**Settings > API keys** shows whether it is running, under your AI key. Resume-Matcher has no logins, so the port is bound
 to `127.0.0.1` and the browser never calls it directly. You can still open <http://localhost:3100>
-to use its own screens. Its data lives in the `resume-data` Docker volume.
+to look around, but don't change its Settings page: our API sets the AI for every run. Its data lives in the `resume-data` Docker volume.
 
 When you upload your resume (PDF or Word) on **My profile**, it is also sent to Resume-Matcher,
 which reads it into sections with its AI (one AI call). **Send again** re-sends it. Each user has
@@ -231,12 +236,6 @@ It takes one to three minutes and more AI calls than a match. Then **Download re
 **Download cover letter PDF** fetch the files through our API (`GET /tailored/{jobId}/resume.pdf`
 and `/cover-letter.pdf`), which checks your login and asks Resume-Matcher to print them.
 Tailoring again replaces the previous version.
-
-**Settings saved in Resume-Matcher's own Settings page win over `.env`.** If **Test AI
-connection** fails and **My profile** shows a provider you didn't expect (for example `ollama`),
-pick Anthropic in <http://localhost:3100/settings>, or reset its saved settings with
-`docker compose --profile tools down` and `docker volume rm job-search-dashboard_resume-data`
-(this deletes Resume-Matcher's data), then `pnpm rm:up`.
 
 ### Connect Gmail (optional)
 

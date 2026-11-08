@@ -260,7 +260,6 @@ describe('profile page', () => {
       'Bewerbungsangaben',
       'Lebenslauf',
       'Design',
-      'Resume-Matcher',
     ]);
     expect(headline).toHaveValue('Frontend engineer');
     const years = screen.getByRole('textbox', { name: 'Jahre Berufserfahrung' });
@@ -390,10 +389,7 @@ describe('profile page', () => {
     await user.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Applications' })).toHaveFocus();
     await user.keyboard('{End}');
-    expect(screen.getByRole('tab', { name: 'Resume-Matcher' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
-    expect(localStorage.getItem('jobsearch.profile.tab')).toBe('matcher');
+    expect(screen.getByRole('tab', { name: 'Design' })).toHaveAttribute('aria-selected', 'true');
+    expect(localStorage.getItem('jobsearch.profile.tab')).toBe('design');
   });
 });

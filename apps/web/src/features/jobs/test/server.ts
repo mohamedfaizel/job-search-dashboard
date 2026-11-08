@@ -144,6 +144,12 @@ export const haveTerms: string[] = [];
 export const savedAnswers: SavedAnswer[] = [];
 
 /** The languages line the user edited for job-1; null = their profile's. */
+/** The AI the user picked in Settings, and the keys they saved. */
+export const me: { aiProvider: 'ANTHROPIC' | 'OPENAI'; keys: ('ANTHROPIC' | 'OPENAI')[] } = {
+  aiProvider: 'ANTHROPIC',
+  keys: ['ANTHROPIC'],
+};
+
 export const jobLanguages: { current: string | null } = { current: null };
 
 /** INSIGHTS minus the removed terms, like the real API (score fixed at 80 once any is gone). */
@@ -526,6 +532,35 @@ const handlers = [
     removedTerms.splice(0, removedTerms.length, ...others);
     return HttpResponse.json({ data: { restoreInsightTerm: insightsNow() } });
   }),
+  // Who is logged in, and the AI they picked in Settings (its copy-and-open buttons follow it).
+  api.query('Me', () =>
+    HttpResponse.json({
+      data: {
+        me: {
+          id: 2,
+          email: 'ada@example.com',
+          name: 'Ada',
+          role: 'USER',
+          locale: 'en',
+          aiProvider: me.aiProvider,
+        },
+      },
+    }),
+  ),
+  // A Claude key is saved, so the AI score can run.
+  api.query('MyApiKeys', () =>
+    HttpResponse.json({
+      data: {
+        myApiKeys: me.keys.map((kind) => ({
+          kind,
+          last4: 'abcd',
+          model: null,
+          credits: null,
+          updatedAt: '2026-11-08T12:00:00.000Z',
+        })),
+      },
+    }),
+  ),
   // Resume-Matcher is running, so the AI parts are on.
   api.query('ResumeMatcherStatus', () =>
     HttpResponse.json({
@@ -535,7 +570,7 @@ const handlers = [
           reachable: true,
           aiConfigured: null,
           aiHealthy: null,
-          aiProvider: 'anthropic',
+          aiProvider: 'Claude',
           aiModel: 'claude-sonnet-5-5',
           message: 'Resume-Matcher is running.',
         },
