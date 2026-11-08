@@ -6,8 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
+import type { TabItem } from '../profile/components/TabList';
+import { TabList } from '../profile/components/TabList';
 import { useLanguageName } from '../profile/components/useLanguageName';
 import { HeaderCard } from './components/HeaderCard';
+import { LookPanel } from './components/LookPanel';
 import { PdfPreview } from './components/PdfPreview';
 import { ReadAgain } from './components/ReadAgain';
 import { SectionCard } from './components/SectionCard';
@@ -30,19 +33,33 @@ import {
 /** Wait this long after the last keystroke before saving (and making a new preview). */
 const AUTOSAVE_MS = 1000;
 
+export type BuilderTab = 'edit' | 'look';
+const TABS: BuilderTab[] = ['edit', 'look'];
+
+const param = (name: string) =>
+  typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get(name);
+
+/** The page address for a language and tab, so a reload or a shared link opens the same. */
+function builderUrl(language: string | null, tab: BuilderTab): string {
+  const params = new URLSearchParams();
+  if (language) params.set('language', language);
+  if (tab !== 'edit') params.set('tab', tab);
+  const query = params.toString();
+  return query ? `/resume?${query}` : '/resume';
+}
+
 /**
  * The Resume builder: your master resume section by section on the left, the real PDF on the
  * right. Changes save on their own; Undo goes back step by step. ?language=de opens your German
- * resume.
+ * resume, ?tab=look the Look tab (template, colour, size and spacing).
  */
 export function ResumeBuilderPage() {
   const t = useTranslations('Resume');
   const errorText = useErrorText();
   const router = useRouter();
-  const [language, setLanguage] = useState<string | null>(() =>
-    typeof window === 'undefined'
-      ? null
-      : new URLSearchParams(window.location.search).get('language'),
+  const [language, setLanguage] = useState<string | null>(() => param('language'));
+  const [tab, setTab] = useState<BuilderTab>(
+    () => TABS.find((id) => id === param('tab')) ?? 'edit',
   );
   const build = useResumeBuild(language);
 
@@ -59,9 +76,14 @@ export function ResumeBuilderPage() {
       // Another language is another resume: start its editor fresh.
       key={build.data.language}
       build={build.data}
+      tab={tab}
+      onTab={(next) => {
+        setTab(next);
+        router.replace(builderUrl(language, next));
+      }}
       onLanguage={(next) => {
         setLanguage(next);
-        router.replace(`/resume?language=${encodeURIComponent(next)}`);
+        router.replace(builderUrl(next, tab));
       }}
     />
   );
@@ -71,12 +93,17 @@ type View = 'edit' | 'preview';
 
 function Builder({
   build,
+  tab,
+  onTab,
   onLanguage,
 }: {
   build: ResumeBuild;
+  tab: BuilderTab;
+  onTab: (tab: BuilderTab) => void;
   onLanguage: (language: string) => void;
 }) {
   const t = useTranslations('Resume');
+  const tabs: TabItem<BuilderTab>[] = TABS.map((id) => ({ id, label: t(`tabs.${id}`) }));
   const errorText = useErrorText();
   const nameOf = useLanguageName();
   const save = useSaveResumeBuild();
@@ -155,6 +182,11 @@ function Builder({
     return () => {
       window.removeEventListener('keydown', onKey);
     };
+  }, []);
+
+  // A new look makes a new PDF: the preview asks again.
+  const lookSaved = useCallback(() => {
+    setVersion(`look-${String(Date.now())}`);
   }, []);
 
   const sectionDrag = useDragSort('sections', (from, to) => {
@@ -259,6 +291,15 @@ function Builder({
         </p>
       )}
 
+      <TabList
+        label={t('tabsLabel')}
+        idPrefix="builder-tab"
+        panelId="builder-panel"
+        tabs={tabs}
+        selected={tab}
+        onSelect={onTab}
+      />
+
       <ReadAgain
         language={language}
         outOfDate={outOfDate}
@@ -297,49 +338,60 @@ function Builder({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className={`min-w-0 space-y-3 ${view === 'edit' ? '' : 'hidden lg:block'}`}>
-          <p className="text-xs text-slate-500">{t('intro')}</p>
-          <HeaderCard doc={doc} onChange={change} />
-          {doc.sections.map((section, index) => (
-            <SectionCard
-              key={section.id}
-              section={section}
-              index={index}
-              count={doc.sections.length}
-              profileLanguages={build.profileLanguages}
-              gripProps={sectionDrag.grip(index)}
-              rowProps={sectionDrag.row(index)}
-              dropHere={sectionDrag.over === index}
-              onChange={(next, field) => {
+        <div
+          id="builder-panel"
+          role="tabpanel"
+          aria-labelledby={`builder-tab-${tab}`}
+          className={`min-w-0 ${view === 'edit' ? '' : 'hidden lg:block'}`}
+        >
+          {/* Both tabs stay mounted, so a change waiting to be saved survives switching. */}
+          <div hidden={tab !== 'look'}>
+            <LookPanel onSaved={lookSaved} />
+          </div>
+          <div hidden={tab !== 'edit'} className="space-y-3">
+            <p className="text-xs text-slate-500">{t('intro')}</p>
+            <HeaderCard doc={doc} onChange={change} />
+            {doc.sections.map((section, index) => (
+              <SectionCard
+                key={section.id}
+                section={section}
+                index={index}
+                count={doc.sections.length}
+                profileLanguages={build.profileLanguages}
+                gripProps={sectionDrag.grip(index)}
+                rowProps={sectionDrag.row(index)}
+                dropHere={sectionDrag.over === index}
+                onChange={(next, field) => {
+                  change(
+                    updateSection(doc, section.id, () => next),
+                    field,
+                  );
+                }}
+                onMove={(to) => {
+                  change({ ...doc, sections: move(doc.sections, index, to) }, null);
+                }}
+                onDuplicate={() => {
+                  const copy = copySection(section, t('copyOf', { title: section.title }));
+                  change({ ...doc, sections: insertAt(doc.sections, index + 1, copy) }, null);
+                }}
+                onDelete={() => {
+                  change({ ...doc, sections: removeAt(doc.sections, index) }, null);
+                }}
+              />
+            ))}
+            <AddSection
+              language={language}
+              onAdd={(preset) => {
                 change(
-                  updateSection(doc, section.id, () => next),
-                  field,
+                  {
+                    ...doc,
+                    sections: [...doc.sections, newSection(preset, presetTitle(preset, language))],
+                  },
+                  null,
                 );
               }}
-              onMove={(to) => {
-                change({ ...doc, sections: move(doc.sections, index, to) }, null);
-              }}
-              onDuplicate={() => {
-                const copy = copySection(section, t('copyOf', { title: section.title }));
-                change({ ...doc, sections: insertAt(doc.sections, index + 1, copy) }, null);
-              }}
-              onDelete={() => {
-                change({ ...doc, sections: removeAt(doc.sections, index) }, null);
-              }}
             />
-          ))}
-          <AddSection
-            language={language}
-            onAdd={(preset) => {
-              change(
-                {
-                  ...doc,
-                  sections: [...doc.sections, newSection(preset, presetTitle(preset, language))],
-                },
-                null,
-              );
-            }}
-          />
+          </div>
         </div>
         <div className={`min-w-0 ${view === 'preview' ? '' : 'hidden lg:block'}`}>
           <div className="lg:sticky lg:top-4">

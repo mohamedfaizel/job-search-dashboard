@@ -130,4 +130,24 @@ describe('Resume builder', () => {
       expect(requests).toContainEqual({ operation: 'ResumeBuild', variables: { language: 'de' } });
     });
   });
+
+  it('has a Look tab whose changes make a new PDF', async () => {
+    const user = await renderBuilder();
+    await waitFor(() => {
+      expect(requests.filter((r) => r.operation === 'ResumePdf')).toHaveLength(1);
+    });
+    await user.click(screen.getByRole('tab', { name: 'Look' }));
+    expect(router.replace).toHaveBeenCalledWith('/resume?tab=look');
+    expect(screen.getByRole('tab', { name: 'Look' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument();
+
+    await user.click(await screen.findByRole('radio', { name: /Modern/ }, { timeout: 5000 }));
+    await waitFor(() => {
+      expect(requests.filter((r) => r.operation === 'ResumePdf')).toHaveLength(2);
+    }, SAVE_WAIT);
+
+    await user.click(screen.getByRole('tab', { name: 'Edit' }));
+    expect(router.replace).toHaveBeenLastCalledWith('/resume');
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeVisible();
+  });
 });

@@ -144,6 +144,56 @@ describe('resume and cover letter templates', () => {
     expect(badTemplate.errors?.[0]?.message).toContain('Pick a resume template');
   });
 
+  it('saves the Look tab sliders, uses them for your resume and not for samples', async () => {
+    const LAYOUT = `mutation ($input: DocumentStyleInput!) { updateDocumentStyle(input: $input) { fontSize margin lineSpacing compact } }`;
+    const base = {
+      resumeTemplate: 'classic',
+      coverLetterLayout: 'auto',
+      accentColor: '1F4E79',
+      font: 'auto',
+      showPhoto: false,
+    };
+    const saved = await t.asUser<{ updateDocumentStyle: Record<string, unknown> }>(LAYOUT, {
+      input: { ...base, fontSize: 10.5, margin: 15, lineSpacing: 1.15, compact: true },
+    });
+    expect(saved.data!.updateDocumentStyle).toEqual({
+      fontSize: 10.5,
+      margin: 15,
+      lineSpacing: 1.15,
+      compact: true,
+    });
+    // Left out: kept. Null: back to the template's own.
+    const kept = await t.asUser<{ updateDocumentStyle: Record<string, unknown> }>(LAYOUT, {
+      input: { ...base, margin: null },
+    });
+    expect(kept.data!.updateDocumentStyle).toEqual({
+      fontSize: 10.5,
+      margin: null,
+      lineSpacing: 1.15,
+      compact: true,
+    });
+    const tooSmall = await t.asUser(LAYOUT, { input: { ...base, fontSize: 6 } });
+    expect(tooSmall.errors).toBeDefined();
+
+    await pdf(`/job-resume/${jobId}/resume.pdf`);
+    const resume = rendered.at(-1)!.tex;
+    expect(resume).toContain('\\fontsize{10.5}{12.6}');
+    expect(resume).toContain('\\linespread{1.15}');
+    expect(resume).toContain('itemsep=0pt');
+
+    await pdf('/documents/preview/resume.pdf?template=classic');
+    expect(rendered.at(-1)!.tex).not.toContain('\\linespread');
+
+    const templates = await t.asUser<{
+      documentTemplates: { resumeTemplates: { id: string; fontSize: number; margin: number }[] };
+    }>('query { documentTemplates { resumeTemplates { id fontSize margin } } }');
+    expect(templates.data!.documentTemplates.resumeTemplates[0]).toEqual({
+      id: 'classic',
+      fontSize: 11,
+      margin: 20,
+    });
+  });
+
   it('lists the templates and says the renderer is running', async () => {
     const res = await t.asUser<{
       documentTemplates: { resumeTemplates: { id: string }[]; rendererAvailable: boolean };

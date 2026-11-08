@@ -35,6 +35,8 @@ import {
   MY_WORD_FILE,
   RESUME_TEMPLATES,
   resumeTex,
+  templateSizes,
+  toLayout,
 } from './templates';
 
 /** The My design column as a design, or null when none is saved. */
@@ -65,6 +67,22 @@ interface WordFile {
 
 const isDocx = (fileName: string | null, type: string | null) =>
   type === DOCX_TYPE || /\.docx$/i.test(fileName ?? '');
+
+/**
+ * The sliders the input sets: a value left out stays as saved, null goes back to the
+ * template's own, and numbers are kept inside the limits.
+ */
+function layoutUpdate(input: DocumentStyleInput) {
+  const layout = toLayout(input);
+  return {
+    ...(input.fontSize !== undefined ? { fontSize: layout.fontSize } : {}),
+    ...(input.margin !== undefined ? { margin: layout.margin } : {}),
+    ...(input.lineSpacing !== undefined && input.lineSpacing !== null
+      ? { lineSpacing: layout.lineSpacing }
+      : {}),
+    ...(input.compact !== undefined && input.compact !== null ? { compact: input.compact } : {}),
+  };
+}
 
 /** What the PDF looks like before anything is saved. */
 const DEFAULT_STYLE = {
@@ -157,6 +175,7 @@ export class DocumentsService {
       showPhoto: row?.showPhoto ?? DEFAULT_STYLE.showPhoto,
       hasPhoto: !!row?.photoType,
       myDesign: storedDesign(row?.myDesign),
+      ...toLayout(row ?? {}),
     };
   }
 
@@ -212,6 +231,7 @@ export class DocumentsService {
       accentColor: hexColor(input.accentColor),
       font: input.font,
       showPhoto: input.showPhoto,
+      ...layoutUpdate(input),
     };
     await this.prisma.documentStyle.upsert({
       where: { userId },
@@ -230,7 +250,7 @@ export class DocumentsService {
     return {
       resumeTemplates: [
         ...(row?.myDesign ? [{ ...MY_DESIGN }] : []),
-        ...RESUME_TEMPLATES.map((t) => ({ ...t })),
+        ...RESUME_TEMPLATES.map((t) => ({ ...t, ...templateSizes(t.id) })),
         ...(wordTemplate?.usable ? [{ ...MY_WORD_FILE }] : []),
       ],
       coverLetterLayouts: LETTER_LAYOUTS.map((l) => ({ ...l })),
@@ -556,6 +576,8 @@ export class DocumentsService {
         : (style?.font ?? 'auto')) as FontChoice,
       photo: photoType ? `photo.${photoType}` : null,
       language: doc.language,
+      // Samples show the template itself; your resume uses your sliders.
+      layout: doc.preview || !style ? null : toLayout(style),
     };
 
     let pdf: Uint8Array | null = null;

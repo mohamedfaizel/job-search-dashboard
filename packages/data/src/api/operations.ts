@@ -812,6 +812,10 @@ const DOCUMENT_STYLE_FIELDS = /* GraphQL */ `
   font
   showPhoto
   hasPhoto
+  fontSize
+  margin
+  lineSpacing
+  compact
   myDesign {
     font
     accent
@@ -870,6 +874,8 @@ export const DOCUMENT_TEMPLATES = /* GraphQL */ `
         id
         name
         description
+        fontSize
+        margin
       }
       coverLetterLayouts {
         id

@@ -134,7 +134,11 @@ reads your uploaded text into sections by their titles; _Read my resume into sec
 AI chat prompt that sorts jobs, dates and bullets exactly. Every save writes the resume back as
 text, so Fit %, prompts and the Apply kit read the builder's version. The Languages section always
 shows your languages from My profile with your real levels. The preview uses your template when
-the PDF box runs (`pnpm pdf:up`), otherwise the plain PDF. On _Import from JobHunter_, **Fill from my profile** copies your roles, skills and places
+the PDF box runs (`pnpm pdf:up`), otherwise the plain PDF. The **Look** tab next to _Edit_ holds
+the template, colour, type, photo, text size, margins, line spacing and compact mode; each change
+shows in the PDF straight away and is used for every job's resume.
+
+On _Import from JobHunter_, **Fill from my profile** copies your roles, skills and places
 into the search.
 
 The **Add jobs** page has three tabs: _Saved searches_, _Import from JobHunter_ and _Add a job by hand_.
@@ -260,15 +264,17 @@ Refresh tokens are stored encrypted (AES-256-GCM). Opening this to the public la
 
 ### Resume and cover letter templates (optional)
 
-The resume and cover letter you save for a job download as PDFs in the design you pick on
-**My profile → Resume and cover letter design**:
+The resume and cover letter you save for a job download as PDFs in the design you pick on the
+**Resume → Look** tab (it was on My profile before; old links go there):
 
 - **Resume templates:** Classic (serif, centred), Modern (accent colour, sans-serif) and Compact
   (tighter, for long careers). All are one column with real text, so applicant tracking systems
   read them. Pick an accent colour, the type and, if you like, a photo.
+- **Size and spacing:** text size (9 to 12 pt), margins (10 to 25 mm), line spacing and a compact
+  mode, to fit your page limit. _Back to the template's own_ undoes them.
 - **Cover letters:** DIN 5008 (the German business letter: address field, date on the right,
   bold subject) for German letters, Modern otherwise, or one of them always.
-- **Preview PDF** shows a sample in each template with your name and colour.
+- **Templates** are small buttons on the Look tab; the PDF next to them shows your resume in the one you pick.
 - **My own Word file:** upload your master resume as a `.docx` and it becomes a template too.
   Everything above your first section heading (name, contact, photo) stays exactly as in your
   file; each heading, job, bullet and paragraph below copies the formatting of the matching

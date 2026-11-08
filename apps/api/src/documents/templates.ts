@@ -113,6 +113,54 @@ export interface DocumentLook {
   photo: string | null;
   /** The document's language (ISO 639-1), for the date format and PDF language. */
   language: string;
+  /** Your own text size, margins and spacing from the Look tab; the resume only. */
+  layout?: ResumeLayout | null;
+}
+
+/** The sliders on the Look tab. Null size or margin keeps the template's own. */
+export interface ResumeLayout {
+  /** Body text in points. */
+  fontSize: number | null;
+  /** All four page margins, in millimetres. */
+  margin: number | null;
+  /** 1 is the template's own; 1.2 is 20% more space between lines. */
+  lineSpacing: number;
+  /** Less space between jobs, bullets and sections. */
+  compact: boolean;
+}
+
+/** What the sliders allow: readable text and margins a printer can print. */
+export const LAYOUT_LIMITS = {
+  fontSize: { min: 9, max: 12 },
+  margin: { min: 10, max: 25 },
+  lineSpacing: { min: 1, max: 1.4 },
+} as const;
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+/** A layout from stored or typed values, kept inside the limits. */
+export function toLayout(value: {
+  fontSize?: number | null;
+  margin?: number | null;
+  lineSpacing?: number | null;
+  compact?: boolean | null;
+}): ResumeLayout {
+  const { fontSize, margin, lineSpacing } = LAYOUT_LIMITS;
+  const size = value.fontSize;
+  const mm = value.margin;
+  return {
+    fontSize:
+      size == null || !Number.isFinite(size)
+        ? null
+        : Math.round(clamp(size, fontSize.min, fontSize.max) * 2) / 2,
+    margin:
+      mm == null || !Number.isFinite(mm) ? null : Math.round(clamp(mm, margin.min, margin.max)),
+    lineSpacing:
+      value.lineSpacing == null || !Number.isFinite(value.lineSpacing)
+        ? 1
+        : Math.round(clamp(value.lineSpacing, lineSpacing.min, lineSpacing.max) * 20) / 20,
+    compact: value.compact ?? false,
+  };
 }
 
 const FONT_NAMES = {
@@ -352,6 +400,15 @@ function designStyle(d: MyDesign): TemplateStyle {
   };
 }
 
+/** "1.9cm" → 19 (mm). */
+const mm = (length: string) => Math.round(parseFloat(length) * 10);
+
+/** A template's own text size (pt) and side margin (mm): where the Look tab sliders start. */
+export function templateSizes(id: string): { fontSize: number; margin: number } | null {
+  const style = isResumeTemplate(id) ? STYLES[id] : null;
+  return style ? { fontSize: style.size, margin: mm(style.margin) } : null;
+}
+
 function styleOf(look: DocumentLook): TemplateStyle {
   if (look.template === MY_DESIGN.id) return designStyle(look.design ?? DEFAULT_DESIGN);
   return STYLES[look.template];
@@ -366,11 +423,20 @@ export function hexColor(value: string): string {
   return /^[0-9A-F]{6}$/.test(hex) ? hex : '1F4E79';
 }
 
-function preamble(look: DocumentLook, size: number, geometry: string, extra = ''): string {
+function preamble(
+  look: DocumentLook,
+  size: number,
+  geometry: string,
+  extra = '',
+  layout: ResumeLayout | null = null,
+): string {
   // No common ligatures ("fi", "fl"): some applicant tracking systems read them as one odd
   // character. Title and author go into the PDF properties; the API sets them again after.
   const style = styleOf(look);
   const accent = style.colour ? hexColor(look.accent) : '222222';
+  const items = layout?.compact
+    ? 'itemsep=0pt,parsep=0pt,topsep=1pt'
+    : 'itemsep=1pt,parsep=0pt,topsep=2pt';
   return `\\documentclass[${String(size)}pt,a4paper]{article}
 \\usepackage[a4paper,${geometry}]{geometry}
 \\usepackage{fontspec}
@@ -379,18 +445,30 @@ function preamble(look: DocumentLook, size: number, geometry: string, extra = ''
 \\definecolor{accent}{HTML}{${accent}}
 \\definecolor{muted}{HTML}{555B66}
 \\usepackage{enumitem}
-\\setlist[itemize]{leftmargin=1.1em,label={\\color{accent}\\textbullet},itemsep=1pt,parsep=0pt,topsep=2pt}
+\\setlist[itemize]{leftmargin=1.1em,label={\\color{accent}\\textbullet},${items}}
 \\usepackage{graphicx}
 \\usepackage{tabularx}
 \\usepackage[hidelinks]{hyperref}
-${extra}\\pagestyle{empty}
+${extra}${textSize(layout)}\\pagestyle{empty}
 \\setlength{\\parindent}{0pt}
 \\setlength{\\parskip}{0pt}
 `;
 }
 
-function block(look: DocumentLook, b: ResumeBlock, summary = false): string {
-  const style = styleOf(look);
+/**
+ * Your own text size and line spacing. LaTeX's article class only knows 10, 11 and 12 pt, so
+ * the body size is set directly; \\small and \\large stay relative to the class size.
+ */
+function textSize(layout: ResumeLayout | null): string {
+  if (!layout) return '';
+  const spread = layout.lineSpacing !== 1 ? `\\linespread{${String(layout.lineSpacing)}}\n` : '';
+  if (layout.fontSize === null) return spread ? `${spread}\\AtBeginDocument{\\selectfont}\n` : '';
+  const size = String(layout.fontSize);
+  const skip = String(Math.round(layout.fontSize * 1.2 * 10) / 10);
+  return `${spread}\\renewcommand\\normalsize{\\fontsize{${size}}{${skip}}\\selectfont}\n\\AtBeginDocument{\\normalsize}\n`;
+}
+
+function block(style: TemplateStyle, b: ResumeBlock, summary = false): string {
   switch (b.kind) {
     case 'paragraph':
       return summary && style.summaryBox
@@ -458,7 +536,15 @@ function skillsBeforeExperience(sections: ResumeDoc['sections']): ResumeDoc['sec
 
 /** A resume as a complete .tex file in the chosen template. */
 export function resumeTex(doc: ResumeDoc, look: DocumentLook): string {
-  const s = styleOf(look);
+  const layout = look.layout ?? null;
+  const base = styleOf(look);
+  const s: TemplateStyle = layout?.compact
+    ? { ...base, entryGap: `${String(Math.max(2, parseFloat(base.entryGap) / 2))}pt` }
+    : base;
+  const margin = layout?.margin != null ? `${String(layout.margin)}mm` : null;
+  const side = margin ?? s.margin;
+  const top = margin ?? s.top;
+  const size = layout?.fontSize ?? s.size;
   const sections = s.skillsFirst ? skillsBeforeExperience(doc.sections) : doc.sections;
   const body = sections
     .map((section, i) => {
@@ -469,11 +555,11 @@ export function resumeTex(doc: ResumeDoc, look: DocumentLook): string {
         );
       return (
         (section.title ? s.section(inline(section.title)) : '') +
-        section.blocks.map((b) => block(look, b, first)).join('')
+        section.blocks.map((b) => block(s, b, first)).join('')
       );
     })
     .join('');
-  return `${preamble(look, s.size, `left=${s.margin},right=${s.margin},top=${s.top},bottom=${s.top}`)}
+  return `${preamble(look, size, `left=${side},right=${side},top=${top},bottom=${top}`, '', layout)}
 \\begin{document}
 \\raggedright
 ${header(look, doc, s.centred)}${body}

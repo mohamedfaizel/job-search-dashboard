@@ -688,6 +688,14 @@ export interface DocumentStyle {
   hasPhoto: boolean;
   /** The look of your own resume, as settings. Null until you save one. */
   myDesign: MyDesign | null;
+  /** Resume body text in points (9 to 12); null is the template's own. */
+  fontSize: number | null;
+  /** Resume page margins in mm (10 to 25); null is the template's own. */
+  margin: number | null;
+  /** 1 to 1.4; 1 is the template's own. */
+  lineSpacing: number;
+  /** Less space between jobs, bullets and sections. */
+  compact: boolean;
 }
 
 /** "My design": your resume's look, typeset as the template "design". */
@@ -716,6 +724,9 @@ export interface DocumentTemplate {
   id: string;
   name: string;
   description: string;
+  /** Its own text size (pt) and side margin (mm); built-in resume templates only. */
+  fontSize?: number | null;
+  margin?: number | null;
 }
 
 /** Your Word master resume, used as the template "mine". */

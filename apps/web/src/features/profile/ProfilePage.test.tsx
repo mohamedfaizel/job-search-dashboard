@@ -263,7 +263,6 @@ describe('profile page', () => {
       'Persönlich',
       'Bewerbungsangaben',
       'Lebenslauf',
-      'Design',
     ]);
     expect(headline).toHaveValue('Frontend engineer');
     const years = screen.getByRole('textbox', { name: 'Jahre Berufserfahrung' });
@@ -393,7 +392,9 @@ describe('profile page', () => {
     await user.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Applications' })).toHaveFocus();
     await user.keyboard('{End}');
-    expect(screen.getByRole('tab', { name: 'Design' })).toHaveAttribute('aria-selected', 'true');
-    expect(localStorage.getItem('jobsearch.profile.tab')).toBe('design');
+    expect(screen.getByRole('tab', { name: 'Resume' })).toHaveAttribute('aria-selected', 'true');
+    expect(localStorage.getItem('jobsearch.profile.tab')).toBe('resume');
+    // Design moved to the Resume builder's Look tab: only one place has it.
+    expect(screen.queryByRole('tab', { name: 'Design' })).not.toBeInTheDocument();
   });
 });
