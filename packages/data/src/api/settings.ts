@@ -1,14 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { meKey } from './auth';
 import { graphqlClient } from './client';
 import {
   DELETE_API_KEY,
   MY_API_KEYS,
   SAVE_API_KEY,
+  SET_AI_PROVIDER,
+  SET_API_KEY_MODEL,
   TEST_API_KEY,
   UPDATE_NOTIFICATION_SETTINGS,
 } from './operations';
 import { profileKey } from './profile';
-import type { ApiKey, ApiKeyKind, ApiKeyTest, NotificationSettingsInput, Profile } from './types';
+import type {
+  AiProvider,
+  ApiKey,
+  ApiKeyKind,
+  ApiKeyTest,
+  NotificationSettingsInput,
+  Profile,
+  User,
+} from './types';
 
 export const apiKeysKey = ['settings', 'apiKeys'] as const;
 
@@ -40,7 +51,42 @@ export function useDeleteApiKey() {
   });
 }
 
-/** Tries a saved key against its service (JobHunter: a one-job search, at most 1 credit). */
+/** Changes the AI model used with a saved key; null goes back to the default. */
+export function useSetApiKeyModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { kind: ApiKeyKind; model: string | null }) =>
+      (await graphqlClient.request<{ setApiKeyModel: ApiKey }>(SET_API_KEY_MODEL, input))
+        .setApiKeyModel,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: apiKeysKey }),
+  });
+}
+
+/** Picks Claude or OpenAI. Shown at once: the copy-and-open buttons follow it everywhere. */
+export function useSetAiProvider() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (provider: AiProvider) =>
+      (await graphqlClient.request<{ setAiProvider: User }>(SET_AI_PROVIDER, { provider }))
+        .setAiProvider,
+    onMutate: (provider) => {
+      const before = queryClient.getQueryData<User | null>(meKey);
+      if (before) queryClient.setQueryData(meKey, { ...before, aiProvider: provider });
+      return { before };
+    },
+    onError: (_error, _provider, context) => {
+      if (context?.before) queryClient.setQueryData(meKey, context.before);
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(meKey, user);
+    },
+  });
+}
+
+/**
+ * Tries a saved key against its service: JobHunter with a one-job search (at most 1 credit),
+ * Claude and OpenAI by listing their models (free).
+ */
 export function useTestApiKey() {
   const queryClient = useQueryClient();
   return useMutation({

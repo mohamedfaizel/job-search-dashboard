@@ -12,6 +12,7 @@ export const ADMIN: User = {
   name: 'Mohamed',
   role: 'ADMIN',
   locale: 'en',
+  aiProvider: 'ANTHROPIC',
 };
 
 /** Languages saved with setLocale, in order. */
@@ -35,7 +36,14 @@ export const server = setupServer(
   }),
   api.mutation('SignUp', ({ variables }) => {
     const input = variables['input'] as { name: string; email: string };
-    session.user = { id: 2, email: input.email, name: input.name, role: 'USER', locale: 'en' };
+    session.user = {
+      id: 2,
+      email: input.email,
+      name: input.name,
+      role: 'USER',
+      locale: 'en',
+      aiProvider: 'ANTHROPIC',
+    };
     return HttpResponse.json({ data: { signUp: session.user } });
   }),
   api.mutation('SetLocale', ({ variables }) => {

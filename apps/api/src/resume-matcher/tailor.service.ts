@@ -10,6 +10,8 @@ import {
   ResumeMatcherHttpError,
 } from './resume-matcher.client';
 import type { TailoredResumeModel } from './resume-matcher.model';
+import type { UserAi } from './rm-ai-queue';
+import { RmAiQueue } from './rm-ai-queue';
 import type { RmJobInput } from './rm-job';
 import { loadRmJobInput, withRmJob } from './rm-job';
 
@@ -29,6 +31,7 @@ export class TailorService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly client: ResumeMatcherClient,
+    private readonly queue: RmAiQueue,
   ) {}
 
   /** Background work dies with the process, so a PENDING row left from before can't finish. */
@@ -55,7 +58,8 @@ export class TailorService implements OnApplicationBootstrap {
       if (current) return current;
     }
 
-    const [input, previous, match] = await Promise.all([
+    const [ai, input, previous, match] = await Promise.all([
+      this.queue.userAi(userId),
       loadRmJobInput(this.prisma, userId, jobId),
       this.prisma.tailoredResume.findUnique({ where: { userId_jobId: { userId, jobId } } }),
       this.prisma.jobMatch.findUnique({
@@ -82,7 +86,7 @@ export class TailorService implements OnApplicationBootstrap {
 
     this.running.add(key);
     // Not awaited on purpose: the request returns now and the page polls for the result.
-    void this.run(userId, jobId, input, {
+    void this.run(userId, jobId, ai, input, {
       // A match already sent this job to Resume-Matcher; reuse its copy.
       rmJobId: previous?.rmJobId ?? match?.rmJobId ?? null,
       oldRmResumeId: previous?.rmResumeId ?? null,
@@ -115,22 +119,27 @@ export class TailorService implements OnApplicationBootstrap {
   private async run(
     userId: number,
     jobId: string,
+    ai: UserAi,
     input: RmJobInput,
     ids: { rmJobId: string | null; oldRmResumeId: string | null },
   ): Promise<void> {
     const ref = { rmJobId: ids.rmJobId };
     try {
-      const tailored = await withRmJob(this.client, input, ref, (id) =>
-        this.client.improve(input.rmResumeId, id),
-      );
+      // Both AI steps in one turn, so the cover letter is written with the same key.
+      const { tailored, coverLetter } = await this.queue.run(ai, async () => {
+        const tailored = await withRmJob(this.client, input, ref, (id) =>
+          this.client.improve(input.rmResumeId, id),
+        );
+        // The resume is what matters; a failed cover letter only leaves that part empty.
+        const coverLetter =
+          tailored.data.cover_letter ??
+          (await this.client.generateCoverLetter(tailored.data.resume_id).catch((e: unknown) => {
+            this.logger.warn(`Cover letter ${userId}:${jobId} failed: ${describeError(e)}`);
+            return null;
+          }));
+        return { tailored, coverLetter };
+      });
       const rmResumeId = tailored.data.resume_id;
-      // The resume is what matters; a failed cover letter only leaves that part empty.
-      const coverLetter =
-        tailored.data.cover_letter ??
-        (await this.client.generateCoverLetter(rmResumeId).catch((e: unknown) => {
-          this.logger.warn(`Cover letter ${userId}:${jobId} failed: ${describeError(e)}`);
-          return null;
-        }));
       await this.save(userId, jobId, {
         status: JobMatchStatus.READY,
         rmJobId: ref.rmJobId,

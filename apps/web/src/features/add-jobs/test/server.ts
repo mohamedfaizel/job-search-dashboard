@@ -97,7 +97,14 @@ const PROFILE: Profile = {
 
 /** Who the fake API says is logged in. Add jobs is for the admin only. */
 export const session: { user: User } = {
-  user: { id: 1, email: 'admin@example.com', name: 'Admin', role: 'ADMIN', locale: 'en' },
+  user: {
+    id: 1,
+    email: 'admin@example.com',
+    name: 'Admin',
+    role: 'ADMIN',
+    locale: 'en',
+    aiProvider: 'ANTHROPIC',
+  },
 };
 
 export const server = setupServer(

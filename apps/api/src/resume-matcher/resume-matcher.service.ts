@@ -1,25 +1,26 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ResumeMatcherClient } from './resume-matcher.client';
 import type { ResumeMatcherStatusModel } from './resume-matcher.model';
+import type { UserAi } from './rm-ai-queue';
+import { RmAiQueue } from './rm-ai-queue';
 
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
-/** Choices saved in Resume-Matcher's own Settings page beat .env, which surprises people. */
-const SETTINGS_HINT =
-  " A provider or model saved in Resume-Matcher's own Settings page (http://localhost:3100/settings) overrides .env.";
-const using = ({ aiProvider, aiModel }: ResumeMatcherStatusModel) =>
-  aiProvider ? ` (${aiProvider}${aiModel ? ` / ${aiModel}` : ''})` : '';
+const PROVIDER_NAME = { ANTHROPIC: 'Claude', OPENAI: 'OpenAI' } as const;
 
 @Injectable()
 export class ResumeMatcherService {
-  constructor(private readonly client: ResumeMatcherClient) {}
+  constructor(
+    private readonly client: ResumeMatcherClient,
+    private readonly queue: RmAiQueue,
+  ) {}
 
   /**
-   * Is Resume-Matcher running, and (only when asked) can it reach the AI provider?
+   * Is Resume-Matcher running, and (only when asked) can it reach your AI with your key?
    * The AI check sends one tiny message, which costs a fraction of a cent, so pages call it
    * from a button instead of on every load.
    */
-  async getStatus(checkAi: boolean): Promise<ResumeMatcherStatusModel> {
+  async getStatus(userId: number, checkAi: boolean): Promise<ResumeMatcherStatusModel> {
     const status: ResumeMatcherStatusModel = {
       configured: this.client.isConfigured,
       reachable: false,
@@ -41,32 +42,38 @@ export class ResumeMatcherService {
       status.message = `${errorText(error)}. Start it with pnpm rm:up.`;
       return status;
     }
+
+    // Your own AI from Settings > API keys: Resume-Matcher gets it for each run.
+    let ai: UserAi | null = null;
     try {
-      // Free: reads Resume-Matcher's settings without calling the AI provider.
-      const llm = await this.client.llmConfig();
-      status.aiProvider = llm.provider;
-      status.aiModel = llm.model;
-    } catch {
-      // Older Resume-Matcher versions may not have this endpoint; the rest still works.
+      ai = await this.queue.userAi(userId);
+      status.aiProvider = PROVIDER_NAME[ai.provider];
+      status.aiModel = ai.model;
+    } catch (error) {
+      if (!(error instanceof HttpException)) throw error;
     }
     if (!checkAi) {
       status.message = 'Resume-Matcher is running.';
       return status;
     }
+    if (!ai) {
+      status.aiConfigured = false;
+      status.aiHealthy = false;
+      status.message = 'Resume-Matcher is running, but you have no AI key yet: add one above.';
+      return status;
+    }
 
     try {
-      const rm = await this.client.status();
+      const rm = await this.queue.run(ai, () => this.client.status());
       status.aiConfigured = rm.llm_configured;
       status.aiHealthy = rm.llm_healthy;
     } catch (error) {
       status.message = errorText(error);
       return status;
     }
-    status.message = !status.aiConfigured
-      ? 'Resume-Matcher is running, but no AI key is set: add ANTHROPIC_API_KEY to .env and restart it.'
-      : status.aiHealthy
-        ? 'Resume-Matcher is running and the AI provider answered.'
-        : `Resume-Matcher is running, but the AI provider${using(status)} did not answer: check the key, model and credits.${SETTINGS_HINT}`;
+    status.message = status.aiHealthy
+      ? `Resume-Matcher is running and ${status.aiProvider} answered.`
+      : `Resume-Matcher is running, but ${status.aiProvider} (${ai.model}) did not answer: check the key, model and credits.`;
     return status;
   }
 }

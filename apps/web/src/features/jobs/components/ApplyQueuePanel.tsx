@@ -12,7 +12,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
-import { CLAUDE_URL } from './ApplyKitPanel';
+import { useAiChat } from '../../../lib/ai-chat';
 import { CopyText } from './CopyText';
 
 /**
@@ -37,6 +37,7 @@ const SECONDARY =
 function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: string) => void }) {
   const errorText = useErrorText();
   const t = useTranslations('Jobs.queue');
+  const chat = useAiChat();
   const prompt = useApplyQueuePrompt();
   const save = useSaveApplyQueueReply();
   const [note, setNote] = useState<string | null>(null);
@@ -54,7 +55,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
     } catch {
       setNote(t('copyFailed'));
     }
-    window.open(CLAUDE_URL, '_blank', 'noopener');
+    window.open(chat.url, '_blank', 'noopener');
   };
   const saveReply = (reply: string) => {
     const before = waiting;

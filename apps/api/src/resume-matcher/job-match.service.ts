@@ -4,6 +4,8 @@ import { JobMatchStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { describeError, describeRunError, ResumeMatcherClient } from './resume-matcher.client';
 import type { JobMatchModel } from './resume-matcher.model';
+import type { UserAi } from './rm-ai-queue';
+import { RmAiQueue } from './rm-ai-queue';
 import type { RmJobInput } from './rm-job';
 import { loadRmJobInput, withRmJob } from './rm-job';
 
@@ -40,6 +42,7 @@ export class JobMatchService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly client: ResumeMatcherClient,
+    private readonly queue: RmAiQueue,
   ) {}
 
   /** Background work dies with the process, so a PENDING row left from before can't finish. */
@@ -66,7 +69,8 @@ export class JobMatchService implements OnApplicationBootstrap {
       if (current) return current;
     }
 
-    const [input, previous] = await Promise.all([
+    const [ai, input, previous] = await Promise.all([
+      this.queue.userAi(userId),
       loadRmJobInput(this.prisma, userId, jobId),
       this.prisma.jobMatch.findUnique({ where: { userId_jobId: { userId, jobId } } }),
     ]);
@@ -85,7 +89,7 @@ export class JobMatchService implements OnApplicationBootstrap {
 
     this.running.add(key);
     // Not awaited on purpose: the request returns now and the page polls for the result.
-    void this.run(userId, jobId, input, previous?.rmJobId ?? null).finally(() =>
+    void this.run(userId, jobId, ai, input, previous?.rmJobId ?? null).finally(() =>
       this.running.delete(key),
     );
 
@@ -96,14 +100,17 @@ export class JobMatchService implements OnApplicationBootstrap {
   private async run(
     userId: number,
     jobId: string,
+    ai: UserAi,
     input: RmJobInput,
     rmJobId: string | null,
   ): Promise<void> {
     // Reusing Resume-Matcher's copy of the job saves extracting its keywords again.
     const ref = { rmJobId };
     try {
-      const preview = await withRmJob(this.client, input, ref, (id) =>
-        this.client.improvePreview(input.rmResumeId, id),
+      const preview = await this.queue.run(ai, () =>
+        withRmJob(this.client, input, ref, (id) =>
+          this.client.improvePreview(input.rmResumeId, id),
+        ),
       );
       const ats = preview.data.ats_score;
       if (!ats) throw new Error(NO_SCORE_MESSAGE);

@@ -1,15 +1,16 @@
-import { useResumeMatcherStatus } from '@jobsearch/data';
+import { useMe, useMyApiKeys, useResumeMatcherStatus } from '@jobsearch/data';
 import { useSyncExternalStore } from 'react';
 
 /**
- * Can the paid AI parts (Resume-Matcher, which calls the Claude API with your key) run now?
+ * Can the paid AI parts (Resume-Matcher, which calls your AI with your own key) run now?
  *
  * - notSetUp: RESUME_MATCHER_URL is not set in .env.
  * - notRunning: Resume-Matcher does not answer (checked for free every minute).
+ * - noKey: you have no key saved for the AI you picked in Settings > API keys.
  * - keyFailed: the last AI run or key test failed with a key or credit error, so the key is
  *   missing, expired or out of credits. A run or test that works clears it.
  */
-export type AiState = 'on' | 'notSetUp' | 'notRunning' | 'keyFailed';
+export type AiState = 'on' | 'notSetUp' | 'notRunning' | 'noKey' | 'keyFailed';
 
 const KEY = 'jobsearch.aiKeyFailed';
 const listeners = new Set<() => void>();
@@ -78,9 +79,12 @@ function subscribe(listener: () => void) {
 export function useAiState(): AiState {
   const failed = useSyncExternalStore(subscribe, read, () => null);
   const status = useResumeMatcherStatus();
+  const keys = useMyApiKeys();
+  const { data: me } = useMe();
   // While loading or when the check itself fails, don't block anything.
   if (status.data && !status.data.configured) return 'notSetUp';
   if (status.data && !status.data.reachable) return 'notRunning';
+  if (keys.data && me && !keys.data.some((key) => key.kind === me.aiProvider)) return 'noKey';
   if (failed) return 'keyFailed';
   return 'on';
 }

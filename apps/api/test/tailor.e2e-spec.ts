@@ -3,7 +3,13 @@ import { setupServer } from 'msw/node';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import {
+  createTestApp,
+  resetDatabase,
+  seedTestUsers,
+  rmConfigHandlers,
+  saveAiKey,
+} from './helpers';
 
 const RM_URL = 'http://resume-matcher.test';
 const CREATE_JOB = `mutation ($input: CreateJobInput!) { createJob(input: $input) { id } }`;
@@ -23,6 +29,7 @@ const PDF = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]); // "%PDF-"
 // Fake Resume-Matcher: hands out numbered ids and remembers what it was asked to do.
 let rm: { jobs: number; improved: { resume_id: string; job_id: string }[]; deleted: string[] };
 const server = setupServer(
+  ...rmConfigHandlers(RM_URL),
   http.post(`${RM_URL}/api/v1/jobs/upload`, () => {
     rm.jobs += 1;
     return HttpResponse.json({ message: 'ok', job_id: [`rm-job-${String(rm.jobs)}`] });
@@ -70,6 +77,8 @@ describe('tailoring your resume to a job', () => {
     rm = { jobs: 0, improved: [], deleted: [] };
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
+    await saveAiKey(t.asUser);
+    await saveAiKey(t.gql);
     const res = await t.gql<{ createJob: { id: string } }>(CREATE_JOB, {
       input: { title: 'Frontend Engineer', companyName: 'Acme', description: 'React.' },
     });

@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+enum AiProvider {
+  ANTHROPIC
+  OPENAI
+}
+
 type ApiKey {
   """JobHunter credits left, as it last said."""
   credits: Int
@@ -873,6 +878,16 @@ type Mutation {
   saveTableSettings(settings: String!): Boolean!
 
   """
+  Picks your AI: Claude or OpenAI, for the AI score and the copy-and-open buttons.
+  """
+  setAiProvider(provider: AiProvider!): User!
+
+  """
+  Changes the AI model used with a saved key. Empty means the default model.
+  """
+  setApiKeyModel(kind: ApiKeyKind!, model: String): ApiKey!
+
+  """
   "I have this": adds a missing skill to the Skills list of My profile, or a keyword (keyword: true) to its Keywords list (have: true), or takes it off (have: false). It then counts as covered for every job
   """
   setHaveTerm(have: Boolean! = true, jobId: ID!, keyword: Boolean! = false, term: String!): JobInsights!
@@ -920,7 +935,7 @@ type Mutation {
   tailorResume(jobId: ID!): TailoredResume!
 
   """
-  Tries your saved JobHunter token with a search for one job (at most 1 credit).
+  Tries a saved key: JobHunter with a one-job search (at most 1 credit), Claude and OpenAI by listing their models (free).
   """
   testApiKey(kind: ApiKeyKind!): ApiKeyTest!
 
@@ -1300,7 +1315,7 @@ type Query {
   notifications: Notifications!
   resumeMatcherStatus(
     """
-    Also send a test message to the AI provider (costs a fraction of a cent)
+    Also send a test message to your AI with your key (costs a fraction of a cent)
     """
     checkAi: Boolean! = false
   ): ResumeMatcherStatus!
@@ -1715,6 +1730,10 @@ type TermCheck {
 }
 
 type User {
+  """
+  Your AI for the AI score and the copy-and-open buttons (Settings > API keys)
+  """
+  aiProvider: AiProvider!
   email: String!
   id: Int!
 

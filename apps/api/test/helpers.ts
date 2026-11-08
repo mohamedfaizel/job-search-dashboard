@@ -2,6 +2,7 @@ import type { Server } from 'node:http';
 import type { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { http, HttpResponse } from 'msw';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/configure-app';
@@ -91,4 +92,31 @@ export async function seedTestUsers(prisma: PrismaService): Promise<void> {
       { id: 2, email: 'user@example.com', name: 'User', passwordHash: 'x' },
     ],
   });
+}
+
+/**
+ * Fake Resume-Matcher settings endpoints: the AI queue puts the user's key and model in before
+ * each AI run and takes the key out after. `log` records each change, in order.
+ */
+export function rmConfigHandlers(rmUrl: string, log: string[] = []) {
+  return [
+    http.post(`${rmUrl}/api/v1/config/api-keys`, async ({ request }) => {
+      log.push(`keys ${JSON.stringify(await request.json())}`);
+      return HttpResponse.json({ message: 'ok', updated_providers: [] });
+    }),
+    http.put(`${rmUrl}/api/v1/config/llm-api-key`, async ({ request }) => {
+      const body = (await request.json()) as { provider: string; model: string };
+      log.push(`llm ${body.provider} ${body.model}`);
+      return HttpResponse.json({ provider: body.provider, model: body.model, api_key: '…' });
+    }),
+  ];
+}
+
+/** Saves a Claude key in Settings, which every Resume-Matcher AI run needs. */
+export async function saveAiKey(gql: Gql, value = 'sk-ant-test-key'): Promise<void> {
+  const res = await gql(
+    `mutation ($value: String!) { saveApiKey(input: { kind: ANTHROPIC, value: $value }) { kind } }`,
+    { value },
+  );
+  if (res.errors) throw new Error(res.errors[0]?.message);
 }

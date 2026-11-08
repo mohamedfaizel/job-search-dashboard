@@ -8,6 +8,8 @@ import {
   describeRunError,
   ResumeMatcherClient,
 } from '../resume-matcher/resume-matcher.client';
+import type { UserAi } from '../resume-matcher/rm-ai-queue';
+import { RmAiQueue } from '../resume-matcher/rm-ai-queue';
 
 const INTERRUPTED_MESSAGE = 'The API restarted while this check was running. Check again.';
 const NOT_READ_MESSAGE =
@@ -30,6 +32,7 @@ export class ReplyMatchService implements OnApplicationBootstrap {
     private readonly prisma: PrismaService,
     private readonly client: ResumeMatcherClient,
     private readonly documents: DocumentsService,
+    private readonly queue: RmAiQueue,
   ) {}
 
   /** Background work dies with the process, so a PENDING row left from before can't finish. */
@@ -67,6 +70,7 @@ export class ReplyMatchService implements OnApplicationBootstrap {
         'This job has no description to compare your resume with.',
       );
     }
+    const ai = await this.queue.userAi(userId);
     const startedAt = new Date();
     await this.prisma.jobResume.update({
       where: { userId_jobId: { userId, jobId } },
@@ -84,6 +88,7 @@ export class ReplyMatchService implements OnApplicationBootstrap {
     void this.run(
       userId,
       jobId,
+      ai,
       `${job.title} at ${job.company.name}\n\n${job.description}`,
       startedAt,
     ).finally(() => this.running.delete(key));
@@ -93,21 +98,26 @@ export class ReplyMatchService implements OnApplicationBootstrap {
   private async run(
     userId: number,
     jobId: string,
+    ai: UserAi,
     description: string,
     startedAt: Date,
   ): Promise<void> {
-    let rmResumeId: string | null = null;
+    // Set inside the queued run, so the finally below can delete the temporary copy.
+    const temp: { rmResumeId: string | null } = { rmResumeId: null };
     try {
       const pdf = await this.documents.jobPdf(userId, jobId, 'resume');
-      const uploaded = await this.client.uploadResume({
-        name: 'apply-kit-resume.pdf',
-        type: 'application/pdf',
-        bytes: pdf.bytes,
+      // Reading the resume and scoring it both use the AI: one turn with the user's key.
+      const preview = await this.queue.run(ai, async () => {
+        const uploaded = await this.client.uploadResume({
+          name: 'apply-kit-resume.pdf',
+          type: 'application/pdf',
+          bytes: pdf.bytes,
+        });
+        temp.rmResumeId = uploaded.resume_id;
+        if (uploaded.processing_status !== 'ready') throw new Error(NOT_READ_MESSAGE);
+        const rmJobId = await this.client.uploadJob(description, uploaded.resume_id);
+        return this.client.improvePreview(uploaded.resume_id, rmJobId);
       });
-      rmResumeId = uploaded.resume_id;
-      if (uploaded.processing_status !== 'ready') throw new Error(NOT_READ_MESSAGE);
-      const rmJobId = await this.client.uploadJob(description, rmResumeId);
-      const preview = await this.client.improvePreview(rmResumeId, rmJobId);
       const ats = preview.data.ats_score;
       if (!ats) throw new Error(NO_SCORE_MESSAGE);
       await this.save(userId, jobId, startedAt, {
@@ -126,8 +136,8 @@ export class ReplyMatchService implements OnApplicationBootstrap {
         this.logger.warn(`Could not save reply match ${userId}:${jobId}: ${describeError(e)}`);
       });
     } finally {
-      if (rmResumeId) {
-        await this.client.deleteResume(rmResumeId).catch((e: unknown) => {
+      if (temp.rmResumeId) {
+        await this.client.deleteResume(temp.rmResumeId).catch((e: unknown) => {
           this.logger.warn(`Could not delete the temporary resume: ${describeError(e)}`);
         });
       }

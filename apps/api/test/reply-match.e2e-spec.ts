@@ -3,7 +3,13 @@ import { setupServer } from 'msw/node';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InsightsService } from '../src/insights/insights.service';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import {
+  createTestApp,
+  resetDatabase,
+  seedTestUsers,
+  rmConfigHandlers,
+  saveAiKey,
+} from './helpers';
 
 const RM_URL = 'http://resume-matcher.test';
 const CREATE_JOB = `mutation ($input: CreateJobInput!) { createJob(input: $input) { id } }`;
@@ -30,6 +36,7 @@ const RESUME =
 let rm: { uploaded: string[]; deleted: string[]; jobs: string[] };
 let readable = true;
 const server = setupServer(
+  ...rmConfigHandlers(RM_URL),
   http.post(`${RM_URL}/api/v1/resumes/upload`, () => {
     rm.uploaded.push('rm-temp');
     return HttpResponse.json({
@@ -89,6 +96,8 @@ describe('AI match of the resume Claude wrote', () => {
     readable = true;
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
+    await saveAiKey(t.asUser);
+    await saveAiKey(t.gql);
     const res = await t.gql<{ createJob: { id: string } }>(CREATE_JOB, {
       input: {
         title: 'Frontend Engineer',

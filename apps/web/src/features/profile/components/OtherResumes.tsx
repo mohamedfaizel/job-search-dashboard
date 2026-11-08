@@ -10,10 +10,10 @@ import { useFormatter, useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { useAiChat } from '../../../lib/ai-chat';
 import { inputClass } from './Field';
 import { useLanguageName } from './useLanguageName';
 
-const CLAUDE_URL = 'https://claude.ai/new';
 const MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPT = '.pdf,.docx';
 const BUTTON =
@@ -184,6 +184,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
   const [text, setText] = useState('');
   const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
   const t = useTranslations('Profile.other');
+  const chat = useAiChat();
   const nameOf = useLanguageName();
   const prompt = useTranslationPrompt(language);
   const save = useSaveLanguageResume();
@@ -201,7 +202,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
     } catch {
       setCopied('failed');
     }
-    window.open(CLAUDE_URL, '_blank', 'noopener');
+    window.open(chat.url, '_blank', 'noopener');
   };
 
   return (

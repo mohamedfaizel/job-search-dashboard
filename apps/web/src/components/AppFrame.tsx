@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { isLocale, writeLocaleCookie } from '@/i18n/config';
+import { AiNameIntl } from '@/lib/ai-chat';
 import { APP_NAME } from '@/lib/app-name';
 import { useErrorText } from '../i18n/useErrorText';
 import { FlagStripe } from './FlagStripe';
@@ -189,7 +190,9 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
         </div>
       </header>
       <FlagStripe afterBlack />
-      <main className="px-4 py-6 sm:px-6">{children}</main>
+      <main className="px-4 py-6 sm:px-6">
+        <AiNameIntl>{children}</AiNameIntl>
+      </main>
     </div>
   );
 }

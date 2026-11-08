@@ -8,6 +8,7 @@ import {
   ResumeMatcherHttpError,
 } from './resume-matcher.client';
 import { MatcherResumeModel, MatcherResumeState } from './resume-matcher.model';
+import { RmAiQueue } from './rm-ai-queue';
 
 const NO_FILE_MESSAGE =
   'Upload your resume as a PDF or Word file on this page so Resume-Matcher can use it.';
@@ -26,6 +27,7 @@ export class ResumeSyncService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly client: ResumeMatcherClient,
+    private readonly queue: RmAiQueue,
   ) {}
 
   async get(userId: number): Promise<MatcherResumeModel> {
@@ -104,12 +106,15 @@ export class ResumeSyncService {
       let status: MatcherResumeStatus = MatcherResumeStatus.FAILED;
       let error: string | null;
       try {
+        // Resume-Matcher's AI reads the file into sections, with your own key. Checked first,
+        // so a missing key leaves the old copy in place.
+        const ai = await this.queue.userAi(userId);
         // Resume-Matcher keeps at most 5 master resumes in total, so replace, don't add.
         if (rmResumeId) {
           await this.deleteIfPresent(rmResumeId);
           rmResumeId = null;
         }
-        const uploaded = await this.client.uploadResume(file);
+        const uploaded = await this.queue.run(ai, () => this.client.uploadResume(file));
         rmResumeId = uploaded.resume_id;
         if (uploaded.processing_status === 'ready') {
           status = MatcherResumeStatus.READY;

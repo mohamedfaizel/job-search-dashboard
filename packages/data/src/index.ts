@@ -21,6 +21,8 @@ export {
   useDeleteApiKey,
   useMyApiKeys,
   useSaveApiKey,
+  useSetAiProvider,
+  useSetApiKeyModel,
   useTestApiKey,
   useUpdateNotificationSettings,
 } from './api/settings';

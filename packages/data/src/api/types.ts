@@ -300,7 +300,11 @@ export interface User {
   role: Role;
   /** The language the app is shown in: "en" or "de". */
   locale: string;
+  /** Your AI (Settings > API keys): for the AI score and the copy-and-open buttons. */
+  aiProvider: AiProvider;
 }
+
+export type AiProvider = 'ANTHROPIC' | 'OPENAI';
 
 export interface LogInInput {
   email: string;

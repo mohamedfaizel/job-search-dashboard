@@ -24,13 +24,14 @@ export class ResumeMatcherResolver {
 
   @Query(() => ResumeMatcherStatusModel)
   resumeMatcherStatus(
+    @CurrentUser() user: SessionUser,
     @Args('checkAi', {
       defaultValue: false,
-      description: 'Also send a test message to the AI provider (costs a fraction of a cent)',
+      description: 'Also send a test message to your AI with your key (costs a fraction of a cent)',
     })
     checkAi: boolean,
   ): Promise<ResumeMatcherStatusModel> {
-    return this.resumeMatcher.getStatus(checkAi);
+    return this.resumeMatcher.getStatus(user.id, checkAi);
   }
 
   @Query(() => MatcherResumeModel, {

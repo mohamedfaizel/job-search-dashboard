@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { useAiChat } from '../../../lib/ai-chat';
 import { promptSections } from '../reply';
 import type { JobFormat } from '../useJobFormat';
 import { useJobFormat } from '../useJobFormat';
@@ -17,7 +18,6 @@ export function chromePrompt(job: Job): string {
   return `Please help me apply for "${job.title}" at ${job.company.name}. First open ${applyKitUrl(job.id)} and read all of it. Then go to the job posting${posting} and fill in the application form following the kit's instructions. Never click Submit: stop and tell me what you filled in and what is left for me.`;
 }
 
-export const CLAUDE_URL = 'https://claude.ai/new';
 const LINK = 'text-brand-700 hover:underline';
 export type ApplyStep = 1 | 2 | 3;
 const STEPS: ApplyStep[] = [1, 2, 3];
@@ -257,6 +257,7 @@ function ApplyKit({
   const insights = useJobInsights(job.id);
   const profile = useMyProfile();
   const t = useTranslations('Jobs.apply');
+  const chat = useAiChat();
   const f = useJobFormat();
   const p = profile.data;
   const noAnswers =
@@ -275,7 +276,7 @@ function ApplyKit({
   if (!data) return <p className="text-sm text-slate-500">{t('loading')}</p>;
 
   const copyClaudePrompt = async () => {
-    setCopyFailed(!(await copyAndOpen(data.prompt, CLAUDE_URL)));
+    setCopyFailed(!(await copyAndOpen(data.prompt, chat.url)));
     steps.markCopied();
   };
 
@@ -374,7 +375,7 @@ function ApplyKit({
               {t('copyAgain')}
             </button>{' '}
             ·{' '}
-            <a href={CLAUDE_URL} target="_blank" rel="noreferrer" className={LINK}>
+            <a href={chat.url} target="_blank" rel="noreferrer" className={LINK}>
               {t('openClaude')}
             </a>
           </p>

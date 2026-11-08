@@ -123,7 +123,7 @@ export const RM_RUNNING: ResumeMatcherStatus = {
   reachable: true,
   aiConfigured: null,
   aiHealthy: null,
-  aiProvider: 'anthropic',
+  aiProvider: 'Claude',
   aiModel: 'claude-sonnet-5-5',
   message: 'Resume-Matcher is running.',
 };
@@ -145,18 +145,29 @@ export const gmail: { configured: boolean; accounts: GmailAccount[]; found: numb
 /** Keys saved in Settings during the current test. */
 export const apiKeys: ApiKey[] = [];
 
+/** The AI the fake user picked in Settings. */
+export const me: { aiProvider: 'ANTHROPIC' | 'OPENAI' } = { aiProvider: 'ANTHROPIC' };
+
 /** Sends to Resume-Matcher made in the current test. */
 export const syncs: number[] = [];
+
+const ME = {
+  id: 'u1',
+  email: 'ada@example.com',
+  name: 'Ada King Lovelace',
+  role: 'USER',
+  locale: 'en',
+};
 
 export const server = setupServer(
   api.query('MyApiKeys', () => HttpResponse.json({ data: { myApiKeys: [...apiKeys] } })),
   api.mutation('SaveApiKey', ({ variables }) => {
     requests.push({ operation: 'SaveApiKey', variables });
-    const input = variables['input'] as { kind: ApiKey['kind']; value: string };
+    const input = variables['input'] as { kind: ApiKey['kind']; value: string; model?: string };
     const saved: ApiKey = {
       kind: input.kind,
       last4: input.value.trim().slice(-4),
-      model: null,
+      model: input.model ?? null,
       credits: null,
       updatedAt: '2026-11-08T12:00:00.000Z',
     };
@@ -170,8 +181,22 @@ export const server = setupServer(
   }),
   api.mutation('TestApiKey', ({ variables }) => {
     requests.push({ operation: 'TestApiKey', variables });
+    if (variables['kind'] !== 'JOBHUNTER') {
+      return HttpResponse.json({ data: { testApiKey: { ok: true, credits: null, error: null } } });
+    }
     for (const key of apiKeys) key.credits = 412;
     return HttpResponse.json({ data: { testApiKey: { ok: true, credits: 412, error: null } } });
+  }),
+  api.mutation('SetApiKeyModel', ({ variables }) => {
+    requests.push({ operation: 'SetApiKeyModel', variables });
+    const key = apiKeys.find((k) => k.kind === variables['kind']);
+    if (key) key.model = (variables['model'] as string | null) ?? null;
+    return HttpResponse.json({ data: { setApiKeyModel: key } });
+  }),
+  api.mutation('SetAiProvider', ({ variables }) => {
+    requests.push({ operation: 'SetAiProvider', variables });
+    me.aiProvider = variables['provider'] as typeof me.aiProvider;
+    return HttpResponse.json({ data: { setAiProvider: { ...ME, aiProvider: me.aiProvider } } });
   }),
   api.mutation('UpdateNotificationSettings', ({ variables }) => {
     requests.push({ operation: 'UpdateNotificationSettings', variables });
@@ -199,13 +224,7 @@ export const server = setupServer(
   api.query('Me', () =>
     HttpResponse.json({
       data: {
-        me: {
-          id: 'u1',
-          email: 'ada@example.com',
-          name: 'Ada King Lovelace',
-          role: 'USER',
-          locale: 'en',
-        },
+        me: { ...ME, aiProvider: me.aiProvider },
       },
     }),
   ),
@@ -231,7 +250,7 @@ export const server = setupServer(
           ...RM_RUNNING,
           aiConfigured: true,
           aiHealthy: true,
-          message: 'Resume-Matcher is running and the AI provider answered.',
+          message: 'Resume-Matcher is running and Claude answered.',
         }
       : RM_RUNNING;
     return HttpResponse.json({ data: { resumeMatcherStatus: status } });
