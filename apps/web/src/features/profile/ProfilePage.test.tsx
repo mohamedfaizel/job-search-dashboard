@@ -98,10 +98,14 @@ describe('profile page', () => {
     expect(screen.getByRole('textbox', { name: 'First name' })).toHaveValue('Ada King');
     expect(screen.getByRole('textbox', { name: 'Last name' })).toHaveValue('Lovelace');
     // The resume is on its own tab.
-    expect(screen.queryByRole('textbox', { name: 'Resume text' })).not.toBeInTheDocument();
+    expect(screen.getByText(/words saved/)).not.toBeVisible();
     await openTab(user, 'Resume');
-    expect(screen.getByRole('textbox', { name: 'Resume text' })).toHaveValue(
-      'Ada Lovelace\nFrontend engineer',
+    // The text itself is edited in the Resume builder, the one place for it.
+    expect(screen.queryByRole('textbox', { name: 'Resume text' })).not.toBeInTheDocument();
+    expect(screen.getByText(/^4 words saved/)).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Open Resume builder' })).toHaveAttribute(
+      'href',
+      '/resume',
     );
     expect(screen.getByText('Last upload: ada.pdf')).toBeInTheDocument();
   });
@@ -291,7 +295,7 @@ describe('profile page', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not save: Please log in');
   });
 
-  it('uploads a resume and puts its text in the box, keeping other edits', async () => {
+  it('uploads a resume and saves its text, keeping other edits', async () => {
     const user = await renderProfile();
     const headline = screen.getByRole('textbox', { name: 'Headline' });
     await user.clear(headline);
@@ -302,7 +306,7 @@ describe('profile page', () => {
 
     const resume = screen.getByRole('region', { name: 'Master resume' });
     expect(await within(resume).findByRole('status')).toHaveTextContent('Resume read.');
-    expect(screen.getByRole('textbox', { name: 'Resume text' })).toHaveValue('Text from the PDF');
+    expect(screen.getByText(/^4 words saved/)).toBeVisible();
     expect(screen.getByText('Last upload: new cv.pdf')).toBeInTheDocument();
     expect(headline).toHaveValue('Not saved yet');
     expect(requests).toEqual([{ operation: 'UploadResume', variables: { sent: true } }]);

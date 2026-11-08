@@ -6,6 +6,7 @@ import {
   useTranslationPrompt,
   useUploadLanguageResume,
 } from '@jobsearch/data';
+import Link from 'next/link';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { AutoHide } from '../../../components/AutoHide';
@@ -75,7 +76,10 @@ function UploadButton({
 /** Called after a resume is saved, so the page can say so even though the form starts again. */
 type OnSaved = (language: string) => void;
 
-/** One saved resume in another language: edit the text, replace it with a file, or delete it. */
+/**
+ * One saved resume in another language: open it in the Resume builder (the one place you edit
+ * resume text), replace it with a file, or delete it.
+ */
 function SavedResume({
   resume,
   justSaved,
@@ -88,11 +92,8 @@ function SavedResume({
   const errorText = useErrorText();
   const t = useTranslations('Profile.other');
   const format = useFormatter();
-  const save = useSaveLanguageResume();
   const remove = useDeleteLanguageResume();
-  const [text, setText] = useState(resume.text);
   const name = useLanguageName()(resume.language);
-  const boxId = useId();
 
   return (
     <div className="space-y-2 rounded-md border border-slate-200 p-4">
@@ -105,20 +106,8 @@ function SavedResume({
           })}
         </span>
       </div>
-      <label htmlFor={boxId} className="sr-only">
-        {t('textLabel', { language: name })}
-      </label>
-      <textarea
-        id={boxId}
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-        }}
-        rows={10}
-        className={`${inputClass} font-mono`}
-      />
-      {justSaved && text === resume.text && (
-        <AutoHide key={resume.text}>
+      {justSaved && (
+        <AutoHide key={resume.updatedAt}>
           <p role="status" className="text-sm text-emerald-700">
             {resume.fileName
               ? t('savedNoteFile', { language: name, file: resume.fileName })
@@ -127,26 +116,9 @@ function SavedResume({
         </AutoHide>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Only when there is something to save: a grey button next to a saved resume looks broken. */}
-        {text !== resume.text && (
-          <button
-            type="button"
-            className={PRIMARY}
-            disabled={save.isPending || !text.trim()}
-            onClick={() => {
-              save.mutate(
-                { language: resume.language, text },
-                {
-                  onSuccess: () => {
-                    onSaved(resume.language);
-                  },
-                },
-              );
-            }}
-          >
-            {save.isPending ? t('saving') : t('saveChanges')}
-          </button>
-        )}
+        <Link href={`/resume?language=${encodeURIComponent(resume.language)}`} className={PRIMARY}>
+          {t('edit', { language: name })}
+        </Link>
         <UploadButton
           language={resume.language}
           label={t('replace')}
@@ -165,9 +137,9 @@ function SavedResume({
           {t('delete')}
         </button>
       </div>
-      {(save.error ?? remove.error) && (
+      {remove.error && (
         <p role="alert" className="text-sm text-red-700">
-          {errorText(save.error ?? remove.error)}
+          {errorText(remove.error)}
         </p>
       )}
     </div>

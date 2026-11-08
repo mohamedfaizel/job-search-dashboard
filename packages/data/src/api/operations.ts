@@ -1099,3 +1099,35 @@ export const SET_AI_PROVIDER = /* GraphQL */ `
     }
   }
 `;
+
+const RESUME_BUILD_FIELDS = `language doc outOfDate languages profileLanguages maxPages savedAt`;
+
+export const RESUME_BUILD = /* GraphQL */ `
+  query ResumeBuild($language: String) {
+    resumeBuild(language: $language) {
+      ${RESUME_BUILD_FIELDS}
+    }
+  }
+`;
+
+export const RESUME_BUILD_PROMPT = /* GraphQL */ `
+  query ResumeBuildPrompt($language: String!) {
+    resumeBuildPrompt(language: $language)
+  }
+`;
+
+export const SAVE_RESUME_BUILD = /* GraphQL */ `
+  mutation SaveResumeBuild($language: String!, $doc: String!) {
+    saveResumeBuild(language: $language, doc: $doc) {
+      ${RESUME_BUILD_FIELDS}
+    }
+  }
+`;
+
+export const RESTART_RESUME_BUILD = /* GraphQL */ `
+  mutation RestartResumeBuild($language: String!, $reply: String) {
+    restartResumeBuild(language: $language, reply: $reply) {
+      ${RESUME_BUILD_FIELDS}
+    }
+  }
+`;

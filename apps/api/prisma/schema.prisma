@@ -107,6 +107,7 @@ model User {
   role            Role             @default(USER)
   profile         Profile?
   languageResumes LanguageResume[]
+  resumeBuilds    ResumeBuild[]
   documentStyle   DocumentStyle?
   hiddenJobs      HiddenJob[]
   applications    Application[]
@@ -258,6 +259,23 @@ model LanguageResume {
   file      Bytes?
   fileType  String?
   updatedAt DateTime @updatedAt
+
+  @@id([userId, language])
+}
+
+/// Your master resume as the Resume builder edits it, one per language: sections you can move,
+/// rename and hide (see apps/api/src/resume-builder/builder-doc.ts). Every save also writes the
+/// resume as text into Profile.resumeText or LanguageResume.text, which the rest of the app reads.
+model ResumeBuild {
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// ISO 639-1 code, e.g. "en".
+  language   String
+  doc        Json
+  /// The resume text as the builder last read or wrote it. When the text on My profile differs
+  /// (you uploaded a new file), the builder offers to read it again.
+  syncedText String
+  updatedAt  DateTime @updatedAt
 
   @@id([userId, language])
 }

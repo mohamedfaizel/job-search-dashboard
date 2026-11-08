@@ -62,6 +62,8 @@ export const API_ERROR_CODES = [
   'JOBHUNTER_TOKEN_MISSING',
   'API_KEY_NOT_FOUND',
   'AI_KEY_MISSING',
+  'RESUME_BUILD_INVALID',
+  'RESUME_REPLY_EMPTY',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

@@ -11,7 +11,7 @@ const ACCEPT =
 
 interface Props {
   fileName: string | null;
-  onUploaded: (profile: Profile) => void;
+  onUploaded?: (profile: Profile) => void;
 }
 
 /** Picks a PDF or Word file and sends it straight away; the API turns it into text. */
@@ -49,7 +49,7 @@ export function ResumeUpload({ fileName, onUploaded }: Props) {
               if (file.size > MAX_BYTES) return;
               upload.mutate(file, {
                 onSuccess: (profile) => {
-                  onUploaded(profile);
+                  onUploaded?.(profile);
                   // Jobs are matched against Resume-Matcher's copy, so send the new file along.
                   if (matcher.data?.reachable) syncToMatcher.mutate();
                 },

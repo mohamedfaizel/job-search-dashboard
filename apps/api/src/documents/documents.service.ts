@@ -47,6 +47,8 @@ export interface DocumentFile {
   name: string;
   type: string;
   bytes: Buffer;
+  /** False when the PDF box was not running (or failed) and this is the plain PDF. */
+  styled?: boolean;
 }
 
 export type DocumentKind = 'resume' | 'cover-letter';
@@ -453,6 +455,22 @@ export class DocumentsService {
     });
   }
 
+  /**
+   * A resume in the Markdown layout as a PDF in your template: the Resume builder's preview and
+   * download. The file is named after you and the resume's language.
+   */
+  async resumePdf(userId: number, text: string, language: string): Promise<DocumentFile> {
+    const me = await this.me(userId);
+    return this.makePdf(userId, me, {
+      kind: 'resume',
+      text,
+      language,
+      company: language.toUpperCase(),
+      companyCity: null,
+      jobTitle: '',
+    });
+  }
+
   /** Your name and the contact details a resume header and a letter need. */
   private async me(userId: number) {
     const user = await this.prisma.user.findUniqueOrThrow({
@@ -586,11 +604,13 @@ export class DocumentsService {
         this.logger.warn(`Template PDF failed, sending the plain one: ${detail.slice(-400)}`);
       }
     }
+    const styled = pdf !== null;
     pdf ??= await textToPdf(doc.text, props.title);
     return {
       name: fileName,
       type: 'application/pdf',
       bytes: Buffer.from(await cleanPdf(pdf, props)),
+      styled,
     };
   }
 }

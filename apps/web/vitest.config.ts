@@ -11,6 +11,7 @@ const FEATURES = [
   { name: 'jobs', testTimeout: 15_000 },
   { name: 'add-jobs', testTimeout: 15_000 },
   { name: 'settings', testTimeout: 15_000 },
+  { name: 'resume', testTimeout: 15_000 },
 ];
 
 const base = { globals: true, environment: 'jsdom', css: false } as const;

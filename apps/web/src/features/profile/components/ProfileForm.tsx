@@ -9,6 +9,7 @@ import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
 import type { ProfileFormValues } from '../schema';
 import { profileSchema, profileToForm, toProfileInput } from '../schema';
+import { BuilderLink } from './BuilderLink';
 import { Field, inputClass } from './Field';
 import { ResumeSuggestions } from './ResumeSuggestions';
 import { ResumeUpload } from './ResumeUpload';
@@ -32,7 +33,6 @@ const FIELD_TAB: Partial<Record<keyof ProfileFormValues, ProfileTab>> = {
   drivingLicence: 'applications',
   applicationNotes: 'applications',
   customFields: 'applications',
-  resumeText: 'resume',
   resumeLanguage: 'resume',
   achievements: 'resume',
   resumeMaxPages: 'resume',
@@ -78,7 +78,6 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
     register,
     handleSubmit,
     reset,
-    resetField,
     setValue,
     control,
     formState: { errors, isSubmitting, isDirty },
@@ -530,14 +529,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
           </h2>
           <p className="text-sm text-slate-600">{t('resume.intro')}</p>
         </div>
-        <ResumeUpload
-          fileName={profile.resumeFileName}
-          onUploaded={(uploaded) => {
-            // The upload already saved the text, so it becomes the field's saved value.
-            // Other fields keep any edits the user hasn't saved yet.
-            resetField('resumeText', { defaultValue: uploaded.resumeText });
-          }}
-        />
+        <ResumeUpload fileName={profile.resumeFileName} />
         <ResumeSuggestions
           suggestions={profile.resumeSuggestions}
           reviewPrompt={profile.resumeReviewPrompt}
@@ -562,14 +554,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             ))}
           </select>
         </Field>
-        <Field label={t('resume.text')} htmlFor="resumeText" error={errors.resumeText?.message}>
-          <textarea
-            {...register('resumeText')}
-            {...a11y('resumeText')}
-            rows={16}
-            className={`${inputClass} font-mono`}
-          />
-        </Field>
+        <BuilderLink text={profile.resumeText} />
         <Field
           label={t('resume.achievements')}
           htmlFor="achievements"

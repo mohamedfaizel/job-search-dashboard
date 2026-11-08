@@ -825,6 +825,11 @@ type Mutation {
   """
   removeUnsupportedSkills(jobId: ID!): JobInsights!
 
+  """
+  Reads the resume into sections again: from My profile, or from an AI chat reply
+  """
+  restartResumeBuild(language: String!, reply: String): ResumeBuild!
+
   """Puts a removed skill or keyword back"""
   restoreInsightTerm(jobId: ID!, term: String!): JobInsights!
 
@@ -871,6 +876,11 @@ type Mutation {
   Saves Claude’s reply to the design prompt as My design and makes it your default template
   """
   saveMyDesign(reply: String!): DocumentStyle!
+
+  """
+  Saves the builder resume (JSON text) and writes it to My profile as text
+  """
+  saveResumeBuild(doc: String!, language: String!): ResumeBuild!
 
   """
   Saves your Job posts filters and sort (JSON text), replacing the ones before
@@ -1242,7 +1252,11 @@ input ProfileInput {
   """The language your master resume is in. Left out = unchanged"""
   resumeLanguage: String
   resumeMaxPages: Int! = 2
-  resumeText: String! = ""
+
+  """
+  Left out = unchanged. The Resume builder edits it, so My profile leaves it out
+  """
+  resumeText: String
   salaryExpectation: String! = ""
   showStretches: Boolean! = true
   skills: [String!]! = []
@@ -1313,6 +1327,12 @@ type Query {
 
   """Your bell list, newest first"""
   notifications: Notifications!
+
+  """Your master resume as sections; your main language when none is given"""
+  resumeBuild(language: String): ResumeBuild!
+
+  """AI chat prompt that puts your resume text into the builder layout"""
+  resumeBuildPrompt(language: String!): String!
   resumeMatcherStatus(
     """
     Also send a test message to your AI with your key (costs a fraction of a cent)
@@ -1355,6 +1375,38 @@ type RemovedTerm {
   """True when it is removed from every job, not just this one"""
   everywhere: Boolean!
   term: String!
+}
+
+"""Your master resume in one language, as the Resume builder edits it"""
+type ResumeBuild {
+  """
+  The resume as JSON text: { name, headline, contact[], sections[{ id, title, hidden, blocks[] }] }
+  """
+  doc: String!
+
+  """
+  ISO 639-1 code, e.g. "en"
+  """
+  language: String!
+
+  """Languages you have a master resume in; the first is your main one"""
+  languages: [String!]!
+
+  """Your page limit from My profile"""
+  maxPages: Int!
+
+  """
+  The resume text on My profile changed since the builder last read it (a new upload)
+  """
+  outOfDate: Boolean!
+
+  """
+  Your languages from My profile: the Languages section always shows these
+  """
+  profileLanguages: [String!]!
+
+  """Null until you first save a change"""
+  savedAt: DateTime
 }
 
 type ResumeMatcherStatus {

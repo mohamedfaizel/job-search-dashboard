@@ -120,3 +120,14 @@ export * from './store/jobsTableSlice';
 export { makeStore, useAppDispatch, useAppSelector } from './store/store';
 export type { AppDispatch, AppStore, RootState } from './store/store';
 export { createQueryClient, DataProvider } from './DataProvider';
+export {
+  fetchResumeBuildPdf,
+  resumeBuildKey,
+  resumeBuildPdfUrl,
+  useRestartResumeBuild,
+  useResumeBuild,
+  useResumeBuildPdf,
+  useResumeBuildPrompt,
+  useSaveResumeBuild,
+} from './api/resumeBuilder';
+export type { BuilderPdf } from './api/resumeBuilder';

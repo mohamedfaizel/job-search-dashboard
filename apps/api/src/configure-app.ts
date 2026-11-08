@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { createValidationPipe } from './common/validation.pipe';
+import { PDF_HEADERS } from './resume-builder/resume-builder.controller';
 
 // The Next.js app (apps/web) and Storybook.
 const DEV_ORIGINS = ['http://localhost:3001', 'http://localhost:6006'];
@@ -12,7 +13,8 @@ export function configureApp(app: INestApplication): void {
   // The web app runs on its own port. With cookies, CORS must name each allowed origin (a
   // wildcard is not allowed) and opt in to credentials.
   const origins = process.env['CORS_ORIGINS']?.split(',').map((o) => o.trim()) ?? DEV_ORIGINS;
-  app.enableCors({ origin: origins, credentials: true });
+  // exposedHeaders: the Resume builder's preview reads the page count from its PDF response.
+  app.enableCors({ origin: origins, credentials: true, exposedHeaders: PDF_HEADERS });
   // Runs the class-validator rules on every GraphQL input.
   app.useGlobalPipes(createValidationPipe());
 }

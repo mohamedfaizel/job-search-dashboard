@@ -19,13 +19,15 @@ import { NotificationBell } from './NotificationBell';
 interface NavItem {
   href: string;
   /** The key of its text in messages/<locale>.json, under "Nav". */
-  label: 'jobs' | 'tracker' | 'addJobs' | 'profile' | 'settings';
+  label: 'jobs' | 'tracker' | 'resume' | 'addJobs' | 'profile' | 'settings';
   adminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/jobs', label: 'jobs' },
   { href: '/tracker', label: 'tracker' },
+  // Your master resume, section by section, with a live PDF.
+  { href: '/resume', label: 'resume' },
   // Everyone can add jobs: JobHunter imports use your own token (Settings > API keys).
   { href: '/jobs/add', label: 'addJobs' },
   { href: '/profile', label: 'profile' },

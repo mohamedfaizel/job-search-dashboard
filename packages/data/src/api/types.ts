@@ -403,6 +403,8 @@ export interface LanguageResume {
 export type ProfileInput = Omit<
   Profile,
   | 'resumeFileName'
+  // The Resume builder edits it (saveResumeBuild); My profile leaves it out.
+  | 'resumeText'
   | 'otherResumes'
   | 'updatedAt'
   | 'resumeSuggestions'
@@ -812,4 +814,49 @@ export interface SavedAnswer {
   question: string;
   answer: string;
   updatedAt: string;
+}
+
+/** A job, degree or project inside a resume section. */
+export interface BuilderEntry {
+  id: string;
+  kind: 'entry';
+  title: string;
+  org: string;
+  /** "Berlin | 01/2021 - today" */
+  meta: string;
+  bullets: string[];
+  lines: string[];
+}
+
+export type BuilderBlock =
+  | BuilderEntry
+  | { id: string; kind: 'paragraph'; text: string }
+  | { id: string; kind: 'bullets'; items: string[] };
+
+export interface BuilderSection {
+  id: string;
+  title: string;
+  /** Left out of the PDF and of every prompt. */
+  hidden: boolean;
+  blocks: BuilderBlock[];
+}
+
+/** Your resume as the Resume builder edits it. */
+export interface BuilderDoc {
+  name: string;
+  headline: string;
+  contact: string[];
+  sections: BuilderSection[];
+}
+
+/** Your master resume in one language, from the API (doc is JSON text). */
+export interface ResumeBuild {
+  language: string;
+  doc: string;
+  outOfDate: boolean;
+  /** Languages you have a master resume in; the first is your main one. */
+  languages: string[];
+  profileLanguages: string[];
+  maxPages: number;
+  savedAt: string | null;
 }
