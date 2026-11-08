@@ -915,3 +915,29 @@ export interface SectionSuggestion {
   section: string;
   findings: FactFinding[];
 }
+
+/** The cover letter saved for one job (text: paragraphs separated by a blank line). */
+export interface JobCoverLetter {
+  jobId: string;
+  title: string;
+  company: string;
+  language: string;
+  text: string;
+  /** False until you start a resume copy for the job: the letter is stored with it. */
+  hasCopy: boolean;
+  savedAt: string | null;
+}
+
+/** What "write or improve my letter" asks for: with a pasted reply, or without (own key). */
+export interface ImproveLetterInput {
+  jobId: string;
+  instruction?: string | null;
+  reply?: string | null;
+}
+
+/** A new letter to keep or discard. */
+export interface LetterSuggestion {
+  before: string;
+  after: string;
+  findings: FactFinding[];
+}

@@ -2,8 +2,11 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
 import {
+  ImproveLetterInput,
   ImproveSectionInput,
+  JobCoverLetterModel,
   JobResumeBuildModel,
+  LetterSuggestionModel,
   ResumeBuildModel,
   SectionSuggestionModel,
 } from './resume-builder.model';
@@ -125,5 +128,45 @@ export class ResumeBuilderResolver {
     @Args('sectionId') sectionId: string,
   ): Promise<JobResumeBuildModel> {
     return this.builder.copySectionToMaster(user.id, jobId, sectionId);
+  }
+
+  @Query(() => JobCoverLetterModel, { description: 'The cover letter saved for one job' })
+  jobCoverLetter(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId') jobId: string,
+  ): Promise<JobCoverLetterModel> {
+    return this.builder.getLetter(user.id, jobId);
+  }
+
+  @Mutation(() => JobCoverLetterModel, {
+    description: 'Saves the cover letter for a job (needs a resume copy for it first)',
+  })
+  saveJobCoverLetter(
+    @CurrentUser() user: SessionUser,
+    @Args('jobId') jobId: string,
+    @Args('text') text: string,
+  ): Promise<JobCoverLetterModel> {
+    return this.builder.saveLetter(user.id, jobId, text);
+  }
+
+  @Query(() => String, {
+    description: 'AI chat prompt that writes or improves a job’s cover letter',
+  })
+  improveLetterPrompt(
+    @CurrentUser() user: SessionUser,
+    @Args('input') input: ImproveLetterInput,
+  ): Promise<string> {
+    return this.builder.letterPrompt(user.id, input);
+  }
+
+  @Mutation(() => LetterSuggestionModel, {
+    description:
+      'A written or improved letter, from the AI chat reply you pasted or from your own saved AI key. Changes nothing',
+  })
+  improveLetter(
+    @CurrentUser() user: SessionUser,
+    @Args('input') input: ImproveLetterInput,
+  ): Promise<LetterSuggestionModel> {
+    return this.builder.improveLetter(user.id, input);
   }
 }

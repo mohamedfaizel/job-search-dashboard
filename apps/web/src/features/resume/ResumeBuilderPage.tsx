@@ -5,6 +5,7 @@ import {
   jobResumeBuildPdfUrl,
   resumeBuildPdfUrl,
   useCopySectionToMaster,
+  useJobCoverLetter,
   useJobResumeBuild,
   useResetJobResumeBuild,
   useResumeBuild,
@@ -23,6 +24,7 @@ import { useLanguageName } from '../profile/components/useLanguageName';
 import { CheckPanel } from './components/CheckPanel';
 import { HeaderCard } from './components/HeaderCard';
 import { JobMatchPanel } from './components/JobMatchPanel';
+import { LetterPanel } from './components/LetterPanel';
 import { LookPanel } from './components/LookPanel';
 import { PdfPreview } from './components/PdfPreview';
 import { ReadAgain } from './components/ReadAgain';
@@ -49,10 +51,10 @@ import {
 /** Wait this long after the last keystroke before saving (and making a new preview). */
 const AUTOSAVE_MS = 1000;
 
-export type BuilderTab = 'edit' | 'look' | 'match' | 'check';
-/** The Job match and Check tabs only exist for a job's resume copy. */
+export type BuilderTab = 'edit' | 'look' | 'match' | 'letter' | 'check';
+/** The Job match, Cover letter and Check tabs only exist for a job's resume copy. */
 const tabsFor = (job: boolean): BuilderTab[] =>
-  job ? ['edit', 'look', 'match', 'check'] : ['edit', 'look'];
+  job ? ['edit', 'look', 'match', 'letter', 'check'] : ['edit', 'look'];
 
 const param = (name: string) =>
   typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get(name);
@@ -227,12 +229,15 @@ function Builder({
   // The doc as the server has it, to tell whether there is anything to save.
   const [savedJson, setSavedJson] = useState(build.doc);
   const [version, setVersion] = useState(build.savedAt ?? 'first');
+  // The letter's PDF has its own versions: it changes when the letter or the look does.
+  const [letterVersion, setLetterVersion] = useState('first');
   const [outOfDate, setOutOfDate] = useState(build.outOfDate);
   const [view, setView] = useState<View>('edit');
   const doc = history.present;
   const json = JSON.stringify(doc);
   const unsaved = json !== savedJson;
   const { language } = build;
+  const letterText = useJobCoverLetter(job?.jobId ?? '', !!job).data?.text ?? '';
 
   const change = useCallback((next: BuilderDoc, field: string | null) => {
     dispatch({ type: 'change', doc: next, field, at: Date.now() });
@@ -299,6 +304,10 @@ function Builder({
   // A new look makes a new PDF: the preview asks again.
   const lookSaved = useCallback(() => {
     setVersion(`look-${String(Date.now())}`);
+    setLetterVersion(`look-${String(Date.now())}`);
+  }, []);
+  const letterSaved = useCallback(() => {
+    setLetterVersion(`letter-${String(Date.now())}`);
   }, []);
 
   const sectionDrag = useDragSort('sections', (from, to) => {
@@ -541,7 +550,13 @@ function Builder({
             />
           )}
           {job && tab === 'check' && <CheckPanel jobId={job.jobId} version={version} />}
-          <div hidden={tab === 'look'} className="space-y-3">
+          {/* Stays mounted, so a letter change waiting to be saved survives switching tabs. */}
+          {job && (
+            <div hidden={tab !== 'letter'}>
+              <LetterPanel jobId={job.jobId} onSaved={letterSaved} />
+            </div>
+          )}
+          <div hidden={tab === 'look' || tab === 'letter'} className="space-y-3">
             <p className="text-xs text-slate-500">{t('intro')}</p>
             <HeaderCard doc={doc} onChange={change} />
             {doc.sections.map((section, index) => (
@@ -603,8 +618,10 @@ function Builder({
             <PdfPreview
               language={language}
               {...(jobId ? { jobId } : {})}
-              version={version}
-              maxPages={build.maxPages}
+              version={tab === 'letter' ? letterVersion : version}
+              maxPages={tab === 'letter' ? 1 : build.maxPages}
+              letter={tab === 'letter'}
+              enabled={letterText.trim() !== ''}
             />
           </div>
         </div>

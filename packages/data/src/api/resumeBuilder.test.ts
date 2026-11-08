@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { graphqlClient } from './client';
 import {
+  fetchJobCoverLetterPdf,
   fetchJobResumeBuildPdf,
+  jobCoverLetterPdfUrl,
   fetchResumeBuild,
   fetchResumeBuildPdf,
   jobResumeBuildPdfUrl,
@@ -72,6 +74,20 @@ describe('Resume builder API', () => {
       .mockResolvedValue(new Response('%PDF', { headers: { 'X-Pdf-Pages': '1' } }));
     await expect(fetchJobResumeBuildPdf('j1')).resolves.toMatchObject({ pages: 1, styled: true });
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/job/j1/resume.pdf'), {
+      credentials: 'include',
+    });
+  });
+
+  it('builds a job letter’s PDF address and reads its PDF', async () => {
+    expect(jobCoverLetterPdfUrl('job 1')).toMatch(
+      /\/resume-builder\/job\/job%201\/cover-letter\.pdf$/,
+    );
+    expect(jobCoverLetterPdfUrl('j1', true)).toMatch(/cover-letter\.pdf\?download=1$/);
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('%PDF', { headers: { 'X-Pdf-Pages': '1' } }));
+    await expect(fetchJobCoverLetterPdf('j1')).resolves.toMatchObject({ pages: 1 });
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/job/j1/cover-letter.pdf'), {
       credentials: 'include',
     });
   });

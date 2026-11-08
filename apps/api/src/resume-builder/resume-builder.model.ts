@@ -125,3 +125,60 @@ export class SectionSuggestionModel {
   })
   findings!: FactFindingModel[];
 }
+
+@ObjectType('JobCoverLetter', { description: 'The cover letter saved for one job' })
+export class JobCoverLetterModel {
+  @Field()
+  jobId!: string;
+
+  @Field()
+  title!: string;
+
+  @Field()
+  company!: string;
+
+  @Field({ description: 'ISO 639-1 code of the language the letter is written in' })
+  language!: string;
+
+  @Field({ description: 'Paragraphs separated by a blank line; empty until you write one' })
+  text!: string;
+
+  @Field({
+    description: 'False until you start a resume copy for this job: a letter belongs to it',
+  })
+  hasCopy!: boolean;
+
+  @Field(() => Date, { nullable: true })
+  savedAt!: Date | null;
+}
+
+@InputType('ImproveLetterInput')
+export class ImproveLetterInput {
+  @Field()
+  jobId!: string;
+
+  @Field(() => String, { nullable: true, description: 'What you want from this pass' })
+  instruction?: string | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'An AI chat’s reply pasted back. Left out, your own saved AI key answers instead',
+  })
+  reply?: string | null;
+}
+
+@ObjectType('LetterSuggestion', {
+  description: 'A written or improved cover letter to keep or discard, with its fact check',
+})
+export class LetterSuggestionModel {
+  @Field({ description: 'The letter as it is now' })
+  before!: string;
+
+  @Field({ description: 'The new letter, paragraphs separated by a blank line' })
+  after!: string;
+
+  @Field(() => [FactFindingModel], {
+    description: 'Numbers, skills and levels in the new letter that are in nothing you told us',
+  })
+  findings!: FactFindingModel[];
+}
