@@ -519,7 +519,14 @@ function block(style: TemplateStyle, b: ResumeBlock, summary = false): string {
         b.meta ? inline(b.meta) : null,
       );
       const lines = b.lines.map((l) => `${inline(l)}\\par\n`).join('');
-      return `${head}${lines}${itemize(b.bullets)}\\vspace{${style.entryGap}}\n`;
+      // Each project: its name in bold with the tech after it in grey, then its bullets.
+      const projects = b.projects
+        .map((p) => {
+          const tech = p.tech ? ` {\\small\\color{muted}${inline(p.tech)}}` : '';
+          return `\\vspace{2pt}\\textbf{${inline(p.name)}}${tech}\\par\n${itemize(p.bullets)}`;
+        })
+        .join('');
+      return `${head}${lines}${itemize(b.bullets)}${projects}\\vspace{${style.entryGap}}\n`;
     }
   }
 }

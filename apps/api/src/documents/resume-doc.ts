@@ -13,6 +13,14 @@
  * Templates lay out these parts; they never add or change words. Section titles are kept as
  * written, so a German resume keeps "Berufserfahrung".
  */
+/** A project inside a job: "#### Project name | React, MQTT", then its bullets. */
+export interface ResumeProject {
+  name: string;
+  /** "React, MQTT" */
+  tech: string | null;
+  bullets: string[];
+}
+
 export interface ResumeEntry {
   kind: 'entry';
   /** "Senior Frontend Engineer" */
@@ -24,6 +32,8 @@ export interface ResumeEntry {
   bullets: string[];
   /** Plain lines under the entry that are not bullets. */
   lines: string[];
+  /** Projects of this job, each with its own bullets. */
+  projects: ResumeProject[];
 }
 
 export type ResumeBlock =
@@ -112,6 +122,17 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
       startSection(plain(text));
       continue;
     }
+    if (level >= 4 && entry) {
+      // A project of the job above: "#### Name | React, MQTT". Its bullets follow.
+      flushParagraph();
+      const [name = '', ...tech] = text.split(SEPARATOR);
+      entry.projects.push({
+        name: plain(name),
+        tech: tech.join(', ').trim() || null,
+        bullets: [],
+      });
+      continue;
+    }
     if (level >= 3) {
       flushParagraph();
       inHeader = false;
@@ -123,6 +144,7 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
         meta: null,
         bullets: [],
         lines: [],
+        projects: [],
       };
       currentSection().blocks.push(entry);
       continue;
@@ -155,7 +177,8 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
       flushParagraph();
       const item = (bullet[1] ?? '').trim();
       if (entry) {
-        entry.bullets.push(item);
+        const project = entry.projects[entry.projects.length - 1];
+        (project ?? entry).bullets.push(item);
       } else {
         const blocks = currentSection().blocks;
         const last = blocks[blocks.length - 1];

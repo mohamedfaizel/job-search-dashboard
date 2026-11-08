@@ -397,7 +397,8 @@
       "entry": "Job, degree or project",
       "bullets": "Bullet list",
       "paragraph": "Text",
-      "skillRow": "Skills row"
+      "skillRow": "Skills row",
+      "company": "Next company"
     },
     "paragraph": "Text",
     "paragraphPlaceholder": "A few sentences about you…",
@@ -522,7 +523,8 @@
       "match": "Job match",
       "letter": "Cover letter",
       "check": "Check",
-      "files": "Files and settings"
+      "files": "Resume Settings",
+      "achievements": "Achievements"
     },
     "tabsLabel": "Builder tabs",
     "look": {
@@ -658,7 +660,7 @@
         }
       },
       "wordSpacing": "Your Word file keeps its own size and spacing.",
-      "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file on the Resume page (Files and settings), and “My own Word file” appears here.",
+      "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file on the Resume page (Resume Settings), and “My own Word file” appears here.",
       "templateUsed": "Your next PDF downloads use it."
     },
     "copyToMaster": "Copy {title} to my master resume",
@@ -693,7 +695,7 @@
       "addTermToSkills": "Add {term} to Skills",
       "inResume": "In your resume",
       "achievements": "Your achievements",
-      "noAchievements": "Add true facts with numbers on My profile > Applications and they show up here.",
+      "noAchievements": "Add true facts with numbers on the Achievements tab and they show up here.",
       "achievementsHint": "True lines from your achievements bank. Add one to your latest job.",
       "addBullet": "Add",
       "addBulletLabel": "Add to your latest job: {line}"
@@ -718,8 +720,32 @@
       "loading": "Loading…",
       "save": "Save settings",
       "saved": "Settings saved.",
-      "saveFailed": "Could not save: {error}"
-    }
+      "saveFailed": "Could not save: {error}",
+      "achievementsIntro": "True facts with real numbers, one per line. The AI may use them in a tailored resume, the fact check trusts them, and Job match offers them as bullets.",
+      "saveBank": "Save achievements",
+      "bankSaved": "Achievements saved.",
+      "copiedToBank": "Copied to your Achievements bank and saved."
+    },
+    "project": "Project",
+    "projectUntitled": "Untitled project",
+    "projectName": "Project name",
+    "projectNamePlaceholder": "ATM surveillance platform",
+    "projectTech": "Tech used",
+    "projectTechPlaceholder": "React, MQTT, Node.js",
+    "projectBullets": "{count, plural, one {# bullet} other {# bullets}}",
+    "projectUp": "Move project {name} up",
+    "projectDown": "Move project {name} down",
+    "projectDelete": "Delete project {name}",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "collapseProject": "Collapse project {name}",
+    "expandProject": "Expand project {name}",
+    "collapseEntry": "Collapse {name}",
+    "expandEntry": "Expand {name}",
+    "projectCount": "{count, plural, one {# project} other {# projects}}",
+    "addProject": "Project",
+    "duplicateBlock": "Copy {n} in {title} as a starting point",
+    "duplicateBlockHint": "Copy as a starting point"
   },
   "Jobs": {
     "title": "Job posts",

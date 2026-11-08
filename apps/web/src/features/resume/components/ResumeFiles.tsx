@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
-import { Field, inputClass } from '../../profile/components/Field';
+import { Field } from '../../profile/components/Field';
 import { useLanguageName } from '../../profile/components/useLanguageName';
 import type { ProfileFormValues } from '../../profile/schema';
 import { profileSchema, profileToForm, toProfileInput } from '../../profile/schema';
@@ -48,11 +48,11 @@ function FilesForm({ profile }: { profile: Profile }) {
   );
   const update = useUpdateProfile();
   const [saved, setSaved] = useState(false);
+  const [copiedToBank, setCopiedToBank] = useState(false);
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(schema),
@@ -99,7 +99,17 @@ function FilesForm({ profile }: { profile: Profile }) {
             suggestions={profile.resumeSuggestions}
             reviewPrompt={profile.resumeReviewPrompt}
             onUseAchievements={(lines) => {
-              setValue('achievements', lines, { shouldDirty: true });
+              // The bank has its own tab: the lines are saved there straight away.
+              setSaved(false);
+              setCopiedToBank(false);
+              update.mutate(
+                { ...toProfileInput(profileToForm(profile)), achievements: lines },
+                {
+                  onSuccess: () => {
+                    setCopiedToBank(true);
+                  },
+                },
+              );
             }}
           />
           <Field
@@ -119,20 +129,11 @@ function FilesForm({ profile }: { profile: Profile }) {
               ))}
             </select>
           </Field>
-          <Field
-            label={t('resume.achievements')}
-            htmlFor="achievements"
-            error={errors.achievements?.message}
-            hint={t('resume.achievementsHint')}
-          >
-            <textarea
-              {...register('achievements')}
-              {...a11y('achievements')}
-              rows={6}
-              placeholder={t('resume.achievementsExample')}
-              className={inputClass}
-            />
-          </Field>
+          {copiedToBank && (
+            <p role="status" className="text-sm text-emerald-700">
+              {tFiles('copiedToBank')}
+            </p>
+          )}
           <fieldset className="space-y-3 rounded-md border border-slate-200 p-4">
             <legend className="px-1 text-sm font-medium text-slate-900">
               {t('resume.settings')}

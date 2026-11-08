@@ -201,4 +201,51 @@ describe('plainToMarkdown and structurePrompt', () => {
     expect(prompt).toContain('Berufserfahrung');
     expect(prompt).toContain('Jane Doe');
   });
+
+  it('keeps projects of a job: read from Markdown, saved, and written back', () => {
+    const markdown = `# Jane
+## Experience
+### Tech Lead | Tech Mahindra
+Chennai | 08/2022 - 05/2026
+- Led the team
+#### ATM surveillance platform | React, MQTT
+- 80% fewer penalties
+- 6 banks
+#### Video dashboard
+- Built the MSV view`;
+    const doc = textToBuilderDoc(markdown, 'X');
+    const entry = doc.sections[0]?.blocks[0];
+    expect(entry).toMatchObject({
+      bullets: ['Led the team'],
+      projects: [
+        {
+          name: 'ATM surveillance platform',
+          tech: 'React, MQTT',
+          bullets: ['80% fewer penalties', '6 banks'],
+        },
+        { name: 'Video dashboard', tech: '', bullets: ['Built the MSV view'] },
+      ],
+    });
+    const md = toMarkdown(doc);
+    expect(md).toContain('#### ATM surveillance platform | React, MQTT\n- 80% fewer penalties');
+    expect(md).toContain('#### Video dashboard\n- Built the MSV view');
+    // Saved and read again, junk is dropped and ids are kept.
+    const again = readBuilderDoc(JSON.stringify(doc));
+    expect(again.sections[0]?.blocks[0]).toMatchObject({
+      projects: [{ name: 'ATM surveillance platform' }, {}],
+    });
+    const old = readBuilderDoc(
+      JSON.stringify({ sections: [{ blocks: [{ kind: 'entry', title: 'Dev' }] }] }),
+    );
+    expect(old.sections[0]?.blocks[0]).toMatchObject({ projects: [] });
+    // An empty project adds nothing.
+    const empty = readBuilderDoc(
+      JSON.stringify({
+        sections: [
+          { title: 'Experience', blocks: [{ kind: 'entry', title: 'Dev', projects: [{}] }] },
+        ],
+      }),
+    );
+    expect(toMarkdown(empty)).not.toContain('####');
+  });
 });

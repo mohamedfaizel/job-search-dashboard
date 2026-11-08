@@ -847,6 +847,15 @@ export interface SavedAnswer {
   updatedAt: string;
 }
 
+/** A project inside a job or company: its name, its tech and what you did. */
+export interface BuilderProject {
+  id: string;
+  name: string;
+  /** "React, MQTT" */
+  tech: string;
+  bullets: string[];
+}
+
 /** A job, degree or project inside a resume section. */
 export interface BuilderEntry {
   id: string;
@@ -857,6 +866,8 @@ export interface BuilderEntry {
   meta: string;
   bullets: string[];
   lines: string[];
+  /** Missing in resumes saved before projects existed. */
+  projects?: BuilderProject[];
 }
 
 export type BuilderBlock =

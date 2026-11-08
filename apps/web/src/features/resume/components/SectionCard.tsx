@@ -4,7 +4,10 @@ import { useTranslations } from 'next-intl';
 import type { HTMLAttributes } from 'react';
 import { useState } from 'react';
 import {
+  copyBlock,
+  isExperienceSection,
   isLanguagesSection,
+  insertAt,
   isSkillsSection,
   move,
   newBlock,
@@ -70,6 +73,7 @@ export function SectionCard({
   const title = section.title || t('untitled');
   const locked = isLanguagesSection(section.title) && profileLanguages.length > 0;
   const skills = isSkillsSection(section.title);
+  const experience = isExperienceSection(section.title);
   const setBlocks = (blocks: BuilderBlock[], field: string | null) => {
     onChange({ ...section, blocks }, field);
   };
@@ -283,6 +287,19 @@ export function SectionCard({
                   >
                     <DownIcon />
                   </button>
+                  {block.kind === 'entry' && (
+                    <button
+                      type="button"
+                      className={ICON_BUTTON}
+                      aria-label={t('duplicateBlock', { n: blockIndex + 1, title })}
+                      title={t('duplicateBlockHint')}
+                      onClick={() => {
+                        setBlocks(insertAt(section.blocks, blockIndex + 1, copyBlock(block)), null);
+                      }}
+                    >
+                      <CopyIcon />
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={`${ICON_BUTTON} hover:bg-red-50 hover:text-red-700`}
@@ -312,7 +329,14 @@ export function SectionCard({
                     setBlocks([...section.blocks, newBlock(kind)], null);
                   }}
                 >
-                  + {t(skills && kind === 'paragraph' ? 'blockKind.skillRow' : `blockKind.${kind}`)}
+                  +{' '}
+                  {t(
+                    skills && kind === 'paragraph'
+                      ? 'blockKind.skillRow'
+                      : experience && kind === 'entry'
+                        ? 'blockKind.company'
+                        : `blockKind.${kind}`,
+                  )}
                 </button>
               ))}
             </div>

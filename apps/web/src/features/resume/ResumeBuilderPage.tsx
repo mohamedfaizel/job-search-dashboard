@@ -21,6 +21,7 @@ import { useErrorText } from '../../i18n/useErrorText';
 import type { TabItem } from '../profile/components/TabList';
 import { TabList } from '../profile/components/TabList';
 import { useLanguageName } from '../profile/components/useLanguageName';
+import { AchievementsTab } from './components/AchievementsTab';
 import { CheckPanel } from './components/CheckPanel';
 import { FormatBar } from './components/FormatBar';
 import { HeaderCard } from './components/HeaderCard';
@@ -53,10 +54,10 @@ import {
 /** Wait this long after the last keystroke before saving (and making a new preview). */
 const AUTOSAVE_MS = 1000;
 
-export type BuilderTab = 'edit' | 'look' | 'match' | 'letter' | 'check' | 'files';
+export type BuilderTab = 'edit' | 'look' | 'match' | 'letter' | 'check' | 'files' | 'achievements';
 /** The Job match, Cover letter and Check tabs only exist for a job's resume copy. */
 const tabsFor = (job: boolean): BuilderTab[] =>
-  job ? ['edit', 'look', 'match', 'letter', 'check'] : ['edit', 'look', 'files'];
+  job ? ['edit', 'look', 'match', 'letter', 'check'] : ['files', 'edit', 'look', 'achievements'];
 
 const param = (name: string) =>
   typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get(name);
@@ -507,7 +508,7 @@ function Builder({
       ) : null}
 
       {/* Phones show one side at a time. */}
-      {tab !== 'files' && (
+      {tab !== 'files' && tab !== 'achievements' && (
         <div
           role="group"
           aria-label={t('view')}
@@ -531,7 +532,9 @@ function Builder({
         </div>
       )}
 
-      <div className={`grid gap-6 ${tab === 'files' ? '' : 'lg:grid-cols-2'}`}>
+      <div
+        className={`grid gap-6 ${tab === 'files' || tab === 'achievements' ? '' : 'lg:grid-cols-2'}`}
+      >
         <div
           id="builder-panel"
           role="tabpanel"
@@ -543,6 +546,7 @@ function Builder({
             <LookPanel onSaved={lookSaved} />
           </div>
           {!job && tab === 'files' && <ResumeFiles />}
+          {!job && tab === 'achievements' && <AchievementsTab />}
           {job && tab === 'match' && (
             <JobMatchPanel
               jobId={job.jobId}
@@ -564,7 +568,7 @@ function Builder({
           )}
           <div
             ref={editRef}
-            hidden={tab === 'look' || tab === 'letter' || tab === 'files'}
+            hidden={tab === 'look' || tab === 'letter' || tab === 'files' || tab === 'achievements'}
             className="space-y-3"
           >
             <p className="text-xs text-slate-500">{t('intro')}</p>
@@ -624,7 +628,7 @@ function Builder({
             />
           </div>
         </div>
-        {tab !== 'files' && (
+        {tab !== 'files' && tab !== 'achievements' && (
           <div className={`min-w-0 ${view === 'preview' ? '' : 'hidden lg:block'}`}>
             <div className="lg:sticky lg:top-4">
               <PdfPreview

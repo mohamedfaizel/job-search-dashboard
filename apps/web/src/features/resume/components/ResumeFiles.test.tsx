@@ -24,21 +24,6 @@ describe('Resume files tab', () => {
     expect(screen.getByText('Last upload: ada.pdf')).toBeInTheDocument();
   });
 
-  it('saves the achievements bank on the Resume tab', async () => {
-    const user = await renderFiles();
-    await user.type(
-      screen.getByRole('textbox', { name: 'Achievements bank' }),
-      'Cut page load time by 40% at Acme (2023)',
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Save settings' }));
-
-    expect(await screen.findByRole('status')).toHaveTextContent('Settings saved.');
-    expect(requests[0]).toMatchObject({
-      variables: { input: { achievements: 'Cut page load time by 40% at Acme (2023)' } },
-    });
-  });
-
   it('suggests fixes for your resume and copies its achievements to the bank', async () => {
     server.use(
       api.query('MyProfile', () =>
@@ -69,10 +54,13 @@ describe('Resume files tab', () => {
       within(box).getByText(/About 3 pages \(1238 words\), more than your limit of 2/),
     ).toBeInTheDocument();
     expect(within(box).getByText(/Your resume has 2 achievements/)).toBeInTheDocument();
+    // The bank has its own tab: the lines are saved there straight away.
     await user.click(within(box).getByRole('button', { name: 'Copy to Achievements bank' }));
-    expect(screen.getByRole('textbox', { name: 'Achievements bank' })).toHaveValue(
-      'Cut costs by 20%\nLed 5 people',
-    );
+    expect(await screen.findByText('Copied to your Achievements bank and saved.')).toBeVisible();
+    expect(requests[0]).toMatchObject({
+      operation: 'UpdateProfile',
+      variables: { input: { achievements: 'Cut costs by 20%\nLed 5 people' } },
+    });
     await user.click(within(box).getByRole('button', { name: 'Ask Claude for more suggestions' }));
     expect(within(box).getByRole('textbox', { name: 'Review prompt' })).toHaveValue(
       'Please review my resume as an experienced tech recruiter.',
@@ -82,17 +70,13 @@ describe('Resume files tab', () => {
     await user.click(screen.getByRole('checkbox', { name: /Keep all my headings/ }));
     await user.click(screen.getByRole('button', { name: 'Save settings' }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Settings saved.');
-    expect(requests[0]).toMatchObject({
-      variables: {
-        input: {
-          achievements: 'Cut costs by 20%\nLed 5 people',
-          resumeMaxPages: 3,
-          keepMySections: true,
-        },
-      },
+    await waitFor(() => {
+      expect(requests).toHaveLength(2);
     });
-    expect(requests[0]?.variables).not.toHaveProperty('input.resumeSuggestions');
+    expect(requests[1]).toMatchObject({
+      variables: { input: { resumeMaxPages: 3, keepMySections: true } },
+    });
+    expect(requests[1]?.variables).not.toHaveProperty('input.resumeSuggestions');
   });
 
   it('uploads a resume and saves its text, keeping other edits', async () => {
