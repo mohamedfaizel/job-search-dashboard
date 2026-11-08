@@ -176,7 +176,9 @@ export class ProfileService {
       linkedinUrl: input.linkedinUrl ?? null,
       githubUrl: input.githubUrl ?? null,
       websiteUrl: input.websiteUrl ?? null,
-      resumeText: input.resumeText,
+      // The Resume builder writes it; My profile no longer sends it, so a save there can't undo
+      // the builder's changes.
+      ...(input.resumeText != null ? { resumeText: input.resumeText } : {}),
       ...(input.resumeLanguage ? { resumeLanguage: input.resumeLanguage } : {}),
       phone: input.phone,
       address: input.address,

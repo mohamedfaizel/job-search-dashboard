@@ -31,6 +31,7 @@ describe('AppFrame', () => {
     expect(links.map((link) => link.textContent)).toEqual([
       'Job posts',
       'Tracker',
+      'Resume',
       'Add jobs',
       'My profile',
       'Settings',
@@ -104,6 +105,7 @@ describe('AppFrame', () => {
     ).toEqual([
       'Stellenanzeigen',
       'Bewerbungen',
+      'Lebenslauf',
       'Jobs hinzufügen',
       'Mein Profil',
       'Einstellungen',

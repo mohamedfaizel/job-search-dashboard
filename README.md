@@ -125,8 +125,16 @@ after hiding fixes a slip.
 
 **My profile** holds your headline, the roles and places you want, your skills and links, and your
 **master resume**. Upload a PDF or Word (.docx) file and the API reads the text out of it (scanned
-images can't be read); you can fix that text by hand. Match scores and tailored resumes will start
-from it. On _Import from JobHunter_, **Fill from my profile** copies your roles, skills and places
+images can't be read). Match scores and tailored resumes start from it.
+
+**Resume** is the Resume builder: your master resume section by section, with the real PDF next to
+it. Drag sections and bullets to reorder them, rename, hide (left out of the PDF and prompts), add
+or delete sections; changes save on their own and _Undo_ goes back step by step. The first visit
+reads your uploaded text into sections by their titles; _Read my resume into sections again_ has an
+AI chat prompt that sorts jobs, dates and bullets exactly. Every save writes the resume back as
+text, so Fit %, prompts and the Apply kit read the builder's version. The Languages section always
+shows your languages from My profile with your real levels. The preview uses your template when
+the PDF box runs (`pnpm pdf:up`), otherwise the plain PDF. On _Import from JobHunter_, **Fill from my profile** copies your roles, skills and places
 into the search.
 
 The **Add jobs** page has three tabs: _Saved searches_, _Import from JobHunter_ and _Add a job by hand_.

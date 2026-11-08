@@ -37,7 +37,7 @@ describe('resume in other languages', () => {
     expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
   });
 
-  it('saves a pasted German resume, then edits and deletes it', async () => {
+  it('saves a pasted German resume, then opens it in the builder or deletes it', async () => {
     const user = await renderPage();
 
     await user.type(
@@ -50,8 +50,11 @@ describe('resume in other languages', () => {
       operation: 'SaveLanguageResume',
       variables: { language: 'de', text: 'Ada Lovelace, Entwicklerin' },
     });
-    const saved = await within(section()).findByRole('textbox', { name: 'German resume text' });
-    expect(saved).toHaveValue('Ada Lovelace, Entwicklerin');
+    // Its text is edited in the Resume builder, the one place for resume text.
+    expect(
+      await within(section()).findByRole('link', { name: 'Edit German resume' }),
+    ).toHaveAttribute('href', '/resume?language=de');
+    expect(within(section()).queryByRole('textbox', { name: 'German resume text' })).toBeNull();
     // German is taken now, so the next language offered is another one.
     expect(within(section()).getByRole('combobox', { name: 'Add your resume in' })).not.toHaveValue(
       'de',
@@ -81,16 +84,7 @@ describe('resume in other languages', () => {
       operation: 'UploadLanguageResume',
       variables: { language: 'de' },
     });
-    // Nothing to save yet, so no (grey) Save button.
-    expect(within(section()).queryByRole('button', { name: 'Save changes' })).toBeNull();
-
-    const text = within(section()).getByRole('textbox', { name: 'German resume text' });
-    await user.type(text, ' Berlin');
-    await user.click(within(section()).getByRole('button', { name: 'Save changes' }));
-    expect(requests).toContainEqual({
-      operation: 'SaveLanguageResume',
-      variables: { language: 'de', text: 'Ada Lovelace\nEntwicklerin Berlin' },
-    });
+    expect(within(section()).getByRole('link', { name: 'Edit German resume' })).toBeVisible();
   });
 
   it('lets you say which language the master resume is in', async () => {

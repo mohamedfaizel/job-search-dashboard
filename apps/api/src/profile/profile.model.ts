@@ -324,10 +324,14 @@ export class ProfileInput {
   @IsUrl({ require_protocol: true }, { message: 'Website must be a full link (https://…)' })
   websiteUrl?: string | null;
 
-  @Field({ defaultValue: '' })
+  @Field(() => String, {
+    nullable: true,
+    description: 'Left out = unchanged. The Resume builder edits it, so My profile leaves it out',
+  })
+  @IsOptional()
   @IsString()
   @MaxLength(50_000, { message: 'Keep the resume under 50,000 characters' })
-  resumeText: string = '';
+  resumeText?: string | null;
 
   @Field(() => String, {
     nullable: true,
