@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Profile } from '@jobsearch/data';
-import { RESUME_LANGUAGES, useUpdateProfile } from '@jobsearch/data';
+import { useUpdateProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import type { FieldErrors } from 'react-hook-form';
@@ -9,16 +9,12 @@ import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
 import type { ProfileFormValues } from '../schema';
 import { profileSchema, profileToForm, toProfileInput } from '../schema';
-import { BuilderLink } from './BuilderLink';
 import { Field, inputClass } from './Field';
-import { ResumeSuggestions } from './ResumeSuggestions';
-import { ResumeUpload } from './ResumeUpload';
 import { SavedAnswers } from './SavedAnswers';
-import { useLanguageName } from './useLanguageName';
 
 /** The tabs of My profile. The first three hold this one form; the others are separate. */
-export type ProfileTab = 'personal' | 'applications' | 'resume';
-const FORM_TABS: ProfileTab[] = ['personal', 'applications', 'resume'];
+export type ProfileTab = 'personal' | 'applications';
+const FORM_TABS: ProfileTab[] = ['personal', 'applications'];
 
 /** Which tab each field is on, so a save with a mistake opens the tab that shows it. */
 const FIELD_TAB: Partial<Record<keyof ProfileFormValues, ProfileTab>> = {
@@ -33,9 +29,6 @@ const FIELD_TAB: Partial<Record<keyof ProfileFormValues, ProfileTab>> = {
   drivingLicence: 'applications',
   applicationNotes: 'applications',
   customFields: 'applications',
-  resumeLanguage: 'resume',
-  achievements: 'resume',
-  resumeMaxPages: 'resume',
 };
 
 /** The gender codes the API stores; their words are in messages under Profile.personal.genders. */
@@ -65,7 +58,6 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
   const errorText = useErrorText();
   const t = useTranslations('Profile');
   const tError = useTranslations('Profile.errors');
-  const languageName = useLanguageName();
   const listHint = t('listHint');
   // The rules carry their error texts, so they change with the language.
   const schema = useMemo(
@@ -78,7 +70,6 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
     register,
     handleSubmit,
     reset,
-    setValue,
     control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
@@ -521,88 +512,6 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
           </section>
         </div>
       </div>
-
-      <section aria-labelledby="resume-heading" hidden={tab !== 'resume'} className={card}>
-        <div>
-          <h2 id="resume-heading" className="text-lg font-semibold text-slate-900">
-            {t('resume.heading')}
-          </h2>
-          <p className="text-sm text-slate-600">{t('resume.intro')}</p>
-        </div>
-        <ResumeUpload fileName={profile.resumeFileName} />
-        <ResumeSuggestions
-          suggestions={profile.resumeSuggestions}
-          reviewPrompt={profile.resumeReviewPrompt}
-          onUseAchievements={(lines) => {
-            setValue('achievements', lines, { shouldDirty: true });
-          }}
-        />
-        <Field
-          label={t('resume.language')}
-          htmlFor="resumeLanguage"
-          hint={t('resume.languageHint')}
-        >
-          <select
-            {...register('resumeLanguage')}
-            {...a11y('resumeLanguage')}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
-          >
-            {Object.keys(RESUME_LANGUAGES).map((code) => (
-              <option key={code} value={code}>
-                {languageName(code)}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <BuilderLink text={profile.resumeText} />
-        <Field
-          label={t('resume.achievements')}
-          htmlFor="achievements"
-          error={errors.achievements?.message}
-          hint={t('resume.achievementsHint')}
-        >
-          <textarea
-            {...register('achievements')}
-            {...a11y('achievements')}
-            rows={6}
-            placeholder={t('resume.achievementsExample')}
-            className={inputClass}
-          />
-        </Field>
-        <fieldset className="space-y-3 rounded-md border border-slate-200 p-4">
-          <legend className="px-1 text-sm font-medium text-slate-900">
-            {t('resume.settings')}
-          </legend>
-          <Field
-            label={t('resume.maxPages')}
-            htmlFor="resumeMaxPages"
-            hint={t('resume.maxPagesHint')}
-          >
-            <select
-              {...register('resumeMaxPages')}
-              {...a11y('resumeMaxPages')}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
-            >
-              {(['1', '2', '3'] as const).map((n) => (
-                <option key={n} value={n}>
-                  {t('resume.pages', { count: Number(n) })}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <label className="flex items-start gap-2 text-sm text-slate-800">
-            <input
-              type="checkbox"
-              {...register('keepMySections')}
-              className="mt-0.5 h-4 w-4 rounded border-slate-300"
-            />
-            <span>
-              {t('resume.keepSections')}
-              <span className="block text-xs text-slate-500">{t('resume.keepSectionsHint')}</span>
-            </span>
-          </label>
-        </fieldset>
-      </section>
 
       <div className="flex items-center gap-3">
         <button

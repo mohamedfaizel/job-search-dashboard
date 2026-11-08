@@ -1,14 +1,13 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ProfilePage } from '../ProfilePage';
-import { renderWithData } from '../test/render';
-import { requests } from '../test/server';
+import { renderWithData } from '../../profile/test/render';
+import { requests } from '../../profile/test/server';
+import { ResumeFiles } from './ResumeFiles';
 
 async function renderPage() {
   const user = userEvent.setup();
-  renderWithData(<ProfilePage />);
-  await screen.findByRole('textbox', { name: 'Headline' });
-  await user.click(screen.getByRole('tab', { name: 'Resume' }));
+  renderWithData(<ResumeFiles />);
+  await screen.findByRole('region', { name: 'Master resume' });
   return user;
 }
 
@@ -93,7 +92,7 @@ describe('resume in other languages', () => {
       screen.getByRole('combobox', { name: 'Language of this resume' }),
       'German',
     );
-    await user.click(screen.getByRole('button', { name: 'Save profile' }));
+    await user.click(screen.getByRole('button', { name: 'Save settings' }));
     expect(requests[0]).toMatchObject({
       operation: 'UpdateProfile',
       variables: { input: { resumeLanguage: 'de' } },

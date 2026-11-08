@@ -46,8 +46,7 @@
     "sections": "Profile sections",
     "tabs": {
       "personal": "Personal",
-      "applications": "Applications",
-      "resume": "Resume"
+      "applications": "Applications"
     },
     "listHint": "Separate with commas",
     "personal": {
@@ -141,11 +140,7 @@
       "maxPagesHint": "{ai} keeps each tailored resume to this length. The PDF check uses it too.",
       "pages": "{count, plural, one {# page} other {# pages}}",
       "keepSections": "Keep all my headings",
-      "keepSectionsHint": "Every section of my resume stays, with my own names and order (Key Highlights, Achievements, Technical Skills…), and every job keeps its projects. {ai} only tailors what is inside.",
-      "builderTitle": "Resume text",
-      "builderWords": "{count, plural, one {# word} other {# words}} saved. Edit them section by section, with a live PDF.",
-      "builderEmpty": "Nothing yet. Upload a file above, or start typing in the Resume builder.",
-      "builderOpen": "Open Resume builder"
+      "keepSectionsHint": "Every section of my resume stays, with my own names and order (Key Highlights, Achievements, Technical Skills…), and every job keeps its projects. {ai} only tailors what is inside."
     },
     "save": "Save profile",
     "saving": "Saving…",
@@ -498,7 +493,7 @@
       "add": "Add paragraph"
     },
     "readAgain": {
-      "outOfDate": "Your resume on My profile changed (a new upload?). Read it into sections again, or keep the builder’s version?",
+      "outOfDate": "Your resume file changed (a new upload?). Read it into sections again, or keep the builder’s version?",
       "readNew": "Read the new resume",
       "keepMine": "Keep the builder’s version",
       "copyPrompt": "Copy prompt and open {ai}",
@@ -526,7 +521,8 @@
       "look": "Look",
       "match": "Job match",
       "letter": "Cover letter",
-      "check": "Check"
+      "check": "Check",
+      "files": "Files and settings"
     },
     "tabsLabel": "Builder tabs",
     "look": {
@@ -662,7 +658,7 @@
         }
       },
       "wordSpacing": "Your Word file keeps its own size and spacing.",
-      "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file on My profile > Resume, and “My own Word file” appears here.",
+      "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file on the Resume page (Files and settings), and “My own Word file” appears here.",
       "templateUsed": "Your next PDF downloads use it."
     },
     "copyToMaster": "Copy {title} to my master resume",
@@ -717,6 +713,12 @@
       "cancel": "Cancel",
       "hint": "Select text, then format it. Ctrl+B and Ctrl+I work too.",
       "hintIdle": "Click in a field to format its text."
+    },
+    "files": {
+      "loading": "Loading…",
+      "save": "Save settings",
+      "saved": "Settings saved.",
+      "saveFailed": "Could not save: {error}"
     }
   },
   "Jobs": {
@@ -880,7 +882,7 @@
       "salaryStated": "Stated in the posting",
       "estimated": "est.",
       "statusFor": "Status for {job}",
-      "fitEmpty": "Add your resume on My profile to see how well you fit each job",
+      "fitEmpty": "Add your resume on the Resume page to see how well you fit each job",
       "fitLabel": "Fit for {title}: {score}%",
       "fitHint": "How much of the job’s skills, keywords and title your resume covers. Click for details",
       "applyEmpty": "Save a reply from {ai} in the Apply kit to see its score",
@@ -1029,7 +1031,7 @@
       "gapsTitle": "Likely hard questions",
       "gapsHint": "Skills the ad asks for that your resume doesn’t show. The prompt asks {ai} for an honest answer to each.",
       "noGaps": "Your resume covers every skill the ad asks for.",
-      "noResume": "Add your resume on My profile to see which skills the interviewer may ask about.",
+      "noResume": "Add your resume on the Resume page to see which skills the interviewer may ask about.",
       "german": "The ad asks for German {level}. Practise your answers in German, at your real level.",
       "germanAny": "The ad asks for German. Practise your answers in German, at your real level.",
       "askTitle": "Prepare with {ai}",
@@ -1142,11 +1144,11 @@
       "resumeGerman": "· resume in German",
       "resumeEnglish": "· Resume in English",
       "checkedAgainst": "Fit checked against your {language} resume",
-      "mismatch": ". Add your resume in {language} on “My profile” so its keywords can be found.",
+      "mismatch": ". Add your resume in {language} on the Resume page so its keywords can be found.",
       "reading": "Reading the job…",
       "readError": "Could not read the job: {error}",
       "sectionLabel": "Skills and keywords",
-      "addResume": "Add your resume on “My profile” to see which of these you are missing.",
+      "addResume": "Add your resume on the Resume page to see which of these you are missing.",
       "skillsMissing": "Skills missing from your resume",
       "skills": "Skills",
       "missingSkillsLabel": "Missing skills",
@@ -1816,14 +1818,14 @@
     "TAILOR_FIRST": "Tailor your resume for this job first.",
     "NO_COVER_LETTER": "There is no cover letter for this job. Tailor again.",
     "JOB_NO_DESCRIPTION": "This job has no description to compare your resume with.",
-    "MATCHER_RESUME_FIRST": "Send your resume to Resume-Matcher on My profile first, then try again.",
+    "MATCHER_RESUME_FIRST": "Send your resume to Resume-Matcher on the Resume page first, then try again.",
     "MATCHER_FILE_FIRST": "Upload your resume as a PDF or Word file on this page so Resume-Matcher can use it.",
     "MATCHER_BUSY": "Your resume is already being sent. Wait for it to finish.",
     "PHOTO_TYPE": "Upload a JPEG or PNG photo.",
     "PHOTO_TOO_BIG": "The photo is over 2 MB.",
     "PHOTO_MISSING": "No photo uploaded.",
-    "DOCX_TEMPLATE_FIRST": "Upload your master resume as a Word (.docx) file on “My profile” to use it as the template.",
-    "DOCX_NOT_WORD": "This Word file can’t be used as a template. Upload your master resume as a .docx file on “My profile”.",
+    "DOCX_TEMPLATE_FIRST": "Upload your master resume as a Word (.docx) file on the Resume page to use it as the template.",
+    "DOCX_NOT_WORD": "This Word file can’t be used as a template. Upload your master resume as a .docx file on the Resume page.",
     "GMAIL_NOT_CONFIGURED": "Gmail is not set up on this server.",
     "GMAIL_ACCOUNT_NOT_FOUND": "That Gmail account was not found.",
     "SUGGESTION_NOT_FOUND": "That suggestion was not found.",

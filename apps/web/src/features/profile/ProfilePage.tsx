@@ -4,13 +4,12 @@ import { useMe, useMyProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
-import { OtherResumes } from './components/OtherResumes';
 import type { ProfileTab } from './components/ProfileForm';
 import { ProfileForm } from './components/ProfileForm';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
 
-const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume'];
+const TAB_IDS: ProfileTab[] = ['personal', 'applications'];
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
@@ -41,8 +40,8 @@ export function ProfilePage() {
     const params = new URLSearchParams(window.location.search);
     return TAB_IDS.find((id) => id === params.get('tab')) ?? savedTab();
   });
-  // Email and Resume-Matcher moved to Settings, Design to the Resume builder's Look tab: an old
-  // link (?tab=mail, ?gmail=..., ?tab=matcher, ?tab=design) goes there.
+  // Email and Resume-Matcher moved to Settings, Design and Resume to the Resume page: an old
+  // link (?tab=mail, ?gmail=..., ?tab=matcher, ?tab=design, ?tab=resume) goes there.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'mail' || params.has('gmail')) {
@@ -54,6 +53,8 @@ export function ProfilePage() {
       window.location.replace('/settings?tab=keys');
     } else if (params.get('tab') === 'design') {
       window.location.replace('/resume?tab=look');
+    } else if (params.get('tab') === 'resume') {
+      window.location.replace('/resume?tab=files');
     }
   }, []);
 
@@ -100,9 +101,6 @@ export function ProfilePage() {
                 tab={tab}
                 onTab={selectTab}
               />
-              <div hidden={tab !== 'resume'}>
-                <OtherResumes profile={profile} />
-              </div>
             </div>
           </div>
         </>
