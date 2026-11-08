@@ -30,6 +30,10 @@ const STYLE = {
   showPhoto: false,
   hasPhoto: false,
   myDesign: null as MyDesign | null,
+  fontSize: null as number | null,
+  margin: null as number | null,
+  lineSpacing: 1,
+  compact: false,
 };
 
 /** My design as the server has it; null until a test saves one. */
@@ -284,9 +288,9 @@ export const server = setupServer(
             ...(myDesign.current
               ? [{ id: 'design', name: 'My design', description: 'Your look.' }]
               : []),
-            { id: 'classic', name: 'Classic', description: 'Serif.' },
-            { id: 'modern', name: 'Modern', description: 'Sans.' },
-            { id: 'compact', name: 'Compact', description: 'Small.' },
+            { id: 'classic', name: 'Classic', description: 'Serif.', fontSize: 11, margin: 20 },
+            { id: 'modern', name: 'Modern', description: 'Sans.', fontSize: 11, margin: 19 },
+            { id: 'compact', name: 'Compact', description: 'Small.', fontSize: 10, margin: 15 },
             ...(wordTemplate.current?.usable
               ? [{ id: 'mine', name: 'My own Word file', description: 'Your .docx.' }]
               : []),

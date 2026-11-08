@@ -243,6 +243,14 @@ model DocumentStyle {
   photoType         String?
   /// "My design": the look of your own resume as settings (see apps/api/src/documents/my-design.ts).
   myDesign          Json?
+  /// Resume body text size in points (9 to 12); null is the template's own.
+  fontSize          Float?
+  /// Page margins in millimetres (10 to 25); null is the template's own.
+  margin            Int?
+  /// Line spacing, 1 to 1.4 (1 is the template's own).
+  lineSpacing       Float    @default(1)
+  /// Less space between jobs, bullets and sections, to fit more on a page.
+  compact           Boolean  @default(false)
   updatedAt         DateTime @updatedAt
 }
 

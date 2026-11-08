@@ -4,14 +4,13 @@ import { useMe, useMyProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
-import { DocumentDesign } from './components/DocumentDesign';
 import { OtherResumes } from './components/OtherResumes';
 import type { ProfileTab } from './components/ProfileForm';
 import { ProfileForm } from './components/ProfileForm';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
 
-const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume', 'design'];
+const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume'];
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
@@ -29,21 +28,21 @@ function savedTab(): ProfileTab {
   }
 }
 
-/** The My profile screen: your details, resumes, document design and Resume-Matcher. */
+/** The My profile screen: your details, application answers and resumes. */
 export function ProfilePage() {
   const errorText = useErrorText();
   const t = useTranslations('Profile');
   const tabs: TabItem<ProfileTab>[] = TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) }));
   const { data: profile, isPending, error } = useMyProfile();
   const { data: me } = useMe();
-  // A link can open a tab (?tab=design).
+  // A link can open a tab (?tab=resume).
   const [tab, setTab] = useState<ProfileTab>(() => {
     if (typeof window === 'undefined') return savedTab();
     const params = new URLSearchParams(window.location.search);
     return TAB_IDS.find((id) => id === params.get('tab')) ?? savedTab();
   });
-  // Email and Resume-Matcher moved to Settings: an old link (?tab=mail, ?gmail=..., ?tab=matcher)
-  // goes there.
+  // Email and Resume-Matcher moved to Settings, Design to the Resume builder's Look tab: an old
+  // link (?tab=mail, ?gmail=..., ?tab=matcher, ?tab=design) goes there.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'mail' || params.has('gmail')) {
@@ -53,6 +52,8 @@ export function ProfilePage() {
       );
     } else if (params.get('tab') === 'matcher') {
       window.location.replace('/settings?tab=keys');
+    } else if (params.get('tab') === 'design') {
+      window.location.replace('/resume?tab=look');
     }
   }, []);
 
@@ -101,9 +102,6 @@ export function ProfilePage() {
               />
               <div hidden={tab !== 'resume'}>
                 <OtherResumes profile={profile} />
-              </div>
-              <div hidden={tab !== 'design'}>
-                <DocumentDesign />
               </div>
             </div>
           </div>

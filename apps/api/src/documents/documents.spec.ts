@@ -5,7 +5,15 @@ import { cityOf } from './documents.service';
 import { contactItem, esc, inline } from './latex';
 import { cleanPdf } from './pdf-metadata';
 import { asciiDates, letterParagraphs, parseResume } from './resume-doc';
-import { coverLetterTex, hexColor, letterDate, RESUME_TEMPLATES, resumeTex } from './templates';
+import {
+  coverLetterTex,
+  hexColor,
+  letterDate,
+  RESUME_TEMPLATES,
+  resumeTex,
+  templateSizes,
+  toLayout,
+} from './templates';
 
 const RESUME = `\`\`\`markdown
 # Mohamed Faizel
@@ -200,6 +208,49 @@ describe('templates', () => {
     const tex = resumeTex(doc, { ...look, template: 'jake' });
     expect(tex).toContain('\\textbf{Acme}\\hfill 01/2020 - today\\par');
     expect(tex).toContain('\\textit{Dev}\\hfill{\\small\\textit{Berlin}}');
+  });
+
+  it('applies your text size, margins, line spacing and compact mode', () => {
+    const doc = parseResume(RESUME, 'X');
+    const plain = resumeTex(doc, { ...look, template: 'classic' });
+    expect(plain).toContain('left=2cm,right=2cm,top=1.6cm,bottom=1.6cm');
+    expect(plain).not.toContain('\\linespread');
+    expect(plain).not.toContain('\\renewcommand\\normalsize');
+
+    const layout = { fontSize: 9.5, margin: 12, lineSpacing: 1.2, compact: true };
+    const tex = resumeTex(doc, { ...look, template: 'classic', layout });
+    expect(tex).toContain('left=12mm,right=12mm,top=12mm,bottom=12mm');
+    expect(tex).toContain('\\linespread{1.2}');
+    expect(tex).toContain('\\renewcommand\\normalsize{\\fontsize{9.5}{11.4}\\selectfont}');
+    expect(tex).toContain('itemsep=0pt,parsep=0pt,topsep=1pt');
+    // Classic's 7pt gap between jobs is halved.
+    expect(tex).toContain('\\vspace{3.5pt}');
+
+    const spacingOnly = resumeTex(doc, {
+      ...look,
+      layout: { fontSize: null, margin: null, lineSpacing: 1.1, compact: false },
+    });
+    expect(spacingOnly).toContain('\\linespread{1.1}');
+    expect(spacingOnly).not.toContain('\\renewcommand\\normalsize');
+    expect(spacingOnly).toContain('left=1.9cm');
+  });
+
+  it('keeps the sliders inside readable limits', () => {
+    expect(toLayout({})).toEqual({ fontSize: null, margin: null, lineSpacing: 1, compact: false });
+    expect(toLayout({ fontSize: 4, margin: 99, lineSpacing: 3, compact: true })).toEqual({
+      fontSize: 9,
+      margin: 25,
+      lineSpacing: 1.4,
+      compact: true,
+    });
+    expect(toLayout({ fontSize: 10.3, margin: 14.6, lineSpacing: 1.17 })).toMatchObject({
+      fontSize: 10.5,
+      margin: 15,
+      lineSpacing: 1.15,
+    });
+    expect(toLayout({ fontSize: Number.NaN })).toMatchObject({ fontSize: null });
+    expect(templateSizes('compact')).toEqual({ fontSize: 10, margin: 15 });
+    expect(templateSizes('design')).toBeNull();
   });
 
   it('accepts only real hex colours', () => {

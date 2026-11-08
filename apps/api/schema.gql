@@ -141,14 +141,26 @@ type DocumentStyle {
   """
   accentColor: String!
 
+  """Less space between jobs, bullets and sections"""
+  compact: Boolean!
+
   """auto (DIN 5008 for German letters), din or modern"""
   coverLetterLayout: String!
 
   """auto (the template’s own), sans or serif"""
   font: String!
 
+  """Resume body text in points (9 to 12); null is the template’s own"""
+  fontSize: Float
+
   """A photo is uploaded (GET /documents/photo shows it)"""
   hasPhoto: Boolean!
+
+  """Resume line spacing, 1 to 1.4 (1 is the template’s own)"""
+  lineSpacing: Float!
+
+  """Resume page margins in mm (10 to 25); null is the template’s own"""
+  margin: Int
 
   """Null until you save one"""
   myDesign: MyDesign
@@ -162,15 +174,25 @@ type DocumentStyle {
 
 input DocumentStyleInput {
   accentColor: String!
+  compact: Boolean
   coverLetterLayout: String!
   font: String!
+  fontSize: Float
+  lineSpacing: Float
+  margin: Int
   resumeTemplate: String!
   showPhoto: Boolean!
 }
 
 type DocumentTemplate {
   description: String!
+
+  """Its own text size in points (built-in resume templates only)"""
+  fontSize: Float
   id: String!
+
+  """Its own side margin in mm (built-in resume templates only)"""
+  margin: Int
   name: String!
 }
 

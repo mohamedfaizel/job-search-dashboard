@@ -18,8 +18,7 @@ import {
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { useId, useState } from 'react';
-import { AutoHide } from '../../../components/AutoHide';
+import { useEffect, useId, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiChat } from '../../../lib/ai-chat';
 
@@ -55,7 +54,7 @@ function TemplateCard({
   previewUrl: string;
   onChoose: () => void;
 }) {
-  const t = useTranslations('Profile.design');
+  const t = useTranslations('Resume.look');
   const id = useId();
   return (
     <div
@@ -88,9 +87,9 @@ function TemplateCard({
   );
 }
 
-function Photo({ style }: { style: DocumentStyle }) {
+function Photo({ style, onSaved }: { style: DocumentStyle; onSaved: () => void }) {
   const errorText = useErrorText();
-  const t = useTranslations('Profile.design');
+  const t = useTranslations('Resume.look');
   const upload = useUploadPhoto();
   const remove = useDeletePhoto();
   const inputId = useId();
@@ -126,6 +125,7 @@ function Photo({ style }: { style: DocumentStyle }) {
             upload.mutate(file, {
               onSuccess: () => {
                 setVersion((v) => v + 1);
+                onSaved();
               },
             });
           }}
@@ -137,7 +137,7 @@ function Photo({ style }: { style: DocumentStyle }) {
           className="text-sm text-red-700 hover:underline disabled:opacity-50"
           disabled={remove.isPending}
           onClick={() => {
-            remove.mutate();
+            remove.mutate(undefined, { onSuccess: onSaved });
           }}
         >
           {t('removePhoto')}
@@ -157,7 +157,7 @@ function Photo({ style }: { style: DocumentStyle }) {
  * Your Word master resume as a template: what was found in it, or how to get there.
  */
 function WordFileNote({ word }: { word: WordTemplate | null }) {
-  const t = useTranslations('Profile.design');
+  const t = useTranslations('Resume.look');
   if (!word) {
     return <p className="text-xs text-slate-500">{t('wordNone')}</p>;
   }
@@ -189,7 +189,7 @@ function WordFileNote({ word }: { word: WordTemplate | null }) {
 }
 
 /** What My design took from your resume, as short labels. */
-function designChips(d: MyDesign, t: ReturnType<typeof useTranslations<'Profile.design'>>) {
+function designChips(d: MyDesign, t: ReturnType<typeof useTranslations<'Resume.look'>>) {
   return [
     t(`myDesignFont.${d.font}`),
     t(`myDesignAlign.${d.align}`),
@@ -206,9 +206,9 @@ function designChips(d: MyDesign, t: ReturnType<typeof useTranslations<'Profile.
  * My design: Claude looks at your own resume file (you attach it in Claude) and answers with its
  * design settings; saving them adds "My design" to the templates, in one clean LaTeX column.
  */
-function MyDesignCard({ saved }: { saved: DocumentStyle }) {
+function MyDesignCard({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => void }) {
   const errorText = useErrorText();
-  const t = useTranslations('Profile.design');
+  const t = useTranslations('Resume.look');
   const chat = useAiChat();
   const templates = useDocumentTemplates();
   const save = useSaveMyDesign();
@@ -276,7 +276,7 @@ function MyDesignCard({ saved }: { saved: DocumentStyle }) {
             className={BUTTON}
             disabled={remove.isPending}
             onClick={() => {
-              remove.mutate();
+              remove.mutate(undefined, { onSuccess: onSaved });
             }}
           >
             {t('myDesignDelete')}
@@ -339,6 +339,7 @@ function MyDesignCard({ saved }: { saved: DocumentStyle }) {
               onSuccess: () => {
                 setReply('');
                 setRedo(false);
+                onSaved();
               },
             });
           }}
@@ -367,39 +368,212 @@ function MyDesignCard({ saved }: { saved: DocumentStyle }) {
   );
 }
 
-/** Edits a copy of the saved style; Save sends it. */
-function DesignForm({ saved }: { saved: DocumentStyle }) {
+/** Wait this long after the last change before saving (sliders send many). */
+const SAVE_MS = 500;
+
+const inputOf = (style: DocumentStyle): DocumentStyleInput => ({
+  resumeTemplate: style.resumeTemplate,
+  coverLetterLayout: style.coverLetterLayout,
+  accentColor: style.accentColor,
+  font: style.font,
+  showPhoto: style.showPhoto,
+  fontSize: style.fontSize,
+  margin: style.margin,
+  lineSpacing: style.lineSpacing,
+  compact: style.compact,
+});
+
+const sameInput = (a: DocumentStyleInput, b: DocumentStyleInput) =>
+  JSON.stringify({ ...a, accentColor: a.accentColor.toUpperCase() }) ===
+  JSON.stringify({ ...b, accentColor: b.accentColor.toUpperCase() });
+
+/** A slider that shows its value; at null it sits on the template's own value. */
+function Slider({
+  label,
+  value,
+  fallback,
+  min,
+  max,
+  step,
+  format,
+  onChange,
+}: {
+  label: string;
+  value: number | null;
+  fallback: number;
+  min: number;
+  max: number;
+  step: number;
+  format: (value: number) => string;
+  onChange: (value: number) => void;
+}) {
+  const t = useTranslations('Resume.look');
+  const id = useId();
+  const shown = value ?? fallback;
+  const text = value === null ? t('templateValue', { value: format(fallback) }) : format(value);
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between gap-2">
+        <label htmlFor={id} className="text-sm font-medium text-slate-700">
+          {label}
+        </label>
+        <span className="text-xs tabular-nums text-slate-600">{text}</span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={shown}
+        aria-valuetext={text}
+        onChange={(e) => {
+          onChange(Number(e.target.value));
+        }}
+        className="w-full accent-brand-600"
+      />
+    </div>
+  );
+}
+
+/** Text size, margins, line spacing and compact mode for the resume. */
+function Spacing({
+  draft,
+  template,
+  onChange,
+}: {
+  draft: DocumentStyleInput;
+  template: DocumentTemplate | undefined;
+  onChange: (patch: Partial<DocumentStyleInput>) => void;
+}) {
+  const t = useTranslations('Resume.look');
+  const compactId = useId();
+  const word = draft.resumeTemplate === 'mine';
+  const own =
+    draft.fontSize === null && draft.margin === null && draft.lineSpacing === 1 && !draft.compact;
+  return (
+    <fieldset className="space-y-3 rounded-lg border border-slate-200 p-4">
+      <legend className="px-1 text-sm font-semibold text-slate-900">{t('spacing')}</legend>
+      <p className="text-xs text-slate-500">{word ? t('wordSpacing') : t('spacingHint')}</p>
+      <div className={`grid gap-4 sm:grid-cols-3 ${word ? 'opacity-50' : ''}`}>
+        <Slider
+          label={t('fontSize')}
+          value={draft.fontSize}
+          fallback={template?.fontSize ?? 11}
+          min={9}
+          max={12}
+          step={0.5}
+          format={(v) => `${String(v)} pt`}
+          onChange={(fontSize) => {
+            onChange({ fontSize });
+          }}
+        />
+        <Slider
+          label={t('margin')}
+          value={draft.margin}
+          fallback={template?.margin ?? 19}
+          min={10}
+          max={25}
+          step={1}
+          format={(v) => `${String(v)} mm`}
+          onChange={(margin) => {
+            onChange({ margin });
+          }}
+        />
+        <Slider
+          label={t('lineSpacing')}
+          value={draft.lineSpacing}
+          fallback={1}
+          min={1}
+          max={1.4}
+          step={0.05}
+          format={(v) => v.toFixed(2)}
+          onChange={(lineSpacing) => {
+            onChange({ lineSpacing });
+          }}
+        />
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <input
+            id={compactId}
+            type="checkbox"
+            checked={draft.compact}
+            onChange={(e) => {
+              onChange({ compact: e.target.checked });
+            }}
+          />
+          <label htmlFor={compactId} className="text-sm text-slate-700">
+            {t('compact')}
+          </label>
+        </div>
+        <button
+          type="button"
+          className="text-sm text-brand-700 hover:underline disabled:text-slate-400 disabled:no-underline"
+          disabled={own}
+          onClick={() => {
+            onChange({ fontSize: null, margin: null, lineSpacing: 1, compact: false });
+          }}
+        >
+          {t('reset')}
+        </button>
+      </div>
+    </fieldset>
+  );
+}
+
+/** Edits a copy of the saved style and saves it half a second after each change. */
+function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => void }) {
   const errorText = useErrorText();
-  const t = useTranslations('Profile.design');
+  const t = useTranslations('Resume.look');
   const templates = useDocumentTemplates();
   const update = useUpdateDocumentStyle();
-  const [draft, setDraft] = useState<DocumentStyleInput>({
-    resumeTemplate: saved.resumeTemplate,
-    coverLetterLayout: saved.coverLetterLayout,
-    accentColor: saved.accentColor,
-    font: saved.font,
-    showPhoto: saved.showPhoto,
-  });
-  const [done, setDone] = useState(false);
+  const [draft, setDraft] = useState<DocumentStyleInput>(() => inputOf(saved));
+  // What the server has now, so a change made while saving is saved next.
+  const [sent, setSent] = useState<DocumentStyleInput>(() => inputOf(saved));
   const change = (patch: Partial<DocumentStyleInput>) => {
     setDraft((d) => ({ ...d, ...patch }));
-    setDone(false);
   };
   const colourId = useId();
   const fontId = useId();
   const layoutId = useId();
   const photoId = useId();
-  const changed =
-    draft.resumeTemplate !== saved.resumeTemplate ||
-    draft.coverLetterLayout !== saved.coverLetterLayout ||
-    draft.accentColor.toUpperCase() !== saved.accentColor.toUpperCase() ||
-    draft.font !== saved.font ||
-    draft.showPhoto !== saved.showPhoto;
+  const changed = !sameInput(draft, sent);
+  const { mutate, isPending } = update;
+
+  useEffect(() => {
+    if (!changed || isPending) return;
+    const timer = setTimeout(() => {
+      mutate(draft, {
+        onSuccess: () => {
+          setSent(draft);
+          onSaved();
+        },
+      });
+    }, SAVE_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [changed, isPending, draft, mutate, onSaved]);
+
   const look = { accent: draft.accentColor, font: draft.font };
   const data = templates.data;
+  const chosen = data?.resumeTemplates.find((tpl) => tpl.id === draft.resumeTemplate);
 
   return (
     <div className="space-y-5">
+      <p
+        role="status"
+        className={`text-sm font-medium ${update.isError ? 'text-red-700' : changed || isPending ? 'text-slate-500' : 'text-emerald-700'}`}
+      >
+        {isPending
+          ? t('status.saving')
+          : update.isError
+            ? `${t('status.failed')}: ${errorText(update.error)}`
+            : changed
+              ? ''
+              : t('status.saved')}
+      </p>
       {data && !data.rendererAvailable && (
         <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {data.rendererConfigured ? t('rendererOff') : t('rendererMissing')}{' '}
@@ -407,24 +581,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
         </p>
       )}
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-slate-700">{t('template')}</legend>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
-          {data?.resumeTemplates.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              checked={draft.resumeTemplate === template.id}
-              previewUrl={documentPreviewUrl('resume', { template: template.id, ...look })}
-              onChoose={() => {
-                change({ resumeTemplate: template.id });
-              }}
-            />
-          ))}
-        </div>
-        <MyDesignCard saved={saved} />
-        {data && <WordFileNote word={data.wordTemplate} />}
-      </fieldset>
+      <Spacing draft={draft} template={chosen} onChange={change} />
 
       <div className="flex flex-wrap items-end gap-6">
         <div className="space-y-1">
@@ -480,6 +637,25 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
         </div>
       </div>
 
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-slate-700">{t('template')}</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {data?.resumeTemplates.map((template) => (
+            <TemplateCard
+              key={template.id}
+              template={template}
+              checked={draft.resumeTemplate === template.id}
+              previewUrl={documentPreviewUrl('resume', { template: template.id, ...look })}
+              onChoose={() => {
+                change({ resumeTemplate: template.id });
+              }}
+            />
+          ))}
+        </div>
+        <MyDesignCard saved={saved} onSaved={onSaved} />
+        {data && <WordFileNote word={data.wordTemplate} />}
+      </fieldset>
+
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <input
@@ -495,7 +671,7 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
             {t('showPhoto')}
           </label>
         </div>
-        <Photo style={saved} />
+        <Photo style={saved} onSaved={onSaved} />
       </div>
 
       <div className="space-y-1">
@@ -534,59 +710,22 @@ function DesignForm({ saved }: { saved: DocumentStyle }) {
           {data?.coverLetterLayouts.find((l) => l.id === draft.coverLetterLayout)?.description}
         </p>
       </div>
-
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          disabled={!changed || update.isPending}
-          onClick={() => {
-            update.mutate(draft, {
-              onSuccess: () => {
-                setDone(true);
-              },
-            });
-          }}
-          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
-        >
-          {update.isPending ? t('saving') : t('save')}
-        </button>
-        {done && !changed && (
-          <AutoHide key={update.submittedAt}>
-            <p role="status" className="text-sm text-emerald-700">
-              {t('saved')}
-            </p>
-          </AutoHide>
-        )}
-        {update.isError && (
-          <p role="alert" className="text-sm text-red-700">
-            {t('saveFailed', { error: errorText(update.error) })}
-          </p>
-        )}
-      </div>
     </div>
   );
 }
 
 /**
- * How the resume and cover letter PDFs look: one of the built-in templates, your accent
- * colour, type and photo. Claude writes the words; the template only lays them out, and the
- * PDF properties name only you.
+ * The Look tab: how the resume and cover letter PDFs look. One of the built-in templates, your
+ * accent colour, type, photo, text size and spacing. Every change saves on its own and the PDF
+ * next to it is made again. This is the only place these settings live.
  */
-export function DocumentDesign() {
+export function LookPanel({ onSaved }: { onSaved: () => void }) {
   const errorText = useErrorText();
-  const t = useTranslations('Profile.design');
+  const t = useTranslations('Resume.look');
   const style = useDocumentStyle();
   return (
-    <section
-      aria-labelledby="design-heading"
-      className="space-y-4 rounded-lg border border-slate-200 bg-white p-5"
-    >
-      <div>
-        <h2 id="design-heading" className="text-lg font-semibold text-slate-900">
-          {t('heading')}
-        </h2>
-        <p className="text-sm text-slate-600">{t('intro')}</p>
-      </div>
+    <div className="space-y-4">
+      <p className="text-xs text-slate-500">{t('intro')}</p>
       {style.isPending ? (
         <p className="text-sm text-slate-500">{t('loading')}</p>
       ) : style.isError ? (
@@ -595,8 +734,12 @@ export function DocumentDesign() {
         </p>
       ) : (
         // Saving or deleting My design changes the default template: start the form again from it.
-        <DesignForm key={style.data.myDesign ? 'design' : 'none'} saved={style.data} />
+        <DesignForm
+          key={style.data.myDesign ? 'design' : 'none'}
+          saved={style.data}
+          onSaved={onSaved}
+        />
       )}
-    </section>
+    </div>
   );
 }

@@ -1,6 +1,22 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { IsBoolean, IsIn, IsString, Matches } from 'class-validator';
-import { FONTS, LETTER_LAYOUTS, MY_DESIGN, MY_WORD_FILE, RESUME_TEMPLATES } from './templates';
+import { Field, Float, InputType, Int, ObjectType } from '@nestjs/graphql';
+import {
+  IsBoolean,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+  Max,
+  Min,
+} from 'class-validator';
+import {
+  FONTS,
+  LAYOUT_LIMITS,
+  LETTER_LAYOUTS,
+  MY_DESIGN,
+  MY_WORD_FILE,
+  RESUME_TEMPLATES,
+} from './templates';
 
 @ObjectType('MyDesign', {
   description:
@@ -80,6 +96,24 @@ export class DocumentStyleModel {
 
   @Field(() => MyDesignModel, { nullable: true, description: 'Null until you save one' })
   myDesign!: MyDesignModel | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: 'Resume body text in points (9 to 12); null is the template’s own',
+  })
+  fontSize!: number | null;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Resume page margins in mm (10 to 25); null is the template’s own',
+  })
+  margin!: number | null;
+
+  @Field(() => Float, { description: 'Resume line spacing, 1 to 1.4 (1 is the template’s own)' })
+  lineSpacing!: number;
+
+  @Field({ description: 'Less space between jobs, bullets and sections' })
+  compact!: boolean;
 }
 
 @InputType()
@@ -106,6 +140,33 @@ export class DocumentStyleInput {
   @Field()
   @IsBoolean()
   showPhoto!: boolean;
+
+  // The Look tab's sliders. Left out, they stay as saved; null goes back to the template's own.
+  @Field(() => Float, { nullable: true })
+  @IsOptional()
+  @IsNumber({}, { message: 'The text size is a number of points' })
+  @Min(LAYOUT_LIMITS.fontSize.min)
+  @Max(LAYOUT_LIMITS.fontSize.max)
+  fontSize?: number | null;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsNumber({}, { message: 'The margins are a number of millimetres' })
+  @Min(LAYOUT_LIMITS.margin.min)
+  @Max(LAYOUT_LIMITS.margin.max)
+  margin?: number | null;
+
+  @Field(() => Float, { nullable: true })
+  @IsOptional()
+  @IsNumber({}, { message: 'The line spacing is a number' })
+  @Min(LAYOUT_LIMITS.lineSpacing.min)
+  @Max(LAYOUT_LIMITS.lineSpacing.max)
+  lineSpacing?: number | null;
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  compact?: boolean | null;
 }
 
 @ObjectType('DocumentTemplate')
@@ -118,6 +179,18 @@ export class DocumentTemplateModel {
 
   @Field()
   description!: string;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: 'Its own text size in points (built-in resume templates only)',
+  })
+  fontSize?: number | null;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Its own side margin in mm (built-in resume templates only)',
+  })
+  margin?: number | null;
 }
 
 @ObjectType('WordTemplate', {
