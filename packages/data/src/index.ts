@@ -121,13 +121,22 @@ export { makeStore, useAppDispatch, useAppSelector } from './store/store';
 export type { AppDispatch, AppStore, RootState } from './store/store';
 export { createQueryClient, DataProvider } from './DataProvider';
 export {
+  fetchJobResumeBuildPdf,
   fetchResumeBuildPdf,
+  jobResumeBuildKey,
+  jobResumeBuildPdfUrl,
   resumeBuildKey,
   resumeBuildPdfUrl,
+  useCopySectionToMaster,
+  useJobResumeBuild,
+  useJobResumeBuildPdf,
+  useResetJobResumeBuild,
   useRestartResumeBuild,
   useResumeBuild,
   useResumeBuildPdf,
   useResumeBuildPrompt,
+  useSaveJobResumeBuild,
   useSaveResumeBuild,
+  useStartJobResumeBuild,
 } from './api/resumeBuilder';
 export type { BuilderPdf } from './api/resumeBuilder';

@@ -451,7 +451,8 @@
     },
     "tabs": {
       "edit": "Bearbeiten",
-      "look": "Aussehen"
+      "look": "Aussehen",
+      "match": "Stellen-Abgleich"
     },
     "tabsLabel": "Bereiche des Editors",
     "look": {
@@ -541,6 +542,43 @@
       "wordSpacing": "Deine Word-Datei behält ihre eigene Größe und Abstände.",
       "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf unter Mein Profil > Lebenslauf als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
       "templateUsed": "Deine nächsten PDF-Downloads verwenden sie."
+    },
+    "copyToMaster": "{title} in meinen Haupt-Lebenslauf übernehmen",
+    "copyToMasterHint": "Diesen Abschnitt in deinen Haupt-Lebenslauf übernehmen, damit er für jede Stelle gleich ist",
+    "copyToMasterShort": "in Haupt-Lebenslauf",
+    "changedForJob": "Für diese Stelle geändert",
+    "job": {
+      "forJob": "Für die Stelle: {title} bei {company}",
+      "openMaster": "Mein Haupt-Lebenslauf",
+      "noCopy": "Für diese Stelle hast du noch keinen Lebenslauf. Starte einen aus deinem Haupt-Lebenslauf: Es ist eine Kopie, Änderungen hier berühren deinen Haupt-Lebenslauf nur, wenn du einen Abschnitt zurückkopierst.",
+      "start": "Kopie für diese Stelle starten",
+      "starting": "Wird gestartet…",
+      "copyNote": "Das ist eine Kopie für diese Stelle. Dein Haupt-Lebenslauf bleibt, wie er ist.",
+      "reset": "Zurück zum Haupt-Lebenslauf",
+      "resetConfirm": "Die Änderungen für diese Stelle verwerfen und neu aus deinem Haupt-Lebenslauf beginnen?",
+      "resetYes": "Ja, zurücksetzen"
+    },
+    "match": {
+      "title": "Stellen-Abgleich",
+      "loading": "Wird geladen…",
+      "fit": "Passung der gespeicherten Kopie",
+      "fitHint": "Der Wert gilt für die gespeicherte Kopie; die Listen darunter folgen deiner Eingabe.",
+      "covered": "{have} von {total} abgedeckt",
+      "noTerms": "Diese Stelle hat keine Fähigkeiten oder Schlüsselwörter zum Prüfen.",
+      "missing": "Fehlt",
+      "missingHint": "Hake ✓ nur ab, wenn es stimmt: Dann zählt es als deins und du kannst es hinzufügen.",
+      "iHave": "Das habe ich",
+      "iHaveTerm": "Ich habe {term}",
+      "ready": "Hast du, steht nicht im Lebenslauf",
+      "readyHint": "Zieh eines auf eine Zeile oder füge es zu den Kenntnissen hinzu.",
+      "addToSkills": "Zu Kenntnissen hinzufügen",
+      "addTermToSkills": "{term} zu Kenntnissen hinzufügen",
+      "inResume": "Im Lebenslauf",
+      "achievements": "Deine Erfolge",
+      "noAchievements": "Trage wahre Fakten mit Zahlen unter Mein Profil > Bewerbungsangaben ein, dann erscheinen sie hier.",
+      "achievementsHint": "Wahre Zeilen aus deiner Erfolgs-Sammlung. Füge eine zu deiner letzten Stelle hinzu.",
+      "addBullet": "Hinzufügen",
+      "addBulletLabel": "Zu deiner letzten Stelle hinzufügen: {line}"
     }
   },
   "Jobs": {
@@ -1086,7 +1124,8 @@
         "hint": "Klicken, um die Sprachzeile für diesen Job zu ändern",
         "customHint": "Nur für diesen Job geändert. Zurücksetzen nimmt wieder die Sprachen aus deinem Profil.",
         "reset": "Zurücksetzen"
-      }
+      },
+      "step2Builder": "Oder bearbeite eine Kopie deines Haupt-Lebenslaufs für diese Stelle im Lebenslauf-Editor ↗"
     },
     "reply": {
       "making": "Wird gespeichert…",
@@ -1661,7 +1700,8 @@
     "AI_KEY_MISSING": "Füge zuerst deinen Claude- oder OpenAI-API-Schlüssel unter Einstellungen › API-Schlüssel hinzu.",
     "API_KEY_NOT_FOUND": "Speichere zuerst den Schlüssel.",
     "RESUME_BUILD_INVALID": "Dieser Lebenslauf konnte nicht gespeichert werden. Lade die Seite neu und versuch es erneut.",
-    "RESUME_REPLY_EMPTY": "Füge zuerst die Antwort des KI-Chats ein."
+    "RESUME_REPLY_EMPTY": "Füge zuerst die Antwort des KI-Chats ein.",
+    "SECTION_NOT_FOUND": "Dieser Abschnitt ist nicht in diesem Lebenslauf."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",

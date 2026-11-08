@@ -1,5 +1,6 @@
 import type { ApplicationStatus, Job, JobInsights, Profile } from '@jobsearch/data';
 import { applyKitUrl, useJobInsights, useMyProfile } from '@jobsearch/data';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -380,6 +381,11 @@ function ApplyKit({
             </a>
           </p>
           {copyFailed && <PromptView text={data.prompt} />}
+          <p>
+            <Link href={`/resume?job=${encodeURIComponent(job.id)}&tab=match`} className={LINK}>
+              {t('step2Builder')}
+            </Link>
+          </p>
         </>
       )}
 

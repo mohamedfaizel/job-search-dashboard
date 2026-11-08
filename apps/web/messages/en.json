@@ -451,7 +451,8 @@
     },
     "tabs": {
       "edit": "Edit",
-      "look": "Look"
+      "look": "Look",
+      "match": "Job match"
     },
     "tabsLabel": "Builder tabs",
     "look": {
@@ -541,6 +542,43 @@
       "wordSpacing": "Your Word file keeps its own size and spacing.",
       "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file on My profile > Resume, and “My own Word file” appears here.",
       "templateUsed": "Your next PDF downloads use it."
+    },
+    "copyToMaster": "Copy {title} to my master resume",
+    "copyToMasterHint": "Put this section into your master resume, so it is the same for every job",
+    "copyToMasterShort": "copy to master",
+    "changedForJob": "Changed for this job",
+    "job": {
+      "forJob": "For the job: {title} at {company}",
+      "openMaster": "My master resume",
+      "noCopy": "You have no resume for this job yet. Start one from your master resume: it is a copy, so changes here never touch your master unless you copy a section back.",
+      "start": "Start a copy for this job",
+      "starting": "Starting…",
+      "copyNote": "This is a copy for this job. Your master resume stays as it is.",
+      "reset": "Back to my master",
+      "resetConfirm": "Throw away the changes for this job and start again from your master resume?",
+      "resetYes": "Yes, reset"
+    },
+    "match": {
+      "title": "Job match",
+      "loading": "Loading…",
+      "fit": "Fit score of the saved copy",
+      "fitHint": "The score is for the saved copy; the lists below follow what you type.",
+      "covered": "{have} of {total} covered",
+      "noTerms": "This job has no skills or keywords to check.",
+      "missing": "Missing",
+      "missingHint": "Tick ✓ only when it is true: then it counts as yours and you can add it.",
+      "iHave": "I have this",
+      "iHaveTerm": "I have {term}",
+      "ready": "You have it, not in the resume",
+      "readyHint": "Drag one onto a line, or add it to Skills.",
+      "addToSkills": "Add to Skills",
+      "addTermToSkills": "Add {term} to Skills",
+      "inResume": "In your resume",
+      "achievements": "Your achievements",
+      "noAchievements": "Add true facts with numbers on My profile > Applications and they show up here.",
+      "achievementsHint": "True lines from your achievements bank. Add one to your latest job.",
+      "addBullet": "Add",
+      "addBulletLabel": "Add to your latest job: {line}"
     }
   },
   "Jobs": {
@@ -1086,7 +1124,8 @@
         "hint": "Click to edit the languages line for this job",
         "customHint": "Edited for this job only. Reset goes back to your profile’s Languages.",
         "reset": "Reset"
-      }
+      },
+      "step2Builder": "Or edit a copy of your master resume for this job in the Resume builder ↗"
     },
     "reply": {
       "making": "Saving…",
@@ -1661,7 +1700,8 @@
     "AI_KEY_MISSING": "Add your Claude or OpenAI API key in Settings › API keys first.",
     "API_KEY_NOT_FOUND": "Save the key first.",
     "RESUME_BUILD_INVALID": "This resume could not be saved. Reload the page and try again.",
-    "RESUME_REPLY_EMPTY": "Paste the AI chat’s reply first."
+    "RESUME_REPLY_EMPTY": "Paste the AI chat’s reply first.",
+    "SECTION_NOT_FOUND": "That section is not in this resume."
   },
   "Notifications": {
     "bell": "Notifications",

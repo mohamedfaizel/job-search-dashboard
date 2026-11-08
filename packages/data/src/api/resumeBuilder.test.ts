@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { graphqlClient } from './client';
 import {
+  fetchJobResumeBuildPdf,
   fetchResumeBuild,
   fetchResumeBuildPdf,
+  jobResumeBuildPdfUrl,
   fetchResumeBuildPrompt,
   restartResumeBuild,
   resumeBuildPdfUrl,
@@ -60,5 +62,17 @@ describe('Resume builder API', () => {
       Response.json({ message: 'No', code: 'LANGUAGE_UNKNOWN' }, { status: 400 }),
     );
     await expect(fetchResumeBuildPdf('xx')).rejects.toMatchObject({ code: 'LANGUAGE_UNKNOWN' });
+  });
+
+  it('builds a job copy’s PDF address and reads its PDF the same way', async () => {
+    expect(jobResumeBuildPdfUrl('job 1')).toMatch(/\/resume-builder\/job\/job%201\/resume\.pdf$/);
+    expect(jobResumeBuildPdfUrl('j1', true)).toMatch(/resume\.pdf\?download=1$/);
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('%PDF', { headers: { 'X-Pdf-Pages': '1' } }));
+    await expect(fetchJobResumeBuildPdf('j1')).resolves.toMatchObject({ pages: 1, styled: true });
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/job/j1/resume.pdf'), {
+      credentials: 'include',
+    });
   });
 });

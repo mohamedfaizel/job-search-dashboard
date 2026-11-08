@@ -1,5 +1,5 @@
-import type { BuilderDoc, ResumeBuild } from '@jobsearch/data';
-import { resumeBuildPdfUrl } from '@jobsearch/data';
+import type { BuilderDoc, JobInsights, JobResumeBuild, ResumeBuild } from '@jobsearch/data';
+import { jobResumeBuildPdfUrl, resumeBuildPdfUrl } from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
 import { api, requests } from '../../profile/test/server';
 
@@ -98,6 +98,102 @@ export const builderHandlers = [
       headers: {
         'Content-Type': 'application/pdf',
         'X-Pdf-Pages': String(build.pages),
+        'X-Pdf-Styled': '1',
+      },
+    });
+  }),
+];
+
+/** A job's resume copy as the fake server has it; `hasCopy` false until a test starts one. */
+const JOB_START: JobResumeBuild = {
+  jobId: 'j1',
+  title: 'Frontend Engineer',
+  company: 'Acme GmbH',
+  language: 'en',
+  hasCopy: false,
+  doc: JSON.stringify(DOC),
+  masterDoc: JSON.stringify(DOC),
+  profileLanguages: ['English C1', 'German A2'],
+  maxPages: 2,
+  savedAt: null,
+};
+export const jobBuild = {
+  current: { ...JOB_START },
+  /** The terms the user ticked "I have this" for. */
+  have: [] as string[],
+  reset() {
+    this.current = { ...JOB_START };
+    this.have = [];
+  },
+};
+
+const insights = (): JobInsights =>
+  ({
+    jobId: 'j1',
+    score: 52,
+    jobResume: jobBuild.current.hasCopy ? { score: 61 } : null,
+    skills: [
+      { term: 'react', inResume: false, youHave: false, relatedTo: null },
+      {
+        term: 'graphql',
+        inResume: false,
+        youHave: jobBuild.have.includes('graphql'),
+        relatedTo: null,
+      },
+      { term: 'figma', inResume: false, youHave: jobBuild.have.includes('figma'), relatedTo: null },
+    ],
+    keywords: [{ term: 'storybook', inResume: false, youHave: false, relatedTo: null }],
+  }) as unknown as JobInsights;
+
+export const jobBuilderHandlers = [
+  ...builderHandlers,
+  api.query('JobResumeBuild', ({ variables }) => {
+    requests.push({ operation: 'JobResumeBuild', variables });
+    return HttpResponse.json({ data: { jobResumeBuild: jobBuild.current } });
+  }),
+  api.mutation('StartJobResumeBuild', ({ variables }) => {
+    requests.push({ operation: 'StartJobResumeBuild', variables });
+    jobBuild.current = { ...jobBuild.current, hasCopy: true, savedAt: '2026-11-08T10:00:00Z' };
+    return HttpResponse.json({ data: { startJobResumeBuild: jobBuild.current } });
+  }),
+  api.mutation('SaveJobResumeBuild', ({ variables }) => {
+    requests.push({ operation: 'SaveJobResumeBuild', variables });
+    jobBuild.current = {
+      ...jobBuild.current,
+      doc: variables['doc'] as string,
+      savedAt: new Date().toISOString(),
+    };
+    return HttpResponse.json({ data: { saveJobResumeBuild: jobBuild.current } });
+  }),
+  api.mutation('ResetJobResumeBuild', ({ variables }) => {
+    requests.push({ operation: 'ResetJobResumeBuild', variables });
+    jobBuild.current = { ...jobBuild.current, doc: jobBuild.current.masterDoc };
+    return HttpResponse.json({ data: { resetJobResumeBuild: jobBuild.current } });
+  }),
+  api.mutation('CopySectionToMaster', ({ variables }) => {
+    requests.push({ operation: 'CopySectionToMaster', variables });
+    // The master takes that section from the copy.
+    const copy = JSON.parse(jobBuild.current.doc) as BuilderDoc;
+    const master = JSON.parse(jobBuild.current.masterDoc) as BuilderDoc;
+    const section = copy.sections.find((x) => x.id === variables['sectionId']);
+    if (section) {
+      master.sections = master.sections.map((x) => (x.id === section.id ? section : x));
+    }
+    jobBuild.current = { ...jobBuild.current, masterDoc: JSON.stringify(master) };
+    return HttpResponse.json({ data: { copySectionToMaster: jobBuild.current } });
+  }),
+  api.query('JobInsights', () => HttpResponse.json({ data: { jobInsights: insights() } })),
+  api.mutation('SetHaveTerm', ({ variables }) => {
+    requests.push({ operation: 'SetHaveTerm', variables });
+    jobBuild.have.push(variables['term'] as string);
+    return HttpResponse.json({ data: { setHaveTerm: insights() } });
+  }),
+  http.get(jobResumeBuildPdfUrl('j1'), () => {
+    requests.push({ operation: 'JobResumePdf', variables: {} });
+    return new HttpResponse('%PDF-1.7', {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'X-Pdf-Pages': '1',
         'X-Pdf-Styled': '1',
       },
     });

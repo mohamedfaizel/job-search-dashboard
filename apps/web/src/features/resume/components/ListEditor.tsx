@@ -1,7 +1,8 @@
 import { useTranslations } from 'next-intl';
-import type { KeyboardEvent } from 'react';
+import type { DragEvent, KeyboardEvent } from 'react';
 import { useEffect, useRef } from 'react';
 import { insertAt, move, removeAt, replaceAt } from '../docOps';
+import { KEYWORD_TYPE, withKeyword } from '../keywordDrag';
 import { GripIcon, XIcon } from './icons';
 import { DROP_LINE, FIELD, GRIP, ICON_BUTTON } from './ui';
 import { useDragSort } from './useDragSort';
@@ -37,6 +38,28 @@ export function ListEditor({ scope, items, onChange, itemLabel, addLabel, placeh
     field?.focus();
   });
 
+  // A keyword from the Job match tab can land on any line (the sort drag ignores it).
+  const keywordDrop = (index: number) => ({
+    onDragOver: (event: DragEvent<HTMLElement>) => {
+      if (event.dataTransfer.types.includes(KEYWORD_TYPE)) {
+        event.preventDefault();
+        event.stopPropagation();
+      } else {
+        drag.row(index).onDragOver(event);
+      }
+    },
+    onDrop: (event: DragEvent<HTMLElement>) => {
+      const term = event.dataTransfer.getData(KEYWORD_TYPE);
+      if (term) {
+        event.preventDefault();
+        event.stopPropagation();
+        onChange(replaceAt(items, index, withKeyword(items[index] ?? '', term)), null);
+      } else {
+        drag.row(index).onDrop(event);
+      }
+    },
+  });
+
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>, index: number) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -63,6 +86,7 @@ export function ListEditor({ scope, items, onChange, itemLabel, addLabel, placeh
             // Lines have no ids; the index is fine because every line is a controlled field.
             key={index}
             {...drag.row(index)}
+            {...keywordDrop(index)}
             className={`flex items-start gap-1 rounded-md ${drag.over === index ? DROP_LINE : ''}`}
           >
             <span {...drag.grip(index)} className={GRIP} title={t('dragHint')} aria-hidden>

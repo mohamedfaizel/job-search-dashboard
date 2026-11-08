@@ -35,3 +35,42 @@ export class ResumeBuildModel {
   @Field(() => Date, { nullable: true, description: 'Null until you first save a change' })
   savedAt!: Date | null;
 }
+
+@ObjectType('JobResumeBuild', {
+  description: 'The copy of your resume for one job, as the Resume builder edits it',
+})
+export class JobResumeBuildModel {
+  @Field()
+  jobId!: string;
+
+  @Field({ description: 'The job title as posted' })
+  title!: string;
+
+  @Field()
+  company!: string;
+
+  @Field({ description: 'The language of the master resume this copy starts from' })
+  language!: string;
+
+  @Field({
+    description: 'You have a copy for this job. When false, doc is the master resume to start from',
+  })
+  hasCopy!: boolean;
+
+  @Field({ description: 'This job’s resume as JSON text (the master’s when there is no copy yet)' })
+  doc!: string;
+
+  @Field({ description: 'Your master resume as JSON text, to see what this copy changed' })
+  masterDoc!: string;
+
+  @Field(() => [String], {
+    description: 'Your languages from My profile: the Languages section always shows these',
+  })
+  profileLanguages!: string[];
+
+  @Field(() => Int, { description: 'Your page limit from My profile' })
+  maxPages!: number;
+
+  @Field(() => Date, { nullable: true, description: 'Null until you first save this copy' })
+  savedAt!: Date | null;
+}

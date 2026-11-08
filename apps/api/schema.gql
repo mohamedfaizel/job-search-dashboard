@@ -679,6 +679,42 @@ type JobResume {
   updatedAt: DateTime!
 }
 
+"""The copy of your resume for one job, as the Resume builder edits it"""
+type JobResumeBuild {
+  company: String!
+
+  """
+  This job’s resume as JSON text (the master’s when there is no copy yet)
+  """
+  doc: String!
+
+  """
+  You have a copy for this job. When false, doc is the master resume to start from
+  """
+  hasCopy: Boolean!
+  jobId: String!
+
+  """The language of the master resume this copy starts from"""
+  language: String!
+
+  """Your master resume as JSON text, to see what this copy changed"""
+  masterDoc: String!
+
+  """Your page limit from My profile"""
+  maxPages: Int!
+
+  """
+  Your languages from My profile: the Languages section always shows these
+  """
+  profileLanguages: [String!]!
+
+  """Null until you first save this copy"""
+  savedAt: DateTime
+
+  """The job title as posted"""
+  title: String!
+}
+
 enum JobSortField {
   CITY
   COMPANY
@@ -767,6 +803,9 @@ type Mutation {
   """
   checkJobStillOpen(id: ID!): Job!
 
+  """Puts one section of a job’s resume into your master resume"""
+  copySectionToMaster(jobId: String!, sectionId: String!): JobResumeBuild!
+
   """Add a job by hand"""
   createJob(input: CreateJobInput!): Job!
   createSavedSearch(input: SavedSearchInput!): SavedSearch!
@@ -847,6 +886,9 @@ type Mutation {
   """
   removeUnsupportedSkills(jobId: ID!): JobInsights!
 
+  """Throws a job’s changes away: the copy becomes your master resume again"""
+  resetJobResumeBuild(jobId: String!): JobResumeBuild!
+
   """
   Reads the resume into sections again: from My profile, or from an AI chat reply
   """
@@ -883,6 +925,9 @@ type Mutation {
   Saves Claude's answer to the interview prep prompt for this job (replacing the one before)
   """
   saveInterviewPrep(jobId: ID!, text: String!): JobInsights!
+
+  """Saves a job’s resume (JSON text)"""
+  saveJobResumeBuild(doc: String!, jobId: String!): JobResumeBuild!
 
   """
   Saves pasted text as the resume you wrote for this job (replacing the one before), and scores it
@@ -944,6 +989,9 @@ type Mutation {
 
   """Create an account and log in"""
   signUp(input: SignUpInput!): User!
+
+  """Starts a resume copy for a job from your master resume"""
+  startJobResumeBuild(jobId: String!): JobResumeBuild!
 
   """
   Call when you open Job posts. Returns the time after which jobs are New for this visit (null on your first visit)
@@ -1317,6 +1365,9 @@ type Query {
 
   """Your resume match for one job. Null if you never matched it"""
   jobMatch(jobId: ID!): JobMatch
+
+  """Your resume for one job (your master resume until you start a copy)"""
+  jobResumeBuild(jobId: String!): JobResumeBuild!
 
   """Jobs for the dashboard table: filter, sort and paginate"""
   jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!
