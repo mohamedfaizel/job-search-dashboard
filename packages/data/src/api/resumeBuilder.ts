@@ -39,13 +39,33 @@ export async function fetchResumeBuildPdf(language: string): Promise<BuilderPdf>
   };
 }
 
+export async function fetchResumeBuild(language: string | null): Promise<ResumeBuild> {
+  return (await graphqlClient.request<{ resumeBuild: ResumeBuild }>(RESUME_BUILD, { language }))
+    .resumeBuild;
+}
+
+export async function saveResumeBuild(vars: { language: string; doc: string }) {
+  return (await graphqlClient.request<{ saveResumeBuild: ResumeBuild }>(SAVE_RESUME_BUILD, vars))
+    .saveResumeBuild;
+}
+
+export async function restartResumeBuild(vars: { language: string; reply?: string }) {
+  return (
+    await graphqlClient.request<{ restartResumeBuild: ResumeBuild }>(RESTART_RESUME_BUILD, vars)
+  ).restartResumeBuild;
+}
+
+export async function fetchResumeBuildPrompt(language: string): Promise<string> {
+  return (
+    await graphqlClient.request<{ resumeBuildPrompt: string }>(RESUME_BUILD_PROMPT, { language })
+  ).resumeBuildPrompt;
+}
+
 /** Your master resume as sections; null = your main language. */
 export function useResumeBuild(language: string | null) {
   return useQuery({
     queryKey: resumeBuildKey(language),
-    queryFn: async () =>
-      (await graphqlClient.request<{ resumeBuild: ResumeBuild }>(RESUME_BUILD, { language }))
-        .resumeBuild,
+    queryFn: () => fetchResumeBuild(language),
     // The builder keeps its own copy while you type; a refetch would undo unsaved keystrokes.
     staleTime: Infinity,
     refetchOnWindowFocus: false,
@@ -62,9 +82,7 @@ function refreshResumeReaders(queryClient: ReturnType<typeof useQueryClient>) {
 export function useSaveResumeBuild() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (vars: { language: string; doc: string }) =>
-      (await graphqlClient.request<{ saveResumeBuild: ResumeBuild }>(SAVE_RESUME_BUILD, vars))
-        .saveResumeBuild,
+    mutationFn: saveResumeBuild,
     onSuccess: () => {
       refreshResumeReaders(queryClient);
     },
@@ -89,12 +107,7 @@ export function useRestartResumeBuild() {
 export function useResumeBuildPrompt(language: string) {
   return useQuery({
     queryKey: ['resumeBuild', 'prompt', language],
-    queryFn: async () =>
-      (
-        await graphqlClient.request<{ resumeBuildPrompt: string }>(RESUME_BUILD_PROMPT, {
-          language,
-        })
-      ).resumeBuildPrompt,
+    queryFn: () => fetchResumeBuildPrompt(language),
     enabled: false,
   });
 }
