@@ -3,13 +3,18 @@ import { API_URL, apiErrorFrom, graphqlClient } from './client';
 import { queryKeys } from './hooks';
 import { jobInsightsPrefix } from './insights';
 import {
+  COPY_SECTION_TO_MASTER,
+  JOB_RESUME_BUILD,
+  RESET_JOB_RESUME_BUILD,
   RESTART_RESUME_BUILD,
   RESUME_BUILD,
   RESUME_BUILD_PROMPT,
+  SAVE_JOB_RESUME_BUILD,
   SAVE_RESUME_BUILD,
+  START_JOB_RESUME_BUILD,
 } from './operations';
 import { profileKey } from './profile';
-import type { ResumeBuild } from './types';
+import type { JobResumeBuild, ResumeBuild } from './types';
 
 export const resumeBuildKey = (language: string | null) => ['resumeBuild', language] as const;
 
@@ -27,8 +32,21 @@ export interface BuilderPdf {
   styled: boolean;
 }
 
+/** A job's resume copy as a PDF. */
+export function jobResumeBuildPdfUrl(jobId: string, download = false): string {
+  return `${API_ROOT}/resume-builder/job/${encodeURIComponent(jobId)}/resume.pdf${download ? '?download=1' : ''}`;
+}
+
 export async function fetchResumeBuildPdf(language: string): Promise<BuilderPdf> {
-  const res = await fetch(resumeBuildPdfUrl(language), { credentials: 'include' });
+  return fetchPdf(resumeBuildPdfUrl(language));
+}
+
+export async function fetchJobResumeBuildPdf(jobId: string): Promise<BuilderPdf> {
+  return fetchPdf(jobResumeBuildPdfUrl(jobId));
+}
+
+async function fetchPdf(url: string): Promise<BuilderPdf> {
+  const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) {
     throw apiErrorFrom(await res.json().catch(() => null), `PDF failed (${String(res.status)})`);
   }
@@ -116,10 +134,118 @@ export function useResumeBuildPrompt(language: string) {
  * The builder's PDF for one saved version. A new version is a new key; the last PDF stays on
  * screen while the next one is made.
  */
-export function useResumeBuildPdf(language: string, version: string) {
+export function useResumeBuildPdf(language: string, version: string, enabled = true) {
   return useQuery({
     queryKey: ['resumeBuild', 'pdf', language, version],
     queryFn: () => fetchResumeBuildPdf(language),
+    enabled,
+    placeholderData: (previous) => previous,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export const jobResumeBuildKey = (jobId: string) => ['jobResumeBuild', jobId] as const;
+
+/** Your resume for one job: its copy, or your master resume until you start one. */
+export function useJobResumeBuild(jobId: string | null) {
+  return useQuery({
+    queryKey: jobResumeBuildKey(jobId ?? ''),
+    queryFn: async () =>
+      (await graphqlClient.request<{ jobResumeBuild: JobResumeBuild }>(JOB_RESUME_BUILD, { jobId }))
+        .jobResumeBuild,
+    enabled: jobId !== null,
+    // The builder keeps its own copy while you type; a refetch would undo unsaved keystrokes.
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/** The job copy's text changed: its score, the Apply kit and the Job posts table read it. */
+function refreshJobReaders(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+}
+
+export function useStartJobResumeBuild() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) =>
+      (
+        await graphqlClient.request<{ startJobResumeBuild: JobResumeBuild }>(
+          START_JOB_RESUME_BUILD,
+          { jobId },
+        )
+      ).startJobResumeBuild,
+    onSuccess: (build) => {
+      queryClient.setQueryData(jobResumeBuildKey(build.jobId), build);
+      refreshJobReaders(queryClient);
+    },
+  });
+}
+
+export function useSaveJobResumeBuild() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { jobId: string; doc: string }) =>
+      (
+        await graphqlClient.request<{ saveJobResumeBuild: JobResumeBuild }>(
+          SAVE_JOB_RESUME_BUILD,
+          vars,
+        )
+      ).saveJobResumeBuild,
+    onSuccess: () => {
+      refreshJobReaders(queryClient);
+    },
+  });
+}
+
+/** Throws the job's changes away: the copy becomes your master resume again. */
+export function useResetJobResumeBuild() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) =>
+      (
+        await graphqlClient.request<{ resetJobResumeBuild: JobResumeBuild }>(
+          RESET_JOB_RESUME_BUILD,
+          { jobId },
+        )
+      ).resetJobResumeBuild,
+    onSuccess: (build) => {
+      queryClient.setQueryData(jobResumeBuildKey(build.jobId), build);
+      refreshJobReaders(queryClient);
+    },
+  });
+}
+
+/** Puts one section of the job's resume into your master resume. */
+export function useCopySectionToMaster() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { jobId: string; sectionId: string }) =>
+      (
+        await graphqlClient.request<{ copySectionToMaster: JobResumeBuild }>(
+          COPY_SECTION_TO_MASTER,
+          vars,
+        )
+      ).copySectionToMaster,
+    onSuccess: (build) => {
+      // The returned masterDoc is the new master; the builder keeps the job doc it has.
+      queryClient.setQueryData(jobResumeBuildKey(build.jobId), (old: JobResumeBuild | undefined) =>
+        old ? { ...old, masterDoc: build.masterDoc } : build,
+      );
+      void queryClient.invalidateQueries({ queryKey: ['resumeBuild'] });
+      refreshResumeReaders(queryClient);
+    },
+  });
+}
+
+/** A job copy's PDF for one saved version (see useResumeBuildPdf). */
+export function useJobResumeBuildPdf(jobId: string, version: string, enabled = true) {
+  return useQuery({
+    queryKey: ['jobResumeBuild', 'pdf', jobId, version],
+    queryFn: () => fetchJobResumeBuildPdf(jobId),
+    enabled,
     placeholderData: (previous) => previous,
     staleTime: Infinity,
     refetchOnWindowFocus: false,

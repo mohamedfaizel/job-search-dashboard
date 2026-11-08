@@ -593,6 +593,9 @@ model JobResume {
   jobId       String
   /// Plain text, read out of the file or pasted. This is what gets scored.
   text        String
+  /// This copy as the Resume builder's sections (JSON); null until you open it there. Saving in
+  /// the builder writes `text` from it, so scoring and the Apply kit read the same resume.
+  doc         Json?
   /// The uploaded file, kept so you can download it again. Null when the text was pasted.
   fileName    String?
   file        Bytes?

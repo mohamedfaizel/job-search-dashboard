@@ -71,6 +71,14 @@ describe('ApplyKitPanel', () => {
     expect(screen.getByText(/✓ Prompt copied/)).toBeInTheDocument();
   });
 
+  it('step 2 links to the resume builder for this job', async () => {
+    const { user } = renderKit();
+    await user.click(await screen.findByRole('button', { name: 'Copy prompt and open Claude ↗' }));
+    expect(
+      screen.getByRole('link', { name: /edit a copy of your master resume for this job/ }),
+    ).toHaveAttribute('href', '/resume?job=job-1&tab=match');
+  });
+
   it('opens ChatGPT instead when you picked OpenAI in Settings', async () => {
     me.aiProvider = 'OPENAI';
     const { user, open } = renderKit(makeJob(), false, 'ChatGPT');

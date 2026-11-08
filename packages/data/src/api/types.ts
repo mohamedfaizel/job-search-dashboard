@@ -871,3 +871,19 @@ export interface ResumeBuild {
   maxPages: number;
   savedAt: string | null;
 }
+
+/** Your resume for one job, from the API (doc and masterDoc are JSON text). */
+export interface JobResumeBuild {
+  jobId: string;
+  title: string;
+  company: string;
+  language: string;
+  /** False until you start a copy; doc is then your master resume. */
+  hasCopy: boolean;
+  doc: string;
+  /** Your master resume, to see what this copy changed. */
+  masterDoc: string;
+  profileLanguages: string[];
+  maxPages: number;
+  savedAt: string | null;
+}

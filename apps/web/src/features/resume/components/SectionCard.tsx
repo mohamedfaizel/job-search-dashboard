@@ -27,6 +27,11 @@ interface Props {
   onMove: (to: number) => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  /**
+   * Set when editing a job's copy: this section differs from the master's (`changed`), and the
+   * button puts it into the master.
+   */
+  master?: { changed: boolean; busy: boolean; onCopy: () => void };
   /** From the section list's drag: the grip starts a drag, the card takes a drop. */
   gripProps: HTMLAttributes<HTMLElement>;
   rowProps: HTMLAttributes<HTMLElement>;
@@ -43,6 +48,7 @@ export function SectionCard({
   onMove,
   onDuplicate,
   onDelete,
+  master,
   gripProps,
   rowProps,
   dropHere,
@@ -80,6 +86,18 @@ export function SectionCard({
           <span className="hidden rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600 sm:inline">
             {t('hiddenTag')}
           </span>
+        )}
+        {master?.changed && (
+          <button
+            type="button"
+            disabled={master.busy}
+            title={t('copyToMasterHint')}
+            aria-label={t('copyToMaster', { title })}
+            className="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 hover:bg-amber-200 disabled:opacity-50"
+            onClick={master.onCopy}
+          >
+            {t('changedForJob')} · {t('copyToMasterShort')}
+          </button>
         )}
         <button
           type="button"

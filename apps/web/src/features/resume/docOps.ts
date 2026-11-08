@@ -99,6 +99,105 @@ const LANGUAGE_TITLES =
  */
 export const isLanguagesSection = (title: string) => LANGUAGE_TITLES.test(title.trim());
 
+/** All the words of a resume, as the job match reads them (hidden sections are not in the PDF). */
+export function docText(doc: BuilderDoc): string {
+  const parts = [doc.name, doc.headline, ...doc.contact];
+  for (const section of doc.sections) {
+    if (section.hidden) continue;
+    parts.push(section.title);
+    for (const block of section.blocks) {
+      if (block.kind === 'paragraph') parts.push(block.text);
+      else if (block.kind === 'bullets') parts.push(...block.items);
+      else parts.push(block.title, block.org, block.meta, ...block.lines, ...block.bullets);
+    }
+  }
+  return parts.join('\n');
+}
+
+/** The term appears as a word of its own ("go" is not in "google"); case does not matter. */
+export function mentions(text: string, term: string): boolean {
+  const escaped = term.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!escaped) return false;
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}($|[^\\p{L}\\p{N}])`, 'iu').test(text);
+}
+
+const SKILLS_TITLE =
+  /^(skills|core skills|key skills|technical skills|core competencies|competencies|kenntnisse|fähigkeiten|kompetenzen|fachkenntnisse|skills (&|und) kompetenzen)$/i;
+
+/**
+ * Adds a skill you have to the Skills section: as a new line in its first list, or in a new
+ * Skills section when there is none. `title` names the new section.
+ */
+export function addSkill(doc: BuilderDoc, term: string, title: string): BuilderDoc {
+  const at = doc.sections.findIndex((s) => SKILLS_TITLE.test(s.title.trim()));
+  if (at < 0) {
+    const section = newSection('skills', title);
+    const block = section.blocks[0];
+    if (block?.kind === 'bullets') block.items = [term];
+    return { ...doc, sections: [...doc.sections, section] };
+  }
+  return updateSection(doc, doc.sections[at]?.id ?? '', (section) => {
+    const list = section.blocks.findIndex((b) => b.kind === 'bullets');
+    if (list < 0) return { ...section, blocks: [...section.blocks, newBlock('bullets')] };
+    return {
+      ...section,
+      blocks: section.blocks.map((b, i) =>
+        i === list && b.kind === 'bullets'
+          ? { ...b, items: [...b.items.filter((item) => item.trim()), term] }
+          : b,
+      ),
+    };
+  });
+}
+
+/**
+ * Adds a true line (from your achievements) as a bullet of your latest job: the first job or
+ * project in the resume. Without one it goes into the first list of bullets.
+ */
+export function addBullet(doc: BuilderDoc, text: string): BuilderDoc {
+  for (const section of doc.sections) {
+    const entry = section.blocks.find((b) => b.kind === 'entry');
+    if (entry?.kind === 'entry') {
+      return updateSection(doc, section.id, (s) => ({
+        ...s,
+        blocks: s.blocks.map((b) =>
+          b.id === entry.id && b.kind === 'entry'
+            ? { ...b, bullets: [...b.bullets.filter((x) => x.trim()), text] }
+            : b,
+        ),
+      }));
+    }
+  }
+  for (const section of doc.sections) {
+    const list = section.blocks.find((b) => b.kind === 'bullets');
+    if (list?.kind === 'bullets' && !isLanguagesSection(section.title)) {
+      return updateSection(doc, section.id, (s) => ({
+        ...s,
+        blocks: s.blocks.map((b) =>
+          b.id === list.id && b.kind === 'bullets'
+            ? { ...b, items: [...b.items.filter((x) => x.trim()), text] }
+            : b,
+        ),
+      }));
+    }
+  }
+  return doc;
+}
+
+/** True when this job's section differs from the master's section with the same id. */
+export function sectionChanged(section: BuilderSection, master: BuilderDoc): boolean {
+  const same = master.sections.find((s) => s.id === section.id);
+  return !same || JSON.stringify(same) !== JSON.stringify(section);
+}
+
+/** Your achievements bank as lines: one fact per line, without list marks. */
+export function achievementLines(text: string): string[] {
+  return text
+    .split('\n')
+    .map((line) => line.replace(/^\s*[-*•]\s*/, '').trim())
+    .filter(Boolean);
+}
+
 /** Undo history: the doc as it is, the ones before it, and the ones you undid. */
 export interface History {
   past: BuilderDoc[];

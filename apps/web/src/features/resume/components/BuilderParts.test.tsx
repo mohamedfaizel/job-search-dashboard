@@ -22,8 +22,10 @@ const titles = () =>
     .map((i) => (i as HTMLInputElement).value);
 
 /** jsdom has no DataTransfer; the drag only needs these. */
-const dataTransfer = () => ({
+const dataTransfer = (data: Record<string, string> = {}) => ({
   effectAllowed: '',
+  types: Object.keys(data),
+  getData: (type: string) => data[type] ?? '',
   setData: vi.fn(),
   setDragImage: vi.fn(),
 });

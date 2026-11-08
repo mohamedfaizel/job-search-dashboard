@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
 import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
@@ -18,7 +18,7 @@ import {
   textToBuilderDoc,
   toMarkdown,
 } from './builder-doc';
-import type { ResumeBuildModel } from './resume-builder.model';
+import type { JobResumeBuildModel, ResumeBuildModel } from './resume-builder.model';
 
 /** The builder's PDF, with what the preview shows next to it. */
 export interface BuilderPdf extends DocumentFile {
@@ -117,6 +117,141 @@ export class ResumeBuilderService {
     const file = await this.documents.resumePdf(userId, text, lang);
     const pages = (await PDFDocument.load(file.bytes, { updateMetadata: false })).getPageCount();
     return { ...file, pages };
+  }
+
+  /**
+   * Your resume for one job. A job you wrote a resume for in the Apply kit has one already; it is
+   * read into sections the first time. Without one, `doc` is your master resume and `hasCopy` is
+   * false until you start a copy.
+   */
+  async getJob(userId: number, jobId: string): Promise<JobResumeBuildModel> {
+    const [me, job, row] = await Promise.all([
+      this.me(userId),
+      this.job(jobId),
+      this.prisma.jobResume.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { text: true, doc: true, updatedAt: true },
+      }),
+    ]);
+    const language = this.pick(me, job.language);
+    const master = await this.get(userId, language);
+    const base = {
+      jobId,
+      title: job.title,
+      company: job.company.name,
+      language,
+      masterDoc: master.doc,
+      profileLanguages: me.languages,
+      maxPages: me.maxPages,
+    };
+    if (!row) return { ...base, hasCopy: false, doc: master.doc, savedAt: null };
+    // A resume from the Apply kit has only text: read it into sections (and keep it that way).
+    const doc = row.doc
+      ? lockLanguages(read(JSON.stringify(row.doc)), me.languages)
+      : textToBuilderDoc(row.text, me.name);
+    if (!row.doc) {
+      await this.prisma.jobResume.update({
+        where: { userId_jobId: { userId, jobId } },
+        data: { doc: toJson(doc) },
+        select: { userId: true },
+      });
+    }
+    return { ...base, hasCopy: true, doc: JSON.stringify(doc), savedAt: row.updatedAt };
+  }
+
+  /** Starts this job's copy from your master resume. Starting again keeps the copy you have. */
+  async startJob(userId: number, jobId: string): Promise<JobResumeBuildModel> {
+    const current = await this.getJob(userId, jobId);
+    if (!current.hasCopy) await this.writeJob(userId, jobId, current.doc);
+    return this.getJob(userId, jobId);
+  }
+
+  /** Saves this job's resume. The text the Apply kit and the score read is written from it. */
+  async saveJob(userId: number, jobId: string, json: string): Promise<JobResumeBuildModel> {
+    const me = await this.me(userId);
+    await this.job(jobId);
+    await this.writeJob(userId, jobId, JSON.stringify(lockLanguages(read(json), me.languages)));
+    return this.getJob(userId, jobId);
+  }
+
+  /** Throws this job's changes away: the copy becomes your master resume again. */
+  async resetJob(userId: number, jobId: string): Promise<JobResumeBuildModel> {
+    const current = await this.getJob(userId, jobId);
+    await this.writeJob(userId, jobId, current.masterDoc);
+    return this.getJob(userId, jobId);
+  }
+
+  /**
+   * Puts one section of this job's copy into your master resume: it replaces the section with
+   * the same id there, or is added at the end when the master has none. Everything else in the
+   * master stays as it is.
+   */
+  async copySectionToMaster(
+    userId: number,
+    jobId: string,
+    sectionId: string,
+  ): Promise<JobResumeBuildModel> {
+    const current = await this.getJob(userId, jobId);
+    const copy = read(current.doc).sections.find((s) => s.id === sectionId);
+    if (!current.hasCopy || !copy) {
+      throw apiError(NotFoundException, 'SECTION_NOT_FOUND', 'That section is not in this resume');
+    }
+    const master = read(current.masterDoc);
+    const at = master.sections.findIndex((s) => s.id === sectionId);
+    const sections = [...master.sections];
+    if (at >= 0) sections[at] = copy;
+    else sections.push(copy);
+    await this.save(userId, current.language, JSON.stringify({ ...master, sections }));
+    return this.getJob(userId, jobId);
+  }
+
+  /** The job copy as a PDF in your template. */
+  async jobPdf(userId: number, jobId: string): Promise<BuilderPdf> {
+    const { doc, language, hasCopy } = await this.getJob(userId, jobId);
+    if (!hasCopy) {
+      throw apiError(
+        NotFoundException,
+        'JOB_RESUME_MISSING',
+        'Start a resume copy for this job first',
+      );
+    }
+    const me = await this.me(userId);
+    const text = toMarkdown(lockLanguages(read(doc), me.languages));
+    const file = await this.documents.resumePdf(userId, text, language);
+    const pages = (await PDFDocument.load(file.bytes, { updateMetadata: false })).getPageCount();
+    return { ...file, pages };
+  }
+
+  private async job(jobId: string) {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { title: true, language: true, company: { select: { name: true } } },
+    });
+    if (!job) {
+      throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
+    }
+    return job;
+  }
+
+  /** Writes the doc and its text to this job's resume row; a new text has not been AI-checked. */
+  private async writeJob(userId: number, jobId: string, json: string) {
+    const doc = read(json);
+    const data = {
+      text: toMarkdown(doc),
+      doc: toJson(doc),
+      aiStatus: null,
+      aiScore: null,
+      aiError: null,
+      aiMissing: [],
+      aiTips: [],
+      aiStartedAt: null,
+    };
+    await this.prisma.jobResume.upsert({
+      where: { userId_jobId: { userId, jobId } },
+      create: { userId, jobId, ...data },
+      update: data,
+      select: { userId: true },
+    });
   }
 
   private async me(userId: number) {

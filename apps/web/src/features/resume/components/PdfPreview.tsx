@@ -1,11 +1,13 @@
 import type { BuilderPdf } from '@jobsearch/data';
-import { useResumeBuildPdf } from '@jobsearch/data';
+import { useJobResumeBuildPdf, useResumeBuildPdf } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 
 interface Props {
   language: string;
+  /** Set for a job's resume copy: its own PDF instead of the master's. */
+  jobId?: string;
   /** Changes after every save, so the preview shows the saved resume. */
   version: string;
   maxPages: number;
@@ -15,10 +17,13 @@ interface Props {
  * The real PDF, the same file the download gives you, typeset in your template. It is made
  * again after each save. The meter shows the pages against your page limit from My profile.
  */
-export function PdfPreview({ language, version, maxPages }: Props) {
+export function PdfPreview({ language, jobId, version, maxPages }: Props) {
   const t = useTranslations('Resume');
   const errorText = useErrorText();
-  const pdf = useResumeBuildPdf(language, version);
+  // Both hooks always run; only one of them has a request to make.
+  const master = useResumeBuildPdf(jobId ? '' : language, version, !jobId);
+  const job = useJobResumeBuildPdf(jobId ?? '', version, !!jobId);
+  const pdf = jobId ? job : master;
   const url = useObjectUrl(pdf.data);
   const pages = pdf.data?.pages ?? 0;
   const over = pages > maxPages;

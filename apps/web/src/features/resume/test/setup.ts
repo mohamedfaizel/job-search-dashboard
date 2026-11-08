@@ -2,8 +2,10 @@
 // server.ts here, added per test.
 import '../../profile/test/setup';
 import '../../../test/navigation';
-import { build } from './server';
+import { build, jobBuild } from './server';
 
 afterEach(() => {
   build.reset();
+  jobBuild.reset();
+  window.history.pushState({}, '', '/');
 });

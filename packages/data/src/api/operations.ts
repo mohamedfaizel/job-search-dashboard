@@ -1137,3 +1137,45 @@ export const RESTART_RESUME_BUILD = /* GraphQL */ `
     }
   }
 `;
+
+const JOB_RESUME_BUILD_FIELDS = `jobId title company language hasCopy doc masterDoc profileLanguages maxPages savedAt`;
+
+export const JOB_RESUME_BUILD = /* GraphQL */ `
+  query JobResumeBuild($jobId: String!) {
+    jobResumeBuild(jobId: $jobId) {
+      ${JOB_RESUME_BUILD_FIELDS}
+    }
+  }
+`;
+
+export const START_JOB_RESUME_BUILD = /* GraphQL */ `
+  mutation StartJobResumeBuild($jobId: String!) {
+    startJobResumeBuild(jobId: $jobId) {
+      ${JOB_RESUME_BUILD_FIELDS}
+    }
+  }
+`;
+
+export const SAVE_JOB_RESUME_BUILD = /* GraphQL */ `
+  mutation SaveJobResumeBuild($jobId: String!, $doc: String!) {
+    saveJobResumeBuild(jobId: $jobId, doc: $doc) {
+      ${JOB_RESUME_BUILD_FIELDS}
+    }
+  }
+`;
+
+export const RESET_JOB_RESUME_BUILD = /* GraphQL */ `
+  mutation ResetJobResumeBuild($jobId: String!) {
+    resetJobResumeBuild(jobId: $jobId) {
+      ${JOB_RESUME_BUILD_FIELDS}
+    }
+  }
+`;
+
+export const COPY_SECTION_TO_MASTER = /* GraphQL */ `
+  mutation CopySectionToMaster($jobId: String!, $sectionId: String!) {
+    copySectionToMaster(jobId: $jobId, sectionId: $sectionId) {
+      ${JOB_RESUME_BUILD_FIELDS}
+    }
+  }
+`;
