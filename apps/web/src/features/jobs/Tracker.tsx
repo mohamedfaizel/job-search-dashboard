@@ -3,6 +3,7 @@ import { useMarkFollowedUp, useMyApplications, useUpdateJobStatus } from '@jobse
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
+import { GmailCheck } from './components/GmailCheck';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { MailSuggestions } from './components/MailSuggestions';
 import { TrackerBoard } from './components/TrackerBoard';
@@ -24,11 +25,14 @@ export function TrackerPage() {
 
   return (
     <section aria-labelledby="tracker-heading" className="space-y-4">
-      <div>
-        <h1 id="tracker-heading" className="text-xl font-semibold text-slate-900">
-          {t('title')}
-        </h1>
-        <p className="text-sm text-slate-600">{t('intro')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 id="tracker-heading" className="text-xl font-semibold text-slate-900">
+            {t('title')}
+          </h1>
+          <p className="text-sm text-slate-600">{t('intro')}</p>
+        </div>
+        <GmailCheck />
       </div>
 
       <MailSuggestions />

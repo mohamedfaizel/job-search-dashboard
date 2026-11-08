@@ -2,6 +2,36 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type ApiKey {
+  """JobHunter credits left, as it last said."""
+  credits: Int
+  kind: ApiKeyKind!
+
+  """The last 4 characters, e.g. "a9F2"."""
+  last4: String!
+
+  """The AI model to use with this key."""
+  model: String
+  updatedAt: DateTime!
+}
+
+enum ApiKeyKind {
+  ANTHROPIC
+  JOBHUNTER
+  OPENAI
+}
+
+type ApiKeyTest {
+  """JobHunter credits left after the test."""
+  credits: Int
+
+  """What the service said, when it failed."""
+  error: String
+
+  """True when the service accepted the key."""
+  ok: Boolean!
+}
+
 """A job on your tracker board"""
 type Application {
   """Applied, and no change or follow-up for 7 days: time to follow up"""
@@ -208,7 +238,7 @@ type GmailSyncResult {
 }
 
 type ImportBudget {
-  """DAILY_CREDIT_CAP: scheduled runs stop before going over it"""
+  """DAILY_CREDIT_CAP, per user: scheduled runs stop before going over it"""
   cap: Int!
 
   """Credits used by every import since midnight (server time)"""
@@ -714,6 +744,9 @@ type Mutation {
   createJob(input: CreateJobInput!): Job!
   createSavedSearch(input: SavedSearchInput!): SavedSearch!
 
+  """Deletes one of your keys."""
+  deleteApiKey(kind: ApiKeyKind!): Boolean!
+
   """Deletes the interview prep for this job"""
   deleteInterviewPrep(jobId: ID!): JobInsights!
 
@@ -803,6 +836,9 @@ type Mutation {
   """
   saveAnswer(answer: String!, question: String!): SavedAnswer!
 
+  """Saves or replaces one of your keys."""
+  saveApiKey(input: SaveApiKeyInput!): ApiKey!
+
   """Saves Claude's reply to the queue prompt, each part to its own job"""
   saveApplyQueueReply(text: String!): [ApplyQueueItem!]!
 
@@ -883,6 +919,11 @@ type Mutation {
   """
   tailorResume(jobId: ID!): TailoredResume!
 
+  """
+  Tries your saved JobHunter token with a search for one job (at most 1 credit).
+  """
+  testApiKey(kind: ApiKeyKind!): ApiKeyTest!
+
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
   updateDocumentStyle(input: DocumentStyleInput!): DocumentStyle!
@@ -891,6 +932,9 @@ type Mutation {
   Track your progress: Saved, Applied, Interviewing… Only you see your status.
   """
   updateJobStatus(id: ID!, status: ApplicationStatus!): Job!
+
+  """Settings > Notifications"""
+  updateNotificationSettings(input: NotificationSettingsInput!): Profile!
   updateProfile(input: ProfileInput!): Profile!
   updateSavedSearch(id: Int!, input: SavedSearchInput!): SavedSearch!
 }
@@ -977,6 +1021,11 @@ type NotificationJob {
   fit: Int!
   id: String!
   title: String!
+}
+
+input NotificationSettingsInput {
+  matchFitMin: Int!
+  notifyNewMatches: Boolean!
 }
 
 """Your latest notifications and how many are unread"""
@@ -1170,10 +1219,8 @@ input ProfileInput {
   lastName: String! = ""
   linkedinUrl: String
   locations: [String!]! = []
-  matchFitMin: Int! = 60
   nationality: String! = ""
   noticePeriod: String! = ""
-  notifyNewMatches: Boolean! = true
   phone: String! = ""
   relocation: String! = ""
 
@@ -1205,7 +1252,7 @@ type Query {
   """How many jobs you have hidden"""
   hiddenJobCount: Int!
 
-  """Today's credits used against DAILY_CREDIT_CAP"""
+  """Today's credits you used against DAILY_CREDIT_CAP"""
   importBudget: ImportBudget!
   job(id: ID!): Job!
 
@@ -1228,6 +1275,9 @@ type Query {
 
   """Who is logged in, or null"""
   me: User
+
+  """Your saved keys (only their last 4 characters)."""
+  myApiKeys: [ApiKey!]!
 
   """Your tracker: jobs you saved, applied to, etc."""
   myApplications: [Application!]!
@@ -1333,6 +1383,14 @@ type ResumeSuggestion {
 enum Role {
   ADMIN
   USER
+}
+
+input SaveApiKeyInput {
+  kind: ApiKeyKind!
+  model: String
+
+  """The key or token. Stored encrypted; it is never shown again."""
+  value: String!
 }
 
 """

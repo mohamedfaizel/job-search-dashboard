@@ -17,6 +17,14 @@ export {
   useSyncGmail,
 } from './api/gmail';
 export {
+  apiKeysKey,
+  useDeleteApiKey,
+  useMyApiKeys,
+  useSaveApiKey,
+  useTestApiKey,
+  useUpdateNotificationSettings,
+} from './api/settings';
+export {
   APPLY_QUEUE_URL,
   applyKitUrl,
   useApplyQueue,

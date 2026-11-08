@@ -65,6 +65,39 @@ enum Role {
   USER
 }
 
+enum AiProvider {
+  ANTHROPIC
+  OPENAI
+}
+
+enum ApiKeyKind {
+  /// JobHunter (JobsPipe) search token: imports use it and its credits.
+  JOBHUNTER
+  /// Claude Console key, for the AI score.
+  ANTHROPIC
+  /// OpenAI platform key, for the AI score.
+  OPENAI
+}
+
+/// A user's own key for a paid service, so each person spends their own credits.
+model ApiKey {
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  kind      ApiKeyKind
+  /// Encrypted with AES-256-GCM, like Gmail tokens (api-keys.service.ts). Never returned by the API.
+  secret    String
+  /// The last 4 characters, so you can tell which key is saved.
+  last4     String
+  /// The AI model to use with this key, e.g. "claude-sonnet-5-5". Null for JobHunter.
+  model     String?
+  /// JobHunter credits left, as its last answer said.
+  credits   Int?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@id([userId, kind])
+}
+
 model User {
   id              Int              @id @default(autoincrement())
   email           String           @unique
@@ -97,6 +130,13 @@ model User {
   jobsNewSince    DateTime?
   /// The language the app is shown in ("en" or "de"), so it follows you to other devices.
   locale          String           @default("en")
+  /// Which AI the app uses for you: the AI score and the copy-and-open buttons.
+  aiProvider      AiProvider       @default(ANTHROPIC)
+  apiKeys         ApiKey[]
+  /// True once the old .env keys were copied into this account's Settings (first account only).
+  envKeysAdopted  Boolean          @default(false)
+  savedSearches   SavedSearch[]
+  syncRuns        SyncRun[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 }
@@ -443,8 +483,12 @@ model SyncRun {
   savedSearchId   Int?
   /// True when the scheduler started this import, not a person.
   scheduled       Boolean      @default(false)
+  /// Whose import it was: their token paid for it.
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId          Int?
 
   @@index([searchKey, startedAt])
+  @@index([userId, finishedAt])
   @@index([savedSearchId])
 }
 
@@ -458,7 +502,10 @@ enum ScheduleFrequency {
 /// A JobHunter search you gave a name, so it can be run again in one click (and on a schedule later).
 model SavedSearch {
   id               Int               @id @default(autoincrement())
-  name             String            @unique
+  /// Whose search it is. Its imports use this user's JobHunter token.
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           Int
+  name             String
   source           ImportSource      @default(JOBHUNTER)
   /// Company career pages to read when the source is COMPANY_BOARDS, e.g. "greenhouse:stripe".
   boards           String[]          @default([])
@@ -489,6 +536,8 @@ model SavedSearch {
   runs             SyncRun[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+
+  @@unique([userId, name])
 }
 
 /// A skill or keyword you removed from a job's insights ("I don't have it" or "not relevant").

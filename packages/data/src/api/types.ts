@@ -398,8 +398,41 @@ export interface LanguageResume {
 
 export type ProfileInput = Omit<
   Profile,
-  'resumeFileName' | 'otherResumes' | 'updatedAt' | 'resumeSuggestions' | 'resumeReviewPrompt'
+  | 'resumeFileName'
+  | 'otherResumes'
+  | 'updatedAt'
+  | 'resumeSuggestions'
+  | 'resumeReviewPrompt'
+  // Saved on their own, from Settings > Notifications.
+  | 'notifyNewMatches'
+  | 'matchFitMin'
 >;
+
+/** Settings > Notifications. */
+export interface NotificationSettingsInput {
+  notifyNewMatches: boolean;
+  matchFitMin: number;
+}
+
+/** Which service a saved key is for. */
+export type ApiKeyKind = 'JOBHUNTER' | 'ANTHROPIC' | 'OPENAI';
+
+/** A key you saved in Settings. The key itself never leaves the server. */
+export interface ApiKey {
+  kind: ApiKeyKind;
+  /** The last 4 characters, e.g. "a9F2". */
+  last4: string;
+  model: string | null;
+  /** JobHunter credits left, as it last said. */
+  credits: number | null;
+  updatedAt: string;
+}
+
+export interface ApiKeyTest {
+  ok: boolean;
+  credits: number | null;
+  error: string | null;
+}
 
 /** A suggestion for your master resume. */
 export interface ResumeSuggestion {

@@ -36,6 +36,13 @@ export const applications: Application[] = [];
 /** Employer-email suggestions waiting for an answer in the current test. */
 export const mailSuggestions: MailSuggestion[] = [];
 
+/** Gmail as Settings set it up: off unless a test connects an account. */
+export const gmailAccounts: { configured: boolean; count: number; found: number } = {
+  configured: false,
+  count: 0,
+  found: 0,
+};
+
 /** The test user's Apply queue. Marking a job Applied takes it out, like the real API. */
 export const applyQueue: ApplyQueueItem[] = [];
 
@@ -596,6 +603,34 @@ const handlers = [
   api.query('JobFilterOptions', () =>
     HttpResponse.json({ data: { jobFilterOptions: FILTER_OPTIONS } }),
   ),
+  api.query('GmailStatus', () =>
+    HttpResponse.json({
+      data: {
+        gmailStatus: {
+          configured: gmailAccounts.configured,
+          accounts: Array.from({ length: gmailAccounts.count }, (_, i) => ({
+            id: i + 1,
+            email: `me${String(i)}@gmail.com`,
+            connectedAt: '2026-11-01T08:00:00.000Z',
+            lastSyncAt: null,
+            lastError: null,
+          })),
+        },
+      },
+    }),
+  ),
+  api.mutation('SyncGmail', () => {
+    requests.push({ operation: 'SyncGmail', variables: {} });
+    return HttpResponse.json({
+      data: {
+        syncGmail: {
+          accounts: gmailAccounts.count,
+          suggestions: gmailAccounts.found,
+          warnings: [],
+        },
+      },
+    });
+  }),
   api.query('MailSuggestions', () =>
     HttpResponse.json({ data: { mailSuggestions: [...mailSuggestions] } }),
   ),

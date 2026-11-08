@@ -111,7 +111,7 @@ describe('Gmail suggestions', () => {
 
   it('connects an account and keeps the refresh token scrambled', async () => {
     const res = await connect();
-    expect(res.headers['location']).toBe('http://web.test/profile?gmail=connected');
+    expect(res.headers['location']).toBe('http://web.test/settings?gmail=connected');
     const { data } = await t.asUser<{ gmailStatus: { accounts: { email: string }[] } }>(STATUS);
     expect(data!.gmailStatus.accounts.map((a) => a.email)).toEqual(['me@gmail.com']);
     const stored = await t.prisma.gmailAccount.findFirstOrThrow();
@@ -138,7 +138,7 @@ describe('Gmail suggestions', () => {
     const again = await request(t.server)
       .get('/gmail/callback')
       .query({ code: 'abc', state: makeState(2, KEY) });
-    expect(again.headers['location']).toBe('http://web.test/profile?gmail=connected');
+    expect(again.headers['location']).toBe('http://web.test/settings?gmail=connected');
 
     vi.spyOn(client, 'exchangeCode').mockResolvedValueOnce({
       email: 'new@gmail.com',
@@ -147,21 +147,21 @@ describe('Gmail suggestions', () => {
     const fresh = await request(t.server)
       .get('/gmail/callback')
       .query({ code: 'abc', state: makeState(2, KEY) });
-    expect(fresh.headers['location']).toBe('http://web.test/profile?gmail=error');
+    expect(fresh.headers['location']).toBe('http://web.test/settings?gmail=error');
   });
 
   it('rejects a callback with a bad state, a denial, or a failed exchange', async () => {
     const bad = await request(t.server).get('/gmail/callback').query({ code: 'x', state: 'nope' });
-    expect(bad.headers['location']).toBe('http://web.test/profile?gmail=error');
+    expect(bad.headers['location']).toBe('http://web.test/settings?gmail=error');
     const denied = await request(t.server)
       .get('/gmail/callback')
       .query({ error: 'access_denied', state: makeState(2, KEY) });
-    expect(denied.headers['location']).toBe('http://web.test/profile?gmail=denied');
+    expect(denied.headers['location']).toBe('http://web.test/settings?gmail=denied');
     vi.spyOn(client, 'exchangeCode').mockRejectedValueOnce(new Error('boom'));
     const failed = await request(t.server)
       .get('/gmail/callback')
       .query({ code: 'x', state: makeState(2, KEY) });
-    expect(failed.headers['location']).toBe('http://web.test/profile?gmail=error');
+    expect(failed.headers['location']).toBe('http://web.test/settings?gmail=error');
     expect(await t.prisma.gmailAccount.count()).toBe(0);
   });
 
@@ -300,14 +300,14 @@ describe('Gmail not set up', () => {
     await t.app.close();
   });
 
-  it('says so, and sends /gmail/connect back to the profile', async () => {
+  it('says so, and sends /gmail/connect back to Settings', async () => {
     const { data } = await t.asUser<{ gmailStatus: { configured: boolean } }>(STATUS);
     expect(data!.gmailStatus.configured).toBe(false);
     const res = await request(t.server)
       .get('/gmail/connect')
       .set('Cookie', t.cookieFor('USER'))
       .expect(302);
-    expect(res.headers['location']).toBe('http://localhost:3001/profile?gmail=not-configured');
+    expect(res.headers['location']).toBe('http://localhost:3001/settings?gmail=not-configured');
     await t.app.get(GmailService).syncEveryone();
   });
 });

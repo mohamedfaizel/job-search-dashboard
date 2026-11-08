@@ -1030,3 +1030,51 @@ export const SAVE_CLAUDE_ANSWERS = /* GraphQL */ `
     }
   }
 `;
+
+export const MY_API_KEYS = /* GraphQL */ `
+  query MyApiKeys {
+    myApiKeys {
+      kind
+      last4
+      model
+      credits
+      updatedAt
+    }
+  }
+`;
+
+export const SAVE_API_KEY = /* GraphQL */ `
+  mutation SaveApiKey($input: SaveApiKeyInput!) {
+    saveApiKey(input: $input) {
+      kind
+      last4
+      model
+      credits
+      updatedAt
+    }
+  }
+`;
+
+export const DELETE_API_KEY = /* GraphQL */ `
+  mutation DeleteApiKey($kind: ApiKeyKind!) {
+    deleteApiKey(kind: $kind)
+  }
+`;
+
+export const TEST_API_KEY = /* GraphQL */ `
+  mutation TestApiKey($kind: ApiKeyKind!) {
+    testApiKey(kind: $kind) {
+      ok
+      credits
+      error
+    }
+  }
+`;
+
+export const UPDATE_NOTIFICATION_SETTINGS = /* GraphQL */ `
+  mutation UpdateNotificationSettings($input: NotificationSettingsInput!) {
+    updateNotificationSettings(input: $input) {
+      ${PROFILE_FIELDS}
+    }
+  }
+`;

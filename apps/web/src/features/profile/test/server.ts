@@ -1,4 +1,5 @@
 import type {
+  ApiKey,
   MyDesign,
   GmailAccount,
   LanguageResume,
@@ -141,10 +142,42 @@ export const gmail: { configured: boolean; accounts: GmailAccount[]; found: numb
   found: 0,
 };
 
+/** Keys saved in Settings during the current test. */
+export const apiKeys: ApiKey[] = [];
+
 /** Sends to Resume-Matcher made in the current test. */
 export const syncs: number[] = [];
 
 export const server = setupServer(
+  api.query('MyApiKeys', () => HttpResponse.json({ data: { myApiKeys: [...apiKeys] } })),
+  api.mutation('SaveApiKey', ({ variables }) => {
+    requests.push({ operation: 'SaveApiKey', variables });
+    const input = variables['input'] as { kind: ApiKey['kind']; value: string };
+    const saved: ApiKey = {
+      kind: input.kind,
+      last4: input.value.trim().slice(-4),
+      model: null,
+      credits: null,
+      updatedAt: '2026-11-08T12:00:00.000Z',
+    };
+    apiKeys.splice(0, apiKeys.length, ...apiKeys.filter((k) => k.kind !== input.kind), saved);
+    return HttpResponse.json({ data: { saveApiKey: saved } });
+  }),
+  api.mutation('DeleteApiKey', ({ variables }) => {
+    requests.push({ operation: 'DeleteApiKey', variables });
+    apiKeys.splice(0, apiKeys.length, ...apiKeys.filter((k) => k.kind !== variables['kind']));
+    return HttpResponse.json({ data: { deleteApiKey: true } });
+  }),
+  api.mutation('TestApiKey', ({ variables }) => {
+    requests.push({ operation: 'TestApiKey', variables });
+    for (const key of apiKeys) key.credits = 412;
+    return HttpResponse.json({ data: { testApiKey: { ok: true, credits: 412, error: null } } });
+  }),
+  api.mutation('UpdateNotificationSettings', ({ variables }) => {
+    requests.push({ operation: 'UpdateNotificationSettings', variables });
+    const input = variables['input'] as Partial<Profile>;
+    return HttpResponse.json({ data: { updateNotificationSettings: { ...PROFILE, ...input } } });
+  }),
   api.query('GmailStatus', () =>
     HttpResponse.json({
       data: { gmailStatus: { configured: gmail.configured, accounts: gmail.accounts } },

@@ -95,7 +95,8 @@ When VS Code opens the folder, accept the prompt to install the recommended exte
 cp .env.example .env      # Windows PowerShell: Copy-Item .env.example .env
 ```
 
-`.env` is git-ignored. Put your JobHunter API token in `JOBHUNTER_API_TOKEN`. Never commit it.
+`.env` is git-ignored. Never commit it. Your JobHunter token does not go there: after you log in,
+paste it in **Settings > API keys** (see below).
 
 ### 4. Run everything
 
@@ -108,9 +109,9 @@ pnpm dev                                   # start the api and the web app
 Open <http://localhost:3001>. Check the API at <http://localhost:3000/health>.
 
 **Log in:** the first time, click _Create an account_. The first account on a server becomes the
-**admin**: only the admin sees **Add jobs**, because imports and saved searches spend the server's
-JobHunter credits. Accounts created after that are regular users who can browse the jobs and track
-their status. Passwords are stored as argon2 hashes, and the session lives in an httpOnly cookie
+**admin**. Every account, admin or not, can add jobs: imports use the JobHunter token each person
+saves in **Settings**, so everyone spends their own credits. Jobs are one shared list, so a job is
+never paid for twice; statuses, hidden jobs and saved searches are your own. Passwords are stored as argon2 hashes, and the session lives in an httpOnly cookie
 for 7 days. Set `JWT_SECRET` in `.env` (see `.env.example`); `ALLOW_SIGNUP=false` closes sign-up.
 
 **Tracker:** give a job a status (Saved, Applied, Interviewing, Offer, Rejected) from the table or
@@ -131,9 +132,19 @@ into the search.
 The **Add jobs** page has three tabs: _Saved searches_, _Import from JobHunter_ and _Add a job by hand_.
 _Import history_ sits below the tabs, so it shows on all three.
 
+**Settings** (the gear in the header) has three tabs:
+
+- _API keys_: paste your JobHunter token. It is stored encrypted (AES-256-GCM, key from
+  `SETTINGS_KEY`, else `JWT_SECRET`) and only its last 4 characters are ever shown. _Test_ runs a
+  one-job search (at most 1 credit) and shows the credits you have left. A token from an older
+  `.env` is copied once into the first account's Settings, then `.env` is not read for it again.
+- _Gmail_: connect or remove the Gmail accounts the app reads replies from. _Check now_ is on the
+  **Tracker**, next to the suggestions it finds.
+- _Notifications_: the 🔔 for new jobs that fit you, and from which Fit %.
+
 **Fill the table:** either open **Add jobs** and use _Import from JobHunter_ (needs your token
-in `.env`, and each job costs one credit), or load 36 made-up demo jobs for free while the API
-is running. Adding jobs is admin-only, so the script logs in as your admin account (PowerShell):
+in Settings, and each job costs one credit), or load 36 made-up demo jobs for free while the API
+is running. The script logs in as your account (PowerShell):
 
 ```powershell
 $env:SEED_EMAIL="you@example.com"; $env:SEED_PASSWORD="your password"
@@ -158,8 +169,8 @@ update it) and **Delete**. _Import history_ lists the last 20 imports with what 
 **Scheduled imports:** on a saved search card, pick _Run automatically_ (every hour, every day or
 weekdays), a time, and **Save schedule**. While the API is running it checks every minute for due
 searches and imports only jobs new since the last run. Times are the API computer's local time. To
-protect your credits, a scheduled run is skipped when it could push today's total over
-`DAILY_CREDIT_CAP` (default 100, in `.env`); the card says why, and the header shows today's usage.
+protect your credits, a scheduled run is skipped when it could push your total today over
+`DAILY_CREDIT_CAP` (default 100 per user, in `.env`). A scheduled search uses its owner's token; the card says why, and the header shows today's usage.
 Scheduled runs are tagged in _Import history_.
 
 **Without Docker:** install PostgreSQL 16 natively (keep port 5432), skip `pnpm db:up`, and point
@@ -229,7 +240,7 @@ pick Anthropic in <http://localhost:3100/settings>, or reset its saved settings 
 
 ### Connect Gmail (optional)
 
-On **My profile > Email** every user can connect their own Gmail accounts (as many as they like). The app reads the last two weeks of mail once an hour, finds replies from companies you applied to, and **suggests** a move on your tracker (a rejection, an interview invitation, an offer). Nothing changes until you press the button. It is read-only: the app can never send, change or delete mail.
+On **Settings > Gmail** every user can connect their own Gmail accounts (as many as they like). The app reads the last two weeks of mail once an hour, finds replies from companies you applied to, and **suggests** a move on your tracker (a rejection, an interview invitation, an offer). _Check now_ on the **Tracker** reads new mail right away. Nothing changes until you press the button. It is read-only: the app can never send, change or delete mail.
 
 One-time setup (free):
 

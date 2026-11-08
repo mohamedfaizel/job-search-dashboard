@@ -55,6 +55,7 @@ describe('syncJobs', () => {
   beforeEach(async () => {
     requests.length = 0;
     await resetDatabase(t.prisma);
+    await seedTestUsers(t.prisma);
   });
 
   it('follows the cursor and saves every job', async () => {
@@ -97,7 +98,6 @@ describe('syncJobs', () => {
   it('updates existing jobs on re-sync without losing your application status', async () => {
     await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 5 } });
     const job = await t.prisma.job.findFirstOrThrow({ where: { externalId: '8a5adb17ca3a27ec' } });
-    await seedTestUsers(t.prisma);
     await t.prisma.application.create({ data: { userId: 1, jobId: job.id, status: 'APPLIED' } });
 
     const res = await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 5 } });

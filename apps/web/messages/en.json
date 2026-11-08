@@ -14,6 +14,7 @@
     "tracker": "Tracker",
     "addJobs": "Add jobs",
     "profile": "My profile",
+    "settings": "Settings",
     "admin": "admin",
     "logOut": "Log out",
     "loading": "Loading…"
@@ -47,33 +48,7 @@
       "applications": "Applications",
       "resume": "Resume",
       "design": "Design",
-      "matcher": "Resume-Matcher",
-      "mail": "Email"
-    },
-    "mail": {
-      "title": "Email",
-      "intro": "Connect your Gmail accounts and the app reads employer replies, then suggests moves on your tracker (a rejection, an interview invitation, an offer). You approve each one.",
-      "loading": "Loading your email accounts…",
-      "loadFailed": "Could not load your email accounts: {error}",
-      "none": "No Gmail account connected yet.",
-      "connect": "Connect Gmail",
-      "connectAnother": "Connect another Gmail account",
-      "notConfigured": "Gmail is not set up on this server yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file (see the README).",
-      "disconnect": "Disconnect",
-      "disconnectLabel": "Disconnect {email}",
-      "checkNow": "Check now",
-      "checking": "Checking…",
-      "checkFailed": "Could not check your email: {error}",
-      "checked": "{count, plural, =0 {No new suggestions.} one {1 new suggestion. See it on your tracker.} other {# new suggestions. See them on your tracker.}}",
-      "lastChecked": "Last checked {date}",
-      "neverChecked": "Not checked yet",
-      "privacy": "Read-only: the app can never send, change or delete your mail. It looks at the last two weeks, once an hour, and keeps only the sender, subject and a short snippet of mails that match a job you applied to. Disconnect any time.",
-      "result": {
-        "connected": "Gmail account connected.",
-        "denied": "You did not allow access, so nothing was connected.",
-        "error": "Connecting Gmail did not work. Please try again.",
-        "not-configured": "Gmail is not set up on this server yet."
-      }
+      "matcher": "Resume-Matcher"
     },
     "listHint": "Separate with commas",
     "personal": {
@@ -335,14 +310,6 @@
       "askClaudeHint": "Paste it into Claude: it reviews your resume like a recruiter and lists the top fixes.",
       "askClaudeBox": "Review prompt"
     },
-    "notify": {
-      "heading": "Notifications",
-      "newMatches": "Tell me when a scheduled search finds new jobs that fit me",
-      "newMatchesHint": "You get a 🔔 notification with the best jobs and a link to each.",
-      "fitMin": "A job fits me from",
-      "fitMinHint": "Its Fit % must be at least this.",
-      "fitOption": "{fit}% Fit"
-    },
     "claudeAnswers": {
       "heading": "Answers for Claude",
       "intro": "Your answers to Claude’s questions, kept for the next job. Edit or delete any.",
@@ -357,6 +324,79 @@
       "editFor": "Edit your answer to: {question}",
       "deleteFor": "Delete your answer to: {question}",
       "answerFor": "Your answer to: {question}"
+    }
+  },
+  "Settings": {
+    "title": "Settings",
+    "sections": "Settings sections",
+    "loading": "Loading…",
+    "tabs": {
+      "keys": "API keys",
+      "gmail": "Gmail",
+      "notifications": "Notifications"
+    },
+    "keys": {
+      "heading": "API keys",
+      "intro": "Your own keys for paid services, so you spend your own credits. They are stored encrypted and only the last 4 characters are ever shown again.",
+      "loading": "Loading your keys…",
+      "loadFailed": "Could not load your keys: {error}",
+      "jobhunter": {
+        "name": "JobHunter token",
+        "hint": "Used when you import jobs from JobHunter or your saved searches run.",
+        "testHint": "Test runs a search for one job, which costs at most 1 credit."
+      },
+      "notSet": "Not set",
+      "saved": "Saved",
+      "credits": "{count, plural, one {1 credit left} other {# credits left}}",
+      "paste": "Paste your token",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "replace": "Replace",
+      "test": "Test",
+      "testing": "Testing…",
+      "works": "Works",
+      "testFailed": "Did not work: {error}",
+      "delete": "Delete key",
+      "deleteLabel": "Delete your {name}",
+      "confirmDelete": "Delete this key? Imports stop until you add one again.",
+      "saveFailed": "Could not save: {error}",
+      "masked": "Saved key ending in {last4}"
+    },
+    "notify": {
+      "heading": "Notifications",
+      "newMatches": "Tell me when a scheduled search finds new jobs that fit me",
+      "newMatchesHint": "You get a 🔔 notification with the best jobs and a link to each.",
+      "fitMin": "A job fits me from",
+      "fitMinHint": "Its Fit % must be at least this.",
+      "fitOption": "{fit}% Fit",
+      "interview": "Interview reminder",
+      "interviewHint": "Always on: the 🔔 reminds you the day before an interview date you entered in a job's Interview tab.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "saveFailed": "Could not save: {error}"
+    },
+    "mail": {
+      "title": "Email",
+      "intro": "Connect your Gmail accounts and the app reads employer replies, then suggests moves on your tracker (a rejection, an interview invitation, an offer). You approve each one.",
+      "loading": "Loading your email accounts…",
+      "loadFailed": "Could not load your email accounts: {error}",
+      "none": "No Gmail account connected yet.",
+      "connect": "Connect Gmail",
+      "connectAnother": "Connect another Gmail account",
+      "notConfigured": "Gmail is not set up on this server yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file (see the README).",
+      "disconnect": "Disconnect",
+      "disconnectLabel": "Disconnect {email}",
+      "lastChecked": "Last checked {date}",
+      "neverChecked": "Not checked yet",
+      "privacy": "Read-only: the app can never send, change or delete your mail. It looks at the last two weeks, once an hour, and keeps only the sender, subject and a short snippet of mails that match a job you applied to. Disconnect any time.",
+      "result": {
+        "connected": "Gmail account connected.",
+        "denied": "You did not allow access, so nothing was connected.",
+        "error": "Connecting Gmail did not work. Please try again.",
+        "not-configured": "Gmail is not set up on this server yet."
+      }
     }
   },
   "Jobs": {
@@ -1189,12 +1229,18 @@
       "followedUp": "Followed up {date}",
       "banner": "{count, plural, one {# application has} other {# applications have}} had no news for a week. Look for “Follow up?” below.",
       "error": "Could not save that: {error}"
+    },
+    "gmailCheck": {
+      "checkNow": "Check Gmail now",
+      "checking": "Checking…",
+      "checkFailed": "Could not check your email: {error}",
+      "checked": "{count, plural, =0 {No new suggestions.} one {1 new suggestion.} other {# new suggestions.}}",
+      "connect": "Connect Gmail in Settings"
     }
   },
   "AddJobs": {
     "title": "Add jobs",
     "loading": "Loading…",
-    "adminOnly": "Only the admin can add or import jobs.",
     "tabsLabel": "Ways to add jobs",
     "tabs": {
       "saved": "Saved searches",
@@ -1408,7 +1454,9 @@
       "scheduled": "Scheduled",
       "allFetched": "All fetched",
       "moreLeft": "More left"
-    }
+    },
+    "tokenHint": "Imports from JobHunter use the token in your Settings, so you spend your own credits.",
+    "openSettings": "Open Settings"
   },
   "Errors": {
     "NETWORK": "Can’t reach the API at {url}. Is it running?",
@@ -1462,7 +1510,9 @@
     "LANGUAGES_LENGTH": "The languages line is at most 300 characters.",
     "ANSWER_LENGTH": "A question and its answer must each be 1 to {max} characters long.",
     "ANSWER_NOT_FOUND": "That saved answer was not found.",
-    "ANSWERS_INVALID": "Your answers could not be read."
+    "ANSWERS_INVALID": "Your answers could not be read.",
+    "API_KEY_INVALID": "That does not look like a key. Paste the whole key, without spaces.",
+    "JOBHUNTER_TOKEN_MISSING": "Add your JobHunter token in Settings › API keys first."
   },
   "Notifications": {
     "bell": "Notifications",

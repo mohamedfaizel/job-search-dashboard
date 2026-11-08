@@ -1,7 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
-import { ProfileInput, ProfileModel } from './profile.model';
+import { NotificationSettingsInput, ProfileInput, ProfileModel } from './profile.model';
 import { ProfileService } from './profile.service';
 
 /** Every user reads and edits only their own profile: the id comes from the session cookie. */
@@ -43,6 +43,14 @@ export class ProfileResolver {
     @Args('language') language: string,
   ): Promise<string> {
     return this.profiles.translationPrompt(user.id, language);
+  }
+
+  @Mutation(() => ProfileModel, { description: 'Settings > Notifications' })
+  updateNotificationSettings(
+    @CurrentUser() user: SessionUser,
+    @Args('input') input: NotificationSettingsInput,
+  ): Promise<ProfileModel> {
+    return this.profiles.updateNotifications(user.id, input);
   }
 
   @Mutation(() => ProfileModel)

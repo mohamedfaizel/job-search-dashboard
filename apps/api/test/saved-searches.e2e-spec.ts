@@ -3,7 +3,7 @@ import { setupServer } from 'msw/node';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadSearchResponse } from './fixtures/load';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
 const JOBHUNTER_URL = 'https://jobhunter.test/v1';
 
@@ -71,6 +71,7 @@ describe('saved searches', () => {
   beforeEach(async () => {
     requests.length = 0;
     await resetDatabase(t.prisma);
+    await seedTestUsers(t.prisma);
   });
 
   async function create(input: Record<string, unknown> = SEARCH): Promise<Saved> {

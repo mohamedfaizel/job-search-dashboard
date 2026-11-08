@@ -136,6 +136,21 @@ export class ProfileService {
     return toModel(profile, others);
   }
 
+  /** Settings > Notifications: only these two fields, so the profile form never overwrites them. */
+  async updateNotifications(
+    userId: number,
+    input: { notifyNewMatches: boolean; matchFitMin: number },
+  ): Promise<ProfileModel> {
+    const data = { notifyNewMatches: input.notifyNewMatches, matchFitMin: input.matchFitMin };
+    const profile = await this.prisma.profile.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: data,
+      omit: WITHOUT_FILE,
+    });
+    return toModel(profile, await this.others(userId));
+  }
+
   private others(userId: number): Promise<OtherResume[]> {
     return this.prisma.languageResume.findMany({
       where: { userId },
@@ -176,10 +191,8 @@ export class ProfileService {
       achievements: input.achievements,
       resumeMaxPages: input.resumeMaxPages,
       keepMySections: input.keepMySections,
-      notifyNewMatches: input.notifyNewMatches,
       fillSavedAnswers: input.fillSavedAnswers,
       showStretches: input.showStretches,
-      matchFitMin: input.matchFitMin,
       // Empty rows from the form are dropped.
       customFields: input.customFields
         .filter((f) => f.label || f.value)

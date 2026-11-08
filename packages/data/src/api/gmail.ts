@@ -14,7 +14,7 @@ import type { GmailStatus, GmailSyncResult, MailSuggestion } from './types';
 export const gmailStatusKey = ['gmail', 'status'] as const;
 export const mailSuggestionsKey = ['gmail', 'suggestions'] as const;
 
-/** Where "Connect Gmail" sends the browser: this API, then Google, then back to My profile. */
+/** Where "Connect Gmail" sends the browser: this API, then Google, then back to Settings. */
 export const GMAIL_CONNECT_URL = `${API_URL.replace(/\/graphql\/?$/, '')}/gmail/connect`;
 
 /** Your connected Gmail accounts, and whether the server has Google set up at all. */

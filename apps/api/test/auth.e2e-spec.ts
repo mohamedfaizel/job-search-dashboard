@@ -71,7 +71,7 @@ describe('auth', () => {
     expect(stored.passwordHash).toMatch(/^\$argon2id\$/);
   });
 
-  it('makes later accounts regular users who cannot spend credits', async () => {
+  it('makes later accounts regular users who import with their own token', async () => {
     await browser()(SIGN_UP, { input: MOHAMED });
     const gql = browser();
 
@@ -79,9 +79,12 @@ describe('auth', () => {
 
     expect(signUp.body.data?.signUp.role).toBe('USER');
     expect((await gql(JOBS)).body.errors).toBeUndefined();
-    expect((await gql(SYNC)).body.errors?.[0]?.message).toBe('Only the admin can do this');
-    expect((await gql(SAVED)).body.errors?.[0]?.message).toBe('Only the admin can do this');
-    expect((await t.asUser(SAVED)).errors?.[0]?.message).toBe('Only the admin can do this');
+    // No admin-only gate any more: without a token of their own the import says what to do.
+    expect((await gql(SYNC)).body.errors?.[0]?.extensions?.['apiCode']).toBe(
+      'JOBHUNTER_TOKEN_MISSING',
+    );
+    // Their saved searches are their own, so the list starts empty.
+    expect((await gql(SAVED)).body).toMatchObject({ data: { savedSearches: [] } });
   });
 
   it('refuses a second account with the same email, whatever its case', async () => {

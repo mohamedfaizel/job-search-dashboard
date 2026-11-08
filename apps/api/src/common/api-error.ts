@@ -58,6 +58,8 @@ export const API_ERROR_CODES = [
   'SUGGESTION_NOT_FOUND',
   'SUGGESTION_ANSWERED',
   'DESIGN_REPLY',
+  'API_KEY_INVALID',
+  'JOBHUNTER_TOKEN_MISSING',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

@@ -18,16 +18,17 @@ import { NotificationBell } from './NotificationBell';
 interface NavItem {
   href: string;
   /** The key of its text in messages/<locale>.json, under "Nav". */
-  label: 'jobs' | 'tracker' | 'addJobs' | 'profile';
+  label: 'jobs' | 'tracker' | 'addJobs' | 'profile' | 'settings';
   adminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/jobs', label: 'jobs' },
   { href: '/tracker', label: 'tracker' },
-  // Imports spend the server's JobHunter credits, so only the admin sees this page.
-  { href: '/jobs/add', label: 'addJobs', adminOnly: true },
+  // Everyone can add jobs: JobHunter imports use your own token (Settings > API keys).
+  { href: '/jobs/add', label: 'addJobs' },
   { href: '/profile', label: 'profile' },
+  { href: '/settings', label: 'settings' },
 ];
 
 /** The link for the page you are on: the longest one that matches (/jobs/add, not /jobs). */
