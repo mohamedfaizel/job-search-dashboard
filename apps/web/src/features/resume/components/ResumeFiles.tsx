@@ -1,16 +1,14 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import type { Profile } from '@jobsearch/data';
-import { RESUME_LANGUAGES, useMyProfile, useUpdateProfile } from '@jobsearch/data';
+import { RESUME_LANGUAGES } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { AutoHide } from '../../../components/AutoHide';
+import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { Field } from '../../profile/components/Field';
 import { useLanguageName } from '../../profile/components/useLanguageName';
 import type { ProfileFormValues } from '../../profile/schema';
-import { profileSchema, profileToForm, toProfileInput } from '../../profile/schema';
+import { profileToForm, toProfileInput } from '../../profile/schema';
 import { OtherResumes } from './OtherResumes';
+import { SaveBar, useProfileSection, WithProfile } from './profileSection';
 import { ResumeSuggestions } from './ResumeSuggestions';
 import { ResumeUpload } from './ResumeUpload';
 
@@ -22,52 +20,20 @@ const card = 'space-y-4 rounded-lg border border-slate-200 bg-white p-5';
  * My profile > Resume; each setting lives in one place only.
  */
 export function ResumeFiles() {
-  const errorText = useErrorText();
-  const t = useTranslations('Resume.files');
-  const profile = useMyProfile();
-  if (profile.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
-  if (profile.isError) {
-    return (
-      <p role="alert" className="text-sm text-red-700">
-        {errorText(profile.error)}
-      </p>
-    );
-  }
-  return <FilesForm profile={profile.data} />;
+  return <WithProfile>{(profile) => <FilesForm profile={profile} />}</WithProfile>;
 }
 
 function FilesForm({ profile }: { profile: Profile }) {
   const errorText = useErrorText();
   const t = useTranslations('Profile');
   const tFiles = useTranslations('Resume.files');
-  const tError = useTranslations('Profile.errors');
   const languageName = useLanguageName();
-  const schema = useMemo(
-    () => profileSchema((key, values) => tError(key as 'date', values as never)),
-    [tError],
-  );
-  const update = useUpdateProfile();
-  const [saved, setSaved] = useState(false);
+  const { form, update, saved, setSaved, onSubmit } = useProfileSection(profile);
   const [copiedToBank, setCopiedToBank] = useState(false);
   const {
     register,
-    handleSubmit,
-    reset,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<ProfileFormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: profileToForm(profile),
-  });
-
-  // The rest of the profile goes along unchanged: the save sends the whole saved profile.
-  const onSubmit = handleSubmit(async (values) => {
-    setSaved(false);
-    const result = await update.mutateAsync(toProfileInput(values)).catch(() => null);
-    if (result) {
-      setSaved(true);
-      reset(profileToForm(result));
-    }
-  });
+  } = form;
 
   const a11y = (name: keyof ProfileFormValues) => ({
     id: name,
@@ -168,27 +134,14 @@ function FilesForm({ profile }: { profile: Profile }) {
             </label>
           </fieldset>
         </section>
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
-          >
-            {isSubmitting ? t('saving') : tFiles('save')}
-          </button>
-          {saved && !isDirty && (
-            <AutoHide key={update.submittedAt}>
-              <p role="status" className="text-sm text-emerald-700">
-                {tFiles('saved')}
-              </p>
-            </AutoHide>
-          )}
-          {update.isError && (
-            <p role="alert" className="text-sm text-red-700">
-              {tFiles('saveFailed', { error: errorText(update.error) })}
-            </p>
-          )}
-        </div>
+        <SaveBar
+          label={tFiles('save')}
+          savedText={tFiles('saved')}
+          busy={isSubmitting}
+          showSaved={saved && !isDirty}
+          submittedAt={update.submittedAt}
+          error={update.isError ? tFiles('saveFailed', { error: errorText(update.error) }) : null}
+        />
       </form>
       <OtherResumes profile={profile} />
     </div>
