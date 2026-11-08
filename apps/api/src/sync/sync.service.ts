@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ApiKeysService } from '../api-keys/api-keys.service';
 import { ArbeitsagenturSyncService } from '../arbeitsagentur/arbeitsagentur-sync.service';
 import { apiError } from '../common/api-error';
 import { CompanyBoardsSyncService } from '../company-boards/company-boards-sync.service';
@@ -99,6 +100,13 @@ function toFilters(input: SyncJobsInput, discoveredAtGte: string | null): JobHun
   };
 }
 
+/** Who runs an import (their token pays), and for which saved search. */
+export interface SyncOptions {
+  userId: number;
+  savedSearchId?: number;
+  scheduled?: boolean;
+}
+
 /** Where a run starts: a fresh search, an "only new" window, or an earlier run's cursor. */
 interface StartPoint {
   startedAt: Date;
@@ -118,12 +126,10 @@ export class SyncService {
     private readonly prisma: PrismaService,
     private readonly arbeitsagentur: ArbeitsagenturSyncService,
     private readonly companyBoards: CompanyBoardsSyncService,
+    private readonly keys: ApiKeysService,
   ) {}
 
-  async sync(
-    input: SyncJobsInput,
-    options: { savedSearchId?: number; scheduled?: boolean } = {},
-  ): Promise<SyncJobsResult> {
+  async sync(input: SyncJobsInput, options: SyncOptions): Promise<SyncJobsResult> {
     // The free German job board has its own, simpler import (no credits, no cursor).
     if (input.source === ImportSource.ARBEITSAGENTUR) {
       return this.arbeitsagentur.sync(input, options);
@@ -131,8 +137,19 @@ export class SyncService {
     if (input.source === ImportSource.COMPANY_BOARDS) {
       return this.companyBoards.sync(input, options);
     }
+    // Each user pays with their own token (Settings > API keys).
+    const token = await this.keys.secret(options.userId, 'JOBHUNTER');
+    if (!token) {
+      throw apiError(
+        BadRequestException,
+        'JOBHUNTER_TOKEN_MISSING',
+        'Add your JobHunter token in Settings > API keys first.',
+      );
+    }
     const key = searchKey(input);
-    const start = input.resume ? await this.resumePoint(key) : await this.freshStart(key, input);
+    const start = input.resume
+      ? await this.resumePoint(key, options.userId)
+      : await this.freshStart(key, input, options.userId);
 
     const result: SyncJobsResult = {
       pages: 0,
@@ -152,12 +169,15 @@ export class SyncService {
     const filters = toFilters(input, start.discoveredAtGte);
     let cursor = start.cursor;
     do {
-      const page = await this.jobHunter.searchJobs({
-        ...filters,
-        limit: input.pageSize,
-        include_total_results: result.pages === 0,
-        ...(cursor ? { cursor } : {}),
-      });
+      const page = await this.jobHunter.searchJobs(
+        {
+          ...filters,
+          limit: input.pageSize,
+          include_total_results: result.pages === 0,
+          ...(cursor ? { cursor } : {}),
+        },
+        token,
+      );
 
       const saved = await this.jobs.upsertMany(page.data.map(mapJobHunterJob));
       result.pages += 1;
@@ -172,6 +192,7 @@ export class SyncService {
     } while (cursor && result.pages < input.maxPages);
 
     result.hasMore = cursor !== null;
+    await this.keys.noteCredits(options.userId, 'JOBHUNTER', result.creditsRemaining);
 
     // Remember the run. Only a complete one (no pages left unfetched) moves the "only new"
     // starting point forward; an incomplete one keeps its cursor so it can be continued.
@@ -207,6 +228,7 @@ export class SyncService {
         discoveredAtGte: start.discoveredAtGte,
         savedSearchId: options.savedSearchId ?? null,
         scheduled: options.scheduled ?? false,
+        userId: options.userId,
       },
     });
 
@@ -216,8 +238,8 @@ export class SyncService {
     return result;
   }
 
-  private async freshStart(key: string, input: SyncJobsInput): Promise<StartPoint> {
-    const newSince = input.onlyNew ? await this.lastCompleteRunStart(key) : null;
+  private async freshStart(key: string, input: SyncJobsInput, userId: number): Promise<StartPoint> {
+    const newSince = input.onlyNew ? await this.lastCompleteRunStart(key, userId) : null;
     return {
       startedAt: new Date(),
       newSince,
@@ -226,9 +248,10 @@ export class SyncService {
     };
   }
 
-  private async resumePoint(key: string): Promise<StartPoint> {
+  // A cursor belongs to the token that fetched it, so you only continue your own imports.
+  private async resumePoint(key: string, userId: number): Promise<StartPoint> {
     const last = await this.prisma.syncRun.findFirst({
-      where: { searchKey: key },
+      where: { searchKey: key, userId },
       orderBy: { id: 'desc' },
     });
     if (!last || last.complete || !last.nextCursor) {
@@ -248,9 +271,9 @@ export class SyncService {
     };
   }
 
-  private async lastCompleteRunStart(key: string): Promise<Date | null> {
+  private async lastCompleteRunStart(key: string, userId: number): Promise<Date | null> {
     const run = await this.prisma.syncRun.findFirst({
-      where: { searchKey: key, complete: true },
+      where: { searchKey: key, complete: true, userId },
       orderBy: { startedAt: 'desc' },
       select: { startedAt: true },
     });

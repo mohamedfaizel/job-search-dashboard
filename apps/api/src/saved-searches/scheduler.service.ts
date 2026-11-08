@@ -8,9 +8,9 @@ import { SavedSearchesService } from './saved-searches.service';
 import { nextRunAfter, startOfDay } from './schedule';
 
 export interface ImportBudget {
-  /** Credits used by every import since midnight (server time). */
+  /** Credits this user's imports used since midnight (server time). */
   used: number;
-  /** DAILY_CREDIT_CAP: scheduled runs stop before going over it. */
+  /** DAILY_CREDIT_CAP, per user: scheduled runs stop before going over it. */
   cap: number;
 }
 
@@ -19,8 +19,8 @@ const formatTime = (date: Date) =>
 
 /**
  * Runs saved searches on their schedule. Every minute it picks the searches whose
- * nextRunAt has passed and imports "only new" jobs for each, unless that could push
- * today's credits over DAILY_CREDIT_CAP. When a run finds new jobs, every user they fit
+ * nextRunAt has passed and imports "only new" jobs for each with its owner's token, unless that
+ * could push the owner's credits today over DAILY_CREDIT_CAP. When a run finds new jobs, every user they fit
  * gets a notification.
  */
 @Injectable()
@@ -51,9 +51,9 @@ export class SchedulerService {
     }
   }
 
-  async budget(now = new Date()): Promise<ImportBudget> {
+  async budget(userId: number, now = new Date()): Promise<ImportBudget> {
     const { _sum } = await this.prisma.syncRun.aggregate({
-      where: { finishedAt: { gte: startOfDay(now) } },
+      where: { userId, finishedAt: { gte: startOfDay(now) } },
       _sum: { creditsCharged: true },
     });
     return { used: _sum.creditsCharged ?? 0, cap: this.cap };
@@ -74,7 +74,7 @@ export class SchedulerService {
         data: { nextRunAt: nextRunAfter(search.schedule, search.runAt, now) },
       });
 
-      const { used, cap } = await this.budget(now);
+      const { used, cap } = await this.budget(search.userId, now);
       // The free sources have no credits to run out of.
       const mostItCanCost = search.source === 'JOBHUNTER' ? search.pageSize * search.maxPages : 0;
       if (used + mostItCanCost > cap) {
@@ -87,7 +87,9 @@ export class SchedulerService {
 
       try {
         const startedAt = new Date();
-        const result = await this.savedSearches.run(search.id, false, { scheduled: true });
+        const result = await this.savedSearches.run(search.userId, search.id, false, {
+          scheduled: true,
+        });
         await this.note(
           search.id,
           `Ran at ${formatTime(now)}: ${result.created} new, ${result.updated} already saved.`,

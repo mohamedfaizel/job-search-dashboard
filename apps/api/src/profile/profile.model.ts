@@ -397,21 +397,11 @@ export class ProfileInput {
 
   @Field({ defaultValue: true })
   @IsBoolean()
-  notifyNewMatches: boolean = true;
-
-  @Field({ defaultValue: true })
-  @IsBoolean()
   fillSavedAnswers: boolean = true;
 
   @Field({ defaultValue: true })
   @IsBoolean()
   showStretches: boolean = true;
-
-  @Field(() => Int, { defaultValue: 60 })
-  @IsInt()
-  @Min(1, { message: 'Pick a Fit % from 1 to 100' })
-  @Max(100, { message: 'Pick a Fit % from 1 to 100' })
-  matchFitMin: number = 60;
 
   @Field({ defaultValue: '' })
   @Transform(trim)
@@ -437,4 +427,18 @@ export class ProfileInput {
   @ValidateNested({ each: true })
   @Type(() => ProfileFieldInput)
   customFields: ProfileFieldInput[] = [];
+}
+
+/** Settings > Notifications. Kept apart from the profile form, so neither overwrites the other. */
+@InputType()
+export class NotificationSettingsInput {
+  @Field()
+  @IsBoolean()
+  notifyNewMatches!: boolean;
+
+  @Field(() => Int)
+  @IsInt()
+  @Min(1, { message: 'Pick a Fit % from 1 to 100' })
+  @Max(100, { message: 'Pick a Fit % from 1 to 100' })
+  matchFitMin!: number;
 }

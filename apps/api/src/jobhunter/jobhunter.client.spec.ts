@@ -20,11 +20,7 @@ afterAll(() => {
   server.close();
 });
 
-function clientWith(token: string | undefined) {
-  return new JobHunterClient(
-    new ConfigService({ JOBHUNTER_API_URL: BASE_URL, JOBHUNTER_API_TOKEN: token }),
-  );
-}
+const client = new JobHunterClient(new ConfigService({ JOBHUNTER_API_URL: BASE_URL }));
 
 describe('JobHunterClient', () => {
   it('sends the token and search body, and returns the response', async () => {
@@ -36,10 +32,7 @@ describe('JobHunterClient', () => {
       }),
     );
 
-    const res = await clientWith('jp_test_123').searchJobs({
-      job_title_or: ['frontend'],
-      limit: 3,
-    });
+    const res = await client.searchJobs({ job_title_or: ['frontend'], limit: 3 }, 'jp_test_123');
 
     expect(seen).toEqual({
       auth: 'Bearer jp_test_123',
@@ -48,14 +41,8 @@ describe('JobHunterClient', () => {
     expect(res.data).toHaveLength(3);
   });
 
-  it('fails clearly when the token is missing', async () => {
-    await expect(clientWith(undefined).searchJobs({})).rejects.toThrow('JOBHUNTER_API_TOKEN');
-  });
-
   it('turns an HTTP error into a ServiceUnavailableException', async () => {
     server.use(http.post(`${BASE_URL}/jobs/search`, () => new HttpResponse(null, { status: 401 })));
-    await expect(clientWith('bad').searchJobs({})).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
-    );
+    await expect(client.searchJobs({}, 'bad')).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 });

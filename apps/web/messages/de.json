@@ -14,6 +14,7 @@
     "tracker": "Bewerbungen",
     "addJobs": "Jobs hinzufügen",
     "profile": "Mein Profil",
+    "settings": "Einstellungen",
     "admin": "Admin",
     "logOut": "Abmelden",
     "loading": "Wird geladen…"
@@ -47,33 +48,7 @@
       "applications": "Bewerbungsangaben",
       "resume": "Lebenslauf",
       "design": "Design",
-      "matcher": "Resume-Matcher",
-      "mail": "E-Mail"
-    },
-    "mail": {
-      "title": "E-Mail",
-      "intro": "Verbinde deine Gmail-Konten, dann liest die App Antworten von Arbeitgebern und schlägt Änderungen in deinen Bewerbungen vor (eine Absage, eine Einladung zum Gespräch, ein Angebot). Du bestätigst jeden Vorschlag.",
-      "loading": "Deine E-Mail-Konten werden geladen…",
-      "loadFailed": "Deine E-Mail-Konten konnten nicht geladen werden: {error}",
-      "none": "Noch kein Gmail-Konto verbunden.",
-      "connect": "Gmail verbinden",
-      "connectAnother": "Weiteres Gmail-Konto verbinden",
-      "notConfigured": "Gmail ist auf diesem Server noch nicht eingerichtet. Trage GOOGLE_CLIENT_ID und GOOGLE_CLIENT_SECRET in deine .env-Datei ein (siehe README).",
-      "disconnect": "Trennen",
-      "disconnectLabel": "{email} trennen",
-      "checkNow": "Jetzt prüfen",
-      "checking": "Wird geprüft…",
-      "checkFailed": "Deine E-Mails konnten nicht geprüft werden: {error}",
-      "checked": "{count, plural, =0 {Keine neuen Vorschläge.} one {1 neuer Vorschlag. Du findest ihn bei deinen Bewerbungen.} other {# neue Vorschläge. Du findest sie bei deinen Bewerbungen.}}",
-      "lastChecked": "Zuletzt geprüft: {date}",
-      "neverChecked": "Noch nicht geprüft",
-      "privacy": "Nur Lesezugriff: Die App kann nie E-Mails senden, ändern oder löschen. Sie sieht die letzten zwei Wochen an, einmal pro Stunde, und speichert nur Absender, Betreff und einen kurzen Ausschnitt von Mails, die zu einem Job passen, auf den du dich beworben hast. Du kannst das Konto jederzeit trennen.",
-      "result": {
-        "connected": "Gmail-Konto verbunden.",
-        "denied": "Du hast den Zugriff nicht erlaubt, deshalb wurde nichts verbunden.",
-        "error": "Das Verbinden von Gmail hat nicht geklappt. Bitte versuche es erneut.",
-        "not-configured": "Gmail ist auf diesem Server noch nicht eingerichtet."
-      }
+      "matcher": "Resume-Matcher"
     },
     "listHint": "Mit Kommas trennen",
     "personal": {
@@ -335,14 +310,6 @@
       "askClaudeHint": "In Claude einfügen: es prüft deinen Lebenslauf wie ein Recruiter und nennt die wichtigsten Korrekturen.",
       "askClaudeBox": "Prüf-Prompt"
     },
-    "notify": {
-      "heading": "Benachrichtigungen",
-      "newMatches": "Sag mir Bescheid, wenn eine geplante Suche neue passende Jobs findet",
-      "newMatchesHint": "Du bekommst eine 🔔-Benachrichtigung mit den besten Jobs und einem Link zu jedem.",
-      "fitMin": "Ein Job passt ab",
-      "fitMinHint": "Sein Fit % muss mindestens so hoch sein.",
-      "fitOption": "{fit} % Fit"
-    },
     "claudeAnswers": {
       "heading": "Antworten für Claude",
       "intro": "Deine Antworten auf Claudes Fragen, für den nächsten Job gemerkt. Bearbeite oder lösche sie.",
@@ -357,6 +324,79 @@
       "editFor": "Deine Antwort bearbeiten auf: {question}",
       "deleteFor": "Deine Antwort löschen auf: {question}",
       "answerFor": "Deine Antwort auf: {question}"
+    }
+  },
+  "Settings": {
+    "title": "Einstellungen",
+    "sections": "Bereiche der Einstellungen",
+    "loading": "Wird geladen…",
+    "tabs": {
+      "keys": "API-Schlüssel",
+      "gmail": "Gmail",
+      "notifications": "Benachrichtigungen"
+    },
+    "keys": {
+      "heading": "API-Schlüssel",
+      "intro": "Deine eigenen Schlüssel für bezahlte Dienste, damit du deine eigenen Credits nutzt. Sie werden verschlüsselt gespeichert, und danach werden nur die letzten 4 Zeichen angezeigt.",
+      "loading": "Deine Schlüssel werden geladen…",
+      "loadFailed": "Deine Schlüssel konnten nicht geladen werden: {error}",
+      "jobhunter": {
+        "name": "JobHunter-Token",
+        "hint": "Wird genutzt, wenn du Jobs von JobHunter importierst oder deine gespeicherten Suchen laufen.",
+        "testHint": "Testen sucht einen einzigen Job und kostet höchstens 1 Credit."
+      },
+      "notSet": "Nicht gesetzt",
+      "saved": "Gespeichert",
+      "credits": "{count, plural, one {1 Credit übrig} other {# Credits übrig}}",
+      "paste": "Füge deinen Token ein",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "cancel": "Abbrechen",
+      "replace": "Ersetzen",
+      "test": "Testen",
+      "testing": "Wird getestet…",
+      "works": "Funktioniert",
+      "testFailed": "Hat nicht funktioniert: {error}",
+      "delete": "Schlüssel löschen",
+      "deleteLabel": "Deinen {name} löschen",
+      "confirmDelete": "Diesen Schlüssel löschen? Importe stoppen, bis du wieder einen hinzufügst.",
+      "saveFailed": "Konnte nicht gespeichert werden: {error}",
+      "masked": "Gespeicherter Schlüssel endet auf {last4}"
+    },
+    "notify": {
+      "heading": "Benachrichtigungen",
+      "newMatches": "Sag mir Bescheid, wenn eine geplante Suche neue passende Jobs findet",
+      "newMatchesHint": "Du bekommst eine 🔔-Benachrichtigung mit den besten Jobs und einem Link zu jedem.",
+      "fitMin": "Ein Job passt ab",
+      "fitMinHint": "Sein Fit % muss mindestens so hoch sein.",
+      "fitOption": "{fit} % Fit",
+      "interview": "Erinnerung an Vorstellungsgespräche",
+      "interviewHint": "Immer an: Die 🔔 erinnert dich am Tag vor einem Gesprächstermin, den du im Interview-Tab eines Jobs eingetragen hast.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert.",
+      "saveFailed": "Konnte nicht gespeichert werden: {error}"
+    },
+    "mail": {
+      "title": "E-Mail",
+      "intro": "Verbinde deine Gmail-Konten, dann liest die App Antworten von Arbeitgebern und schlägt Änderungen in deinen Bewerbungen vor (eine Absage, eine Einladung zum Gespräch, ein Angebot). Du bestätigst jeden Vorschlag.",
+      "loading": "Deine E-Mail-Konten werden geladen…",
+      "loadFailed": "Deine E-Mail-Konten konnten nicht geladen werden: {error}",
+      "none": "Noch kein Gmail-Konto verbunden.",
+      "connect": "Gmail verbinden",
+      "connectAnother": "Weiteres Gmail-Konto verbinden",
+      "notConfigured": "Gmail ist auf diesem Server noch nicht eingerichtet. Trage GOOGLE_CLIENT_ID und GOOGLE_CLIENT_SECRET in deine .env-Datei ein (siehe README).",
+      "disconnect": "Trennen",
+      "disconnectLabel": "{email} trennen",
+      "lastChecked": "Zuletzt geprüft: {date}",
+      "neverChecked": "Noch nicht geprüft",
+      "privacy": "Nur Lesezugriff: Die App kann nie E-Mails senden, ändern oder löschen. Sie sieht die letzten zwei Wochen an, einmal pro Stunde, und speichert nur Absender, Betreff und einen kurzen Ausschnitt von Mails, die zu einem Job passen, auf den du dich beworben hast. Du kannst das Konto jederzeit trennen.",
+      "result": {
+        "connected": "Gmail-Konto verbunden.",
+        "denied": "Du hast den Zugriff nicht erlaubt, deshalb wurde nichts verbunden.",
+        "error": "Das Verbinden von Gmail hat nicht geklappt. Bitte versuche es erneut.",
+        "not-configured": "Gmail ist auf diesem Server noch nicht eingerichtet."
+      }
     }
   },
   "Jobs": {
@@ -1189,12 +1229,18 @@
       "followedUp": "Nachgefasst am {date}",
       "banner": "{count, plural, one {# Bewerbung hat} other {# Bewerbungen haben}} seit einer Woche keine Antwort. Achte unten auf „Nachfassen?“.",
       "error": "Konnte nicht gespeichert werden: {error}"
+    },
+    "gmailCheck": {
+      "checkNow": "Gmail jetzt prüfen",
+      "checking": "Wird geprüft…",
+      "checkFailed": "Deine E-Mails konnten nicht geprüft werden: {error}",
+      "checked": "{count, plural, =0 {Keine neuen Vorschläge.} one {1 neuer Vorschlag.} other {# neue Vorschläge.}}",
+      "connect": "Gmail in den Einstellungen verbinden"
     }
   },
   "AddJobs": {
     "title": "Jobs hinzufügen",
     "loading": "Wird geladen…",
-    "adminOnly": "Nur der Admin kann Jobs hinzufügen oder importieren.",
     "tabsLabel": "Wege, Jobs hinzuzufügen",
     "tabs": {
       "saved": "Gespeicherte Suchen",
@@ -1408,7 +1454,9 @@
       "scheduled": "Geplant",
       "allFetched": "Alles geholt",
       "moreLeft": "Noch mehr da"
-    }
+    },
+    "tokenHint": "Importe von JobHunter nutzen den Token aus deinen Einstellungen, also deine eigenen Credits.",
+    "openSettings": "Einstellungen öffnen"
   },
   "Errors": {
     "NETWORK": "Die API unter {url} ist nicht erreichbar. Läuft sie?",
@@ -1462,7 +1510,9 @@
     "LANGUAGES_LENGTH": "Die Sprachzeile darf höchstens 300 Zeichen lang sein.",
     "ANSWER_LENGTH": "Frage und Antwort müssen je 1 bis {max} Zeichen lang sein.",
     "ANSWER_NOT_FOUND": "Diese gespeicherte Antwort wurde nicht gefunden.",
-    "ANSWERS_INVALID": "Deine Antworten konnten nicht gelesen werden."
+    "ANSWERS_INVALID": "Deine Antworten konnten nicht gelesen werden.",
+    "API_KEY_INVALID": "Das sieht nicht wie ein Schlüssel aus. Füge den ganzen Schlüssel ohne Leerzeichen ein.",
+    "JOBHUNTER_TOKEN_MISSING": "Füge zuerst deinen JobHunter-Token unter Einstellungen › API-Schlüssel hinzu."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",

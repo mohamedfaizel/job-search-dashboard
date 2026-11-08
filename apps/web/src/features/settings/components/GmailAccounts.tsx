@@ -1,9 +1,4 @@
-import {
-  GMAIL_CONNECT_URL,
-  useDisconnectGmail,
-  useGmailStatus,
-  useSyncGmail,
-} from '@jobsearch/data';
+import { GMAIL_CONNECT_URL, useDisconnectGmail, useGmailStatus } from '@jobsearch/data';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -26,13 +21,15 @@ function clearCameBack(): void {
   window.history.replaceState(null, '', url);
 }
 
-/** Connect as many Gmail accounts as you like (read-only) and check them for employer replies. */
+/**
+ * Settings > Gmail: connect as many Gmail accounts as you like (read-only). Checking them for
+ * employer replies happens on the Tracker, next to the suggestions it finds.
+ */
 export function GmailAccounts() {
   const errorText = useErrorText();
-  const t = useTranslations('Profile.mail');
+  const t = useTranslations('Settings.mail');
   const format = useFormatter();
   const status = useGmailStatus();
-  const sync = useSyncGmail();
   const disconnect = useDisconnectGmail();
   const [result] = useState(cameBackWith);
   // After the page has drawn: changing the address while drawing makes Next.js complain.
@@ -126,34 +123,7 @@ export function GmailAccounts() {
             ) : (
               <p className="text-sm text-amber-800">{t('notConfigured')}</p>
             )}
-            {accounts.length > 0 && (
-              <button
-                type="button"
-                disabled={sync.isPending}
-                onClick={() => {
-                  sync.mutate();
-                }}
-                className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-              >
-                {sync.isPending ? t('checking') : t('checkNow')}
-              </button>
-            )}
           </div>
-          {sync.isError && (
-            <p role="alert" className="text-sm text-red-700">
-              {t('checkFailed', { error: errorText(sync.error) })}
-            </p>
-          )}
-          {sync.data && (
-            <div role="status" className="space-y-1 text-sm text-slate-700">
-              <p>{t('checked', { count: sync.data.suggestions })}</p>
-              {sync.data.warnings.map((warning) => (
-                <p key={warning} className="text-red-700">
-                  {warning}
-                </p>
-              ))}
-            </div>
-          )}
         </>
       )}
       <p className="text-xs text-slate-500">{t('privacy')}</p>

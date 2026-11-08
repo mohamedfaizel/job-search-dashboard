@@ -1,5 +1,6 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Roles } from '../auth/auth.decorators';
+import type { SessionUser } from '../auth/auth.decorators';
+import { CurrentUser } from '../auth/auth.decorators';
 import { SyncJobsResult } from '../sync/sync.input';
 import {
   ImportBudget,
@@ -11,8 +12,7 @@ import {
 import { SavedSearchesService } from './saved-searches.service';
 import { SchedulerService } from './scheduler.service';
 
-// Saved searches and imports spend the server's JobHunter credits, so they are admin-only.
-@Roles('ADMIN')
+// Everyone has their own saved searches; their JobHunter imports use their own token.
 @Resolver(() => SavedSearch)
 export class SavedSearchesResolver {
   constructor(
@@ -20,58 +20,72 @@ export class SavedSearchesResolver {
     private readonly scheduler: SchedulerService,
   ) {}
 
-  @Query(() => ImportBudget, { description: "Today's credits used against DAILY_CREDIT_CAP" })
-  importBudget(): Promise<ImportBudget> {
-    return this.scheduler.budget();
+  @Query(() => ImportBudget, { description: "Today's credits you used against DAILY_CREDIT_CAP" })
+  importBudget(@CurrentUser() user: SessionUser): Promise<ImportBudget> {
+    return this.scheduler.budget(user.id);
   }
 
   @Mutation(() => SavedSearch, { description: 'Turn scheduled runs of a saved search on or off' })
   setSavedSearchSchedule(
+    @CurrentUser() user: SessionUser,
     @Args('id', { type: () => Int }) id: number,
     @Args('input') input: ScheduleInput,
   ): Promise<SavedSearch> {
-    return this.service.setSchedule(id, input.schedule, input.runAt);
+    return this.service.setSchedule(user.id, id, input.schedule, input.runAt);
   }
 
   @Query(() => [SavedSearch], {
     description: 'Your saved searches, by name, with their last import',
   })
-  savedSearches(): Promise<SavedSearch[]> {
-    return this.service.list();
+  savedSearches(@CurrentUser() user: SessionUser): Promise<SavedSearch[]> {
+    return this.service.list(user.id);
   }
 
   @Query(() => [SyncRunModel], { description: 'Past imports, newest first' })
   syncRuns(
+    @CurrentUser() user: SessionUser,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('savedSearchId', { type: () => Int, nullable: true }) savedSearchId?: number,
   ): Promise<SyncRunModel[]> {
-    return this.service.history(Math.min(Math.max(limit, 1), 100), savedSearchId ?? undefined);
+    return this.service.history(
+      user.id,
+      Math.min(Math.max(limit, 1), 100),
+      savedSearchId ?? undefined,
+    );
   }
 
   @Mutation(() => SavedSearch)
-  createSavedSearch(@Args('input') input: SavedSearchInput): Promise<SavedSearch> {
-    return this.service.create(input);
+  createSavedSearch(
+    @CurrentUser() user: SessionUser,
+    @Args('input') input: SavedSearchInput,
+  ): Promise<SavedSearch> {
+    return this.service.create(user.id, input);
   }
 
   @Mutation(() => SavedSearch)
   updateSavedSearch(
+    @CurrentUser() user: SessionUser,
     @Args('id', { type: () => Int }) id: number,
     @Args('input') input: SavedSearchInput,
   ): Promise<SavedSearch> {
-    return this.service.update(id, input);
+    return this.service.update(user.id, id, input);
   }
 
   @Mutation(() => Boolean, { description: 'Delete a saved search. Its past imports stay.' })
-  deleteSavedSearch(@Args('id', { type: () => Int }) id: number): Promise<boolean> {
-    return this.service.remove(id);
+  deleteSavedSearch(
+    @CurrentUser() user: SessionUser,
+    @Args('id', { type: () => Int }) id: number,
+  ): Promise<boolean> {
+    return this.service.remove(user.id, id);
   }
 
   @Mutation(() => SyncJobsResult, { description: 'Import from JobHunter with a saved search' })
   runSavedSearch(
+    @CurrentUser() user: SessionUser,
     @Args('id', { type: () => Int }) id: number,
     @Args('resume', { defaultValue: false, description: 'Continue its last import instead' })
     resume: boolean,
   ): Promise<SyncJobsResult> {
-    return this.service.run(id, resume);
+    return this.service.run(user.id, id, resume);
   }
 }

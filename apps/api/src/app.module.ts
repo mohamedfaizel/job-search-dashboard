@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthModule } from './auth/auth.module';
 import { withApiError } from './common/api-error';
 import { GmailModule } from './gmail/gmail.module';
@@ -38,6 +39,7 @@ import { SyncModule } from './sync/sync.module';
     // Runs @Cron jobs, like the saved-search scheduler.
     ScheduleModule.forRoot(),
     PrismaModule,
+    ApiKeysModule,
     AuthModule,
     HealthModule,
     JobsModule,

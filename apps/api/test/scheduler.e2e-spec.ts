@@ -48,12 +48,14 @@ describe('scheduled imports', () => {
   beforeEach(async () => {
     jobHunterStatus = 200;
     await resetDatabase(t.prisma);
+    await seedTestUsers(t.prisma);
   });
 
   /** A saved search (25 jobs × 1 page = up to 25 credits) that was due a minute ago. */
   async function dueSearch(name = 'Frontend') {
     return t.prisma.savedSearch.create({
       data: {
+        userId: 1,
         name,
         titles: ['frontend'],
         schedule: 'DAILY',
@@ -64,7 +66,9 @@ describe('scheduled imports', () => {
   }
 
   it('turns a schedule on with the next run time', async () => {
-    const search = await t.prisma.savedSearch.create({ data: { name: 'Frontend', titles: ['x'] } });
+    const search = await t.prisma.savedSearch.create({
+      data: { userId: 1, name: 'Frontend', titles: ['x'] },
+    });
 
     const res = await t.gql<{ setSavedSearchSchedule: { nextRunAt: string } }>(SET_SCHEDULE, {
       id: search.id,
@@ -98,6 +102,7 @@ describe('scheduled imports', () => {
     const search = await dueSearch();
     await t.prisma.savedSearch.create({
       data: {
+        userId: 1,
         name: 'Not due',
         titles: ['backend'],
         schedule: 'DAILY',
@@ -165,9 +170,7 @@ describe('scheduled imports', () => {
       }
     `;
 
-    beforeEach(async () => {
-      await seedTestUsers(t.prisma);
-    });
+    beforeEach(async () => {});
 
     it('tells each user about the new jobs that fit them, best first', async () => {
       await t.prisma.profile.create({

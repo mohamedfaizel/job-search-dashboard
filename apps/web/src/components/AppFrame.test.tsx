@@ -33,6 +33,7 @@ describe('AppFrame', () => {
       'Tracker',
       'Add jobs',
       'My profile',
+      'Settings',
     ]);
     // /jobs/add is "Add jobs", not "Job posts".
     expect(within(nav).getByRole('link', { name: 'Add jobs' })).toHaveAttribute(
@@ -50,12 +51,16 @@ describe('AppFrame', () => {
     });
   });
 
-  it('hides "Add jobs" from a regular user', async () => {
+  it('shows "Add jobs" and "Settings" to a regular user too', async () => {
     session.user = { ...ADMIN, role: 'USER' };
     renderFrame();
 
     const nav = await screen.findByRole('navigation', { name: 'Main' });
-    expect(within(nav).queryByRole('link', { name: 'Add jobs' })).toBeNull();
+    expect(within(nav).getByRole('link', { name: 'Add jobs' })).toBeVisible();
+    expect(within(nav).getByRole('link', { name: 'Settings' })).toHaveAttribute(
+      'href',
+      '/settings',
+    );
   });
 
   it('sends you to /login when the session has expired', async () => {
@@ -96,7 +101,13 @@ describe('AppFrame', () => {
       within(nav)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Stellenanzeigen', 'Bewerbungen', 'Jobs hinzufügen', 'Mein Profil']);
+    ).toEqual([
+      'Stellenanzeigen',
+      'Bewerbungen',
+      'Jobs hinzufügen',
+      'Mein Profil',
+      'Einstellungen',
+    ]);
     expect(screen.getByRole('button', { name: 'Abmelden' })).toBeInTheDocument();
     // Already in your language: nothing to switch.
     expect(router.refresh).not.toHaveBeenCalled();

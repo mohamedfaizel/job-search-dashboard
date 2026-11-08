@@ -65,8 +65,9 @@ export class SavedSearchesService {
     private readonly sync: SyncService,
   ) {}
 
-  async list(): Promise<SavedSearch[]> {
+  async list(userId: number): Promise<SavedSearch[]> {
     const rows = await this.prisma.savedSearch.findMany({
+      where: { userId },
       orderBy: { name: 'asc' },
       include: { runs: { orderBy: { id: 'desc' }, take: 1, include: withSearchName } },
     });
@@ -76,9 +77,9 @@ export class SavedSearchesService {
     }));
   }
 
-  async history(limit: number, savedSearchId?: number): Promise<SyncRunModel[]> {
+  async history(userId: number, limit: number, savedSearchId?: number): Promise<SyncRunModel[]> {
     const runs = await this.prisma.syncRun.findMany({
-      where: savedSearchId === undefined ? {} : { savedSearchId },
+      where: savedSearchId === undefined ? { userId } : { userId, savedSearchId },
       orderBy: { id: 'desc' },
       take: limit,
       include: withSearchName,
@@ -86,19 +87,19 @@ export class SavedSearchesService {
     return runs.map(toRunModel);
   }
 
-  async create(input: SavedSearchInput): Promise<SavedSearch> {
+  async create(userId: number, input: SavedSearchInput): Promise<SavedSearch> {
     const row = await this.withUniqueName(input.name, () =>
-      this.prisma.savedSearch.create({ data: toData(input) }),
+      this.prisma.savedSearch.create({ data: { ...toData(input), userId } }),
     );
     return { ...row, lastRun: null };
   }
 
-  async update(id: number, input: SavedSearchInput): Promise<SavedSearch> {
-    await this.findRow(id);
+  async update(userId: number, id: number, input: SavedSearchInput): Promise<SavedSearch> {
+    await this.findRow(userId, id);
     await this.withUniqueName(input.name, () =>
       this.prisma.savedSearch.update({ where: { id }, data: toData(input) }),
     );
-    const updated = (await this.list()).find((s) => s.id === id);
+    const updated = (await this.list(userId)).find((s) => s.id === id);
     if (!updated)
       throw apiError(NotFoundException, 'SAVED_SEARCH_NOT_FOUND', `Saved search ${id} not found`, {
         id,
@@ -106,8 +107,13 @@ export class SavedSearchesService {
     return updated;
   }
 
-  async setSchedule(id: number, schedule: ScheduleFrequency, runAt: string): Promise<SavedSearch> {
-    await this.findRow(id);
+  async setSchedule(
+    userId: number,
+    id: number,
+    schedule: ScheduleFrequency,
+    runAt: string,
+  ): Promise<SavedSearch> {
+    await this.findRow(userId, id);
     await this.prisma.savedSearch.update({
       where: { id },
       data: {
@@ -117,7 +123,7 @@ export class SavedSearchesService {
         scheduleNote: null,
       },
     });
-    const updated = (await this.list()).find((s) => s.id === id);
+    const updated = (await this.list(userId)).find((s) => s.id === id);
     if (!updated)
       throw apiError(NotFoundException, 'SAVED_SEARCH_NOT_FOUND', `Saved search ${id} not found`, {
         id,
@@ -125,19 +131,20 @@ export class SavedSearchesService {
     return updated;
   }
 
-  async remove(id: number): Promise<boolean> {
-    await this.findRow(id);
+  async remove(userId: number, id: number): Promise<boolean> {
+    await this.findRow(userId, id);
     // Its imports stay in the history; their link is cleared (onDelete: SetNull).
     await this.prisma.savedSearch.delete({ where: { id } });
     return true;
   }
 
   async run(
+    userId: number,
     id: number,
     resume: boolean,
     options: { scheduled?: boolean } = {},
   ): Promise<SyncJobsResult> {
-    const row = await this.findRow(id);
+    const row = await this.findRow(userId, id);
     const input: SyncJobsInput = {
       source: row.source,
       boards: row.boards,
@@ -157,11 +164,17 @@ export class SavedSearchesService {
       onlyNew: row.onlyNew,
       resume,
     };
-    return this.sync.sync(input, { savedSearchId: row.id, scheduled: options.scheduled ?? false });
+    // The search's owner pays, also when the scheduler starts it.
+    return this.sync.sync(input, {
+      userId: row.userId,
+      savedSearchId: row.id,
+      scheduled: options.scheduled ?? false,
+    });
   }
 
-  private async findRow(id: number): Promise<SavedSearchRow> {
-    const row = await this.prisma.savedSearch.findUnique({ where: { id } });
+  /** Only your own searches: someone else's is "not found". */
+  private async findRow(userId: number, id: number): Promise<SavedSearchRow> {
+    const row = await this.prisma.savedSearch.findFirst({ where: { id, userId } });
     if (!row)
       throw apiError(NotFoundException, 'SAVED_SEARCH_NOT_FOUND', `Saved search ${id} not found`, {
         id,
@@ -173,7 +186,7 @@ export class SavedSearchesService {
     try {
       return await write();
     } catch (error) {
-      // P2002 = unique constraint failed: another search already has this name.
+      // P2002 = unique constraint failed: another of your searches already has this name.
       if ((error as { code?: string }).code === 'P2002') {
         throw apiError(
           BadRequestException,

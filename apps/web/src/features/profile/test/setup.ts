@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import {
+  apiKeys,
   gmail,
   myDesign,
   otherResumes,
@@ -19,6 +20,7 @@ beforeAll(() => {
 afterEach(() => {
   server.resetHandlers();
   requests.length = 0;
+  apiKeys.length = 0;
   syncs.length = 0;
   otherResumes.length = 0;
   savedAnswers.length = 0;

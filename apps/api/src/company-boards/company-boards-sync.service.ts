@@ -76,7 +76,7 @@ export class CompanyBoardsSyncService {
 
   async sync(
     input: SyncJobsInput,
-    options: { savedSearchId?: number; scheduled?: boolean } = {},
+    options: { userId?: number; savedSearchId?: number; scheduled?: boolean } = {},
   ): Promise<SyncJobsResult> {
     if (input.resume) {
       throw apiError(
@@ -150,6 +150,7 @@ export class CompanyBoardsSyncService {
         discoveredAtGte: null,
         savedSearchId: options.savedSearchId ?? null,
         scheduled: options.scheduled ?? false,
+        userId: options.userId ?? null,
       },
     });
 

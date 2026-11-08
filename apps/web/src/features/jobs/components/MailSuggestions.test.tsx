@@ -6,7 +6,7 @@ import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
 import { Intl } from '@/test/intl';
 import { JOBS } from '../test/fixtures';
-import { applications, mailSuggestions, requests, server } from '../test/server';
+import { applications, gmailAccounts, mailSuggestions, requests, server } from '../test/server';
 import { TrackerPage } from '../Tracker';
 
 const [FRONTEND] = JOBS as [(typeof JOBS)[number]];
@@ -117,5 +117,25 @@ describe('email suggestions on the tracker', () => {
     expect(
       within(region).getByRole('button', { name: /nach Abgesagt verschieben/ }),
     ).toBeInTheDocument();
+  });
+
+  it('checks Gmail now from the Tracker and says what it found', async () => {
+    Object.assign(gmailAccounts, { configured: true, count: 1, found: 2 });
+    const user = userEvent.setup();
+    renderTracker();
+
+    await user.click(await screen.findByRole('button', { name: 'Check Gmail now' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('2 new suggestions.');
+    expect(requests).toContainEqual({ operation: 'SyncGmail', variables: {} });
+  });
+
+  it('links to Settings when no Gmail account is connected yet', async () => {
+    gmailAccounts.configured = true;
+    renderTracker();
+    expect(await screen.findByRole('link', { name: 'Connect Gmail in Settings' })).toHaveAttribute(
+      'href',
+      '/settings?tab=gmail',
+    );
   });
 });

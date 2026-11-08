@@ -11,6 +11,7 @@ import {
   tableSettings,
   jobResume,
   mailSuggestions,
+  gmailAccounts,
   haveTerms,
   jobLanguages,
   savedAnswers,
@@ -36,6 +37,7 @@ afterEach(() => {
   hiddenIds.clear();
   applications.length = 0;
   mailSuggestions.length = 0;
+  Object.assign(gmailAccounts, { configured: false, count: 0, found: 0 });
   applyQueue.length = 0;
   removedTerms.length = 0;
   haveTerms.length = 0;

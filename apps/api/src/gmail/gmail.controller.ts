@@ -9,7 +9,7 @@ import { makeState, readState } from './oauth-state';
 
 /**
  * The two browser steps of "Connect Gmail": /gmail/connect sends you to Google, Google sends you
- * back to /gmail/callback, and from there you land on My profile with the result in the address.
+ * back to /gmail/callback, and from there you land on Settings > Gmail with the result in the address.
  */
 @Controller('gmail')
 export class GmailController {
@@ -31,7 +31,7 @@ export class GmailController {
 
   private back(result: string): string {
     const web = this.config.get<string>('WEB_URL') || 'http://localhost:3001';
-    return `${web}/profile?gmail=${result}`;
+    return `${web}/settings?gmail=${result}`;
   }
 
   @Get('connect')
@@ -55,7 +55,7 @@ export class GmailController {
     res.redirect(await this.finish(code, state, error));
   }
 
-  /** Where to send the browser afterwards: the profile page, with the result in the address. */
+  /** Where to send the browser afterwards: Settings > Gmail, with the result in the address. */
   private async finish(
     code: string | undefined,
     state: string | undefined,

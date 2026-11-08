@@ -2,10 +2,9 @@
 
 import { useMe, useMyProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
 import { DocumentDesign } from './components/DocumentDesign';
-import { GmailAccounts } from './components/GmailAccounts';
 import { OtherResumes } from './components/OtherResumes';
 import type { ProfileTab } from './components/ProfileForm';
 import { ProfileForm } from './components/ProfileForm';
@@ -13,7 +12,7 @@ import { ResumeMatcherStatus } from './components/ResumeMatcherStatus';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
 
-const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume', 'design', 'mail', 'matcher'];
+const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'resume', 'design', 'matcher'];
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
@@ -38,14 +37,22 @@ export function ProfilePage() {
   const tabs: TabItem<ProfileTab>[] = TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) }));
   const { data: profile, isPending, error } = useMyProfile();
   const { data: me } = useMe();
-  // Coming back from Google's sign-in (?gmail=...) opens the Email tab to show the result.
-  // A link can open a tab too (?tab=matcher, from the job popup's AI score).
+  // A link can open a tab (?tab=matcher, from the job popup's AI score).
   const [tab, setTab] = useState<ProfileTab>(() => {
     if (typeof window === 'undefined') return savedTab();
     const params = new URLSearchParams(window.location.search);
-    if (params.has('gmail')) return 'mail';
     return TAB_IDS.find((id) => id === params.get('tab')) ?? savedTab();
   });
+  // Email moved to Settings: an old link (?tab=mail, ?gmail=...) goes there.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'mail' || params.has('gmail')) {
+      const gmail = params.get('gmail');
+      window.location.replace(
+        `/settings?tab=gmail${gmail ? `&gmail=${encodeURIComponent(gmail)}` : ''}`,
+      );
+    }
+  }, []);
 
   const selectTab = (next: ProfileTab) => {
     setTab(next);
@@ -97,8 +104,6 @@ export function ProfilePage() {
               <div hidden={tab !== 'design'}>
                 <DocumentDesign />
               </div>
-              {/* Only while open: it asks the server about Gmail, which other tabs don't need. */}
-              {tab === 'mail' && <GmailAccounts />}
               <div hidden={tab !== 'matcher'}>
                 <ResumeMatcherStatus />
               </div>

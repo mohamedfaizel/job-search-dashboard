@@ -71,11 +71,15 @@ describe('App tabs', () => {
     }
   });
 
-  it('tells a regular user that only the admin can add jobs', async () => {
+  it('lets a regular user add jobs too, with their own token', async () => {
     session.user = { ...session.user, role: 'USER' };
     renderWithData(<App />);
 
-    expect(await screen.findByText('Only the admin can add or import jobs.')).toBeInTheDocument();
-    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(await screen.findByText(/use the token in your Settings/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open Settings' })).toHaveAttribute(
+      'href',
+      '/settings',
+    );
+    expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
   });
 });

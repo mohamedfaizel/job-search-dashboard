@@ -2,6 +2,7 @@
 
 import type { SavedSearch } from '@jobsearch/data';
 import { useMe, useSavedSearches } from '@jobsearch/data';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
@@ -13,10 +14,13 @@ import { Tabs } from './components/Tabs';
 
 type TabId = 'saved' | 'import' | 'manual';
 
-/** Add jobs: saved searches, imports from JobHunter and adding a job by hand. */
+/**
+ * Add jobs: saved searches, imports from JobHunter and adding a job by hand. Anyone can add jobs;
+ * JobHunter imports use the token in your own Settings.
+ */
 export function AddJobsPage() {
   const errorText = useErrorText();
-  const { data: me, isPending, error } = useMe();
+  const { isPending, error } = useMe();
   const t = useTranslations('AddJobs');
   if (isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
   if (error) {
@@ -24,16 +28,6 @@ export function AddJobsPage() {
       <p role="alert" className="text-sm text-red-700">
         {errorText(error)}
       </p>
-    );
-  }
-  // Imports spend the server's JobHunter credits, so only the admin may add jobs. The API checks
-  // this too; here we just say so instead of showing forms that would fail.
-  if (me?.role !== 'ADMIN') {
-    return (
-      <section className="mx-auto max-w-xl rounded-lg border border-slate-200 bg-white p-6">
-        <h1 className="text-lg font-semibold">{t('title')}</h1>
-        <p className="mt-2 text-sm text-slate-600">{t('adminOnly')}</p>
-      </section>
     );
   }
   return <AddJobs />;
@@ -49,9 +43,17 @@ function AddJobs() {
 
   return (
     <section aria-labelledby="add-jobs-title" className="space-y-6">
-      <h1 id="add-jobs-title" className="text-xl font-semibold text-slate-900">
-        {t('title')}
-      </h1>
+      <div>
+        <h1 id="add-jobs-title" className="text-xl font-semibold text-slate-900">
+          {t('title')}
+        </h1>
+        <p className="text-sm text-slate-600">
+          {t('tokenHint')}{' '}
+          <Link href="/settings" className="text-brand-700 underline">
+            {t('openSettings')}
+          </Link>
+        </p>
+      </div>
       <Tabs
         label={t('tabsLabel')}
         selected={tab}

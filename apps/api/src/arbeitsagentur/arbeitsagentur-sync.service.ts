@@ -62,7 +62,7 @@ export class ArbeitsagenturSyncService {
 
   async sync(
     input: SyncJobsInput,
-    options: { savedSearchId?: number; scheduled?: boolean } = {},
+    options: { userId?: number; savedSearchId?: number; scheduled?: boolean } = {},
   ): Promise<SyncJobsResult> {
     const key = arbeitsagenturKey(input);
     const resuming = input.resume ? await this.resumePoint(key) : null;
@@ -183,6 +183,7 @@ export class ArbeitsagenturSyncService {
         discoveredAtGte: newSince ? newSince.toISOString() : null,
         savedSearchId: options.savedSearchId ?? null,
         scheduled: options.scheduled ?? false,
+        userId: options.userId ?? null,
       },
     });
 
