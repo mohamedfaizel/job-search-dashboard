@@ -274,7 +274,7 @@ The resume and cover letter you save for a job download as PDFs in the design yo
   mode, to fit your page limit. _Back to the template's own_ undoes them.
 - **Cover letters:** DIN 5008 (the German business letter: address field, date on the right,
   bold subject) for German letters, Modern otherwise, or one of them always.
-- **Preview PDF** shows a sample in each template with your name and colour.
+- **Templates** are small buttons on the Look tab; the PDF next to them shows your resume in the one you pick.
 - **My own Word file:** upload your master resume as a `.docx` and it becomes a template too.
   Everything above your first section heading (name, contact, photo) stays exactly as in your
   file; each heading, job, bullet and paragraph below copies the formatting of the matching

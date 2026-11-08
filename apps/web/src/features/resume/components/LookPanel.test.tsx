@@ -94,13 +94,11 @@ describe('Look tab', () => {
     );
   });
 
-  it('links a sample PDF in your colours for each template', async () => {
-    const { user } = await renderLook();
-    await user.click(screen.getByRole('radio', { name: 'Teal' }));
-    expect(screen.getByRole('link', { name: 'Preview Compact (PDF)' })).toHaveAttribute(
-      'href',
-      expect.stringContaining('/documents/preview/resume.pdf?template=compact&accent=0E7C66'),
-    );
+  it('shows the templates as small chips, without sample links or descriptions', async () => {
+    await renderLook();
+    expect(screen.getByRole('radio', { name: 'Compact' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Preview PDF/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('Small.')).not.toBeInTheDocument();
   });
 
   it('says how to start the renderer when it is not running', async () => {
@@ -134,6 +132,7 @@ describe('Look tab', () => {
   it('makes My design from Claude’s reply and makes it your default template', async () => {
     const { user, onSaved } = await renderLook();
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    await user.click(screen.getByText('Make my own design'));
 
     await user.click(screen.getByRole('button', { name: 'Copy design prompt and open Claude ↗' }));
     expect(await navigator.clipboard.readText()).toBe(

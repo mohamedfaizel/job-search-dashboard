@@ -42,48 +42,37 @@ const bold = (chunks: ReactNode) => <span className="font-medium text-slate-800"
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
-/** Template choice as a radio card, with a link to a sample PDF in your colours. */
-function TemplateCard({
+/**
+ * Template choice as a small chip: the name only. The PDF next to it shows the look, and the
+ * description is the tooltip.
+ */
+function TemplateChip({
   template,
   checked,
-  previewUrl,
   onChoose,
 }: {
   template: DocumentTemplate;
   checked: boolean;
-  previewUrl: string;
   onChoose: () => void;
 }) {
-  const t = useTranslations('Resume.look');
-  const id = useId();
   return (
-    <div
-      className={`rounded-lg border p-3 ${checked ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200'}`}
+    <label
+      title={template.description}
+      className={`flex cursor-pointer items-center justify-center rounded-md border px-2 py-1.5 text-center text-sm font-medium has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500 ${
+        checked
+          ? 'border-brand-600 bg-brand-600 text-white'
+          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+      }`}
     >
-      <div className="flex items-start gap-2">
-        <input
-          id={id}
-          type="radio"
-          name="resume-template"
-          checked={checked}
-          onChange={onChoose}
-          className="mt-1"
-        />
-        <label htmlFor={id} className="min-w-0 flex-1 cursor-pointer">
-          <span className="block text-sm font-medium text-slate-900">{template.name}</span>
-          <span className="block text-xs text-slate-600">{template.description}</span>
-        </label>
-      </div>
-      <a
-        href={previewUrl}
-        target="_blank"
-        rel="noreferrer"
-        className={`${LINK} mt-2 inline-block pl-6`}
-        aria-label={t('previewLabel', { name: template.name })}
-      >
-        {t('preview')}
-      </a>
-    </div>
+      <input
+        type="radio"
+        name="resume-template"
+        checked={checked}
+        onChange={onChoose}
+        className="sr-only"
+      />
+      {template.name}
+    </label>
   );
 }
 
@@ -254,14 +243,6 @@ function MyDesignCard({ saved, onSaved }: { saved: DocumentStyle; onSaved: () =>
           </p>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <a
-            href={documentPreviewUrl('resume', { template: 'design' })}
-            target="_blank"
-            rel="noreferrer"
-            className={LINK}
-          >
-            {t('myDesignPreview')}
-          </a>
           <button
             type="button"
             className={BUTTON}
@@ -287,11 +268,12 @@ function MyDesignCard({ saved, onSaved }: { saved: DocumentStyle; onSaved: () =>
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-brand-200 bg-brand-50/40 p-4">
-      <div className="space-y-1">
-        <h3 className="text-sm font-semibold text-slate-900">{t('myDesignMake')}</h3>
-        <p className="text-sm text-slate-600">{t('myDesignIntro')}</p>
-      </div>
+    // Closed until you want it (or open while making it again), so the tab stays short.
+    <details open={redo} className="space-y-3 rounded-lg border border-slate-200 px-3 py-2">
+      <summary className="cursor-pointer text-sm font-medium text-slate-800">
+        {t('myDesignMake')}
+      </summary>
+      <p className="mt-2 text-sm text-slate-600">{t('myDesignIntro')}</p>
       <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700">
         <li>{t('myDesignStep1')}</li>
         <li>{t('myDesignStep2')}</li>
@@ -364,7 +346,7 @@ function MyDesignCard({ saved, onSaved }: { saved: DocumentStyle; onSaved: () =>
           </p>
         )}
       </div>
-    </div>
+    </details>
   );
 }
 
@@ -639,13 +621,12 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-slate-700">{t('template')}</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 xl:grid-cols-4">
           {data?.resumeTemplates.map((template) => (
-            <TemplateCard
+            <TemplateChip
               key={template.id}
               template={template}
               checked={draft.resumeTemplate === template.id}
-              previewUrl={documentPreviewUrl('resume', { template: template.id, ...look })}
               onChoose={() => {
                 change({ resumeTemplate: template.id });
               }}

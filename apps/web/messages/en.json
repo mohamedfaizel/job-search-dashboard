@@ -459,8 +459,6 @@
       "rendererOff": "The PDF renderer isn’t running, so downloads are plain PDFs for now. Start it with",
       "rendererMissing": "PDF templates are switched off: set PDF_RENDERER_URL in .env, then start the renderer with",
       "template": "Resume template",
-      "preview": "Preview PDF ↗",
-      "previewLabel": "Preview {name} (PDF)",
       "colour": "Accent colour",
       "ownColour": "Your own colour",
       "swatches": {
@@ -504,7 +502,6 @@
       "myDesignTitle": "My design",
       "myDesignTook": "What My design took from your resume",
       "myDesignTwoColumns": "Your resume has two columns. My design puts everything in one column, because applicant tracking systems read two columns in the wrong order.",
-      "myDesignPreview": "Preview PDF ↗",
       "myDesignRedo": "Make it again",
       "myDesignDelete": "Delete",
       "myDesignFont": {

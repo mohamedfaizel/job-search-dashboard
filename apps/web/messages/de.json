@@ -459,8 +459,6 @@
       "rendererOff": "Der PDF-Renderer läuft nicht, darum sind Downloads vorerst einfache PDFs. Starte ihn mit",
       "rendererMissing": "PDF-Vorlagen sind aus: setze PDF_RENDERER_URL in .env und starte den Renderer mit",
       "template": "Lebenslauf-Vorlage",
-      "preview": "PDF-Vorschau ↗",
-      "previewLabel": "Vorschau von {name} (PDF)",
       "colour": "Akzentfarbe",
       "ownColour": "Eigene Farbe",
       "swatches": {
@@ -504,7 +502,6 @@
       "myDesignTitle": "Mein Design",
       "myDesignTook": "Was Mein Design aus deinem Lebenslauf übernommen hat",
       "myDesignTwoColumns": "Dein Lebenslauf hat zwei Spalten. Mein Design setzt alles in eine Spalte, weil Bewerbermanagementsysteme zwei Spalten in falscher Reihenfolge lesen.",
-      "myDesignPreview": "PDF-Vorschau ↗",
       "myDesignRedo": "Neu erstellen",
       "myDesignDelete": "Löschen",
       "myDesignFont": {
