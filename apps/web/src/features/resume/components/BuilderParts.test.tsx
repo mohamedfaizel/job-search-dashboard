@@ -132,14 +132,14 @@ describe('Resume builder parts', () => {
     const user = await renderBuilder();
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
     const write = vi.spyOn(navigator.clipboard, 'writeText');
-    await user.click(screen.getByText('Read my resume into sections again'));
+    await user.click(screen.getByRole('button', { name: /Sort with my AI chat/ }));
     await user.click(screen.getByRole('button', { name: 'Copy prompt and open Claude' }));
     expect(await screen.findByText('Copied. Paste it into Claude.')).toBeInTheDocument();
     expect(write).toHaveBeenCalledWith('Please put my resume into the layout');
     expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
 
     await user.type(screen.getByRole('textbox', { name: 'Claude’s reply' }), '# Ada');
-    await user.click(screen.getByRole('button', { name: 'Read the reply' }));
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
     expect(requests).toContainEqual({
       operation: 'RestartResumeBuild',
       variables: { language: 'en', reply: '# Ada' },
@@ -149,7 +149,6 @@ describe('Resume builder parts', () => {
 
   it('starts again from My profile only after you confirm', async () => {
     const user = await renderBuilder();
-    await user.click(screen.getByText('Read my resume into sections again'));
     await user.click(screen.getByRole('button', { name: 'Start again from My profile' }));
     const confirm = screen.getByRole('alertdialog', { name: 'Start again from My profile' });
     await user.click(within(confirm).getByRole('button', { name: 'Cancel' }));

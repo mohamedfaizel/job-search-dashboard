@@ -124,6 +124,21 @@ export function mentions(text: string, term: string): boolean {
 const SKILLS_TITLE =
   /^(skills|core skills|key skills|technical skills|core competencies|competencies|kenntnisse|fähigkeiten|kompetenzen|fachkenntnisse|skills (&|und) kompetenzen)$/i;
 
+/** True for a Skills section by its title, in the languages the app supports. */
+export const isSkillsSection = (title: string) => SKILLS_TITLE.test(title.trim());
+
+/** "Frontend: React, Vue" or "**Frontend**: React" → label and list; no label gives all as list. */
+export function splitSkill(text: string): { label: string; list: string } {
+  const match = /^\s*(?:\*\*)?([^:*]{1,40}?)(?:\*\*)?\s*:(?:\*\*)?\s+(.+)$/.exec(text);
+  return match
+    ? { label: (match[1] ?? '').trim(), list: match[2] ?? '' }
+    : { label: '', list: text };
+}
+
+/** Back to one line of text: "Label: list", or just the list when there is no label. */
+export const joinSkill = (label: string, list: string) =>
+  label.trim() ? `${label.trim()}: ${list}` : list;
+
 /**
  * Adds a skill you have to the Skills section: as a new line in its first list, or in a new
  * Skills section when there is none. `title` names the new section.

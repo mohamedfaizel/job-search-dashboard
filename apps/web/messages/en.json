@@ -401,7 +401,8 @@
     "blockKind": {
       "entry": "Job, degree or project",
       "bullets": "Bullet list",
-      "paragraph": "Text"
+      "paragraph": "Text",
+      "skillRow": "Skills row"
     },
     "paragraph": "Text",
     "paragraphPlaceholder": "A few sentences about you…",
@@ -497,23 +498,28 @@
       "add": "Add paragraph"
     },
     "readAgain": {
-      "title": "Read my resume into sections again",
       "outOfDate": "Your resume on My profile changed (a new upload?). Read it into sections again, or keep the builder’s version?",
       "readNew": "Read the new resume",
       "keepMine": "Keep the builder’s version",
-      "fromProfile": "Start again from the resume text on My profile. Sections are found by their titles.",
-      "fromProfileButton": "Start again from My profile",
-      "confirm": "This replaces what you see here. Undo brings it back.",
-      "confirmYes": "Replace",
-      "cancel": "Cancel",
-      "withAi": "Better: your AI chat sorts jobs, dates and bullets into the right places without changing a word. Copy the prompt, then paste {ai}’s reply here.",
       "copyPrompt": "Copy prompt and open {ai}",
       "gettingPrompt": "Getting the prompt…",
       "copied": "Copied. Paste it into {ai}.",
       "copyFailed": "Couldn’t copy. Allow clipboard access and try again.",
       "paste": "{ai}’s reply",
-      "readReply": "Read the reply",
-      "reading": "Reading…"
+      "reading": "Reading…",
+      "title": "Resume source",
+      "startAgain": "Start again from My profile",
+      "sortWithAi": "Sort with my AI chat",
+      "confirm": "This replaces what you see here. Undo brings it back.",
+      "yes": "Replace",
+      "no": "Cancel",
+      "step1": "Copy the prompt",
+      "step2": "Paste {ai}’s reply",
+      "step3": "Apply it",
+      "pasteClipboard": "Paste from clipboard",
+      "apply": "Apply",
+      "clipboardFailed": "Couldn’t read the clipboard. Paste into the box with Ctrl+V.",
+      "stepHint": "Your AI chat sorts jobs, dates and bullets into the right places without changing a word."
     },
     "tabs": {
       "edit": "Edit",
@@ -695,6 +701,22 @@
       "achievementsHint": "True lines from your achievements bank. Add one to your latest job.",
       "addBullet": "Add",
       "addBulletLabel": "Add to your latest job: {line}"
+    },
+    "skillLabel": "Skills label",
+    "skillLabelPlaceholder": "Frontend",
+    "skillList": "Skills list",
+    "skillListPlaceholder": "React, Next.js, Vue 3",
+    "format": {
+      "label": "Format text",
+      "bold": "Bold",
+      "italic": "Italic",
+      "link": "Link",
+      "clear": "Clear formatting",
+      "address": "Link address",
+      "addLink": "Add the link",
+      "cancel": "Cancel",
+      "hint": "Select text, then format it. Ctrl+B and Ctrl+I work too.",
+      "hintIdle": "Click in a field to format its text."
     }
   },
   "Jobs": {

@@ -401,7 +401,8 @@
     "blockKind": {
       "entry": "Stelle, Abschluss oder Projekt",
       "bullets": "Aufzählung",
-      "paragraph": "Text"
+      "paragraph": "Text",
+      "skillRow": "Kenntnis-Zeile"
     },
     "paragraph": "Text",
     "paragraphPlaceholder": "Ein paar Sätze über dich…",
@@ -497,23 +498,28 @@
       "add": "Absatz hinzufügen"
     },
     "readAgain": {
-      "title": "Lebenslauf neu in Abschnitte einlesen",
       "outOfDate": "Dein Lebenslauf in Mein Profil hat sich geändert (neuer Upload?). Neu in Abschnitte einlesen oder die Version aus dem Editor behalten?",
       "readNew": "Neuen Lebenslauf einlesen",
       "keepMine": "Version aus dem Editor behalten",
-      "fromProfile": "Neu beginnen mit dem Lebenslauf-Text aus Mein Profil. Abschnitte werden an ihren Titeln erkannt.",
-      "fromProfileButton": "Neu aus Mein Profil",
-      "confirm": "Das ersetzt, was du hier siehst. Mit Rückgängig holst du es zurück.",
-      "confirmYes": "Ersetzen",
-      "cancel": "Abbrechen",
-      "withAi": "Besser: Dein KI-Chat sortiert Stellen, Zeiträume und Punkte richtig ein, ohne ein Wort zu ändern. Kopiere den Prompt und füge dann die Antwort von {ai} hier ein.",
       "copyPrompt": "Prompt kopieren und {ai} öffnen",
       "gettingPrompt": "Prompt wird geholt…",
       "copied": "Kopiert. Füge ihn in {ai} ein.",
       "copyFailed": "Kopieren ging nicht. Erlaube den Zugriff auf die Zwischenablage und versuch es erneut.",
       "paste": "Antwort von {ai}",
-      "readReply": "Antwort einlesen",
-      "reading": "Wird eingelesen…"
+      "reading": "Wird eingelesen…",
+      "title": "Quelle des Lebenslaufs",
+      "startAgain": "Neu aus Mein Profil starten",
+      "sortWithAi": "Mit meinem KI-Chat sortieren",
+      "confirm": "Das ersetzt, was du hier siehst. Rückgängig bringt es zurück.",
+      "yes": "Ersetzen",
+      "no": "Abbrechen",
+      "step1": "Prompt kopieren",
+      "step2": "Antwort von {ai} einfügen",
+      "step3": "Übernehmen",
+      "pasteClipboard": "Aus Zwischenablage einfügen",
+      "apply": "Übernehmen",
+      "clipboardFailed": "Zwischenablage nicht lesbar. Füge den Text mit Strg+V in das Feld ein.",
+      "stepHint": "Dein KI-Chat sortiert Stellen, Daten und Punkte an die richtigen Stellen, ohne ein Wort zu ändern."
     },
     "tabs": {
       "edit": "Bearbeiten",
@@ -695,6 +701,22 @@
       "achievementsHint": "Wahre Zeilen aus deiner Erfolgs-Sammlung. Füge eine zu deiner letzten Stelle hinzu.",
       "addBullet": "Hinzufügen",
       "addBulletLabel": "Zu deiner letzten Stelle hinzufügen: {line}"
+    },
+    "skillLabel": "Kenntnis-Label",
+    "skillLabelPlaceholder": "Frontend",
+    "skillList": "Kenntnis-Liste",
+    "skillListPlaceholder": "React, Next.js, Vue 3",
+    "format": {
+      "label": "Text formatieren",
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "link": "Link",
+      "clear": "Formatierung entfernen",
+      "address": "Link-Adresse",
+      "addLink": "Link hinzufügen",
+      "cancel": "Abbrechen",
+      "hint": "Text markieren, dann formatieren. Strg+B und Strg+I gehen auch.",
+      "hintIdle": "Klicke in ein Feld, um den Text zu formatieren."
     }
   },
   "Jobs": {

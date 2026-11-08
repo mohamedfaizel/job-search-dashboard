@@ -16,12 +16,13 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
 import type { TabItem } from '../profile/components/TabList';
 import { TabList } from '../profile/components/TabList';
 import { useLanguageName } from '../profile/components/useLanguageName';
 import { CheckPanel } from './components/CheckPanel';
+import { FormatBar } from './components/FormatBar';
 import { HeaderCard } from './components/HeaderCard';
 import { JobMatchPanel } from './components/JobMatchPanel';
 import { LetterPanel } from './components/LetterPanel';
@@ -233,6 +234,7 @@ function Builder({
   const [letterVersion, setLetterVersion] = useState('first');
   const [outOfDate, setOutOfDate] = useState(build.outOfDate);
   const [view, setView] = useState<View>('edit');
+  const editRef = useRef<HTMLDivElement>(null);
   const doc = history.present;
   const json = JSON.stringify(doc);
   const unsaved = json !== savedJson;
@@ -556,8 +558,9 @@ function Builder({
               <LetterPanel jobId={job.jobId} onSaved={letterSaved} />
             </div>
           )}
-          <div hidden={tab === 'look' || tab === 'letter'} className="space-y-3">
+          <div ref={editRef} hidden={tab === 'look' || tab === 'letter'} className="space-y-3">
             <p className="text-xs text-slate-500">{t('intro')}</p>
+            <FormatBar scope={editRef} />
             <HeaderCard doc={doc} onChange={change} />
             {doc.sections.map((section, index) => (
               <SectionCard
