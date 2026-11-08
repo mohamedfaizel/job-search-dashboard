@@ -613,7 +613,7 @@ describe('JobsDashboard', () => {
     // Still open (no close), now the small bar with the job's title.
     expect(dialog).toHaveAttribute('open');
     expect(within(dialog).queryByRole('tablist')).toBeNull();
-    expect(dialog).toHaveClass('bottom-5');
+    expect(dialog).toHaveClass('lg:bottom-5');
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Open the job again' }));
     expect(within(dialog).getByRole('tab', { name: 'Job ad' })).toHaveAttribute(
@@ -627,6 +627,38 @@ describe('JobsDashboard', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Senior Frontend Engineer' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps several minimized jobs side by side and opens each one again', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+    const first = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+    await user.click(within(first).getByRole('tab', { name: 'Job ad' }));
+    await user.click(within(first).getByRole('button', { name: 'Minimize' }));
+
+    await user.click(screen.getByRole('button', { name: 'Backend Developer' }));
+    const second = screen.getByRole('dialog', { name: 'Backend Developer' });
+    await user.click(within(second).getByRole('button', { name: 'Minimize' }));
+
+    // Two bars: the newest on the right (slot 0), the older one to its left.
+    expect(first).toHaveAttribute('open');
+    expect(second).toHaveAttribute('open');
+    expect(second.style.getPropertyValue('--slot')).toBe('0');
+    expect(first.style.getPropertyValue('--slot')).toBe('1');
+
+    // The first one opens again where you left it; the other stays a bar.
+    await user.click(within(first).getByRole('button', { name: 'Open the job again' }));
+    expect(
+      await within(first).findByRole('tab', { name: 'Job ad', selected: true }),
+    ).toBeInTheDocument();
+    expect(within(second).queryByRole('tablist')).toBeNull();
+    expect(second.style.getPropertyValue('--slot')).toBe('0');
+
+    // Closing the open one leaves the bar.
+    await user.click(within(first).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Senior Frontend Engineer' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Backend Developer' })).toHaveAttribute('open');
   });
 
   it('updates the application status from the table', async () => {

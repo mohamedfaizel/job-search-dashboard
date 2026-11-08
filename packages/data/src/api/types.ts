@@ -546,7 +546,11 @@ export interface JobInsights {
   prompt: string;
   /** The interview prep prompt: paste into Claude for questions, answers and your gaps. */
   interviewPrompt: string;
+  mockInterviewPrompt: string;
+  mockInterviewPromptDe: string;
   /** What Claude answered to it, if you pasted it back. */
+  /** ISO time of your interview for this job, if you set it. */
+  interviewAt: string | null;
   interviewPrep: InterviewPrep | null;
 }
 
@@ -747,12 +751,14 @@ export interface NotificationJob {
 /** Something the app tells you in the bell list. The words come from `kind`, in your language. */
 export interface AppNotification {
   id: number;
-  /** NEW_MATCHES: a scheduled search found new jobs that fit you. */
+  /** NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: jobs[0]'s interview is within a day. */
   kind: string;
   searchName: string;
   count: number;
   fitMin: number;
   jobs: NotificationJob[];
+  /** INTERVIEW_SOON: ISO time of the interview. */
+  at: string | null;
   /** ISO time you read it; null = unread. */
   readAt: string | null;
   createdAt: string;

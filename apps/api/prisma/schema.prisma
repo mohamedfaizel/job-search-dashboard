@@ -394,11 +394,16 @@ model Application {
   statusChangedAt DateTime          @default(now())
   /// When you last said you followed up on it (resets the "Follow up?" reminder).
   followedUpAt    DateTime?
+  /// When your interview is (Interview tab). Setting it moves the job to Interviewing.
+  interviewAt         DateTime?
+  /// When the bell reminded you of that interview. Cleared when the date changes.
+  interviewRemindedAt DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
   @@id([userId, jobId])
   @@index([userId, status])
+  @@index([interviewAt])
 }
 
 /// A job one user doesn't want to see. Other users still see it.

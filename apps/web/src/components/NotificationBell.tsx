@@ -5,7 +5,7 @@ import { useMarkNotificationsRead, useNotifications } from '@jobsearch/data';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToast } from './Toasts';
 
 /** A job's link: Job posts opens its popup. */
@@ -26,9 +26,30 @@ function timeAgo(iso: string, locale: string, now = Date.now()): string {
   return format.format(0, 'minute');
 }
 
+/** The notification's first line, in your language. */
+function useHeadline() {
+  const t = useTranslations('Notifications');
+  const locale = useLocale();
+  return useCallback(
+    (item: AppNotification) =>
+      item.kind === 'INTERVIEW_SOON' && item.at
+        ? t('interviewSoon', {
+            when: new Intl.DateTimeFormat(locale, {
+              weekday: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            }).format(new Date(item.at)),
+          })
+        : t('newMatches', { count: item.count, search: item.searchName }),
+    [t, locale],
+  );
+}
+
 function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
   const t = useTranslations('Notifications');
   const locale = useLocale();
+  const headline = useHeadline();
+  const interview = item.kind === 'INTERVIEW_SOON';
   return (
     <li className={`space-y-1.5 px-3 py-2.5 ${item.readAt ? '' : 'bg-brand-50'}`}>
       <p className="text-sm text-slate-900">
@@ -38,10 +59,11 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
             className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-600"
           />
         )}
-        {t('newMatches', { count: item.count, search: item.searchName })}
+        {headline(item)}
       </p>
       <p className="text-xs text-slate-500">
-        {t('fitAtLeast', { fit: item.fitMin })} · {timeAgo(item.createdAt, locale)}
+        {interview ? t('interviewHint') : t('fitAtLeast', { fit: item.fitMin })} ·{' '}
+        {timeAgo(item.createdAt, locale)}
       </p>
       <ul className="space-y-1">
         {item.jobs.map((job) => (
@@ -55,9 +77,11 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
                 <b className="font-medium text-slate-900">{job.title}</b>{' '}
                 <span className="text-slate-600">· {job.company}</span>
               </span>
-              <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800 ring-1 ring-emerald-200 ring-inset">
-                {t('fit', { fit: job.fit })}
-              </span>
+              {!interview && (
+                <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800 ring-1 ring-emerald-200 ring-inset">
+                  {t('fit', { fit: job.fit })}
+                </span>
+              )}
             </Link>
           </li>
         ))}
@@ -79,6 +103,7 @@ export function NotificationBell() {
   const t = useTranslations('Notifications');
   const router = useRouter();
   const toast = useToast();
+  const headline = useHeadline();
   const { data } = useNotifications();
   const markRead = useMarkNotificationsRead();
   const [open, setOpen] = useState(false);
@@ -94,7 +119,7 @@ export function NotificationBell() {
       for (const item of data.items) {
         if (seen.current.has(item.id) || item.readAt) continue;
         const first = item.jobs[0];
-        toast(t('newMatches', { count: item.count, search: item.searchName }), {
+        toast(headline(item), {
           tone: 'info',
           action: first
             ? {
@@ -108,7 +133,7 @@ export function NotificationBell() {
       }
     }
     seen.current = ids;
-  }, [data, toast, t, router]);
+  }, [data, toast, t, router, headline]);
 
   // Close on a click outside or on Escape.
   useEffect(() => {

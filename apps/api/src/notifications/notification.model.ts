@@ -23,7 +23,10 @@ export class NotificationModel {
   @Field(() => Int)
   id!: number;
 
-  @Field({ description: 'NEW_MATCHES: a scheduled search found new jobs that fit you' })
+  @Field({
+    description:
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day',
+  })
   kind!: string;
 
   @Field({ description: 'The saved search that found them. Empty when not about a search' })
@@ -37,6 +40,12 @@ export class NotificationModel {
 
   @Field(() => [NotificationJobModel], { description: 'The best few jobs, best fit first' })
   jobs!: NotificationJobModel[];
+
+  @Field(() => Date, {
+    nullable: true,
+    description: 'INTERVIEW_SOON: when the interview is. Null for other kinds',
+  })
+  at!: Date | null;
 
   @Field(() => Date, { nullable: true, description: 'When you read it. Null = unread' })
   readAt!: Date | null;

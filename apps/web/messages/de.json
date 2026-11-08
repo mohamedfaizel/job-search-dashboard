@@ -673,12 +673,11 @@
       "german": "Die Anzeige verlangt Deutsch {level}. Übe deine Antworten auf Deutsch, auf deinem echten Niveau.",
       "germanAny": "Die Anzeige verlangt Deutsch. Übe deine Antworten auf Deutsch, auf deinem echten Niveau.",
       "askTitle": "Mit Claude vorbereiten",
-      "copy": "Interview-Prompt für Claude kopieren",
+      "copy": "Prompt kopieren und Claude öffnen",
       "copyHint": "Fragen, Musterantworten aus deinem Lebenslauf, deine Lücken und Fragen an die Firma.",
-      "copiedHint": "Füge ihn in Claude ein und bringe die Antwort unten zurück.",
+      "copiedHint": "Claude ist in einem neuen Tab offen: dort einfügen (Strg+V), dann die Antwort unten zurückbringen.",
       "promptBox": "Interview-Prompt",
       "paste": "Claudes Antwort aus der Zwischenablage einfügen",
-      "pasteHint": "Oder füge sie in das Feld ein.",
       "blocked": "Der Browser hat das Lesen der Zwischenablage blockiert. Füge die Antwort stattdessen in das Feld ein.",
       "boxLabel": "Claudes Interview-Vorbereitung",
       "placeholder": "Claudes Antwort hier einfügen",
@@ -689,7 +688,56 @@
       "savedAt": "Gespeichert am {date}",
       "replace": "Ersetzen",
       "delete": "Löschen",
-      "error": "Das hat nicht geklappt: {error}"
+      "error": "Das hat nicht geklappt: {error}",
+      "gapsHintSaved": "Skills aus der Anzeige, die dein Lebenslauf nicht zeigt. Klick einen an, um zu sehen, was du sagen kannst.",
+      "gapJumpHint": "Zeigen, was du dazu sagen kannst",
+      "pasteInBox": "oder füge sie in ein Feld ein",
+      "prep": {
+        "tabsLabel": "Teile deiner Interview-Vorbereitung",
+        "tabs": {
+          "care": "Was sie wollen",
+          "about": "Über mich",
+          "questions": "Fragen",
+          "gaps": "Meine Lücken",
+          "ask": "Frag sie",
+          "research": "Recherche"
+        },
+        "card": "Frage {n} von {total}",
+        "known": "Das kannst du",
+        "why": "Warum sie fragen: {why}",
+        "showAnswer": "Antwort zeigen",
+        "noAnswer": "Claude hat hierzu keine Musterantwort gegeben.",
+        "iKnowIt": "Kann ich",
+        "practiseAgain": "Nochmal üben",
+        "prev": "Vorherige Frage",
+        "next": "Nächste Frage",
+        "say": "Sag: {say}",
+        "learn": "Diese Woche lernen: {learn}",
+        "wholeReply": "Claudes ganze Antwort zeigen"
+      },
+      "mock": {
+        "title": "Probe-Interview üben",
+        "intro": "Claude spielt die Person, die dich interviewt: eine Frage nach der anderen, mit Feedback nach jeder Antwort und einer Bewertung am Ende. Probier es im Sprachmodus von Claude, um das Sprechen zu üben.",
+        "language": "Sprache des Interviews",
+        "de": "Deutsch (einfach, auf deinem Niveau)",
+        "en": "Englisch",
+        "copy": "Probe-Interview kopieren und Claude öffnen",
+        "copiedHint": "Claude ist in einem neuen Tab offen: dort einfügen (Strg+V) und die Fragen beantworten.",
+        "promptBox": "Prompt für das Probe-Interview"
+      },
+      "date": {
+        "title": "Interviewtermin",
+        "add": "Interviewtermin eintragen",
+        "label": "Datum und Uhrzeit des Interviews",
+        "on": "Interview: {when}",
+        "reminder": "Erinnerung in der Glocke 1 Tag vorher",
+        "change": "Ändern",
+        "clear": "Entfernen",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "hint": "Beim Speichern wandert der Job zu „Im Gespräch“. Die Glocke erinnert dich einen Tag vorher.",
+        "error": "Der Termin konnte nicht gespeichert werden: {error}"
+      }
     },
     "fit": {
       "ringLabel": "{score} Prozent Fit",
@@ -1427,6 +1475,8 @@
     "fit": "{fit} % Fit",
     "more": "{count, plural, one {# weiterer} other {# weitere}} unter Stellenanzeigen (als Neu markiert)",
     "show": "Anzeigen",
-    "close": "Schließen"
+    "close": "Schließen",
+    "interviewSoon": "Interview bald: {when}",
+    "interviewHint": "Öffne den Job und übe im Tab Interview"
   }
 }

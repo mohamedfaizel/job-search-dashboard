@@ -8,7 +8,7 @@ import {
 import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
 import { parseResume } from '../documents/resume-doc';
-import { JobMatchStatus } from '../generated/prisma/enums';
+import { ApplicationStatus, JobMatchStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from '../profile/custom-fields';
 import { cleanResume, tidy } from '../profile/resume-text';
@@ -28,7 +28,7 @@ import type {
   RemovedTermModel,
   TermCheckModel,
 } from './insights.model';
-import { buildInterviewPrompt } from './interview-prompt';
+import { buildInterviewPrompt, buildMockInterviewPrompt } from './interview-prompt';
 import { checkPdf, readPdf } from './pdf-check';
 import type { PromptInput } from './prompt';
 import {
@@ -129,6 +129,7 @@ export class InsightsService implements OnApplicationBootstrap {
       interviewPrep,
       jobLanguages,
       answerBank,
+      application,
     ] = await Promise.all([
       this.prisma.job.findUnique({
         where: { id: jobId },
@@ -198,6 +199,10 @@ export class InsightsService implements OnApplicationBootstrap {
         select: { text: true },
       }),
       this.savedAnswerBank(userId),
+      this.prisma.application.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { interviewAt: true },
+      }),
     ]);
     if (!job)
       throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
@@ -322,7 +327,10 @@ export class InsightsService implements OnApplicationBootstrap {
             formAnswers: jobResume.formAnswers,
           })
         : null,
+      interviewAt: application?.interviewAt ?? null,
       interviewPrompt: buildInterviewPrompt(promptInput),
+      mockInterviewPrompt: buildMockInterviewPrompt(promptInput, 'en'),
+      mockInterviewPromptDe: buildMockInterviewPrompt(promptInput, 'de'),
       interviewPrep,
     };
     return { insights, promptInput };
@@ -609,6 +617,41 @@ export class InsightsService implements OnApplicationBootstrap {
       create: { userId, jobId, text: clean },
       update: { text: clean },
     });
+    return this.forJob(userId, jobId);
+  }
+
+  /**
+   * Sets (or clears, with null) when your interview for a job is. A job not yet at Interviewing
+   * moves there, and a new date means a new reminder the day before.
+   */
+  async setInterviewDate(userId: number, jobId: string, at: Date | null) {
+    await this.assertJob(jobId);
+    const current = await this.prisma.application.findUnique({
+      where: { userId_jobId: { userId, jobId } },
+      select: { status: true },
+    });
+    const before: ApplicationStatus[] = [
+      ApplicationStatus.NONE,
+      ApplicationStatus.SAVED,
+      ApplicationStatus.APPLIED,
+    ];
+    if (!current) {
+      if (at) {
+        await this.prisma.application.create({
+          data: { userId, jobId, status: ApplicationStatus.INTERVIEWING, interviewAt: at },
+        });
+      }
+    } else {
+      const moves = at !== null && before.includes(current.status);
+      await this.prisma.application.update({
+        where: { userId_jobId: { userId, jobId } },
+        data: {
+          interviewAt: at,
+          interviewRemindedAt: null,
+          ...(moves ? { status: ApplicationStatus.INTERVIEWING, statusChangedAt: new Date() } : {}),
+        },
+      });
+    }
     return this.forJob(userId, jobId);
   }
 

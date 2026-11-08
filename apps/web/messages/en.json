@@ -673,12 +673,11 @@
       "german": "The ad asks for German {level}. Practise your answers in German, at your real level.",
       "germanAny": "The ad asks for German. Practise your answers in German, at your real level.",
       "askTitle": "Prepare with Claude",
-      "copy": "Copy interview prompt for Claude",
+      "copy": "Copy prompt and open Claude",
       "copyHint": "Questions, model answers from your resume, your gaps and questions to ask.",
-      "copiedHint": "Paste it into Claude, then bring the reply back below.",
+      "copiedHint": "Claude opened in a new tab: paste it there (Ctrl+V), then bring the reply back below.",
       "promptBox": "Interview prompt",
       "paste": "Paste Claude’s reply from the clipboard",
-      "pasteHint": "Or paste it in the box.",
       "blocked": "The browser blocked reading the clipboard. Paste the reply in the box instead.",
       "boxLabel": "Claude’s interview prep",
       "placeholder": "Paste Claude’s reply here",
@@ -689,7 +688,56 @@
       "savedAt": "Saved {date}",
       "replace": "Replace",
       "delete": "Delete",
-      "error": "Could not do that: {error}"
+      "error": "Could not do that: {error}",
+      "gapsHintSaved": "Skills the ad asks for that your resume doesn’t show. Click one to see what to say.",
+      "gapJumpHint": "Show what to say about it",
+      "pasteInBox": "or paste it in a box",
+      "prep": {
+        "tabsLabel": "Parts of your interview prep",
+        "tabs": {
+          "care": "What they want",
+          "about": "About me",
+          "questions": "Questions",
+          "gaps": "My gaps",
+          "ask": "Ask them",
+          "research": "Research"
+        },
+        "card": "Question {n} of {total}",
+        "known": "You know this",
+        "why": "Why they ask: {why}",
+        "showAnswer": "Show answer",
+        "noAnswer": "Claude gave no model answer for this one.",
+        "iKnowIt": "I know it",
+        "practiseAgain": "Practise again",
+        "prev": "Previous question",
+        "next": "Next question",
+        "say": "Say: {say}",
+        "learn": "Learn this week: {learn}",
+        "wholeReply": "Show Claude’s whole reply"
+      },
+      "mock": {
+        "title": "Practise a mock interview",
+        "intro": "Claude plays the interviewer: one question at a time, with feedback after each answer and a score at the end. Try it in Claude’s voice mode to practise speaking.",
+        "language": "Interview language",
+        "de": "Deutsch (simple, at your level)",
+        "en": "English",
+        "copy": "Copy mock interview and open Claude",
+        "copiedHint": "Claude opened in a new tab: paste it there (Ctrl+V) and answer its questions.",
+        "promptBox": "Mock interview prompt"
+      },
+      "date": {
+        "title": "Interview date",
+        "add": "Add the interview date",
+        "label": "Interview date and time",
+        "on": "Interview: {when}",
+        "reminder": "Reminder in the bell 1 day before",
+        "change": "Change",
+        "clear": "Remove",
+        "save": "Save",
+        "cancel": "Cancel",
+        "hint": "Saving moves the job to Interviewing. The bell reminds you a day before.",
+        "error": "Could not save the date: {error}"
+      }
     },
     "fit": {
       "ringLabel": "{score} percent fit",
@@ -1427,6 +1475,8 @@
     "fit": "{fit}% fit",
     "more": "{count, plural, one {# more} other {# more}} in Job posts (marked New)",
     "show": "Show",
-    "close": "Close"
+    "close": "Close",
+    "interviewSoon": "Interview soon: {when}",
+    "interviewHint": "Open the job to practise on the Interview tab"
   }
 }

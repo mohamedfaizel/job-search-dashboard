@@ -32,6 +32,15 @@ export function useJobFormat() {
       /** "Nov 2, 2026" / "2. Nov. 2026". */
       date: (iso: string) =>
         format.dateTime(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' }),
+      /** Day and time, e.g. "Tue, Nov 12, 10:00". */
+      dateTime: (iso: string) =>
+        format.dateTime(new Date(iso), {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
 
       /** "$215k - $290k", "$90k+", "Up to $120k", or "" when unknown. */
       salary: (min: number | null, max: number | null): string => {

@@ -89,6 +89,9 @@ export const INSIGHTS: JobInsights = {
   jobResume: null,
   prompt: 'Please tailor my resume for this job.\n- graphql',
   interviewPrompt: 'Please prepare me for an interview.\n- graphql',
+  mockInterviewPrompt: "Let's do a mock interview.",
+  mockInterviewPromptDe: "Let's do a mock interview. Run the whole interview in German.",
+  interviewAt: null,
   interviewPrep: null,
 };
 
@@ -120,6 +123,7 @@ export const SAVED_RESUME: JobResume = {
 export const tableSettings: { current: string | null } = { current: null };
 
 export const interviewPrep: { current: InterviewPrep | null } = { current: null };
+export const interviewAt: { current: string | null } = { current: null };
 
 /** What the test user saved for job-1. Tests start with nothing. */
 export const jobResume: { current: JobResume | null } = { current: null };
@@ -150,6 +154,7 @@ function insightsNow(): JobInsights {
     languagesCustom: jobLanguages.current !== null,
     jobResume: jobResume.current,
     interviewPrep: interviewPrep.current,
+    interviewAt: interviewAt.current,
   };
   if (removedTerms.length === 0 && haveTerms.length === 0) return common;
   return {
@@ -437,6 +442,11 @@ const handlers = [
       updatedAt: '2026-11-03T12:00:00.000Z',
     };
     return HttpResponse.json({ data: { saveInterviewPrep: insightsNow() } });
+  }),
+  api.mutation('SetInterviewDate', ({ variables }) => {
+    requests.push({ operation: 'SetInterviewDate', variables });
+    interviewAt.current = (variables['at'] as string | null) ?? null;
+    return HttpResponse.json({ data: { setInterviewDate: insightsNow() } });
   }),
   api.mutation('DeleteInterviewPrep', ({ variables }) => {
     requests.push({ operation: 'DeleteInterviewPrep', variables });

@@ -20,6 +20,7 @@ const meta = {
   args: {
     job: makeJob({ description: DESCRIPTION, applicationStatus: 'SAVED' }),
     onClose: fn(),
+    onOpen: fn(),
     onStatusChange: fn(),
   },
   // The dialog covers the page, so give the snapshot room.

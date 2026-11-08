@@ -273,6 +273,24 @@ export class JobInsightsModel {
   })
   interviewPrompt!: string;
 
+  @Field({
+    description:
+      'The mock interview prompt for Claude in English: Claude asks one question at a time and gives feedback',
+  })
+  mockInterviewPrompt!: string;
+
+  @Field({
+    description:
+      'The same mock interview in simple German at your real level, for jobs whose interview is in German',
+  })
+  mockInterviewPromptDe!: string;
+
+  @Field(() => Date, {
+    nullable: true,
+    description: 'When your interview for this job is, if you set it on the Interview tab',
+  })
+  interviewAt!: Date | null;
+
   @Field(() => InterviewPrepModel, {
     nullable: true,
     description: 'Claude’s interview prep for this job, if you pasted it back',

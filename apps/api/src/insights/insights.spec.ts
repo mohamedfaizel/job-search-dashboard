@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildTranslationPrompt, resumeFor } from '../profile/resumes';
 import { germanRequirement } from './german';
-import { buildInterviewPrompt } from './interview-prompt';
+import { buildInterviewPrompt, buildMockInterviewPrompt } from './interview-prompt';
 import { parseLine, pdfFileName, textToPdf, toWinAnsi } from './pdf';
 import {
   applicationFacts,
@@ -264,7 +264,7 @@ describe('buildInterviewPrompt', () => {
     expect(prompt).toContain('Wir suchen …');
     expect(prompt).toContain('What they care about');
     expect(prompt).toContain('Questions for them');
-    expect(prompt).toContain('what to read about Acme');
+    expect(prompt).toContain('What to read about Acme');
   });
 
   it('writes in English for an English job, without a city, resume or description', () => {
@@ -285,6 +285,16 @@ describe('buildInterviewPrompt', () => {
     expect(prompt).toContain('Ask me for it before you start.');
     expect(prompt).toContain('(No description saved.)');
     expect(prompt).toContain('(my likely gaps):\n- (none)');
+  });
+
+  it('builds a mock interview prompt, in simple German when asked', () => {
+    const en = buildMockInterviewPrompt(input, 'en');
+    expect(en).toContain('Ask one question at a time');
+    expect(en).toContain('- kafka');
+    expect(en).toContain('Run the whole interview in English.');
+    const de = buildMockInterviewPrompt(input, 'de');
+    expect(de).toContain('Run the whole interview in German');
+    expect(de).toContain('- German A2');
   });
 });
 

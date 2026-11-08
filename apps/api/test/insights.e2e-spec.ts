@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { matchScore } from '../src/insights/score';
+import { NotificationsService } from '../src/notifications/notifications.service';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
 
@@ -986,6 +987,54 @@ Why Acme: I like your product.
       });
       const missing = await t.asUser(SAVE_PREP, { jobId: 'nope', text: 'Hello' });
       expect(missing.errors?.[0]?.extensions).toMatchObject({ apiCode: 'JOB_NOT_FOUND' });
+    });
+
+    it('keeps your interview date, moves the job to Interviewing and reminds you once', async () => {
+      const SET_DATE = /* GraphQL */ `
+        mutation ($jobId: ID!, $at: DateTime) {
+          setInterviewDate(jobId: $jobId, at: $at) {
+            interviewAt
+          }
+        }
+      `;
+      const job = await backendJob();
+      const now = new Date('2026-11-10T09:00:00.000Z');
+      const at = '2026-11-11T08:00:00.000Z';
+
+      const set = await t.asUser<{ setInterviewDate: { interviewAt: string | null } }>(SET_DATE, {
+        jobId: job.id,
+        at,
+      });
+      expect(set.errors).toBeUndefined();
+      expect(set.data!.setInterviewDate.interviewAt).toBe(at);
+      const row = await t.prisma.application.findUniqueOrThrow({
+        where: { userId_jobId: { userId: 2, jobId: job.id } },
+      });
+      expect(row.status).toBe('INTERVIEWING');
+
+      // Within a day: one reminder in the bell, not two.
+      const notifications = t.app.get(NotificationsService);
+      expect(await notifications.interviewReminders(now)).toBe(1);
+      expect(await notifications.interviewReminders(now)).toBe(0);
+      const [note] = await t.prisma.notification.findMany({ where: { userId: 2 } });
+      expect(note?.kind).toBe('INTERVIEW_SOON');
+      expect(note?.data).toMatchObject({ at, jobs: [{ id: job.id, title: 'Backend Engineer' }] });
+
+      // A new date means a new reminder; clearing it keeps the status.
+      await t.asUser(SET_DATE, { jobId: job.id, at: '2026-11-11T07:00:00.000Z' });
+      expect(await notifications.interviewReminders(now)).toBe(1);
+      const cleared = await t.asUser<{ setInterviewDate: { interviewAt: string | null } }>(
+        SET_DATE,
+        { jobId: job.id, at: null },
+      );
+      expect(cleared.data!.setInterviewDate.interviewAt).toBeNull();
+      expect(
+        (
+          await t.prisma.application.findUniqueOrThrow({
+            where: { userId_jobId: { userId: 2, jobId: job.id } },
+          })
+        ).status,
+      ).toBe('INTERVIEWING');
     });
   });
 

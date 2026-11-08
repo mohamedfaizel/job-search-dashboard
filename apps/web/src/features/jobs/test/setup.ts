@@ -7,6 +7,7 @@ import {
   applyQueue,
   hiddenIds,
   interviewPrep,
+  interviewAt,
   tableSettings,
   jobResume,
   mailSuggestions,
@@ -22,6 +23,9 @@ import {
 // every package's tests at once), longer than findBy*'s 1 s default. Waiting longer only slows
 // a test that is about to fail anyway.
 configure({ asyncUtilTimeout: 5000 });
+
+// jsdom doesn't lay out pages, so it has no scrollIntoView.
+Element.prototype.scrollIntoView = () => undefined;
 
 beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
@@ -39,6 +43,7 @@ afterEach(() => {
   savedAnswers.length = 0;
   jobResume.current = null;
   interviewPrep.current = null;
+  interviewAt.current = null;
   tableSettings.current = null;
   downloads.length = 0;
   localStorage.clear();
