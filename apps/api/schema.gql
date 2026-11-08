@@ -141,11 +141,17 @@ type DocumentStyle {
   """
   accentColor: String!
 
+  """Bullet shape: dot, dash or none"""
+  bulletStyle: String!
+
   """Less space between jobs, bullets and sections"""
   compact: Boolean!
 
   """auto (DIN 5008 for German letters), din or modern"""
   coverLetterLayout: String!
+
+  """Dates of a job: auto, right or below"""
+  datesSide: String!
 
   """auto (the template’s own), sans or serif"""
   font: String!
@@ -155,6 +161,9 @@ type DocumentStyle {
 
   """A photo is uploaded (GET /documents/photo shows it)"""
   hasPhoto: Boolean!
+
+  """Section titles: auto, rule, bold or bar"""
+  headingStyle: String!
 
   """Resume line spacing, 1 to 1.4 (1 is the template’s own)"""
   lineSpacing: Float!
@@ -170,18 +179,29 @@ type DocumentStyle {
   """
   resumeTemplate: String!
   showPhoto: Boolean!
+
+  """The label of a skills line in bold"""
+  skillsBold: Boolean!
+
+  """Skills lines: index, lines or plain"""
+  skillsStyle: String!
 }
 
 input DocumentStyleInput {
   accentColor: String!
+  bulletStyle: String
   compact: Boolean
   coverLetterLayout: String!
+  datesSide: String
   font: String!
   fontSize: Float
+  headingStyle: String
   lineSpacing: Float
   margin: Int
   resumeTemplate: String!
   showPhoto: Boolean!
+  skillsBold: Boolean
+  skillsStyle: String
 }
 
 type DocumentTemplate {

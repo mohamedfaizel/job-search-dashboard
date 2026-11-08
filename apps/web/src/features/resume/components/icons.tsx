@@ -69,3 +69,22 @@ export const TickIcon = () => (
     <path d="M3 8.5l3.2 3.2L13 4.8" />
   </svg>
 );
+export const RefreshIcon = () => (
+  <svg {...base}>
+    <path d="M13 8a5 5 0 1 1-1.6-3.7" />
+    <path d="M13 2.5v3h-3" />
+  </svg>
+);
+export const LinkIcon = () => (
+  <svg {...base}>
+    <path d="M6.5 9.5l3-3" />
+    <path d="M7 4.5l.8-.8a2.5 2.5 0 0 1 3.5 3.5l-.8.8" />
+    <path d="M9 11.5l-.8.8a2.5 2.5 0 0 1-3.5-3.5l.8-.8" />
+  </svg>
+);
+export const EraserIcon = () => (
+  <svg {...base}>
+    <path d="M9.5 3l3.5 3.5-6 6H4L2.5 11l7-8z" />
+    <path d="M6 7l3.5 3.5" />
+  </svg>
+);

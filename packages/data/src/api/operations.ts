@@ -822,6 +822,11 @@ const DOCUMENT_STYLE_FIELDS = /* GraphQL */ `
   margin
   lineSpacing
   compact
+  skillsStyle
+  skillsBold
+  headingStyle
+  datesSide
+  bulletStyle
   myDesign {
     font
     accent

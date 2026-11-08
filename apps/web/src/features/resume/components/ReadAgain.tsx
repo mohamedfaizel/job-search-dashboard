@@ -4,7 +4,8 @@ import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiChat } from '../../../lib/ai-chat';
-import { FIELD, SMALL_BUTTON } from './ui';
+import { RefreshIcon, TickIcon, XIcon } from './icons';
+import { FIELD, ICON_BUTTON, SMALL_BUTTON } from './ui';
 
 interface Props {
   language: string;
@@ -15,10 +16,45 @@ interface Props {
   onKeep: () => void;
 }
 
+/** A numbered step that turns green when it is done. */
+function Step({
+  n,
+  done,
+  title,
+  children,
+}: {
+  n: number;
+  done: boolean;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <li
+      className={`grid content-start gap-1.5 rounded-lg border p-2 ${
+        done ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200'
+      }`}
+    >
+      <span className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
+        <span
+          aria-hidden
+          className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] text-white ${
+            done ? 'bg-emerald-600' : 'bg-brand-600'
+          }`}
+        >
+          {done ? <TickIcon /> : n}
+        </span>
+        {title}
+      </span>
+      {children}
+    </li>
+  );
+}
+
 /**
- * Reading the resume into sections again. After a new upload the builder asks first. The
- * rules can't tell a job title from a bullet in plain text; the AI chat way can (the yellow ✦
- * marks a prompt you paste into your AI chat yourself, at no cost here).
+ * Where the resume comes from. ↻ starts again from the text on My profile (sections are found
+ * by their titles); "Sort with my AI chat" is the better way: your chat sorts jobs, dates and
+ * bullets into the right places (the yellow ✦ marks a prompt you paste into your AI chat
+ * yourself, at no cost here). After a new upload the bar asks first.
  */
 export function ReadAgain({ language, outOfDate, onRead, onKeep }: Props) {
   const t = useTranslations('Resume.readAgain');
@@ -28,14 +64,19 @@ export function ReadAgain({ language, outOfDate, onRead, onKeep }: Props) {
   const prompt = useResumeBuildPrompt(language);
   const [reply, setReply] = useState('');
   const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
+  const [clipboardFailed, setClipboardFailed] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [open, setOpen] = useState(false);
   const replyId = useId();
+  const panelId = useId();
 
   const read = (vars: { language: string; reply?: string }) => {
     restart.mutate(vars, {
       onSuccess: (build) => {
         setReply('');
         setConfirm(false);
+        setOpen(false);
+        setCopied(null);
         onRead(build);
       },
     });
@@ -52,6 +93,15 @@ export function ReadAgain({ language, outOfDate, onRead, onKeep }: Props) {
       setCopied('failed');
     }
     window.open(chat.url, '_blank', 'noopener');
+  };
+
+  const pasteFromClipboard = async () => {
+    setClipboardFailed(false);
+    try {
+      setReply(await navigator.clipboard.readText());
+    } catch {
+      setClipboardFailed(true);
+    }
   };
 
   return (
@@ -77,104 +127,141 @@ export function ReadAgain({ language, outOfDate, onRead, onKeep }: Props) {
           </button>
         </div>
       )}
-      <details className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-        <summary className="cursor-pointer font-medium text-slate-700">{t('title')}</summary>
-        <div className="mt-3 space-y-4">
-          <div className="space-y-2">
-            <p className="text-slate-600">{t('fromProfile')}</p>
-            {confirm ? (
-              <div
-                role="alertdialog"
-                aria-label={t('fromProfileButton')}
-                className="flex flex-wrap items-center gap-2"
+      <section
+        aria-label={t('title')}
+        className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="mr-auto text-sm font-medium text-slate-700">{t('title')}</h3>
+          {confirm ? (
+            <div
+              role="alertdialog"
+              aria-label={t('startAgain')}
+              className="flex flex-wrap items-center gap-1.5"
+            >
+              <span className="text-xs text-slate-600">{t('confirm')}</span>
+              <button
+                type="button"
+                className={`${ICON_BUTTON} text-emerald-700`}
+                disabled={restart.isPending}
+                aria-label={t('yes')}
+                title={t('yes')}
+                onClick={() => {
+                  read({ language });
+                }}
               >
-                <span className="text-xs text-slate-600">{t('confirm')}</span>
+                <TickIcon />
+              </button>
+              <button
+                type="button"
+                className={`${ICON_BUTTON} text-red-700 hover:bg-red-50 hover:text-red-800`}
+                aria-label={t('no')}
+                title={t('no')}
+                onClick={() => {
+                  setConfirm(false);
+                }}
+              >
+                <XIcon />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={ICON_BUTTON}
+              aria-label={t('startAgain')}
+              title={t('startAgain')}
+              onClick={() => {
+                setConfirm(true);
+              }}
+            >
+              <RefreshIcon />
+            </button>
+          )}
+          <button
+            type="button"
+            className={SMALL_BUTTON}
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => {
+              setOpen((o) => !o);
+            }}
+          >
+            <span className="font-bold text-amber-600" aria-hidden>
+              ✦{' '}
+            </span>
+            {t('sortWithAi')}
+          </button>
+        </div>
+        {open && (
+          <div id={panelId} className="space-y-2">
+            <p className="text-xs text-slate-500">{t('stepHint')}</p>
+            <ol className="grid gap-2 sm:grid-cols-3">
+              <Step n={1} done={copied === 'yes'} title={t('step1')}>
                 <button
                   type="button"
-                  className="rounded-md bg-red-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-800 disabled:opacity-50"
-                  disabled={restart.isPending}
+                  className={SMALL_BUTTON}
+                  disabled={prompt.isFetching}
                   onClick={() => {
-                    read({ language });
+                    void copyPrompt();
                   }}
                 >
-                  {t('confirmYes')}
+                  {prompt.isFetching ? t('gettingPrompt') : t('copyPrompt')}
                 </button>
+                {copied && (
+                  <span role="status" className="text-xs text-slate-600">
+                    {copied === 'yes' ? t('copied') : t('copyFailed')}
+                  </span>
+                )}
+              </Step>
+              <Step n={2} done={!!reply.trim()} title={t('step2', { ai: chat.name })}>
                 <button
                   type="button"
                   className={SMALL_BUTTON}
                   onClick={() => {
-                    setConfirm(false);
+                    void pasteFromClipboard();
                   }}
                 >
-                  {t('cancel')}
+                  {t('pasteClipboard')}
                 </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className={SMALL_BUTTON}
-                onClick={() => {
-                  setConfirm(true);
-                }}
-              >
-                {t('fromProfileButton')}
-              </button>
-            )}
+                <label htmlFor={replyId} className="sr-only">
+                  {t('paste', { ai: chat.name })}
+                </label>
+                <textarea
+                  id={replyId}
+                  rows={2}
+                  value={reply}
+                  onChange={(event) => {
+                    setReply(event.target.value);
+                  }}
+                  className={`${FIELD} font-mono text-xs [field-sizing:fixed]`}
+                />
+                {clipboardFailed && (
+                  <span role="status" className="text-xs text-amber-800">
+                    {t('clipboardFailed')}
+                  </span>
+                )}
+              </Step>
+              <Step n={3} done={false} title={t('step3')}>
+                <button
+                  type="button"
+                  className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+                  disabled={restart.isPending || !reply.trim()}
+                  onClick={() => {
+                    read({ language, reply });
+                  }}
+                >
+                  {restart.isPending ? t('reading') : t('apply')}
+                </button>
+              </Step>
+            </ol>
           </div>
-          <div className="space-y-2 border-t border-slate-100 pt-3">
-            <p className="text-slate-600">
-              <span className="font-bold text-amber-600" aria-hidden>
-                ✦{' '}
-              </span>
-              {t('withAi')}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className={SMALL_BUTTON}
-                disabled={prompt.isFetching}
-                onClick={() => {
-                  void copyPrompt();
-                }}
-              >
-                {prompt.isFetching ? t('gettingPrompt') : t('copyPrompt')}
-              </button>
-              {copied && (
-                <span role="status" className="text-xs text-slate-600">
-                  {copied === 'yes' ? t('copied') : t('copyFailed')}
-                </span>
-              )}
-            </div>
-            <label htmlFor={replyId} className="block text-xs font-medium text-slate-600">
-              {t('paste')}
-            </label>
-            <textarea
-              id={replyId}
-              rows={4}
-              value={reply}
-              onChange={(event) => {
-                setReply(event.target.value);
-              }}
-              className={`${FIELD} font-mono text-xs [field-sizing:fixed]`}
-            />
-            <button
-              type="button"
-              className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-              disabled={restart.isPending || !reply.trim()}
-              onClick={() => {
-                read({ language, reply });
-              }}
-            >
-              {restart.isPending ? t('reading') : t('readReply')}
-            </button>
-          </div>
-          {restart.isError && (
-            <p role="alert" className="text-sm text-red-700">
-              {errorText(restart.error)}
-            </p>
-          )}
-        </div>
-      </details>
+        )}
+        {restart.isError && (
+          <p role="alert" className="text-sm text-red-700">
+            {errorText(restart.error)}
+          </p>
+        )}
+      </section>
     </>
   );
 }

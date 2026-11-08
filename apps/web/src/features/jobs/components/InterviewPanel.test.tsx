@@ -85,7 +85,7 @@ describe('InterviewPanel', () => {
       ),
     );
     renderPanel();
-    expect(await screen.findByText(/Add your resume on My profile/)).toBeInTheDocument();
+    expect(await screen.findByText(/Add your resume on the Resume page/)).toBeInTheDocument();
   });
 
   it('copies the prompt and opens Claude, then saves the reply you paste', async () => {

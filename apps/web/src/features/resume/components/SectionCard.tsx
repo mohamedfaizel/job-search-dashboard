@@ -3,7 +3,14 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { HTMLAttributes } from 'react';
 import { useState } from 'react';
-import { isLanguagesSection, move, newBlock, removeAt, replaceAt } from '../docOps';
+import {
+  isLanguagesSection,
+  isSkillsSection,
+  move,
+  newBlock,
+  removeAt,
+  replaceAt,
+} from '../docOps';
 import { BlockEditor } from './BlockEditor';
 import {
   CopyIcon,
@@ -62,6 +69,7 @@ export function SectionCard({
   const [improving, setImproving] = useState(false);
   const title = section.title || t('untitled');
   const locked = isLanguagesSection(section.title) && profileLanguages.length > 0;
+  const skills = isSkillsSection(section.title);
   const setBlocks = (blocks: BuilderBlock[], field: string | null) => {
     onChange({ ...section, blocks }, field);
   };
@@ -243,6 +251,7 @@ export function SectionCard({
                 <div className="min-w-0 flex-1">
                   <BlockEditor
                     block={block}
+                    skills={skills}
                     onChange={(next, field) => {
                       setBlocks(replaceAt(section.blocks, blockIndex, next), field);
                     }}
@@ -290,7 +299,11 @@ export function SectionCard({
             ))}
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
               <span>{t('add')}</span>
-              {(['entry', 'bullets', 'paragraph'] as const).map((kind) => (
+              {/* Skills lead with their own row; a job fits Experience best. */}
+              {(skills
+                ? (['paragraph', 'bullets', 'entry'] as const)
+                : (['entry', 'bullets', 'paragraph'] as const)
+              ).map((kind) => (
                 <button
                   key={kind}
                   type="button"
@@ -299,7 +312,7 @@ export function SectionCard({
                     setBlocks([...section.blocks, newBlock(kind)], null);
                   }}
                 >
-                  + {t(`blockKind.${kind}`)}
+                  + {t(skills && kind === 'paragraph' ? 'blockKind.skillRow' : `blockKind.${kind}`)}
                 </button>
               ))}
             </div>

@@ -363,6 +363,11 @@ const inputOf = (style: DocumentStyle): DocumentStyleInput => ({
   margin: style.margin,
   lineSpacing: style.lineSpacing,
   compact: style.compact,
+  skillsStyle: style.skillsStyle,
+  skillsBold: style.skillsBold,
+  headingStyle: style.headingStyle,
+  datesSide: style.datesSide,
+  bulletStyle: style.bulletStyle,
 });
 
 const sameInput = (a: DocumentStyleInput, b: DocumentStyleInput) =>
@@ -504,6 +509,115 @@ function Spacing({
   );
 }
 
+/** One setting as a row of small choices; the description of each is its tooltip. */
+function Choice({
+  label,
+  name,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  options: { value: string; label: string; hint: string }[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <fieldset className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <legend className="sr-only">{label}</legend>
+      <span aria-hidden="true" className="w-28 shrink-0 text-sm font-medium text-slate-700">
+        {label}
+      </span>
+      {options.map((o) => (
+        <label
+          key={o.value}
+          title={o.hint}
+          className={`cursor-pointer rounded-md border px-2.5 py-1 text-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500 ${
+            value === o.value
+              ? 'border-brand-600 bg-brand-600 text-white'
+              : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+          }`}
+        >
+          <input
+            type="radio"
+            name={name}
+            checked={value === o.value}
+            onChange={() => {
+              onChange(o.value);
+            }}
+            className="sr-only"
+          />
+          {o.label}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+/** Skills lines, section titles, dates and bullets: the small parts of the resume's look. */
+function Details({
+  draft,
+  onChange,
+}: {
+  draft: DocumentStyleInput;
+  onChange: (patch: Partial<DocumentStyleInput>) => void;
+}) {
+  const t = useTranslations('Resume.look.details');
+  const opt = (group: string, values: string[]) =>
+    values.map((v) => ({ value: v, label: t(`${group}.${v}`), hint: t(`${group}.${v}Hint`) }));
+  return (
+    <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
+      <legend className="px-1 text-sm font-semibold text-slate-900">{t('title')}</legend>
+      <Choice
+        label={t('skills.label')}
+        name="skills-style"
+        value={draft.skillsStyle}
+        options={opt('skills', ['index', 'lines', 'plain'])}
+        onChange={(skillsStyle) => {
+          onChange({ skillsStyle });
+        }}
+      />
+      <Choice
+        label={t('skillsLabel.label')}
+        name="skills-label"
+        value={draft.skillsBold ? 'bold' : 'normal'}
+        options={opt('skillsLabel', ['bold', 'normal'])}
+        onChange={(v) => {
+          onChange({ skillsBold: v === 'bold' });
+        }}
+      />
+      <Choice
+        label={t('headings.label')}
+        name="heading-style"
+        value={draft.headingStyle}
+        options={opt('headings', ['auto', 'rule', 'bold', 'bar'])}
+        onChange={(headingStyle) => {
+          onChange({ headingStyle });
+        }}
+      />
+      <Choice
+        label={t('dates.label')}
+        name="dates-side"
+        value={draft.datesSide}
+        options={opt('dates', ['auto', 'right', 'below'])}
+        onChange={(datesSide) => {
+          onChange({ datesSide });
+        }}
+      />
+      <Choice
+        label={t('bullets.label')}
+        name="bullet-style"
+        value={draft.bulletStyle}
+        options={opt('bullets', ['dot', 'dash', 'none'])}
+        onChange={(bulletStyle) => {
+          onChange({ bulletStyle });
+        }}
+      />
+    </fieldset>
+  );
+}
+
 /** Edits a copy of the saved style and saves it half a second after each change. */
 function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => void }) {
   const errorText = useErrorText();
@@ -564,6 +678,7 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
       )}
 
       <Spacing draft={draft} template={chosen} onChange={change} />
+      {draft.resumeTemplate !== 'mine' && <Details draft={draft} onChange={change} />}
 
       <div className="flex flex-wrap items-end gap-6">
         <div className="space-y-1">

@@ -16,18 +16,20 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
 import type { TabItem } from '../profile/components/TabList';
 import { TabList } from '../profile/components/TabList';
 import { useLanguageName } from '../profile/components/useLanguageName';
 import { CheckPanel } from './components/CheckPanel';
+import { FormatBar } from './components/FormatBar';
 import { HeaderCard } from './components/HeaderCard';
 import { JobMatchPanel } from './components/JobMatchPanel';
 import { LetterPanel } from './components/LetterPanel';
 import { LookPanel } from './components/LookPanel';
 import { PdfPreview } from './components/PdfPreview';
 import { ReadAgain } from './components/ReadAgain';
+import { ResumeFiles } from './components/ResumeFiles';
 import { SectionCard } from './components/SectionCard';
 import { SMALL_BUTTON } from './components/ui';
 import { useDragSort } from './components/useDragSort';
@@ -51,10 +53,10 @@ import {
 /** Wait this long after the last keystroke before saving (and making a new preview). */
 const AUTOSAVE_MS = 1000;
 
-export type BuilderTab = 'edit' | 'look' | 'match' | 'letter' | 'check';
+export type BuilderTab = 'edit' | 'look' | 'match' | 'letter' | 'check' | 'files';
 /** The Job match, Cover letter and Check tabs only exist for a job's resume copy. */
 const tabsFor = (job: boolean): BuilderTab[] =>
-  job ? ['edit', 'look', 'match', 'letter', 'check'] : ['edit', 'look'];
+  job ? ['edit', 'look', 'match', 'letter', 'check'] : ['edit', 'look', 'files'];
 
 const param = (name: string) =>
   typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get(name);
@@ -233,6 +235,7 @@ function Builder({
   const [letterVersion, setLetterVersion] = useState('first');
   const [outOfDate, setOutOfDate] = useState(build.outOfDate);
   const [view, setView] = useState<View>('edit');
+  const editRef = useRef<HTMLDivElement>(null);
   const doc = history.present;
   const json = JSON.stringify(doc);
   const unsaved = json !== savedJson;
@@ -487,7 +490,7 @@ function Builder({
             </p>
           )}
         </div>
-      ) : (
+      ) : tab === 'edit' ? (
         <ReadAgain
           language={language}
           outOfDate={outOfDate}
@@ -501,32 +504,34 @@ function Builder({
             saveNow(json);
           }}
         />
-      )}
+      ) : null}
 
       {/* Phones show one side at a time. */}
-      <div
-        role="group"
-        aria-label={t('view')}
-        className="flex gap-1 rounded-lg bg-slate-100 p-1 lg:hidden"
-      >
-        {(['edit', 'preview'] as const).map((id) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={view === id}
-            onClick={() => {
-              setView(id);
-            }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${
-              view === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
-            }`}
-          >
-            {t(`views.${id}`)}
-          </button>
-        ))}
-      </div>
+      {tab !== 'files' && (
+        <div
+          role="group"
+          aria-label={t('view')}
+          className="flex gap-1 rounded-lg bg-slate-100 p-1 lg:hidden"
+        >
+          {(['edit', 'preview'] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={view === id}
+              onClick={() => {
+                setView(id);
+              }}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${
+                view === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              {t(`views.${id}`)}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className={`grid gap-6 ${tab === 'files' ? '' : 'lg:grid-cols-2'}`}>
         <div
           id="builder-panel"
           role="tabpanel"
@@ -537,6 +542,7 @@ function Builder({
           <div hidden={tab !== 'look'}>
             <LookPanel onSaved={lookSaved} />
           </div>
+          {!job && tab === 'files' && <ResumeFiles />}
           {job && tab === 'match' && (
             <JobMatchPanel
               jobId={job.jobId}
@@ -556,8 +562,13 @@ function Builder({
               <LetterPanel jobId={job.jobId} onSaved={letterSaved} />
             </div>
           )}
-          <div hidden={tab === 'look' || tab === 'letter'} className="space-y-3">
+          <div
+            ref={editRef}
+            hidden={tab === 'look' || tab === 'letter' || tab === 'files'}
+            className="space-y-3"
+          >
             <p className="text-xs text-slate-500">{t('intro')}</p>
+            <FormatBar scope={editRef} />
             <HeaderCard doc={doc} onChange={change} />
             {doc.sections.map((section, index) => (
               <SectionCard
@@ -613,18 +624,20 @@ function Builder({
             />
           </div>
         </div>
-        <div className={`min-w-0 ${view === 'preview' ? '' : 'hidden lg:block'}`}>
-          <div className="lg:sticky lg:top-4">
-            <PdfPreview
-              language={language}
-              {...(jobId ? { jobId } : {})}
-              version={tab === 'letter' ? letterVersion : version}
-              maxPages={tab === 'letter' ? 1 : build.maxPages}
-              letter={tab === 'letter'}
-              enabled={letterText.trim() !== ''}
-            />
+        {tab !== 'files' && (
+          <div className={`min-w-0 ${view === 'preview' ? '' : 'hidden lg:block'}`}>
+            <div className="lg:sticky lg:top-4">
+              <PdfPreview
+                language={language}
+                {...(jobId ? { jobId } : {})}
+                version={tab === 'letter' ? letterVersion : version}
+                maxPages={tab === 'letter' ? 1 : build.maxPages}
+                letter={tab === 'letter'}
+                enabled={letterText.trim() !== ''}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

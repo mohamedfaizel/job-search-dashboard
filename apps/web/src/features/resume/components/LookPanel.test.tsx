@@ -40,6 +40,11 @@ describe('Look tab', () => {
         margin: null,
         lineSpacing: 1,
         compact: false,
+        skillsStyle: 'index',
+        skillsBold: true,
+        headingStyle: 'auto',
+        datesSide: 'auto',
+        bulletStyle: 'dot',
       });
     }, SAVE_WAIT);
     // One save for the quick burst of changes, then the PDF is made again.
@@ -84,6 +89,26 @@ describe('Look tab', () => {
     }, SAVE_WAIT);
   });
 
+  it('sets skills lines, section titles, dates and bullets', async () => {
+    const { user } = await renderLook();
+    expect(screen.getByRole('radio', { name: 'Index' })).toBeChecked();
+    await user.click(screen.getByRole('radio', { name: 'Lines' }));
+    await user.click(screen.getByRole('radio', { name: 'Normal' }));
+    await user.click(screen.getByRole('radio', { name: 'Bar' }));
+    await user.click(screen.getByRole('radio', { name: 'Right' }));
+    await user.click(screen.getByRole('radio', { name: 'Dash' }));
+    await waitFor(() => {
+      expect(lastInput()).toMatchObject({
+        skillsStyle: 'lines',
+        skillsBold: false,
+        headingStyle: 'bar',
+        datesSide: 'right',
+        bulletStyle: 'dash',
+      });
+    }, SAVE_WAIT);
+    expect(screen.getByRole('radio', { name: 'Lines' })).toBeChecked();
+  });
+
   it('starts the sliders from the template you pick', async () => {
     const { user } = await renderLook();
     await user.click(screen.getByRole('radio', { name: /Compact/ }));
@@ -126,7 +151,7 @@ describe('Look tab', () => {
 
   it('says how to use your own Word file when there is none', async () => {
     await renderLook();
-    expect(screen.getByText(/My profile > Resume/)).toBeInTheDocument();
+    expect(screen.getByText(/Files and settings/)).toBeInTheDocument();
   });
 
   it('makes My design from Claude’s reply and makes it your default template', async () => {

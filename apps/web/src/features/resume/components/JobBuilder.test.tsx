@@ -52,7 +52,9 @@ describe('Resume for one job', () => {
     expect(screen.getByText(/For the job: Frontend Engineer at Acme GmbH/)).toBeInTheDocument();
     // No language switch and no "read again": this is a copy, not a master.
     expect(screen.queryByRole('combobox', { name: 'Resume' })).not.toBeInTheDocument();
-    expect(screen.queryByText('Read my resume into sections again')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Start again from My profile' }),
+    ).not.toBeInTheDocument();
   });
 
   it('saves edits to the job copy, not the master', async () => {

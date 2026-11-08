@@ -706,6 +706,16 @@ export interface DocumentStyle {
   lineSpacing: number;
   /** Less space between jobs, bullets and sections. */
   compact: boolean;
+  /** Skills lines: index (aligned), lines or plain. */
+  skillsStyle: string;
+  /** The label of a skills line in bold. */
+  skillsBold: boolean;
+  /** Section titles: auto (the template's own), rule, bold or bar. */
+  headingStyle: string;
+  /** Dates of a job: auto (the template's own), right or below. */
+  datesSide: string;
+  /** Bullet shape: dot, dash or none. */
+  bulletStyle: string;
 }
 
 /** "My design": your resume's look, typeset as the template "design". */

@@ -46,8 +46,7 @@
     "sections": "Profilbereiche",
     "tabs": {
       "personal": "Persönlich",
-      "applications": "Bewerbungsangaben",
-      "resume": "Lebenslauf"
+      "applications": "Bewerbungsangaben"
     },
     "listHint": "Mit Kommas trennen",
     "personal": {
@@ -141,11 +140,7 @@
       "maxPagesHint": "{ai} hält jeden angepassten Lebenslauf in dieser Länge. Die PDF-Prüfung nutzt es auch.",
       "pages": "{count, plural, one {# Seite} other {# Seiten}}",
       "keepSections": "Alle meine Überschriften behalten",
-      "keepSectionsHint": "Jeder Abschnitt meines Lebenslaufs bleibt, mit meinen Namen und in meiner Reihenfolge (Key Highlights, Erfolge, Technische Skills…), und jede Stelle behält ihre Projekte. {ai} passt nur den Inhalt an.",
-      "builderTitle": "Lebenslauf-Text",
-      "builderWords": "{count, plural, one {# Wort} other {# Wörter}} gespeichert. Bearbeite sie Abschnitt für Abschnitt, mit PDF-Vorschau.",
-      "builderEmpty": "Noch nichts da. Lade oben eine Datei hoch oder fang im Lebenslauf-Editor an zu schreiben.",
-      "builderOpen": "Lebenslauf-Editor öffnen"
+      "keepSectionsHint": "Jeder Abschnitt meines Lebenslaufs bleibt, mit meinen Namen und in meiner Reihenfolge (Key Highlights, Erfolge, Technische Skills…), und jede Stelle behält ihre Projekte. {ai} passt nur den Inhalt an."
     },
     "save": "Profil speichern",
     "saving": "Wird gespeichert…",
@@ -401,7 +396,8 @@
     "blockKind": {
       "entry": "Stelle, Abschluss oder Projekt",
       "bullets": "Aufzählung",
-      "paragraph": "Text"
+      "paragraph": "Text",
+      "skillRow": "Kenntnis-Zeile"
     },
     "paragraph": "Text",
     "paragraphPlaceholder": "Ein paar Sätze über dich…",
@@ -497,30 +493,36 @@
       "add": "Absatz hinzufügen"
     },
     "readAgain": {
-      "title": "Lebenslauf neu in Abschnitte einlesen",
-      "outOfDate": "Dein Lebenslauf in Mein Profil hat sich geändert (neuer Upload?). Neu in Abschnitte einlesen oder die Version aus dem Editor behalten?",
+      "outOfDate": "Deine Lebenslauf-Datei hat sich geändert (neuer Upload?). Neu in Abschnitte einlesen oder die Version aus dem Editor behalten?",
       "readNew": "Neuen Lebenslauf einlesen",
       "keepMine": "Version aus dem Editor behalten",
-      "fromProfile": "Neu beginnen mit dem Lebenslauf-Text aus Mein Profil. Abschnitte werden an ihren Titeln erkannt.",
-      "fromProfileButton": "Neu aus Mein Profil",
-      "confirm": "Das ersetzt, was du hier siehst. Mit Rückgängig holst du es zurück.",
-      "confirmYes": "Ersetzen",
-      "cancel": "Abbrechen",
-      "withAi": "Besser: Dein KI-Chat sortiert Stellen, Zeiträume und Punkte richtig ein, ohne ein Wort zu ändern. Kopiere den Prompt und füge dann die Antwort von {ai} hier ein.",
       "copyPrompt": "Prompt kopieren und {ai} öffnen",
       "gettingPrompt": "Prompt wird geholt…",
       "copied": "Kopiert. Füge ihn in {ai} ein.",
       "copyFailed": "Kopieren ging nicht. Erlaube den Zugriff auf die Zwischenablage und versuch es erneut.",
       "paste": "Antwort von {ai}",
-      "readReply": "Antwort einlesen",
-      "reading": "Wird eingelesen…"
+      "reading": "Wird eingelesen…",
+      "title": "Quelle des Lebenslaufs",
+      "startAgain": "Neu aus Mein Profil starten",
+      "sortWithAi": "Mit meinem KI-Chat sortieren",
+      "confirm": "Das ersetzt, was du hier siehst. Rückgängig bringt es zurück.",
+      "yes": "Ersetzen",
+      "no": "Abbrechen",
+      "step1": "Prompt kopieren",
+      "step2": "Antwort von {ai} einfügen",
+      "step3": "Übernehmen",
+      "pasteClipboard": "Aus Zwischenablage einfügen",
+      "apply": "Übernehmen",
+      "clipboardFailed": "Zwischenablage nicht lesbar. Füge den Text mit Strg+V in das Feld ein.",
+      "stepHint": "Dein KI-Chat sortiert Stellen, Daten und Punkte an die richtigen Stellen, ohne ein Wort zu ändern."
     },
     "tabs": {
       "edit": "Bearbeiten",
       "look": "Aussehen",
       "match": "Stellen-Abgleich",
       "letter": "Anschreiben",
-      "check": "Prüfen"
+      "check": "Prüfen",
+      "files": "Dateien und Einstellungen"
     },
     "tabsLabel": "Bereiche des Editors",
     "look": {
@@ -607,8 +609,56 @@
       "compact": "Kompakt: weniger Abstand zwischen Stationen und Punkten",
       "templateValue": "{value} (Vorlage)",
       "reset": "Zurück zu den Werten der Vorlage",
+      "details": {
+        "title": "Details",
+        "skills": {
+          "label": "Kenntnis-Zeilen",
+          "index": "Index",
+          "indexHint": "Fettes Label, dann die Liste in einer ausgerichteten Spalte",
+          "lines": "Zeilen",
+          "linesHint": "Fettes Label, dann die Liste im Fließtext",
+          "plain": "Wie getippt",
+          "plainHint": "Genau so, wie du die Zeilen geschrieben hast"
+        },
+        "skillsLabel": {
+          "label": "Label",
+          "bold": "Fett",
+          "boldHint": "Fettes Label vor dem Doppelpunkt",
+          "normal": "Normal",
+          "normalHint": "Label in normaler Schrift"
+        },
+        "headings": {
+          "label": "Abschnittstitel",
+          "auto": "Vorlage",
+          "autoHint": "Wie in der Vorlage",
+          "rule": "Linie",
+          "ruleHint": "Farbige Linie unter dem Titel",
+          "bold": "Fett",
+          "boldHint": "Fetter Titel ohne Linie",
+          "bar": "Balken",
+          "barHint": "Kleiner farbiger Balken vor dem Titel"
+        },
+        "dates": {
+          "label": "Daten",
+          "auto": "Vorlage",
+          "autoHint": "Wie in der Vorlage",
+          "right": "Rechts",
+          "rightHint": "Daten rechts neben dem Jobtitel",
+          "below": "Darunter",
+          "belowHint": "Daten in einer Zeile unter dem Jobtitel"
+        },
+        "bullets": {
+          "label": "Aufzählung",
+          "dot": "Punkt",
+          "dotHint": "Ein Punkt vor jedem Eintrag",
+          "dash": "Strich",
+          "dashHint": "Ein Strich vor jedem Eintrag",
+          "none": "Keine",
+          "noneHint": "Kein Zeichen vor jedem Eintrag"
+        }
+      },
       "wordSpacing": "Deine Word-Datei behält ihre eigene Größe und Abstände.",
-      "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf unter Mein Profil > Lebenslauf als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
+      "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf auf der Seite Lebenslauf (Dateien und Einstellungen) als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
       "templateUsed": "Deine nächsten PDF-Downloads verwenden sie."
     },
     "copyToMaster": "{title} in meinen Haupt-Lebenslauf übernehmen",
@@ -647,6 +697,28 @@
       "achievementsHint": "Wahre Zeilen aus deiner Erfolgs-Sammlung. Füge eine zu deiner letzten Stelle hinzu.",
       "addBullet": "Hinzufügen",
       "addBulletLabel": "Zu deiner letzten Stelle hinzufügen: {line}"
+    },
+    "skillLabel": "Kenntnis-Label",
+    "skillLabelPlaceholder": "Frontend",
+    "skillList": "Kenntnis-Liste",
+    "skillListPlaceholder": "React, Next.js, Vue 3",
+    "format": {
+      "label": "Text formatieren",
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "link": "Link",
+      "clear": "Formatierung entfernen",
+      "address": "Link-Adresse",
+      "addLink": "Link hinzufügen",
+      "cancel": "Abbrechen",
+      "hint": "Text markieren, dann formatieren. Strg+B und Strg+I gehen auch.",
+      "hintIdle": "Klicke in ein Feld, um den Text zu formatieren."
+    },
+    "files": {
+      "loading": "Lädt…",
+      "save": "Einstellungen speichern",
+      "saved": "Einstellungen gespeichert.",
+      "saveFailed": "Speichern fehlgeschlagen: {error}"
     }
   },
   "Jobs": {
@@ -810,7 +882,7 @@
       "salaryStated": "Steht in der Anzeige",
       "estimated": "geschätzt",
       "statusFor": "Status für {job}",
-      "fitEmpty": "Füge deinen Lebenslauf unter Mein Profil hinzu, um zu sehen, wie gut du zu jedem Job passt",
+      "fitEmpty": "Füge deinen Lebenslauf auf der Seite Lebenslauf hinzu, um zu sehen, wie gut du zu jedem Job passt",
       "fitLabel": "Fit für {title}: {score} %",
       "fitHint": "Wie viel von den Fähigkeiten, Schlagwörtern und dem Titel des Jobs dein Lebenslauf abdeckt. Klick für Details",
       "applyEmpty": "Speichere eine Antwort von {ai} im Bewerbungs-Kit, um ihre Bewertung zu sehen",
@@ -959,7 +1031,7 @@
       "gapsTitle": "Wahrscheinlich schwierige Fragen",
       "gapsHint": "Fähigkeiten, die die Anzeige verlangt und dein Lebenslauf nicht zeigt. Der Prompt bittet {ai} um eine ehrliche Antwort auf jede.",
       "noGaps": "Dein Lebenslauf deckt jede Fähigkeit ab, die die Anzeige verlangt.",
-      "noResume": "Füge deinen Lebenslauf in Mein Profil hinzu, um zu sehen, wonach das Interview fragen könnte.",
+      "noResume": "Füge deinen Lebenslauf auf der Seite Lebenslauf hinzu, um zu sehen, wonach das Interview fragen könnte.",
       "german": "Die Anzeige verlangt Deutsch {level}. Übe deine Antworten auf Deutsch, auf deinem echten Niveau.",
       "germanAny": "Die Anzeige verlangt Deutsch. Übe deine Antworten auf Deutsch, auf deinem echten Niveau.",
       "askTitle": "Mit {ai} vorbereiten",
@@ -1072,11 +1144,11 @@
       "resumeGerman": "· Lebenslauf auf Deutsch",
       "resumeEnglish": "· Lebenslauf auf Englisch",
       "checkedAgainst": "Fit geprüft mit deinem Lebenslauf auf {language}",
-      "mismatch": ". Füge deinen Lebenslauf auf {language} unter „Mein Profil“ hinzu, damit seine Schlagwörter gefunden werden.",
+      "mismatch": ". Füge deinen Lebenslauf auf {language} auf der Seite Lebenslauf hinzu, damit seine Schlagwörter gefunden werden.",
       "reading": "Der Job wird gelesen…",
       "readError": "Der Job konnte nicht gelesen werden: {error}",
       "sectionLabel": "Fähigkeiten und Schlagwörter",
-      "addResume": "Füge deinen Lebenslauf unter „Mein Profil“ hinzu, um zu sehen, welche davon dir fehlen.",
+      "addResume": "Füge deinen Lebenslauf auf der Seite Lebenslauf hinzu, um zu sehen, welche davon dir fehlen.",
       "skillsMissing": "Fähigkeiten, die in deinem Lebenslauf fehlen",
       "skills": "Fähigkeiten",
       "missingSkillsLabel": "Fehlende Fähigkeiten",
@@ -1746,14 +1818,14 @@
     "TAILOR_FIRST": "Passe zuerst deinen Lebenslauf für diesen Job an.",
     "NO_COVER_LETTER": "Für diesen Job gibt es kein Anschreiben. Passe ihn noch einmal an.",
     "JOB_NO_DESCRIPTION": "Dieser Job hat keine Beschreibung, mit der sich dein Lebenslauf vergleichen ließe.",
-    "MATCHER_RESUME_FIRST": "Sende deinen Lebenslauf zuerst unter Mein Profil an Resume-Matcher und versuche es dann noch einmal.",
+    "MATCHER_RESUME_FIRST": "Sende deinen Lebenslauf zuerst auf der Seite Lebenslauf an Resume-Matcher und versuche es dann noch einmal.",
     "MATCHER_FILE_FIRST": "Lade deinen Lebenslauf auf dieser Seite als PDF- oder Word-Datei hoch, damit Resume-Matcher ihn nutzen kann.",
     "MATCHER_BUSY": "Dein Lebenslauf wird gerade gesendet. Warte, bis es fertig ist.",
     "PHOTO_TYPE": "Lade ein JPEG- oder PNG-Foto hoch.",
     "PHOTO_TOO_BIG": "Das Foto ist größer als 2 MB.",
     "PHOTO_MISSING": "Es ist kein Foto hochgeladen.",
-    "DOCX_TEMPLATE_FIRST": "Lade deinen Haupt-Lebenslauf unter „Mein Profil“ als Word-Datei (.docx) hoch, um ihn als Vorlage zu nutzen.",
-    "DOCX_NOT_WORD": "Diese Word-Datei lässt sich nicht als Vorlage nutzen. Lade deinen Haupt-Lebenslauf unter „Mein Profil“ als .docx-Datei hoch.",
+    "DOCX_TEMPLATE_FIRST": "Lade deinen Haupt-Lebenslauf auf der Seite Lebenslauf als Word-Datei (.docx) hoch, um ihn als Vorlage zu nutzen.",
+    "DOCX_NOT_WORD": "Diese Word-Datei lässt sich nicht als Vorlage nutzen. Lade deinen Haupt-Lebenslauf auf der Seite Lebenslauf als .docx-Datei hoch.",
     "GMAIL_NOT_CONFIGURED": "Gmail ist auf diesem Server nicht eingerichtet.",
     "GMAIL_ACCOUNT_NOT_FOUND": "Dieses Gmail-Konto wurde nicht gefunden.",
     "SUGGESTION_NOT_FOUND": "Dieser Vorschlag wurde nicht gefunden.",

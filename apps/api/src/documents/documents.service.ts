@@ -81,6 +81,13 @@ function layoutUpdate(input: DocumentStyleInput) {
       ? { lineSpacing: layout.lineSpacing }
       : {}),
     ...(input.compact !== undefined && input.compact !== null ? { compact: input.compact } : {}),
+    ...(input.skillsStyle ? { skillsStyle: layout.skillsStyle } : {}),
+    ...(input.skillsBold !== undefined && input.skillsBold !== null
+      ? { skillsBold: input.skillsBold }
+      : {}),
+    ...(input.headingStyle ? { headingStyle: layout.headingStyle } : {}),
+    ...(input.datesSide ? { datesSide: layout.datesSide } : {}),
+    ...(input.bulletStyle ? { bulletStyle: layout.bulletStyle } : {}),
   };
 }
 

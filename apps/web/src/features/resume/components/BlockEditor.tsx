@@ -1,17 +1,30 @@
 import type { BuilderBlock, BuilderEntry } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
-import { useId } from 'react';
+import { useId, useState } from 'react';
+import { joinSkill, splitSkill } from '../docOps';
 import { ListEditor } from './ListEditor';
 import { FIELD } from './ui';
 
 interface Props {
   block: BuilderBlock;
   onChange: (block: BuilderBlock, field: string | null) => void;
+  /** In a Skills section a paragraph is a row: a label and its list. */
+  skills?: boolean;
 }
 
 /** One block of a section: a paragraph, a bullet list, or a job/degree/project. */
-export function BlockEditor({ block, onChange }: Props) {
+export function BlockEditor({ block, onChange, skills = false }: Props) {
   const t = useTranslations('Resume');
+  if (block.kind === 'paragraph' && skills) {
+    return (
+      <SkillRow
+        text={block.text}
+        onChange={(text) => {
+          onChange({ ...block, text }, `${block.id}:text`);
+        }}
+      />
+    );
+  }
   if (block.kind === 'paragraph') {
     return (
       <textarea
@@ -40,6 +53,43 @@ export function BlockEditor({ block, onChange }: Props) {
     );
   }
   return <EntryEditor entry={block} onChange={onChange} />;
+}
+
+/**
+ * A skills line as two boxes, "Frontend" and "React, Vue 3": saved as "Frontend: React, Vue 3",
+ * which the PDF sets as an aligned index. The boxes keep their own text while you type, so a
+ * colon in the list never moves the label.
+ */
+function SkillRow({ text, onChange }: { text: string; onChange: (text: string) => void }) {
+  const t = useTranslations('Resume');
+  const [row, setRow] = useState(() => splitSkill(text));
+  const change = (next: { label: string; list: string }) => {
+    setRow(next);
+    onChange(joinSkill(next.label, next.list));
+  };
+  return (
+    <div className="grid gap-1.5 sm:grid-cols-[9rem_1fr]">
+      <input
+        value={row.label}
+        aria-label={t('skillLabel')}
+        placeholder={t('skillLabelPlaceholder')}
+        onChange={(event) => {
+          change({ ...row, label: event.target.value });
+        }}
+        className={`${FIELD} font-semibold`}
+      />
+      <textarea
+        rows={1}
+        value={row.list}
+        aria-label={t('skillList')}
+        placeholder={t('skillListPlaceholder')}
+        onChange={(event) => {
+          change({ ...row, list: event.target.value });
+        }}
+        className={`${FIELD} resize-none`}
+      />
+    </div>
+  );
 }
 
 function EntryEditor({

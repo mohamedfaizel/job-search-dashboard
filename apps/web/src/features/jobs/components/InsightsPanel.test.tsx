@@ -28,7 +28,7 @@ describe('InsightsPanel', () => {
     expect(screen.getByText('· resume in German')).toBeInTheDocument();
     // The German ad was checked against the English resume: say how to do better.
     expect(screen.getByText(/Fit checked against your English resume/)).toHaveTextContent(
-      'Add your resume in German on “My profile”',
+      'Add your resume in German on the Resume page',
     );
     expect(screen.getByRole('img', { name: '50 percent fit' })).toBeInTheDocument();
     expect(screen.getByText(/Skills 1\/2/)).toBeInTheDocument();
@@ -201,7 +201,7 @@ describe('InsightsPanel', () => {
     );
     renderPanel();
 
-    expect(await screen.findByText(/Add your resume on “My profile”/)).toBeInTheDocument();
+    expect(await screen.findByText(/Add your resume on the Resume page/)).toBeInTheDocument();
     expect(screen.getByText('English')).toBeInTheDocument();
     expect(screen.getByText('(detected)')).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /percent fit/ })).not.toBeInTheDocument();

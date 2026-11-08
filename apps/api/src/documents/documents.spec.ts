@@ -217,7 +217,7 @@ describe('templates', () => {
     expect(plain).not.toContain('\\linespread');
     expect(plain).not.toContain('\\renewcommand\\normalsize');
 
-    const layout = { fontSize: 9.5, margin: 12, lineSpacing: 1.2, compact: true };
+    const layout = toLayout({ fontSize: 9.5, margin: 12, lineSpacing: 1.2, compact: true });
     const tex = resumeTex(doc, { ...look, template: 'classic', layout });
     expect(tex).toContain('left=12mm,right=12mm,top=12mm,bottom=12mm');
     expect(tex).toContain('\\linespread{1.2}');
@@ -228,7 +228,7 @@ describe('templates', () => {
 
     const spacingOnly = resumeTex(doc, {
       ...look,
-      layout: { fontSize: null, margin: null, lineSpacing: 1.1, compact: false },
+      layout: toLayout({ lineSpacing: 1.1 }),
     });
     expect(spacingOnly).toContain('\\linespread{1.1}');
     expect(spacingOnly).not.toContain('\\renewcommand\\normalsize');
@@ -236,12 +236,28 @@ describe('templates', () => {
   });
 
   it('keeps the sliders inside readable limits', () => {
-    expect(toLayout({})).toEqual({ fontSize: null, margin: null, lineSpacing: 1, compact: false });
-    expect(toLayout({ fontSize: 4, margin: 99, lineSpacing: 3, compact: true })).toEqual({
+    expect(toLayout({})).toEqual({
+      fontSize: null,
+      margin: null,
+      lineSpacing: 1,
+      compact: false,
+      skillsStyle: 'index',
+      skillsBold: true,
+      headingStyle: 'auto',
+      datesSide: 'auto',
+      bulletStyle: 'dot',
+    });
+    expect(toLayout({ fontSize: 4, margin: 99, lineSpacing: 3, compact: true })).toMatchObject({
       fontSize: 9,
       margin: 25,
       lineSpacing: 1.4,
       compact: true,
+    });
+    // Unknown choices go back to the defaults.
+    expect(toLayout({ skillsStyle: 'x', headingStyle: '}', bulletStyle: 'star' })).toMatchObject({
+      skillsStyle: 'index',
+      headingStyle: 'auto',
+      bulletStyle: 'dot',
     });
     expect(toLayout({ fontSize: 10.3, margin: 14.6, lineSpacing: 1.17 })).toMatchObject({
       fontSize: 10.5,
@@ -251,6 +267,56 @@ describe('templates', () => {
     expect(toLayout({ fontSize: Number.NaN })).toMatchObject({ fontSize: null });
     expect(templateSizes('compact')).toEqual({ fontSize: 10, margin: 15 });
     expect(templateSizes('design')).toBeNull();
+  });
+
+  it('sets Skills lines as a bold-label index in one block', () => {
+    const doc = parseResume(
+      '# Jane\n## Technical Skills\nLanguages : JavaScript, TypeScript\n\n**Frontend**: React, Vue\n\nPlain line without a label',
+      'X',
+    );
+    const tex = resumeTex(doc, { ...look, layout: toLayout({}) });
+    expect(tex).toContain('\\begin{minipage}{\\linewidth}');
+    expect(tex).toContain('\\makebox[\\skillw][l]{\\textbf{Languages}}JavaScript, TypeScript');
+    expect(tex).toContain('\\makebox[\\skillw][l]{\\textbf{Frontend}}React, Vue');
+    expect(tex).toContain('Plain line without a label\\par');
+    expect(tex).not.toContain('\\begin{tabular');
+
+    const lines = resumeTex(doc, { ...look, layout: toLayout({ skillsStyle: 'lines' }) });
+    expect(lines).toContain('\\textbf{Languages}: JavaScript, TypeScript\\par');
+    expect(lines).not.toContain('\\makebox[\\skillw]');
+
+    const light = resumeTex(doc, { ...look, layout: toLayout({ skillsBold: false }) });
+    expect(light).not.toContain('\\textbf{Languages}');
+
+    const plain = resumeTex(doc, { ...look, layout: toLayout({ skillsStyle: 'plain' }) });
+    expect(plain).not.toContain('\\begin{minipage}');
+    // A Skills section with no "Label: list" line is set as written.
+    const none = parseResume('# Jane\n## Skills\n- React\n- Vue', 'X');
+    expect(resumeTex(none, { ...look, layout: toLayout({}) })).toContain('\\item React');
+  });
+
+  it('applies your bullet, heading and date choices', () => {
+    const doc = parseResume(
+      '# Jane\n## Experience\n### Dev | Acme\nBerlin | 01/2020 - today\n- Built it',
+      'X',
+    );
+    const tex = resumeTex(doc, {
+      ...look,
+      layout: toLayout({ bulletStyle: 'dash', headingStyle: 'bar', datesSide: 'right' }),
+    });
+    expect(tex).toContain('label={\\color{accent}\\textendash}');
+    expect(tex).toContain('\\rule[-1pt]{3pt}{11pt}');
+    expect(tex).toContain('\\hfill{\\small\\color{muted}Berlin | 01/2020 - today}');
+    const below = resumeTex(doc, { ...look, layout: toLayout({ datesSide: 'below' }) });
+    expect(below).toContain('{\\small\\color{muted}Berlin | 01/2020 - today}\\par');
+    const none = resumeTex(doc, { ...look, layout: toLayout({ bulletStyle: 'none' }) });
+    expect(none).toContain('leftmargin=0pt,label={\\color{accent}}');
+    expect(resumeTex(doc, { ...look, layout: toLayout({ headingStyle: 'rule' }) })).toContain(
+      '\\rule{\\linewidth}{0.6pt}',
+    );
+    expect(resumeTex(doc, { ...look, layout: toLayout({ headingStyle: 'bold' }) })).toContain(
+      '\\large\\bfseries Experience',
+    );
   });
 
   it('accepts only real hex colours', () => {

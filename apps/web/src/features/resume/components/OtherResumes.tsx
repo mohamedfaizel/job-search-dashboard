@@ -12,8 +12,8 @@ import { useId, useState } from 'react';
 import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiChat } from '../../../lib/ai-chat';
-import { inputClass } from './Field';
-import { useLanguageName } from './useLanguageName';
+import { inputClass } from '../../profile/components/Field';
+import { useLanguageName } from '../../profile/components/useLanguageName';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPT = '.pdf,.docx';
