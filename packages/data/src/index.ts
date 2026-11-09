@@ -1,5 +1,5 @@
 export * from './api/types';
-export { API_URL, ApiError, getErrorCode, getErrorMessage } from './api/client';
+export { API_URL, ApiError, getErrorCode, getErrorMessage, setApiUrl } from './api/client';
 export type { ErrorCode } from './api/client';
 export {
   useFinishOnboarding,

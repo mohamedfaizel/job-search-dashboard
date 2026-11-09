@@ -217,6 +217,35 @@ A phone only installs apps from an `https://` address, so phone install works on
 deployed. Offline, the app shows a short "You're offline" page; your data always comes fresh from
 the API.
 
+### Phone app (Expo, apps/mobile)
+
+A native app for Android and iPhone, built with [Expo](https://expo.dev) and React Native. It
+uses the same API and the same data hooks (`packages/data`) as the website. You log in with the
+same account. For now it shows your jobs with Fit % and a New badge; the job popup, tracker
+status and new-job alerts come next.
+
+Try it on your own phone:
+
+1. Install **Expo Go** from the Play Store or the App Store.
+2. Start the API as usual (`pnpm dev`). Your phone and computer must be on the **same Wi-Fi**.
+3. In a second terminal:
+
+   ```bash
+   pnpm --filter @jobsearch/mobile start
+   ```
+
+4. Scan the QR code: with Expo Go on Android, or with the Camera app on iPhone.
+
+The app finds the API on your computer by itself (the address it loaded the app from, port 3000).
+The login screen shows that address. If the phone can't reach it, allow Node.js through the
+Windows firewall for private networks. To use another server, put
+`EXPO_PUBLIC_API_URL=https://your-server/graphql` in `apps/mobile/.env`.
+
+Without a phone: press `w` in the Expo terminal for a web preview at http://localhost:8081.
+
+Tests: `pnpm --filter @jobsearch/mobile test` (Jest with `jest-expo` and React Native Testing
+Library).
+
 ### Tailor your resume with Resume-Matcher (optional)
 
 [Resume-Matcher](https://github.com/srbhr/Resume-Matcher) (Apache-2.0) tailors a resume to one job

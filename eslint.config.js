@@ -18,6 +18,7 @@ export default tseslint.config(
       '**/.next/**',
       '**/next-env.d.ts',
       'apps/api/src/generated/**',
+      'apps/mobile/.expo/**',
     ],
   },
 
@@ -57,7 +58,11 @@ export default tseslint.config(
 
   // React apps: hooks rules and accessibility checks.
   {
-    files: ['apps/web/src/**/*.{ts,tsx}', 'apps/storybook/{stories,.storybook}/**/*.{ts,tsx}'],
+    files: [
+      'apps/web/src/**/*.{ts,tsx}',
+      'apps/storybook/{stories,.storybook}/**/*.{ts,tsx}',
+      'apps/mobile/src/**/*.{ts,tsx}',
+    ],
     plugins: { 'react-hooks': reactHooks },
     languageOptions: { globals: globals.browser },
     rules: {
@@ -100,6 +105,17 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
+    },
+  },
+
+  // The phone app's Jest files are CommonJS, as Jest loads them.
+  {
+    files: ['apps/mobile/*.js'],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      sourceType: 'commonjs',
+      globals: globals.node,
     },
   },
 

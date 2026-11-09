@@ -5,7 +5,8 @@ import { createValidationPipe } from './common/validation.pipe';
 import { PDF_HEADERS } from './resume-builder/resume-builder.controller';
 
 // The Next.js app (apps/web) and Storybook.
-const DEV_ORIGINS = ['http://localhost:3001', 'http://localhost:6006'];
+// The web app, Storybook and the phone app's web preview (Expo, port 8081).
+const DEV_ORIGINS = ['http://localhost:3001', 'http://localhost:6006', 'http://localhost:8081'];
 
 /** Shared by main.ts and the tests, so both run the API the same way. */
 export function configureApp(app: INestApplication): void {
