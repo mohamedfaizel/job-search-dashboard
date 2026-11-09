@@ -89,7 +89,8 @@
       "github": "GitHub",
       "website": "Website",
       "keywords": "Keywords",
-      "keywordsHint": "Words from job ads that are true for you. ✓ on the Fit tab adds them here."
+      "keywordsHint": "Words from job ads that are true for you. ✓ on the Fit tab adds them here.",
+      "notInResume": "not in resume: {list}"
     },
     "answers": {
       "heading": "Application answers",

@@ -89,7 +89,8 @@
       "github": "GitHub",
       "website": "Website",
       "keywords": "Schlüsselwörter",
-      "keywordsHint": "Wörter aus Stellenanzeigen, die auf dich zutreffen. ✓ im Reiter Passung fügt sie hier hinzu."
+      "keywordsHint": "Wörter aus Stellenanzeigen, die auf dich zutreffen. ✓ im Reiter Passung fügt sie hier hinzu.",
+      "notInResume": "nicht im Lebenslauf: {list}"
     },
     "answers": {
       "heading": "Antworten für Bewerbungen",

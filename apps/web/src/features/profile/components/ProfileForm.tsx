@@ -4,9 +4,10 @@ import { useUpdateProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import type { FieldErrors } from 'react-hook-form';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { AutoHide } from '../../../components/AutoHide';
 import { useErrorText } from '../../../i18n/useErrorText';
+import { notInResume } from '../not-in-resume';
 import type { ProfileFormValues } from '../schema';
 import { profileSchema, profileToForm, toProfileInput } from '../schema';
 import { Field, inputClass } from './Field';
@@ -78,6 +79,10 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
     defaultValues: profileToForm(profile, accountName),
   });
   const custom = useFieldArray({ control, name: 'customFields' });
+  const [skillsText, keywordsText] = useWatch({ control, name: ['skills', 'keywords'] });
+  // Shown next to the label, so the list itself stays as you typed it.
+  const missingNote = (missing: string[]) =>
+    missing.length > 0 ? t('about.notInResume', { list: missing.join(', ') }) : null;
 
   // A mistake on another tab: open that tab so you can see it.
   const onInvalid = (invalid: FieldErrors<ProfileFormValues>) => {
@@ -215,6 +220,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             </Field>
             <Field
               label={t('about.skills')}
+              note={missingNote(notInResume(skillsText, profile.resumeText))}
               htmlFor="skills"
               error={errors.skills?.message}
               hint={listHint}
@@ -223,6 +229,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             </Field>
             <Field
               label={t('about.keywords')}
+              note={missingNote(notInResume(keywordsText, profile.resumeText))}
               htmlFor="keywords"
               error={errors.keywords?.message}
               hint={t('about.keywordsHint')}
