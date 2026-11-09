@@ -1991,7 +1991,23 @@
       "moreLeft": "Noch mehr da"
     },
     "tokenHint": "Importe von JobHunter nutzen den Token aus deinen Einstellungen, also deine eigenen Credits.",
-    "openSettings": "Einstellungen öffnen"
+    "openSettings": "Einstellungen öffnen",
+    "picker": {
+      "open": "Aus {count} Firmen wählen",
+      "close": "Firmenliste schließen",
+      "search": "Firmen oder Orte suchen",
+      "all": "Alle",
+      "groups": {
+        "germany": "Deutschland",
+        "europe": "Europa",
+        "ai": "KI & Daten",
+        "global": "Global & remote"
+      },
+      "chosen": "{count} ausgewählt",
+      "addShown": "Alle {count} angezeigten hinzufügen",
+      "none": "Keine Firma passt.",
+      "hint": "Firmen wechseln manchmal ihr Bewerbungstool. Kann eine Seite nicht gelesen werden, nennt der Import sie, und du kannst den Haken entfernen."
+    }
   },
   "Errors": {
     "NETWORK": "Die API unter {url} ist nicht erreichbar. Läuft sie?",
