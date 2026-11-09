@@ -66,6 +66,7 @@ export {
   useSaveClaudeAnswers,
   useSavedAnswers,
 } from './api/answers';
+export { storiesKey, useDeleteStory, useSaveStory, useStories } from './api/stories';
 export {
   RESUME_LANGUAGES,
   RESUME_UPLOAD_URL,

@@ -1290,3 +1290,27 @@ export const IMPROVE_LETTER = /* GraphQL */ `
     }
   }
 `;
+
+const STORY_FIELDS = `id title situation task action result reflection tags updatedAt`;
+
+export const STORIES = /* GraphQL */ `
+  query Stories {
+    stories {
+      ${STORY_FIELDS}
+    }
+  }
+`;
+
+export const SAVE_STORY = /* GraphQL */ `
+  mutation SaveStory($input: StoryInput!) {
+    saveStory(input: $input) {
+      ${STORY_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_STORY = /* GraphQL */ `
+  mutation DeleteStory($id: Int!) {
+    deleteStory(id: $id)
+  }
+`;

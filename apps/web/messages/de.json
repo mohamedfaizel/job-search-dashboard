@@ -53,7 +53,8 @@
     "tabs": {
       "personal": "Persönlich",
       "applications": "Bewerbungsangaben",
-      "achievements": "Erfolge"
+      "achievements": "Erfolge",
+      "stories": "Story-Bank"
     },
     "listHint": "Mit Kommas trennen",
     "personal": {
@@ -225,6 +226,41 @@
       "editFor": "Deine Antwort bearbeiten auf: {question}",
       "deleteFor": "Deine Antwort löschen auf: {question}",
       "answerFor": "Deine Antwort auf: {question}"
+    },
+    "stories": {
+      "title": "Story-Bank",
+      "intro": "Wahre Geschichten fürs Vorstellungsgespräch, im STAR-Format: Situation, Aufgabe, Handlung, Ergebnis. Die Interview-Vorbereitung gibt Claude die, die zur Stelle passen, für Antworten auf „Erzählen Sie von einer Situation…“.",
+      "add": "Geschichte hinzufügen",
+      "loading": "Deine Geschichten werden geladen…",
+      "empty": "Noch keine Geschichten. Füge eine hinzu, die du im Gespräch erzählen würdest: ein gelöstes Problem, ein Projekt, das du geleitet hast, ein Fehler, aus dem du gelernt hast.",
+      "storyTitle": "Titel",
+      "titleExample": "z. B. Nächtlichen Datenimport von 4 Stunden auf 40 Minuten verkürzt",
+      "parts": {
+        "situation": "Situation",
+        "task": "Aufgabe",
+        "action": "Handlung",
+        "result": "Ergebnis",
+        "reflection": "Reflexion"
+      },
+      "hints": {
+        "situation": "Wo warst du, was war los?",
+        "task": "Was musstest du tun?",
+        "action": "Was hast du getan, Schritt für Schritt?",
+        "result": "Was kam dabei heraus? Nur echte Zahlen.",
+        "reflection": "Optional: was du gelernt hast oder anders machen würdest"
+      },
+      "tags": "Gezeigte Fähigkeiten",
+      "tagsExample": "z. B. SQL, Airflow, Führung (mit Kommas trennen)",
+      "save": "Geschichte speichern",
+      "saving": "Wird gespeichert…",
+      "cancel": "Abbrechen",
+      "edit": "Bearbeiten",
+      "editFor": "Geschichte {title} bearbeiten",
+      "delete": "Löschen",
+      "deleteFor": "Geschichte {title} löschen",
+      "deleteConfirm": "Diese Geschichte löschen?",
+      "deleteYes": "Ja, {title} löschen",
+      "deleteYesShort": "Ja, löschen"
     }
   },
   "Settings": {
@@ -1903,6 +1939,9 @@
     "LANGUAGES_LENGTH": "Die Sprachzeile darf höchstens 300 Zeichen lang sein.",
     "ANSWER_LENGTH": "Frage und Antwort müssen je 1 bis {max} Zeichen lang sein.",
     "ANSWER_NOT_FOUND": "Diese gespeicherte Antwort wurde nicht gefunden.",
+    "STORY_INVALID": "Eine Geschichte braucht einen Titel mit höchstens {title} Zeichen. Jeder Teil hat höchstens {part} Zeichen, mit höchstens {tags} Fähigkeiten.",
+    "STORY_NOT_FOUND": "Diese Geschichte wurde nicht gefunden.",
+    "STORIES_FULL": "Du kannst höchstens {max} Geschichten speichern. Lösche zuerst eine.",
     "ANSWERS_INVALID": "Deine Antworten konnten nicht gelesen werden.",
     "API_KEY_INVALID": "Das sieht nicht wie ein Schlüssel aus. Füge den ganzen Schlüssel ohne Leerzeichen ein.",
     "JOBHUNTER_TOKEN_MISSING": "Füge zuerst deinen JobHunter-Token unter Einstellungen › API-Schlüssel hinzu.",

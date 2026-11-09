@@ -176,6 +176,7 @@ describe('profile page', () => {
       'Persönlich',
       'Bewerbungsangaben',
       'Erfolge',
+      'Story-Bank',
     ]);
     expect(headline).toHaveValue('Frontend engineer');
     const years = screen.getByRole('textbox', { name: 'Jahre Berufserfahrung' });
@@ -262,6 +263,12 @@ describe('profile page', () => {
     await user.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Applications' })).toHaveFocus();
     await user.keyboard('{End}');
+    expect(screen.getByRole('tab', { name: 'Story bank' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(await screen.findByRole('heading', { name: 'Story bank' })).toBeInTheDocument();
+    await user.keyboard('{ArrowLeft}');
     expect(screen.getByRole('tab', { name: 'Achievements' })).toHaveAttribute(
       'aria-selected',
       'true',

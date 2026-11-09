@@ -7,10 +7,11 @@ import { useErrorText } from '../../i18n/useErrorText';
 import { AchievementsTab } from '../resume/components/AchievementsTab';
 import type { ProfileTab } from './components/ProfileForm';
 import { ProfileForm } from './components/ProfileForm';
+import { StoryBank } from './components/StoryBank';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
 
-const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'achievements'];
+const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'achievements', 'stories'];
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
@@ -104,6 +105,8 @@ export function ProfilePage() {
               />
               {/* Facts about you, with numbers: Job match offers them as resume bullets. */}
               {tab === 'achievements' && <AchievementsTab />}
+              {/* True STAR stories: interview prep picks the ones that fit each job. */}
+              {tab === 'stories' && <StoryBank />}
             </div>
           </div>
         </>

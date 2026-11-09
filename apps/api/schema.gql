@@ -947,6 +947,9 @@ type Mutation {
   """Delete a saved search. Its past imports stay."""
   deleteSavedSearch(id: Int!): Boolean!
 
+  """Deletes a story. Returns its id"""
+  deleteStory(id: Int!): Int!
+
   """Removes a Gmail account and its pending suggestions."""
   disconnectGmail(id: Int!): Boolean!
 
@@ -1083,6 +1086,9 @@ type Mutation {
   Saves the builder resume (JSON text) and writes it to My profile as text
   """
   saveResumeBuild(doc: String!, language: String!): ResumeBuild!
+
+  """Adds a story (no id) or changes one (with its id)"""
+  saveStory(input: StoryInput!): Story!
 
   """
   Saves your Job posts filters and sort (JSON text), replacing the ones before
@@ -1576,6 +1582,9 @@ type Query {
   """Your saved searches, by name, with their last import"""
   savedSearches: [SavedSearch!]!
 
+  """Your story bank, the story changed last first"""
+  stories: [Story!]!
+
   """Past imports, newest first"""
   syncRuns(limit: Int! = 20, savedSearchId: Int): [SyncRunModel!]!
 
@@ -1853,6 +1862,48 @@ input SignUpInput {
 enum SortDirection {
   ASC
   DESC
+}
+
+"""One story of your story bank (STAR): situation, task, action, result"""
+type Story {
+  """Action: what you did, step by step"""
+  action: String!
+  id: Int!
+
+  """Reflection: what you learned or would do differently"""
+  reflection: String!
+
+  """Result: what came of it, with real numbers"""
+  result: String!
+
+  """Situation: where you were and what was going on"""
+  situation: String!
+
+  """
+  Skills or themes it shows, e.g. "leadership"
+  """
+  tags: [String!]!
+
+  """Task: what you had to do"""
+  task: String!
+
+  """
+  A short name, e.g. "Cut the nightly load from 4 h to 40 min"
+  """
+  title: String!
+  updatedAt: DateTime!
+}
+
+"""A new story (no id) or a change to one (with its id)"""
+input StoryInput {
+  action: String! = ""
+  id: Int
+  reflection: String! = ""
+  result: String! = ""
+  situation: String! = ""
+  tags: [String!]! = []
+  task: String! = ""
+  title: String!
 }
 
 input SyncJobsInput {

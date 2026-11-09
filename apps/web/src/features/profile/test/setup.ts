@@ -8,6 +8,7 @@ import {
   requests,
   savedAnswers,
   server,
+  stories,
   syncs,
   wordTemplate,
 } from './server';
@@ -26,6 +27,7 @@ afterEach(() => {
   syncs.length = 0;
   otherResumes.length = 0;
   savedAnswers.length = 0;
+  stories.length = 0;
   Object.assign(gmail, { configured: true, accounts: [], found: 0 });
   window.history.replaceState(null, '', '/');
   wordTemplate.current = null;
