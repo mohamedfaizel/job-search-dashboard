@@ -11,6 +11,23 @@ permissions:
   contents: read
 
 jobs:
+  secrets:
+    name: Secret check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The whole history: a key that was committed and later deleted is still readable.
+          fetch-depth: 0
+      # Gitleaks (free, open source) looks for passwords, API keys and tokens in every commit.
+      # If it finds one: remove it from the code, then change that key where it came from.
+      - name: Look for passwords and API keys in the code
+        env:
+          GITLEAKS_VERSION: 8.28.0
+        run: |
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz gitleaks
+          ./gitleaks git --no-banner --redact --verbose .
+
   checks:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
