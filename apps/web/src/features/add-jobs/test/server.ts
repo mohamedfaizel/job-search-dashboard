@@ -104,6 +104,7 @@ export const session: { user: User } = {
     role: 'ADMIN',
     locale: 'en',
     aiProvider: 'ANTHROPIC',
+    onboarded: true,
   },
 };
 

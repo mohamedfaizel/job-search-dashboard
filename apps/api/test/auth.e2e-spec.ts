@@ -144,6 +144,25 @@ describe('auth', () => {
     expect((await gql(JOBS)).body.errors?.[0]?.message).toBe('Please log in');
   });
 
+  it('shows the first-login steps to a new account until it finishes them', async () => {
+    const gql = browser();
+    await gql(SIGN_UP, { input: MOHAMED });
+    const ONBOARDED = `query { me { onboarded } }`;
+    expect((await gql<{ me: { onboarded: boolean } }>(ONBOARDED)).body.data?.me).toEqual({
+      onboarded: false,
+    });
+    const done = await gql<{ finishOnboarding: { onboarded: boolean } }>(
+      `mutation { finishOnboarding { onboarded } }`,
+    );
+    expect(done.body.data?.finishOnboarding).toEqual({ onboarded: true });
+    expect((await gql<{ me: { onboarded: boolean } }>(ONBOARDED)).body.data?.me).toEqual({
+      onboarded: true,
+    });
+    expect(
+      (await t.anonymous(`mutation { finishOnboarding { onboarded } }`)).errors?.[0]?.message,
+    ).toBe('Please log in');
+  });
+
   it('saves the language you pick, and only languages the app has', async () => {
     const gql = browser();
     await gql(SIGN_UP, { input: MOHAMED });

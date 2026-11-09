@@ -295,6 +295,15 @@ const USER_FIELDS = /* GraphQL */ `
   role
   locale
   aiProvider
+  onboarded
+`;
+
+export const FINISH_ONBOARDING = /* GraphQL */ `
+  mutation FinishOnboarding {
+    finishOnboarding {
+      ${USER_FIELDS}
+    }
+  }
 `;
 
 export const SET_LOCALE = /* GraphQL */ `

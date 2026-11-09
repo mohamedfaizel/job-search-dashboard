@@ -1916,5 +1916,47 @@
     "close": "Close",
     "interviewSoon": "Interview soon: {when}",
     "interviewHint": "Open the job to practise on the Interview tab"
+  },
+  "Welcome": {
+    "title": "Welcome, {name}!",
+    "intro": "Two quick steps and the app is ready. You can skip both and do them later.",
+    "skipAll": "Skip setup",
+    "loading": "Loading…",
+    "steps": {
+      "key": "Job data key",
+      "resume": "Your resume",
+      "done": "Done"
+    },
+    "next": "Next ›",
+    "skip": "Skip for now ›",
+    "back": "Back",
+    "key": {
+      "title": "1. Your job data key",
+      "intro": "Job Search Hunter finds jobs with a JobHunter token. Paste yours to import jobs and run saved searches. It stays private to your account."
+    },
+    "resume": {
+      "title": "2. Your resume",
+      "intro": "Upload your resume as a PDF or Word file. It becomes your resume on the Resume page, and your name, phone and links go to My profile › Personal.",
+      "filled": "Added to My profile › Personal:",
+      "fields": {
+        "name": "Name",
+        "headline": "Headline",
+        "phone": "Phone",
+        "linkedin": "LinkedIn",
+        "github": "GitHub",
+        "website": "Website"
+      }
+    },
+    "done": {
+      "title": "You are all set",
+      "key": "Job data key saved",
+      "noKey": "No job data key yet: add it in Settings › API keys",
+      "resume": "Resume uploaded",
+      "noResume": "No resume yet: upload it on the Resume page",
+      "later": "You can change all of this later in Settings and My profile.",
+      "profile": "Check My profile",
+      "addJobs": "Find my first jobs ›",
+      "jobs": "Go to Job posts ›"
+    }
   }
 }

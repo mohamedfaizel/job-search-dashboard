@@ -230,6 +230,12 @@ export const server = setupServer(
     gmail.accounts = gmail.accounts.filter((account) => account.id !== variables['id']);
     return HttpResponse.json({ data: { disconnectGmail: true } });
   }),
+  api.mutation('FinishOnboarding', () => {
+    requests.push({ operation: 'FinishOnboarding', variables: {} });
+    return HttpResponse.json({
+      data: { finishOnboarding: { ...ME, aiProvider: me.aiProvider, onboarded: true } },
+    });
+  }),
   api.query('Me', () =>
     HttpResponse.json({
       data: {

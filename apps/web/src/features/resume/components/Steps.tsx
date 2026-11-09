@@ -18,10 +18,13 @@ export function StepBar<Id extends string>({
   steps,
   current,
   onSelect,
+  isDone,
 }: {
   steps: Step<Id>[];
   current: Id;
   onSelect: (id: Id) => void;
+  /** Which steps get a ✓. Left out, every step before the current one does. */
+  isDone?: (id: Id) => boolean;
 }) {
   const t = useTranslations('Resume.steps');
   const index = steps.findIndex((step) => step.id === current);
@@ -35,7 +38,7 @@ export function StepBar<Id extends string>({
       <ol className="hidden flex-wrap items-center gap-1.5 md:flex">
         {steps.map((step, i) => {
           const on = i === index;
-          const done = i < index;
+          const done = !on && (isDone ? isDone(step.id) : i < index);
           return (
             <li key={step.id} className="flex items-center gap-1.5">
               {i > 0 && (

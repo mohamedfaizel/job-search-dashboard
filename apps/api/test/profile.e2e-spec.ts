@@ -194,6 +194,8 @@ describe('profile', () => {
     const profile = await t.asUser<{ myProfile: { resumeText: string } }>(MY_PROFILE);
     expect(profile.data!.myProfile.resumeText).toContain('Ada Lovelace');
     expect(profile.data!.myProfile.resumeText).toContain('React, TypeScript');
+    // The empty Personal fields are filled from the resume.
+    expect(res.body).toMatchObject({ firstName: 'Ada', lastName: 'Lovelace' });
   });
 
   it('reads the text out of an uploaded Word file and keeps the rest of the profile', async () => {

@@ -48,6 +48,12 @@ export class AuthResolver {
     return toUserModel(user);
   }
 
+  @Mutation(() => UserModel, { description: 'The first-login steps are done (or skipped)' })
+  async finishOnboarding(@CurrentUser() session: SessionUser | undefined): Promise<UserModel> {
+    if (!session) throw apiError(UnauthorizedException, 'LOGIN_REQUIRED', 'Please log in');
+    return toUserModel(await this.auth.finishOnboarding(session.id));
+  }
+
   @Mutation(() => UserModel, { description: 'Show the app in this language: "en" or "de"' })
   async setLocale(
     @CurrentUser() session: SessionUser | undefined,

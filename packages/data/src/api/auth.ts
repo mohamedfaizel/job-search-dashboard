@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
-import { LOG_IN, LOG_OUT, ME, SET_LOCALE, SIGN_UP } from './operations';
+import { FINISH_ONBOARDING, LOG_IN, LOG_OUT, ME, SET_LOCALE, SIGN_UP } from './operations';
 import type { LogInInput, SignUpInput, User } from './types';
 
 export const meKey = ['me'] as const;
@@ -64,6 +64,18 @@ export function useLogOut() {
 }
 
 /** Saves the language you picked on your account, so it follows you to other devices. */
+/** The first-login steps are done (or skipped): they don't show again. */
+export function useFinishOnboarding() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      (await graphqlClient.request<{ finishOnboarding: User }>(FINISH_ONBOARDING)).finishOnboarding,
+    onSuccess: (user) => {
+      queryClient.setQueryData(meKey, user);
+    },
+  });
+}
+
 export function useSetLocale() {
   const queryClient = useQueryClient();
   return useMutation({
