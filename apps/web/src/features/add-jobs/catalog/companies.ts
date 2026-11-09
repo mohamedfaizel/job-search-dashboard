@@ -33,7 +33,6 @@ const LISTS: Record<CatalogGroup, string> = {
     Solaris | greenhouse:solarisbank | Berlin
     Moonfare | greenhouse:moonfare | Berlin
     Isar Aerospace | greenhouse:isaraerospace | Munich
-    Parloa | greenhouse:parloa | Berlin
     DeepL | ashby:deepl | Cologne
     n8n | ashby:n8n | Berlin
     Langdock | ashby:langdock | Berlin
@@ -45,31 +44,14 @@ const LISTS: Record<CatalogGroup, string> = {
     Spotify | lever:spotify | Stockholm
     Intercom | greenhouse:intercom | Dublin
     Wolt | greenhouse:wolt | Helsinki
-    Pleo | greenhouse:pleo | Copenhagen
-    Mollie | greenhouse:mollie | Amsterdam
-    Bolt | greenhouse:bolt | Tallinn
-    Revolut | lever:revolut | London
     Monzo | greenhouse:monzo | London
-    Checkout.com | greenhouse:checkoutcom | London
     GoCardless | greenhouse:gocardless | London
     Typeform | greenhouse:typeform | Barcelona
-    Glovo | greenhouse:glovo | Barcelona
-    Doctolib | greenhouse:doctolib | Paris
     Qonto | lever:qonto | Paris
-    Alan | lever:alan | Paris
-    BlaBlaCar | greenhouse:blablacar | Paris
     Datadog (Paris) | greenhouse:datadog | Paris
-    Miro | greenhouse:miro | Amsterdam
-    Booking.com | greenhouse:bookingcom | Amsterdam
-    Mistral AI | lever:mistral | Paris
-    Pipedrive | greenhouse:pipedrive | Tallinn
     Wise | greenhouse:wise | London
     Deliveroo | greenhouse:deliveroo | London
     Trustpilot | greenhouse:trustpilot | Copenhagen
-    Klarna | greenhouse:klarna | Stockholm
-    Vinted | greenhouse:vinted | Vilnius
-    Aiven | greenhouse:aiven | Helsinki
-    Supercell | greenhouse:supercell | Helsinki
   `,
   ai: `
     Anthropic | greenhouse:anthropic | San Francisco
@@ -78,19 +60,15 @@ const LISTS: Record<CatalogGroup, string> = {
     Perplexity | ashby:perplexity | San Francisco
     Scale AI | greenhouse:scaleai | San Francisco
     Databricks | greenhouse:databricks | San Francisco
-    DeepMind | greenhouse:deepmind | London
     Runway | ashby:runway | New York
     ElevenLabs | ashby:elevenlabs | London
     Synthesia | ashby:synthesia | London
     PolyAI | greenhouse:polyai | London
     LangChain | ashby:langchain | San Francisco
     Pinecone | ashby:pinecone | New York
-    Weights & Biases | lever:wandb | San Francisco
     Hex | ashby:hex | San Francisco
-    dbt Labs | greenhouse:dbtlabsinc | Philadelphia
     Fivetran | greenhouse:fivetran | Oakland
     Airbyte | ashby:airbyte | San Francisco
-    ClickHouse | greenhouse:clickhouse | Amsterdam
     Snowflake | ashby:snowflake | Bozeman
   `,
   global: `
@@ -107,7 +85,6 @@ const LISTS: Record<CatalogGroup, string> = {
     Twilio | greenhouse:twilio | Remote
     MongoDB | greenhouse:mongodb | Dublin
     Elastic | greenhouse:elastic | Remote
-    Grammarly | greenhouse:grammarly | Berlin
     Duolingo | greenhouse:duolingo | Pittsburgh
     Instacart | greenhouse:instacart | San Francisco
     Lyft | greenhouse:lyft | San Francisco
@@ -117,9 +94,7 @@ const LISTS: Record<CatalogGroup, string> = {
     Brex | greenhouse:brex | San Francisco
     Gusto | greenhouse:gusto | San Francisco
     Pinterest | greenhouse:pinterest | San Francisco
-    Netflix | lever:netflix | Los Gatos
     Palantir | lever:palantir | Denver
-    Plaid | lever:plaid | San Francisco
     Ramp | ashby:ramp | New York
     Notion | ashby:notion | San Francisco
     Linear | ashby:linear | Remote

@@ -38,6 +38,18 @@ describe('CompanyBoardsClient', () => {
     );
   });
 
+  it('keeps the 404 when the EU server cannot be reached', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json({}, 404))
+      .mockRejectedValueOnce(new TypeError('fetch failed'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      new CompanyBoardsClient().postings({ ats: 'greenhouse', slug: 'nobody' }),
+    ).rejects.toThrow('404 Not Found');
+  });
+
   it('does not retry Ashby, which has one server', async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({}, 404));
     vi.stubGlobal('fetch', fetchMock);

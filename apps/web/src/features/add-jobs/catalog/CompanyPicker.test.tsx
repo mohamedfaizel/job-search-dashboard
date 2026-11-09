@@ -18,8 +18,8 @@ function Harness({ start = '' }: { start?: string }) {
 const boards = () => screen.getByRole('status', { name: 'boards' }).textContent;
 
 describe('company catalog', () => {
-  it('has 100+ readable boards, each once, in a known group', () => {
-    expect(COMPANY_CATALOG.length).toBeGreaterThanOrEqual(100);
+  it('has 75+ readable boards, each once, in a known group', () => {
+    expect(COMPANY_CATALOG.length).toBeGreaterThanOrEqual(75);
     const keys = COMPANY_CATALOG.map((c) => c.board);
     expect(new Set(keys).size).toBe(keys.length);
     for (const c of COMPANY_CATALOG) {

@@ -23,17 +23,20 @@ export class CompanyBoardsClient {
   private async getJson<T>(url: string): Promise<T> {
     const res = await fetch(url, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(20_000),
+      // Big companies (Palantir) send thousands of postings in one answer.
+      signal: AbortSignal.timeout(60_000),
     });
     if (!res.ok) {
-      const eu = res.status === 404 ? EU_HOSTS[new URL(url).hostname] : undefined;
-      if (eu) {
-        const next = new URL(url);
-        next.hostname = eu;
-        return this.getJson<T>(next.toString());
-      }
       // Don't echo the body: the status line is enough to debug.
-      throw new Error(`${res.status} ${res.statusText}`.trim());
+      const notFound = new Error(`${res.status} ${res.statusText}`.trim());
+      const eu = res.status === 404 ? EU_HOSTS[new URL(url).hostname] : undefined;
+      if (!eu) throw notFound;
+      const next = new URL(url);
+      next.hostname = eu;
+      // The EU server failing to answer at all says no more than the 404 we already have.
+      return this.getJson<T>(next.toString()).catch((error: unknown) => {
+        throw error instanceof TypeError ? notFound : error;
+      });
     }
     return (await res.json()) as T;
   }
