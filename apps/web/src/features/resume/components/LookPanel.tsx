@@ -19,6 +19,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useEffect, useId, useState } from 'react';
+import { Popover } from '../../../components/Popover';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiChat } from '../../../lib/ai-chat';
 
@@ -26,6 +27,10 @@ const BUTTON =
   'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
 const SELECT = 'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm';
 const LINK = 'text-sm text-brand-700 hover:underline';
+const BAR_LABEL = 'text-sm text-slate-500';
+const BAR_SELECT = 'rounded-md border border-slate-300 bg-white px-2 py-1 text-sm';
+const BAR_BUTTON =
+  'rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand-500';
 
 /** Colours that print well and look calm on a resume. */
 const SWATCHES = [
@@ -827,45 +832,97 @@ function DesignForm({
     return (
       <div className="space-y-2">
         {rendererNote}
-        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
-          <div className="space-y-1">
-            <label htmlFor={templateId} className="block text-sm font-medium text-slate-700">
-              {t('template')}
-            </label>
-            <select
-              id={templateId}
-              value={draft.resumeTemplate}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+          <label htmlFor={templateId} className={BAR_LABEL}>
+            {t('template')}
+          </label>
+          <select
+            id={templateId}
+            value={draft.resumeTemplate}
+            onChange={(e) => {
+              change({ resumeTemplate: e.target.value });
+            }}
+            className={BAR_SELECT}
+          >
+            {data?.resumeTemplates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+          <span id={colourId} className={BAR_LABEL}>
+            {t('colour')}
+          </span>
+          <div
+            role="radiogroup"
+            aria-labelledby={colourId}
+            title={draft.resumeTemplate === 'mine' ? t('wordColours') : undefined}
+            className="flex items-center gap-1.5"
+          >
+            {SWATCHES.map((s) => (
+              <button
+                key={s.hex}
+                type="button"
+                role="radio"
+                aria-checked={colour.toUpperCase() === s.hex}
+                aria-label={t(`swatches.${s.name}`)}
+                title={t(`swatches.${s.name}`)}
+                onClick={() => {
+                  setColour(s.hex);
+                }}
+                className="h-5 w-5 rounded-full ring-offset-1 aria-checked:ring-2 aria-checked:ring-slate-900"
+                style={{ backgroundColor: `#${s.hex}` }}
+              />
+            ))}
+            <input
+              type="color"
+              aria-label={t('ownColour')}
+              value={`#${colour.replace(/^#/, '')}`}
               onChange={(e) => {
-                change({ resumeTemplate: e.target.value });
+                setColour(e.target.value.replace(/^#/, '').toUpperCase());
               }}
-              className={SELECT}
-            >
-              {data?.resumeTemplates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
+              className="h-6 w-7 cursor-pointer rounded border border-slate-300 bg-white"
+            />
           </div>
-          {colourAndType}
-          <Spacing draft={draft} template={chosen} onChange={change} inline />
+          <label htmlFor={fontId} className={BAR_LABEL}>
+            {t('type')}
+          </label>
+          <select
+            id={fontId}
+            value={draft.font}
+            onChange={(e) => {
+              change({ font: e.target.value });
+            }}
+            className={BAR_SELECT}
+          >
+            <option value="auto">{t('fontAuto')}</option>
+            <option value="sans">{t('fontSans')}</option>
+            <option value="serif">{t('fontSerif')}</option>
+          </select>
+          <Popover label={t('spacing')} buttonClass={BAR_BUTTON} panelClass="w-[min(36rem,90vw)]">
+            <Spacing draft={draft} template={chosen} onChange={change} />
+          </Popover>
           {/* "Saved" is at the top of the page already; here only saving and errors show. */}
           {(changed || isPending || update.isError) && statusLine}
-        </div>
-        <details>
-          <summary className="cursor-pointer text-sm font-medium text-brand-700">
-            {t('more')}
-          </summary>
-          <div className="mt-3 grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {draft.resumeTemplate !== 'mine' && <Details draft={draft} onChange={change} />}
-            <div className={`space-y-2 ${box}`}>
-              <MyDesignCard saved={saved} onSaved={onSaved} />
-              {data && <WordFileNote word={data.wordTemplate} />}
-            </div>
-            {photoBlock}
-            {letterLayout}
+          <div className="ml-auto">
+            <Popover
+              label={t('more')}
+              align="right"
+              buttonClass={`${BAR_BUTTON} font-medium text-brand-700`}
+              panelClass="max-h-[70vh] w-[min(48rem,92vw)] overflow-y-auto"
+            >
+              <div className="grid items-start gap-3 md:grid-cols-2">
+                {draft.resumeTemplate !== 'mine' && <Details draft={draft} onChange={change} />}
+                <div className={`space-y-2 ${box}`}>
+                  <MyDesignCard saved={saved} onSaved={onSaved} />
+                  {data && <WordFileNote word={data.wordTemplate} />}
+                </div>
+                {photoBlock}
+                {letterLayout}
+              </div>
+            </Popover>
           </div>
-        </details>
+        </div>
       </div>
     );
   }

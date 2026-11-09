@@ -304,10 +304,7 @@ export function OtherResumes({ profile }: { profile: Profile }) {
   const free = Object.keys(RESUME_LANGUAGES).filter((code) => !taken.has(code));
 
   return (
-    <section
-      aria-labelledby="other-resumes-heading"
-      className="space-y-2.5 rounded-lg border border-slate-200 bg-white p-3"
-    >
+    <section aria-labelledby="other-resumes-heading" className="space-y-2.5">
       <div className="flex items-center gap-2">
         <h2 id="other-resumes-heading" className="font-semibold text-slate-900">
           {t('heading')}

@@ -14,10 +14,17 @@ interface Props {
   skills?: boolean;
   /** Move, copy and delete buttons: a job shows them in its title row. */
   actions?: ReactNode;
+  /** "Fold all" / "Open all" of the section: each new `n` folds or opens every job. */
+  fold?: FoldAll;
+}
+
+export interface FoldAll {
+  open: boolean;
+  n: number;
 }
 
 /** One block of a section: a paragraph, a bullet list, or a job/degree/project. */
-export function BlockEditor({ block, onChange, skills = false, actions }: Props) {
+export function BlockEditor({ block, onChange, skills = false, actions, fold }: Props) {
   const t = useTranslations('Resume');
   if (block.kind === 'paragraph' && skills) {
     return (
@@ -56,7 +63,7 @@ export function BlockEditor({ block, onChange, skills = false, actions }: Props)
       />
     );
   }
-  return <EntryEditor entry={block} onChange={onChange} actions={actions} />;
+  return <EntryEditor entry={block} onChange={onChange} actions={actions} fold={fold} />;
 }
 
 /**
@@ -228,14 +235,22 @@ function EntryEditor({
   entry,
   onChange,
   actions,
+  fold,
 }: {
   entry: BuilderEntry;
   onChange: (block: BuilderEntry, field: string | null) => void;
   actions: ReactNode;
+  fold: FoldAll | undefined;
 }) {
   const t = useTranslations('Resume');
   const id = useId();
   const [open, setOpen] = useState(true);
+  // "Fold all" / "Open all" wins once; after it each job folds on its own again.
+  const [foldSeen, setFoldSeen] = useState(fold?.n ?? 0);
+  if (fold && fold.n !== foldSeen) {
+    setFoldSeen(fold.n);
+    setOpen(fold.open);
+  }
   const projects = entry.projects ?? [];
   const summary = [entry.org || entry.title, entry.org ? entry.title : '', entry.meta]
     .filter(Boolean)

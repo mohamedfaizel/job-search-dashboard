@@ -715,7 +715,7 @@
       "wordSpacing": "Deine Word-Datei behält ihre eigene Größe und Abstände.",
       "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf im Tab Einrichtung als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
       "templateUsed": "Deine nächsten PDF-Downloads verwenden sie.",
-      "more": "Mehr: Abschnitte, eigenes Design, Foto, Anschreiben"
+      "more": "Mehr Design"
     },
     "copyToMaster": "{title} in meinen Haupt-Lebenslauf übernehmen",
     "copyToMasterHint": "Diesen Abschnitt in deinen Haupt-Lebenslauf übernehmen, damit er für jede Stelle gleich ist",
@@ -821,7 +821,8 @@
       "letters": "Anschreiben-Vorlagen",
       "letterIn": "Anschreiben ({language})",
       "thisJob": "Diese Stelle",
-      "languageLabel": "Lebenslauf-Sprache"
+      "languageLabel": "Lebenslauf-Sprache",
+      "addLanguage": "+ Lebenslauf in einer weiteren Sprache"
     },
     "downloadStep": {
       "title": "Lebenslauf herunterladen",
@@ -834,9 +835,15 @@
     },
     "ribbon": {
       "label": "Lebenslauf-Werkzeuge",
-      "text": "Text",
-      "design": "Design",
-      "setup": "Einrichtung"
+      "setup": "Einrichtung",
+      "savesItself": "Speichert von selbst",
+      "close": "Einrichtung schließen"
+    },
+    "foldAll": "Alle zuklappen",
+    "openAll": "Alle aufklappen",
+    "skillRows": {
+      "found": "{count, plural, one {# Aufzählungspunkt sieht} other {# Aufzählungspunkte sehen}} aus wie „Bezeichnung: Liste“.",
+      "turn": "In Skill-Zeilen umwandeln"
     }
   },
   "Jobs": {

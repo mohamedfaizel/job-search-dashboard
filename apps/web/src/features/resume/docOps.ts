@@ -179,6 +179,28 @@ export function splitSkill(text: string): { label: string; list: string } {
 export const joinSkill = (label: string, list: string) =>
   label.trim() ? `${label.trim()}: ${list}` : list;
 
+const hasLabel = (item: string) => splitSkill(item).label !== '';
+
+/** How many bullets in these blocks read "Label: list", so they could be skills rows. */
+export const skillBullets = (blocks: BuilderBlock[]) =>
+  blocks.reduce((n, b) => n + (b.kind === 'bullets' ? b.items.filter(hasLabel).length : 0), 0);
+
+/**
+ * Turns each "Label: list" bullet into a skills row of its own ("**Frontend**: React" becomes
+ * "Frontend: React"; the PDF makes the label bold). Other bullets stay a list, in place.
+ */
+export function bulletsToSkillRows(blocks: BuilderBlock[]): BuilderBlock[] {
+  return blocks.flatMap((block): BuilderBlock[] => {
+    if (block.kind !== 'bullets' || !block.items.some(hasLabel)) return [block];
+    const rows: BuilderBlock[] = block.items.filter(hasLabel).map((item) => {
+      const { label, list } = splitSkill(item);
+      return { id: newId(), kind: 'paragraph', text: joinSkill(label, list) };
+    });
+    const rest = block.items.filter((item) => !hasLabel(item));
+    return rest.length ? [...rows, { ...block, items: rest }] : rows;
+  });
+}
+
 /**
  * Adds a skill you have to the Skills section: as a new line in its first list, or in a new
  * Skills section when there is none. `title` names the new section.

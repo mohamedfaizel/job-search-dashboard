@@ -715,7 +715,7 @@
       "wordSpacing": "Your Word file keeps its own size and spacing.",
       "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file in the Setup tab, and “My own Word file” appears here.",
       "templateUsed": "Your next PDF downloads use it.",
-      "more": "More: section style, own design, photo, cover letter"
+      "more": "More design"
     },
     "copyToMaster": "Copy {title} to my master resume",
     "copyToMasterHint": "Put this section into your master resume, so it is the same for every job",
@@ -821,7 +821,8 @@
       "letters": "Cover letter templates",
       "letterIn": "{language} cover letter",
       "thisJob": "This job",
-      "languageLabel": "Resume language"
+      "languageLabel": "Resume language",
+      "addLanguage": "+ Add a resume in another language"
     },
     "downloadStep": {
       "title": "Download your resume",
@@ -834,9 +835,15 @@
     },
     "ribbon": {
       "label": "Resume tools",
-      "text": "Text",
-      "design": "Design",
-      "setup": "Setup"
+      "setup": "Setup",
+      "savesItself": "Saves by itself",
+      "close": "Close setup"
+    },
+    "foldAll": "Fold all",
+    "openAll": "Open all",
+    "skillRows": {
+      "found": "{count, plural, one {# bullet looks} other {# bullets look}} like “Label: list”.",
+      "turn": "Turn into skills rows"
     }
   },
   "Jobs": {

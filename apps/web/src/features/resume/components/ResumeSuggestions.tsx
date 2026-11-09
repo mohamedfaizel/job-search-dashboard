@@ -38,8 +38,8 @@ export function ResumeSuggestions({ suggestions, reviewPrompt, onUseAchievements
 
   const many = suggestions.length > 0;
   return (
-    // A pill that opens over the page: the details depend on this resume, so they stay folded.
-    <details className="group relative">
+    // A pill that opens the list under it: the details depend on this resume, so they stay folded.
+    <details className="group">
       <summary
         aria-label={t('open')}
         className={`inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium [&::-webkit-details-marker]:hidden ${
@@ -56,7 +56,7 @@ export function ResumeSuggestions({ suggestions, reviewPrompt, onUseAchievements
       </summary>
       <section
         aria-label={t('title')}
-        className="absolute top-full left-0 z-30 mt-1 w-[min(26rem,85vw)] space-y-3 rounded-lg border border-slate-200 bg-white p-3 shadow-lg"
+        className={`mt-2 space-y-3 rounded-lg border p-3 ${many ? 'border-amber-200 bg-amber-50/60' : 'border-slate-200 bg-white'}`}
       >
         <h3 className="text-sm font-semibold text-slate-900">{many ? t('title') : t('allGood')}</h3>
         {many && (

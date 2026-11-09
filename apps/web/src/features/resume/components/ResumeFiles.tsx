@@ -12,14 +12,15 @@ import { SaveBar, useProfileSection, WithProfile } from './profileSection';
 import { ResumeSuggestions } from './ResumeSuggestions';
 import { ResumeUpload } from './ResumeUpload';
 
-const card = 'space-y-2.5 rounded-lg border border-slate-200 bg-white p-3';
+const card = 'space-y-2.5 border-b border-slate-200 pb-4';
 const SELECT = 'rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm';
 const LABEL = 'text-sm font-medium text-slate-700';
 
 /**
- * The Setup panel of the Resume page, three short columns side by side: your resume's language
- * and file, the settings shared by all your resumes (page limit, keep my headings) and your
- * resumes in other languages. Explanations sit behind ⓘ, suggestions behind a pill.
+ * The Setup panel of the Resume page, one short list for the panel on the right: this resume's
+ * language, file and suggestions, the settings shared by all your resumes (page limit, keep my
+ * headings) and your resumes in other languages. A change saves by itself; explanations sit
+ * behind ⓘ.
  */
 export function ResumeFiles() {
   return <WithProfile>{(profile) => <FilesForm profile={profile} />}</WithProfile>;
@@ -44,17 +45,24 @@ function FilesForm({ profile }: { profile: Profile }) {
   });
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-3">
+    <div className="space-y-4">
       <form
         onSubmit={(e) => {
           void onSubmit(e);
         }}
-        onChange={() => {
+        onChange={(e) => {
           setSaved(false);
+          // A list or a tick saves at once; the file upload saves on its own.
+          const field = e.target;
+          if (
+            field instanceof HTMLSelectElement ||
+            (field instanceof HTMLInputElement && field.type === 'checkbox')
+          ) {
+            e.currentTarget.requestSubmit();
+          }
         }}
         noValidate
-        // The two cards of the form are columns of the grid.
-        className="contents"
+        className="space-y-4"
       >
         <section aria-labelledby="resume-heading" className={card}>
           <div className="flex items-center gap-2">
@@ -145,6 +153,7 @@ function FilesForm({ profile }: { profile: Profile }) {
             </div>
           </fieldset>
           <SaveBar
+            auto
             label={tFiles('save')}
             savedText={tFiles('saved')}
             busy={isSubmitting}

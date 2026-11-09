@@ -1,10 +1,12 @@
 import type { BuilderDoc } from '@jobsearch/data';
 import {
+  bulletsToSkillRows,
   historyReducer,
   isLanguagesSection,
   lineDiff,
   move,
   presetTitle,
+  skillBullets,
   startHistory,
 } from './docOps';
 
@@ -59,5 +61,33 @@ describe('lineDiff', () => {
 
   it('is all removed and all added for unrelated texts', () => {
     expect(lineDiff('x', 'y').map((l) => l.kind)).toEqual(['removed', 'added']);
+  });
+});
+
+describe('skills rows from bullets', () => {
+  const blocks = [
+    {
+      id: 'b',
+      kind: 'bullets' as const,
+      items: ['**Frontend**: React, Vue 3', 'Testing: Jest, Vitest', 'Fast learner'],
+    },
+    { id: 'p', kind: 'paragraph' as const, text: 'Languages: TypeScript' },
+  ];
+
+  it('counts the bullets that read "Label: list"', () => {
+    expect(skillBullets(blocks)).toBe(2);
+    expect(skillBullets([blocks[1]!])).toBe(0);
+  });
+
+  it('turns them into rows without ** marks and keeps the other bullets', () => {
+    const rows = bulletsToSkillRows(blocks);
+    expect(rows.map((b) => (b.kind === 'paragraph' ? b.text : b.kind))).toEqual([
+      'Frontend: React, Vue 3',
+      'Testing: Jest, Vitest',
+      'bullets',
+      'Languages: TypeScript',
+    ]);
+    expect(rows[2]).toMatchObject({ id: 'b', items: ['Fast learner'] });
+    expect(bulletsToSkillRows([blocks[1]!])).toEqual([blocks[1]]);
   });
 });

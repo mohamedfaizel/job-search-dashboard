@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { SidePanel } from '../../components/SidePanel';
 import { useErrorText } from '../../i18n/useErrorText';
 import { CheckPanel } from './components/CheckPanel';
 import { DownloadCard } from './components/DownloadCard';
@@ -29,7 +30,6 @@ import { PdfPreview } from './components/PdfPreview';
 import { ReadAgain } from './components/ReadAgain';
 import { ResumeFiles } from './components/ResumeFiles';
 import { ResumeSwitcher } from './components/ResumeSwitcher';
-import { Ribbon } from './components/Ribbon';
 import { SectionCard } from './components/SectionCard';
 import { SetupSummary } from './components/SetupSummary';
 import type { Step } from './components/Steps';
@@ -59,12 +59,12 @@ const AUTOSAVE_MS = 1000;
 
 export type BuilderTab = 'edit' | 'look' | 'files' | 'match' | 'letter' | 'check';
 /**
- * Your resume has one screen with a toolbar: Text (bold, italic, links), Design (the look) and
- * Setup (your file, page limit, other languages). A job's copy has steps, in order: what the
- * job asks for first, the fact check and the download last.
+ * Your resume has one screen with one tool row (bold, italic, links and the look) and Setup
+ * (your file, page limit, other languages) in a panel on the right. A job's copy has steps, in
+ * order: what the job asks for first, the fact check and the download last.
  */
 const tabsFor = (job: boolean): BuilderTab[] =>
-  job ? ['match', 'edit', 'look', 'letter', 'check'] : ['edit', 'look', 'files'];
+  job ? ['match', 'edit', 'look', 'letter', 'check'] : ['edit', 'files'];
 
 /** The tab a link asks for (?tab=...), or the first one. Download is the button at the top. */
 function firstTab(job: boolean): BuilderTab {
@@ -330,6 +330,14 @@ function Builder({
     setLetterVersion(`letter-${String(Date.now())}`);
   }, []);
 
+  // Setup is a panel on the right of your own resume (?tab=files opens it).
+  const openSetup = useCallback(() => {
+    onTab('files');
+  }, [onTab]);
+  const closeSetup = useCallback(() => {
+    onTab('edit');
+  }, [onTab]);
+
   const sectionDrag = useDragSort('sections', (from, to) => {
     change({ ...doc, sections: move(doc.sections, from, to) }, null);
   });
@@ -355,7 +363,24 @@ function Builder({
             onOpen={(href) => {
               window.location.assign(href);
             }}
+            {...(job ? {} : { onAdd: openSetup })}
           />
+          {!job && (
+            <>
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={tab === 'files'}
+                onClick={openSetup}
+                className={SMALL_BUTTON}
+              >
+                ⚙ {t('ribbon.setup')}
+              </button>
+              <span className="flex min-w-0 flex-wrap items-center gap-x-3 text-xs text-slate-600">
+                <SetupSummary />
+              </span>
+            </>
+          )}
           {job && (
             <Link href="/resume" className="text-sm text-brand-700 hover:underline">
               {t('job.openMaster')}
@@ -433,27 +458,30 @@ function Builder({
       {job ? (
         <StepBar steps={steps} current={tab} onSelect={onTab} />
       ) : (
-        <Ribbon
-          label={t('ribbon.label')}
-          tabs={[
-            { id: 'edit', label: t('ribbon.text') },
-            { id: 'look', label: t('ribbon.design') },
-            { id: 'files', label: t('ribbon.setup') },
-          ]}
-          current={tab}
-          onSelect={onTab}
-          aside={<SetupSummary />}
-          sticky={tab === 'edit'}
-        >
-          <div hidden={tab !== 'edit'}>
+        <>
+          {/* One row for the text and the look, on screen while you scroll. */}
+          <div
+            role="group"
+            aria-label={t('ribbon.label')}
+            className="sticky top-2 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 shadow-sm"
+          >
             <FormatBar scope={editRef} bare />
+            <span aria-hidden className="hidden h-6 w-px bg-slate-200 sm:block" />
+            <div className="min-w-0 flex-1">
+              <LookPanel onSaved={lookSaved} wide />
+            </div>
           </div>
-          {/* Stays mounted, so a change waiting to be saved survives switching. */}
-          <div hidden={tab !== 'look'}>
-            <LookPanel onSaved={lookSaved} wide />
-          </div>
-          {tab === 'files' && <ResumeFiles />}
-        </Ribbon>
+          {tab === 'files' && (
+            <SidePanel
+              title={t('ribbon.setup')}
+              note={t('ribbon.savesItself')}
+              closeLabel={t('ribbon.close')}
+              onClose={closeSetup}
+            >
+              <ResumeFiles />
+            </SidePanel>
+          )}
+        </>
       )}
 
       {job ? (
