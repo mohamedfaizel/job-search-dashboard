@@ -31,6 +31,7 @@ import type {
   ImproveSectionInput,
   JobCoverLetterModel,
   JobResumeBuildModel,
+  JobResumeCopyModel,
   LetterSuggestionModel,
   ResumeBuildModel,
   SectionSuggestionModel,
@@ -40,6 +41,9 @@ import type {
 export interface BuilderPdf extends DocumentFile {
   pages: number;
 }
+
+/** The switcher lists this many job copies; older ones open from their job. */
+const JOB_COPIES_LISTED = 30;
 
 /** A cover letter is a page; this is far more than any real one needs. */
 const MAX_LETTER_CHARS = 20_000;
@@ -397,6 +401,26 @@ export class ResumeBuilderService {
     const file = await this.documents.resumePdf(userId, text, lang);
     const pages = (await PDFDocument.load(file.bytes, { updateMetadata: false })).getPageCount();
     return { ...file, pages };
+  }
+
+  /** Your job copies, newest first: the Resume page switcher lists them. */
+  async jobCopies(userId: number): Promise<JobResumeCopyModel[]> {
+    const rows = await this.prisma.jobResume.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      take: JOB_COPIES_LISTED,
+      select: {
+        jobId: true,
+        updatedAt: true,
+        job: { select: { title: true, company: { select: { name: true } } } },
+      },
+    });
+    return rows.map((row) => ({
+      jobId: row.jobId,
+      title: row.job.title,
+      company: row.job.company.name,
+      savedAt: row.updatedAt,
+    }));
   }
 
   /**

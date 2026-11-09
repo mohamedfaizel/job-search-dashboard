@@ -50,7 +50,8 @@
     "sections": "Profile sections",
     "tabs": {
       "personal": "Personal",
-      "applications": "Applications"
+      "applications": "Applications",
+      "achievements": "Achievements"
     },
     "listHint": "Separate with commas",
     "personal": {
@@ -522,15 +523,13 @@
       "stepHint": "Your AI chat sorts jobs, dates and bullets into the right places without changing a word."
     },
     "tabs": {
-      "edit": "Edit",
+      "edit": "Content",
       "look": "Look",
-      "match": "Job match",
+      "download": "Download",
+      "match": "Match job",
       "letter": "Cover letter",
-      "check": "Check",
-      "files": "Resume Settings",
-      "achievements": "Achievements"
+      "check": "Check & download"
     },
-    "tabsLabel": "Builder tabs",
     "look": {
       "loading": "Loading…",
       "rendererOff": "The PDF renderer isn’t running, so downloads are plain PDFs for now. Start it with",
@@ -699,7 +698,7 @@
       "addTermToSkills": "Add {term} to Skills",
       "inResume": "In your resume",
       "achievements": "Your achievements",
-      "noAchievements": "Add true facts with numbers on the Achievements tab and they show up here.",
+      "noAchievements": "Add true facts with numbers on My profile › Achievements and they show up here.",
       "achievementsHint": "True lines from your achievements bank. Add one to your latest job.",
       "addBullet": "Add",
       "addBulletLabel": "Add to your latest job: {line}"
@@ -749,7 +748,34 @@
     "projectCount": "{count, plural, one {# project} other {# projects}}",
     "addProject": "Project",
     "duplicateBlock": "Copy {n} in {title} as a starting point",
-    "duplicateBlockHint": "Copy as a starting point"
+    "duplicateBlockHint": "Copy as a starting point",
+    "steps": {
+      "label": "Steps",
+      "of": "Step {n} of {total} · {step}",
+      "back": "Previous step",
+      "forward": "Next step",
+      "next": "Next: {step}"
+    },
+    "setup": {
+      "title": "Setup",
+      "file": "Your resume file",
+      "noFile": "No file yet",
+      "keepHeadings": "Keep my headings",
+      "change": "Change",
+      "close": "Done"
+    },
+    "switcher": {
+      "label": "Resume",
+      "mine": "My resumes",
+      "copies": "Job copies",
+      "resumeIn": "{language} resume",
+      "forJob": "{title} · {company}"
+    },
+    "downloadStep": {
+      "title": "Download your resume",
+      "intro": "The PDF looks exactly like the preview. To tailor it for a job, open the job and start a copy.",
+      "button": "Download PDF"
+    }
   },
   "Jobs": {
     "title": "Job posts",

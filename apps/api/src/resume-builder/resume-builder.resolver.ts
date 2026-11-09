@@ -6,6 +6,7 @@ import {
   ImproveSectionInput,
   JobCoverLetterModel,
   JobResumeBuildModel,
+  JobResumeCopyModel,
   LetterSuggestionModel,
   ResumeBuildModel,
   SectionSuggestionModel,
@@ -78,6 +79,13 @@ export class ResumeBuilderResolver {
     @Args('input') input: ImproveSectionInput,
   ): Promise<SectionSuggestionModel> {
     return this.builder.improve(user.id, input);
+  }
+
+  @Query(() => [JobResumeCopyModel], {
+    description: 'The jobs you have a resume copy for, newest first',
+  })
+  jobResumeCopies(@CurrentUser() user: SessionUser): Promise<JobResumeCopyModel[]> {
+    return this.builder.jobCopies(user.id);
   }
 
   @Query(() => JobResumeBuildModel, {

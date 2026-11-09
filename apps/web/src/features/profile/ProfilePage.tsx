@@ -4,12 +4,13 @@ import { useMe, useMyProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
+import { AchievementsTab } from '../resume/components/AchievementsTab';
 import type { ProfileTab } from './components/ProfileForm';
 import { ProfileForm } from './components/ProfileForm';
 import type { TabItem } from './components/TabList';
 import { TabList } from './components/TabList';
 
-const TAB_IDS: ProfileTab[] = ['personal', 'applications'];
+const TAB_IDS: ProfileTab[] = ['personal', 'applications', 'achievements'];
 
 const TAB_KEY = 'jobsearch.profile.tab';
 
@@ -101,6 +102,8 @@ export function ProfilePage() {
                 tab={tab}
                 onTab={selectTab}
               />
+              {/* Facts about you, with numbers: Job match offers them as resume bullets. */}
+              {tab === 'achievements' && <AchievementsTab />}
             </div>
           </div>
         </>

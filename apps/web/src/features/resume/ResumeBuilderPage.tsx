@@ -18,11 +18,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
-import type { TabItem } from '../profile/components/TabList';
-import { TabList } from '../profile/components/TabList';
-import { useLanguageName } from '../profile/components/useLanguageName';
-import { AchievementsTab } from './components/AchievementsTab';
 import { CheckPanel } from './components/CheckPanel';
+import { DownloadCard } from './components/DownloadCard';
 import { FormatBar } from './components/FormatBar';
 import { HeaderCard } from './components/HeaderCard';
 import { JobMatchPanel } from './components/JobMatchPanel';
@@ -30,8 +27,11 @@ import { LetterPanel } from './components/LetterPanel';
 import { LookPanel } from './components/LookPanel';
 import { PdfPreview } from './components/PdfPreview';
 import { ReadAgain } from './components/ReadAgain';
-import { ResumeFiles } from './components/ResumeFiles';
+import { ResumeSwitcher } from './components/ResumeSwitcher';
 import { SectionCard } from './components/SectionCard';
+import { SetupRow } from './components/SetupRow';
+import type { Step } from './components/Steps';
+import { StepBar, StepNav } from './components/Steps';
 import { SMALL_BUTTON } from './components/ui';
 import { useDragSort } from './components/useDragSort';
 import type { SectionPreset } from './docOps';
@@ -54,10 +54,21 @@ import {
 /** Wait this long after the last keystroke before saving (and making a new preview). */
 const AUTOSAVE_MS = 1000;
 
-export type BuilderTab = 'edit' | 'look' | 'match' | 'letter' | 'check' | 'files' | 'achievements';
-/** The Job match, Cover letter and Check tabs only exist for a job's resume copy. */
+export type BuilderTab = 'edit' | 'look' | 'download' | 'match' | 'letter' | 'check';
+/**
+ * The steps, in order. Your resume: write it, style it, download it. A job's copy starts with
+ * what the job asks for and ends with the fact check and the download.
+ */
 const tabsFor = (job: boolean): BuilderTab[] =>
-  job ? ['edit', 'look', 'match', 'letter', 'check'] : ['files', 'edit', 'look', 'achievements'];
+  job ? ['match', 'edit', 'look', 'letter', 'check'] : ['edit', 'look', 'download'];
+
+/** The step a link asks for (?tab=...), or the first step. */
+function firstTab(job: boolean): BuilderTab {
+  const asked = param('tab');
+  // Settings used to be a tab: it is the Setup row above Content now.
+  if (asked === 'files') return 'edit';
+  return tabsFor(job).find((id) => id === asked) ?? (job ? 'match' : 'edit');
+}
 
 const param = (name: string) =>
   typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get(name);
@@ -67,7 +78,8 @@ function builderUrl(language: string | null, tab: BuilderTab, jobId: string | nu
   const params = new URLSearchParams();
   if (jobId) params.set('job', jobId);
   else if (language) params.set('language', language);
-  if (tab !== 'edit') params.set('tab', tab);
+  // The first step needs no ?tab=.
+  if (tab !== tabsFor(!!jobId)[0]) params.set('tab', tab);
   const query = params.toString();
   return query ? `/resume?${query}` : '/resume';
 }
@@ -88,10 +100,13 @@ function MasterBuilderPage() {
   const errorText = useErrorText();
   const router = useRouter();
   const [language, setLanguage] = useState<string | null>(() => param('language'));
-  const [tab, setTab] = useState<BuilderTab>(
-    () => tabsFor(false).find((id) => id === param('tab')) ?? 'edit',
-  );
+  const [tab, setTab] = useState<BuilderTab>(() => firstTab(false));
   const build = useResumeBuild(language);
+
+  // Achievements moved to My profile: an old link goes there.
+  useEffect(() => {
+    if (param('tab') === 'achievements') window.location.replace('/profile?tab=achievements');
+  }, []);
 
   if (build.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
   if (build.isError) {
@@ -124,9 +139,7 @@ function JobBuilderPage({ jobId }: { jobId: string }) {
   const t = useTranslations('Resume');
   const errorText = useErrorText();
   const router = useRouter();
-  const [tab, setTab] = useState<BuilderTab>(
-    () => tabsFor(true).find((id) => id === param('tab')) ?? 'edit',
-  );
+  const [tab, setTab] = useState<BuilderTab>(() => firstTab(true));
   const job = useJobResumeBuild(jobId);
   const start = useStartJobResumeBuild();
 
@@ -213,12 +226,12 @@ function Builder({
   onLanguage: (language: string) => void;
 }) {
   const t = useTranslations('Resume');
-  const tabs: TabItem<BuilderTab>[] = tabsFor(!!job).map((id) => ({
+  const steps: Step<BuilderTab>[] = tabsFor(!!job).map((id) => ({
     id,
     label: t(`tabs.${id}`),
   }));
+  const [setupOpen, setSetupOpen] = useState(() => param('tab') === 'files');
   const errorText = useErrorText();
-  const nameOf = useLanguageName();
   const masterSave = useSaveResumeBuild();
   const jobSave = useSaveJobResumeBuild();
   const save = job ? jobSave : masterSave;
@@ -329,35 +342,23 @@ function Builder({
   return (
     <div className="mx-auto max-w-7xl space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="mr-auto min-w-0">
-          <h1 className="text-xl font-semibold text-slate-900">{t('title')}</h1>
+        <div className="mr-auto flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+          <h1 className="sr-only">{t('title')}</h1>
+          <ResumeSwitcher
+            languages={job ? [language] : build.languages}
+            language={language}
+            {...(job ? { job } : {})}
+            onLanguage={onLanguage}
+            onOpen={(href) => {
+              window.location.assign(href);
+            }}
+          />
           {job && (
-            <p className="truncate text-sm text-slate-600">
-              {t('job.forJob', { title: job.title, company: job.company })} ·{' '}
-              <Link href="/resume" className="text-brand-700 hover:underline">
-                {t('job.openMaster')}
-              </Link>
-            </p>
+            <Link href="/resume" className="text-sm text-brand-700 hover:underline">
+              {t('job.openMaster')}
+            </Link>
           )}
         </div>
-        {build.languages.length > 1 && (
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <span className="sr-only">{t('language')}</span>
-            <select
-              value={language}
-              onChange={(event) => {
-                onLanguage(event.target.value);
-              }}
-              className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium"
-            >
-              {build.languages.map((code) => (
-                <option key={code} value={code}>
-                  {t('resumeIn', { language: nameOf(code) })}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
         <span
           role="status"
           className={`text-sm font-medium ${
@@ -426,14 +427,15 @@ function Builder({
         </p>
       )}
 
-      <TabList
-        label={t('tabsLabel')}
-        idPrefix="builder-tab"
-        panelId="builder-panel"
-        tabs={tabs}
-        selected={tab}
-        onSelect={onTab}
-      />
+      {!job && (
+        <SetupRow
+          open={setupOpen}
+          onToggle={() => {
+            setSetupOpen((was) => !was);
+          }}
+        />
+      )}
+      <StepBar steps={steps} current={tab} onSelect={onTab} />
 
       {job ? (
         <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
@@ -508,7 +510,7 @@ function Builder({
       ) : null}
 
       {/* Phones show one side at a time. */}
-      {tab !== 'files' && tab !== 'achievements' && (
+      {
         <div
           role="group"
           aria-label={t('view')}
@@ -530,23 +532,23 @@ function Builder({
             </button>
           ))}
         </div>
-      )}
+      }
 
-      <div
-        className={`grid gap-6 ${tab === 'files' || tab === 'achievements' ? '' : 'lg:grid-cols-2'}`}
-      >
+      <div className="grid gap-6 lg:grid-cols-2">
         <div
           id="builder-panel"
-          role="tabpanel"
-          aria-labelledby={`builder-tab-${tab}`}
-          className={`min-w-0 ${view === 'edit' ? '' : 'hidden lg:block'}`}
+          className={`min-w-0 space-y-4 ${view === 'edit' ? '' : 'hidden lg:block'}`}
         >
           {/* Both tabs stay mounted, so a change waiting to be saved survives switching. */}
           <div hidden={tab !== 'look'}>
             <LookPanel onSaved={lookSaved} />
           </div>
-          {!job && tab === 'files' && <ResumeFiles />}
-          {!job && tab === 'achievements' && <AchievementsTab />}
+          {!job && tab === 'download' && (
+            <DownloadCard
+              href={resumeBuildPdfUrl(language, true)}
+              waiting={unsaved || save.isPending}
+            />
+          )}
           {job && tab === 'match' && (
             <JobMatchPanel
               jobId={job.jobId}
@@ -559,18 +561,23 @@ function Builder({
               }}
             />
           )}
-          {job && tab === 'check' && <CheckPanel jobId={job.jobId} version={version} />}
+          {job && tab === 'check' && (
+            <>
+              <CheckPanel jobId={job.jobId} version={version} />
+              <DownloadCard
+                href={jobResumeBuildPdfUrl(job.jobId, true)}
+                waiting={unsaved || save.isPending}
+              />
+            </>
+          )}
           {/* Stays mounted, so a letter change waiting to be saved survives switching tabs. */}
           {job && (
             <div hidden={tab !== 'letter'}>
               <LetterPanel jobId={job.jobId} onSaved={letterSaved} />
             </div>
           )}
-          <div
-            ref={editRef}
-            hidden={tab === 'look' || tab === 'letter' || tab === 'files' || tab === 'achievements'}
-            className="space-y-3"
-          >
+          {/* Job match drops keywords into the sections, so it shows them too. */}
+          <div ref={editRef} hidden={tab !== 'edit' && tab !== 'match'} className="space-y-3">
             <p className="text-xs text-slate-500">{t('intro')}</p>
             <FormatBar scope={editRef} />
             <HeaderCard doc={doc} onChange={change} />
@@ -627,8 +634,9 @@ function Builder({
               }}
             />
           </div>
+          <StepNav steps={steps} current={tab} onSelect={onTab} />
         </div>
-        {tab !== 'files' && tab !== 'achievements' && (
+        {
           <div className={`min-w-0 ${view === 'preview' ? '' : 'hidden lg:block'}`}>
             <div className="lg:sticky lg:top-4">
               <PdfPreview
@@ -641,7 +649,7 @@ function Builder({
               />
             </div>
           </div>
-        )}
+        }
       </div>
     </div>
   );

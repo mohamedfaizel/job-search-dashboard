@@ -906,6 +906,14 @@ export interface ResumeBuild {
   savedAt: string | null;
 }
 
+/** A job you have a resume copy for (the Resume page switcher lists them). */
+export interface JobResumeCopy {
+  jobId: string;
+  title: string;
+  company: string;
+  savedAt: string;
+}
+
 /** Your resume for one job, from the API (doc and masterDoc are JSON text). */
 export interface JobResumeBuild {
   jobId: string;

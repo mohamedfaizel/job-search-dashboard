@@ -49,9 +49,16 @@ describe('Resume for one job', () => {
       operation: 'StartJobResumeBuild',
       variables: { jobId: 'j1' },
     });
-    expect(screen.getByText(/For the job: Frontend Engineer at Acme GmbH/)).toBeInTheDocument();
-    // No language switch and no "read again": this is a copy, not a master.
-    expect(screen.queryByRole('combobox', { name: 'Resume' })).not.toBeInTheDocument();
+    // The switcher names the job; a copy starts with Job match.
+    expect(screen.getByRole('combobox', { name: 'Resume' })).toHaveDisplayValue(
+      'Frontend Engineer · Acme GmbH',
+    );
+    expect(screen.getByRole('button', { name: 'Match job' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+    // No Setup row and no "read again": this is a copy, not a master.
+    expect(screen.queryByRole('region', { name: 'Setup' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Start again from My profile' }),
     ).not.toBeInTheDocument();
@@ -202,11 +209,34 @@ describe('Resume for one job', () => {
     });
   });
 
-  it('keeps the Job match tab to a job’s resume and puts it in the address', async () => {
+  it('puts the step in the address and ends with the check and the download', async () => {
     jobBuild.current = { ...jobBuild.current, hasCopy: true };
     const user = renderJob();
-    await user.click(await screen.findByRole('tab', { name: 'Job match' }));
-    expect(router.replace).toHaveBeenCalledWith('/resume?job=j1&tab=match');
+    await user.click(await screen.findByRole('button', { name: 'Next: Content ›' }));
+    expect(router.replace).toHaveBeenCalledWith('/resume?job=j1&tab=edit');
+    await user.click(screen.getByRole('button', { name: 'Check & download' }));
+    expect(router.replace).toHaveBeenLastCalledWith('/resume?job=j1&tab=check');
+    expect(screen.getByRole('link', { name: '⬇ Download PDF' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/job\/j1\/resume\.pdf\?download=1$/),
+    );
+    await user.click(screen.getByRole('button', { name: 'Match job' }));
+    expect(router.replace).toHaveBeenLastCalledWith('/resume?job=j1');
+  });
+
+  it('switches to your master resume or another job copy', async () => {
+    jobBuild.current = { ...jobBuild.current, hasCopy: true };
+    const assign = vi.fn();
+    vi.stubGlobal('location', { assign, search: '?job=j1', pathname: '/resume' });
+    const user = renderJob();
+    const switcher = await screen.findByRole('combobox', { name: 'Resume' });
+    await user.selectOptions(switcher, 'lang:en');
+    expect(assign).toHaveBeenCalledWith('/resume?language=en');
+    // The job on screen is listed first even before the list knows about it.
+    await within(switcher).findByRole('option', { name: 'Data Engineer · Zalando' });
+    await user.selectOptions(switcher, 'job:j2');
+    expect(assign).toHaveBeenLastCalledWith('/resume?job=j2');
+    vi.unstubAllGlobals();
   });
 });
 
