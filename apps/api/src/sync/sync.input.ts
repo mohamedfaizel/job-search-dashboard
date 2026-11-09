@@ -35,7 +35,8 @@ export class SyncJobsInput {
   })
   @IsOptional()
   @IsArray()
-  @ArrayMaxSize(30)
+  // Room for the whole company list on the import page (about 100) and some of your own.
+  @ArrayMaxSize(150, { message: 'Add at most 150 company boards' })
   @IsString({ each: true })
   @Length(1, 200, { each: true })
   boards?: string[];

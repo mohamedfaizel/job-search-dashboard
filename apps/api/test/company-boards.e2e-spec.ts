@@ -198,6 +198,15 @@ describe('Company board import', () => {
     expect(none.errors?.[0]?.extensions).toMatchObject({ apiCode: 'NO_BOARDS' });
   });
 
+  it('takes the whole company list in one import, up to 150 boards', async () => {
+    const many = (n: number) => Array.from({ length: n }, () => 'nonsense');
+    // Past the size check, so it gets as far as reading the names.
+    const hundred = await t.gql(SYNC, { input: input({ boards: many(110) }) });
+    expect(hundred.errors?.[0]?.extensions).toMatchObject({ apiCode: 'INVALID_BOARD' });
+    const tooMany = await t.gql(SYNC, { input: input({ boards: many(151) }) });
+    expect(JSON.stringify(tooMany.errors)).toContain('at most 150 company boards');
+  });
+
   it('records the import in the history', async () => {
     await t.gql(SYNC, { input: input() });
     const run = await t.prisma.syncRun.findFirstOrThrow();

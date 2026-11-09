@@ -72,4 +72,18 @@ describe('CompanyPicker', () => {
     await userEvent.click(screen.getByRole('button', { name: 'All' }));
     expect(screen.getByText(`${ai.length} picked`)).toBeInTheDocument();
   });
+
+  it('removes all picked companies at once and keeps boards you typed', async () => {
+    render(<Harness start="lever:mine" />);
+    await userEvent.click(screen.getByRole('button', { name: /^Pick from/ }));
+    expect(screen.queryByRole('button', { name: /^Remove all/ })).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: `Add all ${COMPANY_CATALOG.length} shown` }),
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: `Remove all ${COMPANY_CATALOG.length}` }),
+    );
+    expect(boards()).toBe('lever:mine');
+    expect(screen.getByText('0 picked')).toBeInTheDocument();
+  });
 });
