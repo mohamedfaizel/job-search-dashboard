@@ -2005,6 +2005,7 @@
       },
       "chosen": "{count} picked",
       "addShown": "Add all {count} shown",
+      "removeShown": "Remove all {count}",
       "none": "No company matches.",
       "hint": "Companies sometimes move to another hiring tool. If one can't be read, the import tells you which, and you can untick it."
     }

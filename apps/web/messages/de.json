@@ -2005,6 +2005,7 @@
       },
       "chosen": "{count} ausgewählt",
       "addShown": "Alle {count} angezeigten hinzufügen",
+      "removeShown": "Alle {count} entfernen",
       "none": "Keine Firma passt.",
       "hint": "Firmen wechseln manchmal ihr Bewerbungstool. Kann eine Seite nicht gelesen werden, nennt der Import sie, und du kannst den Haken entfernen."
     }
