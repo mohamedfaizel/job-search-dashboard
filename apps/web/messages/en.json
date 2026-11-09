@@ -1073,7 +1073,10 @@
     "copy": {
       "copied": "Copied. {hint}",
       "failed": "Could not copy. Select the text below instead.",
-      "show": "Show the text"
+      "show": "Show the text",
+      "button": "Copy",
+      "done": "Copied",
+      "failedShort": "Could not copy: select the text instead"
     },
     "popup": {
       "tabs": {
@@ -1081,6 +1084,7 @@
         "apply": "Apply",
         "interview": "Interview",
         "salary": "Salary",
+        "messages": "Messages",
         "ad": "Job ad",
         "match": "AI score"
       },
@@ -1647,14 +1651,37 @@
         "counter": "When the offer is below your ask",
         "extras": "If they can't pay more"
       },
-      "copy": "Copy",
-      "copied": "Copied",
-      "copyFailed": "Could not copy: select the text instead",
       "aiTitle": "Want scripts made for you?",
       "aiCopy": "Copy prompt and open {ai}",
       "aiHint": "Your numbers, a lowest offer to accept, a counter-offer email and more.",
       "aiCopied": "{ai} opened in a new tab: paste it there (Ctrl+V).",
       "aiBox": "Salary negotiation prompt"
+    },
+    "messages": {
+      "loading": "Loading your profile…",
+      "title": "Messages to copy",
+      "recipientLabel": "Their name (optional)",
+      "recipientPlaceholder": "e.g. Anna Schmidt",
+      "inEnglish": "In English, from your profile and the skills of this ad you have. Check them before you send.",
+      "inGerman": "In German, because the job needs German. Made from your profile and the skills of this ad you have. Check them before you send.",
+      "addHeadline": "Tip: add a headline in My profile for better drafts.",
+      "drafts": {
+        "connect": "LinkedIn connection note",
+        "recruiter": "Message to the recruiter",
+        "thanks": "Thank-you after the interview"
+      },
+      "when": {
+        "connect": "Send with a connection request to the recruiter or the hiring manager.",
+        "recruiter": "Before you apply or right after, by LinkedIn or email.",
+        "thanks": "The same day as the interview."
+      },
+      "chars": "{count}/{limit} characters",
+      "followUpHint": "No news a week after you applied? The Tracker shows “Follow up?” with an email ready to send.",
+      "aiTitle": "Want messages made for you?",
+      "aiCopy": "Copy prompt and open {ai}",
+      "aiHint": "Four messages from your real facts, including a follow-up.",
+      "aiCopied": "{ai} opened in a new tab: paste it there (Ctrl+V).",
+      "aiBox": "Recruiter messages prompt"
     },
     "toasts": {
       "replySaved": "Reply saved. Your resume PDF is downloading.",

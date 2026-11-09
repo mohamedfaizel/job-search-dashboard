@@ -10,6 +10,7 @@ import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAiState } from '../../../lib/ai-status';
 import { capitalize } from '../format';
+import { MessagesPanel } from '../messages/MessagesPanel';
 import { SalaryPanel } from '../salary/SalaryPanel';
 import { useJobFormat } from '../useJobFormat';
 import { AiOffNote, AiStateTag, AiTag } from './AiLabels';
@@ -44,7 +45,7 @@ interface Props {
 const NOBODY: ReadonlySet<string> = new Set();
 const noop = () => undefined;
 
-const TABS = ['fit', 'apply', 'interview', 'salary', 'ad', 'match'] as const;
+const TABS = ['fit', 'apply', 'interview', 'salary', 'messages', 'ad', 'match'] as const;
 type Tab = (typeof TABS)[number];
 
 const ICON_BUTTON =
@@ -336,6 +337,9 @@ function JobDetails({
           </TabPanel>
           <TabPanel id="salary" active={tab}>
             <SalaryPanel job={job} active={tab === 'salary'} />
+          </TabPanel>
+          <TabPanel id="messages" active={tab}>
+            <MessagesPanel job={job} active={tab === 'messages'} />
           </TabPanel>
           <TabPanel id="ad" active={tab}>
             <JobAdPanel jobId={job.id} description={job.description} />
