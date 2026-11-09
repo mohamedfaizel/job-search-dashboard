@@ -1,0 +1,54 @@
+{
+  "App": {
+    "name": "Job Search Hunter"
+  },
+  "Auth": {
+    "heading": "Bei {app} anmelden",
+    "intro": "Deine Stellen, Fit % und Bewerbungen auf dem Handy.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "logIn": "Anmelden",
+    "loggingIn": "Anmelden…",
+    "logOut": "Abmelden",
+    "server": "Server: {url}"
+  },
+  "Jobs": {
+    "title": "Stellen",
+    "count": "{count, plural, =0 {Noch keine Stellen} one {# Stelle} other {# Stellen}}",
+    "empty": "Noch keine Stellen. Füge Stellen auf der Website hinzu und zieh dann nach unten zum Aktualisieren.",
+    "fit": "Fit {score} %",
+    "noFit": "Fit –",
+    "new": "Neu",
+    "remote": "Remote",
+    "hybrid": "Hybrid",
+    "onSite": "Vor Ort",
+    "loadMore": "Mehr zeigen",
+    "loading": "Lädt…",
+    "openHint": "Öffnet die Stelle"
+  },
+  "Job": {
+    "title": "Stelle",
+    "posted": "Veröffentlicht am {date}",
+    "salary": "Gehalt: {salary}",
+    "skills": "Skills: {skills}",
+    "openAd": "Stellenanzeige öffnen",
+    "status": "Dein Status",
+    "ad": "Stellenanzeige",
+    "noAd": "Diese Stelle hat keinen Anzeigentext."
+  },
+  "Status": {
+    "label": "Tracker-Status",
+    "NONE": "Nicht beworben",
+    "SAVED": "Gemerkt",
+    "APPLIED": "Beworben",
+    "INTERVIEWING": "Im Gespräch",
+    "OFFER": "Angebot",
+    "REJECTED": "Abgesagt"
+  },
+  "Errors": {
+    "NETWORK": "Die API unter {url} ist nicht erreichbar. Läuft `pnpm dev` auf deinem Computer, im selben WLAN?",
+    "WRONG_LOGIN": "E-Mail oder Passwort falsch.",
+    "TOO_MANY_TRIES": "Zu viele Versuche. Bitte warte {minutes} Minuten und versuche es erneut.",
+    "unknown": "Etwas ist schiefgelaufen: {message}"
+  }
+}

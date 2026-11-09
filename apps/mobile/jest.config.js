@@ -7,6 +7,9 @@ module.exports = {
     'node_modules/(?!(?:\\.pnpm/[^/]+/node_modules/)?(?:(?:jest-)?react-native|@react-native(?:-community)?|expo(?:nent)?|@expo(?:nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|use-intl|@formatjs/.*|intl-messageformat|immer|react-redux|redux|reselect|@reduxjs/.*|@jobsearch/.*|graphql-request|@graphql-typed-document-node))',
   ],
   setupFiles: ['./jest.setup.js'],
+  // The first test of a file pays for loading React Native, which on a busy CI runner can
+  // take longer than Jest's 5 s default.
+  testTimeout: 30000,
   collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/app/**'],
   coverageReporters: ['lcov', 'text-summary'],
 };

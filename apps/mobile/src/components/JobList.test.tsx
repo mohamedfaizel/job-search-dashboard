@@ -5,7 +5,7 @@ import { renderApp } from '../test/render';
 import { JobList, PAGE_SIZE } from './JobList';
 import { LogOutButton } from './LogOutButton';
 
-jest.mock('expo-router', () => ({ router: { replace: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { replace: jest.fn(), push: jest.fn() } }));
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -86,6 +86,27 @@ describe('JobList', () => {
     });
     await renderApp(<JobList />);
     expect(await screen.findByText(/No jobs yet\. Add jobs on the website/)).toBeOnTheScreen();
+  });
+
+  it('opens a job when you tap it and shows its tracker status', async () => {
+    fakeApi({
+      Me: () => ({ data: { me: user } }),
+      StartJobsVisit: () => ({ data: { startJobsVisit: null } }),
+      JobsPage: () => ({
+        data: {
+          jobsPage: {
+            items: [{ ...jobs[0], applicationStatus: 'APPLIED' }],
+            total: 1,
+            page: 1,
+            pageSize: 30,
+          },
+        },
+      }),
+    });
+    await renderApp(<JobList />);
+    expect(await screen.findByText('Applied')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: /Data Engineer/ }));
+    expect(router.push).toHaveBeenCalledWith('/job/1');
   });
 
   it('logs out and goes back to the login', async () => {
