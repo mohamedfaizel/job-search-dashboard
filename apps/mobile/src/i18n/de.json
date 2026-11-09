@@ -45,6 +45,19 @@
     "OFFER": "Angebot",
     "REJECTED": "Abgesagt"
   },
+  "Alerts": {
+    "bell": "Benachrichtigungen",
+    "bellUnread": "Benachrichtigungen, {count} ungelesen",
+    "title": "Benachrichtigungen",
+    "unread": "ungelesen",
+    "empty": "Noch nichts. Wenn eine geplante Suche neue passende Jobs findet, erscheinen sie hier.",
+    "newMatches": "{count, plural, one {# neuer Job passt zu dir} other {# neue Jobs passen zu dir}} aus der Suche „{search}“",
+    "interviewSoon": "Interview bald: {when}",
+    "interviewHint": "Übe im Tab Interview auf der Website.",
+    "more": "{count, plural, one {# weiterer} other {# weitere}} in der Jobliste (als Neu markiert)",
+    "loading": "Lädt…",
+    "channel": "Neue Jobs und Interviews"
+  },
   "Errors": {
     "NETWORK": "Die API unter {url} ist nicht erreichbar. Läuft `pnpm dev` auf deinem Computer, im selben WLAN?",
     "WRONG_LOGIN": "E-Mail oder Passwort falsch.",

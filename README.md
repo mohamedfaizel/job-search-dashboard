@@ -221,8 +221,15 @@ the API.
 
 A native app for Android and iPhone, built with [Expo](https://expo.dev) and React Native. It
 uses the same API and the same data hooks (`packages/data`) as the website. You log in with the
-same account. For now it shows your jobs with Fit % and a New badge; the job popup, tracker
-status and new-job alerts come next.
+same account. It shows your jobs with Fit % and a New badge; tap a job for its details and to
+set your tracker status. The 🔔 lists the same notifications as the website's bell (new jobs
+from scheduled searches, interview reminders).
+
+**Phone alerts:** the first time you log in, the app asks to send notifications. While the app
+is open (or was just in use), it checks every minute and pops up an alert for each new
+notification; the app icon shows the unread count, and tapping the alert opens it. Alerts that
+come while the app is fully closed show up in the 🔔 next time you open it (push notifications
+from a server need a published app build, not Expo Go).
 
 Try it on your own phone:
 
