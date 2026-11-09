@@ -231,6 +231,20 @@ export class DocumentsService {
     return this.style(userId);
   }
 
+  /** My design with a new colour, when one was sent and you have My design. */
+  private async designColour(
+    userId: number,
+    accent: string | null | undefined,
+  ): Promise<{ myDesign?: { [K in keyof MyDesign]: MyDesign[K] } }> {
+    if (!accent) return {};
+    const row = await this.prisma.documentStyle.findUnique({
+      where: { userId },
+      select: { myDesign: true },
+    });
+    const design = storedDesign(row?.myDesign);
+    return design ? { myDesign: { ...design, accent: hexColor(accent) } } : {};
+  }
+
   async updateStyle(userId: number, input: DocumentStyleInput): Promise<DocumentStyleModel> {
     const data = {
       resumeTemplate: input.resumeTemplate,
@@ -239,6 +253,7 @@ export class DocumentsService {
       font: input.font,
       showPhoto: input.showPhoto,
       ...layoutUpdate(input),
+      ...(await this.designColour(userId, input.designAccent)),
     };
     await this.prisma.documentStyle.upsert({
       where: { userId },
@@ -254,9 +269,10 @@ export class DocumentsService {
       this.wordTemplate(userId),
       this.prisma.documentStyle.findUnique({ where: { userId }, select: { myDesign: true } }),
     ]);
+    const design = storedDesign(row?.myDesign);
     return {
       resumeTemplates: [
-        ...(row?.myDesign ? [{ ...MY_DESIGN }] : []),
+        ...(design ? [{ ...MY_DESIGN, ...templateSizes(MY_DESIGN.id, design) }] : []),
         ...RESUME_TEMPLATES.map((t) => ({ ...t, ...templateSizes(t.id) })),
         ...(wordTemplate?.usable ? [{ ...MY_WORD_FILE }] : []),
       ],

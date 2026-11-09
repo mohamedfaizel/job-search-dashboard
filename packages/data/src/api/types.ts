@@ -738,13 +738,16 @@ export interface MyDesign {
   twoColumns: boolean;
 }
 
-export type DocumentStyleInput = Omit<DocumentStyle, 'hasPhoto' | 'myDesign'>;
+export type DocumentStyleInput = Omit<DocumentStyle, 'hasPhoto' | 'myDesign'> & {
+  /** My design's own colour; left out, it stays as saved. */
+  designAccent?: string | null;
+};
 
 export interface DocumentTemplate {
   id: string;
   name: string;
   description: string;
-  /** Its own text size (pt) and side margin (mm); built-in resume templates only. */
+  /** Its own text size (pt) and side margin (mm): built-in templates and My design. */
   fontSize?: number | null;
   margin?: number | null;
 }
