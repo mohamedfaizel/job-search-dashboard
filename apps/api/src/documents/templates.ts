@@ -436,13 +436,35 @@ function designStyle(d: MyDesign): TemplateStyle {
 const mm = (length: string) => Math.round(parseFloat(length) * 10);
 
 /** A template's own text size (pt) and side margin (mm): where the Look tab sliders start. */
-export function templateSizes(id: string): { fontSize: number; margin: number } | null {
-  const style = isResumeTemplate(id) ? STYLES[id] : null;
+export function templateSizes(
+  id: string,
+  design: MyDesign | null = null,
+): { fontSize: number; margin: number } | null {
+  const style = isResumeTemplate(id)
+    ? STYLES[id]
+    : id === MY_DESIGN.id && design
+      ? designStyle(design)
+      : null;
   return style ? { fontSize: style.size, margin: mm(style.margin) } : null;
 }
 
+/**
+ * My design with the Look tab's heading and dates choices folded in, so a choice there keeps
+ * the design's own colours, capitals and company-first order instead of a generic heading.
+ */
+function designWithLayout(d: MyDesign, layout: ResumeLayout | null): MyDesign {
+  if (!layout) return d;
+  const heading = { auto: d.headingStyle, rule: 'rule', bold: 'plain', bar: 'bar' } as const;
+  return {
+    ...d,
+    headingStyle: heading[layout.headingStyle],
+    dates: layout.datesSide === 'auto' ? d.dates : layout.datesSide,
+  };
+}
+
 function styleOf(look: DocumentLook): TemplateStyle {
-  if (look.template === MY_DESIGN.id) return designStyle(look.design ?? DEFAULT_DESIGN);
+  if (look.template === MY_DESIGN.id)
+    return designStyle(designWithLayout(look.design ?? DEFAULT_DESIGN, look.layout ?? null));
   return STYLES[look.template];
 }
 
@@ -640,13 +662,19 @@ function skillsTex(blocks: ResumeBlock[], layout: ResumeLayout): string | null {
 export function resumeTex(doc: ResumeDoc, look: DocumentLook): string {
   const layout = look.layout ?? null;
   const base = styleOf(look);
+  // My design already took the heading and dates choices (styleOf).
+  const own = look.template === MY_DESIGN.id;
   const s: TemplateStyle = {
     ...base,
     ...(layout?.compact
       ? { entryGap: `${String(Math.max(2, parseFloat(base.entryGap) / 2))}pt` }
       : {}),
-    ...(layout && layout.headingStyle !== 'auto' ? { section: HEADINGS[layout.headingStyle] } : {}),
-    ...(layout && layout.datesSide !== 'auto' ? { entry: datesEntry(layout.datesSide) } : {}),
+    ...(layout && !own && layout.headingStyle !== 'auto'
+      ? { section: HEADINGS[layout.headingStyle] }
+      : {}),
+    ...(layout && !own && layout.datesSide !== 'auto'
+      ? { entry: datesEntry(layout.datesSide) }
+      : {}),
   };
   const margin = layout?.margin != null ? `${String(layout.margin)}mm` : null;
   const side = margin ?? s.margin;

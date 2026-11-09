@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithData } from '../../profile/test/render';
-import { requests, SAVED_DESIGN, wordTemplate } from '../../profile/test/server';
+import { myDesign, requests, SAVED_DESIGN, wordTemplate } from '../../profile/test/server';
 import { LookPanel } from './LookPanel';
 
 /** Changes save half a second after the last one. */
@@ -45,6 +45,7 @@ describe('Look tab', () => {
         headingStyle: 'auto',
         datesSide: 'auto',
         bulletStyle: 'dot',
+        designAccent: null,
       });
     }, SAVE_WAIT);
     // One save for the quick burst of changes, then the PDF is made again.
@@ -184,5 +185,27 @@ describe('Look tab', () => {
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(requests).toContainEqual({ operation: 'DeleteMyDesign', variables: {} });
     expect(await screen.findByRole('button', { name: 'Save my design' })).toBeInTheDocument();
+  });
+
+  it('works for My design: sliders start at its size, the colour changes My design', async () => {
+    myDesign.current = SAVED_DESIGN;
+    try {
+      const { user } = await renderLook();
+      expect(await screen.findByRole('radio', { name: /My design/ })).toBeChecked();
+      expect(screen.getByRole('slider', { name: 'Text size' })).toHaveValue('10');
+      expect(screen.getByRole('slider', { name: 'Margins' })).toHaveValue('15');
+
+      await user.click(screen.getByRole('radio', { name: 'Burgundy' }));
+      await waitFor(() => {
+        expect(lastInput()).toMatchObject({
+          resumeTemplate: 'design',
+          accentColor: '1F4E79',
+          designAccent: '7C2D12',
+        });
+      }, SAVE_WAIT);
+      expect(screen.getByRole('radio', { name: 'Burgundy' })).toBeChecked();
+    } finally {
+      myDesign.current = null;
+    }
   });
 });

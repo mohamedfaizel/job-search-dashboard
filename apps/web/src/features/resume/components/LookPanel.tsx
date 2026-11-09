@@ -368,6 +368,7 @@ const inputOf = (style: DocumentStyle): DocumentStyleInput => ({
   headingStyle: style.headingStyle,
   datesSide: style.datesSide,
   bulletStyle: style.bulletStyle,
+  designAccent: style.myDesign?.accent ?? null,
 });
 
 const sameInput = (a: DocumentStyleInput, b: DocumentStyleInput) =>
@@ -652,6 +653,12 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
     };
   }, [changed, isPending, draft, mutate, onSaved]);
 
+  // With My design chosen, the colour buttons change My design's own colour.
+  const ownDesign = draft.resumeTemplate === 'design' && draft.designAccent != null;
+  const colour = ownDesign ? (draft.designAccent ?? draft.accentColor) : draft.accentColor;
+  const setColour = (hex: string) => {
+    change(ownDesign ? { designAccent: hex } : { accentColor: hex });
+  };
   const look = { accent: draft.accentColor, font: draft.font };
   const data = templates.data;
   const chosen = data?.resumeTemplates.find((tpl) => tpl.id === draft.resumeTemplate);
@@ -691,11 +698,11 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
                 key={s.hex}
                 type="button"
                 role="radio"
-                aria-checked={draft.accentColor.toUpperCase() === s.hex}
+                aria-checked={colour.toUpperCase() === s.hex}
                 aria-label={t(`swatches.${s.name}`)}
                 title={t(`swatches.${s.name}`)}
                 onClick={() => {
-                  change({ accentColor: s.hex });
+                  setColour(s.hex);
                 }}
                 className="h-7 w-7 rounded-full ring-offset-2 aria-checked:ring-2 aria-checked:ring-slate-900"
                 style={{ backgroundColor: `#${s.hex}` }}
@@ -704,9 +711,9 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
             <input
               type="color"
               aria-label={t('ownColour')}
-              value={`#${draft.accentColor.replace(/^#/, '')}`}
+              value={`#${colour.replace(/^#/, '')}`}
               onChange={(e) => {
-                change({ accentColor: e.target.value.replace(/^#/, '').toUpperCase() });
+                setColour(e.target.value.replace(/^#/, '').toUpperCase());
               }}
               className="h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white"
             />
