@@ -50,6 +50,9 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+        env:
+          # Typed lint of the whole repo needs more than Node's default 2 GB heap.
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Typecheck
         run: pnpm typecheck
