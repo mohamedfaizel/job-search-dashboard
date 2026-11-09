@@ -22,7 +22,7 @@ interface Props {
 }
 
 /**
- * "Pick from 120+ companies": a list of companies whose career pages we can read, to tick
+ * "Pick from N companies": a list of companies whose career pages we can read, to tick
  * instead of typing greenhouse:name by hand. Search by name or place, show one group, or add a
  * whole group. Ticks write to the same text box, so typed boards stay as they are.
  */
