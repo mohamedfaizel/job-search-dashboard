@@ -1655,6 +1655,11 @@ type Query {
   """
   resumePdfCheck(jobId: ID!, template: String): PdfCheck!
 
+  """
+  What similar jobs pay, a number to ask for, and a negotiation prompt for Claude
+  """
+  salaryResearch(jobId: ID!): SalaryResearch!
+
   """Your saved answers, newest first"""
   savedAnswers: [SavedAnswer!]!
 
@@ -1763,6 +1768,60 @@ type ResumeSuggestion {
 enum Role {
   ADMIN
   USER
+}
+
+"""
+What the range compares with: similar titles, the same job function, or nothing
+"""
+enum SalaryBasis {
+  FUNCTION
+  NONE
+  TITLE
+}
+
+"""A similar job with a salary, for the range"""
+type SalaryExample {
+  company: String!
+  jobId: ID!
+  max: Int
+  min: Int
+  title: String!
+}
+
+"""
+Salary research for one job from the jobs we have (no AI): yearly amounts in the country currency, rounded to 1,000
+"""
+type SalaryResearch {
+  """A number to ask for: the higher of the high end and the ad"""
+  ask: Int
+  basis: SalaryBasis!
+
+  """
+  "EUR" or "USD"
+  """
+  currency: String!
+
+  """How many of them are estimates, not stated in the ad"""
+  estimatedCount: Int!
+
+  """Up to five of the similar jobs, newest first"""
+  examples: [SalaryExample!]!
+
+  """Your salary expectation from My profile, as you wrote it"""
+  expectation: String!
+
+  """75th percentile"""
+  high: Int
+  jobMax: Int
+  jobMin: Int
+
+  """25th percentile"""
+  low: Int
+  median: Int
+
+  """Paste into Claude: target, scripts, counter-offer email, extras"""
+  prompt: String!
+  sampleSize: Int!
 }
 
 input SaveApiKeyInput {

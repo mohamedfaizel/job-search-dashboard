@@ -1080,6 +1080,7 @@
         "fit": "Fit",
         "apply": "Bewerben",
         "interview": "Interview",
+        "salary": "Gehalt",
         "ad": "Anzeige",
         "match": "KI-Score"
       },
@@ -1620,6 +1621,40 @@
         "TOO_GOOD": "Verspricht viel Geld für wenig Arbeit. Prüfe das übliche Gehalt für diese Stelle.",
         "SHORT_AD": "Die Anzeige sagt sehr wenig über die Stelle, deshalb konnten wir kaum etwas prüfen."
       }
+    },
+    "salary": {
+      "loading": "Gehälter werden gesucht…",
+      "error": "Gehälter konnten nicht geladen werden: {error}",
+      "marketTitle": "Was ähnliche Stellen zahlen",
+      "basisTitle": "Jahresgehalt in {count, plural, one {# Anzeige} other {# Anzeigen}} mit ähnlichem Titel im selben Land.",
+      "basisFunction": "Zu wenige Anzeigen mit diesem Titel, deshalb vergleicht dies {count, plural, one {# Anzeige} other {# Anzeigen}} im selben Berufsfeld und Land.",
+      "estimated": "{count, plural, one {# davon ist geschätzt} other {# davon sind geschätzt}}, nicht in der Anzeige genannt.",
+      "noData": "Noch keine Gehälter für ähnliche Stellen in deiner Jobliste. Mit dem Prompt unten nutzt dein KI-Chat sein eigenes Marktwissen.",
+      "low": "Niedrig (25 %)",
+      "median": "Üblich",
+      "high": "Hoch (75 %)",
+      "legendRange": "Mittlere Hälfte der Anzeigen",
+      "legendAd": "Diese Anzeige: {range}",
+      "examples": "Ähnliche Stellen anzeigen",
+      "scriptsTitle": "Was du sagen kannst",
+      "askLabel": "Deine Forderung pro Jahr ({currency})",
+      "offerLabel": "Ihr Angebot, falls vorhanden",
+      "askHint": "Wir schlagen das obere Ende der Spanne oder das Maximum der Anzeige vor, je nachdem, was höher ist: Starte hoch, runter geht immer, rauf nie.",
+      "yourExpectation": "Deine gespeicherte Vorstellung: {text}.",
+      "needAsk": "Gib den Jahresbetrag ein, den du fordern willst, dann erscheinen hier die Texte.",
+      "scripts": {
+        "expectation": "Wenn sie nach deiner Gehaltsvorstellung fragen",
+        "counter": "Wenn das Angebot unter deiner Forderung liegt",
+        "extras": "Wenn sie nicht mehr zahlen können"
+      },
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren nicht möglich: markiere den Text stattdessen",
+      "aiTitle": "Texte für dich schreiben lassen?",
+      "aiCopy": "Prompt kopieren und {ai} öffnen",
+      "aiHint": "Deine Zahlen, dein Minimum, eine Gegenangebots-E-Mail und mehr.",
+      "aiCopied": "{ai} wurde in einem neuen Tab geöffnet: dort einfügen (Strg+V).",
+      "aiBox": "Prompt für die Gehaltsverhandlung"
     },
     "toasts": {
       "replySaved": "Antwort gespeichert. Dein Lebenslauf-PDF wird heruntergeladen.",

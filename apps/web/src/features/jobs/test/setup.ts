@@ -5,6 +5,7 @@ import {
   applications,
   funnel,
   trust,
+  salary,
   downloads,
   applyQueue,
   hiddenIds,
@@ -41,6 +42,7 @@ afterEach(() => {
   applications.length = 0;
   funnel.current = null;
   trust.clear();
+  salary.current = null;
   mailSuggestions.length = 0;
   Object.assign(gmailAccounts, { configured: false, count: 0, found: 0 });
   applyQueue.length = 0;
