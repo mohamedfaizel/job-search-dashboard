@@ -24,6 +24,8 @@ const SAVE_KEY = `mutation ($value: String!) { saveApiKey(input: { kind: ANTHROP
 
 const LETTER = `query ($jobId: String!) { jobCoverLetter(jobId: $jobId) { jobId title company language text hasCopy savedAt } }`;
 const SAVE_LETTER = `mutation ($jobId: String!, $text: String!) { saveJobCoverLetter(jobId: $jobId, text: $text) { jobId text hasCopy savedAt } }`;
+const TEMPLATE = `query ($language: String!) { coverLetterTemplate(language: $language) { language text savedAt } }`;
+const SAVE_TEMPLATE = `mutation ($language: String!, $text: String!) { saveCoverLetterTemplate(language: $language, text: $text) { language text savedAt } }`;
 const LETTER_PROMPT = `query ($input: ImproveLetterInput!) { improveLetterPrompt(input: $input) }`;
 const IMPROVE_LETTER = `mutation ($input: ImproveLetterInput!) { improveLetter(input: $input) { before after findings { kind text where context } } }`;
 
@@ -452,6 +454,49 @@ Berlin | 01/2020 – today
 
         const tooLong = await t.asUser(SAVE_LETTER, { jobId, text: 'x'.repeat(20_001) });
         expect(tooLong.errors?.[0]?.extensions?.['apiCode']).toBe('REPLY_PART_TOO_LONG');
+      });
+
+      it('keeps a cover letter template per language, with its own PDF', async () => {
+        const empty = await t.asUser<{
+          coverLetterTemplate: { text: string; savedAt: string | null };
+        }>(TEMPLATE, { language: 'en' });
+        expect(empty.data!.coverLetterTemplate).toEqual({
+          language: 'en',
+          text: '',
+          savedAt: null,
+        });
+        const none = await request(t.server)
+          .get('/resume-builder/en/cover-letter.pdf')
+          .set('Cookie', t.cookieFor('USER'));
+        expect(none.status).toBe(404);
+
+        const saved = await t.asUser<{
+          saveCoverLetterTemplate: { text: string; savedAt: string };
+        }>(SAVE_TEMPLATE, {
+          language: 'en',
+          text: 'Dear {company} team,\n\n\n\nI want the {job} role.\n\nAda',
+        });
+        expect(saved.errors).toBeUndefined();
+        expect(saved.data!.saveCoverLetterTemplate.text).toBe(
+          'Dear {company} team,\n\nI want the {job} role.\n\nAda',
+        );
+        expect(saved.data!.saveCoverLetterTemplate.savedAt).toBeTruthy();
+        const again = await t.asUser(SAVE_TEMPLATE, { language: 'en', text: 'Hello,\n\nAda' });
+        expect(again.errors).toBeUndefined();
+
+        const res = await request(t.server)
+          .get('/resume-builder/en/cover-letter.pdf')
+          .set('Cookie', t.cookieFor('USER'));
+        expect(res.status).toBe(200);
+        expect(res.headers['x-pdf-pages']).toBe('1');
+        expect(res.headers['content-disposition']).toContain('inline');
+
+        const tooLong = await t.asUser(SAVE_TEMPLATE, { language: 'en', text: 'x'.repeat(20_001) });
+        expect(tooLong.errors?.[0]?.extensions?.['apiCode']).toBe('REPLY_PART_TOO_LONG');
+        const loggedOut = await request(t.server)
+          .post('/graphql')
+          .send({ query: TEMPLATE, variables: { language: 'en' } });
+        expect((loggedOut.body as { errors?: unknown[] }).errors).toBeDefined();
       });
 
       it('sends the letter as a PDF, once there is one', async () => {

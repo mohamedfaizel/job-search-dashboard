@@ -143,6 +143,23 @@ export class SectionSuggestionModel {
   findings!: FactFindingModel[];
 }
 
+@ObjectType('CoverLetterTemplate', {
+  description: 'Your cover letter template in one language; it starts each job’s letter',
+})
+export class CoverLetterTemplateModel {
+  @Field({ description: 'ISO 639-1 code, e.g. "en"' })
+  language!: string;
+
+  @Field({
+    description:
+      'Paragraphs separated by a blank line; {company} and {job} become the job’s company and title',
+  })
+  text!: string;
+
+  @Field(() => Date, { nullable: true, description: 'Null until you first save it' })
+  savedAt!: Date | null;
+}
+
 @ObjectType('JobCoverLetter', { description: 'The cover letter saved for one job' })
 export class JobCoverLetterModel {
   @Field()

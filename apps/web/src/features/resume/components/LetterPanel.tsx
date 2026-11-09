@@ -1,11 +1,14 @@
 import type { LetterSuggestion } from '@jobsearch/data';
 import {
+  useCoverLetterTemplate,
   useImproveLetter,
   useImproveLetterPrompt,
   useJobCoverLetter,
+  useSaveCoverLetterTemplate,
   useSaveJobCoverLetter,
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { move, removeAt, replaceAt } from '../docOps';
@@ -30,11 +33,17 @@ const toText = (paragraphs: string[]) =>
     .join('\n\n');
 const words = (text: string) => text.split(/\s+/).filter(Boolean).length;
 
+/** Your template with this job's details: {company} and {job} become the company and title. */
+export const fillTemplate = (text: string, job: { company: string; title: string }) =>
+  text.replace(/\{company\}/gi, job.company).replace(/\{job\}/gi, job.title);
+
 /** Loads the letter, then hands it to the editor, which keeps its own copy while you type. */
 export function LetterPanel({ jobId, onSaved }: Props) {
   const t = useTranslations('Resume.letter');
   const errorText = useErrorText();
   const letter = useJobCoverLetter(jobId);
+  const save = useSaveJobCoverLetter();
+  const template = useCoverLetterTemplate(letter.data?.language ?? '', !!letter.data);
   if (letter.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
   if (letter.isError) {
     return (
@@ -43,7 +52,100 @@ export function LetterPanel({ jobId, onSaved }: Props) {
       </p>
     );
   }
-  return <LetterEditor jobId={jobId} initial={letter.data.text} onSaved={onSaved} />;
+  const start = template.data?.text ?? '';
+  return (
+    <LetterEditor
+      initial={letter.data.text}
+      title={t('title')}
+      hint={t('hint')}
+      emptyText={t('empty')}
+      aiJobId={jobId}
+      saving={save.isPending}
+      saveError={save.error}
+      save={(text, done) => {
+        save.mutate(
+          { jobId, text },
+          {
+            onSuccess: (saved) => {
+              done(saved.text);
+            },
+          },
+        );
+      }}
+      onSaved={onSaved}
+      empty={(fill) =>
+        start ? (
+          <button
+            type="button"
+            className={SMALL_BUTTON}
+            onClick={() => {
+              fill(fillTemplate(start, letter.data));
+            }}
+          >
+            {t('fromTemplate')}
+          </button>
+        ) : null
+      }
+    />
+  );
+}
+
+/**
+ * Your cover letter template in one language: written once, it starts each job's letter.
+ * {company} and {job} in it become the job's company and title.
+ */
+export function TemplatePanel({ language, onSaved }: { language: string; onSaved: () => void }) {
+  const t = useTranslations('Resume.letter');
+  const errorText = useErrorText();
+  const template = useCoverLetterTemplate(language);
+  const save = useSaveCoverLetterTemplate();
+  if (template.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (template.isError) {
+    return (
+      <p role="alert" className="text-sm text-red-700">
+        {errorText(template.error)}
+      </p>
+    );
+  }
+  return (
+    <LetterEditor
+      initial={template.data.text}
+      title={t('templateTitle')}
+      hint={t('templateHint')}
+      emptyText={t('templateEmpty')}
+      saving={save.isPending}
+      saveError={save.error}
+      save={(text, done) => {
+        save.mutate(
+          { language, text },
+          {
+            onSuccess: (saved) => {
+              done(saved.text);
+            },
+          },
+        );
+      }}
+      onSaved={onSaved}
+    />
+  );
+}
+
+interface EditorProps {
+  initial: string;
+  title: string;
+  hint: string;
+  /** Shown while there is no paragraph yet. */
+  emptyText: string;
+  /** Saves the text and calls `done` with the text as saved. */
+  save: (text: string, done: (saved: string) => void) => void;
+  saving: boolean;
+  saveError: Error | null;
+  /** Called after each save, so the preview makes the PDF again. */
+  onSaved: () => void;
+  /** A job letter can be written or improved with AI; a template can't (there is no job). */
+  aiJobId?: string;
+  /** Shown while the letter is empty, with a way to fill it. */
+  empty?: (fill: (text: string) => void) => ReactNode;
 }
 
 /**
@@ -52,10 +154,20 @@ export function LetterPanel({ jobId, onSaved }: Props) {
  * address, the date, the company and the subject line. "Write with AI" works like Improve on
  * a section: you see the new letter first and keep or discard it.
  */
-function LetterEditor({ jobId, initial, onSaved }: Props & { initial: string }) {
+function LetterEditor({
+  initial,
+  title,
+  hint,
+  emptyText,
+  save,
+  saving,
+  saveError,
+  onSaved,
+  aiJobId,
+  empty: emptyExtra,
+}: EditorProps) {
   const t = useTranslations('Resume.letter');
   const errorText = useErrorText();
-  const save = useSaveJobCoverLetter();
   const promptFor = useImproveLetterPrompt();
   const improve = useImproveLetter();
   const [list, setList] = useState(() => toParagraphs(initial));
@@ -64,58 +176,59 @@ function LetterEditor({ jobId, initial, onSaved }: Props & { initial: string }) 
 
   const text = toText(list);
   const unsaved = text !== saved;
-  const { mutate } = save;
   useEffect(() => {
     if (!unsaved) return;
     const timer = setTimeout(() => {
-      mutate(
-        { jobId, text },
-        {
-          onSuccess: (done) => {
-            setSaved(done.text);
-            onSaved();
-          },
-        },
-      );
+      save(text, (done) => {
+        setSaved(done);
+        onSaved();
+      });
     }, AUTOSAVE_MS);
     return () => {
       clearTimeout(timer);
     };
-  }, [unsaved, text, jobId, mutate, onSaved]);
+    // `save` is a new function on every render; the text is what decides a save.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unsaved, text, onSaved]);
 
   const count = words(text);
   const empty = list.length === 0;
-  const input = (instruction: string) => ({ jobId, instruction: instruction || null });
+  const input = (instruction: string) => ({
+    jobId: aiJobId ?? '',
+    instruction: instruction || null,
+  });
   const keep = (value: string) => {
     setList(toParagraphs(value));
   };
 
   return (
     <section
-      aria-label={t('title')}
+      aria-label={title}
       className="space-y-3 rounded-lg border border-slate-200 bg-white p-4"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="mr-auto text-sm font-semibold text-slate-900">{t('title')}</h2>
+        <h2 className="mr-auto text-sm font-semibold text-slate-900">{title}</h2>
         <span role="status" className="text-xs text-slate-500">
-          {save.isPending ? t('saving') : unsaved ? t('notSaved') : `✓ ${t('saved')}`}
+          {saving ? t('saving') : unsaved ? t('notSaved') : `✓ ${t('saved')}`}
         </span>
         <span className="text-xs tabular-nums text-slate-600">{t('words', { count })}</span>
-        <button
-          type="button"
-          className={`${SMALL_BUTTON} inline-flex items-center gap-1`}
-          aria-expanded={asking}
-          onClick={() => {
-            setAsking((open) => !open);
-          }}
-        >
-          <span className="font-bold text-amber-600" aria-hidden>
-            ✦
-          </span>
-          {empty ? t('write') : t('improve')}
-        </button>
+        {aiJobId && (
+          <button
+            type="button"
+            className={`${SMALL_BUTTON} inline-flex items-center gap-1`}
+            aria-expanded={asking}
+            onClick={() => {
+              setAsking((open) => !open);
+            }}
+          >
+            <span className="font-bold text-amber-600" aria-hidden>
+              ✦
+            </span>
+            {empty ? t('write') : t('improve')}
+          </button>
+        )}
       </div>
-      <p className="text-xs text-slate-500">{t('hint')}</p>
+      <p className="text-xs text-slate-500">{hint}</p>
 
       {asking && (
         <ImproveFlow<string>
@@ -136,7 +249,12 @@ function LetterEditor({ jobId, initial, onSaved }: Props & { initial: string }) 
         />
       )}
 
-      {empty && <p className="text-sm text-slate-600">{t('empty')}</p>}
+      {empty && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-slate-600">{emptyText}</p>
+          {emptyExtra?.(keep)}
+        </div>
+      )}
       <ul className="space-y-2">
         {list.map((paragraph, index) => (
           // A paragraph has no id of its own, so its place is its identity.
@@ -199,9 +317,9 @@ function LetterEditor({ jobId, initial, onSaved }: Props & { initial: string }) 
       >
         + {t('add')}
       </button>
-      {save.isError && (
+      {saveError && (
         <p role="alert" className="text-sm text-red-700">
-          {errorText(save.error)}
+          {errorText(saveError)}
         </p>
       )}
     </section>

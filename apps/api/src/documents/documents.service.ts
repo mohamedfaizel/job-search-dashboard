@@ -514,6 +514,22 @@ export class DocumentsService {
     });
   }
 
+  /**
+   * Your cover letter template as a PDF: {company} and {job} stay as they are, and the letter
+   * head shows them too, so you see where the job's details will go.
+   */
+  async letterTemplatePdf(userId: number, text: string, language: string): Promise<DocumentFile> {
+    const me = await this.me(userId);
+    return this.makePdf(userId, me, {
+      kind: 'cover-letter',
+      text,
+      language,
+      company: '{company}',
+      companyCity: null,
+      jobTitle: '{job}',
+    });
+  }
+
   /** Your name and the contact details a resume header and a letter need. */
   private async me(userId: number) {
     const user = await this.prisma.user.findUniqueOrThrow({

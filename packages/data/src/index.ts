@@ -128,6 +128,9 @@ export { makeStore, useAppDispatch, useAppSelector } from './store/store';
 export type { AppDispatch, AppStore, RootState } from './store/store';
 export { createQueryClient, DataProvider } from './DataProvider';
 export {
+  coverLetterTemplateKey,
+  coverLetterTemplatePdfUrl,
+  fetchCoverLetterTemplatePdf,
   fetchJobCoverLetterPdf,
   fetchJobResumeBuildPdf,
   jobCoverLetterKey,
@@ -139,6 +142,8 @@ export {
   resumeBuildKey,
   resumeBuildPdfUrl,
   useCopySectionToMaster,
+  useCoverLetterTemplate,
+  useCoverLetterTemplatePdf,
   useImproveLetter,
   useImproveLetterPrompt,
   useImproveSection,
@@ -153,6 +158,7 @@ export {
   useResumeBuild,
   useResumeBuildPdf,
   useResumeBuildPrompt,
+  useSaveCoverLetterTemplate,
   useSaveJobCoverLetter,
   useSaveJobResumeBuild,
   useSaveResumeBuild,

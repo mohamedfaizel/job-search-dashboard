@@ -100,6 +100,24 @@ type Company {
   name: String!
 }
 
+"""
+Your cover letter template in one language; it starts each job’s letter
+"""
+type CoverLetterTemplate {
+  """
+  ISO 639-1 code, e.g. "en"
+  """
+  language: String!
+
+  """Null until you first save it"""
+  savedAt: DateTime
+
+  """
+  Paragraphs separated by a blank line; {company} and {job} become the job’s company and title
+  """
+  text: String!
+}
+
 input CreateJobInput {
   applicationStatus: ApplicationStatus
   city: String
@@ -1032,6 +1050,9 @@ type Mutation {
   """
   saveClaudeAnswers(answers: String!, jobId: ID!): JobInsights!
 
+  """Saves your cover letter template in one language"""
+  saveCoverLetterTemplate(language: String!, text: String!): CoverLetterTemplate!
+
   """
   Saves Claude's answer to the interview prep prompt for this job (replacing the one before)
   """
@@ -1454,6 +1475,9 @@ input ProfileInput {
 type Query {
   """One Claude prompt for the queued jobs that have no reply yet (up to 5)"""
   applyQueuePrompt: ApplyQueuePrompt!
+
+  """Your cover letter template in one language"""
+  coverLetterTemplate(language: String!): CoverLetterTemplate!
 
   """How your resume and cover letter PDFs look"""
   documentStyle: DocumentStyle!

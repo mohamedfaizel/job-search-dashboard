@@ -498,7 +498,11 @@
       "upShort": "Hoch",
       "downShort": "Runter",
       "removeShort": "Löschen",
-      "add": "Absatz hinzufügen"
+      "add": "Absatz hinzufügen",
+      "fromTemplate": "Mit meiner Vorlage beginnen",
+      "templateTitle": "Anschreiben-Vorlage",
+      "templateHint": "Einmal schreiben, für jede Stelle nutzen. Schreibe '{company}' und '{job}', wo Firma und Stellentitel hinkommen.",
+      "templateEmpty": "Noch keine Vorlage. Füge den ersten Absatz hinzu: beginne mit der Anrede und ende mit dem Gruß und deinem Namen."
     },
     "readAgain": {
       "outOfDate": "Deine Lebenslauf-Datei hat sich geändert (neuer Upload?). Neu in Abschnitte einlesen oder die Version aus dem Editor behalten?",
@@ -769,14 +773,20 @@
     "switcher": {
       "label": "Lebenslauf",
       "mine": "Meine Lebensläufe",
-      "copies": "Kopien für Jobs",
       "resumeIn": "Lebenslauf {language}",
-      "forJob": "{title} · {company}"
+      "forJob": "{title} · {company}",
+      "letters": "Anschreiben-Vorlagen",
+      "letterIn": "Anschreiben ({language})",
+      "thisJob": "Diese Stelle"
     },
     "downloadStep": {
       "title": "Lebenslauf herunterladen",
       "intro": "Das PDF sieht genau aus wie die Vorschau. Um ihn für einen Job anzupassen, öffne den Job und starte eine Kopie.",
       "button": "PDF herunterladen"
+    },
+    "templatePage": {
+      "heading": "Anschreiben-Vorlage",
+      "intro": "Dein übliches Anschreiben. Im Schritt Anschreiben einer Stelle füllt „Mit meiner Vorlage beginnen“ es mit Firma und Stellentitel."
     }
   },
   "Jobs": {

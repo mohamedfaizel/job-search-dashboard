@@ -1,5 +1,10 @@
 import type { BuilderPdf } from '@jobsearch/data';
-import { useJobCoverLetterPdf, useJobResumeBuildPdf, useResumeBuildPdf } from '@jobsearch/data';
+import {
+  useCoverLetterTemplatePdf,
+  useJobCoverLetterPdf,
+  useJobResumeBuildPdf,
+  useResumeBuildPdf,
+} from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -11,7 +16,7 @@ interface Props {
   /** Changes after every save, so the preview shows the saved resume. */
   version: string;
   maxPages: number;
-  /** Show the job's cover letter instead of its resume. */
+  /** Show the job's cover letter (or, without a job, your letter template) instead of a resume. */
   letter?: boolean;
   /** False while there is nothing to typeset yet (no letter written). */
   enabled?: boolean;
@@ -32,10 +37,11 @@ export function PdfPreview({
   const t = useTranslations('Resume');
   const errorText = useErrorText();
   // Both hooks always run; only one of them has a request to make.
-  const master = useResumeBuildPdf(jobId ? '' : language, version, !jobId);
+  const master = useResumeBuildPdf(jobId ? '' : language, version, !jobId && !letter);
   const job = useJobResumeBuildPdf(jobId ?? '', version, !!jobId && !letter);
   const letterPdf = useJobCoverLetterPdf(jobId ?? '', version, !!jobId && letter && enabled);
-  const pdf = jobId ? (letter ? letterPdf : job) : master;
+  const template = useCoverLetterTemplatePdf(language, version, !jobId && letter && enabled);
+  const pdf = letter ? (jobId ? letterPdf : template) : jobId ? job : master;
   const url = useObjectUrl(pdf.data);
   const pages = pdf.data?.pages ?? 0;
   const over = pages > maxPages;

@@ -29,6 +29,7 @@ import { buildLetterPrompt, readLetter } from './letter';
 import type {
   ImproveLetterInput,
   ImproveSectionInput,
+  CoverLetterTemplateModel,
   JobCoverLetterModel,
   JobResumeBuildModel,
   JobResumeCopyModel,
@@ -49,6 +50,18 @@ const JOB_COPIES_LISTED = 30;
 const MAX_LETTER_CHARS = 20_000;
 
 /** Whitespace differences (a trailing newline) don't make the resume "changed". */
+/** A letter (or template) longer than MAX_LETTER_CHARS is refused. */
+function tooLongLetter(text: string): void {
+  if (text.length > MAX_LETTER_CHARS) {
+    throw apiError(
+      BadRequestException,
+      'REPLY_PART_TOO_LONG',
+      `A cover letter is at most ${String(MAX_LETTER_CHARS)} characters`,
+      { max: MAX_LETTER_CHARS },
+    );
+  }
+}
+
 const same = (a: string, b: string) => a.trim() === b.trim();
 
 /**
@@ -303,14 +316,7 @@ export class ResumeBuilderService {
   /** Saves the letter for this job. Needs a resume copy first: the letter is stored with it. */
   async saveLetter(userId: number, jobId: string, text: string): Promise<JobCoverLetterModel> {
     await this.job(jobId);
-    if (text.length > MAX_LETTER_CHARS) {
-      throw apiError(
-        BadRequestException,
-        'REPLY_PART_TOO_LONG',
-        `A cover letter is at most ${String(MAX_LETTER_CHARS)} characters`,
-        { max: MAX_LETTER_CHARS },
-      );
-    }
+    tooLongLetter(text);
     const { count } = await this.prisma.jobResume.updateMany({
       where: { userId, jobId },
       data: { coverLetter: letterParagraphs(text).join('\n\n') },
@@ -323,6 +329,47 @@ export class ResumeBuilderService {
       );
     }
     return this.getLetter(userId, jobId);
+  }
+
+  /** Your cover letter template in this language (empty until you write one). */
+  async getTemplate(userId: number, language: string): Promise<CoverLetterTemplateModel> {
+    const lang = this.pick(await this.me(userId), language);
+    const row = await this.prisma.coverLetterTemplate.findUnique({
+      where: { userId_language: { userId, language: lang } },
+    });
+    return {
+      language: lang,
+      text: letterParagraphs(row?.text ?? '').join('\n\n'),
+      savedAt: row?.updatedAt ?? null,
+    };
+  }
+
+  /** Saves your cover letter template in this language. */
+  async saveTemplate(
+    userId: number,
+    language: string,
+    text: string,
+  ): Promise<CoverLetterTemplateModel> {
+    const lang = this.pick(await this.me(userId), language);
+    tooLongLetter(text);
+    const clean = letterParagraphs(text).join('\n\n');
+    await this.prisma.coverLetterTemplate.upsert({
+      where: { userId_language: { userId, language: lang } },
+      create: { userId, language: lang, text: clean },
+      update: { text: clean },
+    });
+    return this.getTemplate(userId, lang);
+  }
+
+  /** The template as a PDF in your cover letter layout, with a sample company and job. */
+  async templatePdf(userId: number, language: string): Promise<BuilderPdf> {
+    const { text, language: lang } = await this.getTemplate(userId, language);
+    if (!text) {
+      throw apiError(NotFoundException, 'COVER_LETTER_MISSING', 'No cover letter template yet');
+    }
+    const file = await this.documents.letterTemplatePdf(userId, text, lang);
+    const pages = (await PDFDocument.load(file.bytes, { updateMetadata: false })).getPageCount();
+    return { ...file, pages };
   }
 
   /** The saved letter as a PDF in your cover letter layout, with its page count. */

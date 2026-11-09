@@ -951,6 +951,14 @@ export interface SectionSuggestion {
 }
 
 /** The cover letter saved for one job (text: paragraphs separated by a blank line). */
+/** Your cover letter template in one language: it starts each job's letter. */
+export interface CoverLetterTemplate {
+  language: string;
+  /** Paragraphs separated by a blank line; {company} and {job} become the job's details. */
+  text: string;
+  savedAt: string | null;
+}
+
 export interface JobCoverLetter {
   jobId: string;
   title: string;
