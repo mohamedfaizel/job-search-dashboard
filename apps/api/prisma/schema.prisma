@@ -109,6 +109,7 @@ model User {
   languageResumes LanguageResume[]
   resumeBuilds    ResumeBuild[]
   letterTemplates CoverLetterTemplate[]
+  stories         Story[]
   documentStyle   DocumentStyle?
   hiddenJobs      HiddenJob[]
   applications    Application[]
@@ -679,6 +680,27 @@ model ApplyQueueItem {
 
 /// An answer you gave to one of Claude's questions, kept for the next jobs. `key` is the question
 /// in lower case without punctuation, so the same question is saved once.
+/// One story of your story bank, in STAR form: what happened, what you had to do, what you did
+/// and what came of it. Interview prep uses them for behavioural answers ("Tell me about a time…").
+model Story {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  title      String
+  situation  String   @default("")
+  task       String   @default("")
+  action     String   @default("")
+  result     String   @default("")
+  /// What you learned, or would do differently.
+  reflection String   @default("")
+  /// Skills or themes it shows, e.g. "leadership", "SQL".
+  tags       String[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
 model SavedAnswer {
   id        Int      @id @default(autoincrement())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

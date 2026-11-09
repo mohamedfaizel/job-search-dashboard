@@ -7,6 +7,7 @@ import type {
   Profile,
   ResumeMatcherStatus,
   SavedAnswer,
+  Story,
   WordTemplate,
 } from '@jobsearch/data';
 import { API_URL, RESUME_UPLOAD_URL } from '@jobsearch/data';
@@ -18,6 +19,9 @@ export const api = graphql.link(API_URL);
 
 /** The test user's saved answers to Claude's questions. Tests start with none. */
 export const savedAnswers: SavedAnswer[] = [];
+
+/** The test user's story bank. Tests start with none. */
+export const stories: Story[] = [];
 
 /** Requests made in the current test, so tests can check what was sent. */
 export const requests: { operation: string; variables: Record<string, unknown> }[] = [];
@@ -360,6 +364,36 @@ export const server = setupServer(
     const rest = savedAnswers.filter((a) => a.id !== variables['id']);
     savedAnswers.splice(0, savedAnswers.length, ...rest);
     return HttpResponse.json({ data: { deleteSavedAnswer: variables['id'] } });
+  }),
+  api.query('Stories', () => HttpResponse.json({ data: { stories: [...stories] } })),
+  api.mutation('SaveStory', ({ variables }) => {
+    requests.push({ operation: 'SaveStory', variables });
+    const input = variables['input'] as Omit<Story, 'updatedAt' | 'id'> & { id?: number };
+    if (!input.title.trim()) {
+      return HttpResponse.json({
+        errors: [
+          {
+            message: 'no title',
+            extensions: {
+              apiCode: 'STORY_INVALID',
+              apiParams: { title: 120, part: 2000, tags: 10 },
+            },
+          },
+        ],
+      });
+    }
+    const row: Story = {
+      ...input,
+      id: input.id ?? stories.length + 1,
+      updatedAt: '2026-11-09T12:00:00.000Z',
+    };
+    stories.splice(0, stories.length, row, ...stories.filter((x) => x.id !== row.id));
+    return HttpResponse.json({ data: { saveStory: row } });
+  }),
+  api.mutation('DeleteStory', ({ variables }) => {
+    requests.push({ operation: 'DeleteStory', variables });
+    stories.splice(0, stories.length, ...stories.filter((x) => x.id !== variables['id']));
+    return HttpResponse.json({ data: { deleteStory: variables['id'] } });
   }),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: withOthers() } })),
   api.mutation('SaveLanguageResume', ({ variables }) => {

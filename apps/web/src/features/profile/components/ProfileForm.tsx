@@ -14,7 +14,7 @@ import { SavedAnswers } from './SavedAnswers';
 
 /** The tabs of My profile. The first three hold this one form; the others are separate. */
 /** Achievements is its own form (AchievementsTab); ProfileForm shows the other two. */
-export type ProfileTab = 'personal' | 'applications' | 'achievements';
+export type ProfileTab = 'personal' | 'applications' | 'achievements' | 'stories';
 const FORM_TABS: ProfileTab[] = ['personal', 'applications'];
 
 /** Which tab each field is on, so a save with a mistake opens the tab that shows it. */

@@ -26,6 +26,8 @@ export interface PromptInput {
   savedAnswers: string;
   /** Your achievements bank from My profile: true facts with numbers, one per line. */
   achievements: string[];
+  /** Your story bank, the stories that fit this job best, as prompt text (see storyText). */
+  stories: string[];
   /** Your resume settings from My profile: page limit and whether to keep your sections. */
   settings: ResumeSettings;
 }

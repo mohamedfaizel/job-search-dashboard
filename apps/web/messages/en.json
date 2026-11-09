@@ -53,7 +53,8 @@
     "tabs": {
       "personal": "Personal",
       "applications": "Applications",
-      "achievements": "Achievements"
+      "achievements": "Achievements",
+      "stories": "Story bank"
     },
     "listHint": "Separate with commas",
     "personal": {
@@ -225,6 +226,41 @@
       "editFor": "Edit your answer to: {question}",
       "deleteFor": "Delete your answer to: {question}",
       "answerFor": "Your answer to: {question}"
+    },
+    "stories": {
+      "title": "Story bank",
+      "intro": "True stories for interviews, in STAR form: situation, task, action, result. Interview prep gives Claude the ones that fit each job, for \"Tell me about a time…\" answers.",
+      "add": "Add story",
+      "loading": "Loading your stories…",
+      "empty": "No stories yet. Add one you would tell in an interview: a problem you solved, a project you led, a mistake you learned from.",
+      "storyTitle": "Title",
+      "titleExample": "e.g. Cut the nightly data load from 4 hours to 40 minutes",
+      "parts": {
+        "situation": "Situation",
+        "task": "Task",
+        "action": "Action",
+        "result": "Result",
+        "reflection": "Reflection"
+      },
+      "hints": {
+        "situation": "Where were you, what was going on?",
+        "task": "What did you have to do?",
+        "action": "What did you do, step by step?",
+        "result": "What came of it? Real numbers only.",
+        "reflection": "Optional: what you learned or would do differently"
+      },
+      "tags": "Skills it shows",
+      "tagsExample": "e.g. SQL, Airflow, leadership (separate with commas)",
+      "save": "Save story",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "editFor": "Edit story {title}",
+      "delete": "Delete",
+      "deleteFor": "Delete story {title}",
+      "deleteConfirm": "Delete this story?",
+      "deleteYes": "Yes, delete {title}",
+      "deleteYesShort": "Yes, delete"
     }
   },
   "Settings": {
@@ -1903,6 +1939,9 @@
     "LANGUAGES_LENGTH": "The languages line is at most 300 characters.",
     "ANSWER_LENGTH": "A question and its answer must each be 1 to {max} characters long.",
     "ANSWER_NOT_FOUND": "That saved answer was not found.",
+    "STORY_INVALID": "A story needs a title of at most {title} characters. Each part is at most {part} characters, with at most {tags} skills.",
+    "STORY_NOT_FOUND": "That story was not found.",
+    "STORIES_FULL": "You can keep at most {max} stories. Delete one first.",
     "ANSWERS_INVALID": "Your answers could not be read.",
     "API_KEY_INVALID": "That does not look like a key. Paste the whole key, without spaces.",
     "JOBHUNTER_TOKEN_MISSING": "Add your JobHunter token in Settings › API keys first.",

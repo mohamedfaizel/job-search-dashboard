@@ -243,6 +243,7 @@ describe('buildInterviewPrompt', () => {
     facts: [] as string[],
     savedAnswers: '',
     achievements: [] as string[],
+    stories: [] as string[],
     settings: { maxPages: 2, keepSections: false },
   };
 
@@ -316,6 +317,7 @@ describe('buildResumePrompt', () => {
     facts: ['Work permit: EU Blue Card', 'Notice period / earliest start: 1 month'],
     savedAnswers: 'I want to work on products people use every day.',
     achievements: ['Cut page load time by 40% at Acme (2023)'],
+    stories: [] as string[],
     settings: { maxPages: 2, keepSections: false },
   };
 
@@ -623,6 +625,7 @@ describe('queue prompt', () => {
     facts: [],
     savedAnswers: '',
     achievements: [],
+    stories: [],
     settings: { maxPages: 2, keepSections: false },
   });
 

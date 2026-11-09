@@ -88,3 +88,8 @@ export const EraserIcon = () => (
     <path d="M6 7l3.5 3.5" />
   </svg>
 );
+export const PencilIcon = () => (
+  <svg {...base}>
+    <path d="M10.5 2.5l3 3L6 13H3v-3z" />
+  </svg>
+);

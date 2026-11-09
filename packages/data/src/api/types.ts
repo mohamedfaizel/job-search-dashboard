@@ -983,3 +983,20 @@ export interface LetterSuggestion {
   after: string;
   findings: FactFinding[];
 }
+
+/** One story of your story bank (STAR): situation, task, action, result, and what you learned. */
+export interface Story {
+  id: number;
+  title: string;
+  situation: string;
+  task: string;
+  action: string;
+  result: string;
+  reflection: string;
+  /** Skills or themes it shows, e.g. "leadership". */
+  tags: string[];
+  updatedAt: string;
+}
+
+/** A new story (no id) or a change to one of yours (with its id). */
+export type StoryInput = Omit<Story, 'id' | 'updatedAt'> & { id?: number | null };

@@ -14,6 +14,7 @@ import { customFieldsOf } from '../profile/custom-fields';
 import { cleanResume, tidy } from '../profile/resume-text';
 import type { MasterResumes } from '../profile/resumes';
 import { resumeFor } from '../profile/resumes';
+import { pickStories, storyText } from '../stories/story-prompt';
 import { buildApplyKit } from './apply-kit';
 import type { ApplyQueueItemModel, ApplyQueuePromptModel } from './apply-queue';
 import { buildQueuePage } from './apply-queue';
@@ -130,6 +131,7 @@ export class InsightsService implements OnApplicationBootstrap {
       jobLanguages,
       answerBank,
       application,
+      storyRows,
     ] = await Promise.all([
       this.prisma.job.findUnique({
         where: { id: jobId },
@@ -203,6 +205,7 @@ export class InsightsService implements OnApplicationBootstrap {
         where: { userId_jobId: { userId, jobId } },
         select: { interviewAt: true },
       }),
+      this.prisma.story.findMany({ where: { userId }, orderBy: { updatedAt: 'desc' } }),
     ]);
     if (!job)
       throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
@@ -278,6 +281,7 @@ export class InsightsService implements OnApplicationBootstrap {
         job.description ?? '',
       ),
       achievements: achievementLines(profile?.achievements ?? ''),
+      stories: pickStories(storyRows, [...terms.skills, ...terms.keywords]).map(storyText),
       settings: profile
         ? { maxPages: profile.resumeMaxPages, keepSections: profile.keepMySections }
         : DEFAULT_RESUME_SETTINGS,
@@ -290,6 +294,7 @@ export class InsightsService implements OnApplicationBootstrap {
             ...factTexts,
             ...haveList,
             profile?.achievements ?? '',
+            ...storyRows.map(storyText),
             ...(profile?.languages ?? []),
             profile?.headline ?? '',
             profile?.yearsExperience ? `${String(profile.yearsExperience)} years` : '',

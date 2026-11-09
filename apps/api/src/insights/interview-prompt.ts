@@ -1,3 +1,4 @@
+import { storiesPart } from '../stories/story-prompt';
 import type { PromptInput } from './prompt';
 import { achievementsPart } from './prompt';
 
@@ -34,7 +35,7 @@ export function buildInterviewPrompt(input: PromptInput): string {
 Job: ${input.title} at ${input.company}${where}
 ${languageLine(input)}
 
-Rules: use only what is in my resume and my achievements below. Never invent employers, projects, numbers, titles or skills for me. Where my resume is thin, say so and give me an honest way to answer instead of a made-up story.${languages}
+Rules: use only what is in my resume, my achievements and my stories below. Never invent employers, projects, numbers, titles or skills for me. Where my resume is thin, say so and give me an honest way to answer instead of a made-up story.${languages}
 
 Skills and keywords in the job ad that my resume does not show (my likely gaps):
 ${list(gaps)}
@@ -62,7 +63,7 @@ What to read about ${input.company} before the interview, one item per line star
 My resume:
 """
 ${resume}
-"""${achievementsPart(input.achievements)}
+"""${achievementsPart(input.achievements)}${storiesPart(input.stories)}
 
 The job ad:
 """
