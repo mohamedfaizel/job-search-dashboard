@@ -89,8 +89,7 @@
       "github": "GitHub",
       "website": "Website",
       "keywords": "Schlüsselwörter",
-      "keywordsHint": "Wörter aus Stellenanzeigen, die auf dich zutreffen. ✓ im Reiter Passung fügt sie hier hinzu.",
-      "notInResume": "nicht im Lebenslauf: {list}"
+      "keywordsHint": "Wörter aus Stellenanzeigen, die auf dich zutreffen. ✓ im Reiter Passung fügt sie hier hinzu."
     },
     "answers": {
       "heading": "Antworten für Bewerbungen",
@@ -266,7 +265,22 @@
       "deleteYes": "Ja, {title} löschen",
       "deleteYesShort": "Ja, löschen"
     },
-    "moreAbout": "Über „{field}“"
+    "moreAbout": "Über „{field}“",
+    "chips": {
+      "heading": "Skills und Schlüsselwörter",
+      "intro": "Für den Fit % und zum Anpassen deines Lebenslaufs.",
+      "missingTag": "nicht in deinem Lebenslauf",
+      "addSkill": "Skill eingeben, Enter drücken",
+      "addKeyword": "Schlüsselwort eingeben, Enter drücken",
+      "notInResume": "{count} nicht im Lebenslauf",
+      "copyHint": "Dein Lebenslauf nennt diese nicht. Kopiere sie und nimm die zutreffenden in deinen Lebenslauf auf.",
+      "copyList": "{field} nicht in deinem Lebenslauf",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "remove": "{item} entfernen",
+      "more": "+ {count} weitere",
+      "fewer": "Weniger zeigen"
+    }
   },
   "Settings": {
     "title": "Einstellungen",
@@ -715,7 +729,11 @@
       "wordSpacing": "Deine Word-Datei behält ihre eigene Größe und Abstände.",
       "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf im Tab Einrichtung als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
       "templateUsed": "Deine nächsten PDF-Downloads verwenden sie.",
-      "more": "Mehr Design"
+      "more": "Mehr Design",
+      "bar": {
+        "template": "Vorlage",
+        "colour": "Farbe"
+      }
     },
     "copyToMaster": "{title} in meinen Haupt-Lebenslauf übernehmen",
     "copyToMasterHint": "Diesen Abschnitt in deinen Haupt-Lebenslauf übernehmen, damit er für jede Stelle gleich ist",

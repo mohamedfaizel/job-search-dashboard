@@ -98,12 +98,22 @@ describe('profile page', () => {
 
   it('saves the profile with lists split on commas', async () => {
     const user = await renderProfile();
-    const skills = screen.getByRole('textbox', { name: 'Skills' });
-    await user.clear(skills);
-    await user.type(skills, 'React,  Node.js , ,GraphQL');
-    const keywords = screen.getByRole('textbox', { name: 'Keywords' });
-    expect(keywords).toHaveValue('accessibility');
-    await user.type(keywords, ', wcag');
+    await user.click(screen.getByRole('button', { name: 'Remove React' }));
+    await user.click(screen.getByRole('button', { name: 'Remove TypeScript' }));
+    // Enter adds the chips; it does not send the form.
+    await user.type(
+      screen.getByRole('textbox', { name: 'Add a skill, press Enter' }),
+      'React,  Node.js , ,GraphQL{Enter}',
+    );
+    expect(requests).toHaveLength(0);
+    const keywords = screen.getByRole('list', { name: 'Keywords' });
+    expect(
+      within(keywords)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual([expect.stringContaining('accessibility')]);
+    // Leaving the box adds what you typed, too.
+    await user.type(screen.getByRole('textbox', { name: 'Add a keyword, press Enter' }), 'wcag');
     const languages = screen.getByRole('textbox', { name: 'Languages' });
     await user.clear(languages);
     await user.type(languages, 'German A2, English C1');
@@ -130,12 +140,24 @@ describe('profile page', () => {
   it('says next to Skills and Keywords which ones your resume does not mention', async () => {
     // The resume text is "Ada Lovelace / Frontend engineer".
     const user = await renderProfile();
-    expect(screen.getByText('not in resume: React, TypeScript')).toBeInTheDocument();
-    expect(screen.getByText('not in resume: accessibility')).toBeInTheDocument();
-    const skills = screen.getByRole('textbox', { name: 'Skills' });
-    await user.clear(skills);
-    await user.type(skills, 'frontend, SAP');
-    expect(screen.getByText('not in resume: SAP')).toBeInTheDocument();
+    const skills = screen.getByRole('region', { name: 'Skills' });
+    expect(within(skills).getByRole('button', { name: /2 not in resume/ })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'Keywords' })).getByRole('button', {
+        name: /1 not in resume/,
+      }),
+    ).toBeInTheDocument();
+    expect(within(skills).getByText('React')).toHaveTextContent('(not in your resume)');
+    await user.click(within(skills).getByRole('button', { name: 'Remove React' }));
+    await user.click(within(skills).getByRole('button', { name: 'Remove TypeScript' }));
+    await user.type(
+      within(skills).getByRole('textbox', { name: 'Add a skill, press Enter' }),
+      'frontend, SAP{Enter}',
+    );
+    await user.click(within(skills).getByRole('button', { name: /1 not in resume/ }));
+    expect(within(skills).getByRole('textbox', { name: 'Skills not in your resume' })).toHaveValue(
+      'SAP',
+    );
   });
 
   it('saves the application answers the Apply kit uses', async () => {

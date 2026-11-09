@@ -107,6 +107,7 @@ export function FormatBar({
     <div
       role="toolbar"
       aria-label={t('label')}
+      title={bare ? (active ? t('hint') : t('hintIdle')) : undefined}
       className={`flex flex-wrap items-center gap-0.5 ${
         bare
           ? ''
@@ -200,9 +201,12 @@ export function FormatBar({
           </button>
         </form>
       )}
-      <span className="ml-1 hidden text-xs text-slate-500 sm:inline">
-        {active ? t('hint') : t('hintIdle')}
-      </span>
+      {/* In the page's tool row there is no room: the hint is the toolbar's tooltip. */}
+      {!bare && (
+        <span className="ml-1 hidden text-xs text-slate-500 sm:inline">
+          {active ? t('hint') : t('hintIdle')}
+        </span>
+      )}
     </div>
   );
 }

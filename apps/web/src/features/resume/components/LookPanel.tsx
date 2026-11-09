@@ -834,7 +834,8 @@ function DesignForm({
         {rendererNote}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           <label htmlFor={templateId} className={BAR_LABEL}>
-            {t('template')}
+            <span aria-hidden>{t('bar.template')}</span>
+            <span className="sr-only">{t('template')}</span>
           </label>
           <select
             id={templateId}
@@ -850,12 +851,12 @@ function DesignForm({
               </option>
             ))}
           </select>
-          <span id={colourId} className={BAR_LABEL}>
-            {t('colour')}
+          <span aria-hidden className={BAR_LABEL}>
+            {t('bar.colour')}
           </span>
           <div
             role="radiogroup"
-            aria-labelledby={colourId}
+            aria-label={t('colour')}
             title={draft.resumeTemplate === 'mine' ? t('wordColours') : undefined}
             className="flex items-center gap-1.5"
           >
@@ -899,7 +900,12 @@ function DesignForm({
             <option value="sans">{t('fontSans')}</option>
             <option value="serif">{t('fontSerif')}</option>
           </select>
-          <Popover label={t('spacing')} buttonClass={BAR_BUTTON} panelClass="w-[min(36rem,90vw)]">
+          <Popover
+            label={t('spacing')}
+            align="right"
+            buttonClass={BAR_BUTTON}
+            panelClass="w-[min(36rem,90vw)]"
+          >
             <Spacing draft={draft} template={chosen} onChange={change} />
           </Popover>
           {/* "Saved" is at the top of the page already; here only saving and errors show. */}

@@ -89,8 +89,7 @@
       "github": "GitHub",
       "website": "Website",
       "keywords": "Keywords",
-      "keywordsHint": "Words from job ads that are true for you. ✓ on the Fit tab adds them here.",
-      "notInResume": "not in resume: {list}"
+      "keywordsHint": "Words from job ads that are true for you. ✓ on the Fit tab adds them here."
     },
     "answers": {
       "heading": "Application answers",
@@ -266,7 +265,22 @@
       "deleteYes": "Yes, delete {title}",
       "deleteYesShort": "Yes, delete"
     },
-    "moreAbout": "About “{field}”"
+    "moreAbout": "About “{field}”",
+    "chips": {
+      "heading": "Skills and keywords",
+      "intro": "Used for Fit % and for tailoring your resume.",
+      "missingTag": "not in your resume",
+      "addSkill": "Add a skill, press Enter",
+      "addKeyword": "Add a keyword, press Enter",
+      "notInResume": "{count} not in resume",
+      "copyHint": "Your resume does not mention these. Copy them, and add the ones that are true to your resume.",
+      "copyList": "{field} not in your resume",
+      "copy": "Copy",
+      "copied": "Copied",
+      "remove": "Remove {item}",
+      "more": "+ {count} more",
+      "fewer": "Show fewer"
+    }
   },
   "Settings": {
     "title": "Settings",
@@ -715,7 +729,11 @@
       "wordSpacing": "Your Word file keeps its own size and spacing.",
       "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file in the Setup tab, and “My own Word file” appears here.",
       "templateUsed": "Your next PDF downloads use it.",
-      "more": "More design"
+      "more": "More design",
+      "bar": {
+        "template": "Template",
+        "colour": "Colour"
+      }
     },
     "copyToMaster": "Copy {title} to my master resume",
     "copyToMasterHint": "Put this section into your master resume, so it is the same for every job",
