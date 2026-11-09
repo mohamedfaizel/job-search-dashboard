@@ -217,7 +217,7 @@ export function ApplyQueuePanel({
         }}
         aria-label={t('open', { count: items.length })}
         title={t('openHint')}
-        className="fixed right-4 bottom-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-xl ring-2 ring-white hover:bg-slate-800"
+        className="fixed right-4 bottom-[calc(1rem+var(--tabbar))] z-30 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-xl ring-2 ring-white hover:bg-slate-800"
       >
         <svg
           aria-hidden="true"

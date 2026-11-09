@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useDismiss } from '@/lib/use-dismiss';
 import { useToast } from './Toasts';
 
 /** A job's link: Job posts opens its popup. */
@@ -135,22 +136,10 @@ export function NotificationBell() {
     seen.current = ids;
   }, [data, toast, t, router, headline]);
 
-  // Close on a click outside or on Escape.
-  useEffect(() => {
-    if (!open) return;
-    const onClick = (event: MouseEvent) => {
-      if (!box.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', onClick);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onClick);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
+  const close = useCallback(() => {
+    setOpen(false);
+  }, []);
+  useDismiss(open, box, close);
 
   return (
     <div ref={box} className="relative">

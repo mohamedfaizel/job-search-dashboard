@@ -98,7 +98,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         ref={stack}
         popover={canPop ? 'manual' : undefined}
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-4 top-auto bottom-4 z-[60] m-0 flex flex-col items-center gap-2 overflow-visible border-0 bg-transparent p-0 sm:right-6 sm:left-auto sm:items-end"
+        className="pointer-events-none fixed inset-x-4 top-auto bottom-[calc(1rem+var(--tabbar))] z-[60] m-0 flex flex-col items-center gap-2 overflow-visible border-0 bg-transparent p-0 sm:right-6 sm:left-auto sm:items-end"
       >
         {toasts.map((toast) => (
           <div

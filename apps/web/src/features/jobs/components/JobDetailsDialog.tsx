@@ -611,7 +611,7 @@ function JobWindow({
       className={
         minimized
           ? // Side by side on wide screens, stacked on small ones.
-            'fixed top-auto right-4 bottom-[calc(1.25rem+var(--slot)*3.5rem)] left-auto z-50 m-0 w-[min(14rem,calc(100vw-2rem))] rounded-lg p-0 shadow-xl ring-1 ring-slate-200 lg:right-[calc(5.5rem+var(--slot)*14.5rem)] lg:bottom-5'
+            'fixed top-auto right-4 bottom-[calc(1.25rem+var(--slot)*3.5rem+var(--tabbar))] left-auto z-50 m-0 w-[min(14rem,calc(100vw-2rem))] rounded-lg p-0 shadow-xl ring-1 ring-slate-200 lg:right-[calc(5.5rem+var(--slot)*14.5rem)] lg:bottom-5'
           : `p-0 shadow-2xl backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm max-sm:m-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:rounded-none ${
               maximized
                 ? 'm-0 h-dvh max-h-none w-screen max-w-none rounded-none'
