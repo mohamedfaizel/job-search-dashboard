@@ -642,9 +642,14 @@ export class InsightsService implements OnApplicationBootstrap {
     ];
     if (!current) {
       if (at) {
-        await this.prisma.application.create({
-          data: { userId, jobId, status: ApplicationStatus.INTERVIEWING, interviewAt: at },
-        });
+        await this.prisma.$transaction([
+          this.prisma.application.create({
+            data: { userId, jobId, status: ApplicationStatus.INTERVIEWING, interviewAt: at },
+          }),
+          this.prisma.applicationEvent.create({
+            data: { userId, jobId, status: ApplicationStatus.INTERVIEWING },
+          }),
+        ]);
       }
     } else {
       const moves = at !== null && before.includes(current.status);
@@ -656,6 +661,11 @@ export class InsightsService implements OnApplicationBootstrap {
           ...(moves ? { status: ApplicationStatus.INTERVIEWING, statusChangedAt: new Date() } : {}),
         },
       });
+      if (moves) {
+        await this.prisma.applicationEvent.create({
+          data: { userId, jobId, status: ApplicationStatus.INTERVIEWING },
+        });
+      }
     }
     return this.forJob(userId, jobId);
   }

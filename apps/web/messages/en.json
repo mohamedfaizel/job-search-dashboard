@@ -1664,6 +1664,33 @@
       "checkFailed": "Could not check your email: {error}",
       "checked": "{count, plural, =0 {No new suggestions.} one {1 new suggestion.} other {# new suggestions.}}",
       "connect": "Connect Gmail in Settings"
+    },
+    "funnel": {
+      "title": "Your funnel",
+      "summary": "{applied} applied · {interviews, plural, one {# interview} other {# interviews}} · {offers, plural, one {# offer} other {# offers}}",
+      "steps": {
+        "tracked": "On tracker",
+        "applied": "Applied",
+        "interviews": "Interview",
+        "offers": "Offer"
+      },
+      "stats": {
+        "answered": "Got an answer",
+        "wait": "Typical wait for an answer",
+        "waiting": "Still waiting",
+        "week": "Applied this week",
+        "month": "Applied in 30 days"
+      },
+      "days": "{count, plural, one {# day} other {# days}}",
+      "bySource": "Where your applications came from",
+      "source": "Source",
+      "sources": {
+        "JOBHUNTER": "JobHunter",
+        "MANUAL": "Added by hand",
+        "ARBEITSAGENTUR": "Arbeitsagentur",
+        "COMPANY_BOARD": "Company career pages"
+      },
+      "hint": "A job counts for every step it reached: a rejection after an interview is still an interview. Percent = share of the step above."
     }
   },
   "AddJobs": {

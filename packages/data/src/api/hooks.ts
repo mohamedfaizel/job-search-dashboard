@@ -5,6 +5,7 @@ import {
   CREATE_JOB,
   CREATE_SAVED_SEARCH,
   DELETE_SAVED_SEARCH,
+  FUNNEL,
   HIDDEN_JOB_COUNT,
   HIDE_JOB,
   IMPORT_BUDGET,
@@ -26,6 +27,7 @@ import {
   UPDATE_SAVED_SEARCH,
 } from './operations';
 import type {
+  Funnel,
   Application,
   ApplicationStatus,
   CreateJobInput,
@@ -51,6 +53,8 @@ export const queryKeys = {
   // Under 'jobs', so anything that refreshes the jobs refreshes the count too.
   hiddenJobCount: ['jobs', 'hiddenCount'] as const,
   applications: ['jobs', 'applications'] as const,
+  /** Under 'jobs', so a status change refreshes it too. */
+  funnel: ['jobs', 'funnel'] as const,
   savedSearches: ['savedSearches'] as const,
   syncRuns: ['syncRuns'] as const,
   importBudget: ['importBudget'] as const,
@@ -117,6 +121,14 @@ export function useMyApplications() {
       const data = await graphqlClient.request<{ myApplications: Application[] }>(MY_APPLICATIONS);
       return data.myApplications;
     },
+  });
+}
+
+/** Your job search funnel: how far the jobs on your tracker got. */
+export function useFunnel() {
+  return useQuery({
+    queryKey: queryKeys.funnel,
+    queryFn: async () => (await graphqlClient.request<{ funnel: Funnel }>(FUNNEL)).funnel,
   });
 }
 

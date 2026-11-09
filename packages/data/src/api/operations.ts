@@ -1314,3 +1314,28 @@ export const DELETE_STORY = /* GraphQL */ `
     deleteStory(id: $id)
   }
 `;
+
+export const FUNNEL = /* GraphQL */ `
+  query Funnel {
+    funnel {
+      tracked
+      applied
+      interviews
+      offers
+      rejected
+      waiting
+      responseRate
+      interviewRate
+      offerRate
+      medianDaysToReply
+      appliedLast7Days
+      appliedLast30Days
+      bySource {
+        source
+        applied
+        interviews
+        offers
+      }
+    }
+  }
+`;

@@ -131,6 +131,40 @@ describe('applications (tracker)', () => {
     expect((await statuses(t.asUser))['Designer']).toBe('NONE');
   });
 
+  it('counts your funnel from each status a job moved through', async () => {
+    const FUNNEL = `query { funnel { tracked applied interviews offers rejected waiting responseRate interviewRate offerRate appliedLast7Days bySource { source applied interviews offers } } }`;
+    const move = (title: string, status: string) => t.gql(SET, { id: ids[title], status }); // the admin's own tracker
+    await move('Frontend Engineer', 'APPLIED');
+    await move('Frontend Engineer', 'INTERVIEWING');
+    await move('Frontend Engineer', 'REJECTED');
+    await move('Backend Engineer', 'APPLIED');
+    await move('Data Analyst', 'SAVED');
+    const res = await t.gql<{ funnel: Record<string, unknown> }>(FUNNEL);
+    expect(res.errors).toBeUndefined();
+    expect(res.data!.funnel).toEqual({
+      tracked: 3,
+      applied: 2,
+      // The rejection came after an interview: it still counts.
+      interviews: 1,
+      offers: 0,
+      rejected: 1,
+      waiting: 1,
+      responseRate: 0.5,
+      interviewRate: 0.5,
+      offerRate: 0,
+      appliedLast7Days: 2,
+      bySource: [{ source: 'MANUAL', applied: 2, interviews: 1, offers: 0 }],
+    });
+
+    // Taken off the tracker and added again: a fresh start.
+    await move('Frontend Engineer', 'NONE');
+    await move('Frontend Engineer', 'SAVED');
+    const after = await t.gql<{ funnel: { applied: number; interviews: number } }>(FUNNEL);
+    expect(after.data!.funnel).toMatchObject({ applied: 1, interviews: 0 });
+    // Another user's funnel is empty.
+    expect((await t.asUser<{ funnel: { tracked: number } }>(FUNNEL)).data!.funnel.tracked).toBe(0);
+  });
+
   it('needs a login and an existing job', async () => {
     expect((await t.anonymous(MINE)).errors?.[0]?.message).toBe('Please log in');
     const missing = await t.asUser(SET, { id: 'nope', status: 'SAVED' });

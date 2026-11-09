@@ -278,6 +278,45 @@ type FactFinding {
   where: String!
 }
 
+"""
+Your job search funnel: how far your tracked jobs got. An offer also counts as applied and interviewed
+"""
+type Funnel {
+  applied: Int!
+  appliedLast7Days: Int!
+  appliedLast30Days: Int!
+  bySource: [FunnelSource!]!
+
+  """Share of applications with an interview"""
+  interviewRate: Float
+  interviews: Int!
+
+  """Middle number of days from applying to the first answer"""
+  medianDaysToReply: Float
+
+  """Share of interviews that became an offer"""
+  offerRate: Float
+  offers: Int!
+  rejected: Int!
+
+  """Share of applications with any answer, 0 to 1; null before you apply"""
+  responseRate: Float
+
+  """Every job on your tracker"""
+  tracked: Int!
+
+  """Applied, with no interview, offer or rejection yet"""
+  waiting: Int!
+}
+
+"""How far applications from one job source got"""
+type FunnelSource {
+  applied: Int!
+  interviews: Int!
+  offers: Int!
+  source: JobSource!
+}
+
 type GmailAccount {
   connectedAt: DateTime!
   email: String!
@@ -1488,6 +1527,9 @@ type Query {
   """How your resume and cover letter PDFs look"""
   documentStyle: DocumentStyle!
   documentTemplates: DocumentTemplates!
+
+  """Your job search funnel, from your tracker"""
+  funnel: Funnel!
 
   """Your connected Gmail accounts."""
   gmailStatus: GmailStatus!

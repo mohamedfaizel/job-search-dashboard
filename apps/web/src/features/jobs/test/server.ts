@@ -1,4 +1,5 @@
 import type {
+  Funnel,
   Application,
   ApplicationStatus,
   ApplyQueueItem,
@@ -32,6 +33,30 @@ export const hiddenIds = new Set<string>();
 
 /** The test user's tracker. Tests fill it; status changes update it like the real API. */
 export const applications: Application[] = [];
+
+/** The funnel the API answers; null = made from `applications` (each counts for its status). */
+export const funnel: { current: Funnel | null } = { current: null };
+
+const funnelFrom = (apps: Application[]): Funnel => {
+  const count = (...statuses: Application['status'][]) =>
+    apps.filter((a) => statuses.includes(a.status)).length;
+  const applied = count('APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED');
+  return {
+    tracked: apps.length,
+    applied,
+    interviews: count('INTERVIEWING', 'OFFER'),
+    offers: count('OFFER'),
+    rejected: count('REJECTED'),
+    waiting: count('APPLIED'),
+    responseRate: applied ? (applied - count('APPLIED')) / applied : null,
+    interviewRate: applied ? count('INTERVIEWING', 'OFFER') / applied : null,
+    offerRate: null,
+    medianDaysToReply: null,
+    appliedLast7Days: applied,
+    appliedLast30Days: applied,
+    bySource: [],
+  };
+};
 
 /** Employer-email suggestions waiting for an answer in the current test. */
 export const mailSuggestions: MailSuggestion[] = [];
@@ -687,6 +712,9 @@ const handlers = [
     return HttpResponse.json({ data: { dismissMailSuggestion: true } });
   }),
   api.query('MyApplications', () => HttpResponse.json({ data: { myApplications: applications } })),
+  api.query('Funnel', () =>
+    HttpResponse.json({ data: { funnel: funnel.current ?? funnelFrom(applications) } }),
+  ),
   api.mutation('MarkFollowedUp', ({ variables }) => {
     requests.push({ operation: 'MarkFollowedUp', variables });
     for (const app of applications) {

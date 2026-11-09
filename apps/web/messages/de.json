@@ -1664,6 +1664,33 @@
       "checkFailed": "Deine E-Mails konnten nicht geprüft werden: {error}",
       "checked": "{count, plural, =0 {Keine neuen Vorschläge.} one {1 neuer Vorschlag.} other {# neue Vorschläge.}}",
       "connect": "Gmail in den Einstellungen verbinden"
+    },
+    "funnel": {
+      "title": "Dein Trichter",
+      "summary": "{applied} beworben · {interviews, plural, one {# Gespräch} other {# Gespräche}} · {offers, plural, one {# Angebot} other {# Angebote}}",
+      "steps": {
+        "tracked": "Im Tracker",
+        "applied": "Beworben",
+        "interviews": "Gespräch",
+        "offers": "Angebot"
+      },
+      "stats": {
+        "answered": "Antwort erhalten",
+        "wait": "Übliche Wartezeit auf Antwort",
+        "waiting": "Warten noch",
+        "week": "Diese Woche beworben",
+        "month": "In 30 Tagen beworben"
+      },
+      "days": "{count, plural, one {# Tag} other {# Tage}}",
+      "bySource": "Woher deine Bewerbungen kamen",
+      "source": "Quelle",
+      "sources": {
+        "JOBHUNTER": "JobHunter",
+        "MANUAL": "Von Hand hinzugefügt",
+        "ARBEITSAGENTUR": "Arbeitsagentur",
+        "COMPANY_BOARD": "Karriereseiten von Firmen"
+      },
+      "hint": "Eine Stelle zählt für jeden Schritt, den sie erreicht hat: eine Absage nach einem Gespräch bleibt ein Gespräch. Prozent = Anteil am Schritt darüber."
     }
   },
   "AddJobs": {

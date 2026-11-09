@@ -5,6 +5,7 @@ import { CreateJobInput } from './dto/create-job.input';
 import { JobsArgs } from './dto/jobs.args';
 import { JobsService } from './jobs.service';
 import { ApplicationStatus } from './models/enums';
+import { FunnelModel } from './models/funnel.model';
 import { Application, Job, JobFilterOptions, JobPage } from './models/job.model';
 
 /** GraphQL entry points for jobs. Resolvers stay thin; the logic lives in JobsService. */
@@ -55,6 +56,11 @@ export class JobsResolver {
   @Query(() => [Application], { description: 'Your tracker: jobs you saved, applied to, etc.' })
   myApplications(@CurrentUser() user: SessionUser) {
     return this.jobs.applications(user.id);
+  }
+
+  @Query(() => FunnelModel, { description: 'Your job search funnel, from your tracker' })
+  funnel(@CurrentUser() user: SessionUser): Promise<FunnelModel> {
+    return this.jobs.funnel(user.id);
   }
 
   @Mutation(() => [Application], {

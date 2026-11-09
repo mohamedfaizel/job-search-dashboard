@@ -99,52 +99,53 @@ model ApiKey {
 }
 
 model User {
-  id              Int                   @id @default(autoincrement())
-  email           String                @unique
-  name            String
+  id                Int                   @id @default(autoincrement())
+  email             String                @unique
+  name              String
   /// argon2id hash. The password itself is never stored.
-  passwordHash    String
-  role            Role                  @default(USER)
-  profile         Profile?
-  languageResumes LanguageResume[]
-  resumeBuilds    ResumeBuild[]
-  letterTemplates CoverLetterTemplate[]
-  stories         Story[]
-  documentStyle   DocumentStyle?
-  hiddenJobs      HiddenJob[]
-  applications    Application[]
-  matcherResume   MatcherResume?
-  jobMatches      JobMatch[]
-  tailored        TailoredResume[]
-  removedTerms    RemovedTerm[]
-  jobResumes      JobResume[]
-  interviewPreps  InterviewPrep[]
-  gmailAccounts   GmailAccount[]
-  mailSuggestions MailSuggestion[]
-  applyQueue      ApplyQueueItem[]
-  jobFits         JobFit[]
-  jobLanguages    JobLanguages[]
-  savedAnswers    SavedAnswer[]
-  tableSettings   TableSettings?
-  notifications   Notification[]
+  passwordHash      String
+  role              Role                  @default(USER)
+  profile           Profile?
+  languageResumes   LanguageResume[]
+  resumeBuilds      ResumeBuild[]
+  letterTemplates   CoverLetterTemplate[]
+  stories           Story[]
+  applicationEvents ApplicationEvent[]
+  documentStyle     DocumentStyle?
+  hiddenJobs        HiddenJob[]
+  applications      Application[]
+  matcherResume     MatcherResume?
+  jobMatches        JobMatch[]
+  tailored          TailoredResume[]
+  removedTerms      RemovedTerm[]
+  jobResumes        JobResume[]
+  interviewPreps    InterviewPrep[]
+  gmailAccounts     GmailAccount[]
+  mailSuggestions   MailSuggestion[]
+  applyQueue        ApplyQueueItem[]
+  jobFits           JobFit[]
+  jobLanguages      JobLanguages[]
+  savedAnswers      SavedAnswer[]
+  tableSettings     TableSettings?
+  notifications     Notification[]
   /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
-  jobsLastSeenAt  DateTime?
+  jobsLastSeenAt    DateTime?
   /// Jobs imported after this are "New" for this visit: the end of your previous visit.
-  jobsNewSince    DateTime?
+  jobsNewSince      DateTime?
   /// The language the app is shown in ("en" or "de"), so it follows you to other devices.
-  locale          String                @default("en")
+  locale            String                @default("en")
   /// Which AI the app uses for you: the AI score and the copy-and-open buttons.
-  aiProvider      AiProvider            @default(ANTHROPIC)
+  aiProvider        AiProvider            @default(ANTHROPIC)
   /// When you finished (or skipped) the first-login steps; null shows them after you log in.
-  onboardedAt     DateTime?
-  apiKeys         ApiKey[]
+  onboardedAt       DateTime?
+  apiKeys           ApiKey[]
   /// The old .env keys already copied into this account's Settings (first account only), so
   /// each is copied once and a key you delete stays deleted.
-  adoptedEnvKeys  ApiKeyKind[]          @default([])
-  savedSearches   SavedSearch[]
-  syncRuns        SyncRun[]
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  adoptedEnvKeys    ApiKeyKind[]          @default([])
+  savedSearches     SavedSearch[]
+  syncRuns          SyncRun[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 }
 
 /// The Job posts filters and sort a user saved, as JSON text, so the table opens the way they left
@@ -419,58 +420,59 @@ model Company {
 }
 
 model Job {
-  id              String           @id @default(cuid())
+  id                String             @id @default(cuid())
   /// The JobHunter posting id. Null for jobs added by hand.
-  externalId      String?          @unique
-  source          JobSource
-  title           String
-  company         Company          @relation(fields: [companyId], references: [id])
-  companyId       Int
-  url             String?
-  postedAt        DateTime
-  seniority       String?
-  jobFunction     String?
-  skills          String[]
-  city            String?
-  location        String?
-  countryCode     String?
+  externalId        String?            @unique
+  source            JobSource
+  title             String
+  company           Company            @relation(fields: [companyId], references: [id])
+  companyId         Int
+  url               String?
+  postedAt          DateTime
+  seniority         String?
+  jobFunction       String?
+  skills            String[]
+  city              String?
+  location          String?
+  countryCode       String?
   /// Language the posting is written in, as an ISO 639-1 code such as "de".
-  language        String?
-  salaryMinUsd    Int?
-  salaryMaxUsd    Int?
+  language          String?
+  salaryMinUsd      Int?
+  salaryMaxUsd      Int?
   /// True when the salary is JobHunter's estimate rather than stated in the ad.
-  salaryEstimated Boolean          @default(false)
+  salaryEstimated   Boolean            @default(false)
   /// Job board the posting was found on, e.g. "indeed".
-  provider        String?
-  workplace       Workplace?
+  provider          String?
+  workplace         Workplace?
   /// Read from the description when the job is saved. Null until it has been checked.
-  visa            VisaSponsorship?
-  industry        String?
-  description     String?
+  visa              VisaSponsorship?
+  industry          String?
+  description       String?
   /// "active", "closed" (JobHunter says so) or "expired" (our still-open check found it closed).
-  postingStatus   String           @default("active")
+  postingStatus     String             @default("active")
   /// When the still-open check last opened the job's link. Null until it has been checked.
-  checkedAt       DateTime?
-  lastCheck       PostingCheck?
+  checkedAt         DateTime?
+  lastCheck         PostingCheck?
   /// Why: a short code such as NOT_FOUND or SAYS_CLOSED (the web app turns it into words).
-  checkReason     String?
+  checkReason       String?
   /// When the check first found the job closed.
-  expiredAt       DateTime?
+  expiredAt         DateTime?
   /// The original API record, kept so new columns can be backfilled without re-fetching.
-  raw             Json?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  hiddenBy        HiddenJob[]
-  applications    Application[]
-  matches         JobMatch[]
-  tailored        TailoredResume[]
-  removedTerms    RemovedTerm[]
-  jobResumes      JobResume[]
-  interviewPreps  InterviewPrep[]
-  mailSuggestions MailSuggestion[]
-  applyQueue      ApplyQueueItem[]
-  fits            JobFit[]
-  jobLanguages    JobLanguages[]
+  raw               Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  hiddenBy          HiddenJob[]
+  applications      Application[]
+  applicationEvents ApplicationEvent[]
+  matches           JobMatch[]
+  tailored          TailoredResume[]
+  removedTerms      RemovedTerm[]
+  jobResumes        JobResume[]
+  interviewPreps    InterviewPrep[]
+  mailSuggestions   MailSuggestion[]
+  applyQueue        ApplyQueueItem[]
+  fits              JobFit[]
+  jobLanguages      JobLanguages[]
 
   @@index([postedAt])
   @@index([companyId])
@@ -499,6 +501,21 @@ model Application {
   @@id([userId, jobId])
   @@index([userId, status])
   @@index([interviewAt])
+}
+
+/// Each status a tracked job moved to, and when: the Funnel stats count how far your
+/// applications got (a rejected job may have had an interview first). Removing a job from your
+/// tracker removes its events.
+model ApplicationEvent {
+  id     Int               @id @default(autoincrement())
+  user   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  job    Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId  String
+  status ApplicationStatus
+  at     DateTime          @default(now())
+
+  @@index([userId, jobId])
 }
 
 /// A job one user doesn't want to see. Other users still see it.
