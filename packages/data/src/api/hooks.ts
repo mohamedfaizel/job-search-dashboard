@@ -6,6 +6,7 @@ import {
   CREATE_SAVED_SEARCH,
   DELETE_SAVED_SEARCH,
   FUNNEL,
+  JOB_TRUST,
   HIDDEN_JOB_COUNT,
   HIDE_JOB,
   IMPORT_BUDGET,
@@ -28,6 +29,7 @@ import {
 } from './operations';
 import type {
   Funnel,
+  JobTrust,
   Application,
   ApplicationStatus,
   CreateJobInput,
@@ -50,6 +52,7 @@ export const queryKeys = {
   jobsPage: (args: JobsPageArgs) => ['jobs', 'page', args] as const,
   filterOptions: ['jobs', 'filterOptions'] as const,
   job: (id: string) => ['jobs', 'one', id] as const,
+  jobTrust: (id: string) => ['jobs', 'one', id, 'trust'] as const,
   // Under 'jobs', so anything that refreshes the jobs refreshes the count too.
   hiddenJobCount: ['jobs', 'hiddenCount'] as const,
   applications: ['jobs', 'applications'] as const,
@@ -86,6 +89,15 @@ export function useJob(id: string | null, { enabled = true }: { enabled?: boolea
       const data = await graphqlClient.request<{ job: Job }>(JOB, { id });
       return data.job;
     },
+  });
+}
+
+/** "Is this job real?" for one job: reposts, age and scam signs. Refreshed with the job. */
+export function useJobTrust(id: string) {
+  return useQuery({
+    queryKey: queryKeys.jobTrust(id),
+    queryFn: async () =>
+      (await graphqlClient.request<{ jobTrust: JobTrust }>(JOB_TRUST, { id })).jobTrust,
   });
 }
 

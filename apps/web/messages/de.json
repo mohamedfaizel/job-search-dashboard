@@ -1603,6 +1603,24 @@
         "NO_LINK": "dieser Job hat keinen Link zum Prüfen"
       }
     },
+    "trust": {
+      "ok": "Keine Warnzeichen in dieser Anzeige",
+      "caution": "{count, plural, one {# Punkt} other {# Punkte}} vor der Bewerbung prüfen",
+      "warning": "Vorsicht: das könnte Betrug sein",
+      "hint": "Unsere eigene Prüfung des Anzeigentexts und seines Verlaufs. Keine KI. Ein Zeichen ist kein Beweis: echte Anzeigen haben auch manchmal eins.",
+      "show": "Anzeigen",
+      "hide": "Ausblenden",
+      "flags": {
+        "ASKS_PAYMENT": "Verlangt Geld (Gebühr, Kaution oder Startpaket). Echte Arbeitgeber verlangen nie Geld für eine Bewerbung.",
+        "ASKS_PERSONAL_DATA": "Fragt vorab nach Bank-, Karten- oder Ausweisdaten. Schicke diese nie vor einem unterschriebenen Vertrag.",
+        "CHAT_APP_ONLY": "Will nur über WhatsApp, Telegram oder Signal sprechen. Echte Recruiter nutzen E-Mail oder Telefon.",
+        "REPOSTED": "Diese Firma hat die Anzeige seit {date} schon {count, plural, one {einmal} other {#-mal}} geschaltet. Die Stelle ist vielleicht schwer zu besetzen, oder es ist eine Geisteranzeige, die nur Lebensläufe sammelt.",
+        "OLD_AD": "Seit {days} Tagen online. Alte Anzeigen bleiben manchmal nur online, um Lebensläufe zu sammeln.",
+        "PRIVATE_EMAIL": "Nennt eine private E-Mail-Adresse (z. B. Gmail). Prüfe die echte Website der Firma.",
+        "TOO_GOOD": "Verspricht viel Geld für wenig Arbeit. Prüfe das übliche Gehalt für diese Stelle.",
+        "SHORT_AD": "Die Anzeige sagt sehr wenig über die Stelle, deshalb konnten wir kaum etwas prüfen."
+      }
+    },
     "toasts": {
       "replySaved": "Antwort gespeichert. Dein Lebenslauf-PDF wird heruntergeladen.",
       "resumeUploaded": "Lebenslauf gespeichert.",

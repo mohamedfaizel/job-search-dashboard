@@ -1603,6 +1603,24 @@
         "NO_LINK": "this job has no link to check"
       }
     },
+    "trust": {
+      "ok": "No warning signs in this ad",
+      "caution": "{count, plural, one {# thing} other {# things}} to check before you apply",
+      "warning": "Careful: this may be a scam",
+      "hint": "Our own check of the ad text and its history. No AI. A sign is not proof: real ads can have one too.",
+      "show": "Show",
+      "hide": "Hide",
+      "flags": {
+        "ASKS_PAYMENT": "Asks you to pay (a fee, deposit or starter kit). Real employers never charge you to apply.",
+        "ASKS_PERSONAL_DATA": "Asks for bank, card or passport details up front. Never send these before you have a signed contract.",
+        "CHAT_APP_ONLY": "Wants you to talk only on WhatsApp, Telegram or Signal. Real recruiters use email or phone.",
+        "REPOSTED": "Posted {count, plural, one {once} other {# times}} before by this company since {date}. It may be hard to fill, or a ghost job kept up to collect resumes.",
+        "OLD_AD": "Open for {days} days. Old ads are sometimes kept up only to collect resumes.",
+        "PRIVATE_EMAIL": "Gives a private email address (like Gmail). Check the company's real website.",
+        "TOO_GOOD": "Promises big pay for little work. Check the salary for this role.",
+        "SHORT_AD": "The ad says very little about the job, so we could not check much."
+      }
+    },
     "toasts": {
       "replySaved": "Reply saved. Your resume PDF is downloading.",
       "resumeUploaded": "Resume saved.",

@@ -1339,3 +1339,15 @@ export const FUNNEL = /* GraphQL */ `
     }
   }
 `;
+
+export const JOB_TRUST = /* GraphQL */ `
+  query JobTrust($id: ID!) {
+    jobTrust(id: $id) {
+      level
+      flags
+      reposts
+      firstPostedAt
+      ageDays
+    }
+  }
+`;

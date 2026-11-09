@@ -14,6 +14,8 @@ import { funnelStats } from './funnel';
 import type { Funnel } from './funnel';
 import { JobSortField, SortDirection } from './models/enums';
 import type { JobFilterOptions, JobPage } from './models/job.model';
+import { checkTrust, REPOST_LOOKBACK_DAYS } from './trust';
+import type { TrustResult } from './trust';
 import { visaSponsorship } from './visa';
 
 /** Loads the company and this user's application, match and fit, so those fields are theirs. */
@@ -174,6 +176,33 @@ export class JobsService implements OnApplicationBootstrap {
     const job = await this.prisma.job.findUnique({ where: { id }, include: forUser(userId) });
     if (!job) throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${id} not found`, { id });
     return withStatus(job);
+  }
+
+  /** "Is this job real?": reposts of the same ad, its age, and scam signs in the text. */
+  async trust(id: string, now = new Date()): Promise<TrustResult> {
+    const job = await this.prisma.job.findUnique({
+      where: { id },
+      select: {
+        companyId: true,
+        title: true,
+        description: true,
+        postedAt: true,
+        postingStatus: true,
+      },
+    });
+    if (!job) throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${id} not found`, { id });
+    const earlier = await this.prisma.job.findMany({
+      where: {
+        companyId: job.companyId,
+        id: { not: id },
+        postedAt: {
+          lt: job.postedAt,
+          gte: new Date(job.postedAt.getTime() - REPOST_LOOKBACK_DAYS * 24 * 60 * 60 * 1000),
+        },
+      },
+      select: { title: true, postedAt: true },
+    });
+    return checkTrust(job, earlier, now);
   }
 
   /** The jobs this user is tracking (any status but NONE), most recently moved first. */

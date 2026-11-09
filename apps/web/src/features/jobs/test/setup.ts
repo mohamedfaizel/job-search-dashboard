@@ -4,6 +4,7 @@ import { resetAiStatus } from '../../../lib/ai-status';
 import {
   applications,
   funnel,
+  trust,
   downloads,
   applyQueue,
   hiddenIds,
@@ -39,6 +40,7 @@ afterEach(() => {
   hiddenIds.clear();
   applications.length = 0;
   funnel.current = null;
+  trust.clear();
   mailSuggestions.length = 0;
   Object.assign(gmailAccounts, { configured: false, count: 0, found: 0 });
   applyQueue.length = 0;
