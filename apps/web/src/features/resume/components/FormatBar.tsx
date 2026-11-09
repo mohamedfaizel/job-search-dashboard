@@ -27,7 +27,14 @@ function write(field: Field, edit: Edit) {
  * text stays plain Markdown, so the PDF, Fit % and the prompts read it as before. Ctrl+B and
  * Ctrl+I work in the same fields.
  */
-export function FormatBar({ scope }: { scope: React.RefObject<HTMLElement | null> }) {
+export function FormatBar({
+  scope,
+  bare = false,
+}: {
+  scope: React.RefObject<HTMLElement | null>;
+  /** Inside a toolbar that has its own box (and stays on screen). */
+  bare?: boolean;
+}) {
   const t = useTranslations('Resume.format');
   const target = useRef<Field | null>(null);
   const picked = useRef({ start: 0, end: 0 });
@@ -100,7 +107,11 @@ export function FormatBar({ scope }: { scope: React.RefObject<HTMLElement | null
     <div
       role="toolbar"
       aria-label={t('label')}
-      className="sticky top-2 z-10 flex flex-wrap items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-1.5 py-1 shadow-sm"
+      className={`flex flex-wrap items-center gap-0.5 ${
+        bare
+          ? ''
+          : 'sticky top-2 z-10 rounded-lg border border-slate-200 bg-white px-1.5 py-1 shadow-sm'
+      }`}
     >
       <button
         type="button"

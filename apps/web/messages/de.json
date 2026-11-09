@@ -133,7 +133,7 @@
       "heading": "Haupt-Lebenslauf",
       "intro": "Lade hier deinen Lebenslauf hoch. Bearbeitet wird er Abschnitt für Abschnitt im Lebenslauf-Editor. Passungswerte und angepasste Lebensläufe gehen von ihm aus.",
       "language": "Sprache dieses Lebenslaufs",
-      "languageHint": "Stellen in dieser Sprache werden damit verglichen. Weitere Sprachen kannst du unten hinzufügen.",
+      "languageHint": "Stellen in dieser Sprache werden damit verglichen. Weitere Sprachen kannst du rechts hinzufügen.",
       "text": "Text des Lebenslaufs",
       "upload": "PDF- oder Word-Datei hochladen",
       "reading": "Dein Lebenslauf wird gelesen…",
@@ -144,7 +144,7 @@
       "achievements": "Erfolge-Sammlung",
       "achievementsHint": "Ein wahrer Erfolg pro Zeile, mit echten Zahlen. {ai} darf sie in jedem angepassten Lebenslauf nutzen, und die Faktenprüfung vertraut ihnen.",
       "achievementsExample": "Ladezeit bei Acme um 40 % gesenkt (2023)\nTeam von 4 Entwicklern beim Checkout-Redesign geleitet",
-      "settings": "Einstellungen für angepasste Lebensläufe",
+      "settings": "Für alle Lebensläufe",
       "maxPages": "Seitenlimit",
       "maxPagesHint": "{ai} hält jeden angepassten Lebenslauf in dieser Länge. Die PDF-Prüfung nutzt es auch.",
       "pages": "{count, plural, one {# Seite} other {# Seiten}}",
@@ -167,7 +167,7 @@
     },
     "other": {
       "heading": "Lebenslauf in anderen Sprachen",
-      "intro": "Optional. Stellen, deren Anzeige in einer dieser Sprachen ist, werden mit diesem Lebenslauf verglichen, und der {ai}-Prompt geht davon aus. Dein Haupt-Lebenslauf oben bleibt der wichtigste.",
+      "intro": "Optional. Stellen, deren Anzeige in einer dieser Sprachen ist, werden mit diesem Lebenslauf verglichen, und der {ai}-Prompt geht davon aus. Dein Haupt-Lebenslauf bleibt der wichtigste.",
       "addAnother": "Weitere Sprache hinzufügen",
       "addIn": "Lebenslauf hinzufügen auf",
       "pasted": "Eingefügter Text",
@@ -194,7 +194,8 @@
       "saveResume": "Lebenslauf auf {language} speichern",
       "or": "oder",
       "uploadSaves": "Eine hochgeladene Datei wird sofort gespeichert: kein Klick auf Speichern nötig.",
-      "edit": "Lebenslauf ({language}) bearbeiten"
+      "edit": "Lebenslauf ({language}) bearbeiten",
+      "addFirst": "Lebenslauf in einer weiteren Sprache hinzufügen"
     },
     "suggestions": {
       "title": "Vorschläge für deinen Lebenslauf",
@@ -205,7 +206,7 @@
       "CLICHES": "Allgemeine Wörter, die Recruiter überspringen: {detail}. Zeig es lieber mit einem Beispiel.",
       "SYMBOLS": "Symbole, die ein ATS vielleicht nicht liest: {detail}",
       "NUMBERS": "Nur {with} von {bullets} Stichpunkten haben eine Zahl. Ergänze Ergebnisse (gesparte Zeit, Umfang, Teamgröße), wo du sie hast.",
-      "LENGTH": "Etwa {pages} Seiten ({words} Wörter), mehr als dein Limit von {limit}. Angepasste Lebensläufe werden auf {limit} gekürzt, oder erhöhe das Limit unten.",
+      "LENGTH": "Etwa {pages} Seiten ({words} Wörter), mehr als dein Limit von {limit}. Angepasste Lebensläufe werden auf {limit} gekürzt, oder erhöhe das Seitenlimit.",
       "CONTACT": "Fehlt im Kopf: {detail}",
       "ACHIEVEMENTS": "Dein Lebenslauf hat {count, plural, one {# Erfolg} other {# Erfolge}}. Übernimm sie in die Erfolge-Sammlung, damit jeder angepasste Lebenslauf sie nutzen kann.",
       "useAchievements": "In die Erfolge-Sammlung kopieren",
@@ -568,10 +569,10 @@
     "tabs": {
       "edit": "Inhalt",
       "look": "Aussehen",
-      "download": "Herunterladen",
       "match": "Stellen-Abgleich",
       "letter": "Anschreiben",
-      "check": "Prüfen & herunterladen"
+      "check": "Prüfen & herunterladen",
+      "files": "Einrichtung"
     },
     "look": {
       "loading": "Wird geladen…",
@@ -706,8 +707,9 @@
         }
       },
       "wordSpacing": "Deine Word-Datei behält ihre eigene Größe und Abstände.",
-      "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf auf der Seite Lebenslauf (Lebenslauf-Einstellungen) als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
-      "templateUsed": "Deine nächsten PDF-Downloads verwenden sie."
+      "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf im Tab Einrichtung als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
+      "templateUsed": "Deine nächsten PDF-Downloads verwenden sie.",
+      "more": "Mehr: Abschnitte, eigenes Design, Foto, Anschreiben"
     },
     "copyToMaster": "{title} in meinen Haupt-Lebenslauf übernehmen",
     "copyToMasterHint": "Diesen Abschnitt in deinen Haupt-Lebenslauf übernehmen, damit er für jede Stelle gleich ist",
@@ -800,12 +802,10 @@
       "next": "Weiter: {step}"
     },
     "setup": {
-      "title": "Einrichtung",
       "file": "Deine Lebenslauf-Datei",
       "noFile": "Noch keine Datei",
       "keepHeadings": "Meine Überschriften behalten",
-      "change": "Ändern",
-      "close": "Fertig"
+      "allResumes": "Alle Lebensläufe: {pages}"
     },
     "switcher": {
       "label": "Lebenslauf",
@@ -814,7 +814,8 @@
       "forJob": "{title} · {company}",
       "letters": "Anschreiben-Vorlagen",
       "letterIn": "Anschreiben ({language})",
-      "thisJob": "Diese Stelle"
+      "thisJob": "Diese Stelle",
+      "languageLabel": "Lebenslauf-Sprache"
     },
     "downloadStep": {
       "title": "Lebenslauf herunterladen",
@@ -824,6 +825,12 @@
     "templatePage": {
       "heading": "Anschreiben-Vorlage",
       "intro": "Dein übliches Anschreiben. Im Schritt Anschreiben einer Stelle füllt „Mit meiner Vorlage beginnen“ es mit Firma und Stellentitel."
+    },
+    "ribbon": {
+      "label": "Lebenslauf-Werkzeuge",
+      "text": "Text",
+      "design": "Design",
+      "setup": "Einrichtung"
     }
   },
   "Jobs": {
@@ -1748,7 +1755,6 @@
     },
     "funnel": {
       "title": "Dein Trichter",
-      "summary": "{applied} beworben · {interviews, plural, one {# Gespräch} other {# Gespräche}} · {offers, plural, one {# Angebot} other {# Angebote}}",
       "steps": {
         "tracked": "Im Tracker",
         "applied": "Beworben",
@@ -1757,12 +1763,13 @@
       },
       "stats": {
         "answered": "Antwort erhalten",
-        "wait": "Übliche Wartezeit auf Antwort",
+        "wait": "Übliche Wartezeit",
         "waiting": "Warten noch",
         "week": "Diese Woche beworben",
         "month": "In 30 Tagen beworben"
       },
       "days": "{count, plural, one {# Tag} other {# Tage}}",
+      "more": "Quellen und wie gezählt wird",
       "bySource": "Woher deine Bewerbungen kamen",
       "source": "Quelle",
       "sources": {

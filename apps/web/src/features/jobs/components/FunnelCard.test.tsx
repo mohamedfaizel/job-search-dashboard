@@ -38,16 +38,18 @@ describe('FunnelCard', () => {
   it('shows each step with its share of the step before, the answer stats and the sources', async () => {
     funnel.current = FUNNEL;
     renderCard();
-    expect(await screen.findByText('8 applied · 2 interviews · 1 offer')).toBeInTheDocument();
-    const steps = screen.getAllByRole('listitem');
+    const card = await screen.findByRole('region', { name: 'Your funnel' });
+    const steps = within(card).getAllByRole('listitem');
     expect(steps.map((li) => li.textContent)).toEqual([
       'On tracker10',
-      'Applied8(80%)',
-      'Interview2(25%)',
-      'Offer1(50%)',
+      '›Applied880%',
+      '›Interview225%',
+      '›Offer150%',
     ]);
     expect(screen.getByText('Got an answer').nextSibling).toHaveTextContent('63%');
-    expect(screen.getByText('Typical wait for an answer').nextSibling).toHaveTextContent('10 days');
+    expect(screen.getByText('Typical wait').nextSibling).toHaveTextContent('10 days');
+    // Sources and the counting note sit behind one small toggle.
+    expect(screen.getByText('Sources and how it counts')).toBeInTheDocument();
     const table = screen.getByRole('table', { name: 'Where your applications came from' });
     // A source with no applications is left out.
     expect(within(table).getAllByRole('row')).toHaveLength(3);

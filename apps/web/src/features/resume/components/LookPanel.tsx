@@ -429,10 +429,13 @@ function Spacing({
   draft,
   template,
   onChange,
+  inline = false,
 }: {
   draft: DocumentStyleInput;
   template: DocumentTemplate | undefined;
   onChange: (patch: Partial<DocumentStyleInput>) => void;
+  /** One row in the toolbar: no box, no hint. */
+  inline?: boolean;
 }) {
   const t = useTranslations('Resume.look');
   const compactId = useId();
@@ -440,10 +443,23 @@ function Spacing({
   const own =
     draft.fontSize === null && draft.margin === null && draft.lineSpacing === 1 && !draft.compact;
   return (
-    <fieldset className="space-y-3 rounded-lg border border-slate-200 p-4">
-      <legend className="px-1 text-sm font-semibold text-slate-900">{t('spacing')}</legend>
-      <p className="text-xs text-slate-500">{word ? t('wordSpacing') : t('spacingHint')}</p>
-      <div className={`grid gap-4 sm:grid-cols-3 ${word ? 'opacity-50' : ''}`}>
+    <fieldset
+      className={
+        inline
+          ? 'flex w-full min-w-0 flex-wrap items-end gap-x-4 gap-y-2 sm:w-auto'
+          : 'space-y-3 rounded-lg border border-slate-200 p-4'
+      }
+      title={inline ? (word ? t('wordSpacing') : t('spacingHint')) : undefined}
+    >
+      <legend className={inline ? 'sr-only' : 'px-1 text-sm font-semibold text-slate-900'}>
+        {t('spacing')}
+      </legend>
+      {!inline && (
+        <p className="text-xs text-slate-500">{word ? t('wordSpacing') : t('spacingHint')}</p>
+      )}
+      <div
+        className={`grid gap-4 ${inline ? 'w-full sm:w-[34rem] sm:grid-cols-3' : 'sm:grid-cols-3'} ${word ? 'opacity-50' : ''}`}
+      >
         <Slider
           label={t('fontSize')}
           value={draft.fontSize}
@@ -481,7 +497,7 @@ function Spacing({
           }}
         />
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className={`flex flex-wrap items-center gap-3 ${inline ? 'pb-1' : 'justify-between'}`}>
         <div className="flex items-center gap-2">
           <input
             id={compactId}
@@ -620,7 +636,15 @@ function Details({
 }
 
 /** Edits a copy of the saved style and saves it half a second after each change. */
-function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => void }) {
+function DesignForm({
+  saved,
+  onSaved,
+  wide,
+}: {
+  saved: DocumentStyle;
+  onSaved: () => void;
+  wide: boolean;
+}) {
   const errorText = useErrorText();
   const t = useTranslations('Resume.look');
   const templates = useDocumentTemplates();
@@ -635,6 +659,7 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
   const fontId = useId();
   const layoutId = useId();
   const photoId = useId();
+  const templateId = useId();
   const changed = !sameInput(draft, sent);
   const { mutate, isPending } = update;
 
@@ -663,83 +688,196 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
   const data = templates.data;
   const chosen = data?.resumeTemplates.find((tpl) => tpl.id === draft.resumeTemplate);
 
+  // In the toolbar the groups get boxes of their own.
+  const box = wide ? 'rounded-lg border border-slate-200 p-4' : '';
+  const statusLine = (
+    <p
+      role="status"
+      className={`text-sm font-medium ${update.isError ? 'text-red-700' : changed || isPending ? 'text-slate-500' : 'text-emerald-700'}`}
+    >
+      {isPending
+        ? t('status.saving')
+        : update.isError
+          ? `${t('status.failed')}: ${errorText(update.error)}`
+          : changed
+            ? ''
+            : t('status.saved')}
+    </p>
+  );
+  const rendererNote = data && !data.rendererAvailable && (
+    <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+      {data.rendererConfigured ? t('rendererOff') : t('rendererMissing')}{' '}
+      <code className="rounded bg-amber-100 px-1">pnpm pdf:up</code>.
+    </p>
+  );
+  const colourAndType = (
+    <div className="flex flex-wrap items-end gap-6">
+      <div className="space-y-1">
+        <span id={colourId} className="block text-sm font-medium text-slate-700">
+          {t('colour')}
+        </span>
+        <div role="radiogroup" aria-labelledby={colourId} className="flex items-center gap-2">
+          {SWATCHES.map((s) => (
+            <button
+              key={s.hex}
+              type="button"
+              role="radio"
+              aria-checked={colour.toUpperCase() === s.hex}
+              aria-label={t(`swatches.${s.name}`)}
+              title={t(`swatches.${s.name}`)}
+              onClick={() => {
+                setColour(s.hex);
+              }}
+              className="h-7 w-7 rounded-full ring-offset-2 aria-checked:ring-2 aria-checked:ring-slate-900"
+              style={{ backgroundColor: `#${s.hex}` }}
+            />
+          ))}
+          <input
+            type="color"
+            aria-label={t('ownColour')}
+            value={`#${colour.replace(/^#/, '')}`}
+            onChange={(e) => {
+              setColour(e.target.value.replace(/^#/, '').toUpperCase());
+            }}
+            className="h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white"
+          />
+        </div>
+        {draft.resumeTemplate === 'mine' && (
+          <p className="text-xs text-slate-500">{t('wordColours')}</p>
+        )}
+      </div>
+      <div className="space-y-1">
+        <label htmlFor={fontId} className="block text-sm font-medium text-slate-700">
+          {t('type')}
+        </label>
+        <select
+          id={fontId}
+          value={draft.font}
+          onChange={(e) => {
+            change({ font: e.target.value });
+          }}
+          className={SELECT}
+        >
+          <option value="auto">{t('fontAuto')}</option>
+          <option value="sans">{t('fontSans')}</option>
+          <option value="serif">{t('fontSerif')}</option>
+        </select>
+      </div>
+    </div>
+  );
+  const photoBlock = (
+    <div className={`space-y-2 ${box}`}>
+      <div className="flex items-center gap-2">
+        <input
+          id={photoId}
+          type="checkbox"
+          checked={draft.showPhoto}
+          disabled={!saved.hasPhoto}
+          onChange={(e) => {
+            change({ showPhoto: e.target.checked });
+          }}
+        />
+        <label htmlFor={photoId} className="text-sm font-medium text-slate-700">
+          {t('showPhoto')}
+        </label>
+      </div>
+      <Photo style={saved} onSaved={onSaved} />
+    </div>
+  );
+  const letterLayout = (
+    <div className={`space-y-1 ${box}`}>
+      <label htmlFor={layoutId} className="block text-sm font-medium text-slate-700">
+        {t('layout')}
+      </label>
+      <div className="flex flex-wrap items-center gap-3">
+        <select
+          id={layoutId}
+          value={draft.coverLetterLayout}
+          onChange={(e) => {
+            change({ coverLetterLayout: e.target.value });
+          }}
+          className={SELECT}
+        >
+          {data?.coverLetterLayouts.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
+          ))}
+        </select>
+        <a
+          href={documentPreviewUrl('cover-letter', {
+            template: draft.resumeTemplate,
+            layout: draft.coverLetterLayout === 'auto' ? 'modern' : draft.coverLetterLayout,
+            ...look,
+          })}
+          target="_blank"
+          rel="noreferrer"
+          className={LINK}
+        >
+          {t('previewLetter')}
+        </a>
+      </div>
+      <p className="text-xs text-slate-500">
+        {data?.coverLetterLayouts.find((l) => l.id === draft.coverLetterLayout)?.description}
+      </p>
+    </div>
+  );
+
+  if (wide) {
+    return (
+      <div className="space-y-2">
+        {rendererNote}
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+          <div className="space-y-1">
+            <label htmlFor={templateId} className="block text-sm font-medium text-slate-700">
+              {t('template')}
+            </label>
+            <select
+              id={templateId}
+              value={draft.resumeTemplate}
+              onChange={(e) => {
+                change({ resumeTemplate: e.target.value });
+              }}
+              className={SELECT}
+            >
+              {data?.resumeTemplates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {colourAndType}
+          <Spacing draft={draft} template={chosen} onChange={change} inline />
+          {/* "Saved" is at the top of the page already; here only saving and errors show. */}
+          {(changed || isPending || update.isError) && statusLine}
+        </div>
+        <details>
+          <summary className="cursor-pointer text-sm font-medium text-brand-700">
+            {t('more')}
+          </summary>
+          <div className="mt-3 grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {draft.resumeTemplate !== 'mine' && <Details draft={draft} onChange={change} />}
+            <div className={`space-y-2 ${box}`}>
+              <MyDesignCard saved={saved} onSaved={onSaved} />
+              {data && <WordFileNote word={data.wordTemplate} />}
+            </div>
+            {photoBlock}
+            {letterLayout}
+          </div>
+        </details>
+      </div>
+    );
+  }
   return (
     <div className="space-y-5">
-      <p
-        role="status"
-        className={`text-sm font-medium ${update.isError ? 'text-red-700' : changed || isPending ? 'text-slate-500' : 'text-emerald-700'}`}
-      >
-        {isPending
-          ? t('status.saving')
-          : update.isError
-            ? `${t('status.failed')}: ${errorText(update.error)}`
-            : changed
-              ? ''
-              : t('status.saved')}
-      </p>
-      {data && !data.rendererAvailable && (
-        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          {data.rendererConfigured ? t('rendererOff') : t('rendererMissing')}{' '}
-          <code className="rounded bg-amber-100 px-1">pnpm pdf:up</code>.
-        </p>
-      )}
+      {statusLine}
+      {rendererNote}
 
       <Spacing draft={draft} template={chosen} onChange={change} />
       {draft.resumeTemplate !== 'mine' && <Details draft={draft} onChange={change} />}
 
-      <div className="flex flex-wrap items-end gap-6">
-        <div className="space-y-1">
-          <span id={colourId} className="block text-sm font-medium text-slate-700">
-            {t('colour')}
-          </span>
-          <div role="radiogroup" aria-labelledby={colourId} className="flex items-center gap-2">
-            {SWATCHES.map((s) => (
-              <button
-                key={s.hex}
-                type="button"
-                role="radio"
-                aria-checked={colour.toUpperCase() === s.hex}
-                aria-label={t(`swatches.${s.name}`)}
-                title={t(`swatches.${s.name}`)}
-                onClick={() => {
-                  setColour(s.hex);
-                }}
-                className="h-7 w-7 rounded-full ring-offset-2 aria-checked:ring-2 aria-checked:ring-slate-900"
-                style={{ backgroundColor: `#${s.hex}` }}
-              />
-            ))}
-            <input
-              type="color"
-              aria-label={t('ownColour')}
-              value={`#${colour.replace(/^#/, '')}`}
-              onChange={(e) => {
-                setColour(e.target.value.replace(/^#/, '').toUpperCase());
-              }}
-              className="h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white"
-            />
-          </div>
-          {draft.resumeTemplate === 'mine' && (
-            <p className="text-xs text-slate-500">{t('wordColours')}</p>
-          )}
-        </div>
-        <div className="space-y-1">
-          <label htmlFor={fontId} className="block text-sm font-medium text-slate-700">
-            {t('type')}
-          </label>
-          <select
-            id={fontId}
-            value={draft.font}
-            onChange={(e) => {
-              change({ font: e.target.value });
-            }}
-            className={SELECT}
-          >
-            <option value="auto">{t('fontAuto')}</option>
-            <option value="sans">{t('fontSans')}</option>
-            <option value="serif">{t('fontSerif')}</option>
-          </select>
-        </div>
-      </div>
+      {colourAndType}
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-slate-700">{t('template')}</legend>
@@ -759,60 +897,9 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
         {data && <WordFileNote word={data.wordTemplate} />}
       </fieldset>
 
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <input
-            id={photoId}
-            type="checkbox"
-            checked={draft.showPhoto}
-            disabled={!saved.hasPhoto}
-            onChange={(e) => {
-              change({ showPhoto: e.target.checked });
-            }}
-          />
-          <label htmlFor={photoId} className="text-sm font-medium text-slate-700">
-            {t('showPhoto')}
-          </label>
-        </div>
-        <Photo style={saved} onSaved={onSaved} />
-      </div>
+      {photoBlock}
 
-      <div className="space-y-1">
-        <label htmlFor={layoutId} className="block text-sm font-medium text-slate-700">
-          {t('layout')}
-        </label>
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            id={layoutId}
-            value={draft.coverLetterLayout}
-            onChange={(e) => {
-              change({ coverLetterLayout: e.target.value });
-            }}
-            className={SELECT}
-          >
-            {data?.coverLetterLayouts.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
-          <a
-            href={documentPreviewUrl('cover-letter', {
-              template: draft.resumeTemplate,
-              layout: draft.coverLetterLayout === 'auto' ? 'modern' : draft.coverLetterLayout,
-              ...look,
-            })}
-            target="_blank"
-            rel="noreferrer"
-            className={LINK}
-          >
-            {t('previewLetter')}
-          </a>
-        </div>
-        <p className="text-xs text-slate-500">
-          {data?.coverLetterLayouts.find((l) => l.id === draft.coverLetterLayout)?.description}
-        </p>
-      </div>
+      {letterLayout}
     </div>
   );
 }
@@ -822,13 +909,13 @@ function DesignForm({ saved, onSaved }: { saved: DocumentStyle; onSaved: () => v
  * accent colour, type, photo, text size and spacing. Every change saves on its own and the PDF
  * next to it is made again. This is the only place these settings live.
  */
-export function LookPanel({ onSaved }: { onSaved: () => void }) {
+export function LookPanel({ onSaved, wide = false }: { onSaved: () => void; wide?: boolean }) {
   const errorText = useErrorText();
   const t = useTranslations('Resume.look');
   const style = useDocumentStyle();
   return (
-    <div className="space-y-4">
-      <p className="text-xs text-slate-500">{t('intro')}</p>
+    <div className={wide ? 'space-y-2' : 'space-y-4'}>
+      {!wide && <p className="text-xs text-slate-500">{t('intro')}</p>}
       {style.isPending ? (
         <p className="text-sm text-slate-500">{t('loading')}</p>
       ) : style.isError ? (
@@ -841,6 +928,7 @@ export function LookPanel({ onSaved }: { onSaved: () => void }) {
           key={style.data.myDesign ? 'design' : 'none'}
           saved={style.data}
           onSaved={onSaved}
+          wide={wide}
         />
       )}
     </div>

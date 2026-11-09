@@ -36,7 +36,10 @@ export function ResumeSwitcher({
   const value = job ? `job:${job.jobId}` : `${letter ? 'letter' : 'lang'}:${language}`;
   return (
     <label className="flex min-w-0 items-center gap-2 text-sm">
-      <span className="sr-only">{t('label')}</span>
+      {/* On your own resume the list picks its language; elsewhere it is a plain switcher. */}
+      <span className={job || letter ? 'sr-only' : 'shrink-0 text-xs font-medium text-slate-500'}>
+        {job || letter ? t('label') : t('languageLabel')}
+      </span>
       <select
         value={value}
         onChange={(event) => {

@@ -96,7 +96,7 @@ function SavedResume({
   const name = useLanguageName()(resume.language);
 
   return (
-    <div className="space-y-2 rounded-md border border-slate-200 p-4">
+    <div className="space-y-2 rounded-md border border-slate-200 p-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="font-medium text-slate-900">{name}</h3>
         <span className="text-xs text-slate-500">
@@ -304,13 +304,13 @@ export function OtherResumes({ profile }: { profile: Profile }) {
   return (
     <section
       aria-labelledby="other-resumes-heading"
-      className="space-y-4 rounded-lg border border-slate-200 bg-white p-5"
+      className="space-y-3 rounded-lg border border-slate-200 bg-white p-4"
     >
       <div>
-        <h2 id="other-resumes-heading" className="text-lg font-semibold text-slate-900">
+        <h2 id="other-resumes-heading" className="font-semibold text-slate-900">
           {t('heading')}
         </h2>
-        <p className="text-sm text-slate-600">{t('intro')}</p>
+        <p className="text-xs text-slate-500">{t('intro')}</p>
       </div>
       {profile.otherResumes.map((resume) => (
         // key includes the save time, so the text box starts again from a newly saved version.
@@ -321,19 +321,17 @@ export function OtherResumes({ profile }: { profile: Profile }) {
           onSaved={setJustSaved}
         />
       ))}
-      {free.length > 0 &&
-        (profile.otherResumes.length === 0 ? (
-          <AddResume key={free.join()} languages={free} onSaved={setJustSaved} />
-        ) : (
-          <details>
-            <summary className="cursor-pointer text-sm font-medium text-brand-700">
-              {t('addAnother')}
-            </summary>
-            <div className="mt-3">
-              <AddResume key={free.join()} languages={free} onSaved={setJustSaved} />
-            </div>
-          </details>
-        ))}
+      {/* Folded away, so more languages don't make the Setup panel long. */}
+      {free.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-sm font-medium text-brand-700">
+            + {t(profile.otherResumes.length ? 'addAnother' : 'addFirst')}
+          </summary>
+          <div className="mt-3">
+            <AddResume key={free.join()} languages={free} onSaved={setJustSaved} />
+          </div>
+        </details>
+      )}
     </section>
   );
 }
