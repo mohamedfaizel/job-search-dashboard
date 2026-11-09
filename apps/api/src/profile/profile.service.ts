@@ -4,6 +4,7 @@ import type { LanguageResume, Profile } from '../generated/prisma/client';
 import { FitService } from '../insights/fit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from './custom-fields';
+import { fillEmpty, personalFromResume } from './personal-from-resume';
 import type { LanguageResumeModel, ProfileInput, ProfileModel } from './profile.model';
 import { buildMasterReviewPrompt, reviewResume } from './resume-review';
 import { cleanResume } from './resume-text';
@@ -232,12 +233,28 @@ export class ProfileService {
       resumeFileType: file.type,
       resumeUploadedAt: new Date(),
     };
-    const profile = await this.prisma.profile.upsert({
+    const saved = await this.prisma.profile.upsert({
       where: { userId },
       create: { userId, ...data },
       update: data,
       omit: WITHOUT_FILE,
     });
+    // Your name, phone and links go to My profile > Personal, where you left them empty.
+    const fill = fillEmpty(
+      {
+        firstName: saved.firstName,
+        lastName: saved.lastName,
+        headline: saved.headline,
+        phone: saved.phone,
+        linkedinUrl: saved.linkedinUrl ?? '',
+        githubUrl: saved.githubUrl ?? '',
+        websiteUrl: saved.websiteUrl ?? '',
+      },
+      personalFromResume(resumeText),
+    );
+    const profile = Object.keys(fill).length
+      ? await this.prisma.profile.update({ where: { userId }, data: fill, omit: WITHOUT_FILE })
+      : saved;
     // Your Fit % for every job starts again now, so the table is ready when you open it.
     this.fit.warm(userId);
     return toModel(profile, await this.others(userId));

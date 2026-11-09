@@ -136,7 +136,16 @@ interface CardProps {
 }
 
 /** One key: masked when saved (Test, Replace, delete), a password box when not. */
-function KeyCard({ kind, name, hint, testHint, paste, confirmDelete, saved, models }: CardProps) {
+export function KeyCard({
+  kind,
+  name,
+  hint,
+  testHint,
+  paste,
+  confirmDelete,
+  saved,
+  models,
+}: CardProps) {
   const errorText = useErrorText();
   const t = useTranslations('Settings.keys');
   const inputId = useId();

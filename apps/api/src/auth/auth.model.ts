@@ -27,6 +27,9 @@ export class UserModel {
     description: 'Your AI for the AI score and the copy-and-open buttons (Settings > API keys)',
   })
   aiProvider!: AiProvider;
+
+  @Field({ description: 'False until you finish or skip the first-login steps' })
+  onboarded!: boolean;
 }
 
 /** The languages the app is translated into. The first is the default. */

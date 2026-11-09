@@ -302,6 +302,8 @@ export interface User {
   locale: string;
   /** Your AI (Settings > API keys): for the AI score and the copy-and-open buttons. */
   aiProvider: AiProvider;
+  /** False until you finish or skip the first-login steps (/welcome). */
+  onboarded: boolean;
 }
 
 export type AiProvider = 'ANTHROPIC' | 'OPENAI';

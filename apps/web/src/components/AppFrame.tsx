@@ -38,6 +38,9 @@ const ADD_JOBS: NavItem = { href: '/jobs/add', label: 'addJobs', icon: PlusIcon 
 /** Every link the header knows, so "the page you are on" also works for the account pages. */
 const ALL_HREFS = [...NAV_ITEMS.map((item) => item.href), ADD_JOBS.href, '/profile', '/settings'];
 
+/** The first-login steps' page. */
+const WELCOME = '/welcome';
+
 /** The link for the page you are on: the longest one that matches (/jobs/add, not /jobs). */
 function currentHref(pathname: string): string | undefined {
   return ALL_HREFS.filter((href) => pathname === href || pathname.startsWith(`${href}/`)).sort(
@@ -66,6 +69,11 @@ export function AppFrame({ children }: { children: ReactNode }) {
     writeLocaleCookie(user.locale);
     router.refresh();
   }, [user, locale, router]);
+
+  // A new account starts with the first-login steps (your key, then your resume).
+  useEffect(() => {
+    if (user?.onboarded === false && pathname !== WELCOME) router.replace(WELCOME);
+  }, [user, pathname, router]);
 
   useEffect(() => {
     if (isPending || error || user) return;

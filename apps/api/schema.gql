@@ -940,6 +940,9 @@ type Mutation {
   """
   editJobResume(coverLetter: String!, formAnswers: String!, jobId: ID!, resume: String!): JobInsights!
 
+  """The first-login steps are done (or skipped)"""
+  finishOnboarding: User!
+
   """Hide a job from your table. Other users still see it."""
   hideJob(id: ID!): Boolean!
 
@@ -2012,6 +2015,9 @@ type User {
   """
   locale: String!
   name: String!
+
+  """False until you finish or skip the first-login steps"""
+  onboarded: Boolean!
   role: Role!
 }
 

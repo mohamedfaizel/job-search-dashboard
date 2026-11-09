@@ -13,6 +13,7 @@ export const ADMIN: User = {
   role: 'ADMIN',
   locale: 'en',
   aiProvider: 'ANTHROPIC',
+  onboarded: true,
 };
 
 /** Languages saved with setLocale, in order. */
@@ -43,6 +44,8 @@ export const server = setupServer(
       role: 'USER',
       locale: 'en',
       aiProvider: 'ANTHROPIC',
+      // A new account starts with the first-login steps.
+      onboarded: false,
     };
     return HttpResponse.json({ data: { signUp: session.user } });
   }),
@@ -51,6 +54,10 @@ export const server = setupServer(
     savedLocales.push(locale);
     if (session.user) session.user = { ...session.user, locale };
     return HttpResponse.json({ data: { setLocale: session.user } });
+  }),
+  api.mutation('FinishOnboarding', () => {
+    if (session.user) session.user = { ...session.user, onboarded: true };
+    return HttpResponse.json({ data: { finishOnboarding: session.user } });
   }),
   api.query('Notifications', () => HttpResponse.json({ data: { notifications: bell } })),
   api.mutation('MarkNotificationsRead', () => {

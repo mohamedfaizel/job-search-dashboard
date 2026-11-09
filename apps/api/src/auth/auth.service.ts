@@ -66,6 +66,11 @@ export class AuthService {
   }
 
   /** Saves the language you picked, so the app shows it on every device. */
+  /** Marks the first-login steps done (finished or skipped), so they don't show again. */
+  finishOnboarding(id: number): Promise<User> {
+    return this.prisma.user.update({ where: { id }, data: { onboardedAt: new Date() } });
+  }
+
   setLocale(id: number, locale: string): Promise<User> {
     if (!(LOCALES as readonly string[]).includes(locale)) {
       throw apiError(BadRequestException, 'LOCALE_UNKNOWN', `Pick one of: ${LOCALES.join(', ')}`);
@@ -87,5 +92,6 @@ export function toUserModel(user: User): UserModel {
     role: user.role,
     locale: user.locale,
     aiProvider: user.aiProvider,
+    onboarded: user.onboardedAt !== null,
   };
 }

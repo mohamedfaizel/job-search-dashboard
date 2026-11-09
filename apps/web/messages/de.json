@@ -1916,5 +1916,47 @@
     "close": "Schließen",
     "interviewSoon": "Interview bald: {when}",
     "interviewHint": "Öffne den Job und übe im Tab Interview"
+  },
+  "Welcome": {
+    "title": "Willkommen, {name}!",
+    "intro": "Zwei kurze Schritte, dann ist die App bereit. Du kannst beide überspringen und später erledigen.",
+    "skipAll": "Einrichtung überspringen",
+    "loading": "Wird geladen…",
+    "steps": {
+      "key": "Job-Daten-Schlüssel",
+      "resume": "Dein Lebenslauf",
+      "done": "Fertig"
+    },
+    "next": "Weiter ›",
+    "skip": "Jetzt überspringen ›",
+    "back": "Zurück",
+    "key": {
+      "title": "1. Dein Job-Daten-Schlüssel",
+      "intro": "Job Search Hunter findet Jobs mit einem JobHunter-Token. Füge deins ein, um Jobs zu importieren und gespeicherte Suchen laufen zu lassen. Es bleibt privat in deinem Konto."
+    },
+    "resume": {
+      "title": "2. Dein Lebenslauf",
+      "intro": "Lade deinen Lebenslauf als PDF- oder Word-Datei hoch. Er wird dein Lebenslauf auf der Lebenslauf-Seite, und Name, Telefon und Links kommen in Mein Profil › Persönlich.",
+      "filled": "In Mein Profil › Persönlich eingetragen:",
+      "fields": {
+        "name": "Name",
+        "headline": "Kurzprofil",
+        "phone": "Telefon",
+        "linkedin": "LinkedIn",
+        "github": "GitHub",
+        "website": "Website"
+      }
+    },
+    "done": {
+      "title": "Alles bereit",
+      "key": "Job-Daten-Schlüssel gespeichert",
+      "noKey": "Noch kein Job-Daten-Schlüssel: füge ihn unter Einstellungen › API-Schlüssel hinzu",
+      "resume": "Lebenslauf hochgeladen",
+      "noResume": "Noch kein Lebenslauf: lade ihn auf der Lebenslauf-Seite hoch",
+      "later": "Du kannst all das später in den Einstellungen und in Mein Profil ändern.",
+      "profile": "Mein Profil prüfen",
+      "addJobs": "Meine ersten Jobs finden ›",
+      "jobs": "Zu den Stellenanzeigen ›"
+    }
   }
 }

@@ -88,6 +88,23 @@ describe('AppFrame', () => {
     });
   });
 
+  it('sends a new account to the first-login steps, once', async () => {
+    session.user = { ...ADMIN, onboarded: false };
+    location.pathname = '/jobs';
+    renderFrame();
+    await vi.waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith('/welcome');
+    });
+  });
+
+  it('stays on the first-login steps while you do them', async () => {
+    session.user = { ...ADMIN, onboarded: false };
+    location.pathname = '/welcome';
+    renderFrame();
+    await screen.findByText('Page content');
+    expect(router.replace).not.toHaveBeenCalledWith('/welcome');
+  });
+
   it('sends you to /login when the session has expired', async () => {
     location.pathname = '/tracker';
     renderFrame();
