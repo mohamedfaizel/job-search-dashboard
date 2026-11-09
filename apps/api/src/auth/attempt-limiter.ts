@@ -9,6 +9,7 @@ export class AttemptLimiter {
     private readonly max: number,
     private readonly windowMs: number,
     private readonly now: () => number = Date.now,
+    private readonly maxKeys = 10_000,
   ) {}
 
   /** Throws TOO_MANY_TRIES when `key` already used up its tries; otherwise counts this one. */
@@ -28,7 +29,7 @@ export class AttemptLimiter {
     recent.push(now);
     this.tries.set(key, recent);
     // Keep memory small: forget keys whose tries are all old.
-    if (this.tries.size > 10_000) {
+    if (this.tries.size > this.maxKeys) {
       for (const [k, list] of this.tries) {
         if (list.every((t) => now - t >= this.windowMs)) this.tries.delete(k);
       }
@@ -38,6 +39,48 @@ export class AttemptLimiter {
   /** A correct login clears the count for that key. */
   reset(key: string): void {
     this.tries.delete(key);
+  }
+}
+
+const MINUTE = 60_000;
+
+/**
+ * The login and sign-up limits. One address may try one email 10 times, and any emails 50 times,
+ * in 15 minutes, and make 10 accounts an hour. Off (`enabled` false) in tests, which sign up and
+ * log in many times from one address.
+ */
+export class AuthLimits {
+  private readonly login: AttemptLimiter;
+  private readonly address: AttemptLimiter;
+  private readonly signUps: AttemptLimiter;
+
+  constructor(
+    private readonly enabled: boolean,
+    now: () => number = Date.now,
+  ) {
+    this.login = new AttemptLimiter(10, 15 * MINUTE, now);
+    this.address = new AttemptLimiter(50, 15 * MINUTE, now);
+    this.signUps = new AttemptLimiter(10, 60 * MINUTE, now);
+  }
+
+  /** Counts a sign-up from `address`; throws TOO_MANY_TRIES past the limit. */
+  signUp(address: string): void {
+    if (this.enabled) this.signUps.hit(address);
+  }
+
+  /** Counts a login try; returns the key to pass to `loggedIn` when the password was right. */
+  logIn(address: string, email: string): string {
+    const key = `${address}|${email.trim().toLowerCase()}`;
+    if (this.enabled) {
+      this.address.hit(address);
+      this.login.hit(key);
+    }
+    return key;
+  }
+
+  /** A correct login clears the count for that email. */
+  loggedIn(key: string): void {
+    this.login.reset(key);
   }
 }
 
