@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { createValidationPipe } from './common/validation.pipe';
 import { PDF_HEADERS } from './resume-builder/resume-builder.controller';
 
@@ -8,6 +9,18 @@ const DEV_ORIGINS = ['http://localhost:3001', 'http://localhost:6006'];
 
 /** Shared by main.ts and the tests, so both run the API the same way. */
 export function configureApp(app: INestApplication): void {
+  // Safe browser headers on every answer (no sniffing file types, no framing by other sites,
+  // HTTPS only once deployed). The strict content rules only in production: in development
+  // they would block the GraphQL sandbox page. "same-site" lets the web app on another port
+  // or subdomain show the API's photos and PDFs.
+  const production = process.env['NODE_ENV'] === 'production';
+  app.use(
+    helmet({
+      contentSecurityPolicy: production,
+      crossOriginResourcePolicy: { policy: 'same-site' },
+      strictTransportSecurity: production,
+    }),
+  );
   // Reads the session cookie into req.cookies.
   app.use(cookieParser());
   // The web app runs on its own port. With cookies, CORS must name each allowed origin (a

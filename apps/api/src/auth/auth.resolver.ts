@@ -1,7 +1,8 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { apiError } from '../common/api-error';
+import { AuthLimits } from './attempt-limiter';
 import type { SessionUser } from './auth.decorators';
 import { CurrentUser, Public } from './auth.decorators';
 import { LogInInput, SignUpInput, UserModel } from './auth.model';
@@ -9,8 +10,14 @@ import { AuthService, toUserModel } from './auth.service';
 import { SESSION_COOKIE, sessionCookieOptions } from './session';
 
 interface GqlContext {
+  req?: Request;
   res: Response;
 }
+
+const limits = new AuthLimits(process.env['NODE_ENV'] !== 'test');
+
+/** The caller's address. Behind a proxy (Caddy, nginx), set Express "trust proxy" so this is real. */
+const addressOf = (ctx: GqlContext) => ctx.req?.ip ?? 'unknown';
 
 @Public()
 @Resolver(() => UserModel)
@@ -26,6 +33,7 @@ export class AuthResolver {
 
   @Mutation(() => UserModel, { description: 'Create an account and log in' })
   async signUp(@Args('input') input: SignUpInput, @Context() ctx: GqlContext): Promise<UserModel> {
+    limits.signUp(addressOf(ctx));
     const user = await this.auth.signUp(input);
     ctx.res.cookie(SESSION_COOKIE, await this.auth.sessionToken(user), sessionCookieOptions());
     return toUserModel(user);
@@ -33,7 +41,9 @@ export class AuthResolver {
 
   @Mutation(() => UserModel)
   async logIn(@Args('input') input: LogInInput, @Context() ctx: GqlContext): Promise<UserModel> {
+    const key = limits.logIn(addressOf(ctx), input.email);
     const user = await this.auth.logIn(input);
+    limits.loggedIn(key);
     ctx.res.cookie(SESSION_COOKIE, await this.auth.sessionToken(user), sessionCookieOptions());
     return toUserModel(user);
   }

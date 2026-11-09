@@ -1815,6 +1815,7 @@
     "SIGNUP_CLOSED": "Die Registrierung ist auf diesem Server geschlossen.",
     "EMAIL_TAKEN": "Mit dieser E-Mail gibt es schon ein Konto.",
     "WRONG_LOGIN": "E-Mail oder Passwort ist falsch.",
+    "TOO_MANY_TRIES": "Zu viele Versuche. Bitte warte {minutes} Minuten und versuche es erneut.",
     "LOCALE_UNKNOWN": "Diese Sprache gibt es nicht.",
     "JOB_NOT_FOUND": "Job {id} wurde nicht gefunden.",
     "SALARY_ORDER": "Das Mindestgehalt darf nicht über dem Höchstgehalt liegen.",

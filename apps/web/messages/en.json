@@ -1815,6 +1815,7 @@
     "SIGNUP_CLOSED": "Sign-up is closed on this server.",
     "EMAIL_TAKEN": "An account with this email already exists.",
     "WRONG_LOGIN": "Wrong email or password.",
+    "TOO_MANY_TRIES": "Too many tries. Please wait {minutes} minutes and try again.",
     "LOCALE_UNKNOWN": "This language is not available.",
     "JOB_NOT_FOUND": "Job {id} was not found.",
     "SALARY_ORDER": "The minimum salary can’t be higher than the maximum salary.",

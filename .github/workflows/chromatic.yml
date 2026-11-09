@@ -7,6 +7,11 @@ on:
     branches: [main]
   pull_request:
 
+# The workflow's GitHub token may only read the code, so a bad dependency can't push or
+# change the repo.
+permissions:
+  contents: read
+
 jobs:
   chromatic:
     name: Visual tests
