@@ -1234,6 +1234,24 @@ export const IMPROVE_SECTION = /* GraphQL */ `
   }
 `;
 
+const COVER_LETTER_TEMPLATE_FIELDS = `language text savedAt`;
+
+export const COVER_LETTER_TEMPLATE = /* GraphQL */ `
+  query CoverLetterTemplate($language: String!) {
+    coverLetterTemplate(language: $language) {
+      ${COVER_LETTER_TEMPLATE_FIELDS}
+    }
+  }
+`;
+
+export const SAVE_COVER_LETTER_TEMPLATE = /* GraphQL */ `
+  mutation SaveCoverLetterTemplate($language: String!, $text: String!) {
+    saveCoverLetterTemplate(language: $language, text: $text) {
+      ${COVER_LETTER_TEMPLATE_FIELDS}
+    }
+  }
+`;
+
 const JOB_COVER_LETTER_FIELDS = `jobId title company language text hasCopy savedAt`;
 
 export const JOB_COVER_LETTER = /* GraphQL */ `

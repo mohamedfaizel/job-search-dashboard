@@ -224,7 +224,7 @@ describe('Resume for one job', () => {
     expect(router.replace).toHaveBeenLastCalledWith('/resume?job=j1');
   });
 
-  it('switches to your master resume or another job copy', async () => {
+  it('switches to your master resume or a cover letter template; lists only this job', async () => {
     jobBuild.current = { ...jobBuild.current, hasCopy: true };
     const assign = vi.fn();
     vi.stubGlobal('location', { assign, search: '?job=j1', pathname: '/resume' });
@@ -232,10 +232,11 @@ describe('Resume for one job', () => {
     const switcher = await screen.findByRole('combobox', { name: 'Resume' });
     await user.selectOptions(switcher, 'lang:en');
     expect(assign).toHaveBeenCalledWith('/resume?language=en');
-    // The job on screen is listed first even before the list knows about it.
-    await within(switcher).findByRole('option', { name: 'Data Engineer · Zalando' });
-    await user.selectOptions(switcher, 'job:j2');
-    expect(assign).toHaveBeenLastCalledWith('/resume?job=j2');
+    await user.selectOptions(switcher, 'letter:en');
+    expect(assign).toHaveBeenLastCalledWith('/resume?letter=en');
+    // Job copies are not listed any more: only the job on screen.
+    expect(within(switcher).getAllByRole('option', { name: /·/ })).toHaveLength(1);
+    expect(within(switcher).getByRole('option', { name: 'English cover letter' })).toBeVisible();
     vi.unstubAllGlobals();
   });
 });

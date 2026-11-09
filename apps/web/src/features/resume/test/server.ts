@@ -1,5 +1,10 @@
 import type { BuilderDoc, JobInsights, JobResumeBuild, ResumeBuild } from '@jobsearch/data';
-import { jobCoverLetterPdfUrl, jobResumeBuildPdfUrl, resumeBuildPdfUrl } from '@jobsearch/data';
+import {
+  coverLetterTemplatePdfUrl,
+  jobCoverLetterPdfUrl,
+  jobResumeBuildPdfUrl,
+  resumeBuildPdfUrl,
+} from '@jobsearch/data';
 import { http, HttpResponse } from 'msw';
 import { api, apiKeys, requests } from '../../profile/test/server';
 
@@ -71,21 +76,28 @@ export function lastSaved(): BuilderDoc | null {
 const EXPERIENCE_BEFORE =
   '## Experience\n\n### Frontend Engineer | Acme GmbH\nBerlin | 01/2021 - today\n- Cut load time by 40%\n- Built the design system';
 
+const templateOf = (variables: Record<string, unknown>) => ({
+  language: variables['language'] as string,
+  text: jobBuild.template,
+  savedAt: jobBuild.template ? '2026-11-09T10:00:00Z' : null,
+});
+
 export const builderHandlers = [
-  api.query('JobResumeCopies', () =>
-    HttpResponse.json({
-      data: {
-        jobResumeCopies: [
-          {
-            jobId: 'j2',
-            title: 'Data Engineer',
-            company: 'Zalando',
-            savedAt: '2026-11-08T10:00:00Z',
-          },
-        ],
-      },
-    }),
-  ),
+  api.query('CoverLetterTemplate', ({ variables }) => {
+    requests.push({ operation: 'CoverLetterTemplate', variables });
+    return HttpResponse.json({ data: { coverLetterTemplate: templateOf(variables) } });
+  }),
+  api.mutation('SaveCoverLetterTemplate', ({ variables }) => {
+    requests.push({ operation: 'SaveCoverLetterTemplate', variables });
+    jobBuild.template = variables['text'] as string;
+    return HttpResponse.json({ data: { saveCoverLetterTemplate: templateOf(variables) } });
+  }),
+  http.get(coverLetterTemplatePdfUrl('en'), () => {
+    requests.push({ operation: 'TemplatePdf', variables: {} });
+    return new HttpResponse('%PDF-1.7', {
+      headers: { 'Content-Type': 'application/pdf', 'X-Pdf-Pages': '1', 'X-Pdf-Styled': '1' },
+    });
+  }),
   api.query('ImproveSectionPrompt', ({ variables }) => {
     requests.push({ operation: 'ImproveSectionPrompt', variables });
     return HttpResponse.json({ data: { improveSectionPrompt: 'Please improve my section.' } });
@@ -175,6 +187,8 @@ export const jobBuild = {
   have: [] as string[],
   /** The cover letter saved for the job. */
   letter: '',
+  /** Your cover letter template (English). */
+  template: '',
   /** What the fact check found in the saved copy. */
   facts: [] as { kind: string; text: string; where: string; context: string }[],
   reset() {
@@ -182,6 +196,7 @@ export const jobBuild = {
     this.have = [];
     this.facts = [];
     this.letter = '';
+    this.template = '';
   },
 };
 

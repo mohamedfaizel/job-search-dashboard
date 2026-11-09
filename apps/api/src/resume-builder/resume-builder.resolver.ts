@@ -4,6 +4,7 @@ import { CurrentUser } from '../auth/auth.decorators';
 import {
   ImproveLetterInput,
   ImproveSectionInput,
+  CoverLetterTemplateModel,
   JobCoverLetterModel,
   JobResumeBuildModel,
   JobResumeCopyModel,
@@ -136,6 +137,27 @@ export class ResumeBuilderResolver {
     @Args('sectionId') sectionId: string,
   ): Promise<JobResumeBuildModel> {
     return this.builder.copySectionToMaster(user.id, jobId, sectionId);
+  }
+
+  @Query(() => CoverLetterTemplateModel, {
+    description: 'Your cover letter template in one language',
+  })
+  coverLetterTemplate(
+    @CurrentUser() user: SessionUser,
+    @Args('language') language: string,
+  ): Promise<CoverLetterTemplateModel> {
+    return this.builder.getTemplate(user.id, language);
+  }
+
+  @Mutation(() => CoverLetterTemplateModel, {
+    description: 'Saves your cover letter template in one language',
+  })
+  saveCoverLetterTemplate(
+    @CurrentUser() user: SessionUser,
+    @Args('language') language: string,
+    @Args('text') text: string,
+  ): Promise<CoverLetterTemplateModel> {
+    return this.builder.saveTemplate(user.id, language, text);
   }
 
   @Query(() => JobCoverLetterModel, { description: 'The cover letter saved for one job' })

@@ -4,6 +4,7 @@ import { queryKeys } from './hooks';
 import { jobInsightsPrefix } from './insights';
 import {
   COPY_SECTION_TO_MASTER,
+  COVER_LETTER_TEMPLATE,
   IMPROVE_LETTER,
   IMPROVE_LETTER_PROMPT,
   IMPROVE_SECTION,
@@ -15,6 +16,7 @@ import {
   RESTART_RESUME_BUILD,
   RESUME_BUILD,
   RESUME_BUILD_PROMPT,
+  SAVE_COVER_LETTER_TEMPLATE,
   SAVE_JOB_COVER_LETTER,
   SAVE_JOB_RESUME_BUILD,
   SAVE_RESUME_BUILD,
@@ -22,6 +24,7 @@ import {
 } from './operations';
 import { profileKey } from './profile';
 import type {
+  CoverLetterTemplate,
   ImproveLetterInput,
   ImproveSectionInput,
   JobCoverLetter,
@@ -68,6 +71,15 @@ export function jobCoverLetterPdfUrl(jobId: string, download = false): string {
 
 export async function fetchJobCoverLetterPdf(jobId: string): Promise<BuilderPdf> {
   return fetchPdf(jobCoverLetterPdfUrl(jobId));
+}
+
+/** Your cover letter template as a PDF, with {company} and {job} where the job's details go. */
+export function coverLetterTemplatePdfUrl(language: string, download = false): string {
+  return `${API_ROOT}/resume-builder/${encodeURIComponent(language)}/cover-letter.pdf${download ? '?download=1' : ''}`;
+}
+
+export async function fetchCoverLetterTemplatePdf(language: string): Promise<BuilderPdf> {
+  return fetchPdf(coverLetterTemplatePdfUrl(language));
 }
 
 async function fetchPdf(url: string): Promise<BuilderPdf> {
@@ -314,6 +326,55 @@ export function useImproveSection() {
           input,
         })
       ).improveSection,
+  });
+}
+
+export const coverLetterTemplateKey = (language: string) =>
+  ['coverLetterTemplate', language] as const;
+
+/** Your cover letter template in one language. The editor keeps its own copy while you type. */
+export function useCoverLetterTemplate(language: string, enabled = true) {
+  return useQuery({
+    queryKey: coverLetterTemplateKey(language),
+    enabled: enabled && language !== '',
+    queryFn: async () =>
+      (
+        await graphqlClient.request<{ coverLetterTemplate: CoverLetterTemplate }>(
+          COVER_LETTER_TEMPLATE,
+          { language },
+        )
+      ).coverLetterTemplate,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/** Saves your cover letter template. */
+export function useSaveCoverLetterTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { language: string; text: string }) =>
+      (
+        await graphqlClient.request<{ saveCoverLetterTemplate: CoverLetterTemplate }>(
+          SAVE_COVER_LETTER_TEMPLATE,
+          vars,
+        )
+      ).saveCoverLetterTemplate,
+    onSuccess: (template) => {
+      queryClient.setQueryData(coverLetterTemplateKey(template.language), template);
+    },
+  });
+}
+
+/** The template's PDF for one saved version (see useResumeBuildPdf). */
+export function useCoverLetterTemplatePdf(language: string, version: string, enabled = true) {
+  return useQuery({
+    queryKey: ['coverLetterTemplate', 'pdf', language, version],
+    queryFn: () => fetchCoverLetterTemplatePdf(language),
+    enabled,
+    placeholderData: (previous) => previous,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 }
 

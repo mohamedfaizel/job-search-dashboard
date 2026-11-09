@@ -50,6 +50,7 @@ import {
   startHistory,
   updateSection,
 } from './docOps';
+import { LetterTemplatePage } from './LetterTemplatePage';
 
 /** Wait this long after the last keystroke before saving (and making a new preview). */
 const AUTOSAVE_MS = 1000;
@@ -88,11 +89,13 @@ function builderUrl(language: string | null, tab: BuilderTab, jobId: string | nu
  * The Resume builder: your master resume section by section on the left, the real PDF on the
  * right. Changes save on their own; Undo goes back step by step. ?language=de opens your German
  * resume, ?tab=look the Look tab (template, colour, size and spacing), ?job=ID the copy of your
- * resume for one job, with its Job match tab.
+ * resume for one job, with its Job match tab, and ?letter=en your English cover letter template.
  */
 export function ResumeBuilderPage() {
   const [jobId] = useState(() => param('job'));
-  return jobId ? <JobBuilderPage jobId={jobId} /> : <MasterBuilderPage />;
+  const [letter] = useState(() => param('letter'));
+  if (jobId) return <JobBuilderPage jobId={jobId} />;
+  return letter ? <LetterTemplatePage language={letter} /> : <MasterBuilderPage />;
 }
 
 function MasterBuilderPage() {
