@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { HTMLAttributes } from 'react';
 import { useState } from 'react';
 import {
+  bulletsToSkillRows,
   copyBlock,
   isExperienceSection,
   isLanguagesSection,
@@ -13,7 +14,9 @@ import {
   newBlock,
   removeAt,
   replaceAt,
+  skillBullets,
 } from '../docOps';
+import type { FoldAll } from './BlockEditor';
 import { BlockEditor } from './BlockEditor';
 import {
   CopyIcon,
@@ -74,6 +77,10 @@ export function SectionCard({
   const locked = isLanguagesSection(section.title) && profileLanguages.length > 0;
   const skills = isSkillsSection(section.title);
   const experience = isExperienceSection(section.title);
+  const rowBullets = skills ? skillBullets(section.blocks) : 0;
+  const entries = section.blocks.filter((b) => b.kind === 'entry').length;
+  // "Fold all" and "Open all" take turns; each press is a new signal to every job.
+  const [fold, setFold] = useState<FoldAll | null>(null);
   const setBlocks = (blocks: BuilderBlock[], field: string | null) => {
     onChange({ ...section, blocks }, field);
   };
@@ -99,6 +106,17 @@ export function SectionCard({
           }}
           className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 py-1 text-sm font-semibold text-slate-900 hover:border-slate-200 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
         />
+        {entries > 1 && (
+          <button
+            type="button"
+            className="shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
+            onClick={() => {
+              setFold((f) => ({ open: f ? !f.open : false, n: (f?.n ?? 0) + 1 }));
+            }}
+          >
+            {fold && !fold.open ? t('openAll') : t('foldAll')}
+          </button>
+        )}
         {section.hidden && (
           <span className="hidden rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600 sm:inline">
             {t('hiddenTag')}
@@ -250,19 +268,24 @@ export function SectionCard({
           </div>
         ) : (
           <>
-            {section.blocks.map((block, blockIndex) => (
-              <div key={block.id} className="group flex items-start gap-1">
-                <div className="min-w-0 flex-1">
-                  <BlockEditor
-                    block={block}
-                    skills={skills}
-                    onChange={(next, field) => {
-                      setBlocks(replaceAt(section.blocks, blockIndex, next), field);
-                    }}
-                  />
-                </div>
-                {/* Moving blocks is rare: these show on hover or focus to keep the card calm. */}
-                <div className="flex flex-col opacity-40 group-focus-within:opacity-100 group-hover:opacity-100">
+            {skills && rowBullets > 0 && (
+              <div className="flex flex-wrap items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs text-brand-900">
+                <span className="flex-1">{t('skillRows.found', { count: rowBullets })}</span>
+                <button
+                  type="button"
+                  className="rounded-md bg-brand-600 px-2.5 py-1 font-medium text-white hover:bg-brand-700"
+                  onClick={() => {
+                    setBlocks(bulletsToSkillRows(section.blocks), null);
+                  }}
+                >
+                  {t('skillRows.turn')}
+                </button>
+              </div>
+            )}
+            {section.blocks.map((block, blockIndex) => {
+              // Moving blocks is rare: these show on hover or focus to keep the card calm.
+              const actions = (
+                <>
                   <button
                     type="button"
                     className={ICON_BUTTON}
@@ -311,9 +334,31 @@ export function SectionCard({
                   >
                     <TrashIcon />
                   </button>
+                </>
+              );
+              const editor = (
+                <BlockEditor
+                  block={block}
+                  skills={skills}
+                  // A job puts them in its own title row, so a folded job is one line.
+                  actions={actions}
+                  {...(fold ? { fold } : {})}
+                  onChange={(next, field) => {
+                    setBlocks(replaceAt(section.blocks, blockIndex, next), field);
+                  }}
+                />
+              );
+              return block.kind === 'entry' ? (
+                <div key={block.id}>{editor}</div>
+              ) : (
+                <div key={block.id} className="group flex items-start gap-1">
+                  <div className="min-w-0 flex-1">{editor}</div>
+                  <div className="flex flex-col opacity-40 group-focus-within:opacity-100 group-hover:opacity-100">
+                    {actions}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
               <span>{t('add')}</span>
               {/* Skills lead with their own row; a job fits Experience best. */}

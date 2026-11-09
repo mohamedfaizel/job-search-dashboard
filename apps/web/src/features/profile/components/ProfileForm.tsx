@@ -4,12 +4,14 @@ import { useUpdateProfile } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import type { FieldErrors } from 'react-hook-form';
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { AutoHide } from '../../../components/AutoHide';
+import { InfoTip } from '../../../components/InfoTip';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { notInResume } from '../not-in-resume';
 import type { ProfileFormValues } from '../schema';
 import { profileSchema, profileToForm, toProfileInput } from '../schema';
+import { ChipList } from './ChipList';
 import { Field, inputClass } from './Field';
 import { SavedAnswers } from './SavedAnswers';
 
@@ -43,6 +45,8 @@ const GENDERS = [
 ] as const;
 
 const card = 'space-y-4 rounded-lg border border-slate-200 bg-white p-5';
+/** Four fields a row on a laptop, two on a tablet, one on a phone. */
+const GRID = 'grid gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-4';
 
 interface Props {
   profile: Profile;
@@ -80,9 +84,6 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
   });
   const custom = useFieldArray({ control, name: 'customFields' });
   const [skillsText, keywordsText] = useWatch({ control, name: ['skills', 'keywords'] });
-  // Shown next to the label, so the list itself stays as you typed it.
-  const missingNote = (missing: string[]) =>
-    missing.length > 0 ? t('about.notInResume', { list: missing.join(', ') }) : null;
 
   // A mistake on another tab: open that tab so you can see it.
   const onInvalid = (invalid: FieldErrors<ProfileFormValues>) => {
@@ -119,15 +120,19 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
       hidden={!FORM_TABS.includes(tab)}
       className="space-y-6"
     >
-      <div hidden={tab !== 'personal'} className="grid gap-6 xl:grid-cols-2 xl:items-start">
+      <div hidden={tab !== 'personal'} className="space-y-6">
+        {/* Personal details and About you: one wide card, four fields a row on a laptop. */}
         <section aria-labelledby="personal-heading" className={card}>
-          <div>
+          <div className="flex items-center gap-2">
             <h2 id="personal-heading" className="text-lg font-semibold text-slate-900">
               {t('personal.heading')}
             </h2>
-            <p className="text-sm text-slate-600">{t('personal.intro')}</p>
+            <InfoTip
+              label={t('moreAbout', { field: t('personal.heading') })}
+              text={t('personal.intro')}
+            />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className={GRID}>
             <Field
               label={t('personal.firstName')}
               htmlFor="firstName"
@@ -156,7 +161,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               label={t('personal.gender')}
               htmlFor="gender"
               error={errors.gender?.message}
-              hint={t('personal.genderHint')}
+              tip={t('personal.genderHint')}
             >
               <select {...register('gender')} {...a11y('gender')} className={inputClass}>
                 {GENDERS.map(([code, key]) => (
@@ -170,7 +175,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               label={t('personal.dateOfBirth')}
               htmlFor="dateOfBirth"
               error={errors.dateOfBirth?.message}
-              hint={t('personal.dateOfBirthHint')}
+              tip={t('personal.dateOfBirthHint')}
             >
               <input
                 {...register('dateOfBirth')}
@@ -188,25 +193,27 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               <input {...register('nationality')} {...a11y('nationality')} className={inputClass} />
             </Field>
           </div>
-        </section>
-        <section aria-labelledby="about-heading" className={card}>
-          <h2 id="about-heading" className="text-lg font-semibold text-slate-900">
+          <h2
+            id="about-heading"
+            className="border-t border-slate-200 pt-4 text-lg font-semibold text-slate-900"
+          >
             {t('about.heading')}
           </h2>
-          <Field
-            label={t('about.headline')}
-            htmlFor="headline"
-            error={errors.headline?.message}
-            hint={t('about.headlineHint')}
-          >
-            <input {...register('headline')} {...a11y('headline')} className={inputClass} />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className={GRID}>
+            <Field
+              label={t('about.headline')}
+              htmlFor="headline"
+              error={errors.headline?.message}
+              tip={t('about.headlineHint')}
+              className="sm:col-span-2"
+            >
+              <input {...register('headline')} {...a11y('headline')} className={inputClass} />
+            </Field>
             <Field
               label={t('about.targetRoles')}
               htmlFor="targetRoles"
               error={errors.targetRoles?.message}
-              hint={listHint}
+              tip={listHint}
             >
               <input {...register('targetRoles')} {...a11y('targetRoles')} className={inputClass} />
             </Field>
@@ -214,33 +221,15 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
               label={t('about.locations')}
               htmlFor="locations"
               error={errors.locations?.message}
-              hint={listHint}
+              tip={listHint}
             >
               <input {...register('locations')} {...a11y('locations')} className={inputClass} />
-            </Field>
-            <Field
-              label={t('about.skills')}
-              note={missingNote(notInResume(skillsText, profile.resumeText))}
-              htmlFor="skills"
-              error={errors.skills?.message}
-              hint={listHint}
-            >
-              <input {...register('skills')} {...a11y('skills')} className={inputClass} />
-            </Field>
-            <Field
-              label={t('about.keywords')}
-              note={missingNote(notInResume(keywordsText, profile.resumeText))}
-              htmlFor="keywords"
-              error={errors.keywords?.message}
-              hint={t('about.keywordsHint')}
-            >
-              <input {...register('keywords')} {...a11y('keywords')} className={inputClass} />
             </Field>
             <Field
               label={t('about.languages')}
               htmlFor="languages"
               error={errors.languages?.message}
-              hint={t('about.languagesHint')}
+              tip={t('about.languagesHint')}
             >
               <input {...register('languages')} {...a11y('languages')} className={inputClass} />
             </Field>
@@ -256,8 +245,6 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                 className={inputClass}
               />
             </Field>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
             <Field
               label={t('about.linkedin')}
               htmlFor="linkedinUrl"
@@ -294,123 +281,153 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             </Field>
           </div>
         </section>
+
+        <section aria-labelledby="skills-heading" className={card}>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h2 id="skills-heading" className="text-lg font-semibold text-slate-900">
+              {t('chips.heading')}
+            </h2>
+            <span className="text-xs text-slate-600">{t('chips.intro')}</span>
+            {profile.resumeText.trim() && (
+              <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-slate-600">
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 rounded-full border-[1.5px] border-dashed border-amber-700"
+                />
+                {t('chips.missingTag')}
+              </span>
+            )}
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <Controller
+              control={control}
+              name="skills"
+              render={({ field }) => (
+                <ChipList
+                  label={t('about.skills')}
+                  addLabel={t('chips.addSkill')}
+                  value={field.value}
+                  missing={notInResume(skillsText, profile.resumeText)}
+                  error={errors.skills?.message}
+                  onChange={(next) => {
+                    setSaved(false);
+                    field.onChange(next);
+                  }}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="keywords"
+              render={({ field }) => (
+                <ChipList
+                  label={t('about.keywords')}
+                  addLabel={t('chips.addKeyword')}
+                  value={field.value}
+                  missing={notInResume(keywordsText, profile.resumeText)}
+                  hint={t('about.keywordsHint')}
+                  error={errors.keywords?.message}
+                  onChange={(next) => {
+                    setSaved(false);
+                    field.onChange(next);
+                  }}
+                />
+              )}
+            />
+          </div>
+        </section>
       </div>
 
       <div hidden={tab !== 'applications'} className="grid gap-6 xl:grid-cols-2 xl:items-start">
-        <section aria-labelledby="answers-heading" className={card}>
-          <div>
-            <h2 id="answers-heading" className="text-lg font-semibold text-slate-900">
-              {t('answers.heading')}
-            </h2>
-            <p className="text-sm text-slate-600">{t('answers.intro')}</p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t('answers.phone')} htmlFor="phone" error={errors.phone?.message}>
-              <input
-                {...register('phone')}
-                {...a11y('phone')}
-                type="tel"
-                autoComplete="tel"
-                placeholder="+49 151 …"
-                className={inputClass}
-              />
-            </Field>
-            <Field
-              label={t('answers.address')}
-              htmlFor="address"
-              error={errors.address?.message}
-              hint={t('answers.addressHint')}
-            >
-              <input {...register('address')} {...a11y('address')} className={inputClass} />
-            </Field>
-            <Field
-              label={t('answers.workPermit')}
-              htmlFor="workPermit"
-              error={errors.workPermit?.message}
-              hint={t('answers.workPermitHint')}
-            >
-              <input {...register('workPermit')} {...a11y('workPermit')} className={inputClass} />
-            </Field>
-            <Field
-              label={t('answers.noticePeriod')}
-              htmlFor="noticePeriod"
-              error={errors.noticePeriod?.message}
-              hint={t('answers.noticePeriodHint')}
-            >
-              <input
-                {...register('noticePeriod')}
-                {...a11y('noticePeriod')}
-                className={inputClass}
-              />
-            </Field>
-            <Field
-              label={t('answers.salary')}
-              htmlFor="salaryExpectation"
-              error={errors.salaryExpectation?.message}
-              hint={t('answers.salaryHint')}
-            >
-              <input
-                {...register('salaryExpectation')}
-                {...a11y('salaryExpectation')}
-                className={inputClass}
-              />
-            </Field>
-            <Field
-              label={t('answers.relocation')}
-              htmlFor="relocation"
-              error={errors.relocation?.message}
-              hint={t('answers.relocationHint')}
-            >
-              <input {...register('relocation')} {...a11y('relocation')} className={inputClass} />
-            </Field>
-          </div>
-          <Field
-            label={t('answers.notes')}
-            htmlFor="applicationNotes"
-            error={errors.applicationNotes?.message}
-            hint={t('answers.notesHint')}
-          >
-            <textarea
-              {...register('applicationNotes')}
-              {...a11y('applicationNotes')}
-              rows={5}
-              className={inputClass}
-            />
-          </Field>
-        </section>
-
+        {/* Left: everything you fill in for forms. Right: the answers Claude keeps. */}
         <div className="space-y-6">
-          <section aria-labelledby="claude-answers-heading" className={card}>
+          <section aria-labelledby="answers-heading" className={card}>
             <div>
-              <h2 id="claude-answers-heading" className="text-lg font-semibold text-slate-900">
-                {t('claudeAnswers.heading')}
+              <h2 id="answers-heading" className="text-lg font-semibold text-slate-900">
+                {t('answers.heading')}
               </h2>
-              <p className="text-sm text-slate-600">{t('claudeAnswers.intro')}</p>
+              <p className="text-sm text-slate-600">{t('answers.intro')}</p>
             </div>
-            <label className="flex items-center gap-2 text-sm text-slate-800">
-              <input
-                type="checkbox"
-                {...register('fillSavedAnswers')}
-                className="h-4 w-4 rounded border-slate-300"
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t('answers.phone')} htmlFor="phone" error={errors.phone?.message}>
+                <input
+                  {...register('phone')}
+                  {...a11y('phone')}
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="+49 151 …"
+                  className={inputClass}
+                />
+              </Field>
+              <Field
+                label={t('answers.address')}
+                htmlFor="address"
+                error={errors.address?.message}
+                hint={t('answers.addressHint')}
+              >
+                <input {...register('address')} {...a11y('address')} className={inputClass} />
+              </Field>
+              <Field
+                label={t('answers.workPermit')}
+                htmlFor="workPermit"
+                error={errors.workPermit?.message}
+                hint={t('answers.workPermitHint')}
+              >
+                <input {...register('workPermit')} {...a11y('workPermit')} className={inputClass} />
+              </Field>
+              <Field
+                label={t('answers.noticePeriod')}
+                htmlFor="noticePeriod"
+                error={errors.noticePeriod?.message}
+                hint={t('answers.noticePeriodHint')}
+              >
+                <input
+                  {...register('noticePeriod')}
+                  {...a11y('noticePeriod')}
+                  className={inputClass}
+                />
+              </Field>
+              <Field
+                label={t('answers.salary')}
+                htmlFor="salaryExpectation"
+                error={errors.salaryExpectation?.message}
+                hint={t('answers.salaryHint')}
+              >
+                <input
+                  {...register('salaryExpectation')}
+                  {...a11y('salaryExpectation')}
+                  className={inputClass}
+                />
+              </Field>
+              <Field
+                label={t('answers.relocation')}
+                htmlFor="relocation"
+                error={errors.relocation?.message}
+                hint={t('answers.relocationHint')}
+              >
+                <input {...register('relocation')} {...a11y('relocation')} className={inputClass} />
+              </Field>
+            </div>
+            <Field
+              label={t('answers.notes')}
+              htmlFor="applicationNotes"
+              error={errors.applicationNotes?.message}
+              hint={t('answers.notesHint')}
+            >
+              <textarea
+                {...register('applicationNotes')}
+                {...a11y('applicationNotes')}
+                rows={5}
+                className={inputClass}
               />
-              {t('claudeAnswers.fill')}
-            </label>
-            <label className="flex items-center gap-2 text-sm text-slate-800">
-              <input
-                type="checkbox"
-                {...register('showStretches')}
-                className="h-4 w-4 rounded border-slate-300"
-              />
-              {t('claudeAnswers.stretches')}
-            </label>
-            <SavedAnswers />
+            </Field>
           </section>
 
           <section aria-labelledby="more-heading" className={card}>
             <h2 id="more-heading" className="text-lg font-semibold text-slate-900">
               {t('looking.heading')}
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <Field
                 label={t('looking.employmentType')}
                 htmlFor="employmentType"
@@ -519,6 +536,32 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
             </button>
           </section>
         </div>
+
+        <section aria-labelledby="claude-answers-heading" className={card}>
+          <div>
+            <h2 id="claude-answers-heading" className="text-lg font-semibold text-slate-900">
+              {t('claudeAnswers.heading')}
+            </h2>
+            <p className="text-sm text-slate-600">{t('claudeAnswers.intro')}</p>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-slate-800">
+            <input
+              type="checkbox"
+              {...register('fillSavedAnswers')}
+              className="h-4 w-4 rounded border-slate-300"
+            />
+            {t('claudeAnswers.fill')}
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-800">
+            <input
+              type="checkbox"
+              {...register('showStretches')}
+              className="h-4 w-4 rounded border-slate-300"
+            />
+            {t('claudeAnswers.stretches')}
+          </label>
+          <SavedAnswers />
+        </section>
       </div>
 
       <div className="flex items-center gap-3">

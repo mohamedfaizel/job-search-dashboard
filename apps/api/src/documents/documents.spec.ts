@@ -320,13 +320,34 @@ describe('templates', () => {
     expect(tex).toContain('\\item 80\\% fewer penalties');
   });
 
-  it('sets Skills lines as a bold-label index in one block', () => {
+  it('puts each contact line of the header on its own line, up to three', () => {
+    const two = parseResume(
+      '# Jane\nDev\nBerlin | jane@example.com\nGerman: A2 | English: C1',
+      'X',
+    );
+    expect(two.contactBreaks).toEqual([2]);
+    const tex = resumeTex(two, look);
+    expect(tex).toContain('jane@example.com}\\\\[2pt]German: A2');
+    // Many short lines are a list of details: one line, as before.
+    const many = parseResume(
+      '# Jane\nDev\nBerlin, Germany\nme@x.de\n+49 151 2345678\nlinkedin.com/in/me',
+      'X',
+    );
+    expect(many.contactBreaks).toBeUndefined();
+    expect(resumeTex(many, look)).not.toContain('\\\\[2pt]');
+  });
+
+  it('sets Skills lines as a bold-label index that may continue on the next page', () => {
     const doc = parseResume(
       '# Jane\n## Technical Skills\nLanguages : JavaScript, TypeScript\n\n**Frontend**: React, Vue\n\nPlain line without a label',
       'X',
     );
     const tex = resumeTex(doc, { ...look, layout: toLayout({}) });
-    expect(tex).toContain('\\begin{minipage}{\\linewidth}');
+    // Rows never split, but the section is no single block that jumps to the next page.
+    expect(tex).toContain('{\\raggedright\\interlinepenalty=10000');
+    expect(tex).not.toContain('\\begin{minipage}{\\linewidth}\\raggedright');
+    // Its title moves on with its first lines.
+    expect(tex).toContain('\\needspace{4\\baselineskip}');
     expect(tex).toContain('\\makebox[\\skillw][l]{\\textbf{Languages}}JavaScript, TypeScript');
     expect(tex).toContain('\\makebox[\\skillw][l]{\\textbf{Frontend}}React, Vue');
     expect(tex).toContain('Plain line without a label\\par');
@@ -340,7 +361,7 @@ describe('templates', () => {
     expect(light).not.toContain('\\textbf{Languages}');
 
     const plain = resumeTex(doc, { ...look, layout: toLayout({ skillsStyle: 'plain' }) });
-    expect(plain).not.toContain('\\begin{minipage}');
+    expect(plain).not.toContain('\\interlinepenalty');
     // A Skills section with no "Label: list" line is set as written.
     const none = parseResume('# Jane\n## Skills\n- React\n- Vue', 'X');
     expect(resumeTex(none, { ...look, layout: toLayout({}) })).toContain('\\item React');

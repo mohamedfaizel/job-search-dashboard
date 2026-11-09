@@ -506,6 +506,7 @@ function preamble(
 \\newlength{\\skillw}\\newlength{\\tmpw}
 \\usepackage{graphicx}
 \\usepackage{tabularx}
+\\usepackage{needspace}
 \\usepackage[hidelinks]{hyperref}
 ${extra}${textSize(layout)}\\pagestyle{empty}
 \\setlength{\\parindent}{0pt}
@@ -558,18 +559,27 @@ function itemize(items: string[]): string {
   return `\\begin{itemize}\n${items.map((i) => `\\item ${inline(i)}`).join('\n')}\n\\end{itemize}\n`;
 }
 
-/** Name, headline and contact line, with the photo on the right when there is one. */
+/** The contact details with a grey bar between them, on as many lines as the header asks. */
+function contactLines(doc: Pick<ResumeDoc, 'contact' | 'contactBreaks'>): string {
+  const breaks = new Set(doc.contactBreaks ?? []);
+  return doc.contact
+    .map((item, i) => {
+      if (i === 0) return contactItem(item);
+      return `${breaks.has(i) ? '\\\\[2pt]' : ' {\\color{muted}\\enspace|\\enspace} '}${contactItem(item)}`;
+    })
+    .join('');
+}
+
+/** Name, headline and contact lines, with the photo on the right when there is one. */
 function header(
   look: DocumentLook,
-  doc: Pick<ResumeDoc, 'name' | 'headline' | 'contact'>,
+  doc: Pick<ResumeDoc, 'name' | 'headline' | 'contact' | 'contactBreaks'>,
   centred: boolean,
 ): string {
   const style = styleOf(look);
   const name = style.name(esc(doc.name));
   const headline = doc.headline ? `\\\\[5pt]${style.headline(inline(doc.headline))}` : '';
-  const contact = doc.contact.length
-    ? `\\\\[5pt]{\\small ${doc.contact.map(contactItem).join(' {\\color{muted}\\enspace|\\enspace} ')}}`
-    : '';
+  const contact = doc.contact.length ? `\\\\[5pt]{\\small ${contactLines(doc)}}` : '';
   const text = `${name}${headline}${contact}`;
   if (look.photo && style.photo) {
     const align = centred ? '\\centering' : '\\raggedright';
@@ -621,7 +631,8 @@ const SKILL_ROW = /^\s*(?:\*\*)?([^:*]{1,40}?)(?:\*\*)?\s*:(?:\*\*)?\s+(.+)$/;
 
 /**
  * The lines of a Skills section as an index: the bold label, then the list in one column, a
- * long list wrapping under itself. One block, so it never splits across two pages. Null when
+ * long list wrapping under itself. A row never splits, but the section may continue on the
+ * next page between rows (one unbreakable block left a big gap when it didn't fit). Null when
  * the section has no "Label: list" line, which is then set as written.
  */
 function skillsTex(blocks: ResumeBlock[], layout: ResumeLayout): string | null {
@@ -655,7 +666,7 @@ function skillsTex(blocks: ResumeBlock[], layout: ResumeLayout): string | null {
         : `${label(l)}: ${inline(rest)}\\par\\vspace{2pt}\n`;
     })
     .join('');
-  return `\\noindent\\begin{minipage}{\\linewidth}\\raggedright\n${measure}${lines}\\end{minipage}\\par\n`;
+  return `{\\raggedright\\interlinepenalty=10000\n${measure}${lines}\\par}\n`;
 }
 
 /** A resume as a complete .tex file in the chosen template. */
@@ -693,7 +704,8 @@ export function resumeTex(doc: ResumeDoc, look: DocumentLook): string {
           ? skillsTex(section.blocks, layout)
           : null;
       return (
-        (section.title ? s.section(inline(section.title)) : '') +
+        // A title never sits alone at the bottom of a page: it moves on with its first lines.
+        (section.title ? `\\needspace{4\\baselineskip}\n${s.section(inline(section.title))}` : '') +
         (skills ?? section.blocks.map((b) => block(s, b, first)).join(''))
       );
     })

@@ -63,10 +63,13 @@ export interface BuilderSection {
 export interface BuilderDoc {
   name: string;
   headline: string;
-  /** Address, phone, email, links: one item each. */
+  /** Address, phone, email, links: one item each. CONTACT_BREAK starts a new line. */
   contact: string[];
   sections: BuilderSection[];
 }
+
+/** A contact "item" that is a line break in the PDF's header, not a detail. */
+export const CONTACT_BREAK = '\n';
 
 /** Big enough for any real resume, small enough to keep junk out. */
 export const LIMITS = {
@@ -80,12 +83,19 @@ export const LIMITS = {
 
 export const newId = () => randomUUID().slice(0, 8);
 
+/** The contact items with a CONTACT_BREAK where each new line starts. */
+function withBreaks(contact: string[], breaks: number[] = []): string[] {
+  return contact.flatMap((item, i) =>
+    i > 0 && breaks.includes(i) ? [CONTACT_BREAK, item] : [item],
+  );
+}
+
 /** The doc read from the Markdown layout (an AI chat reply, or a saved job resume). */
 export function fromResumeDoc(doc: ResumeDoc): BuilderDoc {
   return {
     name: doc.name,
     headline: doc.headline ?? '',
-    contact: doc.contact,
+    contact: withBreaks(doc.contact, doc.contactBreaks),
     sections: doc.sections.map((section) => ({
       id: newId(),
       title: section.title,
@@ -299,8 +309,13 @@ const oneLine = (text: string) => text.replace(/\s+/g, ' ').trim();
 export function toMarkdown(doc: BuilderDoc): string {
   const out: string[] = [`# ${oneLine(doc.name) || 'Your Name'}`];
   if (oneLine(doc.headline)) out.push(oneLine(doc.headline));
-  const contact = doc.contact.map(oneLine).filter(Boolean);
-  if (contact.length) out.push(contact.join(' | '));
+  // One Markdown line per header line: the PDF keeps your line breaks.
+  const lines: string[][] = [[]];
+  for (const item of doc.contact) {
+    if (item === CONTACT_BREAK) lines.push([]);
+    else if (oneLine(item)) lines.at(-1)?.push(oneLine(item));
+  }
+  for (const line of lines) if (line.length) out.push(line.join(' | '));
 
   for (const section of doc.sections) {
     if (section.hidden) continue;

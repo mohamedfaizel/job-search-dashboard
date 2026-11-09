@@ -20,6 +20,7 @@ export function ResumeSwitcher({
   letter = false,
   onLanguage,
   onOpen,
+  onAdd,
 }: {
   /** Your master resumes' languages. */
   languages: string[];
@@ -30,6 +31,8 @@ export function ResumeSwitcher({
   letter?: boolean;
   onLanguage: (language: string) => void;
   onOpen: (href: string) => void;
+  /** Set on your own resume: "+ Add a resume in another language" at the end of the list. */
+  onAdd?: () => void;
 }) {
   const t = useTranslations('Resume.switcher');
   const nameOf = useLanguageName();
@@ -44,7 +47,8 @@ export function ResumeSwitcher({
         value={value}
         onChange={(event) => {
           const [kind, id = ''] = event.target.value.split(/:(.*)/s);
-          if (kind === 'lang' && !job && !letter) onLanguage(id);
+          if (kind === 'add') onAdd?.();
+          else if (kind === 'lang' && !job && !letter) onLanguage(id);
           else onOpen(kind === 'lang' ? masterHref(id) : letterHref(id));
         }}
         className="max-w-full min-w-0 truncate rounded-md border border-slate-300 bg-white py-1.5 pr-8 pl-2.5 text-base font-semibold text-slate-900"
@@ -70,6 +74,7 @@ export function ResumeSwitcher({
             </option>
           </optgroup>
         )}
+        {onAdd && <option value="add:">{t('addLanguage')}</option>}
       </select>
     </label>
   );

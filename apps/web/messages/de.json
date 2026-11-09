@@ -89,8 +89,7 @@
       "github": "GitHub",
       "website": "Website",
       "keywords": "Schlüsselwörter",
-      "keywordsHint": "Wörter aus Stellenanzeigen, die auf dich zutreffen. ✓ im Reiter Passung fügt sie hier hinzu.",
-      "notInResume": "nicht im Lebenslauf: {list}"
+      "keywordsHint": "Wörter aus Stellenanzeigen, die auf dich zutreffen. ✓ im Reiter Passung fügt sie hier hinzu."
     },
     "answers": {
       "heading": "Antworten für Bewerbungen",
@@ -212,7 +211,9 @@
       "useAchievements": "In die Erfolge-Sammlung kopieren",
       "askClaude": "{ai} nach weiteren Vorschlägen fragen",
       "askClaudeHint": "In {ai} einfügen: es prüft deinen Lebenslauf wie ein Recruiter und nennt die wichtigsten Korrekturen.",
-      "askClaudeBox": "Prüf-Prompt"
+      "askClaudeBox": "Prüf-Prompt",
+      "count": "{count, plural, =0 {Keine schnellen Korrekturen} one {# Vorschlag} other {# Vorschläge}}",
+      "open": "Vorschläge für deinen Lebenslauf zeigen"
     },
     "claudeAnswers": {
       "heading": "Antworten für {ai}",
@@ -263,6 +264,22 @@
       "deleteConfirm": "Diese Geschichte löschen?",
       "deleteYes": "Ja, {title} löschen",
       "deleteYesShort": "Ja, löschen"
+    },
+    "moreAbout": "Über „{field}“",
+    "chips": {
+      "heading": "Skills und Schlüsselwörter",
+      "intro": "Für den Fit % und zum Anpassen deines Lebenslaufs.",
+      "missingTag": "nicht in deinem Lebenslauf",
+      "addSkill": "Skill eingeben, Enter drücken",
+      "addKeyword": "Schlüsselwort eingeben, Enter drücken",
+      "notInResume": "{count} nicht im Lebenslauf",
+      "copyHint": "Dein Lebenslauf nennt diese nicht. Kopiere sie und nimm die zutreffenden in deinen Lebenslauf auf.",
+      "copyList": "{field} nicht in deinem Lebenslauf",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "remove": "{item} entfernen",
+      "more": "+ {count} weitere",
+      "fewer": "Weniger zeigen"
     }
   },
   "Settings": {
@@ -411,6 +428,9 @@
     "contact": "Kontaktangaben, eine pro Zeile",
     "contactItem": "Kontaktangabe",
     "addContact": "Kontaktangabe hinzufügen",
+    "contactBreak": "Neue Zeile im PDF",
+    "addContactBreak": "Zeilenumbruch",
+    "contactBreakHint": "Beginnt hier eine neue Zeile im Kopf des PDFs. Zum Beispiel Sprachen oder Arbeitserlaubnis in die zweite Zeile.",
     "contactPlaceholder": "Berlin, Deutschland · +49 … · ich@example.com · linkedin.com/in/ich",
     "sectionTitle": "Abschnittstitel",
     "untitled": "Abschnitt ohne Titel",
@@ -709,7 +729,11 @@
       "wordSpacing": "Deine Word-Datei behält ihre eigene Größe und Abstände.",
       "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf im Tab Einrichtung als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
       "templateUsed": "Deine nächsten PDF-Downloads verwenden sie.",
-      "more": "Mehr: Abschnitte, eigenes Design, Foto, Anschreiben"
+      "more": "Mehr Design",
+      "bar": {
+        "template": "Vorlage",
+        "colour": "Farbe"
+      }
     },
     "copyToMaster": "{title} in meinen Haupt-Lebenslauf übernehmen",
     "copyToMasterHint": "Diesen Abschnitt in deinen Haupt-Lebenslauf übernehmen, damit er für jede Stelle gleich ist",
@@ -815,7 +839,8 @@
       "letters": "Anschreiben-Vorlagen",
       "letterIn": "Anschreiben ({language})",
       "thisJob": "Diese Stelle",
-      "languageLabel": "Lebenslauf-Sprache"
+      "languageLabel": "Lebenslauf-Sprache",
+      "addLanguage": "+ Lebenslauf in einer weiteren Sprache"
     },
     "downloadStep": {
       "title": "Lebenslauf herunterladen",
@@ -828,9 +853,15 @@
     },
     "ribbon": {
       "label": "Lebenslauf-Werkzeuge",
-      "text": "Text",
-      "design": "Design",
-      "setup": "Einrichtung"
+      "setup": "Einrichtung",
+      "savesItself": "Speichert von selbst",
+      "close": "Einrichtung schließen"
+    },
+    "foldAll": "Alle zuklappen",
+    "openAll": "Alle aufklappen",
+    "skillRows": {
+      "found": "{count, plural, one {# Aufzählungspunkt sieht} other {# Aufzählungspunkte sehen}} aus wie „Bezeichnung: Liste“.",
+      "turn": "In Skill-Zeilen umwandeln"
     }
   },
   "Jobs": {

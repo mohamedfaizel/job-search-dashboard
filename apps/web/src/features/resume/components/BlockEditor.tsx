@@ -1,5 +1,6 @@
 import type { BuilderBlock, BuilderEntry, BuilderProject } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
 import { insertAt, joinSkill, move, newProject, removeAt, replaceAt, splitSkill } from '../docOps';
 import { DownIcon, TrashIcon, UpIcon } from './icons';
@@ -11,10 +12,19 @@ interface Props {
   onChange: (block: BuilderBlock, field: string | null) => void;
   /** In a Skills section a paragraph is a row: a label and its list. */
   skills?: boolean;
+  /** Move, copy and delete buttons: a job shows them in its title row. */
+  actions?: ReactNode;
+  /** "Fold all" / "Open all" of the section: each new `n` folds or opens every job. */
+  fold?: FoldAll;
+}
+
+export interface FoldAll {
+  open: boolean;
+  n: number;
 }
 
 /** One block of a section: a paragraph, a bullet list, or a job/degree/project. */
-export function BlockEditor({ block, onChange, skills = false }: Props) {
+export function BlockEditor({ block, onChange, skills = false, actions, fold }: Props) {
   const t = useTranslations('Resume');
   if (block.kind === 'paragraph' && skills) {
     return (
@@ -53,7 +63,7 @@ export function BlockEditor({ block, onChange, skills = false }: Props) {
       />
     );
   }
-  return <EntryEditor entry={block} onChange={onChange} />;
+  return <EntryEditor entry={block} onChange={onChange} actions={actions} fold={fold} />;
 }
 
 /**
@@ -217,16 +227,30 @@ function ProjectEditor({
   );
 }
 
+/**
+ * A job, degree or project. Its title row holds the fold button, a one-line summary and the move,
+ * copy and delete buttons, so a folded job takes one line and the next one follows right after.
+ */
 function EntryEditor({
   entry,
   onChange,
+  actions,
+  fold,
 }: {
   entry: BuilderEntry;
   onChange: (block: BuilderEntry, field: string | null) => void;
+  actions: ReactNode;
+  fold: FoldAll | undefined;
 }) {
   const t = useTranslations('Resume');
   const id = useId();
   const [open, setOpen] = useState(true);
+  // "Fold all" / "Open all" wins once; after it each job folds on its own again.
+  const [foldSeen, setFoldSeen] = useState(fold?.n ?? 0);
+  if (fold && fold.n !== foldSeen) {
+    setFoldSeen(fold.n);
+    setOpen(fold.open);
+  }
   const projects = entry.projects ?? [];
   const summary = [entry.org || entry.title, entry.org ? entry.title : '', entry.meta]
     .filter(Boolean)
@@ -247,46 +271,39 @@ function EntryEditor({
       />
     </div>
   );
-  if (!open) {
-    return (
+  const name = summary || t('untitled');
+  const titleRow = (
+    <div className="group flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50/60 pr-1">
       <button
         type="button"
-        aria-expanded={false}
-        aria-label={t('expandEntry', { name: summary || t('untitled') })}
-        className="flex w-full items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1.5 text-left text-sm hover:bg-slate-50"
+        aria-expanded={open}
+        aria-label={open ? t('collapseEntry', { name }) : t('expandEntry', { name })}
+        title={open ? t('collapse') : t('expand')}
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-slate-100"
         onClick={() => {
-          setOpen(true);
+          setOpen((o) => !o);
         }}
       >
-        <UpIcon />
-        <span className="min-w-0 flex-1 truncate font-medium text-slate-800">
-          {summary || t('untitled')}
-        </span>
-        {projects.length > 0 && (
+        {open ? <DownIcon /> : <UpIcon />}
+        <span className="min-w-0 flex-1 truncate font-medium text-slate-800">{name}</span>
+        {!open && projects.length > 0 && (
           <span className="shrink-0 text-xs text-slate-500">
             {t('projectCount', { count: projects.length })}
           </span>
         )}
       </button>
-    );
-  }
+      <div className="flex shrink-0 opacity-40 group-focus-within:opacity-100 group-hover:opacity-100">
+        {actions}
+      </div>
+    </div>
+  );
+  if (!open) return titleRow;
   const setProjects = (next: BuilderProject[], field: string | null) => {
     onChange({ ...entry, projects: next }, field);
   };
   return (
     <div className="space-y-2">
-      <button
-        type="button"
-        aria-expanded
-        aria-label={t('collapseEntry', { name: summary || t('untitled') })}
-        title={t('collapse')}
-        className={`${ICON_BUTTON} -mb-1`}
-        onClick={() => {
-          setOpen(false);
-        }}
-      >
-        <DownIcon />
-      </button>
+      {titleRow}
       <div className="grid gap-2 sm:grid-cols-2">
         {input('title', t('entryTitle'), t('entryTitlePlaceholder'))}
         {input('org', t('entryOrg'), t('entryOrgPlaceholder'))}

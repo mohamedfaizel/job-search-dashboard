@@ -45,7 +45,10 @@ describe('Resume files tab', () => {
     );
     const user = await renderFiles();
 
+    // Folded into a pill, so the Setup tab stays short.
+    await user.click(screen.getByText('4 suggestions'));
     const box = screen.getByRole('region', { name: 'Suggestions for your resume' });
+    expect(box).toBeVisible();
     expect(
       within(box).getByText(/differs from My profile \(German: B2 → A2\)/),
     ).toBeInTheDocument();
@@ -68,15 +71,15 @@ describe('Resume files tab', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Page limit' }), '3');
     await user.click(screen.getByRole('checkbox', { name: /Keep all my headings/ }));
-    await user.click(screen.getByRole('button', { name: 'Save settings' }));
 
+    // Each change saves by itself: there is no Save button.
+    expect(screen.queryByRole('button', { name: 'Save settings' })).not.toBeInTheDocument();
     await waitFor(() => {
-      expect(requests).toHaveLength(2);
+      expect(requests.at(-1)).toMatchObject({
+        variables: { input: { resumeMaxPages: 3, keepMySections: true } },
+      });
     });
-    expect(requests[1]).toMatchObject({
-      variables: { input: { resumeMaxPages: 3, keepMySections: true } },
-    });
-    expect(requests[1]?.variables).not.toHaveProperty('input.resumeSuggestions');
+    expect(requests.at(-1)?.variables).not.toHaveProperty('input.resumeSuggestions');
   });
 
   it('uploads a resume and saves its text, keeping other edits', async () => {

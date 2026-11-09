@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { AutoHide } from '../../../components/AutoHide';
+import { InfoTip } from '../../../components/InfoTip';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiChat } from '../../../lib/ai-chat';
 import { inputClass } from '../../profile/components/Field';
@@ -296,21 +297,19 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
  */
 export function OtherResumes({ profile }: { profile: Profile }) {
   const t = useTranslations('Profile.other');
+  const tProfile = useTranslations('Profile');
   // The language saved last, to confirm it: the saved resume's form starts again after a save.
   const [justSaved, setJustSaved] = useState<string | null>(null);
   const taken = new Set([profile.resumeLanguage, ...profile.otherResumes.map((r) => r.language)]);
   const free = Object.keys(RESUME_LANGUAGES).filter((code) => !taken.has(code));
 
   return (
-    <section
-      aria-labelledby="other-resumes-heading"
-      className="space-y-3 rounded-lg border border-slate-200 bg-white p-4"
-    >
-      <div>
+    <section aria-labelledby="other-resumes-heading" className="space-y-2.5">
+      <div className="flex items-center gap-2">
         <h2 id="other-resumes-heading" className="font-semibold text-slate-900">
           {t('heading')}
         </h2>
-        <p className="text-xs text-slate-500">{t('intro')}</p>
+        <InfoTip label={tProfile('moreAbout', { field: t('heading') })} text={t('intro')} />
       </div>
       {profile.otherResumes.map((resume) => (
         // key includes the save time, so the text box starts again from a newly saved version.

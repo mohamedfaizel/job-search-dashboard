@@ -131,18 +131,13 @@ describe('Resume builder', () => {
     });
   });
 
-  it('has a Design tab next to the content whose changes make a new PDF', async () => {
+  it('has the look in the tool row next to the content, and its changes make a new PDF', async () => {
     const user = await renderBuilder();
     await waitFor(() => {
       expect(requests.filter((r) => r.operation === 'ResumePdf')).toHaveLength(1);
     });
-    await user.click(screen.getByRole('tab', { name: 'Design' }));
-    expect(router.replace).toHaveBeenCalledWith('/resume?tab=look');
-    expect(screen.getByRole('tab', { name: 'Design' })).toHaveAttribute('aria-selected', 'true');
-    // The content stays on screen: no step to switch back to.
-    expect(screen.getByRole('textbox', { name: 'Name' })).toBeVisible();
-
-    const template = await screen.findByRole(
+    const tools = screen.getByRole('group', { name: 'Resume tools' });
+    const template = await within(tools).findByRole(
       'combobox',
       { name: 'Resume template' },
       { timeout: 5000 },
@@ -150,46 +145,61 @@ describe('Resume builder', () => {
     await waitFor(() => {
       expect(template).toHaveValue('classic');
     });
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeVisible();
     await user.selectOptions(template, 'modern');
     await waitFor(() => {
       expect(requests.filter((r) => r.operation === 'ResumePdf')).toHaveLength(2);
     }, SAVE_WAIT);
 
-    await user.click(screen.getByRole('tab', { name: 'Text' }));
-    expect(router.replace).toHaveBeenLastCalledWith('/resume');
+    // Size and spacing, and the rest of the look, open under their buttons.
+    await user.click(within(tools).getByRole('button', { name: /Size and spacing/ }));
+    expect(screen.getByRole('slider', { name: 'Text size' })).toBeVisible();
+    await user.click(within(tools).getByRole('button', { name: /More design/ }));
+    expect(screen.queryByRole('slider', { name: 'Text size' })).toBeNull();
+    expect(screen.getByText('Show my photo on the resume')).toBeVisible();
   });
 
-  it('has one screen with a toolbar instead of steps; the PDF button downloads', async () => {
+  it('has one tool row instead of tabs or steps; the PDF button downloads', async () => {
     await renderBuilder();
     expect(screen.queryByRole('navigation', { name: 'Steps' })).toBeNull();
-    const tools = screen.getByRole('tablist', { name: 'Resume tools' });
-    expect(
-      within(tools)
-        .getAllByRole('tab')
-        .map((tab) => tab.textContent),
-    ).toEqual(['Text', 'Design', 'Setup']);
-    expect(screen.getByRole('toolbar', { name: 'Format text' })).toBeInTheDocument();
+    expect(screen.queryByRole('tablist')).toBeNull();
+    const tools = screen.getByRole('group', { name: 'Resume tools' });
+    expect(within(tools).getByRole('toolbar', { name: 'Format text' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '⬇ PDF' })).toHaveAttribute(
       'href',
       expect.stringContaining('download=1'),
     );
   });
 
-  it('shows the setup at a glance and opens it in the Setup tab', async () => {
+  it('shows the setup at a glance and opens it in a panel on the right', async () => {
     const user = await renderBuilder();
     expect(await screen.findByText('All resumes: 2 pages')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Master resume' })).toBeNull();
-    await user.click(screen.getByRole('tab', { name: 'Setup' }));
+    expect(screen.queryByRole('dialog', { name: 'Setup' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: '⚙ Setup' }));
     expect(router.replace).toHaveBeenCalledWith('/resume?tab=files');
-    expect(await screen.findByRole('heading', { name: 'Master resume' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'For all resumes' })).toBeInTheDocument();
+    const panel = screen.getByRole('dialog', { name: 'Setup' });
+    expect(
+      await within(panel).findByRole('heading', { name: 'Master resume' }),
+    ).toBeInTheDocument();
+    expect(within(panel).getByRole('region', { name: 'For all resumes' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: 'Setup' })).toBeNull();
+    expect(router.replace).toHaveBeenLastCalledWith('/resume');
+  });
+
+  it('opens Setup from "+ Add a resume in another language"', async () => {
+    const user = await renderBuilder();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Resume language' }), 'add:');
+    expect(screen.getByRole('dialog', { name: 'Setup' })).toBeInTheDocument();
   });
 
   it('opens Setup for an old Resume Settings link', async () => {
     window.history.pushState({}, '', '/resume?tab=files');
     await renderBuilder();
-    expect(await screen.findByRole('heading', { name: 'Master resume' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Setup' })).toHaveAttribute('aria-selected', 'true');
+    const panel = screen.getByRole('dialog', { name: 'Setup' });
+    expect(
+      await within(panel).findByRole('heading', { name: 'Master resume' }),
+    ).toBeInTheDocument();
     window.history.pushState({}, '', '/resume');
   });
 });

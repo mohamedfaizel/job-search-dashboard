@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithData } from '../../profile/test/render';
 import { requests } from '../../profile/test/server';
@@ -92,10 +92,12 @@ describe('resume in other languages', () => {
       screen.getByRole('combobox', { name: 'Language of this resume' }),
       'German',
     );
-    await user.click(screen.getByRole('button', { name: 'Save settings' }));
-    expect(requests[0]).toMatchObject({
-      operation: 'UpdateProfile',
-      variables: { input: { resumeLanguage: 'de' } },
+    // It saves by itself.
+    await waitFor(() => {
+      expect(requests[0]).toMatchObject({
+        operation: 'UpdateProfile',
+        variables: { input: { resumeLanguage: 'de' } },
+      });
     });
   });
 });

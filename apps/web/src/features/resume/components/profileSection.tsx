@@ -56,6 +56,7 @@ export function useProfileSection(profile: Profile) {
 
 /** The Save button with its "saved" and error messages. */
 export function SaveBar({
+  auto = false,
   label,
   savedText,
   busy,
@@ -63,6 +64,8 @@ export function SaveBar({
   submittedAt,
   error,
 }: {
+  /** The form saves by itself: no button, only "Saved" or the error. */
+  auto?: boolean;
   label: string;
   savedText: string;
   busy: boolean;
@@ -73,13 +76,17 @@ export function SaveBar({
   const t = useTranslations('Profile');
   return (
     <div className="flex items-center gap-3">
-      <button
-        type="submit"
-        disabled={busy}
-        className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
-      >
-        {busy ? t('saving') : label}
-      </button>
+      {auto ? (
+        busy && <p className="text-sm text-slate-500">{t('saving')}</p>
+      ) : (
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+        >
+          {busy ? t('saving') : label}
+        </button>
+      )}
       {showSaved && (
         <AutoHide key={submittedAt}>
           <p role="status" className="text-sm text-emerald-700">
