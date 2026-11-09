@@ -12,6 +12,7 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
+import { CompanyPicker } from '../catalog/CompanyPicker';
 import { useDateTime } from '../format';
 import type { SyncFormValues } from '../schema';
 import {
@@ -70,6 +71,7 @@ export function SyncPanel({ loaded = null }: Props) {
   // The free sources: no credits, and only some of the filters apply.
   const free = source !== 'JOBHUNTER';
   const boards = source === 'COMPANY_BOARDS';
+  const boardsText = useWatch({ control, name: 'boards' });
   const [pageSize, maxPages, maxAgeDays] = useWatch({
     control,
     name: ['pageSize', 'maxPages', 'maxAgeDays'],
@@ -210,6 +212,14 @@ export function SyncPanel({ loaded = null }: Props) {
             className={inputClass}
           />
         </Field>
+      )}
+      {boards && (
+        <CompanyPicker
+          value={boardsText}
+          onChange={(text) => {
+            setValue('boards', text, { shouldValidate: Boolean(errors.boards) });
+          }}
+        />
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">

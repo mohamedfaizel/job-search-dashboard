@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { splitList } from '../../lib/split-list';
 
 /** Splits "greenhouse:stripe, lever:netflix  ashby:ramp" on commas and spaces. */
-function splitBoards(value: string): string[] {
+export function splitBoards(value: string): string[] {
   return value.split(/[\s,]+/).filter(Boolean);
 }
 

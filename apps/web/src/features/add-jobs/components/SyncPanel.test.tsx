@@ -281,6 +281,27 @@ describe('SyncPanel', () => {
       });
     });
 
+    it('picks companies from the list into the same box, and clears the error', async () => {
+      renderWithData(<SyncPanel />);
+      await pick();
+      await userEvent.click(screen.getByRole('button', { name: 'Import' }));
+      expect(
+        await screen.findByText('Add at least one company board, like greenhouse:stripe'),
+      ).toBeInTheDocument();
+
+      const box = screen.getByRole('textbox', { name: /^company career pages/i });
+      await userEvent.type(box, 'lever:acme');
+      await userEvent.click(screen.getByRole('button', { name: /^Pick from \d+ companies$/ }));
+      await userEvent.click(screen.getByRole('checkbox', { name: /Stripe/ }));
+      expect(box).toHaveValue('lever:acme, greenhouse:stripe');
+      expect(
+        screen.queryByText('Add at least one company board, like greenhouse:stripe'),
+      ).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('checkbox', { name: /Stripe/ }));
+      expect(box).toHaveValue('lever:acme');
+    });
+
     it('needs at least one company', async () => {
       renderWithData(<SyncPanel />);
       await pick();

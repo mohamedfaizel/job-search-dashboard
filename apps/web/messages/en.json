@@ -1991,7 +1991,23 @@
       "moreLeft": "More left"
     },
     "tokenHint": "Imports from JobHunter use the token in your Settings, so you spend your own credits.",
-    "openSettings": "Open Settings"
+    "openSettings": "Open Settings",
+    "picker": {
+      "open": "Pick from {count} companies",
+      "close": "Close the company list",
+      "search": "Search companies or places",
+      "all": "All",
+      "groups": {
+        "germany": "Germany",
+        "europe": "Europe",
+        "ai": "AI & data",
+        "global": "Global & remote"
+      },
+      "chosen": "{count} picked",
+      "addShown": "Add all {count} shown",
+      "none": "No company matches.",
+      "hint": "Companies sometimes move to another hiring tool. If one can't be read, the import tells you which, and you can untick it."
+    }
   },
   "Errors": {
     "NETWORK": "Can’t reach the API at {url}. Is it running?",
