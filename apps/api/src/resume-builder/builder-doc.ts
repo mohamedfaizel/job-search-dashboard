@@ -13,6 +13,15 @@ import type { ResumeDoc } from '../documents/resume-doc';
  * It is saved as JSON. Everything else in the app (Fit %, prompts, PDFs) reads the Markdown
  * that `toMarkdown` writes from it, the layout the Apply kit already uses.
  */
+/** A project inside a job or company: its name, the tech it used, and what you did. */
+export interface BuilderProject {
+  id: string;
+  name: string;
+  /** "React, MQTT" */
+  tech: string;
+  bullets: string[];
+}
+
 export interface BuilderEntry {
   id: string;
   kind: 'entry';
@@ -25,6 +34,8 @@ export interface BuilderEntry {
   bullets: string[];
   /** Plain lines under the entry that are not bullets. */
   lines: string[];
+  /** Projects of this job. Missing in resumes saved before projects existed. */
+  projects?: BuilderProject[];
 }
 
 export interface BuilderParagraph {
@@ -89,6 +100,12 @@ export function fromResumeDoc(doc: ResumeDoc): BuilderDoc {
             meta: block.meta ?? '',
             bullets: block.bullets,
             lines: block.lines,
+            projects: block.projects.map((p) => ({
+              id: newId(),
+              name: p.name,
+              tech: p.tech ?? '',
+              bullets: p.bullets,
+            })),
           };
         }
         if (block.kind === 'bullets') return { id: newId(), kind: 'bullets', items: block.items };
@@ -309,6 +326,14 @@ export function toMarkdown(doc: BuilderDoc): string {
             .map((b) => `- ${b}`),
         );
         lines.push(...block.lines.map(oneLine).filter(Boolean));
+        for (const project of block.projects ?? []) {
+          const name = oneLine(project.name);
+          const tech = oneLine(project.tech);
+          const bullets = project.bullets.map(oneLine).filter(Boolean);
+          if (!name && !tech && !bullets.length) continue;
+          lines.push('', `#### ${[name || tech, name ? tech : ''].filter(Boolean).join(' | ')}`);
+          lines.push(...bullets.map((b) => `- ${b}`));
+        }
       }
     }
     const title = oneLine(section.title);
@@ -334,6 +359,19 @@ const id = (value: unknown): string => {
   return /^[\w-]{1,40}$/.test(text) ? text : newId();
 };
 
+function readProjects(value: unknown): BuilderProject[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, LIMITS.items).map((raw) => {
+    const p = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+    return {
+      id: id(p['id']),
+      name: str(p['name'], 300),
+      tech: str(p['tech'], 300),
+      bullets: strings(p['bullets']),
+    };
+  });
+}
+
 function readBlock(value: unknown): BuilderBlock | null {
   if (!value || typeof value !== 'object') return null;
   const b = value as Record<string, unknown>;
@@ -351,6 +389,7 @@ function readBlock(value: unknown): BuilderBlock | null {
         meta: str(b['meta'], 300),
         bullets: strings(b['bullets']),
         lines: strings(b['lines']),
+        projects: readProjects(b['projects']),
       };
     default:
       return null;

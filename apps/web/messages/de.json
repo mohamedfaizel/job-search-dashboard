@@ -397,7 +397,8 @@
       "entry": "Stelle, Abschluss oder Projekt",
       "bullets": "Aufzählung",
       "paragraph": "Text",
-      "skillRow": "Kenntnis-Zeile"
+      "skillRow": "Kenntnis-Zeile",
+      "company": "Nächstes Unternehmen"
     },
     "paragraph": "Text",
     "paragraphPlaceholder": "Ein paar Sätze über dich…",
@@ -522,7 +523,8 @@
       "match": "Stellen-Abgleich",
       "letter": "Anschreiben",
       "check": "Prüfen",
-      "files": "Dateien und Einstellungen"
+      "files": "Lebenslauf-Einstellungen",
+      "achievements": "Erfolge"
     },
     "tabsLabel": "Bereiche des Editors",
     "look": {
@@ -658,7 +660,7 @@
         }
       },
       "wordSpacing": "Deine Word-Datei behält ihre eigene Größe und Abstände.",
-      "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf auf der Seite Lebenslauf (Dateien und Einstellungen) als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
+      "wordNone": "Möchtest du dein eigenes Layout? Lade deinen Haupt-Lebenslauf auf der Seite Lebenslauf (Lebenslauf-Einstellungen) als Word-Datei (.docx) hoch, dann erscheint hier „My own Word file“.",
       "templateUsed": "Deine nächsten PDF-Downloads verwenden sie."
     },
     "copyToMaster": "{title} in meinen Haupt-Lebenslauf übernehmen",
@@ -693,7 +695,7 @@
       "addTermToSkills": "{term} zu Kenntnissen hinzufügen",
       "inResume": "Im Lebenslauf",
       "achievements": "Deine Erfolge",
-      "noAchievements": "Trage wahre Fakten mit Zahlen unter Mein Profil > Bewerbungsangaben ein, dann erscheinen sie hier.",
+      "noAchievements": "Trage wahre Fakten mit Zahlen im Tab Erfolge ein, dann erscheinen sie hier.",
       "achievementsHint": "Wahre Zeilen aus deiner Erfolgs-Sammlung. Füge eine zu deiner letzten Stelle hinzu.",
       "addBullet": "Hinzufügen",
       "addBulletLabel": "Zu deiner letzten Stelle hinzufügen: {line}"
@@ -718,8 +720,32 @@
       "loading": "Lädt…",
       "save": "Einstellungen speichern",
       "saved": "Einstellungen gespeichert.",
-      "saveFailed": "Speichern fehlgeschlagen: {error}"
-    }
+      "saveFailed": "Speichern fehlgeschlagen: {error}",
+      "achievementsIntro": "Wahre Fakten mit echten Zahlen, einer pro Zeile. Die KI darf sie in einem angepassten Lebenslauf nutzen, der Faktencheck vertraut ihnen und der Job-Abgleich bietet sie als Punkte an.",
+      "saveBank": "Erfolge speichern",
+      "bankSaved": "Erfolge gespeichert.",
+      "copiedToBank": "In deine Erfolgssammlung kopiert und gespeichert."
+    },
+    "project": "Projekt",
+    "projectUntitled": "Projekt ohne Namen",
+    "projectName": "Projektname",
+    "projectNamePlaceholder": "ATM-Überwachungsplattform",
+    "projectTech": "Verwendete Technik",
+    "projectTechPlaceholder": "React, MQTT, Node.js",
+    "projectBullets": "{count, plural, one {# Punkt} other {# Punkte}}",
+    "projectUp": "Projekt {name} nach oben",
+    "projectDown": "Projekt {name} nach unten",
+    "projectDelete": "Projekt {name} löschen",
+    "collapse": "Einklappen",
+    "expand": "Aufklappen",
+    "collapseProject": "Projekt {name} einklappen",
+    "expandProject": "Projekt {name} aufklappen",
+    "collapseEntry": "{name} einklappen",
+    "expandEntry": "{name} aufklappen",
+    "projectCount": "{count, plural, one {# Projekt} other {# Projekte}}",
+    "addProject": "Projekt",
+    "duplicateBlock": "{n} in {title} als Vorlage kopieren",
+    "duplicateBlockHint": "Als Vorlage kopieren"
   },
   "Jobs": {
     "title": "Stellenanzeigen",

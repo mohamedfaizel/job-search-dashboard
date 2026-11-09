@@ -59,6 +59,7 @@ describe('parseResume', () => {
       meta: 'Aachen | 01/2021 - heute',
       bullets: ['Built a dashboard used by 40 teams.'],
       lines: [],
+      projects: [],
     });
     expect(doc.sections[1]?.blocks[0]).toEqual({
       kind: 'bullets',
@@ -267,6 +268,17 @@ describe('templates', () => {
     expect(toLayout({ fontSize: Number.NaN })).toMatchObject({ fontSize: null });
     expect(templateSizes('compact')).toEqual({ fontSize: 10, margin: 15 });
     expect(templateSizes('design')).toBeNull();
+  });
+
+  it('sets the projects of a job under it: bold name, tech in grey, its bullets', () => {
+    const doc = parseResume(
+      '# Jane\n## Experience\n### Lead | Acme\nBerlin | 2020 - 2024\n- Led\n#### ATM platform | React, MQTT\n- 80% fewer penalties',
+      'X',
+    );
+    const tex = resumeTex(doc, look);
+    expect(tex).toContain('\\textbf{ATM platform} {\\small\\color{muted}React, MQTT}\\par');
+    expect(tex.indexOf('\\item Led')).toBeLessThan(tex.indexOf('ATM platform'));
+    expect(tex).toContain('\\item 80\\% fewer penalties');
   });
 
   it('sets Skills lines as a bold-label index in one block', () => {

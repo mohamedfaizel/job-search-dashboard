@@ -1,4 +1,4 @@
-import type { BuilderBlock, BuilderDoc, BuilderSection } from '@jobsearch/data';
+import type { BuilderBlock, BuilderDoc, BuilderProject, BuilderSection } from '@jobsearch/data';
 
 /**
  * Small, pure edits to a resume in the builder. Each returns a new doc, so the page can keep
@@ -42,14 +42,40 @@ export function copySection(section: BuilderSection, title: string): BuilderSect
     ...section,
     id: newId(),
     title,
-    blocks: section.blocks.map((b) => ({ ...b, id: newId() })),
+    blocks: section.blocks.map(copyBlock),
   };
 }
+
+/** A copy of a block (a company, say) with new ids, to start the next one from it. */
+export function copyBlock(block: BuilderBlock): BuilderBlock {
+  if (block.kind !== 'entry') return { ...block, id: newId() };
+  return {
+    ...block,
+    id: newId(),
+    projects: (block.projects ?? []).map((p) => ({ ...p, id: newId() })),
+  };
+}
+
+export const newProject = (): BuilderProject => ({
+  id: newId(),
+  name: '',
+  tech: '',
+  bullets: [''],
+});
 
 export function newBlock(kind: BuilderBlock['kind']): BuilderBlock {
   if (kind === 'paragraph') return { id: newId(), kind, text: '' };
   if (kind === 'bullets') return { id: newId(), kind, items: [''] };
-  return { id: newId(), kind, title: '', org: '', meta: '', bullets: [''], lines: [] };
+  return {
+    id: newId(),
+    kind,
+    title: '',
+    org: '',
+    meta: '',
+    bullets: [''],
+    lines: [],
+    projects: [],
+  };
 }
 
 /** What a new section of a kind starts with: a job list gets an empty job, and so on. */
@@ -108,7 +134,12 @@ export function docText(doc: BuilderDoc): string {
     for (const block of section.blocks) {
       if (block.kind === 'paragraph') parts.push(block.text);
       else if (block.kind === 'bullets') parts.push(...block.items);
-      else parts.push(block.title, block.org, block.meta, ...block.lines, ...block.bullets);
+      else {
+        parts.push(block.title, block.org, block.meta, ...block.lines, ...block.bullets);
+        for (const project of block.projects ?? []) {
+          parts.push(project.name, project.tech, ...project.bullets);
+        }
+      }
     }
   }
   return parts.join('\n');
@@ -123,6 +154,12 @@ export function mentions(text: string, term: string): boolean {
 
 const SKILLS_TITLE =
   /^(skills|core skills|key skills|technical skills|core competencies|competencies|kenntnisse|fähigkeiten|kompetenzen|fachkenntnisse|skills (&|und) kompetenzen)$/i;
+
+const EXPERIENCE_TITLE =
+  /^(experience|work experience|professional experience|berufserfahrung|erfahrung|beruflicher werdegang)$/i;
+
+/** True for the work history, where a new entry is "the next company". */
+export const isExperienceSection = (title: string) => EXPERIENCE_TITLE.test(title.trim());
 
 /** True for a Skills section by its title, in the languages the app supports. */
 export const isSkillsSection = (title: string) => SKILLS_TITLE.test(title.trim());
