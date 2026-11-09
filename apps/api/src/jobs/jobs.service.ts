@@ -10,6 +10,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { CreateJobInput } from './dto/create-job.input';
 import type { JobFilterInput, JobsArgs, JobSortInput } from './dto/jobs.args';
 import { isFollowUpDue } from './follow-up';
+import { funnelStats } from './funnel';
+import type { Funnel } from './funnel';
 import { JobSortField, SortDirection } from './models/enums';
 import type { JobFilterOptions, JobPage } from './models/job.model';
 import { visaSponsorship } from './visa';
@@ -190,6 +192,26 @@ export class JobsService implements OnApplicationBootstrap {
     }));
   }
 
+  /** Your funnel: how far the jobs on your tracker got, from their status history. */
+  async funnel(userId: number, now = new Date()): Promise<Funnel> {
+    const rows = await this.prisma.application.findMany({
+      where: { userId },
+      select: { jobId: true, status: true, job: { select: { source: true } } },
+    });
+    const events = await this.prisma.applicationEvent.findMany({
+      where: { userId },
+      select: { jobId: true, status: true, at: true },
+    });
+    return funnelStats(
+      rows.map((row) => ({
+        status: row.status,
+        source: row.job.source,
+        events: events.filter((event) => event.jobId === row.jobId),
+      })),
+      now,
+    );
+  }
+
   /**
    * You followed up on an application (sent an email, called): the "Follow up?" reminder goes
    * away and comes back after another FOLLOW_UP_DAYS without news. Returns your tracker.
@@ -323,7 +345,11 @@ export class JobsService implements OnApplicationBootstrap {
   async updateApplicationStatus(userId: number, jobId: string, status: ApplicationStatus) {
     await this.findOne(userId, jobId); // gives a clean "not found" error instead of a Prisma one
     if (status === ApplicationStatus.NONE) {
-      await this.prisma.application.deleteMany({ where: { userId, jobId } });
+      await this.prisma.$transaction([
+        this.prisma.application.deleteMany({ where: { userId, jobId } }),
+        // Tracked again later, it starts a fresh history.
+        this.prisma.applicationEvent.deleteMany({ where: { userId, jobId } }),
+      ]);
     } else {
       const current = await this.prisma.application.findUnique({
         where: { userId_jobId: { userId, jobId } },
@@ -331,11 +357,14 @@ export class JobsService implements OnApplicationBootstrap {
       });
       // Choosing the same status again doesn't restart the follow-up clock.
       if (current?.status !== status) {
-        await this.prisma.application.upsert({
-          where: { userId_jobId: { userId, jobId } },
-          create: { userId, jobId, status },
-          update: { status, statusChangedAt: new Date() },
-        });
+        await this.prisma.$transaction([
+          this.prisma.application.upsert({
+            where: { userId_jobId: { userId, jobId } },
+            create: { userId, jobId, status },
+            update: { status, statusChangedAt: new Date() },
+          }),
+          this.prisma.applicationEvent.create({ data: { userId, jobId, status } }),
+        ]);
       }
     }
     // Applied (or further along): it no longer waits in your Apply queue.

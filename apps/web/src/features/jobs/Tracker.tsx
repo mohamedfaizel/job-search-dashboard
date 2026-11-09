@@ -3,6 +3,7 @@ import { useMarkFollowedUp, useMyApplications, useUpdateJobStatus } from '@jobse
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../i18n/useErrorText';
+import { FunnelCard } from './components/FunnelCard';
 import { GmailCheck } from './components/GmailCheck';
 import { JobDetailsDialog } from './components/JobDetailsDialog';
 import { MailSuggestions } from './components/MailSuggestions';
@@ -36,6 +37,8 @@ export function TrackerPage() {
       </div>
 
       <MailSuggestions />
+
+      <FunnelCard />
 
       {applications.isError && (
         <p

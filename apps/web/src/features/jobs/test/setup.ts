@@ -3,6 +3,7 @@ import { configure } from '@testing-library/react';
 import { resetAiStatus } from '../../../lib/ai-status';
 import {
   applications,
+  funnel,
   downloads,
   applyQueue,
   hiddenIds,
@@ -37,6 +38,7 @@ afterEach(() => {
   requests.length = 0;
   hiddenIds.clear();
   applications.length = 0;
+  funnel.current = null;
   mailSuggestions.length = 0;
   Object.assign(gmailAccounts, { configured: false, count: 0, found: 0 });
   applyQueue.length = 0;

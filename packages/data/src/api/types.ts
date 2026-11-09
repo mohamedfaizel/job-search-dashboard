@@ -1000,3 +1000,29 @@ export interface Story {
 
 /** A new story (no id) or a change to one of yours (with its id). */
 export type StoryInput = Omit<Story, 'id' | 'updatedAt'> & { id?: number | null };
+
+/** How far applications from one job source got. */
+export interface FunnelSource {
+  source: JobSource;
+  applied: number;
+  interviews: number;
+  offers: number;
+}
+
+/** Your job search funnel. An offer also counts as applied and interviewed. Rates are 0 to 1. */
+export interface Funnel {
+  tracked: number;
+  applied: number;
+  interviews: number;
+  offers: number;
+  rejected: number;
+  /** Applied, with no answer yet. */
+  waiting: number;
+  responseRate: number | null;
+  interviewRate: number | null;
+  offerRate: number | null;
+  medianDaysToReply: number | null;
+  appliedLast7Days: number;
+  appliedLast30Days: number;
+  bySource: FunnelSource[];
+}

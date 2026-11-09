@@ -121,6 +121,7 @@ export {
   useSyncRuns,
   useUpdateJobStatus,
   useHiddenJobCount,
+  useFunnel,
   useMyApplications,
   useSetJobHidden,
 } from './api/hooks';
