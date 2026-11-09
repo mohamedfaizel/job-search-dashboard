@@ -26,6 +26,26 @@ export const messages = {
       onSite: 'On-site',
       loadMore: 'Show more',
       loading: 'Loading…',
+      openHint: 'Opens the job',
+    },
+    Job: {
+      title: 'Job',
+      posted: 'Posted {date}',
+      salary: 'Salary: {salary}',
+      skills: 'Skills: {skills}',
+      openAd: 'Open the job ad',
+      status: 'Your status',
+      ad: 'Job ad',
+      noAd: 'This job has no ad text.',
+    },
+    Status: {
+      label: 'Tracker status',
+      NONE: 'Not applied',
+      SAVED: 'Saved',
+      APPLIED: 'Applied',
+      INTERVIEWING: 'Interviewing',
+      OFFER: 'Offer',
+      REJECTED: 'Rejected',
     },
     Errors: {
       NETWORK:
@@ -62,6 +82,26 @@ export const messages = {
       onSite: 'Vor Ort',
       loadMore: 'Mehr zeigen',
       loading: 'Lädt…',
+      openHint: 'Öffnet die Stelle',
+    },
+    Job: {
+      title: 'Stelle',
+      posted: 'Veröffentlicht am {date}',
+      salary: 'Gehalt: {salary}',
+      skills: 'Skills: {skills}',
+      openAd: 'Stellenanzeige öffnen',
+      status: 'Dein Status',
+      ad: 'Stellenanzeige',
+      noAd: 'Diese Stelle hat keinen Anzeigentext.',
+    },
+    Status: {
+      label: 'Tracker-Status',
+      NONE: 'Nicht beworben',
+      SAVED: 'Gemerkt',
+      APPLIED: 'Beworben',
+      INTERVIEWING: 'Im Gespräch',
+      OFFER: 'Angebot',
+      REJECTED: 'Abgesagt',
     },
     Errors: {
       NETWORK:
