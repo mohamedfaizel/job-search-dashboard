@@ -1151,6 +1151,17 @@ export const RESTART_RESUME_BUILD = /* GraphQL */ `
 
 const JOB_RESUME_BUILD_FIELDS = `jobId title company language hasCopy doc masterDoc profileLanguages maxPages savedAt`;
 
+export const JOB_RESUME_COPIES = /* GraphQL */ `
+  query JobResumeCopies {
+    jobResumeCopies {
+      jobId
+      title
+      company
+      savedAt
+    }
+  }
+`;
+
 export const JOB_RESUME_BUILD = /* GraphQL */ `
   query JobResumeBuild($jobId: String!) {
     jobResumeBuild(jobId: $jobId) {

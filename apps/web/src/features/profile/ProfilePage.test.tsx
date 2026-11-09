@@ -175,6 +175,7 @@ describe('profile page', () => {
     expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
       'Persönlich',
       'Bewerbungsangaben',
+      'Erfolge',
     ]);
     expect(headline).toHaveValue('Frontend engineer');
     const years = screen.getByRole('textbox', { name: 'Jahre Berufserfahrung' });
@@ -261,11 +262,13 @@ describe('profile page', () => {
     await user.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Applications' })).toHaveFocus();
     await user.keyboard('{End}');
-    expect(screen.getByRole('tab', { name: 'Applications' })).toHaveAttribute(
+    expect(screen.getByRole('tab', { name: 'Achievements' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
-    expect(localStorage.getItem('jobsearch.profile.tab')).toBe('applications');
+    expect(localStorage.getItem('jobsearch.profile.tab')).toBe('achievements');
+    // Achievements moved here from the Resume page.
+    expect(await screen.findByRole('textbox', { name: /Achievements bank/ })).toBeInTheDocument();
     // Design and Resume moved to the Resume page: only one place has each.
     expect(screen.queryByRole('tab', { name: 'Design' })).not.toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Resume' })).not.toBeInTheDocument();

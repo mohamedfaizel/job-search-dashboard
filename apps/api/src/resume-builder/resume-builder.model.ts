@@ -37,6 +37,23 @@ export class ResumeBuildModel {
   savedAt!: Date | null;
 }
 
+@ObjectType('JobResumeCopy', {
+  description: 'A job you have a resume copy for, for the Resume page switcher',
+})
+export class JobResumeCopyModel {
+  @Field()
+  jobId!: string;
+
+  @Field({ description: 'The job title as posted' })
+  title!: string;
+
+  @Field()
+  company!: string;
+
+  @Field(() => Date)
+  savedAt!: Date;
+}
+
 @ObjectType('JobResumeBuild', {
   description: 'The copy of your resume for one job, as the Resume builder edits it',
 })

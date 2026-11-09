@@ -193,6 +193,9 @@ input DocumentStyleInput {
   compact: Boolean
   coverLetterLayout: String!
   datesSide: String
+
+  """My design’s own colour; left out, it stays as saved"""
+  designAccent: String
   font: String!
   fontSize: Float
   headingStyle: String
@@ -779,6 +782,16 @@ type JobResumeBuild {
 
   """Null until you first save this copy"""
   savedAt: DateTime
+
+  """The job title as posted"""
+  title: String!
+}
+
+"""A job you have a resume copy for, for the Resume page switcher"""
+type JobResumeCopy {
+  company: String!
+  jobId: String!
+  savedAt: DateTime!
 
   """The job title as posted"""
   title: String!
@@ -1477,6 +1490,9 @@ type Query {
 
   """Your resume for one job (your master resume until you start a copy)"""
   jobResumeBuild(jobId: String!): JobResumeBuild!
+
+  """The jobs you have a resume copy for, newest first"""
+  jobResumeCopies: [JobResumeCopy!]!
 
   """Jobs for the dashboard table: filter, sort and paginate"""
   jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!

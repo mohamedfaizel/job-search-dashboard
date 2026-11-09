@@ -50,7 +50,8 @@
     "sections": "Profilbereiche",
     "tabs": {
       "personal": "Persönlich",
-      "applications": "Bewerbungsangaben"
+      "applications": "Bewerbungsangaben",
+      "achievements": "Erfolge"
     },
     "listHint": "Mit Kommas trennen",
     "personal": {
@@ -522,15 +523,13 @@
       "stepHint": "Dein KI-Chat sortiert Stellen, Daten und Punkte an die richtigen Stellen, ohne ein Wort zu ändern."
     },
     "tabs": {
-      "edit": "Bearbeiten",
+      "edit": "Inhalt",
       "look": "Aussehen",
+      "download": "Herunterladen",
       "match": "Stellen-Abgleich",
       "letter": "Anschreiben",
-      "check": "Prüfen",
-      "files": "Lebenslauf-Einstellungen",
-      "achievements": "Erfolge"
+      "check": "Prüfen & herunterladen"
     },
-    "tabsLabel": "Bereiche des Editors",
     "look": {
       "loading": "Wird geladen…",
       "rendererOff": "Der PDF-Renderer läuft nicht, darum sind Downloads vorerst einfache PDFs. Starte ihn mit",
@@ -699,7 +698,7 @@
       "addTermToSkills": "{term} zu Kenntnissen hinzufügen",
       "inResume": "Im Lebenslauf",
       "achievements": "Deine Erfolge",
-      "noAchievements": "Trage wahre Fakten mit Zahlen im Tab Erfolge ein, dann erscheinen sie hier.",
+      "noAchievements": "Trage wahre Fakten mit Zahlen unter Mein Profil › Erfolge ein, dann erscheinen sie hier.",
       "achievementsHint": "Wahre Zeilen aus deiner Erfolgs-Sammlung. Füge eine zu deiner letzten Stelle hinzu.",
       "addBullet": "Hinzufügen",
       "addBulletLabel": "Zu deiner letzten Stelle hinzufügen: {line}"
@@ -749,7 +748,34 @@
     "projectCount": "{count, plural, one {# Projekt} other {# Projekte}}",
     "addProject": "Projekt",
     "duplicateBlock": "{n} in {title} als Vorlage kopieren",
-    "duplicateBlockHint": "Als Vorlage kopieren"
+    "duplicateBlockHint": "Als Vorlage kopieren",
+    "steps": {
+      "label": "Schritte",
+      "of": "Schritt {n} von {total} · {step}",
+      "back": "Vorheriger Schritt",
+      "forward": "Nächster Schritt",
+      "next": "Weiter: {step}"
+    },
+    "setup": {
+      "title": "Einrichtung",
+      "file": "Deine Lebenslauf-Datei",
+      "noFile": "Noch keine Datei",
+      "keepHeadings": "Meine Überschriften behalten",
+      "change": "Ändern",
+      "close": "Fertig"
+    },
+    "switcher": {
+      "label": "Lebenslauf",
+      "mine": "Meine Lebensläufe",
+      "copies": "Kopien für Jobs",
+      "resumeIn": "Lebenslauf {language}",
+      "forJob": "{title} · {company}"
+    },
+    "downloadStep": {
+      "title": "Lebenslauf herunterladen",
+      "intro": "Das PDF sieht genau aus wie die Vorschau. Um ihn für einen Job anzupassen, öffne den Job und starte eine Kopie.",
+      "button": "PDF herunterladen"
+    }
   },
   "Jobs": {
     "title": "Stellenanzeigen",

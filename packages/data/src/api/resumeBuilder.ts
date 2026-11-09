@@ -10,6 +10,7 @@ import {
   IMPROVE_SECTION_PROMPT,
   JOB_COVER_LETTER,
   JOB_RESUME_BUILD,
+  JOB_RESUME_COPIES,
   RESET_JOB_RESUME_BUILD,
   RESTART_RESUME_BUILD,
   RESUME_BUILD,
@@ -25,6 +26,7 @@ import type {
   ImproveSectionInput,
   JobCoverLetter,
   JobResumeBuild,
+  JobResumeCopy,
   LetterSuggestion,
   ResumeBuild,
   SectionSuggestion,
@@ -184,8 +186,21 @@ export function useJobResumeBuild(jobId: string | null) {
   });
 }
 
+export const jobResumeCopiesKey = ['jobResumeCopies'] as const;
+
+/** The jobs you have a resume copy for, newest first. */
+export function useJobResumeCopies() {
+  return useQuery({
+    queryKey: jobResumeCopiesKey,
+    queryFn: async () =>
+      (await graphqlClient.request<{ jobResumeCopies: JobResumeCopy[] }>(JOB_RESUME_COPIES))
+        .jobResumeCopies,
+  });
+}
+
 /** The job copy's text changed: its score, the Apply kit and the Job posts table read it. */
 function refreshJobReaders(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: jobResumeCopiesKey });
   void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
   void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
 }

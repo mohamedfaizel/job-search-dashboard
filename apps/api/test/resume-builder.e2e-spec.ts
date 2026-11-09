@@ -518,6 +518,14 @@ Berlin | 01/2020 – today
       // The admin has no copy for this job.
       const admin = await t.gql<{ jobResumeBuild: JobBuild }>(GET_JOB, { jobId });
       expect(admin.data!.jobResumeBuild.hasCopy).toBe(false);
+      // The switcher lists your copies only.
+      const COPIES = '{ jobResumeCopies { jobId title company savedAt } }';
+      const mine = await t.asUser<{ jobResumeCopies: { jobId: string; title: string }[] }>(COPIES);
+      expect(mine.data!.jobResumeCopies).toEqual([
+        expect.objectContaining({ jobId, title: 'Frontend Engineer', company: 'Acme GmbH' }),
+      ]);
+      const adminCopies = await t.gql<{ jobResumeCopies: unknown[] }>(COPIES);
+      expect(adminCopies.data!.jobResumeCopies).toEqual([]);
       const missing = await t.asUser(GET_JOB, { jobId: 'nope' });
       expect(missing.errors?.[0]?.extensions?.['apiCode']).toBe('JOB_NOT_FOUND');
     });

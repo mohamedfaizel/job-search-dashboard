@@ -72,6 +72,20 @@ const EXPERIENCE_BEFORE =
   '## Experience\n\n### Frontend Engineer | Acme GmbH\nBerlin | 01/2021 - today\n- Cut load time by 40%\n- Built the design system';
 
 export const builderHandlers = [
+  api.query('JobResumeCopies', () =>
+    HttpResponse.json({
+      data: {
+        jobResumeCopies: [
+          {
+            jobId: 'j2',
+            title: 'Data Engineer',
+            company: 'Zalando',
+            savedAt: '2026-11-08T10:00:00Z',
+          },
+        ],
+      },
+    }),
+  ),
   api.query('ImproveSectionPrompt', ({ variables }) => {
     requests.push({ operation: 'ImproveSectionPrompt', variables });
     return HttpResponse.json({ data: { improveSectionPrompt: 'Please improve my section.' } });
