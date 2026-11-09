@@ -5,9 +5,10 @@ import { useSetLocale } from '@jobsearch/data';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useCallback, useRef, useState } from 'react';
+import { useInstallApp } from '@/lib/install-app';
 import { useDismiss } from '@/lib/use-dismiss';
 import { LanguageSwitch } from './LanguageSwitch';
-import { LanguageIcon, LogOutIcon, ProfileIcon, SettingsIcon } from './NavIcons';
+import { InstallIcon, LanguageIcon, LogOutIcon, ProfileIcon, SettingsIcon } from './NavIcons';
 
 /** "Mohamed Faizel" → "MF"; one word → its first letter; an empty name → "?". */
 export function initialsOf(name: string): string {
@@ -45,6 +46,7 @@ export function AccountMenu({
     setOpen(false);
   }, []);
   useDismiss(open, box, close);
+  const app = useInstallApp();
 
   return (
     <div ref={box} className="relative">
@@ -87,6 +89,25 @@ export function AccountMenu({
               <SettingsIcon className="h-4 w-4 text-slate-500" />
               {t('settings')}
             </Link>
+            {app.state === 'prompt' && (
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  void app.install();
+                }}
+                className={ITEM}
+              >
+                <InstallIcon className="h-4 w-4 text-slate-500" />
+                {t('install')}
+              </button>
+            )}
+            {app.state === 'ios' && (
+              <p className="flex items-start gap-2.5 px-2.5 py-2 text-xs text-slate-600">
+                <InstallIcon className="h-4 w-4 shrink-0 text-slate-500" />
+                {t('installIos')}
+              </p>
+            )}
           </nav>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-2.5 py-2 text-sm">
             <span className="flex items-center gap-2.5">

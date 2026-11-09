@@ -22,7 +22,9 @@
     "add": "Hinzufügen",
     "account": "Kontomenü von {name}",
     "accountMenu": "Konto",
-    "language": "Sprache"
+    "language": "Sprache",
+    "install": "App installieren",
+    "installIos": "Zum Installieren: Teilen antippen, dann „Zum Home-Bildschirm“."
   },
   "Auth": {
     "logInTitle": "Anmelden",

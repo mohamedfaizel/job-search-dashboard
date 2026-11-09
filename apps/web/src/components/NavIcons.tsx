@@ -75,3 +75,11 @@ export const LogOutIcon = (props: IconProps) => (
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
   </Icon>
 );
+
+/** A phone with a down arrow: Install app. */
+export const InstallIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="6" y="2" width="12" height="20" rx="2" />
+    <path d="M12 7v7m-3-3 3 3 3-3M10 18h4" />
+  </Icon>
+);

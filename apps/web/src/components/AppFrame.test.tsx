@@ -1,5 +1,5 @@
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Locale } from '@/i18n/config';
 import { Intl } from '../test/intl';
@@ -86,6 +86,39 @@ describe('AppFrame', () => {
     await vi.waitFor(() => {
       expect(router.replace).toHaveBeenCalledWith('/login');
     });
+  });
+
+  it('offers Install app in the avatar menu when the browser can install it', async () => {
+    session.user = ADMIN;
+    const user = userEvent.setup();
+    renderFrame();
+    const avatar = await screen.findByRole('button', { name: /Account menu/ });
+    await user.click(avatar);
+    expect(screen.queryByRole('button', { name: 'Install app' })).toBeNull();
+
+    const prompt = vi.fn(() => Promise.resolve());
+    act(() => {
+      window.dispatchEvent(
+        Object.assign(new Event('beforeinstallprompt'), {
+          prompt,
+          userChoice: Promise.resolve({ outcome: 'accepted' }),
+        }),
+      );
+    });
+    await user.click(screen.getByRole('button', { name: 'Install app' }));
+    expect(prompt).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('navigation', { name: 'Account' })).toBeNull();
+  });
+
+  it('tells iPhone users how to add the app to the home screen', async () => {
+    const agent = navigator.userAgent;
+    Object.defineProperty(navigator, 'userAgent', { value: 'iPhone', configurable: true });
+    session.user = ADMIN;
+    const user = userEvent.setup();
+    renderFrame();
+    await user.click(await screen.findByRole('button', { name: /Account menu/ }));
+    expect(screen.getByText(/tap Share, then "Add to Home Screen"/)).toBeInTheDocument();
+    Object.defineProperty(navigator, 'userAgent', { value: agent, configurable: true });
   });
 
   it('sends a new account to the first-login steps, once', async () => {
