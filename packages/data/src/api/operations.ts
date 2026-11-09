@@ -1351,3 +1351,29 @@ export const JOB_TRUST = /* GraphQL */ `
     }
   }
 `;
+
+export const SALARY_RESEARCH = /* GraphQL */ `
+  query SalaryResearch($jobId: ID!) {
+    salaryResearch(jobId: $jobId) {
+      currency
+      basis
+      sampleSize
+      estimatedCount
+      low
+      median
+      high
+      jobMin
+      jobMax
+      ask
+      examples {
+        jobId
+        title
+        company
+        min
+        max
+      }
+      expectation
+      prompt
+    }
+  }
+`;

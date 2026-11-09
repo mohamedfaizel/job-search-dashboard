@@ -10,6 +10,7 @@ import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAiState } from '../../../lib/ai-status';
 import { capitalize } from '../format';
+import { SalaryPanel } from '../salary/SalaryPanel';
 import { useJobFormat } from '../useJobFormat';
 import { AiOffNote, AiStateTag, AiTag } from './AiLabels';
 import { ApplyKitPanel, useApplyStep } from './ApplyKitPanel';
@@ -43,7 +44,7 @@ interface Props {
 const NOBODY: ReadonlySet<string> = new Set();
 const noop = () => undefined;
 
-const TABS = ['fit', 'apply', 'interview', 'ad', 'match'] as const;
+const TABS = ['fit', 'apply', 'interview', 'salary', 'ad', 'match'] as const;
 type Tab = (typeof TABS)[number];
 
 const ICON_BUTTON =
@@ -263,7 +264,7 @@ function JobDetails({
         <div
           role="tablist"
           aria-label={t('tabsLabel')}
-          className="flex justify-between gap-5 sm:justify-start sm:gap-6"
+          className="-mx-4 flex gap-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:gap-6 sm:px-0"
         >
           {TABS.map((id) => (
             <button
@@ -284,7 +285,7 @@ function JobDetails({
               onClick={() => {
                 setTab(id);
               }}
-              className={`-mb-px h-11 border-b-2 px-0.5 text-sm font-medium ${
+              className={`-mb-px h-11 shrink-0 border-b-2 px-0.5 text-sm font-medium whitespace-nowrap ${
                 tab === id
                   ? 'border-brand-600 text-brand-700'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -332,6 +333,9 @@ function JobDetails({
           </TabPanel>
           <TabPanel id="interview" active={tab}>
             <InterviewPanel jobId={job.id} />
+          </TabPanel>
+          <TabPanel id="salary" active={tab}>
+            <SalaryPanel job={job} active={tab === 'salary'} />
           </TabPanel>
           <TabPanel id="ad" active={tab}>
             <JobAdPanel jobId={job.id} description={job.description} />

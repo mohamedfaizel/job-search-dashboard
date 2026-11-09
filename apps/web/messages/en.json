@@ -1080,6 +1080,7 @@
         "fit": "Fit",
         "apply": "Apply",
         "interview": "Interview",
+        "salary": "Salary",
         "ad": "Job ad",
         "match": "AI score"
       },
@@ -1620,6 +1621,40 @@
         "TOO_GOOD": "Promises big pay for little work. Check the salary for this role.",
         "SHORT_AD": "The ad says very little about the job, so we could not check much."
       }
+    },
+    "salary": {
+      "loading": "Looking up salaries…",
+      "error": "Could not load salaries: {error}",
+      "marketTitle": "What similar jobs pay",
+      "basisTitle": "Yearly pay in {count, plural, one {# ad} other {# ads}} with a similar title in the same country.",
+      "basisFunction": "Not enough ads with this title, so this compares {count, plural, one {# ad} other {# ads}} in the same job function and country.",
+      "estimated": "{count, plural, one {# of them is an estimate} other {# of them are estimates}}, not stated in the ad.",
+      "noData": "No salaries for similar jobs in your job list yet. The prompt below lets your AI chat use what it knows of the market.",
+      "low": "Low (25%)",
+      "median": "Typical",
+      "high": "High (75%)",
+      "legendRange": "Middle half of ads",
+      "legendAd": "This ad: {range}",
+      "examples": "Show similar jobs",
+      "scriptsTitle": "What to say",
+      "askLabel": "Your ask, yearly ({currency})",
+      "offerLabel": "Their offer, if you have one",
+      "askHint": "We suggest the high end of the range or the ad's top, whichever is higher: start high, you can come down but never up.",
+      "yourExpectation": "Your saved expectation: {text}.",
+      "needAsk": "Type the yearly amount you want to ask for, and the scripts appear here.",
+      "scripts": {
+        "expectation": "When they ask your salary expectation",
+        "counter": "When the offer is below your ask",
+        "extras": "If they can't pay more"
+      },
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Could not copy: select the text instead",
+      "aiTitle": "Want scripts made for you?",
+      "aiCopy": "Copy prompt and open {ai}",
+      "aiHint": "Your numbers, a lowest offer to accept, a counter-offer email and more.",
+      "aiCopied": "{ai} opened in a new tab: paste it there (Ctrl+V).",
+      "aiBox": "Salary negotiation prompt"
     },
     "toasts": {
       "replySaved": "Reply saved. Your resume PDF is downloading.",

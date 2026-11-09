@@ -1048,3 +1048,35 @@ export interface JobTrust {
   firstPostedAt: string | null;
   ageDays: number;
 }
+
+/** A similar job with a salary, used for the range. */
+export interface SalaryExample {
+  jobId: string;
+  title: string;
+  company: string;
+  min: number | null;
+  max: number | null;
+}
+
+/**
+ * Salary research for one job from the jobs we have (no AI). Yearly amounts in the country's
+ * currency ("EUR" or "USD"), rounded to 1,000.
+ */
+export interface SalaryResearch {
+  currency: string;
+  /** Similar titles, the same job function, or nothing to compare with. */
+  basis: 'TITLE' | 'FUNCTION' | 'NONE';
+  sampleSize: number;
+  estimatedCount: number;
+  low: number | null;
+  median: number | null;
+  high: number | null;
+  jobMin: number | null;
+  jobMax: number | null;
+  ask: number | null;
+  examples: SalaryExample[];
+  /** Your salary expectation from My profile, as you wrote it. */
+  expectation: string;
+  /** Paste into Claude: target, scripts, counter-offer email, extras. */
+  prompt: string;
+}

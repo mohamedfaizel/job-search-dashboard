@@ -9,6 +9,7 @@ import { mapJobHunterJob } from '../jobhunter/jobhunter.mapper';
 import type { JobHunterSearchRequest } from '../jobhunter/jobhunter.types';
 import { JobsService } from '../jobs/jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { EUR_TO_USD } from '../salary/salary';
 import type { SyncJobsInput, SyncJobsResult } from './sync.input';
 
 /**
@@ -33,12 +34,6 @@ const FLUENT_GERMAN_PHRASES = [
   'Deutschkenntnisse C1',
   'Deutschkenntnisse C2',
 ];
-
-/**
- * JobHunter's salary filter is in US dollars. A rough rate is enough for a minimum; update it if
- * the euro moves a lot.
- */
-const EUR_TO_USD = 1.08;
 
 /** The same search always gets the same key, whatever the order or case of its terms. */
 function searchKey(input: SyncJobsInput): string {

@@ -7,6 +7,7 @@ import {
   DELETE_SAVED_SEARCH,
   FUNNEL,
   JOB_TRUST,
+  SALARY_RESEARCH,
   HIDDEN_JOB_COUNT,
   HIDE_JOB,
   IMPORT_BUDGET,
@@ -30,6 +31,7 @@ import {
 import type {
   Funnel,
   JobTrust,
+  SalaryResearch,
   Application,
   ApplicationStatus,
   CreateJobInput,
@@ -53,6 +55,7 @@ export const queryKeys = {
   filterOptions: ['jobs', 'filterOptions'] as const,
   job: (id: string) => ['jobs', 'one', id] as const,
   jobTrust: (id: string) => ['jobs', 'one', id, 'trust'] as const,
+  salary: (id: string) => ['jobs', 'one', id, 'salary'] as const,
   // Under 'jobs', so anything that refreshes the jobs refreshes the count too.
   hiddenJobCount: ['jobs', 'hiddenCount'] as const,
   applications: ['jobs', 'applications'] as const,
@@ -98,6 +101,20 @@ export function useJobTrust(id: string) {
     queryKey: queryKeys.jobTrust(id),
     queryFn: async () =>
       (await graphqlClient.request<{ jobTrust: JobTrust }>(JOB_TRUST, { id })).jobTrust,
+  });
+}
+
+/** What similar jobs pay, a number to ask for, and a negotiation prompt for Claude. */
+export function useSalaryResearch(jobId: string, { enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({
+    enabled,
+    queryKey: queryKeys.salary(jobId),
+    queryFn: async () =>
+      (
+        await graphqlClient.request<{ salaryResearch: SalaryResearch }>(SALARY_RESEARCH, {
+          jobId,
+        })
+      ).salaryResearch,
   });
 }
 

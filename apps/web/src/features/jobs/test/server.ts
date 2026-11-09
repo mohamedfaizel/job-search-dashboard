@@ -1,6 +1,7 @@
 import type {
   Funnel,
   JobTrust,
+  SalaryResearch,
   Application,
   ApplicationStatus,
   ApplyQueueItem,
@@ -38,6 +39,24 @@ export const applications: Application[] = [];
 /** What "Is this job real?" answers, by job id; jobs not listed show no warning signs. */
 export const trust = new Map<string, JobTrust>();
 const NO_SIGNS: JobTrust = { level: 'OK', flags: [], reposts: 0, firstPostedAt: null, ageDays: 1 };
+
+/** What the Salary tab gets; null = no similar jobs with a salary. */
+export const salary: { current: SalaryResearch | null } = { current: null };
+const NO_SALARIES: SalaryResearch = {
+  currency: 'USD',
+  basis: 'NONE',
+  sampleSize: 0,
+  estimatedCount: 0,
+  low: null,
+  median: null,
+  high: null,
+  jobMin: null,
+  jobMax: null,
+  ask: null,
+  examples: [],
+  expectation: '',
+  prompt: 'Please help me negotiate my salary for this job.',
+};
 
 /** The funnel the API answers; null = made from `applications` (each counts for its status). */
 export const funnel: { current: Funnel | null } = { current: null };
@@ -719,6 +738,9 @@ const handlers = [
   api.query('MyApplications', () => HttpResponse.json({ data: { myApplications: applications } })),
   api.query<{ jobTrust: JobTrust }, { id: string }>('JobTrust', ({ variables }) =>
     HttpResponse.json({ data: { jobTrust: trust.get(variables.id) ?? NO_SIGNS } }),
+  ),
+  api.query('SalaryResearch', () =>
+    HttpResponse.json({ data: { salaryResearch: salary.current ?? NO_SALARIES } }),
   ),
   api.query('Funnel', () =>
     HttpResponse.json({ data: { funnel: funnel.current ?? funnelFrom(applications) } }),
