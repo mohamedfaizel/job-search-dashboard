@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiChat } from '../../../lib/ai-chat';
 import { AiTag } from '../components/AiLabels';
+import { CopyButton } from '../components/CopyButton';
 import { CopyText } from '../components/CopyText';
 import type { ScriptId } from './scripts';
 import { money, salaryScripts } from './scripts';
@@ -71,36 +72,6 @@ function RangeBar({ data, language }: { data: SalaryResearch; language: string }
         ))}
       </dl>
     </div>
-  );
-}
-
-function CopyButton({ text }: { text: string }) {
-  const t = useTranslations('Jobs.salary');
-  const [done, setDone] = useState<'yes' | 'failed' | null>(null);
-  return (
-    <span className="inline-flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => {
-          navigator.clipboard.writeText(text).then(
-            () => {
-              setDone('yes');
-            },
-            () => {
-              setDone('failed');
-            },
-          );
-        }}
-        className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-      >
-        {t('copy')}
-      </button>
-      {done && (
-        <span role="status" className="text-xs text-slate-500">
-          {done === 'yes' ? t('copied') : t('copyFailed')}
-        </span>
-      )}
-    </span>
   );
 }
 

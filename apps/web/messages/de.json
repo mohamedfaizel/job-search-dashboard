@@ -1073,7 +1073,10 @@
     "copy": {
       "copied": "Kopiert. {hint}",
       "failed": "Kopieren ging nicht. Markiere stattdessen den Text unten.",
-      "show": "Text anzeigen"
+      "show": "Text anzeigen",
+      "button": "Kopieren",
+      "done": "Kopiert",
+      "failedShort": "Kopieren nicht möglich: markiere den Text stattdessen"
     },
     "popup": {
       "tabs": {
@@ -1081,6 +1084,7 @@
         "apply": "Bewerben",
         "interview": "Interview",
         "salary": "Gehalt",
+        "messages": "Nachrichten",
         "ad": "Anzeige",
         "match": "KI-Score"
       },
@@ -1647,14 +1651,37 @@
         "counter": "Wenn das Angebot unter deiner Forderung liegt",
         "extras": "Wenn sie nicht mehr zahlen können"
       },
-      "copy": "Kopieren",
-      "copied": "Kopiert",
-      "copyFailed": "Kopieren nicht möglich: markiere den Text stattdessen",
       "aiTitle": "Texte für dich schreiben lassen?",
       "aiCopy": "Prompt kopieren und {ai} öffnen",
       "aiHint": "Deine Zahlen, dein Minimum, eine Gegenangebots-E-Mail und mehr.",
       "aiCopied": "{ai} wurde in einem neuen Tab geöffnet: dort einfügen (Strg+V).",
       "aiBox": "Prompt für die Gehaltsverhandlung"
+    },
+    "messages": {
+      "loading": "Dein Profil wird geladen…",
+      "title": "Nachrichten zum Kopieren",
+      "recipientLabel": "Name der Person (optional)",
+      "recipientPlaceholder": "z. B. Anna Schmidt",
+      "inEnglish": "Auf Englisch, aus deinem Profil und den Skills dieser Anzeige, die du hast. Prüfe sie vor dem Senden.",
+      "inGerman": "Auf Deutsch, weil die Stelle Deutsch verlangt. Aus deinem Profil und den Skills dieser Anzeige, die du hast. Prüfe sie vor dem Senden.",
+      "addHeadline": "Tipp: Trage in Mein Profil eine Überschrift ein, dann werden die Texte besser.",
+      "drafts": {
+        "connect": "LinkedIn-Kontaktanfrage",
+        "recruiter": "Nachricht an die Recruiterin oder den Recruiter",
+        "thanks": "Danke nach dem Gespräch"
+      },
+      "when": {
+        "connect": "Mit einer Kontaktanfrage an die Recruiter oder die Führungskraft senden.",
+        "recruiter": "Vor der Bewerbung oder direkt danach, per LinkedIn oder E-Mail.",
+        "thanks": "Am selben Tag wie das Gespräch."
+      },
+      "chars": "{count}/{limit} Zeichen",
+      "followUpHint": "Eine Woche nach der Bewerbung keine Antwort? Der Tracker zeigt „Nachfassen?“ mit einer fertigen E-Mail.",
+      "aiTitle": "Nachrichten für dich schreiben lassen?",
+      "aiCopy": "Prompt kopieren und {ai} öffnen",
+      "aiHint": "Vier Nachrichten aus deinen echten Angaben, mit Nachfass-E-Mail.",
+      "aiCopied": "{ai} wurde in einem neuen Tab geöffnet: dort einfügen (Strg+V).",
+      "aiBox": "Prompt für Recruiter-Nachrichten"
     },
     "toasts": {
       "replySaved": "Antwort gespeichert. Dein Lebenslauf-PDF wird heruntergeladen.",
