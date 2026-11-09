@@ -1026,3 +1026,25 @@ export interface Funnel {
   appliedLast30Days: number;
   bySource: FunnelSource[];
 }
+
+export type JobTrustLevel = 'OK' | 'CAUTION' | 'WARNING';
+export type JobTrustFlag =
+  | 'ASKS_PAYMENT'
+  | 'ASKS_PERSONAL_DATA'
+  | 'CHAT_APP_ONLY'
+  | 'REPOSTED'
+  | 'OLD_AD'
+  | 'PRIVATE_EMAIL'
+  | 'TOO_GOOD'
+  | 'SHORT_AD';
+
+/** "Is this job real?": plain checks for ghost and scam ads, no AI. */
+export interface JobTrust {
+  level: JobTrustLevel;
+  /** Worst first. */
+  flags: JobTrustFlag[];
+  /** Earlier ads with the same title at the same company (last year). */
+  reposts: number;
+  firstPostedAt: string | null;
+  ageDays: number;
+}

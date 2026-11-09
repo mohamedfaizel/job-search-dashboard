@@ -7,6 +7,7 @@ import { JobsService } from './jobs.service';
 import { ApplicationStatus } from './models/enums';
 import { FunnelModel } from './models/funnel.model';
 import { Application, Job, JobFilterOptions, JobPage } from './models/job.model';
+import { JobTrustModel } from './models/trust.model';
 
 /** GraphQL entry points for jobs. Resolvers stay thin; the logic lives in JobsService. */
 @Resolver(() => Job)
@@ -51,6 +52,13 @@ export class JobsResolver {
   @Query(() => Job)
   job(@CurrentUser() user: SessionUser, @Args('id', { type: () => ID }) id: string) {
     return this.jobs.findOne(user.id, id);
+  }
+
+  @Query(() => JobTrustModel, {
+    description: 'Is this job real? Reposts, age and scam signs, checked without AI',
+  })
+  jobTrust(@Args('id', { type: () => ID }) id: string) {
+    return this.jobs.trust(id);
   }
 
   @Query(() => [Application], { description: 'Your tracker: jobs you saved, applied to, etc.' })

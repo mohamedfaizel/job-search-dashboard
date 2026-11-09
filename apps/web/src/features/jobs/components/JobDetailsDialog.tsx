@@ -17,6 +17,7 @@ import { BookmarkIcon, EyeIcon, EyeSlashIcon } from './icons';
 import { InsightsPanel } from './InsightsPanel';
 import { InterviewPanel } from './InterviewPanel';
 import { JobAdPanel } from './JobAdPanel';
+import { JobTrust } from './JobTrust';
 import { MatchPanel, scoreTone } from './MatchPanel';
 import { PopupLayoutContext } from './popupLayout';
 import { StatusSelect } from './StatusSelect';
@@ -172,6 +173,7 @@ function JobDetails({
             <MetaLine job={job} />
             {/* Opening the Apply tab checks again, so you don't apply to a closed ad. */}
             <StillOpen job={job} autoCheck={tab === 'apply'} />
+            <JobTrust job={job} />
           </div>
           <div className="flex shrink-0 items-center">
             <button

@@ -1,5 +1,6 @@
 import type {
   Funnel,
+  JobTrust,
   Application,
   ApplicationStatus,
   ApplyQueueItem,
@@ -33,6 +34,10 @@ export const hiddenIds = new Set<string>();
 
 /** The test user's tracker. Tests fill it; status changes update it like the real API. */
 export const applications: Application[] = [];
+
+/** What "Is this job real?" answers, by job id; jobs not listed show no warning signs. */
+export const trust = new Map<string, JobTrust>();
+const NO_SIGNS: JobTrust = { level: 'OK', flags: [], reposts: 0, firstPostedAt: null, ageDays: 1 };
 
 /** The funnel the API answers; null = made from `applications` (each counts for its status). */
 export const funnel: { current: Funnel | null } = { current: null };
@@ -712,6 +717,9 @@ const handlers = [
     return HttpResponse.json({ data: { dismissMailSuggestion: true } });
   }),
   api.query('MyApplications', () => HttpResponse.json({ data: { myApplications: applications } })),
+  api.query<{ jobTrust: JobTrust }, { id: string }>('JobTrust', ({ variables }) =>
+    HttpResponse.json({ data: { jobTrust: trust.get(variables.id) ?? NO_SIGNS } }),
+  ),
   api.query('Funnel', () =>
     HttpResponse.json({ data: { funnel: funnel.current ?? funnelFrom(applications) } }),
   ),

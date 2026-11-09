@@ -877,6 +877,40 @@ enum JobSource {
   MANUAL
 }
 
+"""Is this job real? Plain checks for ghost and scam ads, no AI"""
+type JobTrust {
+  """Days since this ad was posted"""
+  ageDays: Int!
+
+  """When the first of those earlier ads was posted"""
+  firstPostedAt: DateTime
+
+  """What the check found, worst first"""
+  flags: [JobTrustFlag!]!
+  level: JobTrustLevel!
+
+  """Earlier ads with the same title at the same company (last year)"""
+  reposts: Int!
+}
+
+enum JobTrustFlag {
+  ASKS_PAYMENT
+  ASKS_PERSONAL_DATA
+  CHAT_APP_ONLY
+  OLD_AD
+  PRIVATE_EMAIL
+  REPOSTED
+  SHORT_AD
+  TOO_GOOD
+}
+
+"""OK: no signs found. CAUTION: worth a look. WARNING: looks like a scam"""
+enum JobTrustLevel {
+  CAUTION
+  OK
+  WARNING
+}
+
 type LanguageResume {
   """The uploaded file, null when pasted"""
   fileName: String
@@ -1568,6 +1602,9 @@ type Query {
 
   """The jobs you have a resume copy for, newest first"""
   jobResumeCopies: [JobResumeCopy!]!
+
+  """Is this job real? Reposts, age and scam signs, checked without AI"""
+  jobTrust(id: ID!): JobTrust!
 
   """Jobs for the dashboard table: filter, sort and paginate"""
   jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!

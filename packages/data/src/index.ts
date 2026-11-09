@@ -122,6 +122,7 @@ export {
   useUpdateJobStatus,
   useHiddenJobCount,
   useFunnel,
+  useJobTrust,
   useMyApplications,
   useSetJobHidden,
 } from './api/hooks';
