@@ -1,5 +1,7 @@
 # Dependabot opens a pull request when a dependency has a newer version or a security fix.
 # Grouped so you get a few PRs a week, not dozens. CI runs on each one before you merge.
+# Big version jumps (a new major version, e.g. graphql 16 -> 17) are skipped: they often need
+# code changes, so we do them on purpose in our own PR. Dependabot alerts still show them.
 version: 2
 updates:
   - package-ecosystem: npm # pnpm workspace: reads the root pnpm-lock.yaml
@@ -8,6 +10,9 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -22,3 +27,6 @@ updates:
     directories: [/docker/pdf-renderer]
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
