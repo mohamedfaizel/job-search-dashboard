@@ -394,6 +394,40 @@ describe('resume and cover letter templates', () => {
     expect(rendered[0]?.tex).toContain('TeX Gyre Pagella');
     expect(rendered[0]?.tex).not.toContain('passwd');
 
+    // The Look tab: My design starts the sliders at its own size, and the colour buttons
+    // change My design's colour (the built-in templates keep theirs).
+    const sizes = await t.asUser<{
+      documentTemplates: { resumeTemplates: { id: string; fontSize: number; margin: number }[] };
+    }>(`query { documentTemplates { resumeTemplates { id fontSize margin } } }`);
+    expect(sizes.data!.documentTemplates.resumeTemplates[0]).toEqual({
+      id: 'design',
+      fontSize: 11,
+      margin: 19,
+    });
+    const recoloured = await t.asUser<{
+      updateDocumentStyle: { accentColor: string; myDesign: { accent: string } };
+    }>(
+      `mutation ($input: DocumentStyleInput!) { updateDocumentStyle(input: $input) { accentColor myDesign { accent } } }`,
+      {
+        input: {
+          resumeTemplate: 'design',
+          coverLetterLayout: 'auto',
+          accentColor: '#1F4E79',
+          designAccent: '#8b1e3f',
+          font: 'auto',
+          showPhoto: false,
+        },
+      },
+    );
+    expect(recoloured.errors).toBeUndefined();
+    expect(recoloured.data!.updateDocumentStyle).toEqual({
+      accentColor: '1F4E79',
+      myDesign: { accent: '8B1E3F' },
+    });
+    rendered.length = 0;
+    await pdf(`/job-resume/${jobId}/resume.pdf`).expect(200);
+    expect(rendered[0]?.tex).toContain('\\definecolor{accent}{HTML}{8B1E3F}');
+
     const deleted = await t.asUser<{
       deleteMyDesign: { resumeTemplate: string; myDesign: unknown };
     }>(DELETE_DESIGN);

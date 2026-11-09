@@ -291,7 +291,15 @@ export const server = setupServer(
         documentTemplates: {
           resumeTemplates: [
             ...(myDesign.current
-              ? [{ id: 'design', name: 'My design', description: 'Your look.' }]
+              ? [
+                  {
+                    id: 'design',
+                    name: 'My design',
+                    description: 'Your look.',
+                    fontSize: 10,
+                    margin: 15,
+                  },
+                ]
               : []),
             { id: 'classic', name: 'Classic', description: 'Serif.', fontSize: 11, margin: 20 },
             { id: 'modern', name: 'Modern', description: 'Sans.', fontSize: 11, margin: 19 },
@@ -315,8 +323,12 @@ export const server = setupServer(
   ),
   api.mutation('UpdateDocumentStyle', ({ variables }) => {
     requests.push({ operation: 'UpdateDocumentStyle', variables });
+    const { designAccent, ...input } = variables['input'] as { designAccent?: string | null };
+    // Like the API: a colour for My design is saved into My design.
+    if (designAccent && myDesign.current)
+      myDesign.current = { ...myDesign.current, accent: designAccent };
     return HttpResponse.json({
-      data: { updateDocumentStyle: { ...STYLE, ...(variables['input'] as object) } },
+      data: { updateDocumentStyle: { ...STYLE, ...input, myDesign: myDesign.current } },
     });
   }),
   api.query('SavedAnswers', () => HttpResponse.json({ data: { savedAnswers: [...savedAnswers] } })),

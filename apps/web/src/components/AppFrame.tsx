@@ -121,10 +121,7 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
             href="/jobs"
             className="flex items-center gap-2 rounded-md font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
           >
-            {/* A white tile, so the logo's black card still shows on the black bar. */}
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white">
-              <Logo />
-            </span>
+            <Logo onDark className="h-9 w-9" />
             {APP_NAME}
           </Link>
           <button
