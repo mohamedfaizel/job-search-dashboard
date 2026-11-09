@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { textToPdf } from '../insights/pdf';
 import { cityOf } from './documents.service';
 import { contactItem, esc, inline } from './latex';
+import { DEFAULT_DESIGN } from './my-design';
 import { cleanPdf } from './pdf-metadata';
 import { asciiDates, letterParagraphs, parseResume } from './resume-doc';
 import {
@@ -268,6 +269,44 @@ describe('templates', () => {
     expect(toLayout({ fontSize: Number.NaN })).toMatchObject({ fontSize: null });
     expect(templateSizes('compact')).toEqual({ fontSize: 10, margin: 15 });
     expect(templateSizes('design')).toBeNull();
+  });
+
+  describe('My design with the Look tab', () => {
+    const design = { ...DEFAULT_DESIGN, headingCase: 'upper' as const, companyFirst: true };
+    const mine = { ...look, template: 'design' as const, design };
+    const doc = () => parseResume(RESUME, 'X');
+
+    it('tells the sliders where My design starts', () => {
+      expect(templateSizes('design', design)).toEqual({ fontSize: 11, margin: 19 });
+      expect(templateSizes('design', { ...design, density: 'compact' })).toEqual({
+        fontSize: 10,
+        margin: 15,
+      });
+    });
+
+    it('uses your text size, margins and bullets', () => {
+      const tex = resumeTex(doc(), {
+        ...mine,
+        layout: toLayout({ fontSize: 9.5, margin: 12, bulletStyle: 'dash' }),
+      });
+      expect(tex).toContain('\\fontsize{9.5}');
+      expect(tex).toContain('left=12mm,right=12mm');
+      expect(tex).toContain('label={\\color{accent}\\textendash}');
+    });
+
+    it('keeps its capitals and company-first order when you pick a heading or dates side', () => {
+      const tex = resumeTex(doc(), {
+        ...mine,
+        layout: toLayout({ headingStyle: 'bar', datesSide: 'right' }),
+      });
+      // The bar heading, still in capitals as My design has it.
+      expect(tex).toContain('\\rule[-1pt]{3pt}{11pt}');
+      expect(tex).toContain('\\MakeUppercase{Summary}');
+      // Company first, then the job title in italics, dates on the right.
+      expect(tex).toContain('\\textbf{Wayne GmbH}');
+      expect(tex).toContain('\\textit{Senior Frontend Engineer}');
+      expect(tex).toContain('\\hfill');
+    });
   });
 
   it('sets the projects of a job under it: bold name, tech in grey, its bullets', () => {

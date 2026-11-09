@@ -152,6 +152,15 @@ export class DocumentStyleInput {
   @Matches(/^#?[0-9a-fA-F]{6}$/, { message: 'The colour is six hex digits, like #1F4E79' })
   accentColor!: string;
 
+  @Field(() => String, {
+    nullable: true,
+    description: 'My design’s own colour; left out, it stays as saved',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^#?[0-9a-fA-F]{6}$/, { message: 'The colour is six hex digits, like #1F4E79' })
+  designAccent?: string | null;
+
   @Field()
   @IsIn([...FONTS], { message: 'The font is auto, sans or serif' })
   font!: string;
