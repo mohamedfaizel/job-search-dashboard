@@ -34,6 +34,11 @@ const AD = '<p>Build the web app with React and TypeScript in our Berlin office.
 let requested: string[] = [];
 
 const server = setupServer(
+  // European boards live on their own server; none of ours do.
+  http.get(
+    'https://boards-api.eu.greenhouse.io/v1/boards/:slug/jobs',
+    () => new HttpResponse(null, { status: 404, statusText: 'Not Found' }),
+  ),
   http.get('https://boards-api.greenhouse.io/v1/boards/:slug/jobs', ({ params }) => {
     requested.push(`greenhouse:${String(params['slug'])}`);
     if (params['slug'] === 'gone')

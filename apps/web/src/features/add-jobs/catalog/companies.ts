@@ -26,40 +26,19 @@ const LISTS: Record<CatalogGroup, string> = {
     Contentful | greenhouse:contentful | Berlin
     Celonis | greenhouse:celonis | Munich
     SumUp | greenhouse:sumup | Berlin
-    Babbel | greenhouse:babbel | Berlin
-    Taxfix | greenhouse:taxfix | Berlin
     Raisin | greenhouse:raisin | Berlin
     FlixBus | greenhouse:flix | Munich
     Trade Republic | greenhouse:traderepublicbank | Berlin
-    Scalable Capital | greenhouse:scalablecapital | Munich
-    Enpal | greenhouse:enpal | Berlin
-    1Komma5° | greenhouse:1komma5grad | Hamburg
-    Pitch | greenhouse:pitch | Berlin
     Helsing | greenhouse:helsing | Munich
-    Personio | greenhouse:personio | Munich
     Solaris | greenhouse:solarisbank | Berlin
-    Sennder | lever:sennder | Berlin
-    Forto | greenhouse:forto | Berlin
-    Tier Mobility | greenhouse:tier | Berlin
-    Mambu | greenhouse:mambu | Berlin
     Moonfare | greenhouse:moonfare | Berlin
-    Billie | greenhouse:billie | Berlin
-    Wefox | greenhouse:wefox | Berlin
-    Quantum Systems | greenhouse:quantumsystems | Munich
     Isar Aerospace | greenhouse:isaraerospace | Munich
     Parloa | greenhouse:parloa | Berlin
-    Aleph Alpha | greenhouse:alephalpha | Heidelberg
     DeepL | ashby:deepl | Cologne
     n8n | ashby:n8n | Berlin
     Langdock | ashby:langdock | Berlin
-    Black Forest Labs | greenhouse:blackforestlabs | Freiburg
     Agicap | lever:agicap | Berlin
-    Zeit Online | greenhouse:zeitonline | Hamburg
-    Freeletics | greenhouse:freeletics | Munich
-    Tado | greenhouse:tado | Munich
     Grover | greenhouse:grover | Berlin
-    Ecosia | greenhouse:ecosia | Berlin
-    Pliant | greenhouse:pliant | Berlin
   `,
   europe: `
     Adyen | greenhouse:adyen | Amsterdam

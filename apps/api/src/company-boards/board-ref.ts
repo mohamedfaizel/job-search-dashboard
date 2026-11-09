@@ -7,7 +7,9 @@ const SLUG = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
 const HOSTS: Record<string, Ats> = {
   'boards.greenhouse.io': 'greenhouse',
   'job-boards.greenhouse.io': 'greenhouse',
+  'job-boards.eu.greenhouse.io': 'greenhouse',
   'jobs.lever.co': 'lever',
+  'jobs.eu.lever.co': 'lever',
   'jobs.ashbyhq.com': 'ashby',
 };
 
