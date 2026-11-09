@@ -94,7 +94,7 @@ export function funnelStats(apps: FunnelApp[], now = new Date()): Funnel {
   const since = (days: number) =>
     applied.filter((s) => s.appliedAt && now.getTime() - s.appliedAt.getTime() <= days * DAY_MS)
       .length;
-  const sources = [...new Set(stages.map((s) => s.app.source))].sort();
+  const sources = [...new Set(stages.map((s) => s.app.source))].sort((a, b) => a.localeCompare(b));
   return {
     tracked: apps.length,
     applied: applied.length,
