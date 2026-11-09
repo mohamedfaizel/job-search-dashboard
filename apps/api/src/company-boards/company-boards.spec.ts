@@ -12,6 +12,8 @@ describe('parseBoard', () => {
     [' Lever : Netflix ', { ats: 'lever', slug: 'netflix' }],
     ['https://boards.greenhouse.io/Stripe/jobs/123', { ats: 'greenhouse', slug: 'stripe' }],
     ['job-boards.greenhouse.io/acme', { ats: 'greenhouse', slug: 'acme' }],
+    ['https://job-boards.eu.greenhouse.io/parloa/jobs/1', { ats: 'greenhouse', slug: 'parloa' }],
+    ['https://jobs.eu.lever.co/acme', { ats: 'lever', slug: 'acme' }],
     ['https://jobs.lever.co/netflix?lever-via=x', { ats: 'lever', slug: 'netflix' }],
     ['https://jobs.ashbyhq.com/ramp', { ats: 'ashby', slug: 'ramp' }],
   ])('reads %s', (text, board) => {
