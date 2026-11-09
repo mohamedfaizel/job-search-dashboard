@@ -17,149 +17,146 @@ export interface CatalogCompany {
 
 export const CATALOG_GROUPS: CatalogGroup[] = ['germany', 'europe', 'ai', 'global'];
 
-export const COMPANY_CATALOG: CatalogCompany[] = [
-  { name: 'N26', board: 'greenhouse:n26', group: 'germany', place: 'Berlin' },
-  { name: 'GetYourGuide', board: 'greenhouse:getyourguide', group: 'germany', place: 'Berlin' },
-  { name: 'HelloFresh', board: 'greenhouse:hellofresh', group: 'germany', place: 'Berlin' },
-  { name: 'Contentful', board: 'greenhouse:contentful', group: 'germany', place: 'Berlin' },
-  { name: 'Celonis', board: 'greenhouse:celonis', group: 'germany', place: 'Munich' },
-  { name: 'SumUp', board: 'greenhouse:sumup', group: 'germany', place: 'Berlin' },
-  { name: 'Babbel', board: 'greenhouse:babbel', group: 'germany', place: 'Berlin' },
-  { name: 'Taxfix', board: 'greenhouse:taxfix', group: 'germany', place: 'Berlin' },
-  { name: 'Raisin', board: 'greenhouse:raisin', group: 'germany', place: 'Berlin' },
-  { name: 'FlixBus', board: 'greenhouse:flix', group: 'germany', place: 'Munich' },
-  {
-    name: 'Trade Republic',
-    board: 'greenhouse:traderepublicbank',
-    group: 'germany',
-    place: 'Berlin',
-  },
-  {
-    name: 'Scalable Capital',
-    board: 'greenhouse:scalablecapital',
-    group: 'germany',
-    place: 'Munich',
-  },
-  { name: 'Enpal', board: 'greenhouse:enpal', group: 'germany', place: 'Berlin' },
-  { name: '1Komma5°', board: 'greenhouse:1komma5grad', group: 'germany', place: 'Hamburg' },
-  { name: 'Pitch', board: 'greenhouse:pitch', group: 'germany', place: 'Berlin' },
-  { name: 'Helsing', board: 'greenhouse:helsing', group: 'germany', place: 'Munich' },
-  { name: 'Personio', board: 'greenhouse:personio', group: 'germany', place: 'Munich' },
-  { name: 'Solaris', board: 'greenhouse:solarisbank', group: 'germany', place: 'Berlin' },
-  { name: 'Sennder', board: 'lever:sennder', group: 'germany', place: 'Berlin' },
-  { name: 'Forto', board: 'greenhouse:forto', group: 'germany', place: 'Berlin' },
-  { name: 'Tier Mobility', board: 'greenhouse:tier', group: 'germany', place: 'Berlin' },
-  { name: 'Mambu', board: 'greenhouse:mambu', group: 'germany', place: 'Berlin' },
-  { name: 'Moonfare', board: 'greenhouse:moonfare', group: 'germany', place: 'Berlin' },
-  { name: 'Billie', board: 'greenhouse:billie', group: 'germany', place: 'Berlin' },
-  { name: 'Wefox', board: 'greenhouse:wefox', group: 'germany', place: 'Berlin' },
-  {
-    name: 'Quantum Systems',
-    board: 'greenhouse:quantumsystems',
-    group: 'germany',
-    place: 'Munich',
-  },
-  { name: 'Isar Aerospace', board: 'greenhouse:isaraerospace', group: 'germany', place: 'Munich' },
-  { name: 'Parloa', board: 'greenhouse:parloa', group: 'germany', place: 'Berlin' },
-  { name: 'Aleph Alpha', board: 'greenhouse:alephalpha', group: 'germany', place: 'Heidelberg' },
-  { name: 'DeepL', board: 'ashby:deepl', group: 'germany', place: 'Cologne' },
-  { name: 'n8n', board: 'ashby:n8n', group: 'germany', place: 'Berlin' },
-  { name: 'Langdock', board: 'ashby:langdock', group: 'germany', place: 'Berlin' },
-  {
-    name: 'Black Forest Labs',
-    board: 'greenhouse:blackforestlabs',
-    group: 'germany',
-    place: 'Freiburg',
-  },
-  { name: 'Agicap', board: 'lever:agicap', group: 'germany', place: 'Berlin' },
-  { name: 'Zeit Online', board: 'greenhouse:zeitonline', group: 'germany', place: 'Hamburg' },
-  { name: 'Freeletics', board: 'greenhouse:freeletics', group: 'germany', place: 'Munich' },
-  { name: 'Tado', board: 'greenhouse:tado', group: 'germany', place: 'Munich' },
-  { name: 'Grover', board: 'greenhouse:grover', group: 'germany', place: 'Berlin' },
-  { name: 'Ecosia', board: 'greenhouse:ecosia', group: 'germany', place: 'Berlin' },
-  { name: 'Pliant', board: 'greenhouse:pliant', group: 'germany', place: 'Berlin' },
-  { name: 'Adyen', board: 'greenhouse:adyen', group: 'europe', place: 'Amsterdam' },
-  { name: 'Spotify', board: 'lever:spotify', group: 'europe', place: 'Stockholm' },
-  { name: 'Intercom', board: 'greenhouse:intercom', group: 'europe', place: 'Dublin' },
-  { name: 'Wolt', board: 'greenhouse:wolt', group: 'europe', place: 'Helsinki' },
-  { name: 'Pleo', board: 'greenhouse:pleo', group: 'europe', place: 'Copenhagen' },
-  { name: 'Mollie', board: 'greenhouse:mollie', group: 'europe', place: 'Amsterdam' },
-  { name: 'Bolt', board: 'greenhouse:bolt', group: 'europe', place: 'Tallinn' },
-  { name: 'Revolut', board: 'lever:revolut', group: 'europe', place: 'London' },
-  { name: 'Monzo', board: 'greenhouse:monzo', group: 'europe', place: 'London' },
-  { name: 'Checkout.com', board: 'greenhouse:checkoutcom', group: 'europe', place: 'London' },
-  { name: 'GoCardless', board: 'greenhouse:gocardless', group: 'europe', place: 'London' },
-  { name: 'Typeform', board: 'greenhouse:typeform', group: 'europe', place: 'Barcelona' },
-  { name: 'Glovo', board: 'greenhouse:glovo', group: 'europe', place: 'Barcelona' },
-  { name: 'Doctolib', board: 'greenhouse:doctolib', group: 'europe', place: 'Paris' },
-  { name: 'Qonto', board: 'lever:qonto', group: 'europe', place: 'Paris' },
-  { name: 'Alan', board: 'lever:alan', group: 'europe', place: 'Paris' },
-  { name: 'BlaBlaCar', board: 'greenhouse:blablacar', group: 'europe', place: 'Paris' },
-  { name: 'Datadog (Paris)', board: 'greenhouse:datadog', group: 'europe', place: 'Paris' },
-  { name: 'Miro', board: 'greenhouse:miro', group: 'europe', place: 'Amsterdam' },
-  { name: 'Booking.com', board: 'greenhouse:bookingcom', group: 'europe', place: 'Amsterdam' },
-  { name: 'Mistral AI', board: 'lever:mistral', group: 'europe', place: 'Paris' },
-  { name: 'Pipedrive', board: 'greenhouse:pipedrive', group: 'europe', place: 'Tallinn' },
-  { name: 'Wise', board: 'greenhouse:wise', group: 'europe', place: 'London' },
-  { name: 'Deliveroo', board: 'greenhouse:deliveroo', group: 'europe', place: 'London' },
-  { name: 'Trustpilot', board: 'greenhouse:trustpilot', group: 'europe', place: 'Copenhagen' },
-  { name: 'Klarna', board: 'greenhouse:klarna', group: 'europe', place: 'Stockholm' },
-  { name: 'Vinted', board: 'greenhouse:vinted', group: 'europe', place: 'Vilnius' },
-  { name: 'Aiven', board: 'greenhouse:aiven', group: 'europe', place: 'Helsinki' },
-  { name: 'Supercell', board: 'greenhouse:supercell', group: 'europe', place: 'Helsinki' },
-  { name: 'Anthropic', board: 'greenhouse:anthropic', group: 'ai', place: 'San Francisco' },
-  { name: 'OpenAI', board: 'ashby:openai', group: 'ai', place: 'San Francisco' },
-  { name: 'Cohere', board: 'ashby:cohere', group: 'ai', place: 'Toronto' },
-  { name: 'Perplexity', board: 'ashby:perplexity', group: 'ai', place: 'San Francisco' },
-  { name: 'Scale AI', board: 'greenhouse:scaleai', group: 'ai', place: 'San Francisco' },
-  { name: 'Databricks', board: 'greenhouse:databricks', group: 'ai', place: 'San Francisco' },
-  { name: 'DeepMind', board: 'greenhouse:deepmind', group: 'ai', place: 'London' },
-  { name: 'Runway', board: 'ashby:runway', group: 'ai', place: 'New York' },
-  { name: 'ElevenLabs', board: 'ashby:elevenlabs', group: 'ai', place: 'London' },
-  { name: 'Synthesia', board: 'ashby:synthesia', group: 'ai', place: 'London' },
-  { name: 'PolyAI', board: 'greenhouse:polyai', group: 'ai', place: 'London' },
-  { name: 'LangChain', board: 'ashby:langchain', group: 'ai', place: 'San Francisco' },
-  { name: 'Pinecone', board: 'ashby:pinecone', group: 'ai', place: 'New York' },
-  { name: 'Weights & Biases', board: 'lever:wandb', group: 'ai', place: 'San Francisco' },
-  { name: 'Hex', board: 'ashby:hex', group: 'ai', place: 'San Francisco' },
-  { name: 'dbt Labs', board: 'greenhouse:dbtlabsinc', group: 'ai', place: 'Philadelphia' },
-  { name: 'Fivetran', board: 'greenhouse:fivetran', group: 'ai', place: 'Oakland' },
-  { name: 'Airbyte', board: 'ashby:airbyte', group: 'ai', place: 'San Francisco' },
-  { name: 'ClickHouse', board: 'greenhouse:clickhouse', group: 'ai', place: 'Amsterdam' },
-  { name: 'Snowflake', board: 'ashby:snowflake', group: 'ai', place: 'Bozeman' },
-  { name: 'Stripe', board: 'greenhouse:stripe', group: 'global', place: 'Dublin' },
-  { name: 'GitLab', board: 'greenhouse:gitlab', group: 'global', place: 'Remote' },
-  { name: 'Cloudflare', board: 'greenhouse:cloudflare', group: 'global', place: 'Lisbon' },
-  { name: 'Figma', board: 'greenhouse:figma', group: 'global', place: 'San Francisco' },
-  { name: 'Airbnb', board: 'greenhouse:airbnb', group: 'global', place: 'San Francisco' },
-  { name: 'Dropbox', board: 'greenhouse:dropbox', group: 'global', place: 'Remote' },
-  { name: 'Reddit', board: 'greenhouse:reddit', group: 'global', place: 'San Francisco' },
-  { name: 'Discord', board: 'greenhouse:discord', group: 'global', place: 'San Francisco' },
-  { name: 'Coinbase', board: 'greenhouse:coinbase', group: 'global', place: 'Remote' },
-  { name: 'Airtable', board: 'greenhouse:airtable', group: 'global', place: 'San Francisco' },
-  { name: 'Twilio', board: 'greenhouse:twilio', group: 'global', place: 'Remote' },
-  { name: 'MongoDB', board: 'greenhouse:mongodb', group: 'global', place: 'Dublin' },
-  { name: 'Elastic', board: 'greenhouse:elastic', group: 'global', place: 'Remote' },
-  { name: 'Grammarly', board: 'greenhouse:grammarly', group: 'global', place: 'Berlin' },
-  { name: 'Duolingo', board: 'greenhouse:duolingo', group: 'global', place: 'Pittsburgh' },
-  { name: 'Instacart', board: 'greenhouse:instacart', group: 'global', place: 'San Francisco' },
-  { name: 'Lyft', board: 'greenhouse:lyft', group: 'global', place: 'San Francisco' },
-  { name: 'Vercel', board: 'greenhouse:vercel', group: 'global', place: 'Remote' },
-  { name: 'Samsara', board: 'greenhouse:samsara', group: 'global', place: 'San Francisco' },
-  { name: 'Okta', board: 'greenhouse:okta', group: 'global', place: 'San Francisco' },
-  { name: 'Brex', board: 'greenhouse:brex', group: 'global', place: 'San Francisco' },
-  { name: 'Gusto', board: 'greenhouse:gusto', group: 'global', place: 'San Francisco' },
-  { name: 'Pinterest', board: 'greenhouse:pinterest', group: 'global', place: 'San Francisco' },
-  { name: 'Netflix', board: 'lever:netflix', group: 'global', place: 'Los Gatos' },
-  { name: 'Palantir', board: 'lever:palantir', group: 'global', place: 'Denver' },
-  { name: 'Plaid', board: 'lever:plaid', group: 'global', place: 'San Francisco' },
-  { name: 'Ramp', board: 'ashby:ramp', group: 'global', place: 'New York' },
-  { name: 'Notion', board: 'ashby:notion', group: 'global', place: 'San Francisco' },
-  { name: 'Linear', board: 'ashby:linear', group: 'global', place: 'Remote' },
-  { name: 'Vanta', board: 'ashby:vanta', group: 'global', place: 'Remote' },
-  { name: 'PostHog', board: 'ashby:posthog', group: 'global', place: 'Remote' },
-  { name: 'Supabase', board: 'ashby:supabase', group: 'global', place: 'Remote' },
-  { name: 'Deel', board: 'ashby:deel', group: 'global', place: 'Remote' },
-  { name: 'Zapier', board: 'ashby:zapier', group: 'global', place: 'Remote' },
-  { name: 'Automattic', board: 'greenhouse:automatticcareers', group: 'global', place: 'Remote' },
-];
+/** One company per line: "Name | ats:slug | Place". */
+const LISTS: Record<CatalogGroup, string> = {
+  germany: `
+    N26 | greenhouse:n26 | Berlin
+    GetYourGuide | greenhouse:getyourguide | Berlin
+    HelloFresh | greenhouse:hellofresh | Berlin
+    Contentful | greenhouse:contentful | Berlin
+    Celonis | greenhouse:celonis | Munich
+    SumUp | greenhouse:sumup | Berlin
+    Babbel | greenhouse:babbel | Berlin
+    Taxfix | greenhouse:taxfix | Berlin
+    Raisin | greenhouse:raisin | Berlin
+    FlixBus | greenhouse:flix | Munich
+    Trade Republic | greenhouse:traderepublicbank | Berlin
+    Scalable Capital | greenhouse:scalablecapital | Munich
+    Enpal | greenhouse:enpal | Berlin
+    1Komma5° | greenhouse:1komma5grad | Hamburg
+    Pitch | greenhouse:pitch | Berlin
+    Helsing | greenhouse:helsing | Munich
+    Personio | greenhouse:personio | Munich
+    Solaris | greenhouse:solarisbank | Berlin
+    Sennder | lever:sennder | Berlin
+    Forto | greenhouse:forto | Berlin
+    Tier Mobility | greenhouse:tier | Berlin
+    Mambu | greenhouse:mambu | Berlin
+    Moonfare | greenhouse:moonfare | Berlin
+    Billie | greenhouse:billie | Berlin
+    Wefox | greenhouse:wefox | Berlin
+    Quantum Systems | greenhouse:quantumsystems | Munich
+    Isar Aerospace | greenhouse:isaraerospace | Munich
+    Parloa | greenhouse:parloa | Berlin
+    Aleph Alpha | greenhouse:alephalpha | Heidelberg
+    DeepL | ashby:deepl | Cologne
+    n8n | ashby:n8n | Berlin
+    Langdock | ashby:langdock | Berlin
+    Black Forest Labs | greenhouse:blackforestlabs | Freiburg
+    Agicap | lever:agicap | Berlin
+    Zeit Online | greenhouse:zeitonline | Hamburg
+    Freeletics | greenhouse:freeletics | Munich
+    Tado | greenhouse:tado | Munich
+    Grover | greenhouse:grover | Berlin
+    Ecosia | greenhouse:ecosia | Berlin
+    Pliant | greenhouse:pliant | Berlin
+  `,
+  europe: `
+    Adyen | greenhouse:adyen | Amsterdam
+    Spotify | lever:spotify | Stockholm
+    Intercom | greenhouse:intercom | Dublin
+    Wolt | greenhouse:wolt | Helsinki
+    Pleo | greenhouse:pleo | Copenhagen
+    Mollie | greenhouse:mollie | Amsterdam
+    Bolt | greenhouse:bolt | Tallinn
+    Revolut | lever:revolut | London
+    Monzo | greenhouse:monzo | London
+    Checkout.com | greenhouse:checkoutcom | London
+    GoCardless | greenhouse:gocardless | London
+    Typeform | greenhouse:typeform | Barcelona
+    Glovo | greenhouse:glovo | Barcelona
+    Doctolib | greenhouse:doctolib | Paris
+    Qonto | lever:qonto | Paris
+    Alan | lever:alan | Paris
+    BlaBlaCar | greenhouse:blablacar | Paris
+    Datadog (Paris) | greenhouse:datadog | Paris
+    Miro | greenhouse:miro | Amsterdam
+    Booking.com | greenhouse:bookingcom | Amsterdam
+    Mistral AI | lever:mistral | Paris
+    Pipedrive | greenhouse:pipedrive | Tallinn
+    Wise | greenhouse:wise | London
+    Deliveroo | greenhouse:deliveroo | London
+    Trustpilot | greenhouse:trustpilot | Copenhagen
+    Klarna | greenhouse:klarna | Stockholm
+    Vinted | greenhouse:vinted | Vilnius
+    Aiven | greenhouse:aiven | Helsinki
+    Supercell | greenhouse:supercell | Helsinki
+  `,
+  ai: `
+    Anthropic | greenhouse:anthropic | San Francisco
+    OpenAI | ashby:openai | San Francisco
+    Cohere | ashby:cohere | Toronto
+    Perplexity | ashby:perplexity | San Francisco
+    Scale AI | greenhouse:scaleai | San Francisco
+    Databricks | greenhouse:databricks | San Francisco
+    DeepMind | greenhouse:deepmind | London
+    Runway | ashby:runway | New York
+    ElevenLabs | ashby:elevenlabs | London
+    Synthesia | ashby:synthesia | London
+    PolyAI | greenhouse:polyai | London
+    LangChain | ashby:langchain | San Francisco
+    Pinecone | ashby:pinecone | New York
+    Weights & Biases | lever:wandb | San Francisco
+    Hex | ashby:hex | San Francisco
+    dbt Labs | greenhouse:dbtlabsinc | Philadelphia
+    Fivetran | greenhouse:fivetran | Oakland
+    Airbyte | ashby:airbyte | San Francisco
+    ClickHouse | greenhouse:clickhouse | Amsterdam
+    Snowflake | ashby:snowflake | Bozeman
+  `,
+  global: `
+    Stripe | greenhouse:stripe | Dublin
+    GitLab | greenhouse:gitlab | Remote
+    Cloudflare | greenhouse:cloudflare | Lisbon
+    Figma | greenhouse:figma | San Francisco
+    Airbnb | greenhouse:airbnb | San Francisco
+    Dropbox | greenhouse:dropbox | Remote
+    Reddit | greenhouse:reddit | San Francisco
+    Discord | greenhouse:discord | San Francisco
+    Coinbase | greenhouse:coinbase | Remote
+    Airtable | greenhouse:airtable | San Francisco
+    Twilio | greenhouse:twilio | Remote
+    MongoDB | greenhouse:mongodb | Dublin
+    Elastic | greenhouse:elastic | Remote
+    Grammarly | greenhouse:grammarly | Berlin
+    Duolingo | greenhouse:duolingo | Pittsburgh
+    Instacart | greenhouse:instacart | San Francisco
+    Lyft | greenhouse:lyft | San Francisco
+    Vercel | greenhouse:vercel | Remote
+    Samsara | greenhouse:samsara | San Francisco
+    Okta | greenhouse:okta | San Francisco
+    Brex | greenhouse:brex | San Francisco
+    Gusto | greenhouse:gusto | San Francisco
+    Pinterest | greenhouse:pinterest | San Francisco
+    Netflix | lever:netflix | Los Gatos
+    Palantir | lever:palantir | Denver
+    Plaid | lever:plaid | San Francisco
+    Ramp | ashby:ramp | New York
+    Notion | ashby:notion | San Francisco
+    Linear | ashby:linear | Remote
+    Vanta | ashby:vanta | Remote
+    PostHog | ashby:posthog | Remote
+    Supabase | ashby:supabase | Remote
+    Deel | ashby:deel | Remote
+    Zapier | ashby:zapier | Remote
+    Automattic | greenhouse:automatticcareers | Remote
+  `,
+};
+
+export const COMPANY_CATALOG: CatalogCompany[] = CATALOG_GROUPS.flatMap((group) =>
+  LISTS[group]
+    .split('\n')
+    .map((line) => line.split('|').map((part) => part.trim()))
+    .filter(([name]) => name)
+    .map(([name = '', board = '', place = '']) => ({ name, board, group, place })),
+);
