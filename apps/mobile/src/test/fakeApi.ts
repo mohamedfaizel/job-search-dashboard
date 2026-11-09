@@ -1,4 +1,4 @@
-import type { Job } from '@jobsearch/data';
+import type { AppNotification, Job } from '@jobsearch/data';
 
 /** What a fake operation answers: GraphQL's { data } or { errors }. */
 type Answer = { data: unknown } | { errors: { message: string; extensions?: object }[] };
@@ -77,4 +77,19 @@ export function job(over: Partial<Job> & Pick<Job, 'id' | 'title'>): Job {
     createdAt: '2026-11-01T10:00:00.000Z',
     ...over,
   };
+}
+
+/** A 🔔 notification: by default, unread new jobs from the search "Data jobs". */
+export function notification(over: Partial<AppNotification> & Pick<AppNotification, 'id'>) {
+  return {
+    kind: 'NEW_MATCHES',
+    searchName: 'Data jobs',
+    count: 1,
+    fitMin: 60,
+    jobs: [{ id: '5', title: 'Data Engineer', company: 'HelloFresh', fit: 82 }],
+    at: null,
+    readAt: null,
+    createdAt: '2026-11-09T08:00:00.000Z',
+    ...over,
+  } satisfies AppNotification;
 }

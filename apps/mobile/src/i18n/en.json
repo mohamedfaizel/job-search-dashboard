@@ -45,6 +45,19 @@
     "OFFER": "Offer",
     "REJECTED": "Rejected"
   },
+  "Alerts": {
+    "bell": "Notifications",
+    "bellUnread": "Notifications, {count} unread",
+    "title": "Notifications",
+    "unread": "unread",
+    "empty": "Nothing yet. When a scheduled search finds new jobs that fit you, they show up here.",
+    "newMatches": "{count, plural, one {# new job fits you} other {# new jobs fit you}} from the search “{search}”",
+    "interviewSoon": "Interview soon: {when}",
+    "interviewHint": "Practise on the website’s Interview tab.",
+    "more": "{count, plural, one {# more} other {# more}} in the job list (marked New)",
+    "loading": "Loading…",
+    "channel": "New jobs and interviews"
+  },
   "Errors": {
     "NETWORK": "Can’t reach the API at {url}. Is `pnpm dev` running on your computer, on the same Wi-Fi?",
     "WRONG_LOGIN": "Wrong email or password.",
