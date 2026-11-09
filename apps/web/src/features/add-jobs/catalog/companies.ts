@@ -29,23 +29,16 @@ const LISTS: Record<CatalogGroup, string> = {
     Raisin | greenhouse:raisin | Berlin
     FlixBus | greenhouse:flix | Munich
     Trade Republic | greenhouse:traderepublicbank | Berlin
-    Scalable Capital | greenhouse:scalablecapital | Munich
-    Pitch | greenhouse:pitch | Berlin
     Helsing | greenhouse:helsing | Munich
     Solaris | greenhouse:solarisbank | Berlin
-    Tier Mobility | greenhouse:tier | Berlin
     Moonfare | greenhouse:moonfare | Berlin
-    Billie | greenhouse:billie | Berlin
     Isar Aerospace | greenhouse:isaraerospace | Munich
     Parloa | greenhouse:parloa | Berlin
     DeepL | ashby:deepl | Cologne
     n8n | ashby:n8n | Berlin
     Langdock | ashby:langdock | Berlin
-    Black Forest Labs | greenhouse:blackforestlabs | Freiburg
     Agicap | lever:agicap | Berlin
-    Freeletics | greenhouse:freeletics | Munich
     Grover | greenhouse:grover | Berlin
-    Ecosia | greenhouse:ecosia | Berlin
   `,
   europe: `
     Adyen | greenhouse:adyen | Amsterdam
