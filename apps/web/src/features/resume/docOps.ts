@@ -5,6 +5,9 @@ import type { BuilderBlock, BuilderDoc, BuilderProject, BuilderSection } from '@
  * the old one for Undo.
  */
 
+/** A contact "item" that starts a new line in the PDF's header (the API's CONTACT_BREAK). */
+export const CONTACT_BREAK = '\n';
+
 export const newId = () => Math.random().toString(36).slice(2, 10);
 
 /** Moves the item at `from` to `to` (both indexes in the list before the move). */

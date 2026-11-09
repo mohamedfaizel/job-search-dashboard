@@ -15,7 +15,8 @@ const BUTTON =
 
 /**
  * Suggestions for your master resume, right after you upload or save it: free checks of the
- * text, and a prompt for Claude when you want a recruiter's view.
+ * text, and a prompt for Claude when you want a recruiter's view. Folded into a small pill
+ * ("⚠ 3 suggestions") that opens over the page, so the Setup tab stays short.
  */
 export function ResumeSuggestions({ suggestions, reviewPrompt, onUseAchievements }: Props) {
   const t = useTranslations('Profile.suggestions');
@@ -35,44 +36,56 @@ export function ResumeSuggestions({ suggestions, reviewPrompt, onUseAchievements
     }
   };
 
+  const many = suggestions.length > 0;
   return (
-    <section
-      aria-label={t('title')}
-      className={`space-y-3 rounded-lg border px-4 py-3 ${
-        suggestions.length
-          ? 'border-amber-200 bg-amber-50/60'
-          : 'border-emerald-200 bg-emerald-50/60'
-      }`}
-    >
-      <h3 className="text-sm font-semibold text-slate-900">
-        {suggestions.length ? t('title') : t('allGood')}
-      </h3>
-      {suggestions.length > 0 && (
-        <ul className="space-y-2" aria-label={t('title')}>
-          {suggestions.map((s) => (
-            <li key={s.code} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              <span className="text-slate-800">{message(s)}</span>
-              {s.code === 'ACHIEVEMENTS' && (
-                <button
-                  type="button"
-                  className={BUTTON}
-                  onClick={() => {
-                    onUseAchievements(s.detail);
-                  }}
-                >
-                  {t('useAchievements')}
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      <CopyText
-        label={t('askClaude')}
-        text={reviewPrompt}
-        copiedHint={t('askClaudeHint')}
-        boxLabel={t('askClaudeBox')}
-      />
-    </section>
+    // A pill that opens over the page: the details depend on this resume, so they stay folded.
+    <details className="group relative">
+      <summary
+        aria-label={t('open')}
+        className={`inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium [&::-webkit-details-marker]:hidden ${
+          many
+            ? 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100'
+            : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+        }`}
+      >
+        <span aria-hidden>{many ? '⚠' : '✓'}</span>
+        {t('count', { count: suggestions.length })}
+        <span aria-hidden className="text-[10px] group-open:rotate-180">
+          ▾
+        </span>
+      </summary>
+      <section
+        aria-label={t('title')}
+        className="absolute top-full left-0 z-30 mt-1 w-[min(26rem,85vw)] space-y-3 rounded-lg border border-slate-200 bg-white p-3 shadow-lg"
+      >
+        <h3 className="text-sm font-semibold text-slate-900">{many ? t('title') : t('allGood')}</h3>
+        {many && (
+          <ul className="space-y-2" aria-label={t('title')}>
+            {suggestions.map((s) => (
+              <li key={s.code} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <span className="text-slate-800">{message(s)}</span>
+                {s.code === 'ACHIEVEMENTS' && (
+                  <button
+                    type="button"
+                    className={BUTTON}
+                    onClick={() => {
+                      onUseAchievements(s.detail);
+                    }}
+                  >
+                    {t('useAchievements')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <CopyText
+          label={t('askClaude')}
+          text={reviewPrompt}
+          copiedHint={t('askClaudeHint')}
+          boxLabel={t('askClaudeBox')}
+        />
+      </section>
+    </details>
   );
 }

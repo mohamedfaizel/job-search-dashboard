@@ -1,4 +1,6 @@
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
+import { InfoTip } from '../../../components/InfoTip';
 
 interface Props {
   label: string;
@@ -8,6 +10,8 @@ interface Props {
   htmlFor: string;
   error?: string | undefined;
   hint?: string;
+  /** Like `hint`, but behind a small ⓘ next to the label, for compact forms. */
+  tip?: string;
   required?: boolean;
   children: ReactNode;
   className?: string;
@@ -20,10 +24,12 @@ export function Field({
   htmlFor,
   error,
   hint,
+  tip,
   required = false,
   children,
   className = '',
 }: Props) {
+  const t = useTranslations('Profile');
   return (
     <div className={`space-y-1 ${className}`}>
       <div className="flex flex-wrap items-baseline gap-x-2">
@@ -31,6 +37,7 @@ export function Field({
           {label}
           {required && <span className="text-red-600"> *</span>}
         </label>
+        {tip && <InfoTip label={t('moreAbout', { field: label })} text={tip} />}
         {/* Outside the label, so the field's name stays "Skills". */}
         {note && <span className="text-xs text-amber-700">{note}</span>}
       </div>

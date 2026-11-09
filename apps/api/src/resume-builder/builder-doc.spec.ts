@@ -3,6 +3,7 @@ import { parseResume } from '../documents/resume-doc';
 import type { BuilderDoc } from './builder-doc';
 import {
   BuilderDocError,
+  CONTACT_BREAK,
   emptyDoc,
   isLanguagesSection,
   lockLanguages,
@@ -116,6 +117,20 @@ describe('toMarkdown', () => {
     const doc = textToBuilderDoc(MARKDOWN, 'Fallback');
     const again = parseResume(toMarkdown(doc), 'Fallback');
     expect(again).toEqual(parseResume(MARKDOWN, 'Fallback'));
+  });
+
+  it('keeps the line breaks you put in the contact details', () => {
+    const doc: BuilderDoc = {
+      ...emptyDoc('Jane'),
+      contact: ['Berlin', 'jane@example.com', CONTACT_BREAK, 'German: A2', 'English: C1'],
+    };
+    const markdown = toMarkdown(doc);
+    expect(markdown).toContain('# Jane\nBerlin | jane@example.com\nGerman: A2 | English: C1\n');
+    const read = parseResume(markdown, 'X');
+    expect(read.headline).toBeNull();
+    expect(read.contactBreaks).toEqual([2]);
+    // And back: the builder gets the break where it was.
+    expect(textToBuilderDoc(markdown, 'X').contact).toEqual(doc.contact);
   });
 
   it('leaves out hidden sections, empty lines and empty sections', () => {

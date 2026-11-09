@@ -1,6 +1,7 @@
 import type { BuilderDoc } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useId } from 'react';
+import { CONTACT_BREAK } from '../docOps';
 import { ListEditor } from './ListEditor';
 import { FIELD } from './ui';
 
@@ -58,6 +59,12 @@ export function HeaderCard({ doc, onChange }: Props) {
           itemLabel={t('contactItem')}
           addLabel={t('addContact')}
           placeholder={t('contactPlaceholder')}
+          lineBreak={{
+            item: CONTACT_BREAK,
+            label: t('contactBreak'),
+            addLabel: t('addContactBreak'),
+            hint: t('contactBreakHint'),
+          }}
           onChange={(contact, field) => {
             onChange({ ...doc, contact }, field);
           }}

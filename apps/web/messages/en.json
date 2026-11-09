@@ -212,7 +212,9 @@
       "useAchievements": "Copy to Achievements bank",
       "askClaude": "Ask {ai} for more suggestions",
       "askClaudeHint": "Paste it into {ai}: it reviews your resume like a recruiter and lists the top fixes.",
-      "askClaudeBox": "Review prompt"
+      "askClaudeBox": "Review prompt",
+      "count": "{count, plural, =0 {No quick fixes} one {# suggestion} other {# suggestions}}",
+      "open": "Show the suggestions for your resume"
     },
     "claudeAnswers": {
       "heading": "Answers for {ai}",
@@ -263,7 +265,8 @@
       "deleteConfirm": "Delete this story?",
       "deleteYes": "Yes, delete {title}",
       "deleteYesShort": "Yes, delete"
-    }
+    },
+    "moreAbout": "About “{field}”"
   },
   "Settings": {
     "title": "Settings",
@@ -411,6 +414,9 @@
     "contact": "Contact details, one per line",
     "contactItem": "Contact detail",
     "addContact": "Add contact detail",
+    "contactBreak": "New line in the PDF",
+    "addContactBreak": "Line break",
+    "contactBreakHint": "Starts a new line in the PDF header here. Put your languages or work permit on a second line.",
     "contactPlaceholder": "Berlin, Germany · +49 … · me@example.com · linkedin.com/in/me",
     "sectionTitle": "Section title",
     "untitled": "Untitled section",

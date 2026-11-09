@@ -45,7 +45,10 @@ describe('Resume files tab', () => {
     );
     const user = await renderFiles();
 
+    // Folded into a pill, so the Setup tab stays short.
+    await user.click(screen.getByText('4 suggestions'));
     const box = screen.getByRole('region', { name: 'Suggestions for your resume' });
+    expect(box).toBeVisible();
     expect(
       within(box).getByText(/differs from My profile \(German: B2 → A2\)/),
     ).toBeInTheDocument();

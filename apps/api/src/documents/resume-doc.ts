@@ -49,8 +49,16 @@ export interface ResumeDoc {
   headline: string | null;
   /** Address, phone, email, links: one item each. */
   contact: string[];
+  /**
+   * Where a new contact line starts, as indexes into `contact`: the header's own line breaks.
+   * Empty or missing: one line.
+   */
+  contactBreaks?: number[];
   sections: ResumeSection[];
 }
+
+/** More header lines than this are a list of details, set on one line as before. */
+const MAX_CONTACT_LINES = 3;
 
 const HEADING = /^(#{1,6})\s+(.*?)\s*#*$/;
 const BULLET = /^\s*[-*•–]\s+(.*)$/;
@@ -156,6 +164,8 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
     }
 
     if (inHeader) {
+      // A second contact line starts a new line in the PDF too.
+      if (doc.contact.length) (doc.contactBreaks ??= []).push(doc.contact.length);
       if (isContactLine(line)) {
         doc.contact.push(
           ...line
@@ -163,7 +173,8 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
             .map((part) => part.trim())
             .filter(Boolean),
         );
-      } else if (!doc.headline) {
+      } else if (!doc.headline && !doc.contact.length) {
+        // The headline is the line right under the name, never one after the contact details.
         // The prompt shows the line as "Headline: …"; Claude sometimes keeps the label.
         doc.headline = line.replace(/^\*{0,2}(headline|überschrift|titel)\*{0,2}\s*:\s*/i, '');
       } else {
@@ -201,6 +212,7 @@ export function parseResume(markdown: string, fallbackName: string): ResumeDoc {
 
   if (!doc.name) doc.name = fallbackName;
   doc.sections = doc.sections.filter((s) => s.title || s.blocks.length);
+  if ((doc.contactBreaks?.length ?? 0) >= MAX_CONTACT_LINES) delete doc.contactBreaks;
   return doc;
 }
 

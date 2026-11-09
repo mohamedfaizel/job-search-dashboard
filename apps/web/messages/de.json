@@ -212,7 +212,9 @@
       "useAchievements": "In die Erfolge-Sammlung kopieren",
       "askClaude": "{ai} nach weiteren Vorschlägen fragen",
       "askClaudeHint": "In {ai} einfügen: es prüft deinen Lebenslauf wie ein Recruiter und nennt die wichtigsten Korrekturen.",
-      "askClaudeBox": "Prüf-Prompt"
+      "askClaudeBox": "Prüf-Prompt",
+      "count": "{count, plural, =0 {Keine schnellen Korrekturen} one {# Vorschlag} other {# Vorschläge}}",
+      "open": "Vorschläge für deinen Lebenslauf zeigen"
     },
     "claudeAnswers": {
       "heading": "Antworten für {ai}",
@@ -263,7 +265,8 @@
       "deleteConfirm": "Diese Geschichte löschen?",
       "deleteYes": "Ja, {title} löschen",
       "deleteYesShort": "Ja, löschen"
-    }
+    },
+    "moreAbout": "Über „{field}“"
   },
   "Settings": {
     "title": "Einstellungen",
@@ -411,6 +414,9 @@
     "contact": "Kontaktangaben, eine pro Zeile",
     "contactItem": "Kontaktangabe",
     "addContact": "Kontaktangabe hinzufügen",
+    "contactBreak": "Neue Zeile im PDF",
+    "addContactBreak": "Zeilenumbruch",
+    "contactBreakHint": "Beginnt hier eine neue Zeile im Kopf des PDFs. Zum Beispiel Sprachen oder Arbeitserlaubnis in die zweite Zeile.",
     "contactPlaceholder": "Berlin, Deutschland · +49 … · ich@example.com · linkedin.com/in/ich",
     "sectionTitle": "Abschnittstitel",
     "untitled": "Abschnitt ohne Titel",

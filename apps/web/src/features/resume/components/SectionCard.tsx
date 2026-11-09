@@ -250,19 +250,10 @@ export function SectionCard({
           </div>
         ) : (
           <>
-            {section.blocks.map((block, blockIndex) => (
-              <div key={block.id} className="group flex items-start gap-1">
-                <div className="min-w-0 flex-1">
-                  <BlockEditor
-                    block={block}
-                    skills={skills}
-                    onChange={(next, field) => {
-                      setBlocks(replaceAt(section.blocks, blockIndex, next), field);
-                    }}
-                  />
-                </div>
-                {/* Moving blocks is rare: these show on hover or focus to keep the card calm. */}
-                <div className="flex flex-col opacity-40 group-focus-within:opacity-100 group-hover:opacity-100">
+            {section.blocks.map((block, blockIndex) => {
+              // Moving blocks is rare: these show on hover or focus to keep the card calm.
+              const actions = (
+                <>
                   <button
                     type="button"
                     className={ICON_BUTTON}
@@ -311,9 +302,30 @@ export function SectionCard({
                   >
                     <TrashIcon />
                   </button>
+                </>
+              );
+              const editor = (
+                <BlockEditor
+                  block={block}
+                  skills={skills}
+                  // A job puts them in its own title row, so a folded job is one line.
+                  actions={actions}
+                  onChange={(next, field) => {
+                    setBlocks(replaceAt(section.blocks, blockIndex, next), field);
+                  }}
+                />
+              );
+              return block.kind === 'entry' ? (
+                <div key={block.id}>{editor}</div>
+              ) : (
+                <div key={block.id} className="group flex items-start gap-1">
+                  <div className="min-w-0 flex-1">{editor}</div>
+                  <div className="flex flex-col opacity-40 group-focus-within:opacity-100 group-hover:opacity-100">
+                    {actions}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
               <span>{t('add')}</span>
               {/* Skills lead with their own row; a job fits Experience best. */}

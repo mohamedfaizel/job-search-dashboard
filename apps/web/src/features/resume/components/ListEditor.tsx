@@ -7,6 +7,8 @@ import { GripIcon, XIcon } from './icons';
 import { DROP_LINE, FIELD, GRIP, ICON_BUTTON } from './ui';
 import { useDragSort } from './useDragSort';
 
+const ADD = 'text-xs font-medium text-slate-600 hover:text-slate-900 hover:underline';
+
 interface Props {
   /** Keeps drags inside this list, and names its fields for Undo. */
   scope: string;
@@ -16,13 +18,23 @@ interface Props {
   itemLabel: string;
   addLabel: string;
   placeholder?: string;
+  /** Lets you put line breaks between the items (contact details): this item is a break. */
+  lineBreak?: { item: string; label: string; addLabel: string; hint: string };
 }
 
 /**
  * A list of lines: bullets, skills. Enter adds a line below, Backspace on an empty line
  * removes it, Alt+↑/↓ moves a line; or drag it by its grip.
  */
-export function ListEditor({ scope, items, onChange, itemLabel, addLabel, placeholder }: Props) {
+export function ListEditor({
+  scope,
+  items,
+  onChange,
+  itemLabel,
+  addLabel,
+  placeholder,
+  lineBreak,
+}: Props) {
   const t = useTranslations('Resume');
   const fields = useRef<(HTMLTextAreaElement | null)[]>([]);
   // The line to focus after the list changes (a new line, or the one above a removed line).
@@ -92,27 +104,46 @@ export function ListEditor({ scope, items, onChange, itemLabel, addLabel, placeh
             <span {...drag.grip(index)} className={GRIP} title={t('dragHint')} aria-hidden>
               <GripIcon />
             </span>
-            <textarea
-              ref={(el) => {
-                fields.current[index] = el;
-              }}
-              rows={1}
-              value={item}
-              placeholder={placeholder}
-              aria-label={`${itemLabel} ${String(index + 1)}`}
-              aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
-              onChange={(event) => {
-                onChange(replaceAt(items, index, event.target.value), `${scope}:${String(index)}`);
-              }}
-              onKeyDown={(event) => {
-                onKeyDown(event, index);
-              }}
-              className={`${FIELD} resize-none`}
-            />
+            {lineBreak && item === lineBreak.item ? (
+              <span
+                title={lineBreak.hint}
+                className="flex min-h-8 flex-1 items-center gap-2 text-xs font-medium text-slate-500"
+              >
+                <span aria-hidden className="h-px flex-1 border-t border-dashed border-slate-300" />
+                ↵ {lineBreak.label}
+                <span aria-hidden className="h-px flex-1 border-t border-dashed border-slate-300" />
+              </span>
+            ) : (
+              <textarea
+                ref={(el) => {
+                  fields.current[index] = el;
+                }}
+                rows={1}
+                value={item}
+                placeholder={placeholder}
+                aria-label={`${itemLabel} ${String(index + 1)}`}
+                aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
+                onChange={(event) => {
+                  onChange(
+                    replaceAt(items, index, event.target.value),
+                    `${scope}:${String(index)}`,
+                  );
+                }}
+                onKeyDown={(event) => {
+                  onKeyDown(event, index);
+                }}
+                className={`${FIELD} resize-none`}
+              />
+            )}
             <button
               type="button"
               className={ICON_BUTTON}
-              aria-label={t('removeItem', { item: `${itemLabel} ${String(index + 1)}` })}
+              aria-label={t('removeItem', {
+                item:
+                  lineBreak && item === lineBreak.item
+                    ? lineBreak.label
+                    : `${itemLabel} ${String(index + 1)}`,
+              })}
               title={t('remove')}
               onClick={() => {
                 onChange(removeAt(items, index), null);
@@ -123,16 +154,30 @@ export function ListEditor({ scope, items, onChange, itemLabel, addLabel, placeh
           </li>
         ))}
       </ul>
-      <button
-        type="button"
-        className="ml-6 text-xs font-medium text-slate-600 hover:text-slate-900 hover:underline"
-        onClick={() => {
-          focusNext.current = items.length;
-          onChange([...items, ''], null);
-        }}
-      >
-        + {addLabel}
-      </button>
+      <div className="ml-6 flex flex-wrap gap-x-4">
+        <button
+          type="button"
+          className={ADD}
+          onClick={() => {
+            focusNext.current = items.length;
+            onChange([...items, ''], null);
+          }}
+        >
+          + {addLabel}
+        </button>
+        {lineBreak && (
+          <button
+            type="button"
+            className={ADD}
+            title={lineBreak.hint}
+            onClick={() => {
+              onChange([...items, lineBreak.item], null);
+            }}
+          >
+            ↵ {lineBreak.addLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
