@@ -16,6 +16,14 @@ export const API_URL: string =
 // the API runs on another port (a different origin) than the page.
 export const graphqlClient = new GraphQLClient(API_URL, { credentials: 'include' });
 
+/**
+ * Points every request at another API address. The phone app calls it on start: on a phone,
+ * "localhost" is the phone itself, so it uses your computer's address on the Wi-Fi instead.
+ */
+export function setApiUrl(url: string): void {
+  graphqlClient.setEndpoint(url);
+}
+
 /** True when the API said "log in first" (no session cookie, or it expired). */
 export function isUnauthenticated(error: unknown): boolean {
   return (

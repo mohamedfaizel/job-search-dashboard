@@ -1,6 +1,6 @@
 import { ClientError } from 'graphql-request';
-import { describe, expect, it } from 'vitest';
-import { ApiError, apiErrorFrom, getErrorCode } from './client';
+import { describe, expect, it, vi } from 'vitest';
+import { API_URL, ApiError, apiErrorFrom, getErrorCode, graphqlClient, setApiUrl } from './client';
 
 const failed = (extensions?: Record<string, unknown>) =>
   new ClientError({ status: 200, errors: [{ message: 'English text', extensions }] } as never, {
@@ -47,5 +47,20 @@ describe('apiErrorFrom', () => {
     expect(apiErrorFrom({ message: ['a', 'b'] }, 'Upload failed (400)').message).toBe(
       'Upload failed (400)',
     );
+  });
+});
+
+describe('setApiUrl', () => {
+  it('sends the next requests to the new address', async () => {
+    const seen: string[] = [];
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      seen.push(String(input instanceof Request ? input.url : input));
+      return Promise.resolve(Response.json({ data: { ok: true } }));
+    });
+    setApiUrl('http://192.168.1.20:3000/graphql');
+    await graphqlClient.request('{ ok }');
+    expect(seen).toEqual(['http://192.168.1.20:3000/graphql']);
+    setApiUrl(API_URL);
+    fetchSpy.mockRestore();
   });
 });
