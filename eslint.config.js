@@ -69,6 +69,16 @@ export default tseslint.config(
     ...jsxA11y.flatConfigs.strict,
   },
 
+  // The service worker is plain JavaScript the browser loads as is: no TypeScript project.
+  {
+    files: ['apps/web/public/**/*.js'],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      globals: globals.serviceworker,
+    },
+  },
+
   // NestJS API: Node globals, and allow the decorated empty classes Nest uses for modules.
   {
     files: ['apps/api/**/*.{ts,mjs}'],

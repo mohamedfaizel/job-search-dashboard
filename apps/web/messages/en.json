@@ -22,7 +22,9 @@
     "add": "Add",
     "account": "Account menu for {name}",
     "accountMenu": "Account",
-    "language": "Language"
+    "language": "Language",
+    "install": "Install app",
+    "installIos": "To install: tap Share, then \"Add to Home Screen\"."
   },
   "Auth": {
     "logInTitle": "Log in",

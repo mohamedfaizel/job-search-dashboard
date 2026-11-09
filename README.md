@@ -197,6 +197,26 @@ TEST_DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/jobsearch_t
 
 `db:deploy` creates the database if it doesn't exist yet.
 
+### Install the app on your computer or phone (PWA)
+
+The web app is a Progressive Web App: a browser can install it like a normal app, with its own
+icon and window. The offline part (a small service worker, `apps/web/public/sw.js`) runs only in a
+production build, so try it with:
+
+```bash
+pnpm --filter @jobsearch/web build
+pnpm --filter @jobsearch/web start   # http://localhost:3001
+```
+
+- **Chrome or Edge on your computer:** open the avatar menu, then **Install app** (or use the
+  install icon in the address bar).
+- **Android (Chrome):** avatar menu, then **Install app**.
+- **iPhone (Safari):** tap Share, then **Add to Home Screen**. The avatar menu shows this hint.
+
+A phone only installs apps from an `https://` address, so phone install works once the app is
+deployed. Offline, the app shows a short "You're offline" page; your data always comes fresh from
+the API.
+
 ### Tailor your resume with Resume-Matcher (optional)
 
 [Resume-Matcher](https://github.com/srbhr/Resume-Matcher) (Apache-2.0) tailors a resume to one job
