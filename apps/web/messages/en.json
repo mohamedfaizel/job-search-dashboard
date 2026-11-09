@@ -89,7 +89,8 @@
       "github": "GitHub",
       "website": "Website",
       "keywords": "Keywords",
-      "keywordsHint": "Words from job ads that are true for you. ✓ on the Fit tab adds them here."
+      "keywordsHint": "Words from job ads that are true for you. ✓ on the Fit tab adds them here.",
+      "notInResume": "not in resume: {list}"
     },
     "answers": {
       "heading": "Application answers",
@@ -132,7 +133,7 @@
       "heading": "Master resume",
       "intro": "Upload your resume here. You edit it section by section in the Resume builder. Match scores and tailored resumes start from it.",
       "language": "Language of this resume",
-      "languageHint": "Jobs in this language are checked against it. Add other languages below.",
+      "languageHint": "Jobs in this language are checked against it. Add other languages on the right.",
       "text": "Resume text",
       "upload": "Upload a PDF or Word file",
       "reading": "Reading your resume…",
@@ -143,7 +144,7 @@
       "achievements": "Achievements bank",
       "achievementsHint": "One true fact per line, with real numbers. {ai} may use them in any tailored resume, and the fact check trusts them.",
       "achievementsExample": "Cut page load time by 40% at Acme (2023)\nLed a team of 4 developers on the checkout redesign",
-      "settings": "Tailored resume settings",
+      "settings": "For all resumes",
       "maxPages": "Page limit",
       "maxPagesHint": "{ai} keeps each tailored resume to this length. The PDF check uses it too.",
       "pages": "{count, plural, one {# page} other {# pages}}",
@@ -166,7 +167,7 @@
     },
     "other": {
       "heading": "Resume in other languages",
-      "intro": "Optional. Jobs whose ad is in one of these languages are checked against that resume, and the {ai} prompt starts from it. Your master resume above stays the main one.",
+      "intro": "Optional. Jobs whose ad is in one of these languages are checked against that resume, and the {ai} prompt starts from it. Your master resume stays the main one.",
       "addAnother": "Add another language",
       "addIn": "Add your resume in",
       "pasted": "Pasted text",
@@ -193,7 +194,8 @@
       "saveResume": "Save {language} resume",
       "or": "or",
       "uploadSaves": "Uploading a file saves it straight away: no need to click Save.",
-      "edit": "Edit {language} resume"
+      "edit": "Edit {language} resume",
+      "addFirst": "Add a resume in another language"
     },
     "suggestions": {
       "title": "Suggestions for your resume",
@@ -204,7 +206,7 @@
       "CLICHES": "Generic words recruiters skip: {detail}. Show it with an example instead.",
       "SYMBOLS": "Symbols an ATS may not read: {detail}",
       "NUMBERS": "Only {with} of {bullets} bullets have a number. Add results (time saved, scale, team size) where you have them.",
-      "LENGTH": "About {pages} pages ({words} words), more than your limit of {limit}. Tailored resumes will be cut to {limit}, or raise the limit below.",
+      "LENGTH": "About {pages} pages ({words} words), more than your limit of {limit}. Tailored resumes will be cut to {limit}, or raise the page limit.",
       "CONTACT": "Missing in the header: {detail}",
       "ACHIEVEMENTS": "Your resume has {count, plural, one {# achievement} other {# achievements}}. Put them in the Achievements bank so every tailored resume can use them.",
       "useAchievements": "Copy to Achievements bank",
@@ -567,10 +569,10 @@
     "tabs": {
       "edit": "Content",
       "look": "Look",
-      "download": "Download",
       "match": "Match job",
       "letter": "Cover letter",
-      "check": "Check & download"
+      "check": "Check & download",
+      "files": "Setup"
     },
     "look": {
       "loading": "Loading…",
@@ -705,8 +707,9 @@
         }
       },
       "wordSpacing": "Your Word file keeps its own size and spacing.",
-      "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file on the Resume page (Resume Settings), and “My own Word file” appears here.",
-      "templateUsed": "Your next PDF downloads use it."
+      "wordNone": "Want your own layout? Upload your master resume as a Word (.docx) file in the Setup tab, and “My own Word file” appears here.",
+      "templateUsed": "Your next PDF downloads use it.",
+      "more": "More: section style, own design, photo, cover letter"
     },
     "copyToMaster": "Copy {title} to my master resume",
     "copyToMasterHint": "Put this section into your master resume, so it is the same for every job",
@@ -799,12 +802,10 @@
       "next": "Next: {step}"
     },
     "setup": {
-      "title": "Setup",
       "file": "Your resume file",
       "noFile": "No file yet",
       "keepHeadings": "Keep my headings",
-      "change": "Change",
-      "close": "Done"
+      "allResumes": "All resumes: {pages}"
     },
     "switcher": {
       "label": "Resume",
@@ -813,7 +814,8 @@
       "forJob": "{title} · {company}",
       "letters": "Cover letter templates",
       "letterIn": "{language} cover letter",
-      "thisJob": "This job"
+      "thisJob": "This job",
+      "languageLabel": "Resume language"
     },
     "downloadStep": {
       "title": "Download your resume",
@@ -823,6 +825,12 @@
     "templatePage": {
       "heading": "Cover letter template",
       "intro": "Your usual letter. On a job’s Cover letter step, “Start from my template” fills it in with that job’s company and title."
+    },
+    "ribbon": {
+      "label": "Resume tools",
+      "text": "Text",
+      "design": "Design",
+      "setup": "Setup"
     }
   },
   "Jobs": {
@@ -1747,7 +1755,6 @@
     },
     "funnel": {
       "title": "Your funnel",
-      "summary": "{applied} applied · {interviews, plural, one {# interview} other {# interviews}} · {offers, plural, one {# offer} other {# offers}}",
       "steps": {
         "tracked": "On tracker",
         "applied": "Applied",
@@ -1756,12 +1763,13 @@
       },
       "stats": {
         "answered": "Got an answer",
-        "wait": "Typical wait for an answer",
+        "wait": "Typical wait",
         "waiting": "Still waiting",
         "week": "Applied this week",
         "month": "Applied in 30 days"
       },
       "days": "{count, plural, one {# day} other {# days}}",
+      "more": "Sources and how it counts",
       "bySource": "Where your applications came from",
       "source": "Source",
       "sources": {

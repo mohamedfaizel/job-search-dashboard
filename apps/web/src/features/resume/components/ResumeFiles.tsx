@@ -12,12 +12,12 @@ import { SaveBar, useProfileSection, WithProfile } from './profileSection';
 import { ResumeSuggestions } from './ResumeSuggestions';
 import { ResumeUpload } from './ResumeUpload';
 
-const card = 'space-y-4 rounded-lg border border-slate-200 bg-white p-5';
+const card = 'space-y-3 rounded-lg border border-slate-200 bg-white p-4';
 
 /**
- * The Files tab of the Resume page: the file your resume comes from, its language, your
- * achievements bank, the page limit and your resumes in other languages. They used to be on
- * My profile > Resume; each setting lives in one place only.
+ * The Setup panel of the Resume page, three columns side by side so it never gets long: the
+ * file your resume comes from and its language, the settings shared by all your resumes (page
+ * limit, keep my headings) and your resumes in other languages.
  */
 export function ResumeFiles() {
   return <WithProfile>{(profile) => <FilesForm profile={profile} />}</WithProfile>;
@@ -42,7 +42,7 @@ function FilesForm({ profile }: { profile: Profile }) {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="grid items-start gap-4 lg:grid-cols-3">
       <form
         onSubmit={(e) => {
           void onSubmit(e);
@@ -51,14 +51,15 @@ function FilesForm({ profile }: { profile: Profile }) {
           setSaved(false);
         }}
         noValidate
-        className="space-y-6"
+        // The two cards of the form are columns of the grid.
+        className="contents"
       >
         <section aria-labelledby="resume-heading" className={card}>
           <div>
-            <h2 id="resume-heading" className="text-lg font-semibold text-slate-900">
+            <h2 id="resume-heading" className="font-semibold text-slate-900">
               {t('resume.heading')}
             </h2>
-            <p className="text-sm text-slate-600">{t('resume.intro')}</p>
+            <p className="text-xs text-slate-500">{t('resume.intro')}</p>
           </div>
           <ResumeUpload fileName={profile.resumeFileName} />
           <ResumeSuggestions
@@ -100,10 +101,10 @@ function FilesForm({ profile }: { profile: Profile }) {
               {tFiles('copiedToBank')}
             </p>
           )}
-          <fieldset className="space-y-3 rounded-md border border-slate-200 p-4">
-            <legend className="px-1 text-sm font-medium text-slate-900">
-              {t('resume.settings')}
-            </legend>
+        </section>
+        <section aria-label={t('resume.settings')} className={card}>
+          <fieldset className="space-y-3">
+            <legend className="font-semibold text-slate-900">{t('resume.settings')}</legend>
             <Field
               label={t('resume.maxPages')}
               htmlFor="resumeMaxPages"
@@ -133,15 +134,15 @@ function FilesForm({ profile }: { profile: Profile }) {
               </span>
             </label>
           </fieldset>
+          <SaveBar
+            label={tFiles('save')}
+            savedText={tFiles('saved')}
+            busy={isSubmitting}
+            showSaved={saved && !isDirty}
+            submittedAt={update.submittedAt}
+            error={update.isError ? tFiles('saveFailed', { error: errorText(update.error) }) : null}
+          />
         </section>
-        <SaveBar
-          label={tFiles('save')}
-          savedText={tFiles('saved')}
-          busy={isSubmitting}
-          showSaved={saved && !isDirty}
-          submittedAt={update.submittedAt}
-          error={update.isError ? tFiles('saveFailed', { error: errorText(update.error) }) : null}
-        />
       </form>
       <OtherResumes profile={profile} />
     </div>

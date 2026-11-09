@@ -127,6 +127,17 @@ describe('profile page', () => {
     });
   });
 
+  it('says next to Skills and Keywords which ones your resume does not mention', async () => {
+    // The resume text is "Ada Lovelace / Frontend engineer".
+    const user = await renderProfile();
+    expect(screen.getByText('not in resume: React, TypeScript')).toBeInTheDocument();
+    expect(screen.getByText('not in resume: accessibility')).toBeInTheDocument();
+    const skills = screen.getByRole('textbox', { name: 'Skills' });
+    await user.clear(skills);
+    await user.type(skills, 'frontend, SAP');
+    expect(screen.getByText('not in resume: SAP')).toBeInTheDocument();
+  });
+
   it('saves the application answers the Apply kit uses', async () => {
     const user = await renderProfile();
     await openTab(user, 'Applications');

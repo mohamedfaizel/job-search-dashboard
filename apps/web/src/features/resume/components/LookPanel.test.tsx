@@ -152,7 +152,7 @@ describe('Look tab', () => {
 
   it('says how to use your own Word file when there is none', async () => {
     await renderLook();
-    expect(screen.getByText(/Resume Settings/)).toBeInTheDocument();
+    expect(screen.getByText(/in the Setup tab/)).toBeInTheDocument();
   });
 
   it('makes My design from Claude’s reply and makes it your default template', async () => {

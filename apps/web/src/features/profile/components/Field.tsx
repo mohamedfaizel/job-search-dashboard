@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 
 interface Props {
   label: string;
+  /** Small text after the label, e.g. "not in resume: SAP". */
+  note?: ReactNode;
   /** The id of the input inside, so the label and error are linked to it. */
   htmlFor: string;
   error?: string | undefined;
@@ -14,6 +16,7 @@ interface Props {
 /** Label + input + error message, wired up for screen readers. */
 export function Field({
   label,
+  note,
   htmlFor,
   error,
   hint,
@@ -23,10 +26,14 @@ export function Field({
 }: Props) {
   return (
     <div className={`space-y-1 ${className}`}>
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-slate-700">
-        {label}
-        {required && <span className="text-red-600"> *</span>}
-      </label>
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <label htmlFor={htmlFor} className="block text-sm font-medium text-slate-700">
+          {label}
+          {required && <span className="text-red-600"> *</span>}
+        </label>
+        {/* Outside the label, so the field's name stays "Skills". */}
+        {note && <span className="text-xs text-amber-700">{note}</span>}
+      </div>
       {children}
       {hint && !error && <p className="text-xs text-slate-500">{hint}</p>}
       {error && (

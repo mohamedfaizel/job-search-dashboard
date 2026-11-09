@@ -27,9 +27,11 @@ import { LetterPanel } from './components/LetterPanel';
 import { LookPanel } from './components/LookPanel';
 import { PdfPreview } from './components/PdfPreview';
 import { ReadAgain } from './components/ReadAgain';
+import { ResumeFiles } from './components/ResumeFiles';
 import { ResumeSwitcher } from './components/ResumeSwitcher';
+import { Ribbon } from './components/Ribbon';
 import { SectionCard } from './components/SectionCard';
-import { SetupRow } from './components/SetupRow';
+import { SetupSummary } from './components/SetupSummary';
 import type { Step } from './components/Steps';
 import { StepBar, StepNav } from './components/Steps';
 import { SMALL_BUTTON } from './components/ui';
@@ -55,19 +57,18 @@ import { LetterTemplatePage } from './LetterTemplatePage';
 /** Wait this long after the last keystroke before saving (and making a new preview). */
 const AUTOSAVE_MS = 1000;
 
-export type BuilderTab = 'edit' | 'look' | 'download' | 'match' | 'letter' | 'check';
+export type BuilderTab = 'edit' | 'look' | 'files' | 'match' | 'letter' | 'check';
 /**
- * The steps, in order. Your resume: write it, style it, download it. A job's copy starts with
- * what the job asks for and ends with the fact check and the download.
+ * Your resume has one screen with a toolbar: Text (bold, italic, links), Design (the look) and
+ * Setup (your file, page limit, other languages). A job's copy has steps, in order: what the
+ * job asks for first, the fact check and the download last.
  */
 const tabsFor = (job: boolean): BuilderTab[] =>
-  job ? ['match', 'edit', 'look', 'letter', 'check'] : ['edit', 'look', 'download'];
+  job ? ['match', 'edit', 'look', 'letter', 'check'] : ['edit', 'look', 'files'];
 
-/** The step a link asks for (?tab=...), or the first step. */
+/** The tab a link asks for (?tab=...), or the first one. Download is the button at the top. */
 function firstTab(job: boolean): BuilderTab {
   const asked = param('tab');
-  // Settings used to be a tab: it is the Setup row above Content now.
-  if (asked === 'files') return 'edit';
   return tabsFor(job).find((id) => id === asked) ?? (job ? 'match' : 'edit');
 }
 
@@ -233,7 +234,6 @@ function Builder({
     id,
     label: t(`tabs.${id}`),
   }));
-  const [setupOpen, setSetupOpen] = useState(() => param('tab') === 'files');
   const errorText = useErrorText();
   const masterSave = useSaveResumeBuild();
   const jobSave = useSaveJobResumeBuild();
@@ -430,15 +430,31 @@ function Builder({
         </p>
       )}
 
-      {!job && (
-        <SetupRow
-          open={setupOpen}
-          onToggle={() => {
-            setSetupOpen((was) => !was);
-          }}
-        />
+      {job ? (
+        <StepBar steps={steps} current={tab} onSelect={onTab} />
+      ) : (
+        <Ribbon
+          label={t('ribbon.label')}
+          tabs={[
+            { id: 'edit', label: t('ribbon.text') },
+            { id: 'look', label: t('ribbon.design') },
+            { id: 'files', label: t('ribbon.setup') },
+          ]}
+          current={tab}
+          onSelect={onTab}
+          aside={<SetupSummary />}
+          sticky={tab === 'edit'}
+        >
+          <div hidden={tab !== 'edit'}>
+            <FormatBar scope={editRef} bare />
+          </div>
+          {/* Stays mounted, so a change waiting to be saved survives switching. */}
+          <div hidden={tab !== 'look'}>
+            <LookPanel onSaved={lookSaved} wide />
+          </div>
+          {tab === 'files' && <ResumeFiles />}
+        </Ribbon>
       )}
-      <StepBar steps={steps} current={tab} onSelect={onTab} />
 
       {job ? (
         <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
@@ -496,7 +512,7 @@ function Builder({
             </p>
           )}
         </div>
-      ) : tab === 'edit' ? (
+      ) : (
         <ReadAgain
           language={language}
           outOfDate={outOfDate}
@@ -510,7 +526,7 @@ function Builder({
             saveNow(json);
           }}
         />
-      ) : null}
+      )}
 
       {/* Phones show one side at a time. */}
       {
@@ -543,14 +559,10 @@ function Builder({
           className={`min-w-0 space-y-4 ${view === 'edit' ? '' : 'hidden lg:block'}`}
         >
           {/* Both tabs stay mounted, so a change waiting to be saved survives switching. */}
-          <div hidden={tab !== 'look'}>
-            <LookPanel onSaved={lookSaved} />
-          </div>
-          {!job && tab === 'download' && (
-            <DownloadCard
-              href={resumeBuildPdfUrl(language, true)}
-              waiting={unsaved || save.isPending}
-            />
+          {job && (
+            <div hidden={tab !== 'look'}>
+              <LookPanel onSaved={lookSaved} />
+            </div>
           )}
           {job && tab === 'match' && (
             <JobMatchPanel
@@ -580,9 +592,14 @@ function Builder({
             </div>
           )}
           {/* Job match drops keywords into the sections, so it shows them too. */}
-          <div ref={editRef} hidden={tab !== 'edit' && tab !== 'match'} className="space-y-3">
+          {/* Your resume's content is always there, next to its toolbar. */}
+          <div
+            ref={editRef}
+            hidden={!!job && tab !== 'edit' && tab !== 'match'}
+            className="space-y-3"
+          >
             <p className="text-xs text-slate-500">{t('intro')}</p>
-            <FormatBar scope={editRef} />
+            {job && <FormatBar scope={editRef} />}
             <HeaderCard doc={doc} onChange={change} />
             {doc.sections.map((section, index) => (
               <SectionCard
@@ -637,7 +654,7 @@ function Builder({
               }}
             />
           </div>
-          <StepNav steps={steps} current={tab} onSelect={onTab} />
+          {job && <StepNav steps={steps} current={tab} onSelect={onTab} />}
         </div>
         {
           <div className={`min-w-0 ${view === 'preview' ? '' : 'hidden lg:block'}`}>
