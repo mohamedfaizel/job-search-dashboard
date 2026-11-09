@@ -9,7 +9,6 @@
   },
   "Nav": {
     "main": "Hauptmenü",
-    "menu": "Menü",
     "jobs": "Stellenanzeigen",
     "tracker": "Bewerbungen",
     "resume": "Lebenslauf",
@@ -18,7 +17,12 @@
     "settings": "Einstellungen",
     "admin": "Admin",
     "logOut": "Abmelden",
-    "loading": "Wird geladen…"
+    "loading": "Wird geladen…",
+    "tabs": "Tabs",
+    "add": "Hinzufügen",
+    "account": "Kontomenü von {name}",
+    "accountMenu": "Konto",
+    "language": "Sprache"
   },
   "Auth": {
     "logInTitle": "Anmelden",

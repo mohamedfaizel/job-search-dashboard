@@ -246,7 +246,7 @@ export function JobsDashboard() {
       {lastChange && (
         <p
           role="status"
-          className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-lg items-center gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg"
+          className="fixed inset-x-4 bottom-[calc(1rem+var(--tabbar))] z-30 mx-auto flex max-w-lg items-center gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg"
         >
           <span className="min-w-0 flex-1">
             {lastChange.jobs.length === 1 && lastChange.jobs[0]

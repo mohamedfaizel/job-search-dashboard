@@ -6,3 +6,17 @@
  */
 @import 'tailwindcss' source('../');
 @import './theme.css';
+
+/*
+ * On phones the app pages have a tab bar at the bottom (#phone-tabs, about 4rem tall). Things
+ * pinned to the bottom (toasts, the apply queue button, minimized popups) add var(--tabbar), so
+ * they sit above it instead of under it.
+ */
+:root {
+  --tabbar: 0px;
+}
+@media (width < 48rem) {
+  :root:has(#phone-tabs) {
+    --tabbar: calc(4rem + env(safe-area-inset-bottom));
+  }
+}

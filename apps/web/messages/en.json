@@ -9,7 +9,6 @@
   },
   "Nav": {
     "main": "Main",
-    "menu": "Menu",
     "jobs": "Job posts",
     "tracker": "Tracker",
     "resume": "Resume",
@@ -18,7 +17,12 @@
     "settings": "Settings",
     "admin": "admin",
     "logOut": "Log out",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "tabs": "Tabs",
+    "add": "Add",
+    "account": "Account menu for {name}",
+    "accountMenu": "Account",
+    "language": "Language"
   },
   "Auth": {
     "logInTitle": "Log in",

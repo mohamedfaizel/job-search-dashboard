@@ -5,6 +5,7 @@ import type { Locale } from '@/i18n/config';
 import { Intl } from '../test/intl';
 import { location, router } from '../test/navigation';
 import { ADMIN, savedLocales, session } from '../test/server';
+import { initialsOf } from './AccountMenu';
 import { AppFrame } from './AppFrame';
 
 function renderFrame(locale: Locale = 'en') {
@@ -20,48 +21,71 @@ function renderFrame(locale: Locale = 'en') {
 }
 
 describe('AppFrame', () => {
-  it('shows the links, marks the current page and logs out', async () => {
+  it('shows the main pages, the gold Add jobs and the phone tabs', async () => {
     session.user = ADMIN;
     location.pathname = '/jobs/add';
-    const user = userEvent.setup();
     renderFrame();
 
     const nav = await screen.findByRole('navigation', { name: 'Main' });
-    const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual([
-      'Job posts',
-      'Tracker',
-      'Resume',
-      'Add jobs',
-      'My profile',
-      'Settings',
-    ]);
+    expect(
+      within(nav)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Job posts', 'Tracker', 'Resume']);
     // /jobs/add is "Add jobs", not "Job posts".
-    expect(within(nav).getByRole('link', { name: 'Add jobs' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
     expect(within(nav).getByRole('link', { name: 'Job posts' })).not.toHaveAttribute(
       'aria-current',
     );
+    expect(screen.getByRole('link', { name: 'Add jobs' })).toHaveAttribute('aria-current', 'page');
+
+    const tabs = screen.getByRole('navigation', { name: 'Tabs' });
+    expect(
+      within(tabs)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual(['/jobs', '/tracker', '/resume', '/jobs/add']);
+    expect(within(tabs).getByRole('link', { name: 'Add' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByText('Page content')).toBeInTheDocument();
 
+    await userEvent.click(screen.getByRole('button', { name: 'Account menu for Mohamed' }));
+    expect(screen.getByText('admin')).toBeInTheDocument();
+  });
+
+  it('opens the avatar menu with My profile, Settings and Log out', async () => {
+    session.user = { ...ADMIN, role: 'USER', name: 'Mohamed Faizel' };
+    location.pathname = '/settings';
+    const user = userEvent.setup();
+    renderFrame();
+
+    const avatar = await screen.findByRole('button', { name: 'Account menu for Mohamed Faizel' });
+    expect(avatar).toHaveTextContent('MF');
+    expect(screen.queryByRole('link', { name: 'Settings' })).toBeNull();
+
+    await user.click(avatar);
+    const menu = screen.getByRole('navigation', { name: 'Account' });
+    expect(within(menu).getByRole('link', { name: 'My profile' })).toHaveAttribute(
+      'href',
+      '/profile',
+    );
+    expect(within(menu).getByRole('link', { name: 'Settings' })).toHaveAttribute(
+      'href',
+      '/settings',
+    );
+    expect(screen.getByText(ADMIN.email)).toBeInTheDocument();
+    expect(screen.queryByText('admin')).toBeNull();
+
+    // Escape closes it; a link click closes it too.
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('navigation', { name: 'Account' })).toBeNull();
+    await user.click(avatar);
+    await user.click(screen.getByRole('link', { name: 'My profile' }));
+    expect(screen.queryByRole('navigation', { name: 'Account' })).toBeNull();
+
+    await user.click(avatar);
     await user.click(screen.getByRole('button', { name: 'Log out' }));
     await vi.waitFor(() => {
       expect(router.replace).toHaveBeenCalledWith('/login');
     });
-  });
-
-  it('shows "Add jobs" and "Settings" to a regular user too', async () => {
-    session.user = { ...ADMIN, role: 'USER' };
-    renderFrame();
-
-    const nav = await screen.findByRole('navigation', { name: 'Main' });
-    expect(within(nav).getByRole('link', { name: 'Add jobs' })).toBeVisible();
-    expect(within(nav).getByRole('link', { name: 'Settings' })).toHaveAttribute(
-      'href',
-      '/settings',
-    );
   });
 
   it('sends you to /login when the session has expired', async () => {
@@ -79,7 +103,8 @@ describe('AppFrame', () => {
     const user = userEvent.setup();
     renderFrame();
 
-    const language = await screen.findByRole('group', { name: 'Language' });
+    await user.click(await screen.findByRole('button', { name: /Account menu/ }));
+    const language = screen.getByRole('group', { name: 'Language' });
     expect(within(language).getByRole('button', { name: 'English' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -102,15 +127,9 @@ describe('AppFrame', () => {
       within(nav)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual([
-      'Stellenanzeigen',
-      'Bewerbungen',
-      'Lebenslauf',
-      'Jobs hinzufügen',
-      'Mein Profil',
-      'Einstellungen',
-    ]);
-    expect(screen.getByRole('button', { name: 'Abmelden' })).toBeInTheDocument();
+    ).toEqual(['Stellenanzeigen', 'Bewerbungen', 'Lebenslauf']);
+    expect(screen.getByRole('link', { name: 'Jobs hinzufügen' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Tabs' })).toHaveTextContent('Hinzufügen');
     // Already in your language: nothing to switch.
     expect(router.refresh).not.toHaveBeenCalled();
   });
@@ -124,5 +143,11 @@ describe('AppFrame', () => {
     });
     expect(document.cookie).toContain('locale=de');
     expect(savedLocales).toEqual([]);
+  });
+
+  it('makes initials from a name', () => {
+    expect(initialsOf('Mohamed Faizel Jamal')).toBe('MF');
+    expect(initialsOf('  anna ')).toBe('A');
+    expect(initialsOf('')).toBe('?');
   });
 });
