@@ -82,7 +82,7 @@ describe('AuthForm', () => {
     expect(router.refresh).toHaveBeenCalled();
     // The refresh brings the page back in German; the form keeps its state.
     rerender(page('de'));
-    expect(screen.getByRole('heading')).toHaveTextContent('Bei Job search anmelden');
+    expect(screen.getByRole('heading')).toHaveTextContent('Bei Job Search Hunter anmelden');
 
     await user.type(screen.getByLabelText('E-Mail'), 'mohamed@example.com');
     await user.type(screen.getByLabelText('Passwort'), 'correct horse');
