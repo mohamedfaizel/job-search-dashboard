@@ -23,6 +23,8 @@ const LAST_RUN: SyncRun = {
   savedSearchName: 'Frontend in Berlin',
   scheduled: false,
   summary: 'frontend · react · DE · Berlin',
+  source: 'JOBHUNTER',
+  boards: [],
 };
 
 export const SAVED: SavedSearch = {
@@ -179,6 +181,16 @@ export const server = setupServer(
             summary: 'backend',
             complete: false,
             scheduled: true,
+          },
+          {
+            ...LAST_RUN,
+            id: 5,
+            savedSearchId: null,
+            savedSearchName: null,
+            summary: 'Senior Frontend',
+            source: 'COMPANY_BOARDS',
+            boards: ['greenhouse:n26', 'ashby:deepl', 'lever:spotify'],
+            creditsCharged: 0,
           },
         ],
       },

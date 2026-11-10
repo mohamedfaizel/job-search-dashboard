@@ -6,7 +6,7 @@ import { api, requests, SAVED, server } from '../test/server';
 import { SyncPanel } from './SyncPanel';
 
 describe('SyncPanel', () => {
-  it('starts on the free Arbeitsagentur when you have no JobHunter token yet, and says why', async () => {
+  it('starts on the Arbeitsagentur when you have no JobHunter token yet, and says why', async () => {
     server.use(api.query('MyApiKeys', () => HttpResponse.json({ data: { myApiKeys: [] } })));
     renderWithData(<SyncPanel />);
 
@@ -36,8 +36,8 @@ describe('SyncPanel', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Fill from my profile' }));
 
-    expect(screen.getByLabelText(/job titles/i)).toHaveValue('Frontend Engineer, React Developer');
-    expect(screen.getByLabelText(/cities or regions/i)).toHaveValue('Berlin');
+    expect(screen.getByLabelText(/^job titles/i)).toHaveValue('Frontend Engineer, React Developer');
+    expect(screen.getByLabelText(/^cities or regions/i)).toHaveValue('Berlin');
     // The profile has no skills, so the search keeps its own.
     expect(screen.getByLabelText(/^skills/i)).toHaveValue('react');
   });
@@ -59,14 +59,14 @@ describe('SyncPanel', () => {
     );
     expect(status).toHaveTextContent('80 jobs match this search in total.');
     expect(status).toHaveTextContent(
-      'Used 20 credits (5 jobs already paid this month, so free), 741 left.',
+      'Used 20 credits (5 jobs already paid this month, so no charge), 741 left.',
     );
     expect(requests[0]?.variables).toEqual({
       input: {
         titles: ['frontend'],
         skills: ['react'],
         countryCodes: ['DE'],
-        maxAgeDays: 7,
+        maxAgeDays: 1,
         pageSize: 25,
         maxPages: 2,
         onlyNew: true,
@@ -76,7 +76,7 @@ describe('SyncPanel', () => {
 
   it('sends cities or regions', async () => {
     renderWithData(<SyncPanel />);
-    await userEvent.type(screen.getByLabelText(/cities or regions/i), 'Berlin, Bavaria');
+    await userEvent.type(screen.getByLabelText(/^cities or regions/i), 'Berlin, Bavaria');
     await userEvent.click(screen.getByRole('button', { name: /^import/i }));
 
     await screen.findByRole('status');
@@ -101,7 +101,7 @@ describe('SyncPanel', () => {
 
   it('can fetch everything again instead of only new jobs', async () => {
     renderWithData(<SyncPanel />);
-    const onlyNew = screen.getByRole('checkbox', { name: 'Only jobs new since my last import' });
+    const onlyNew = screen.getByRole('checkbox', { name: 'New since last import' });
     expect(onlyNew).toBeChecked();
 
     await userEvent.click(onlyNew);
@@ -114,7 +114,7 @@ describe('SyncPanel', () => {
 
   it('needs at least one job title', async () => {
     renderWithData(<SyncPanel />);
-    await userEvent.clear(screen.getByLabelText(/job titles/i));
+    await userEvent.clear(screen.getByLabelText(/^job titles/i));
     await userEvent.click(screen.getByRole('button', { name: /^import/i }));
 
     expect(await screen.findByText('Enter at least one job title')).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe('SyncPanel', () => {
     renderWithData(<SyncPanel />);
     const fold = screen.getByText('Page settings').closest('details');
     expect(fold).not.toHaveAttribute('open');
-    expect(fold).toHaveTextContent('7 days old at most · 25 per page · 1 page');
+    expect(fold).toHaveTextContent('No. of days: 1 · 25 per page · 1 page');
 
     await userEvent.click(screen.getByText('Page settings'));
     const pageSize = screen.getByLabelText('Jobs per page');
@@ -140,18 +140,14 @@ describe('SyncPanel', () => {
     expect(requests).toHaveLength(0);
   });
 
-  it('sends the extra filters from More filters', async () => {
+  it('sends the extra filters from the chips', async () => {
     renderWithData(<SyncPanel />);
-    await userEvent.click(screen.getByText('More filters'));
     await userEvent.click(screen.getByRole('checkbox', { name: 'English' }));
-    await userEvent.click(
-      screen.getByRole('checkbox', { name: /Skip ads that need fluent German/ }),
-    );
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Skip fluent-German ads' }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Remote only' }));
     await userEvent.type(screen.getByLabelText('Skip titles with'), 'Werkstudent, Praktikum');
     await userEvent.click(screen.getByRole('checkbox', { name: 'Full-time' }));
-    await userEvent.type(screen.getByLabelText('Minimum salary (€ a year)'), '60000');
-    expect(screen.getByText('More filters')).toHaveTextContent('6 on');
+    await userEvent.type(screen.getByLabelText('Min salary (€ a year)'), '60000');
 
     await userEvent.click(screen.getByRole('button', { name: /^import/i }));
 
@@ -168,17 +164,16 @@ describe('SyncPanel', () => {
     });
   });
 
-  it('opens More filters when a loaded search uses them', () => {
+  it('shows the filters a loaded search uses as ticked chips', () => {
     renderWithData(<SyncPanel loaded={{ ...SAVED, remoteOnly: true }} />);
-    expect(screen.getByText('More filters').closest('details')).toHaveAttribute('open');
     expect(screen.getByRole('checkbox', { name: 'Remote only' })).toBeChecked();
   });
 
   describe('saving the search', () => {
     it('saves the form as a named search', async () => {
       renderWithData(<SyncPanel />);
-      await userEvent.type(screen.getByLabelText(/cities or regions/i), 'Berlin');
-      await userEvent.type(screen.getByLabelText('Save this search as'), 'Frontend in Berlin');
+      await userEvent.type(screen.getByLabelText(/^cities or regions/i), 'Berlin');
+      await userEvent.type(screen.getByLabelText('Save as'), 'Frontend in Berlin');
 
       await userEvent.click(screen.getByRole('button', { name: 'Save search' }));
 
@@ -191,7 +186,7 @@ describe('SyncPanel', () => {
             titles: ['frontend'],
             skills: ['react'],
             locations: ['Berlin'],
-            maxAgeDays: 7,
+            maxAgeDays: 1,
             pageSize: 25,
             maxPages: 1,
             onlyNew: true,
@@ -210,7 +205,7 @@ describe('SyncPanel', () => {
 
     it('starts from a loaded search and updates it', async () => {
       renderWithData(<SyncPanel loaded={SAVED} />);
-      expect(screen.getByLabelText(/cities or regions/i)).toHaveValue('Berlin');
+      expect(screen.getByLabelText(/^cities or regions/i)).toHaveValue('Berlin');
       expect(screen.getByLabelText('Max pages')).toHaveValue('2');
 
       await userEvent.click(screen.getByRole('button', { name: 'Update saved search' }));
@@ -221,7 +216,7 @@ describe('SyncPanel', () => {
 
     it('saves a renamed copy as a new search', async () => {
       renderWithData(<SyncPanel loaded={SAVED} />);
-      const name = screen.getByLabelText('Save this search as');
+      const name = screen.getByLabelText('Save as');
       await userEvent.clear(name);
       await userEvent.type(name, 'Frontend in Munich');
 
@@ -235,29 +230,28 @@ describe('SyncPanel', () => {
   it('imports from the free German board, hiding filters it ignores', async () => {
     renderWithData(<SyncPanel />);
     expect(screen.getByRole('radio', { name: /JobHunter/ })).toBeChecked();
-    await userEvent.type(screen.getByLabelText(/cities or regions/i), 'Berlin');
+    await userEvent.type(screen.getByLabelText(/^cities or regions/i), 'Berlin');
 
-    await userEvent.click(screen.getByRole('radio', { name: /Arbeitsagentur \(free\)/ }));
+    await userEvent.click(screen.getByRole('radio', { name: /Arbeitsagentur/ }));
 
     expect(screen.getByRole('heading', { name: 'Import from Arbeitsagentur' })).toBeInTheDocument();
     expect(screen.queryByLabelText(/^skills/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Countries' })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByText('More filters'));
     expect(screen.queryByRole('checkbox', { name: 'English' })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Minimum salary (€ a year)')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Min salary (€ a year)')).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: 'Contract' })).not.toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Part-time' })).toBeInTheDocument();
 
     // No credit estimate on the button.
     await userEvent.click(screen.getByRole('button', { name: 'Import' }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Free: no credits used.');
+    expect(await screen.findByRole('status')).toHaveTextContent('No credits used.');
     expect(requests[0]?.variables).toEqual({
       input: {
         source: 'ARBEITSAGENTUR',
         titles: ['frontend'],
         locations: ['Berlin'],
-        maxAgeDays: 7,
+        maxAgeDays: 1,
         pageSize: 25,
         maxPages: 1,
         onlyNew: true,
@@ -284,7 +278,7 @@ describe('SyncPanel', () => {
       expect(screen.queryByRole('combobox', { name: 'Countries' })).not.toBeInTheDocument();
       expect(screen.queryByLabelText('Jobs per page')).not.toBeInTheDocument();
       expect(screen.queryByLabelText('Max pages')).not.toBeInTheDocument();
-      expect(screen.queryByLabelText(/only jobs new since/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/new since last import/i)).not.toBeInTheDocument();
 
       await userEvent.type(
         screen.getByRole('textbox', { name: /^company career pages/i }),
@@ -292,13 +286,13 @@ describe('SyncPanel', () => {
       );
       await userEvent.click(screen.getByRole('button', { name: 'Import' }));
 
-      expect(await screen.findByRole('status')).toHaveTextContent('Free: no credits used.');
+      expect(await screen.findByRole('status')).toHaveTextContent('No credits used.');
       expect(requests[0]?.variables).toEqual({
         input: {
           source: 'COMPANY_BOARDS',
           boards: ['greenhouse:stripe', 'https://jobs.lever.co/netflix', 'ashby:ramp'],
           titles: ['frontend'],
-          maxAgeDays: 7,
+          maxAgeDays: 1,
           pageSize: 25,
           maxPages: 1,
           onlyNew: true,

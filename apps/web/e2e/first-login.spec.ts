@@ -59,7 +59,7 @@ test.describe('desktop', () => {
     );
   });
 
-  test('a German sign-up stays German, and without a token the import starts free', async ({
+  test('a German sign-up stays German, and without a token the import starts on the Arbeitsagentur', async ({
     browser,
   }) => {
     const context = await browser.newContext({ locale: 'de-DE' });
