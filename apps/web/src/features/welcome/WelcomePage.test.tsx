@@ -31,7 +31,7 @@ describe('Welcome steps', () => {
     );
 
     // Says where a new user gets their own token.
-    expect(screen.getByRole('link', { name: 'Get a token at jobspipe.dev' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Get your token here' })).toHaveAttribute(
       'href',
       'https://jobspipe.dev',
     );

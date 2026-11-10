@@ -2173,7 +2173,7 @@
       "title": "1. Dein Job-Daten-Schlüssel",
       "intro": "Job Search Hunter findet Jobs mit einem JobHunter-Token. Füge deins ein, um Jobs zu importieren und gespeicherte Suchen laufen zu lassen. Es bleibt privat in deinem Konto.",
       "where": "Noch kein Token? Registriere dich mit deiner eigenen E-Mail und kopiere deinen API-Schlüssel (er beginnt mit jp_).",
-      "whereLink": "Token bei jobspipe.dev holen"
+      "whereLink": "Token hier holen"
     },
     "resume": {
       "title": "2. Dein Lebenslauf",

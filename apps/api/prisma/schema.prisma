@@ -71,7 +71,7 @@ enum AiProvider {
 }
 
 enum ApiKeyKind {
-  /// JobHunter (JobsPipe) search token: imports use it and its credits.
+  /// JobHunter search token: imports use it and its credits.
   JOBHUNTER
   /// Claude Console key, for the AI score.
   ANTHROPIC
