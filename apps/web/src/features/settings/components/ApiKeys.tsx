@@ -135,7 +135,7 @@ interface CardProps {
   models?: { default: string; more: string[] };
 }
 
-/** One key: masked when saved (Test, Replace, delete), a password box when not. */
+/** One key: a Saved badge with Test, Replace and Delete when saved, a password box when not. */
 export function KeyCard({
   kind,
   name,
@@ -174,56 +174,47 @@ export function KeyCard({
             {t('notSet')}
           </span>
         )}
+        {saved && !editing && (
+          // A saved key is never shown again, not even its last letters: the badge says it is set.
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className={button}
+              disabled={test.isPending}
+              onClick={() => {
+                test.mutate(kind, {
+                  // The job popup turns its AI parts off (or on again) from this result.
+                  onSuccess: (result) => {
+                    if (models) noteAiResult(result.ok, result.error);
+                  },
+                });
+              }}
+            >
+              {test.isPending ? t('testing') : t('test')}
+            </button>
+            <button
+              type="button"
+              className={button}
+              onClick={() => {
+                setEditing(true);
+                test.reset();
+              }}
+            >
+              {t('replace')}
+            </button>
+            <button
+              type="button"
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+              aria-label={t('deleteLabel', { name })}
+              onClick={() => {
+                setConfirming(true);
+              }}
+            >
+              {t('delete')}
+            </button>
+          </div>
+        )}
       </div>
-
-      {saved && !editing && (
-        <div className="flex flex-wrap items-center gap-2">
-          <code
-            className="w-full min-w-0 truncate rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 font-mono text-sm text-slate-700 sm:w-auto sm:flex-1"
-            aria-label={t('masked', { last4: saved.last4 })}
-          >
-            {`••••••••••••${saved.last4}`}
-          </code>
-          <button
-            type="button"
-            className={button}
-            disabled={test.isPending}
-            onClick={() => {
-              test.mutate(kind, {
-                // The job popup turns its AI parts off (or on again) from this result.
-                onSuccess: (result) => {
-                  if (models) noteAiResult(result.ok, result.error);
-                },
-              });
-            }}
-          >
-            {test.isPending ? t('testing') : t('test')}
-          </button>
-          <button
-            type="button"
-            className={button}
-            onClick={() => {
-              setEditing(true);
-              test.reset();
-            }}
-          >
-            {t('replace')}
-          </button>
-          <button
-            type="button"
-            className="rounded-md border border-slate-300 bg-white p-1.5 text-red-600 hover:bg-red-50"
-            aria-label={t('deleteLabel', { name })}
-            title={t('delete')}
-            onClick={() => {
-              setConfirming(true);
-            }}
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-            </svg>
-          </button>
-        </div>
-      )}
 
       {confirming && saved && (
         <div

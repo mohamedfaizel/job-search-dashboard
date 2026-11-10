@@ -293,7 +293,7 @@
     },
     "keys": {
       "heading": "API keys",
-      "intro": "Your own keys for paid services, so you spend your own credits. They are stored encrypted and only the last 4 characters are ever shown again.",
+      "intro": "Your own keys for paid services, so you spend your own credits. They are stored encrypted and never shown again once saved.",
       "loading": "Loading your keys…",
       "loadFailed": "Could not load your keys: {error}",
       "jobhunter": {
@@ -317,7 +317,6 @@
       "deleteLabel": "Delete your {name}",
       "confirmDelete": "Delete this key? Imports stop until you add one again.",
       "saveFailed": "Could not save: {error}",
-      "masked": "Saved key ending in {last4}",
       "ai": {
         "heading": "AI",
         "intro": "Pick your AI and paste its key. The AI score (Resume-Matcher) uses your key and credits, and the copy-and-open buttons open this AI's chat.",
@@ -2174,7 +2173,7 @@
       "title": "1. Your job data key",
       "intro": "Job Search Hunter finds jobs with a JobHunter token. Paste yours to import jobs and run saved searches. It stays private to your account.",
       "where": "No token yet? Sign up with your own email, then copy your API key (it starts with jp_).",
-      "whereLink": "Get a token at jobspipe.dev"
+      "whereLink": "Get your token here"
     },
     "resume": {
       "title": "2. Your resume",

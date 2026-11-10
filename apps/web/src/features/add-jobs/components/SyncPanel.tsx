@@ -162,7 +162,7 @@ export function SyncPanel({ loaded = null }: Props) {
               label={t('moreAbout', { field: t('sync.source') })}
               text={t(boards ? 'sync.introBoards' : noCredits ? 'sync.introFree' : 'sync.intro')}
             />
-            <div className="flex w-full gap-2 overflow-x-auto sm:w-auto sm:flex-wrap">
+            <div className="flex w-full min-w-0 gap-2 overflow-x-auto sm:w-auto sm:flex-wrap">
               {IMPORT_SOURCES.map((value) => (
                 <label
                   key={value}
