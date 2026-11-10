@@ -3,12 +3,17 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Browser tests: the real web app and the real API, in Chromium. They walk through what a new
  * account sees on its first login. Run `pnpm build` first, then `pnpm --filter @jobsearch/web
- * test:browser`. The API runs on the TEST database.
+ * test:browser`. The API runs on its own test database.
  */
-const testDatabase = process.env['TEST_DATABASE_URL'];
-if (!testDatabase) {
-  throw new Error('Set TEST_DATABASE_URL (see .env.example): the browser tests use that database.');
+const testDatabaseUrl = process.env['TEST_DATABASE_URL'];
+if (!testDatabaseUrl) {
+  throw new Error('Set TEST_DATABASE_URL (see .env.example): the browser tests use a copy of it.');
 }
+// Their own database next to the API tests' one (jobsearch_test -> jobsearch_test_browser):
+// the API tests add rows with fixed ids, which would make new sign-ups here clash.
+const browserDatabase = new URL(testDatabaseUrl);
+browserDatabase.pathname = `${browserDatabase.pathname}_browser`;
+const testDatabase = browserDatabase.toString();
 
 export default defineConfig({
   testDir: './e2e',
@@ -29,7 +34,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      // The test database's tables, then the built API. Tests use new accounts each run.
+      // Creates the database and its tables if needed, then starts the built API.
       command:
         'pnpm --filter @jobsearch/api exec prisma migrate deploy && pnpm --filter @jobsearch/api start',
       url: 'http://localhost:3000/health',
