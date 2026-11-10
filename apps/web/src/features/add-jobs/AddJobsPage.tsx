@@ -1,7 +1,7 @@
 'use client';
 
 import type { SavedSearch } from '@jobsearch/data';
-import { useMe, useSavedSearches } from '@jobsearch/data';
+import { useMe } from '@jobsearch/data';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -12,11 +12,11 @@ import { SavedSearches } from './components/SavedSearches';
 import { SyncPanel } from './components/SyncPanel';
 import { Tabs } from './components/Tabs';
 
-type TabId = 'saved' | 'import' | 'manual';
+type TabId = 'import' | 'manual';
 
 /**
- * Add jobs: saved searches, imports from JobHunter and adding a job by hand. Anyone can add jobs;
- * JobHunter imports use the token in your own Settings.
+ * Add jobs: imports (with your saved searches beside the form) and adding a job by hand. Anyone
+ * can add jobs; JobHunter imports use the token in your own Settings.
  */
 export function AddJobsPage() {
   const errorText = useErrorText();
@@ -35,11 +35,10 @@ export function AddJobsPage() {
 
 function AddJobs() {
   const t = useTranslations('AddJobs');
-  const [tab, setTab] = useState<TabId>('saved');
+  const [tab, setTab] = useState<TabId>('import');
   // "Edit" on a saved search puts it into the import form. The key remounts the form with it.
   const [loaded, setLoaded] = useState<SavedSearch | null>(null);
   const [formKey, setFormKey] = useState(0);
-  const { data: searches } = useSavedSearches();
 
   return (
     <section aria-labelledby="add-jobs-title" className="space-y-4">
@@ -60,28 +59,24 @@ function AddJobs() {
         onSelect={setTab}
         tabs={[
           {
-            id: 'saved',
-            label: searches ? t('tabs.savedCount', { count: searches.length }) : t('tabs.saved'),
-            short: searches
-              ? t('tabs.savedShortCount', { count: searches.length })
-              : t('tabs.savedShort'),
-            panel: (
-              <SavedSearches
-                onLoad={(search) => {
-                  setLoaded(search);
-                  setFormKey((k) => k + 1);
-                  setTab('import');
-                }}
-              />
-            ),
-          },
-          {
             id: 'import',
             label: t('tabs.import'),
             short: t('tabs.importShort'),
             panel: (
-              <div>
-                <SyncPanel key={formKey} loaded={loaded} />
+              // Saved searches sit beside the form on wide screens and above it on a phone.
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                <div className="lg:w-80 lg:flex-none">
+                  <SavedSearches
+                    loadedId={loaded?.id ?? null}
+                    onLoad={(search) => {
+                      setLoaded(search);
+                      setFormKey((k) => k + 1);
+                    }}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <SyncPanel key={formKey} loaded={loaded} />
+                </div>
               </div>
             ),
           },
