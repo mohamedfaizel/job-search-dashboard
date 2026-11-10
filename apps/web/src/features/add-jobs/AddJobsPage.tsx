@@ -63,7 +63,8 @@ function AddJobs() {
             label: t('tabs.import'),
             short: t('tabs.importShort'),
             panel: (
-              // Saved searches sit beside the form on wide screens and above it on a phone.
+              // Saved searches sit beside the form on wide screens and above it on a phone. Import
+              // history sits under the form, so a long saved-search list has the left side to itself.
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
                 <div className="lg:w-80 lg:flex-none">
                   <SavedSearches
@@ -74,8 +75,9 @@ function AddJobs() {
                     }}
                   />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 space-y-6">
                   <SyncPanel key={formKey} loaded={loaded} />
+                  <ImportHistory />
                 </div>
               </div>
             ),
@@ -85,17 +87,14 @@ function AddJobs() {
             label: t('tabs.manual'),
             short: t('tabs.manualShort'),
             panel: (
-              <div>
+              <div className="space-y-6">
                 <AddJobForm />
+                <ImportHistory />
               </div>
             ),
           },
         ]}
       />
-      {/* Outside the tabs, so every tab shows what the imports brought in. */}
-      <div className="pt-2">
-        <ImportHistory />
-      </div>
     </section>
   );
 }
