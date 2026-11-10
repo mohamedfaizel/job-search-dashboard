@@ -128,36 +128,53 @@ describe('Resume builder parts', () => {
     expect(card('Experience')).toBeInTheDocument();
   });
 
-  it('reads the resume with the AI chat prompt and the pasted reply', async () => {
+  it('sorts the resume with the AI chat: pasting the reply applies it, Undo goes back', async () => {
     const user = await renderBuilder();
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
     const write = vi.spyOn(navigator.clipboard, 'writeText');
     await user.click(screen.getByRole('button', { name: /Sort with my AI chat/ }));
-    await user.click(screen.getByRole('button', { name: 'Copy prompt and open Claude' }));
+    await user.click(screen.getByRole('button', { name: /Copy prompt and open Claude/ }));
     expect(await screen.findByText('Copied. Paste it into Claude.')).toBeInTheDocument();
     expect(write).toHaveBeenCalledWith('Please put my resume into the layout');
     expect(open).toHaveBeenCalledWith('https://claude.ai/new', '_blank', 'noopener');
 
-    await user.type(screen.getByRole('textbox', { name: 'Claude’s reply' }), '# Ada');
-    await user.click(screen.getByRole('button', { name: 'Apply' }));
+    vi.spyOn(navigator.clipboard, 'readText').mockResolvedValue('# Ada');
+    await user.click(screen.getByRole('button', { name: /Paste Claude’s reply/ }));
     expect(requests).toContainEqual({
       operation: 'RestartResumeBuild',
       variables: { language: 'en', reply: '# Ada' },
     });
     expect(await screen.findByDisplayValue('Ada from the upload')).toBeInTheDocument();
+    const done = screen.getByText(/Done: your resume is sorted/);
+    // The Undo next to the paste button, inside the dropdown.
+    await user.click(within(done.parentElement!).getByRole('button', { name: '↶ Undo' }));
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Ada Lovelace');
+  });
+
+  it('opens the reply as text to edit, also when the clipboard is blocked', async () => {
+    const user = await renderBuilder();
+    vi.spyOn(navigator.clipboard, 'readText').mockRejectedValue(new Error('blocked'));
+    await user.click(screen.getByRole('button', { name: /Sort with my AI chat/ }));
+    expect(screen.queryByRole('textbox', { name: 'Claude’s reply' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: /Paste Claude’s reply/ }));
+    expect(await screen.findByText(/Couldn’t read the clipboard/)).toBeInTheDocument();
+    await user.type(screen.getByRole('textbox', { name: 'Claude’s reply' }), '# Ada');
+    await user.click(screen.getByRole('button', { name: 'Apply this reply' }));
+    expect(await screen.findByDisplayValue('Ada from the upload')).toBeInTheDocument();
   });
 
   it('starts again from My profile only after you confirm', async () => {
     const user = await renderBuilder();
-    await user.click(screen.getByRole('button', { name: 'Start again from My profile' }));
+    await user.click(screen.getByRole('button', { name: /Sort with my AI chat/ }));
+    await user.click(screen.getByRole('button', { name: /Start again from My profile/ }));
     const confirm = screen.getByRole('alertdialog', { name: 'Start again from My profile' });
     await user.click(within(confirm).getByRole('button', { name: 'Cancel' }));
     expect(requests.some((r) => r.operation === 'RestartResumeBuild')).toBe(false);
-    await user.click(screen.getByRole('button', { name: 'Start again from My profile' }));
+    await user.click(screen.getByRole('button', { name: /Start again from My profile/ }));
     await user.click(screen.getByRole('button', { name: 'Replace' }));
     expect(await screen.findByDisplayValue('Ada from the upload')).toBeInTheDocument();
-    // Undo brings the builder's version back.
-    await user.click(screen.getByRole('button', { name: /Undo/ }));
+    // Undo at the top brings the builder's version back.
+    await user.click(screen.getAllByRole('button', { name: '↶ Undo' })[0]!);
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Ada Lovelace');
   });
 

@@ -27,7 +27,7 @@ import { JobMatchPanel } from './components/JobMatchPanel';
 import { LetterPanel } from './components/LetterPanel';
 import { LookPanel } from './components/LookPanel';
 import { PdfPreview } from './components/PdfPreview';
-import { ReadAgain } from './components/ReadAgain';
+import { ReadAgain, SortWithAi } from './components/ReadAgain';
 import { ResumeFiles } from './components/ResumeFiles';
 import { ResumeSwitcher } from './components/ResumeSwitcher';
 import { SectionCard } from './components/SectionCard';
@@ -330,6 +330,14 @@ function Builder({
     setLetterVersion(`letter-${String(Date.now())}`);
   }, []);
 
+  // A resume read again (the new upload, your AI chat's reply or My profile): Undo goes back.
+  const readAgain = useCallback((read: ResumeBuild) => {
+    dispatch({ type: 'reset', doc: JSON.parse(read.doc) as BuilderDoc });
+    setSavedJson(read.doc);
+    setOutOfDate(false);
+    setVersion(read.savedAt ?? String(Date.now()));
+  }, []);
+
   // Setup is a panel on the right of your own resume (?tab=files opens it).
   const openSetup = useCallback(() => {
     onTab('files');
@@ -352,21 +360,22 @@ function Builder({
 
   return (
     <div className="mx-auto max-w-7xl space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="mr-auto flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-          <h1 className="sr-only">{t('title')}</h1>
-          <ResumeSwitcher
-            languages={job ? [language] : build.languages}
-            language={language}
-            {...(job ? { job } : {})}
-            onLanguage={onLanguage}
-            onOpen={(href) => {
-              window.location.assign(href);
-            }}
-            {...(job ? {} : { onAdd: openSetup })}
-          />
-          {!job && (
-            <>
+      {/* Left: which resume and its setup. Right: saved, AI sort, undo, redo and the PDF. */}
+      <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+        <div className="mr-auto min-w-0 space-y-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="sr-only">{t('title')}</h1>
+            <ResumeSwitcher
+              languages={job ? [language] : build.languages}
+              language={language}
+              {...(job ? { job } : {})}
+              onLanguage={onLanguage}
+              onOpen={(href) => {
+                window.location.assign(href);
+              }}
+              {...(job ? {} : { onAdd: openSetup })}
+            />
+            {!job && (
               <button
                 type="button"
                 aria-haspopup="dialog"
@@ -376,78 +385,91 @@ function Builder({
               >
                 ⚙ {t('ribbon.setup')}
               </button>
-              <span className="flex min-w-0 flex-wrap items-center gap-x-3 text-xs text-slate-600">
-                <SetupSummary />
-              </span>
-            </>
-          )}
-          {job && (
-            <Link href="/resume" className="text-sm text-brand-700 hover:underline">
-              {t('job.openMaster')}
-            </Link>
+            )}
+            {job && (
+              <Link href="/resume" className="text-sm text-brand-700 hover:underline">
+                {t('job.openMaster')}
+              </Link>
+            )}
+          </div>
+          {!job && (
+            <p className="flex min-w-0 flex-wrap items-center gap-x-3 text-xs text-slate-600">
+              <SetupSummary />
+            </p>
           )}
         </div>
-        <span
-          role="status"
-          className={`text-sm font-medium ${
-            save.isError && unsaved
-              ? 'text-red-700'
-              : unsaved || save.isPending
-                ? 'text-slate-500'
-                : 'text-emerald-700'
-          }`}
-        >
-          {status}
-        </span>
-        {save.isError && unsaved && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            role="status"
+            className={`text-sm font-medium ${
+              save.isError && unsaved
+                ? 'text-red-700'
+                : unsaved || save.isPending
+                  ? 'text-slate-500'
+                  : 'text-emerald-700'
+            }`}
+          >
+            {status}
+          </span>
+          {save.isError && unsaved && (
+            <button
+              type="button"
+              className={SMALL_BUTTON}
+              onClick={() => {
+                saveNow(json);
+              }}
+            >
+              {t('retry')}
+            </button>
+          )}
+          {!job && (
+            <SortWithAi
+              language={language}
+              onRead={readAgain}
+              onUndo={() => {
+                dispatch({ type: 'undo' });
+              }}
+            />
+          )}
           <button
             type="button"
             className={SMALL_BUTTON}
+            disabled={!history.past.length}
+            aria-keyshortcuts="Control+Z"
             onClick={() => {
-              saveNow(json);
+              dispatch({ type: 'undo' });
             }}
           >
-            {t('retry')}
+            ↶ {t('undo')}
           </button>
-        )}
-        <button
-          type="button"
-          className={SMALL_BUTTON}
-          disabled={!history.past.length}
-          aria-keyshortcuts="Control+Z"
-          onClick={() => {
-            dispatch({ type: 'undo' });
-          }}
-        >
-          ↶ {t('undo')}
-        </button>
-        <button
-          type="button"
-          className={SMALL_BUTTON}
-          disabled={!history.future.length}
-          aria-keyshortcuts="Control+Shift+Z"
-          onClick={() => {
-            dispatch({ type: 'redo' });
-          }}
-        >
-          ↷ {t('redo')}
-        </button>
-        {unsaved || save.isPending ? (
-          <span
-            aria-disabled
-            title={t('downloadWait')}
-            className="cursor-not-allowed rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white opacity-50"
+          <button
+            type="button"
+            className={SMALL_BUTTON}
+            disabled={!history.future.length}
+            aria-keyshortcuts="Control+Shift+Z"
+            onClick={() => {
+              dispatch({ type: 'redo' });
+            }}
           >
-            ⬇ {t('download')}
-          </span>
-        ) : (
-          <a
-            href={jobId ? jobResumeBuildPdfUrl(jobId, true) : resumeBuildPdfUrl(language, true)}
-            className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
-          >
-            ⬇ {t('download')}
-          </a>
-        )}
+            ↷ {t('redo')}
+          </button>
+          {unsaved || save.isPending ? (
+            <span
+              aria-disabled
+              title={t('downloadWait')}
+              className="cursor-not-allowed rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white opacity-50"
+            >
+              ⬇ {t('download')}
+            </span>
+          ) : (
+            <a
+              href={jobId ? jobResumeBuildPdfUrl(jobId, true) : resumeBuildPdfUrl(language, true)}
+              className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              ⬇ {t('download')}
+            </a>
+          )}
+        </div>
       </div>
       {save.isError && unsaved && (
         <p role="alert" className="text-sm text-red-700">
@@ -544,12 +566,7 @@ function Builder({
         <ReadAgain
           language={language}
           outOfDate={outOfDate}
-          onRead={(read) => {
-            dispatch({ type: 'reset', doc: JSON.parse(read.doc) as BuilderDoc });
-            setSavedJson(read.doc);
-            setOutOfDate(false);
-            setVersion(read.savedAt ?? String(Date.now()));
-          }}
+          onRead={readAgain}
           onKeep={() => {
             saveNow(json);
           }}
