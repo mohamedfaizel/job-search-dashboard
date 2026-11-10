@@ -48,8 +48,8 @@ test.describe('desktop', () => {
     await page.getByRole('button', { name: 'Find my first jobs ›' }).click();
     await expect(page).toHaveURL(/\/jobs\/add$/);
 
-    // With a token, the import starts on JobHunter.
-    await page.getByRole('tab', { name: 'Import from JobHunter' }).click();
+    // Add jobs opens on the import form; with a token it starts on JobHunter.
+    await page.getByRole('tab', { name: 'Import jobs' }).click();
     await expect(page.getByRole('radio', { name: /^JobHunter/ })).toBeChecked();
 
     // The resume is on the Resume page and in My profile.
@@ -75,7 +75,7 @@ test.describe('desktop', () => {
     await expect(page.getByRole('heading', { name: 'Stellenanzeigen' })).toBeVisible();
 
     await page.goto('/jobs/add');
-    await page.getByRole('tab', { name: /Aus JobHunter importieren|^Import$/ }).click();
+    await page.getByRole('tab', { name: /Jobs importieren|^Import$/ }).click();
     await expect(page.getByRole('radio', { name: /Arbeitsagentur/ })).toBeChecked();
     await expect(page.getByText(/noch keinen JobHunter-Token/)).toBeVisible();
     await context.close();

@@ -5,38 +5,34 @@ import { renderWithData } from './test/render';
 import { session } from './test/server';
 
 describe('App tabs', () => {
-  it('opens on saved searches and switches tabs on click', async () => {
+  it('opens on the import form with your saved searches beside it', async () => {
     renderWithData(<App />);
 
-    expect(await screen.findByRole('tab', { name: 'Saved searches (1)' })).toHaveAttribute(
+    expect(await screen.findByRole('tab', { name: 'Import jobs' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
-    expect(screen.getByRole('heading', { name: 'Saved searches' })).toBeVisible();
-    expect(screen.queryByRole('heading', { name: 'Add a job by hand' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('tab')).toHaveLength(2);
+    expect(await screen.findByRole('heading', { name: 'Saved searches (1)' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Import from JobHunter' })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('tab', { name: 'Add a job by hand' }));
 
     expect(screen.getByRole('heading', { name: 'Add a job by hand' })).toBeVisible();
-    expect(screen.queryByRole('heading', { name: 'Saved searches' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Saved searches (1)' })).not.toBeInTheDocument();
   });
 
   it('moves between tabs with the arrow keys', async () => {
     renderWithData(<App />);
-    const saved = await screen.findByRole('tab', { name: /^Saved searches/ });
+    const imports = await screen.findByRole('tab', { name: 'Import jobs' });
 
-    saved.focus();
+    imports.focus();
     await userEvent.keyboard('{ArrowRight}');
-    expect(screen.getByRole('tab', { name: 'Import from JobHunter' })).toHaveFocus();
-    expect(screen.getByRole('heading', { name: 'Import from JobHunter' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Add a job by hand' })).toHaveFocus();
+    expect(screen.getByRole('heading', { name: 'Add a job by hand' })).toBeVisible();
 
-    await userEvent.keyboard('{End}');
-    expect(screen.getByRole('tab', { name: 'Add a job by hand' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
     await userEvent.keyboard('{ArrowRight}');
-    expect(saved).toHaveFocus();
+    expect(imports).toHaveFocus();
   });
 
   it('keeps what you typed when you switch away and back', async () => {
@@ -44,28 +40,25 @@ describe('App tabs', () => {
     await userEvent.click(await screen.findByRole('tab', { name: 'Add a job by hand' }));
     await userEvent.type(screen.getByRole('textbox', { name: /^Job title/ }), 'Frontend engineer');
 
-    await userEvent.click(screen.getByRole('tab', { name: /^Saved searches/ }));
+    await userEvent.click(screen.getByRole('tab', { name: 'Import jobs' }));
     await userEvent.click(screen.getByRole('tab', { name: 'Add a job by hand' }));
 
     expect(screen.getByRole('textbox', { name: /^Job title/ })).toHaveValue('Frontend engineer');
   });
 
-  it('opens the import tab with the search filled in when you edit a saved search', async () => {
+  it('fills the form beside the list when you edit a saved search', async () => {
     renderWithData(<App />);
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit Frontend in Berlin' }));
 
-    expect(screen.getByRole('tab', { name: 'Import from JobHunter' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
     expect(screen.getByLabelText(/^Save as/)).toHaveValue('Frontend in Berlin');
+    expect(screen.getByText('In the form')).toBeInTheDocument();
   });
 
-  it('shows the import history under every tab', async () => {
+  it('shows the import history under both tabs', async () => {
     renderWithData(<App />);
 
-    for (const name of [/^Saved searches/, 'Import from JobHunter', 'Add a job by hand']) {
+    for (const name of ['Import jobs', 'Add a job by hand']) {
       await userEvent.click(await screen.findByRole('tab', { name }));
       expect(screen.getByRole('heading', { name: 'Import history' })).toBeVisible();
     }

@@ -1824,11 +1824,7 @@
     "loading": "Wird geladen…",
     "tabsLabel": "Wege, Jobs hinzuzufügen",
     "tabs": {
-      "saved": "Gespeicherte Suchen",
-      "savedCount": "Gespeicherte Suchen ({count})",
-      "savedShort": "Gespeichert",
-      "savedShortCount": "Gespeichert ({count})",
-      "import": "Aus JobHunter importieren",
+      "import": "Jobs importieren",
       "importShort": "Import",
       "manual": "Job von Hand hinzufügen",
       "manualShort": "Von Hand"
@@ -1986,7 +1982,7 @@
       "budget": "Heute: {used} von {credits} verbraucht. Geplante Importe stoppen, bevor das Limit überschritten wird.",
       "loading": "Gespeicherte Suchen werden geladen…",
       "loadError": "Gespeicherte Suchen konnten nicht geladen werden: {error}",
-      "none": "Noch keine. Füll das Importformular aus und nutze „Suche speichern“.",
+      "none": "Noch keine. Füll das Formular aus und drück „Suche speichern“. Sie erscheint dann hier, und du kannst sie mit einem Klick oder nach Zeitplan wieder starten.",
       "inLanguages": "auf {languages}",
       "remote": "remote",
       "noFluentGerman": "ohne fließendes Deutsch",
@@ -2025,7 +2021,13 @@
       "boardsBadge": "Karriereseiten",
       "freeBadge": "Arbeitsagentur",
       "lastDaysFree": "Letzte {days} Tage · 0 Credits",
-      "free": "Keine Credits verbraucht."
+      "free": "Keine Credits verbraucht.",
+      "count": "Gespeicherte Suchen ({count})",
+      "hide": "Ausblenden",
+      "show": "Anzeigen",
+      "more": "Mehr zu {name}",
+      "editNamed": "{name} bearbeiten",
+      "loadedNote": "Im Formular"
     },
     "history": {
       "heading": "Import-Verlauf",

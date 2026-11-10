@@ -11,6 +11,10 @@ describe('SavedSearches', () => {
     renderWithData(<SavedSearches onLoad={onLoad} />);
     return within(await screen.findByRole('article', { name: 'Frontend in Berlin' }));
   }
+  /** The schedule and Delete sit behind the "more" button. */
+  async function openMore() {
+    await userEvent.click(screen.getByRole('button', { name: 'More for Frontend in Berlin' }));
+  }
 
   it('shows what each search looks for and how its last import went', async () => {
     const card = await renderCard();
@@ -103,14 +107,16 @@ describe('SavedSearches', () => {
     const onLoad = vi.fn();
     const card = await renderCard(onLoad);
 
-    await userEvent.click(card.getByRole('button', { name: 'Edit' }));
+    await userEvent.click(card.getByRole('button', { name: 'Edit Frontend in Berlin' }));
 
     expect(onLoad).toHaveBeenCalledWith(SAVED);
   });
 
   it('asks before deleting', async () => {
     const card = await renderCard();
+    expect(card.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
 
+    await openMore();
     await userEvent.click(card.getByRole('button', { name: 'Delete' }));
     expect(requests).toHaveLength(0);
     await userEvent.click(card.getByRole('button', { name: 'Delete "Frontend in Berlin"' }));
@@ -124,6 +130,9 @@ describe('SavedSearches', () => {
     const card = await renderCard();
 
     expect(await screen.findByText(/Today: 35 of 100 credits used/)).toBeInTheDocument();
+    // The row shows how often it runs; the controls are behind "more".
+    expect(card.getAllByText('Every day')[0]).toBeVisible();
+    await openMore();
     expect(card.getByLabelText('Run automatically')).toHaveValue('DAILY');
     expect(card.getByLabelText('At')).toHaveValue('07:00');
     expect(card.getByText(/^Next run:/)).toBeInTheDocument();
@@ -132,6 +141,7 @@ describe('SavedSearches', () => {
 
   it('saves a new schedule only after something changed', async () => {
     const card = await renderCard();
+    await openMore();
     expect(card.queryByRole('button', { name: 'Save schedule' })).not.toBeInTheDocument();
 
     await userEvent.selectOptions(card.getByLabelText('Run automatically'), 'Weekdays (Mon–Fri)');
@@ -150,10 +160,36 @@ describe('SavedSearches', () => {
 
   it('hides the time when the schedule is off', async () => {
     const card = await renderCard();
+    await openMore();
 
     await userEvent.selectOptions(card.getByLabelText('Run automatically'), 'Off');
 
     expect(card.queryByLabelText('At')).not.toBeInTheDocument();
     expect(card.getByRole('button', { name: 'Save schedule' })).toBeEnabled();
+  });
+
+  it('marks the search that is in the form', async () => {
+    renderWithData(<SavedSearches onLoad={vi.fn()} loadedId={1} />);
+    const card = within(await screen.findByRole('article', { name: 'Frontend in Berlin' }));
+
+    expect(card.getByText('In the form')).toBeInTheDocument();
+  });
+
+  it('tells a new user how to make their first one', async () => {
+    server.use(
+      api.query('SavedSearches', () => HttpResponse.json({ data: { savedSearches: [] } })),
+    );
+    renderWithData(<SavedSearches onLoad={vi.fn()} />);
+
+    expect(await screen.findByText(/None yet\. Fill in the form/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Hide' })).not.toBeInTheDocument();
+  });
+
+  it('can fold the list away, for phones', async () => {
+    await renderCard();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide' }));
+
+    expect(screen.getByRole('button', { name: 'Show' })).toHaveAttribute('aria-expanded', 'false');
   });
 });

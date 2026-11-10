@@ -141,8 +141,10 @@ shows in the PDF straight away and is used for every job's resume.
 On _Import from JobHunter_, **Fill from my profile** copies your roles, skills and places
 into the search.
 
-The **Add jobs** page has three tabs: _Saved searches_, _Import from JobHunter_ and _Add a job by hand_.
-_Import history_ sits below the tabs, so it shows on all three.
+The **Add jobs** page has two tabs: _Import jobs_ (the import form, with your saved searches in a
+panel beside it, or above it on a phone) and _Add a job by hand_. _Import history_ sits below the
+tabs, so it shows on both. Each user sees only the jobs they imported or added: a job two users
+import is saved once and listed for both.
 
 **Settings** (the gear in the header) has three tabs:
 
@@ -177,10 +179,10 @@ many pages one import fetches. When an import stops with pages left, the panel s
 match in total and a **Continue import** button that picks up from the next page.
 
 **Saved searches:** type a name under _Save this search as_ to keep a search. Each saved search
-gets a card with **Run now**, **Edit** (loads it into the import form; save with the same name to
-update it) and **Delete**. _Import history_ lists the last 20 imports with what each brought in.
+gets a row in the panel beside the form with **Run now**, **Edit** (loads it into the form; save
+with the same name to update it) and **⋯** (its schedule and **Delete**). _Import history_ lists the last 20 imports with what each brought in.
 
-**Scheduled imports:** on a saved search card, pick _Run automatically_ (every hour, every day or
+**Scheduled imports:** on a saved search row, open **⋯**, pick _Run automatically_ (every hour, every day or
 weekdays), a time, and **Save schedule**. While the API is running it checks every minute for due
 searches and imports only jobs new since the last run. Times are the API computer's local time. To
 protect your credits, a scheduled run is skipped when it could push your total today over

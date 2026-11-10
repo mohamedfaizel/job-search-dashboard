@@ -1824,11 +1824,7 @@
     "loading": "Loading…",
     "tabsLabel": "Ways to add jobs",
     "tabs": {
-      "saved": "Saved searches",
-      "savedCount": "Saved searches ({count})",
-      "savedShort": "Saved",
-      "savedShortCount": "Saved ({count})",
-      "import": "Import from JobHunter",
+      "import": "Import jobs",
       "importShort": "Import",
       "manual": "Add a job by hand",
       "manualShort": "By hand"
@@ -1986,7 +1982,7 @@
       "budget": "Today: {used} of {credits} used. Scheduled imports stop before going over.",
       "loading": "Loading saved searches…",
       "loadError": "Could not load saved searches: {error}",
-      "none": "None yet. Fill in the import form and use \"Save search\".",
+      "none": "None yet. Fill in the form, then press \"Save search\". It shows up here, and you can run it again in one click or on a schedule.",
       "inLanguages": "in {languages}",
       "remote": "remote",
       "noFluentGerman": "no fluent German",
@@ -2025,7 +2021,13 @@
       "boardsBadge": "Career pages",
       "freeBadge": "Arbeitsagentur",
       "lastDaysFree": "Last {days} days · 0 credits",
-      "free": "No credits used."
+      "free": "No credits used.",
+      "count": "Saved searches ({count})",
+      "hide": "Hide",
+      "show": "Show",
+      "more": "More for {name}",
+      "editNamed": "Edit {name}",
+      "loadedNote": "In the form"
     },
     "history": {
       "heading": "Import history",
