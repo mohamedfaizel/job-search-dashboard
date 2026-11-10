@@ -140,6 +140,10 @@ model User {
   aiProvider        AiProvider            @default(ANTHROPIC)
   /// When you finished (or skipped) the first-login steps; null shows them after you log in.
   onboardedAt       DateTime?
+  /// Set by an admin to stop this account logging in. Null = can log in. Nothing is deleted.
+  disabledAt        DateTime?
+  /// When this account last used the app (updated at most every few minutes), for Admin › Users.
+  lastSeenAt        DateTime?
   apiKeys           ApiKey[]
   /// The old .env keys already copied into this account's Settings (first account only), so
   /// each is copied once and a key you delete stays deleted.

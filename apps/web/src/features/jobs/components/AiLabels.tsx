@@ -1,4 +1,4 @@
-import { useTestAiConnection } from '@jobsearch/data';
+import { useMe, useTestAiConnection } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { AiState } from '../../../lib/ai-status';
 import { markKeyFailed, noteAiResult, useAiState } from '../../../lib/ai-status';
@@ -41,14 +41,18 @@ export function AiStateTag() {
 export function AiOffNote({ state, compact = false }: { state: AiState; compact?: boolean }) {
   const t = useTranslations('Jobs.aiLabels');
   const test = useTestAiConnection();
+  const { data: me } = useMe();
   if (state === 'on') return null;
+  // How to set Resume-Matcher up or start it is for admins; everyone else reads it's not there now.
+  const serverSide = state === 'notSetUp' || state === 'notRunning';
+  const reason = serverSide && me?.role !== 'ADMIN' ? 'unavailable' : state;
   return (
     <div
       role="note"
       className={`space-y-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 ${compact ? 'px-2.5 py-2 text-xs' : 'px-3 py-2.5 text-sm'}`}
     >
       <p>
-        <b>{t('offTitle')}</b> {t(`offReason.${state}`)} {t('freeStillWorks')}
+        <b>{t('offTitle')}</b> {t(`offReason.${reason}`)} {t('freeStillWorks')}
       </p>
       <div className="flex flex-wrap items-center gap-2">
         {state === 'keyFailed' && (

@@ -159,13 +159,13 @@ describe('sending the master resume to Resume-Matcher', () => {
     });
   });
 
-  it('says how to start Resume-Matcher when it is down', async () => {
+  it('says Resume-Matcher is not available when it is down, without the server setup', async () => {
     server.use(http.post(`${RM_URL}/api/v1/resumes/upload`, () => HttpResponse.error()));
     await upload();
 
     expect(await sync()).toMatchObject({
       state: 'FAILED',
-      message: `Resume-Matcher at ${RM_URL} is not reachable. Start it with pnpm rm:up.`,
+      message: 'Resume-Matcher is not available right now. Please try again later.',
     });
   });
 

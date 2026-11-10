@@ -3,7 +3,7 @@ import { apiError } from '../common/api-error';
 import { MatcherResumeStatus } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
-  describeError,
+  describeForUser,
   ResumeMatcherClient,
   ResumeMatcherHttpError,
 } from './resume-matcher.client';
@@ -157,5 +157,5 @@ function describe(error: unknown): string {
   ) {
     return 'Resume-Matcher already holds 5 master resumes, its limit. Delete an old one in its own screens (http://localhost:3100), then send again.';
   }
-  return describeError(error);
+  return describeForUser(error);
 }

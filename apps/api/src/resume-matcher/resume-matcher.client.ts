@@ -206,12 +206,25 @@ export function describeError(error: unknown): string {
   return text.includes('not reachable') ? `${text}. Start it with pnpm rm:up.` : text;
 }
 
-/** Like describeError, for a run on a job: a 404 there means its copy of your resume is gone. */
+/** What every user sees when Resume-Matcher is off or down; the setup hint is for admins only. */
+export const RM_UNAVAILABLE = 'Resume-Matcher is not available right now. Please try again later.';
+
+/**
+ * Like describeError, for a message saved for the user to read. Server setup (the address,
+ * how to start it) stays in the logs and in the admin's Settings: users get RM_UNAVAILABLE.
+ */
+export function describeForUser(error: unknown): string {
+  const http = error instanceof ResumeMatcherHttpError;
+  if (error instanceof ServiceUnavailableException && !http) return RM_UNAVAILABLE;
+  return describeError(error);
+}
+
+/** Like describeForUser, for a run on a job: a 404 there means its copy of your resume is gone. */
 export function describeRunError(error: unknown): string {
   if (error instanceof ResumeMatcherHttpError && error.rmStatus === 404) {
     return 'Resume-Matcher no longer has your resume. Send it again on My profile, then try again.';
   }
-  return describeError(error);
+  return describeForUser(error);
 }
 
 /** With a FormData body, fetch sets the multipart Content-Type (and its boundary) itself. */

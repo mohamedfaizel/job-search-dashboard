@@ -1086,3 +1086,20 @@ export interface SalaryResearch {
   /** Paste into Claude: target, scripts, counter-offer email, extras. */
   prompt: string;
 }
+
+/** One account on Admin › Users: who it is and counts only, never its jobs, resumes or keys. */
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: Role;
+  /** ISO date and time the account was made. */
+  joinedAt: string;
+  /** ISO date and time it last used the app; null = not since this was added. */
+  lastSeenAt: string | null;
+  /** Switched off by an admin: it can't log in. */
+  disabled: boolean;
+  /** Has saved a JobHunter token in Settings. */
+  hasJobKey: boolean;
+  importsThisMonth: number;
+}

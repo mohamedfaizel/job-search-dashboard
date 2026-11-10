@@ -1,5 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { ResumeMatcherClient } from './resume-matcher.client';
+import { RM_UNAVAILABLE, ResumeMatcherClient } from './resume-matcher.client';
 import type { ResumeMatcherStatusModel } from './resume-matcher.model';
 import type { UserAi } from './rm-ai-queue';
 import { RmAiQueue } from './rm-ai-queue';
@@ -18,9 +18,14 @@ export class ResumeMatcherService {
   /**
    * Is Resume-Matcher running, and (only when asked) can it reach your AI with your key?
    * The AI check sends one tiny message, which costs a fraction of a cent, so pages call it
-   * from a button instead of on every load.
+   * from a button instead of on every load. Only admins read how to set it up or start it;
+   * everyone else reads that it is not available right now.
    */
-  async getStatus(userId: number, checkAi: boolean): Promise<ResumeMatcherStatusModel> {
+  async getStatus(
+    userId: number,
+    checkAi: boolean,
+    isAdmin = false,
+  ): Promise<ResumeMatcherStatusModel> {
     const status: ResumeMatcherStatusModel = {
       configured: this.client.isConfigured,
       reachable: false,
@@ -31,7 +36,9 @@ export class ResumeMatcherService {
       message: '',
     };
     if (!status.configured) {
-      status.message = 'Resume-Matcher is switched off: set RESUME_MATCHER_URL in .env.';
+      status.message = isAdmin
+        ? 'Resume-Matcher is switched off: set RESUME_MATCHER_URL in .env.'
+        : RM_UNAVAILABLE;
       return status;
     }
 
@@ -39,7 +46,7 @@ export class ResumeMatcherService {
       await this.client.health();
       status.reachable = true;
     } catch (error) {
-      status.message = `${errorText(error)}. Start it with pnpm rm:up.`;
+      status.message = isAdmin ? `${errorText(error)}. Start it with pnpm rm:up.` : RM_UNAVAILABLE;
       return status;
     }
 

@@ -24,7 +24,8 @@
     "accountMenu": "Account",
     "language": "Language",
     "install": "Install app",
-    "installIos": "To install: tap Share, then \"Add to Home Screen\"."
+    "installIos": "To install: tap Share, then \"Add to Home Screen\".",
+    "adminPage": "Admin"
   },
   "Auth": {
     "logInTitle": "Log in",
@@ -381,6 +382,7 @@
       "checking": "Checking…",
       "running": "Running",
       "notRunning": "Not running",
+      "unavailable": "Not available",
       "checkFailed": "Could not check Resume-Matcher: {error}",
       "test": "Test AI connection",
       "testing": "Testing…",
@@ -1746,7 +1748,8 @@
         "notSetUp": "Resume-Matcher is switched off: set RESUME_MATCHER_URL in .env.",
         "notRunning": "Resume-Matcher is not running: start it with pnpm rm:up.",
         "keyFailed": "Your AI key is missing, expired or out of credits.",
-        "noKey": "You have no AI key yet: add your Claude or OpenAI key in Settings."
+        "noKey": "You have no AI key yet: add your Claude or OpenAI key in Settings.",
+        "unavailable": "Resume-Matcher is not available right now. Please try again later."
       },
       "chatHint": "AI chat: you paste a prompt into Claude, ChatGPT or any AI chat",
       "openSettings": "Open Settings › API keys ↗"
@@ -2139,7 +2142,11 @@
     "RESUME_REPLY_EMPTY": "Paste the AI chat’s reply first.",
     "SECTION_NOT_FOUND": "That section is not in this resume.",
     "AI_CALL_FAILED": "The AI provider did not answer: {reason}",
-    "SUGGESTION_UNREADABLE": "The AI reply has no resume text in it. Paste the whole reply."
+    "SUGGESTION_UNREADABLE": "The AI reply has no resume text in it. Paste the whole reply.",
+    "ACCOUNT_DISABLED": "This account is switched off. Ask the admin of this app.",
+    "USER_NOT_FOUND": "This account no longer exists.",
+    "NOT_ON_YOURSELF": "You can’t change your own account here. Ask another admin.",
+    "CONFIRM_EMAIL_MISMATCH": "Type the email of the account you delete."
   },
   "Notifications": {
     "bell": "Notifications",
@@ -2198,6 +2205,56 @@
       "profile": "Check My profile",
       "addJobs": "Find my first jobs ›",
       "jobs": "Go to Job posts ›"
+    }
+  },
+  "Admin": {
+    "title": "Admin",
+    "intro": "Only admins see this page. You see counts, never other users’ jobs, resumes or keys.",
+    "notAdmin": "Only admins can open this page.",
+    "users": {
+      "heading": "Users ({count})",
+      "search": "Find a user",
+      "searchPlaceholder": "Find by name or email",
+      "filters": "Show",
+      "filter": {
+        "all": "All",
+        "admins": "Admins",
+        "disabled": "Switched off",
+        "noKey": "No key"
+      },
+      "name": "Name and email",
+      "role": "Role",
+      "joined": "Joined",
+      "lastSeen": "Last seen",
+      "key": "Key",
+      "imports": "Imports this month",
+      "actions": "Actions",
+      "roleAdmin": "Admin",
+      "roleUser": "User",
+      "disabled": "Switched off",
+      "you": "You",
+      "never": "Never",
+      "hasKey": "Has a job data key",
+      "noKey": "No job data key",
+      "makeAdmin": "Make admin",
+      "removeAdmin": "Remove admin",
+      "enable": "Switch on",
+      "disable": "Switch off",
+      "delete": "Delete",
+      "more": "More for {name}",
+      "importsShort": "{count} imports",
+      "seenShort": "seen {when}",
+      "empty": "No user matches.",
+      "note": "⋯ = Switch off or on, Delete. You can’t change your own account here.",
+      "loading": "Loading users…"
+    },
+    "delete": {
+      "title": "Delete {name}?",
+      "text": "This deletes the account and all its data: jobs list, resumes, tracker, saved searches and keys. It can’t be undone.",
+      "confirm": "Type their email to confirm",
+      "cancel": "Cancel",
+      "go": "Delete for good",
+      "deleting": "Deleting…"
     }
   }
 }

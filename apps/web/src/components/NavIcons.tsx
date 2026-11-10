@@ -63,6 +63,13 @@ export const SettingsIcon = (props: IconProps) => (
   </Icon>
 );
 
+/** A shield: the Admin page. */
+export const AdminIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" />
+  </Icon>
+);
+
 export const LanguageIcon = (props: IconProps) => (
   <Icon {...props}>
     <circle cx="12" cy="12" r="9" />

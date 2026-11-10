@@ -92,7 +92,15 @@ test.describe('phone', () => {
     await page.getByRole('button', { name: 'Skip setup' }).click();
     await expect(page).toHaveURL(/\/jobs$/);
 
-    for (const path of ['/jobs', '/jobs/add', '/tracker', '/resume', '/profile', '/settings']) {
+    for (const path of [
+      '/jobs',
+      '/jobs/add',
+      '/tracker',
+      '/resume',
+      '/profile',
+      '/settings',
+      '/admin',
+    ]) {
       await page.goto(path);
       await page.waitForLoadState('networkidle');
       const wide = await page.evaluate(

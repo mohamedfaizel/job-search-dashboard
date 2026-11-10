@@ -1379,3 +1379,45 @@ export const SALARY_RESEARCH = /* GraphQL */ `
     }
   }
 `;
+
+const ADMIN_USER_FIELDS = `
+  id
+  name
+  email
+  role
+  joinedAt
+  lastSeenAt
+  disabled
+  hasJobKey
+  importsThisMonth
+`;
+
+export const ADMIN_USERS = /* GraphQL */ `
+  query AdminUsers {
+    adminUsers {
+      ${ADMIN_USER_FIELDS}
+    }
+  }
+`;
+
+export const SET_USER_ROLE = /* GraphQL */ `
+  mutation SetUserRole($input: SetUserRoleInput!) {
+    setUserRole(input: $input) {
+      ${ADMIN_USER_FIELDS}
+    }
+  }
+`;
+
+export const SET_USER_DISABLED = /* GraphQL */ `
+  mutation SetUserDisabled($input: SetUserDisabledInput!) {
+    setUserDisabled(input: $input) {
+      ${ADMIN_USER_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_USER = /* GraphQL */ `
+  mutation DeleteUser($input: DeleteUserInput!) {
+    deleteUser(input: $input)
+  }
+`;

@@ -36,7 +36,13 @@ const NAV_ITEMS: NavItem[] = [
 const ADD_JOBS: NavItem = { href: '/jobs/add', label: 'addJobs', icon: PlusIcon };
 
 /** Every link the header knows, so "the page you are on" also works for the account pages. */
-const ALL_HREFS = [...NAV_ITEMS.map((item) => item.href), ADD_JOBS.href, '/profile', '/settings'];
+const ALL_HREFS = [
+  ...NAV_ITEMS.map((item) => item.href),
+  ADD_JOBS.href,
+  '/profile',
+  '/settings',
+  '/admin',
+];
 
 /** The first-login steps' page. */
 const WELCOME = '/welcome';

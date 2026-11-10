@@ -64,6 +64,10 @@ export class AuthService {
     const ok = await verify(user?.passwordHash ?? (await DUMMY_HASH), input.password);
     if (!user || !ok)
       throw apiError(UnauthorizedException, 'WRONG_LOGIN', 'Wrong email or password');
+    // Only after the password was right, so this doesn't tell strangers who has an account.
+    if (user.disabledAt) {
+      throw apiError(ForbiddenException, 'ACCOUNT_DISABLED', 'This account is switched off');
+    }
     return user;
   }
 

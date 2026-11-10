@@ -71,6 +71,10 @@ export const API_ERROR_CODES = [
   'SECTION_NOT_FOUND',
   'AI_CALL_FAILED',
   'SUGGESTION_UNREADABLE',
+  'ACCOUNT_DISABLED',
+  'USER_NOT_FOUND',
+  'NOT_ON_YOURSELF',
+  'CONFIRM_EMAIL_MISMATCH',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
