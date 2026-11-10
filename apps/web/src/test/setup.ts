@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { location } from './navigation';
-import { savedLocales, server, session } from './server';
+import { savedLocales, server, session, signup } from './server';
 
 beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
@@ -8,6 +8,9 @@ beforeAll(() => {
 afterEach(() => {
   server.resetHandlers();
   session.user = null;
+  signup.mode = 'OPEN';
+  signup.invites = [];
+  signup.sent = [];
   savedLocales.length = 0;
   document.cookie = 'locale=; max-age=0; path=/';
   vi.clearAllMocks();

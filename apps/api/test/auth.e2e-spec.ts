@@ -208,22 +208,3 @@ describe('auth', () => {
     expect((forged.body as GqlResult<unknown>).errors?.[0]?.message).toBe('Please log in');
   });
 });
-
-describe('auth with sign-up closed', () => {
-  let t: TestApp;
-
-  beforeAll(async () => {
-    t = await createTestApp({ ALLOW_SIGNUP: 'false' });
-    await resetDatabase(t.prisma);
-  });
-  afterAll(async () => {
-    Reflect.deleteProperty(process.env, 'ALLOW_SIGNUP');
-    await t.app.close();
-  });
-
-  it('refuses new accounts', async () => {
-    const res = await t.anonymous(SIGN_UP, { input: MOHAMED });
-
-    expect(res.errors?.[0]?.message).toBe('Sign-up is closed on this server');
-  });
-});

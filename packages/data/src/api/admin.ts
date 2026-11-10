@@ -1,7 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
-import { ADMIN_USERS, DELETE_USER, SET_USER_DISABLED, SET_USER_ROLE } from './operations';
-import type { AdminUser, Role } from './types';
+import {
+  ADMIN_USERS,
+  APP_SETTINGS,
+  CANCEL_INVITE,
+  CREATE_INVITE,
+  DELETE_USER,
+  INVITES,
+  SET_USER_DISABLED,
+  SET_USER_ROLE,
+  SIGNUP_STATE,
+  UPDATE_APP_SETTINGS,
+} from './operations';
+import type { AdminUser, AppSettings, AppSettingsChange, Invite, Role, SignupState } from './types';
 
 export const adminUsersKey = ['admin', 'users'] as const;
 
@@ -61,5 +72,81 @@ export function useDeleteUser() {
       );
       await queryClient.invalidateQueries({ queryKey: adminUsersKey });
     },
+  });
+}
+
+export const appSettingsKey = ['admin', 'settings'] as const;
+export const invitesKey = ['admin', 'invites'] as const;
+
+/** Sign-up mode and limits (admins only). */
+export function useAppSettings() {
+  return useQuery({
+    queryKey: appSettingsKey,
+    queryFn: async () =>
+      (await graphqlClient.request<{ appSettings: AppSettings }>(APP_SETTINGS)).appSettings,
+  });
+}
+
+/** Saves the changed settings; they work at once on the server. */
+export function useUpdateAppSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: AppSettingsChange) =>
+      (
+        await graphqlClient.request<{ updateAppSettings: AppSettings }>(UPDATE_APP_SETTINGS, {
+          input,
+        })
+      ).updateAppSettings,
+    onSuccess: (settings) => {
+      queryClient.setQueryData(appSettingsKey, settings);
+    },
+  });
+}
+
+/** Invite links not canceled, newest first. */
+export function useInvites() {
+  return useQuery({
+    queryKey: invitesKey,
+    queryFn: async () => (await graphqlClient.request<{ invites: Invite[] }>(INVITES)).invites,
+  });
+}
+
+/** Makes an invite link. Null = never expires / any number of times. */
+export function useCreateInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { expiresInDays: number | null; maxUses: number | null }) =>
+      (await graphqlClient.request<{ createInvite: Invite }>(CREATE_INVITE, { input }))
+        .createInvite,
+    onSuccess: (invite) => {
+      queryClient.setQueryData<Invite[]>(invitesKey, (list) => [invite, ...(list ?? [])]);
+    },
+  });
+}
+
+export function useCancelInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await graphqlClient.request(CANCEL_INVITE, { id });
+      return id;
+    },
+    onSuccess: (id) => {
+      queryClient.setQueryData<Invite[]>(invitesKey, (list) => list?.filter((i) => i.id !== id));
+    },
+  });
+}
+
+/** For the sign-up page: can it make an account, with this invite code or none? */
+export function useSignupState(invite: string | null, enabled = true) {
+  return useQuery({
+    enabled,
+    queryKey: ['signupState', invite],
+    queryFn: async () =>
+      (
+        await graphqlClient.request<{ signupState: SignupState }>(SIGNUP_STATE, {
+          invite: invite ?? null,
+        })
+      ).signupState,
   });
 }

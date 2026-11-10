@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { getErrorMessage } from '../common/errors';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 import { SavedSearchesService } from './saved-searches.service';
 import { nextRunAfter, startOfDay } from './schedule';
 
 export interface ImportBudget {
   /** Credits this user's imports used since midnight (server time). */
   used: number;
-  /** DAILY_CREDIT_CAP, per user: scheduled runs stop before going over it. */
+  /** Admin › Limits, per user: scheduled runs stop before going over it. */
   cap: number;
 }
 
@@ -20,7 +20,7 @@ const formatTime = (date: Date) =>
 /**
  * Runs saved searches on their schedule. Every minute it picks the searches whose
  * nextRunAt has passed and imports "only new" jobs for each with its owner's token, unless that
- * could push the owner's credits today over DAILY_CREDIT_CAP. When a run finds new jobs, every user they fit
+ * could push the owner's credits today over the daily limit (Admin › Limits). When a run finds new jobs, every user they fit
  * gets a notification.
  */
 @Injectable()
@@ -31,18 +31,15 @@ export class SchedulerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly savedSearches: SavedSearchesService,
-    private readonly config: ConfigService,
+    private readonly settings: SettingsService,
     private readonly notifications: NotificationsService,
   ) {}
-
-  get cap(): number {
-    return Number(this.config.get<string>('DAILY_CREDIT_CAP') ?? 100);
-  }
 
   @Cron(CronExpression.EVERY_MINUTE)
   async tick(): Promise<void> {
     // Tests drive runDue() directly; a slow run must not overlap the next tick.
-    if (this.config.get<string>('SCHEDULER_ENABLED') === 'false' || this.running) return;
+    // Off in .env or on Admin › Limits: schedules wait, nothing is lost.
+    if (this.running || !(await this.settings.schedulerOn())) return;
     this.running = true;
     try {
       await this.runDue(new Date());
@@ -56,7 +53,8 @@ export class SchedulerService {
       where: { userId, finishedAt: { gte: startOfDay(now) } },
       _sum: { creditsCharged: true },
     });
-    return { used: _sum.creditsCharged ?? 0, cap: this.cap };
+    const { dailyCreditCap } = await this.settings.get();
+    return { used: _sum.creditsCharged ?? 0, cap: dailyCreditCap };
   }
 
   /** Runs every search that is due at `now`. Returns how many it ran. */

@@ -3,10 +3,18 @@ export { API_URL, ApiError, getErrorCode, getErrorMessage, setApiUrl } from './a
 export type { ErrorCode } from './api/client';
 export {
   adminUsersKey,
+  appSettingsKey,
+  invitesKey,
   useAdminUsers,
+  useAppSettings,
+  useCancelInvite,
+  useCreateInvite,
   useDeleteUser,
+  useInvites,
   useSetUserDisabled,
   useSetUserRole,
+  useSignupState,
+  useUpdateAppSettings,
 } from './api/admin';
 export {
   useFinishOnboarding,

@@ -80,7 +80,7 @@ export async function createTestApp(env: Record<string, string> = {}): Promise<T
 
 export async function resetDatabase(prisma: PrismaService): Promise<void> {
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "Job", "Company", "SyncRun", "SavedSearch", "User" RESTART IDENTITY CASCADE',
+    'TRUNCATE "Job", "Company", "SyncRun", "SavedSearch", "User", "AppSetting", "Invite" RESTART IDENTITY CASCADE',
   );
 }
 
@@ -92,6 +92,8 @@ export async function seedTestUsers(prisma: PrismaService): Promise<void> {
       { id: 2, email: 'user@example.com', name: 'User', passwordHash: 'x' },
     ],
   });
+  // So an account made in the test (a sign-up) gets id 3, not 1 again.
+  await prisma.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"User"', 'id'), 2)`);
 }
 
 /**

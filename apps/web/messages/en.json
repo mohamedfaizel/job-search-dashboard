@@ -33,7 +33,7 @@
     "logInHeading": "Log in to {app}",
     "signUpHeading": "Create your account",
     "logInIntro": "Track jobs, your applications and your profile.",
-    "signUpIntro": "The first account on a new server becomes its admin.",
+    "signUpIntro": "Find jobs, tailor your resume and track your applications.",
     "name": "Name",
     "email": "Email",
     "password": "Password",
@@ -44,7 +44,11 @@
     "creatingAccount": "Creating account…",
     "newHere": "New here?",
     "createAnAccount": "Create an account",
-    "haveAccount": "Already have an account?"
+    "haveAccount": "Already have an account?",
+    "invited": "You were invited. Welcome!",
+    "signupClosed": "Sign-up is closed on this server right now. Ask the admin if you need an account.",
+    "needsInvite": "Sign-up on this server is by invite only. Ask the admin for an invite link.",
+    "inviteInvalid": "This invite link has expired, was used up or was canceled. Ask the admin for a new one."
   },
   "Profile": {
     "title": "My profile",
@@ -2146,7 +2150,11 @@
     "ACCOUNT_DISABLED": "This account is switched off. Ask the admin of this app.",
     "USER_NOT_FOUND": "This account no longer exists.",
     "NOT_ON_YOURSELF": "You can’t change your own account here. Ask another admin.",
-    "CONFIRM_EMAIL_MISMATCH": "Type the email of the account you delete."
+    "CONFIRM_EMAIL_MISMATCH": "Type the email of the account you delete.",
+    "INVITE_NEEDED": "Sign-up on this server needs an invite link.",
+    "INVITE_INVALID": "This invite link has expired, was used up or was canceled.",
+    "INVITE_NOT_FOUND": "This invite link is already gone.",
+    "SAVED_SEARCHES_FULL": "You can keep at most {max} saved searches. Delete one first."
   },
   "Notifications": {
     "bell": "Notifications",
@@ -2255,6 +2263,73 @@
       "cancel": "Cancel",
       "go": "Delete for good",
       "deleting": "Deleting…"
+    },
+    "tabs": {
+      "label": "Admin sections",
+      "users": "Users",
+      "access": "Sign-up & access",
+      "limits": "Limits"
+    },
+    "access": {
+      "modeHeading": "Who can make an account?",
+      "mode": {
+        "OPEN": "Open to everyone",
+        "INVITE": "Invite only",
+        "CLOSED": "Closed"
+      },
+      "modeHint": {
+        "OPEN": "Anyone with the link can sign up.",
+        "INVITE": "Only people with an invite link below can sign up.",
+        "CLOSED": "No new accounts. Existing users can still log in."
+      },
+      "saves": "Saves on its own and works right away, no server restart.",
+      "saved": "Saved.",
+      "invitesHeading": "Invite links",
+      "expiresAfter": "Expires after",
+      "expiry": {
+        "7": "7 days",
+        "30": "30 days",
+        "never": "Never"
+      },
+      "canBeUsed": "Can be used",
+      "useCount": {
+        "1": "Once",
+        "10": "10 times",
+        "any": "Any number of times"
+      },
+      "newInvite": "+ New invite link",
+      "making": "Making…",
+      "link": "Link",
+      "made": "Made",
+      "expires": "Expires",
+      "used": "Used",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "copyFailed": "Could not copy. Select the link and copy it yourself.",
+      "cancel": "Cancel link",
+      "cancelFor": "Cancel link {code}",
+      "copyFor": "Copy link {code}",
+      "none": "No invite links yet.",
+      "never": "Never",
+      "expired": "Expired",
+      "usedOf": "{uses} of {max}",
+      "usedAny": "{uses} so far",
+      "note": "Invite links work in every mode except Closed, so you can still invite someone while sign-up is open.",
+      "loading": "Loading…"
+    },
+    "limits": {
+      "cap": "Scheduled searches: most credits a day, per user",
+      "capHint": "Saved searches that run on their own stop before going over. Imports a user starts by hand are not limited. Each user pays with their own key.",
+      "max": "Most saved searches per user",
+      "maxHint": "Keeps the morning runs short when many people use the app.",
+      "scheduler": "Run scheduled searches",
+      "schedulerHint": "Off pauses every saved search’s schedule. Nothing is deleted.",
+      "stillOpen": "Nightly “still open?” check",
+      "stillOpenHint": "Checks tracked jobs’ links each night and marks closed ones.",
+      "offInEnv": "Switched off in the server’s .env file, so it stays off.",
+      "note": "Changes save on their own and work right away. If the server’s .env switches the scheduler off, it stays off here too, and the switch says so.",
+      "saved": "Saved.",
+      "loading": "Loading…"
     }
   }
 }

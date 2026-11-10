@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { apiError } from '../common/api-error';
 import type { Prisma, SavedSearch as SavedSearchRow } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 import { ImportSource } from '../sync/import-source';
 import type { SyncJobsInput, SyncJobsResult } from '../sync/sync.input';
 import { SyncService } from '../sync/sync.service';
@@ -83,6 +84,7 @@ export class SavedSearchesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sync: SyncService,
+    private readonly settings: SettingsService,
   ) {}
 
   async list(userId: number): Promise<SavedSearch[]> {
@@ -108,6 +110,16 @@ export class SavedSearchesService {
   }
 
   async create(userId: number, input: SavedSearchInput): Promise<SavedSearch> {
+    // Admin › Limits: keeps the morning runs short when many people use the app.
+    const { maxSavedSearches } = await this.settings.get();
+    if ((await this.prisma.savedSearch.count({ where: { userId } })) >= maxSavedSearches) {
+      throw apiError(
+        BadRequestException,
+        'SAVED_SEARCHES_FULL',
+        `You can keep up to ${maxSavedSearches} saved searches. Delete one first.`,
+        { max: maxSavedSearches },
+      );
+    }
     const row = await this.withUniqueName(input.name, () =>
       this.prisma.savedSearch.create({ data: { ...toData(input), userId } }),
     );

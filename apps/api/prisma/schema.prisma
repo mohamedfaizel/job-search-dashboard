@@ -840,3 +840,43 @@ model Notification {
 
   @@index([userId, createdAt])
 }
+
+/// Who can make a new account (Admin › Sign-up & access).
+enum SignupMode {
+  /// Anyone with the link.
+  OPEN
+  /// Only with an invite link.
+  INVITE
+  /// No new accounts; existing ones still log in.
+  CLOSED
+}
+
+/// The server's settings that admins change in the app. One row (id 1), made the first time it
+/// is read, with its starting values from .env (ALLOW_SIGNUP, DAILY_CREDIT_CAP).
+model AppSetting {
+  id               Int        @id @default(1)
+  signupMode       SignupMode @default(OPEN)
+  /// Per user and day: saved searches that run on their own stop before going over it.
+  dailyCreditCap   Int        @default(100)
+  /// The most saved searches one user can keep.
+  maxSavedSearches Int        @default(10)
+  /// Off pauses every saved search's schedule (SCHEDULER_ENABLED=false in .env wins).
+  schedulerOn      Boolean    @default(true)
+  /// Off stops the nightly "still open?" check (STILL_OPEN_CHECK_ENABLED=false in .env wins).
+  stillOpenOn      Boolean    @default(true)
+  updatedAt        DateTime   @updatedAt
+}
+
+/// A sign-up link an admin made: /signup?invite=<token>. Works in every mode except CLOSED.
+model Invite {
+  id         Int       @id @default(autoincrement())
+  token      String    @unique
+  createdAt  DateTime  @default(now())
+  /// Null = never expires.
+  expiresAt  DateTime?
+  /// Null = any number of times.
+  maxUses    Int?
+  uses       Int       @default(0)
+  /// Set when an admin cancels the link.
+  canceledAt DateTime?
+}

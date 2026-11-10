@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { Locale } from '@/i18n/config';
 import { Intl } from '../test/intl';
 import { location, router } from '../test/navigation';
-import { savedLocales } from '../test/server';
+import { savedLocales, signup } from '../test/server';
 import { AuthForm } from './AuthForm';
 import type { AuthMode } from './AuthForm';
 
@@ -115,5 +115,40 @@ describe('AuthForm', () => {
     await vi.waitFor(() => {
       expect(savedLocales).toEqual(['de']);
     });
+  });
+
+  it('shows why you can’t sign up when sign-up is closed or needs an invite', async () => {
+    signup.mode = 'CLOSED';
+    renderForm('sign-up');
+    expect(await screen.findByRole('status')).toHaveTextContent('Sign-up is closed');
+    expect(screen.queryByRole('button', { name: 'Create account' })).toBeNull();
+    // The way back to log in stays.
+    expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument();
+  });
+
+  it('asks for an invite link while sign-up is invite only', async () => {
+    signup.mode = 'INVITE';
+    location.search = new URLSearchParams({ invite: 'old' });
+    renderForm('sign-up');
+    expect(await screen.findByRole('status')).toHaveTextContent('This invite link has expired');
+  });
+
+  it('signs up with the invite link’s code', async () => {
+    signup.mode = 'INVITE';
+    signup.invites = ['k7Q2'];
+    location.search = new URLSearchParams({ invite: 'k7Q2' });
+    const user = userEvent.setup();
+    renderForm('sign-up');
+
+    expect(await screen.findByText('You were invited. Welcome!')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Name'), 'Sam');
+    await user.type(screen.getByLabelText('Email'), 'sam@example.com');
+    await user.type(screen.getByLabelText(/Password/), 'long password');
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+
+    await vi.waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith('/jobs');
+    });
+    expect(signup.sent).toEqual([expect.objectContaining({ invite: 'k7Q2' })]);
   });
 });

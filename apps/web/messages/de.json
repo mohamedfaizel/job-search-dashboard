@@ -33,7 +33,7 @@
     "logInHeading": "Bei {app} anmelden",
     "signUpHeading": "Konto erstellen",
     "logInIntro": "Behalte Jobs, deine Bewerbungen und dein Profil im Blick.",
-    "signUpIntro": "Das erste Konto auf einem neuen Server wird Admin.",
+    "signUpIntro": "Finde Jobs, pass deinen Lebenslauf an und behalte deine Bewerbungen im Blick.",
     "name": "Name",
     "email": "E-Mail",
     "password": "Passwort",
@@ -44,7 +44,11 @@
     "creatingAccount": "Konto wird erstellt…",
     "newHere": "Neu hier?",
     "createAnAccount": "Konto erstellen",
-    "haveAccount": "Schon ein Konto?"
+    "haveAccount": "Schon ein Konto?",
+    "invited": "Du wurdest eingeladen. Willkommen!",
+    "signupClosed": "Die Registrierung ist auf diesem Server gerade geschlossen. Frag den Admin, wenn du ein Konto brauchst.",
+    "needsInvite": "Auf diesem Server kannst du dich nur mit Einladung registrieren. Frag den Admin nach einem Einladungslink.",
+    "inviteInvalid": "Dieser Einladungslink ist abgelaufen, aufgebraucht oder wurde zurückgezogen. Frag den Admin nach einem neuen."
   },
   "Profile": {
     "title": "Mein Profil",
@@ -2146,7 +2150,11 @@
     "ACCOUNT_DISABLED": "Dieses Konto ist ausgeschaltet. Frag den Admin dieser App.",
     "USER_NOT_FOUND": "Dieses Konto gibt es nicht mehr.",
     "NOT_ON_YOURSELF": "Dein eigenes Konto kannst du hier nicht ändern. Frag einen anderen Admin.",
-    "CONFIRM_EMAIL_MISMATCH": "Gib die E-Mail des Kontos ein, das du löschst."
+    "CONFIRM_EMAIL_MISMATCH": "Gib die E-Mail des Kontos ein, das du löschst.",
+    "INVITE_NEEDED": "Für die Registrierung auf diesem Server brauchst du einen Einladungslink.",
+    "INVITE_INVALID": "Dieser Einladungslink ist abgelaufen, aufgebraucht oder wurde zurückgezogen.",
+    "INVITE_NOT_FOUND": "Diesen Einladungslink gibt es schon nicht mehr.",
+    "SAVED_SEARCHES_FULL": "Du kannst höchstens {max} gespeicherte Suchen behalten. Lösche zuerst eine."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",
@@ -2255,6 +2263,73 @@
       "cancel": "Abbrechen",
       "go": "Endgültig löschen",
       "deleting": "Wird gelöscht…"
+    },
+    "tabs": {
+      "label": "Admin-Bereiche",
+      "users": "Nutzer",
+      "access": "Registrierung & Zugang",
+      "limits": "Grenzen"
+    },
+    "access": {
+      "modeHeading": "Wer kann ein Konto erstellen?",
+      "mode": {
+        "OPEN": "Offen für alle",
+        "INVITE": "Nur mit Einladung",
+        "CLOSED": "Geschlossen"
+      },
+      "modeHint": {
+        "OPEN": "Alle mit dem Link können sich registrieren.",
+        "INVITE": "Nur wer einen Einladungslink von unten hat, kann sich registrieren.",
+        "CLOSED": "Keine neuen Konten. Bestehende Nutzer können sich weiter anmelden."
+      },
+      "saves": "Speichert sich selbst und gilt sofort, ohne Server-Neustart.",
+      "saved": "Gespeichert.",
+      "invitesHeading": "Einladungslinks",
+      "expiresAfter": "Läuft ab nach",
+      "expiry": {
+        "7": "7 Tagen",
+        "30": "30 Tagen",
+        "never": "Nie"
+      },
+      "canBeUsed": "Nutzbar",
+      "useCount": {
+        "1": "Einmal",
+        "10": "10-mal",
+        "any": "Beliebig oft"
+      },
+      "newInvite": "+ Neuer Einladungslink",
+      "making": "Wird erstellt…",
+      "link": "Link",
+      "made": "Erstellt",
+      "expires": "Läuft ab",
+      "used": "Genutzt",
+      "copy": "Link kopieren",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren ging nicht. Markiere den Link und kopiere ihn selbst.",
+      "cancel": "Link zurückziehen",
+      "cancelFor": "Link {code} zurückziehen",
+      "copyFor": "Link {code} kopieren",
+      "none": "Noch keine Einladungslinks.",
+      "never": "Nie",
+      "expired": "Abgelaufen",
+      "usedOf": "{uses} von {max}",
+      "usedAny": "bisher {uses}",
+      "note": "Einladungslinks gelten in jedem Modus außer Geschlossen, du kannst also auch bei offener Registrierung jemanden einladen.",
+      "loading": "Wird geladen…"
+    },
+    "limits": {
+      "cap": "Geplante Suchen: höchstens so viele Credits pro Tag und Nutzer",
+      "capHint": "Gespeicherte Suchen, die von selbst laufen, stoppen vorher. Importe, die jemand selbst startet, sind nicht begrenzt. Alle zahlen mit ihrem eigenen Schlüssel.",
+      "max": "Höchstens so viele gespeicherte Suchen pro Nutzer",
+      "maxHint": "Hält die Läufe am Morgen kurz, wenn viele die App nutzen.",
+      "scheduler": "Geplante Suchen ausführen",
+      "schedulerHint": "Aus pausiert den Zeitplan aller gespeicherten Suchen. Nichts wird gelöscht.",
+      "stillOpen": "Nächtliche Prüfung „noch offen?“",
+      "stillOpenHint": "Prüft jede Nacht die Links der verfolgten Jobs und markiert geschlossene.",
+      "offInEnv": "In der .env-Datei des Servers ausgeschaltet, bleibt also aus.",
+      "note": "Änderungen speichern sich selbst und gelten sofort. Schaltet die .env des Servers den Zeitplan aus, bleibt er auch hier aus, und der Schalter sagt es.",
+      "saved": "Gespeichert.",
+      "loading": "Wird geladen…"
     }
   }
 }

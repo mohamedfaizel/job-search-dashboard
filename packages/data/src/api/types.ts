@@ -321,7 +321,12 @@ export interface SignUpInput extends LogInInput {
   name: string;
   /** The language the sign-up page was in; the new account keeps it. */
   locale?: string;
+  /** The invite link's code (?invite=…), needed while sign-up is invite only. */
+  invite?: string;
 }
+
+/** What the sign-up page can do now (see Admin › Sign-up & access). */
+export type SignupState = 'OPEN' | 'INVITED' | 'NEEDS_INVITE' | 'INVITE_INVALID' | 'CLOSED';
 
 /** What the user tells us about themselves, plus the text of their master resume. */
 /** Genders a form may ask for, as codes; the page shows words for them. */
@@ -1102,4 +1107,40 @@ export interface AdminUser {
   /** Has saved a JobHunter token in Settings. */
   hasJobKey: boolean;
   importsThisMonth: number;
+}
+
+/** Who can make a new account. */
+export type SignupMode = 'OPEN' | 'INVITE' | 'CLOSED';
+
+/** Admin › Sign-up & access and Limits. */
+export interface AppSettings {
+  signupMode: SignupMode;
+  /** Per user and day: scheduled runs stop before going over it. */
+  dailyCreditCap: number;
+  maxSavedSearches: number;
+  schedulerOn: boolean;
+  stillOpenOn: boolean;
+  /** SCHEDULER_ENABLED=false in .env keeps the scheduler off whatever the switch says. */
+  schedulerOffInEnv: boolean;
+  stillOpenOffInEnv: boolean;
+}
+
+export type AppSettingsChange = Partial<
+  Pick<
+    AppSettings,
+    'signupMode' | 'dailyCreditCap' | 'maxSavedSearches' | 'schedulerOn' | 'stillOpenOn'
+  >
+>;
+
+/** An invite link: /signup?invite=<token>. */
+export interface Invite {
+  id: number;
+  token: string;
+  createdAt: string;
+  /** Null = never expires. */
+  expiresAt: string | null;
+  /** Null = any number of times. */
+  maxUses: number | null;
+  uses: number;
+  state: 'ACTIVE' | 'EXPIRED' | 'USED_UP';
 }

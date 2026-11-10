@@ -165,7 +165,7 @@ export class ImportBudget {
   used!: number;
 
   @Field(() => Int, {
-    description: 'DAILY_CREDIT_CAP, per user: scheduled runs stop before going over it',
+    description: 'Admin › Limits, per user: scheduled runs stop before going over it',
   })
   cap!: number;
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import type { User } from '@jobsearch/data';
-import { useLogIn, useSetLocale, useSignUp } from '@jobsearch/data';
+import type { SignupState, User } from '@jobsearch/data';
+import { useLogIn, useSetLocale, useSignUp, useSignupState } from '@jobsearch/data';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -14,6 +14,14 @@ import { LanguageSwitch } from './LanguageSwitch';
 import { Logo } from './Logo';
 
 export type AuthMode = 'log-in' | 'sign-up';
+
+/** Why the sign-up page can't make an account now, as a message key; null when it can. */
+function blockedNote(state: SignupState | undefined) {
+  if (state === 'CLOSED') return 'signupClosed' as const;
+  if (state === 'NEEDS_INVITE') return 'needsInvite' as const;
+  if (state === 'INVITE_INVALID') return 'inviteInvalid' as const;
+  return null;
+}
 
 /** A text field's value from a submitted form. */
 function text(form: FormData, name: string): string {
@@ -31,7 +39,12 @@ const field =
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const errorText = useErrorText();
   const router = useRouter();
-  const next = safeNextPath(useSearchParams().get('next'));
+  const params = useSearchParams();
+  const next = safeNextPath(params.get('next'));
+  // /signup?invite=… from an invite link an admin made.
+  const invite = params.get('invite');
+  const signupState = useSignupState(invite, mode === 'sign-up');
+  const blocked = mode === 'sign-up' ? blockedNote(signupState.data) : null;
   const logIn = useLogIn();
   const signUp = useSignUp();
   const active = mode === 'log-in' ? logIn : signUp;
@@ -53,7 +66,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       router.replace(next);
     };
     if (mode === 'log-in') logIn.mutate({ email, password }, { onSuccess });
-    else signUp.mutate({ name: text(form, 'name'), email, password, locale }, { onSuccess });
+    else {
+      signUp.mutate(
+        { name: text(form, 'name'), email, password, locale, ...(invite ? { invite } : {}) },
+        { onSuccess },
+      );
+    }
   }
 
   // Keep ?next= when switching between the two pages.
@@ -76,68 +94,77 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <p className="mt-1 text-sm text-slate-600">
           {mode === 'log-in' ? t('logInIntro') : t('signUpIntro')}
         </p>
+        {mode === 'sign-up' && signupState.data === 'INVITED' && (
+          <p className="mt-3 rounded-md bg-brand-50 p-3 text-sm text-slate-800">{t('invited')}</p>
+        )}
 
-        <form
-          onSubmit={onSubmit}
-          className="mt-6 space-y-4"
-          aria-label={mode === 'log-in' ? t('logInTitle') : t('signUpTitle')}
-        >
-          {active.isError && (
-            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-              {errorText(active.error)}
-            </p>
-          )}
-          {mode === 'sign-up' && (
-            <label htmlFor={`${id}-name`} className="block text-sm font-medium text-slate-700">
-              {t('name')}
+        {blocked ? (
+          <p role="status" className="mt-6 rounded-md bg-slate-100 p-3 text-sm text-slate-800">
+            {t(blocked)}
+          </p>
+        ) : (
+          <form
+            onSubmit={onSubmit}
+            className="mt-6 space-y-4"
+            aria-label={mode === 'log-in' ? t('logInTitle') : t('signUpTitle')}
+          >
+            {active.isError && (
+              <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+                {errorText(active.error)}
+              </p>
+            )}
+            {mode === 'sign-up' && (
+              <label htmlFor={`${id}-name`} className="block text-sm font-medium text-slate-700">
+                {t('name')}
+                <input
+                  id={`${id}-name`}
+                  name="name"
+                  required
+                  maxLength={80}
+                  autoComplete="name"
+                  className={field}
+                />
+              </label>
+            )}
+            <label htmlFor={`${id}-email`} className="block text-sm font-medium text-slate-700">
+              {t('email')}
               <input
-                id={`${id}-name`}
-                name="name"
+                id={`${id}-email`}
+                name="email"
+                type="email"
                 required
-                maxLength={80}
-                autoComplete="name"
+                autoComplete="email"
                 className={field}
               />
             </label>
-          )}
-          <label htmlFor={`${id}-email`} className="block text-sm font-medium text-slate-700">
-            {t('email')}
-            <input
-              id={`${id}-email`}
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              className={field}
-            />
-          </label>
-          <label htmlFor={`${id}-password`} className="block text-sm font-medium text-slate-700">
-            {t('password')}
-            <input
-              id={`${id}-password`}
-              name="password"
-              type="password"
-              required
-              minLength={mode === 'sign-up' ? 8 : undefined}
-              autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
-              className={field}
-            />
-            {mode === 'sign-up' && (
-              <span className="mt-1 block text-xs font-normal text-slate-500">
-                {t('passwordHint')}
-              </span>
-            )}
-          </label>
-          <button
-            type="submit"
-            disabled={active.isPending}
-            className="w-full rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-          >
-            {mode === 'log-in'
-              ? t(logIn.isPending ? 'loggingIn' : 'logIn')
-              : t(signUp.isPending ? 'creatingAccount' : 'createAccount')}
-          </button>
-        </form>
+            <label htmlFor={`${id}-password`} className="block text-sm font-medium text-slate-700">
+              {t('password')}
+              <input
+                id={`${id}-password`}
+                name="password"
+                type="password"
+                required
+                minLength={mode === 'sign-up' ? 8 : undefined}
+                autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
+                className={field}
+              />
+              {mode === 'sign-up' && (
+                <span className="mt-1 block text-xs font-normal text-slate-500">
+                  {t('passwordHint')}
+                </span>
+              )}
+            </label>
+            <button
+              type="submit"
+              disabled={active.isPending}
+              className="w-full rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+            >
+              {mode === 'log-in'
+                ? t(logIn.isPending ? 'loggingIn' : 'logIn')
+                : t(signUp.isPending ? 'creatingAccount' : 'createAccount')}
+            </button>
+          </form>
+        )}
 
         <p className="mt-6 text-center text-sm text-slate-600">
           {mode === 'log-in' ? t('newHere') : t('haveAccount')}{' '}

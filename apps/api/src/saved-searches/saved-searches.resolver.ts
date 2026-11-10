@@ -20,7 +20,9 @@ export class SavedSearchesResolver {
     private readonly scheduler: SchedulerService,
   ) {}
 
-  @Query(() => ImportBudget, { description: "Today's credits you used against DAILY_CREDIT_CAP" })
+  @Query(() => ImportBudget, {
+    description: "Today's credits you used against the daily limit (Admin › Limits)",
+  })
   importBudget(@CurrentUser() user: SessionUser): Promise<ImportBudget> {
     return this.scheduler.budget(user.id);
   }

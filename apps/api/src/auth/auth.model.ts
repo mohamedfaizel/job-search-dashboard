@@ -74,4 +74,26 @@ export class SignUpInput {
   @IsOptional()
   @IsIn(LOCALES)
   locale?: string | null;
+
+  /** The invite link's code (?invite=…), needed while sign-up is "invite only". */
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  invite?: string | null;
 }
+
+/** What the sign-up page shows: the form, or why it can't make an account. */
+export enum SignupState {
+  /** Anyone can sign up. */
+  OPEN = 'OPEN',
+  /** Invite only, and this invite link works. */
+  INVITED = 'INVITED',
+  /** Invite only, and there is no invite link. */
+  NEEDS_INVITE = 'NEEDS_INVITE',
+  /** Invite only, and the link expired, was used up or canceled. */
+  INVITE_INVALID = 'INVITE_INVALID',
+  /** No new accounts. */
+  CLOSED = 'CLOSED',
+}
+registerEnumType(SignupState, { name: 'SignupState' });
