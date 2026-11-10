@@ -113,6 +113,22 @@ export const session: { user: User } = {
 export const server = setupServer(
   api.query('Me', () => HttpResponse.json({ data: { me: session.user } })),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
+  // You have a JobHunter token unless a test says otherwise.
+  api.query('MyApiKeys', () =>
+    HttpResponse.json({
+      data: {
+        myApiKeys: [
+          {
+            kind: 'JOBHUNTER',
+            last4: 'abcd',
+            model: null,
+            credits: null,
+            updatedAt: '2026-11-08T12:00:00.000Z',
+          },
+        ],
+      },
+    }),
+  ),
   api.mutation('CreateJob', ({ variables }) => {
     requests.push({ operation: 'CreateJob', variables });
     const input = variables['input'] as { title: string; companyName: string };

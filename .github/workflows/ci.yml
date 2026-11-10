@@ -83,6 +83,13 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Real browser, real API: what a new account sees on its first login (desktop and phone).
+      - name: Install Chromium for the browser tests
+        run: pnpm --filter @jobsearch/web exec playwright install --with-deps chromium
+
+      - name: Browser tests (first login)
+        run: pnpm --filter @jobsearch/web test:browser
+
       # Skipped until the SONAR_TOKEN secret is added to the repo (see README, "Code quality").
       - name: SonarCloud scan
         if: env.SONAR_TOKEN != ''

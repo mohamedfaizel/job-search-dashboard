@@ -319,6 +319,8 @@ export interface LogInInput {
 
 export interface SignUpInput extends LogInInput {
   name: string;
+  /** The language the sign-up page was in; the new account keeps it. */
+  locale?: string;
 }
 
 /** What the user tells us about themselves, plus the text of their master resume. */

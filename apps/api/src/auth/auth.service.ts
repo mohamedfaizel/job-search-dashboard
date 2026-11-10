@@ -36,7 +36,13 @@ export class AuthService {
         // The very first account runs the place: it can import jobs and spend credits.
         const role = (await tx.user.count()) === 0 ? 'ADMIN' : 'USER';
         return tx.user.create({
-          data: { email: input.email, name: input.name, passwordHash, role },
+          data: {
+            email: input.email,
+            name: input.name,
+            passwordHash,
+            role,
+            ...(input.locale ? { locale: input.locale } : {}),
+          },
         });
       });
     } catch (error) {

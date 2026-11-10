@@ -53,7 +53,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       router.replace(next);
     };
     if (mode === 'log-in') logIn.mutate({ email, password }, { onSuccess });
-    else signUp.mutate({ name: text(form, 'name'), email, password }, { onSuccess });
+    else signUp.mutate({ name: text(form, 'name'), email, password, locale }, { onSuccess });
   }
 
   // Keep ?next= when switching between the two pages.

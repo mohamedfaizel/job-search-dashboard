@@ -1,6 +1,6 @@
 import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, Length } from 'class-validator';
+import { IsEmail, IsIn, IsOptional, IsString, Length } from 'class-validator';
 import { AiProvider, Role } from '../generated/prisma/client';
 
 registerEnumType(Role, { name: 'Role' });
@@ -68,4 +68,10 @@ export class SignUpInput {
   @IsString()
   @Length(8, 128, { message: 'Use a password of at least 8 characters' })
   password!: string;
+
+  /** The language the sign-up page was in, so the app stays in it after you sign up. */
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsIn(LOCALES)
+  locale?: string | null;
 }

@@ -30,6 +30,7 @@ import {
   useSetJobHidden,
   useUpdateJobStatus,
 } from '@jobsearch/data';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -126,6 +127,14 @@ export function JobsDashboard() {
     });
   }, [tableState]);
   const foundQuery = useJobsPage(foundArgs, { enabled: settingsReady });
+  // A brand-new account: no jobs at all, nothing tracked or hidden, and no filter set.
+  const nothingYet =
+    !showingHidden &&
+    countActiveFilters(tableState) === 0 &&
+    !tableState.search.trim() &&
+    foundQuery.data?.total === 0 &&
+    hiddenCount.data === 0 &&
+    applications.data?.length === 0;
 
   // Opening Job posts starts a visit; jobs imported since the last one are New.
   const visit = useJobsVisit();
@@ -465,7 +474,19 @@ export function JobsDashboard() {
       />
 
       {jobsQuery.isPending && <p className="text-center text-sm text-slate-500">{t('loading')}</p>}
-      {jobsQuery.isSuccess && jobs.length === 0 && (
+      {jobsQuery.isSuccess && jobs.length === 0 && nothingYet && (
+        <div className="space-y-3 rounded-lg border border-dashed border-slate-300 p-8 text-center">
+          <p className="text-base font-semibold text-slate-900">{t('empty.title')}</p>
+          <p className="text-sm text-slate-600">{t('empty.text')}</p>
+          <Link
+            href="/jobs/add"
+            className="inline-block rounded-md bg-brand-400 px-4 py-2 text-sm font-semibold text-black hover:bg-brand-300"
+          >
+            {t('empty.addJobs')}
+          </Link>
+        </div>
+      )}
+      {jobsQuery.isSuccess && jobs.length === 0 && !nothingYet && (
         <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
           {showingHidden ? t('noHidden') : t('noJobs')}
         </p>

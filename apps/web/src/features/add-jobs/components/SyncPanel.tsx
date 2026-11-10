@@ -3,12 +3,14 @@ import type { SavedSearch } from '@jobsearch/data';
 import {
   EMPLOYMENT_TYPES,
   IMPORT_SOURCES,
+  useMyApiKeys,
   useMyProfile,
   useSaveSearch,
   useSyncJobs,
 } from '@jobsearch/data';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { InfoTip } from '../../../components/InfoTip';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -76,6 +78,15 @@ export function SyncPanel({ loaded = null }: Props) {
   });
 
   const source = useWatch({ control, name: 'source' });
+  // No JobHunter token yet: start on the Arbeitsagentur instead, once, and say why.
+  const keys = useMyApiKeys();
+  const noToken = keys.isSuccess && !keys.data.some((key) => key.kind === 'JOBHUNTER');
+  const pickedNoCredits = useRef(false);
+  useEffect(() => {
+    if (!noToken || loaded || pickedNoCredits.current) return;
+    pickedNoCredits.current = true;
+    setValue('source', 'ARBEITSAGENTUR');
+  }, [noToken, loaded, setValue]);
   // Arbeitsagentur and company pages: no credits, and only some of the filters apply.
   const noCredits = source !== 'JOBHUNTER';
   const boards = source === 'COMPANY_BOARDS';
@@ -196,6 +207,14 @@ export function SyncPanel({ loaded = null }: Props) {
             </button>
           )}
         </div>
+        {noToken && (
+          <p className="text-xs text-slate-600">
+            {t(source === 'JOBHUNTER' ? 'sync.noToken.picked' : 'sync.noToken.other')}{' '}
+            <Link href="/settings" className="font-medium underline">
+              {t('sync.noToken.link')}
+            </Link>
+          </p>
+        )}
 
         {boards && (
           <div className="space-y-2">

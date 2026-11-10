@@ -1993,6 +1993,7 @@ type SectionSuggestion {
 
 input SignUpInput {
   email: String!
+  locale: String
   name: String!
   password: String!
 }

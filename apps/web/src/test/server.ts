@@ -36,13 +36,14 @@ export const server = setupServer(
     return HttpResponse.json({ data: { logIn: ADMIN } });
   }),
   api.mutation('SignUp', ({ variables }) => {
-    const input = variables['input'] as { name: string; email: string };
+    const input = variables['input'] as { name: string; email: string; locale?: string };
     session.user = {
       id: 2,
       email: input.email,
       name: input.name,
       role: 'USER',
-      locale: 'en',
+      // Like the API: the account keeps the language the sign-up page was in.
+      locale: input.locale ?? 'en',
       aiProvider: 'ANTHROPIC',
       // A new account starts with the first-login steps.
       onboarded: false,

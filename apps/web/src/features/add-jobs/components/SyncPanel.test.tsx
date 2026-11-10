@@ -6,6 +6,31 @@ import { api, requests, SAVED, server } from '../test/server';
 import { SyncPanel } from './SyncPanel';
 
 describe('SyncPanel', () => {
+  it('starts on the Arbeitsagentur when you have no JobHunter token yet, and says why', async () => {
+    server.use(api.query('MyApiKeys', () => HttpResponse.json({ data: { myApiKeys: [] } })));
+    renderWithData(<SyncPanel />);
+
+    await vi.waitFor(() => {
+      expect(screen.getByRole('radio', { name: /Arbeitsagentur/ })).toBeChecked();
+    });
+    expect(screen.getByText(/no JobHunter token yet/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Settings › API keys/ })).toHaveAttribute(
+      'href',
+      '/settings',
+    );
+
+    // Picking JobHunter anyway says it needs the token first.
+    await userEvent.click(screen.getByRole('radio', { name: /^JobHunter/ }));
+    expect(screen.getByText('JobHunter needs your own token first.')).toBeInTheDocument();
+  });
+
+  it('starts on JobHunter when your token is saved', async () => {
+    renderWithData(<SyncPanel />);
+    await screen.findByRole('button', { name: 'Fill from my profile' });
+    expect(screen.getByRole('radio', { name: /^JobHunter/ })).toBeChecked();
+    expect(screen.queryByText(/no JobHunter token yet/)).not.toBeInTheDocument();
+  });
+
   it('fills the search from the profile, keeping fields the profile leaves empty', async () => {
     renderWithData(<SyncPanel />);
 

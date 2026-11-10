@@ -30,6 +30,11 @@ describe('Welcome steps', () => {
       'step',
     );
 
+    // Says where a new user gets their own token.
+    expect(screen.getByRole('link', { name: 'Get a token at jobspipe.dev' })).toHaveAttribute(
+      'href',
+      'https://jobspipe.dev',
+    );
     await user.type(await screen.findByLabelText('JobHunter token'), 'jh_live_1234');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText(/1234/)).toBeInTheDocument();

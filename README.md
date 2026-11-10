@@ -523,19 +523,20 @@ Until the secret exists, the scan step skips itself.
 
 ## Scripts
 
-| Command              | What it does                     |
-| -------------------- | -------------------------------- |
-| `pnpm dev`           | Run every app in watch mode      |
-| `pnpm build`         | Build every app                  |
-| `pnpm test`          | Run all unit and component tests |
-| `pnpm test:coverage` | Tests plus a coverage report     |
-| `pnpm test:e2e`      | API tests against PostgreSQL     |
-| `pnpm lint`          | Lint the whole repo              |
-| `pnpm typecheck`     | Type-check every app             |
-| `pnpm format`        | Format all files with Prettier   |
-| `pnpm db:up`/`down`  | Start or stop PostgreSQL         |
-| `pnpm rm:up`/`down`  | Start or stop Resume-Matcher     |
-| `pnpm pdf:up`/`down` | Start or stop the PDF renderer   |
+| Command                                     | What it does                                       |
+| ------------------------------------------- | -------------------------------------------------- |
+| `pnpm dev`                                  | Run every app in watch mode                        |
+| `pnpm build`                                | Build every app                                    |
+| `pnpm test`                                 | Run all unit and component tests                   |
+| `pnpm test:coverage`                        | Tests plus a coverage report                       |
+| `pnpm test:e2e`                             | API tests against PostgreSQL                       |
+| `pnpm --filter @jobsearch/web test:browser` | First login in a real browser (after `pnpm build`) |
+| `pnpm lint`                                 | Lint the whole repo                                |
+| `pnpm typecheck`                            | Type-check every app                               |
+| `pnpm format`                               | Format all files with Prettier                     |
+| `pnpm db:up`/`down`                         | Start or stop PostgreSQL                           |
+| `pnpm rm:up`/`down`                         | Start or stop Resume-Matcher                       |
+| `pnpm pdf:up`/`down`                        | Start or stop the PDF renderer                     |
 
 Run a script for one app with a filter, for example `pnpm --filter @jobsearch/web test`.
 
