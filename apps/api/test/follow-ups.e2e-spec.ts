@@ -39,6 +39,7 @@ describe('follow-up reminders', () => {
         source: 'MANUAL',
         postedAt: new Date(),
         company: { create: { name: 'Acme' } },
+        listedFor: { create: { userId: 2 } },
       },
     });
     jobId = job.id;

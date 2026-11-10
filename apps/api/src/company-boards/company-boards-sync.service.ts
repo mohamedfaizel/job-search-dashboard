@@ -115,7 +115,7 @@ export class CompanyBoardsSyncService {
         `${mapped.length} postings fit; only the newest ${MAX_SAVED_PER_RUN} were saved. Narrow the job title or places.`,
       );
     }
-    const saved = await this.jobs.upsertMany(cut);
+    const saved = await this.jobs.upsertMany(cut, options.userId);
 
     await this.prisma.syncRun.create({
       data: {

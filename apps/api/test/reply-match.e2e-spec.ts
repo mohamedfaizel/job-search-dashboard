@@ -9,6 +9,7 @@ import {
   seedTestUsers,
   rmConfigHandlers,
   saveAiKey,
+  listAllJobsFor,
 } from './helpers';
 
 const RM_URL = 'http://resume-matcher.test';
@@ -106,6 +107,7 @@ describe('AI match of the resume Claude wrote', () => {
       },
     });
     jobId = res.data!.createJob.id;
+    await listAllJobsFor(t.prisma, 2);
   });
 
   const save = () =>
@@ -132,6 +134,7 @@ describe('AI match of the resume Claude wrote', () => {
       input: { title: 'No text', companyName: 'Acme' },
     });
     jobId = created.data!.createJob.id;
+    await listAllJobsFor(t.prisma, 2);
     await save();
     const res = await t.asUser(MATCH, { jobId });
     expect(res.errors?.[0]?.message).toMatch(/no description/);

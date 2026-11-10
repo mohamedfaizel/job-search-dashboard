@@ -2,7 +2,7 @@
 # HTTP server (server.py).
 # Built and started with `pnpm pdf:up`. Only our API talks to it.
 # Ubuntu 24.04: the same TeX Live 2023 packages the templates were tested with.
-FROM ubuntu:24.10
+FROM ubuntu:24.04
 
 # --no-install-recommends keeps the image small: only the LaTeX packages the templates use.
 # Carlito, Caladea and Liberation have the same letter widths as Calibri, Cambria, Arial and

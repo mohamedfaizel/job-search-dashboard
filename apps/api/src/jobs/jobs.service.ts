@@ -43,6 +43,11 @@ function withStatus({ applications, matches, fits, jobResumes, ...job }: JobForU
   };
 }
 
+/** Only the jobs on this user's list: the ones they imported or added. */
+function listedFor(userId: number) {
+  return { listedFor: { some: { userId } } } satisfies Prisma.JobWhereInput;
+}
+
 /** Opening Job posts again within this long counts as the same visit, so the New badges stay. */
 const VISIT_GAP_MS = 30 * 60 * 1000;
 
@@ -109,11 +114,18 @@ export class JobsService implements OnApplicationBootstrap {
     return newSince;
   }
 
-  /** One page of jobs as `userId` sees them: their hidden jobs are left out, or only those. */
+  /**
+   * One page of the jobs on `userId`'s list (the ones they imported or added): their hidden jobs
+   * are left out, or only those.
+   */
   async findPage(userId: number, { filter, sort, page, pageSize }: JobsArgs): Promise<JobPage> {
     const hiddenByMe = { hiddenBy: { some: { userId } } } satisfies Prisma.JobWhereInput;
     const where: Prisma.JobWhereInput = {
-      AND: [buildWhere(filter, userId), filter?.hidden ? hiddenByMe : { NOT: hiddenByMe }],
+      AND: [
+        listedFor(userId),
+        buildWhere(filter, userId),
+        filter?.hidden ? hiddenByMe : { NOT: hiddenByMe },
+      ],
     };
     // Fit scores are worked out again here when your resume, removed terms or the jobs changed.
     await this.fit.ensureFresh(userId);
@@ -172,8 +184,12 @@ export class JobsService implements OnApplicationBootstrap {
     return { items, total: all.length, page, pageSize };
   }
 
+  /** One job on this user's list. Someone else's job is "not found", like a wrong id. */
   async findOne(userId: number, id: string) {
-    const job = await this.prisma.job.findUnique({ where: { id }, include: forUser(userId) });
+    const job = await this.prisma.job.findFirst({
+      where: { id, ...listedFor(userId) },
+      include: forUser(userId),
+    });
     if (!job) throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${id} not found`, { id });
     return withStatus(job);
   }
@@ -258,13 +274,14 @@ export class JobsService implements OnApplicationBootstrap {
     return this.applications(userId, now);
   }
 
-  async filterOptions(): Promise<JobFilterOptions> {
+  /** The filter choices, taken from the jobs on this user's list only. */
+  async filterOptions(userId: number): Promise<JobFilterOptions> {
     const distinct = async (
       field:
         'seniority' | 'jobFunction' | 'city' | 'countryCode' | 'language' | 'provider' | 'industry',
     ) => {
       const rows = await this.prisma.job.findMany({
-        where: { [field]: { not: null } },
+        where: { [field]: { not: null }, ...listedFor(userId) },
         distinct: [field],
         select: { [field]: true },
         orderBy: { [field]: 'asc' },
@@ -288,9 +305,15 @@ export class JobsService implements OnApplicationBootstrap {
       providers,
       industries,
     ] = await Promise.all([
-      this.prisma.company.findMany({ select: { name: true }, orderBy: { name: 'asc' } }),
+      this.prisma.company.findMany({
+        where: { jobs: { some: listedFor(userId) } },
+        select: { name: true },
+        orderBy: { name: 'asc' },
+      }),
       this.prisma.$queryRaw<{ skill: string }[]>`
-          SELECT DISTINCT unnest(skills) AS skill FROM "Job" ORDER BY skill`,
+          SELECT DISTINCT unnest(j.skills) AS skill FROM "Job" j
+          JOIN "UserJob" u ON u."jobId" = j.id AND u."userId" = ${userId}
+          ORDER BY skill`,
       distinct('seniority'),
       distinct('jobFunction'),
       distinct('city'),
@@ -335,6 +358,7 @@ export class JobsService implements OnApplicationBootstrap {
         salaryMaxUsd: salaryMaxUsd ?? null,
         source: JobSource.MANUAL,
         postedAt: rest.postedAt ?? new Date(),
+        listedFor: { create: { userId } },
         company: {
           connectOrCreate: {
             where: { name: companyName.trim() },
@@ -404,17 +428,28 @@ export class JobsService implements OnApplicationBootstrap {
   }
 
   /**
-   * Saves JobHunter postings. Re-running with the same postings updates them in place
-   * (matched on externalId). Application statuses live in their own table, so they stay.
+   * Saves imported postings and puts them on `userId`'s list. Re-running with the same postings
+   * updates them in place (matched on externalId). Application statuses live in their own table,
+   * so they stay. "created" counts the jobs new to this user's list, even when another user
+   * imported them first.
    */
-  async upsertMany(mapped: MappedJob[]): Promise<UpsertResult> {
+  async upsertMany(mapped: MappedJob[], userId?: number): Promise<UpsertResult> {
     if (mapped.length === 0) return { created: 0, updated: 0 };
 
     const existing = await this.prisma.job.findMany({
       where: { externalId: { in: mapped.map((m) => m.job.externalId) } },
-      select: { externalId: true, postingStatus: true },
+      select: {
+        externalId: true,
+        postingStatus: true,
+        listedFor: { where: { userId: userId ?? -1 }, select: { userId: true } },
+      },
     });
-    const existingIds = new Set(existing.map((e) => e.externalId));
+    // Already on this user's list (or, with no user, already saved at all).
+    const existingIds = new Set(
+      existing
+        .filter((e) => userId === undefined || e.listedFor.length > 0)
+        .map((e) => e.externalId),
+    );
     // Our still-open check found these closed; a re-import must not reopen them.
     const expiredIds = new Set(
       existing.filter((e) => e.postingStatus === 'expired').map((e) => e.externalId),
@@ -436,19 +471,34 @@ export class JobsService implements OnApplicationBootstrap {
       companyIds.set(company.name, row.id);
     }
 
-    await this.prisma.$transaction(
+    const saved = await this.prisma.$transaction(
       mapped.map(({ company, job }) => {
         const data = { ...job, companyId: companyIds.get(company.name) ?? 0 };
         return this.prisma.job.upsert({
           where: { externalId: job.externalId },
           create: data,
           update: expiredIds.has(job.externalId) ? { ...data, postingStatus: 'expired' } : data,
+          select: { id: true },
         });
       }),
     );
+    if (userId !== undefined)
+      await this.list(
+        userId,
+        saved.map((job) => job.id),
+      );
 
     const created = mapped.filter((m) => !existingIds.has(m.job.externalId)).length;
     return { created, updated: mapped.length - created };
+  }
+
+  /** Puts saved jobs on a user's list. Ones already on it stay as they are. */
+  async list(userId: number, jobIds: string[]): Promise<void> {
+    if (jobIds.length === 0) return;
+    await this.prisma.userJob.createMany({
+      data: jobIds.map((jobId) => ({ userId, jobId })),
+      skipDuplicates: true,
+    });
   }
 }
 

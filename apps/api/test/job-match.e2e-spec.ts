@@ -9,6 +9,7 @@ import {
   seedTestUsers,
   rmConfigHandlers,
   saveAiKey,
+  listAllJobsFor,
 } from './helpers';
 
 const RM_URL = 'http://resume-matcher.test';
@@ -90,6 +91,7 @@ describe('matching your resume against a job', () => {
       input: { title: 'Frontend Engineer', companyName: 'Acme', description: 'React and GraphQL.' },
     });
     jobId = res.data!.createJob.id;
+    await listAllJobsFor(t.prisma, 2);
   });
 
   const sendResume = (syncedAt = new Date()) =>

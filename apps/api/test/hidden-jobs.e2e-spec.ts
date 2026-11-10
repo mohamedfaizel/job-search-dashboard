@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers, listAllJobsFor } from './helpers';
 
 const CREATE_JOB = `mutation ($input: CreateJobInput!) { createJob(input: $input) { id } }`;
 const PAGE = `query ($filter: JobFilterInput) { jobsPage(filter: $filter) { total items { title } } }`;
@@ -33,6 +33,7 @@ describe('hidden jobs', () => {
       });
       ids[title] = res.data!.createJob.id;
     }
+    await listAllJobsFor(t.prisma, 2);
   });
 
   const titles = async (as: TestApp['gql'], filter?: Record<string, unknown>) => {

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import type { MappedJob } from '../src/jobhunter/jobhunter.mapper';
 import { JobsService } from '../src/jobs/jobs.service';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
@@ -176,6 +177,57 @@ describe('Jobs GraphQL API', () => {
       // Stored in lower case, the way JobHunter sends it.
       languages: ['de'],
     });
+  });
+
+  it('shows each user only the jobs they added or imported', async () => {
+    await addJob({ title: 'Admin job', companyName: 'Acme', skills: ['go'] });
+    const res = await t.asUser<{ createJob: { id: string } }>(CREATE_JOB, {
+      input: { title: 'User job', companyName: 'Beta', skills: ['react'] },
+    });
+    const adminJob = (await t.prisma.job.findFirstOrThrow({ where: { title: 'Admin job' } })).id;
+
+    const page = await t.asUser<JobsPageData>(JOBS_PAGE);
+    expect(page.data!.jobsPage.items.map((job) => job.title)).toEqual(['User job']);
+    expect(page.data!.jobsPage.total).toBe(1);
+
+    // Someone else's job can't be opened or acted on, even with its id.
+    const open = await t.asUser(`query ($id: ID!) { job(id: $id) { id } }`, { id: adminJob });
+    expect(open.errors?.[0]?.message).toMatch(/not found/);
+    const move = await t.asUser(
+      `mutation ($id: ID!) { updateJobStatus(id: $id, status: APPLIED) { id } }`,
+      { id: adminJob },
+    );
+    expect(move.errors?.[0]?.message).toMatch(/not found/);
+
+    // The filters offer only values from your own jobs.
+    const options = await t.asUser<{ jobFilterOptions: Record<string, string[]> }>(
+      `{ jobFilterOptions { companies skills } }`,
+    );
+    expect(options.data!.jobFilterOptions).toEqual({ companies: ['Beta'], skills: ['react'] });
+    expect(res.errors).toBeUndefined();
+  });
+
+  it('saves a job two users import once, and counts it as new for each of them', async () => {
+    const jobs = t.app.get(JobsService);
+    const posting: MappedJob = {
+      company: { name: 'Acme', domain: null, logoUrl: null },
+      job: {
+        externalId: 'jh-1',
+        source: 'JOBHUNTER',
+        title: 'Frontend Engineer',
+        postedAt: new Date('2026-11-01'),
+      },
+    };
+
+    expect(await jobs.upsertMany([posting], 1)).toEqual({ created: 1, updated: 0 });
+    expect(await jobs.upsertMany([posting], 1)).toEqual({ created: 0, updated: 1 });
+    // New on the user's list, though the admin saved it first.
+    expect(await jobs.upsertMany([posting], 2)).toEqual({ created: 1, updated: 0 });
+
+    expect(await t.prisma.job.count()).toBe(1);
+    expect(await t.prisma.userJob.count()).toBe(2);
+    const page = await t.asUser<JobsPageData>(JOBS_PAGE);
+    expect(page.data!.jobsPage.items.map((job) => job.title)).toEqual(['Frontend Engineer']);
   });
 
   it('filters by country and language', async () => {

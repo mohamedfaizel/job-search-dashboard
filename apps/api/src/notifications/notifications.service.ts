@@ -49,8 +49,8 @@ function toModel(row: {
 }
 
 /**
- * The bell list: one user's notifications. A scheduled search that imports new jobs tells every
- * user for whom some of them fit at least their "match" Fit % (Profile > Notifications).
+ * The bell list: one user's notifications. A scheduled search that imports new jobs tells its
+ * owner when some of them fit at least their "match" Fit % (Profile > Notifications).
  */
 @Injectable()
 export class NotificationsService {
@@ -83,14 +83,14 @@ export class NotificationsService {
   }
 
   /**
-   * After a scheduled search imported `jobIds`, tells each user how many of them fit them.
+   * After a scheduled search put `jobIds` on `userId`'s list, tells them how many fit them.
    * Users who turned it off, have no Fit scores (no resume) or hid the job are skipped.
    * Returns how many notifications it made.
    */
-  async newMatches(searchName: string, jobIds: string[]): Promise<number> {
+  async newMatches(searchName: string, jobIds: string[], userId: number): Promise<number> {
     if (jobIds.length === 0) return 0;
     const users = await this.prisma.profile.findMany({
-      where: { notifyNewMatches: true },
+      where: { userId, notifyNewMatches: true },
       select: { userId: true, matchFitMin: true },
     });
     let made = 0;
