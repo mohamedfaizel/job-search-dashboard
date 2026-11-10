@@ -49,6 +49,12 @@ describe('AppFrame', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Account menu for Mohamed' }));
     expect(screen.getByText('admin')).toBeInTheDocument();
+    // Only admins get the Admin page in their menu.
+    expect(
+      within(screen.getByRole('navigation', { name: 'Account' })).getByRole('link', {
+        name: 'Admin',
+      }),
+    ).toHaveAttribute('href', '/admin');
   });
 
   it('opens the avatar menu with My profile, Settings and Log out', async () => {
@@ -73,6 +79,7 @@ describe('AppFrame', () => {
     );
     expect(screen.getByText(ADMIN.email)).toBeInTheDocument();
     expect(screen.queryByText('admin')).toBeNull();
+    expect(within(menu).queryByRole('link', { name: 'Admin' })).toBeNull();
 
     // Escape closes it; a link click closes it too.
     await user.keyboard('{Escape}');

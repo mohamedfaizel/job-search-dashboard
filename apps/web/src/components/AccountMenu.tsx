@@ -8,7 +8,14 @@ import { useCallback, useRef, useState } from 'react';
 import { useInstallApp } from '@/lib/install-app';
 import { useDismiss } from '@/lib/use-dismiss';
 import { LanguageSwitch } from './LanguageSwitch';
-import { InstallIcon, LanguageIcon, LogOutIcon, ProfileIcon, SettingsIcon } from './NavIcons';
+import {
+  AdminIcon,
+  InstallIcon,
+  LanguageIcon,
+  LogOutIcon,
+  ProfileIcon,
+  SettingsIcon,
+} from './NavIcons';
 
 /** "Mohamed Faizel" → "MF"; one word → its first letter; an empty name → "?". */
 export function initialsOf(name: string): string {
@@ -27,7 +34,7 @@ const ITEM =
 
 /**
  * The round avatar at the right of the header. It opens your account menu: My profile,
- * Settings, the language and Log out, so the header itself stays short.
+ * Settings, Admin (for admins), the language and Log out, so the header itself stays short.
  */
 export function AccountMenu({
   user,
@@ -89,6 +96,12 @@ export function AccountMenu({
               <SettingsIcon className="h-4 w-4 text-slate-500" />
               {t('settings')}
             </Link>
+            {user.role === 'ADMIN' && (
+              <Link href="/admin" onClick={close} className={ITEM}>
+                <AdminIcon className="h-4 w-4 text-slate-500" />
+                {t('adminPage')}
+              </Link>
+            )}
             {app.state === 'prompt' && (
               <button
                 type="button"

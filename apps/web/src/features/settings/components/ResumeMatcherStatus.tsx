@@ -1,5 +1,6 @@
 import {
   useIsSyncingResume,
+  useMe,
   useMyMatcherResume,
   useResumeMatcherStatus,
   useSyncResumeToMatcher,
@@ -21,6 +22,8 @@ export function ResumeMatcherStatus() {
   // The test result lives on the mutation, so the regular status refresh doesn't hide it.
   const aiResult = testAi.data;
   const ready = status.data?.reachable ?? false;
+  // "Not running" is the admin's to fix; everyone else just reads that it's not available.
+  const isAdmin = useMe().data?.role === 'ADMIN';
 
   return (
     <section
@@ -36,7 +39,13 @@ export function ResumeMatcherStatus() {
             ready ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'
           }`}
         >
-          {status.isPending ? t('checking') : ready ? t('running') : t('notRunning')}
+          {status.isPending
+            ? t('checking')
+            : ready
+              ? t('running')
+              : isAdmin
+                ? t('notRunning')
+                : t('unavailable')}
         </span>
       </div>
       <p className="text-sm text-slate-600">{t('intro')}</p>

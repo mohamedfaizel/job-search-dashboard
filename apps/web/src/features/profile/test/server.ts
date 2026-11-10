@@ -164,7 +164,7 @@ export const me: { aiProvider: 'ANTHROPIC' | 'OPENAI' } = { aiProvider: 'ANTHROP
 /** Sends to Resume-Matcher made in the current test. */
 export const syncs: number[] = [];
 
-const ME = {
+export const ME = {
   id: 'u1',
   email: 'ada@example.com',
   name: 'Ada King Lovelace',

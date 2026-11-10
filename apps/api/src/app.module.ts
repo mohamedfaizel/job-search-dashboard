@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AdminModule } from './admin/admin.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthModule } from './auth/auth.module';
 import { withApiError } from './common/api-error';
@@ -56,6 +57,7 @@ import { SyncModule } from './sync/sync.module';
     NotificationsModule,
     SavedAnswersModule,
     StoriesModule,
+    AdminModule,
     SalaryModule,
     GmailModule,
   ],

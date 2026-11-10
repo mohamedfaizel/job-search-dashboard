@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { ResumeMatcherClient } from './resume-matcher.client';
+import { RM_UNAVAILABLE, ResumeMatcherClient } from './resume-matcher.client';
 import { ResumeMatcherService } from './resume-matcher.service';
 import type { RmAiQueue, UserAi } from './rm-ai-queue';
 
@@ -54,7 +54,7 @@ function serviceWith(url: string | undefined, ai: UserAi | null = CLAUDE) {
 
 describe('ResumeMatcherService.getStatus', () => {
   it('reports the feature as off when RESUME_MATCHER_URL is not set', async () => {
-    const status = await serviceWith(undefined).getStatus(1, true);
+    const status = await serviceWith(undefined).getStatus(1, true, true);
 
     expect(status).toMatchObject({ configured: false, reachable: false, aiHealthy: null });
     expect(status.message).toContain('RESUME_MATCHER_URL');
@@ -99,15 +99,22 @@ describe('ResumeMatcherService.getStatus', () => {
     expect(calls).toEqual(['health']);
   });
 
-  it('says how to start it when the container is down', async () => {
+  it('tells an admin how to start it when the container is down', async () => {
     server.use(http.get(`${RM_URL}/api/v1/health`, () => HttpResponse.error()));
 
-    const status = await serviceWith(RM_URL).getStatus(1, true);
+    const status = await serviceWith(RM_URL).getStatus(1, true, true);
 
     expect(status).toMatchObject({ configured: true, reachable: false, aiHealthy: null });
     expect(status.message).toBe(
       `Resume-Matcher at ${RM_URL} is not reachable. Start it with pnpm rm:up.`,
     );
+  });
+
+  it('tells a normal user only that it is not available, without the server setup', async () => {
+    server.use(http.get(`${RM_URL}/api/v1/health`, () => HttpResponse.error()));
+
+    expect((await serviceWith(RM_URL).getStatus(2, true)).message).toBe(RM_UNAVAILABLE);
+    expect((await serviceWith(undefined).getStatus(2, true)).message).toBe(RM_UNAVAILABLE);
   });
 
   it('reports an HTTP error from the AI check', async () => {

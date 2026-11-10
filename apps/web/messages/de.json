@@ -24,7 +24,8 @@
     "accountMenu": "Konto",
     "language": "Sprache",
     "install": "App installieren",
-    "installIos": "Zum Installieren: Teilen antippen, dann „Zum Home-Bildschirm“."
+    "installIos": "Zum Installieren: Teilen antippen, dann „Zum Home-Bildschirm“.",
+    "adminPage": "Admin"
   },
   "Auth": {
     "logInTitle": "Anmelden",
@@ -381,6 +382,7 @@
       "checking": "Wird geprüft…",
       "running": "Läuft",
       "notRunning": "Läuft nicht",
+      "unavailable": "Nicht verfügbar",
       "checkFailed": "Resume-Matcher konnte nicht geprüft werden: {error}",
       "test": "KI-Verbindung testen",
       "testing": "Wird getestet…",
@@ -1746,7 +1748,8 @@
         "notSetUp": "Resume-Matcher ist ausgeschaltet: setze RESUME_MATCHER_URL in .env.",
         "notRunning": "Resume-Matcher läuft nicht: starte ihn mit pnpm rm:up.",
         "keyFailed": "Dein KI-Schlüssel fehlt, ist abgelaufen oder hat kein Guthaben mehr.",
-        "noKey": "Du hast noch keinen KI-Schlüssel: füge deinen Claude- oder OpenAI-Schlüssel in den Einstellungen hinzu."
+        "noKey": "Du hast noch keinen KI-Schlüssel: füge deinen Claude- oder OpenAI-Schlüssel in den Einstellungen hinzu.",
+        "unavailable": "Resume-Matcher ist gerade nicht verfügbar. Bitte versuche es später noch einmal."
       },
       "chatHint": "KI-Chat: du fügst einen Prompt in Claude, ChatGPT oder einen anderen KI-Chat ein",
       "openSettings": "Einstellungen › API-Schlüssel öffnen ↗"
@@ -2139,7 +2142,11 @@
     "RESUME_REPLY_EMPTY": "Füge zuerst die Antwort des KI-Chats ein.",
     "SECTION_NOT_FOUND": "Dieser Abschnitt ist nicht in diesem Lebenslauf.",
     "AI_CALL_FAILED": "Der KI-Anbieter hat nicht geantwortet: {reason}",
-    "SUGGESTION_UNREADABLE": "In der KI-Antwort steht kein Lebenslauftext. Füge die ganze Antwort ein."
+    "SUGGESTION_UNREADABLE": "In der KI-Antwort steht kein Lebenslauftext. Füge die ganze Antwort ein.",
+    "ACCOUNT_DISABLED": "Dieses Konto ist ausgeschaltet. Frag den Admin dieser App.",
+    "USER_NOT_FOUND": "Dieses Konto gibt es nicht mehr.",
+    "NOT_ON_YOURSELF": "Dein eigenes Konto kannst du hier nicht ändern. Frag einen anderen Admin.",
+    "CONFIRM_EMAIL_MISMATCH": "Gib die E-Mail des Kontos ein, das du löschst."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",
@@ -2198,6 +2205,56 @@
       "profile": "Mein Profil prüfen",
       "addJobs": "Meine ersten Jobs finden ›",
       "jobs": "Zu den Stellenanzeigen ›"
+    }
+  },
+  "Admin": {
+    "title": "Admin",
+    "intro": "Nur Admins sehen diese Seite. Du siehst Zahlen, nie die Jobs, Lebensläufe oder Schlüssel anderer.",
+    "notAdmin": "Nur Admins können diese Seite öffnen.",
+    "users": {
+      "heading": "Nutzer ({count})",
+      "search": "Nutzer suchen",
+      "searchPlaceholder": "Nach Name oder E-Mail suchen",
+      "filters": "Zeigen",
+      "filter": {
+        "all": "Alle",
+        "admins": "Admins",
+        "disabled": "Ausgeschaltet",
+        "noKey": "Ohne Schlüssel"
+      },
+      "name": "Name und E-Mail",
+      "role": "Rolle",
+      "joined": "Dabei seit",
+      "lastSeen": "Zuletzt da",
+      "key": "Schlüssel",
+      "imports": "Importe diesen Monat",
+      "actions": "Aktionen",
+      "roleAdmin": "Admin",
+      "roleUser": "Nutzer",
+      "disabled": "Ausgeschaltet",
+      "you": "Du",
+      "never": "Nie",
+      "hasKey": "Hat einen Job-Daten-Schlüssel",
+      "noKey": "Kein Job-Daten-Schlüssel",
+      "makeAdmin": "Zum Admin machen",
+      "removeAdmin": "Admin entfernen",
+      "enable": "Einschalten",
+      "disable": "Ausschalten",
+      "delete": "Löschen",
+      "more": "Mehr für {name}",
+      "importsShort": "{count} Importe",
+      "seenShort": "zuletzt {when}",
+      "empty": "Kein Nutzer passt.",
+      "note": "⋯ = Aus- oder einschalten, Löschen. Dein eigenes Konto änderst du hier nicht.",
+      "loading": "Nutzer werden geladen…"
+    },
+    "delete": {
+      "title": "{name} löschen?",
+      "text": "Das löscht das Konto und alle Daten: Jobliste, Lebensläufe, Bewerbungen, gespeicherte Suchen und Schlüssel. Das lässt sich nicht rückgängig machen.",
+      "confirm": "Gib zur Bestätigung die E-Mail ein",
+      "cancel": "Abbrechen",
+      "go": "Endgültig löschen",
+      "deleting": "Wird gelöscht…"
     }
   }
 }

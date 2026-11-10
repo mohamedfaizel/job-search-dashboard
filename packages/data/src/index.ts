@@ -2,6 +2,13 @@ export * from './api/types';
 export { API_URL, ApiError, getErrorCode, getErrorMessage, setApiUrl } from './api/client';
 export type { ErrorCode } from './api/client';
 export {
+  adminUsersKey,
+  useAdminUsers,
+  useDeleteUser,
+  useSetUserDisabled,
+  useSetUserRole,
+} from './api/admin';
+export {
   useFinishOnboarding,
   useLogIn,
   useLogOut,

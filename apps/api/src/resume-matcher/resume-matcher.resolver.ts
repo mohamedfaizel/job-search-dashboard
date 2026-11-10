@@ -31,7 +31,7 @@ export class ResumeMatcherResolver {
     })
     checkAi: boolean,
   ): Promise<ResumeMatcherStatusModel> {
-    return this.resumeMatcher.getStatus(user.id, checkAi);
+    return this.resumeMatcher.getStatus(user.id, checkAi, user.role === 'ADMIN');
   }
 
   @Query(() => MatcherResumeModel, {
