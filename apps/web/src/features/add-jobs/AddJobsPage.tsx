@@ -42,12 +42,12 @@ function AddJobs() {
   const { data: searches } = useSavedSearches();
 
   return (
-    <section aria-labelledby="add-jobs-title" className="space-y-6">
-      <div>
+    <section aria-labelledby="add-jobs-title" className="space-y-4">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
         <h1 id="add-jobs-title" className="text-xl font-semibold text-slate-900">
           {t('title')}
         </h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-xs text-slate-600">
           {t('tokenHint')}{' '}
           <Link href="/settings" className="text-brand-700 underline">
             {t('openSettings')}
@@ -98,7 +98,7 @@ function AddJobs() {
         ]}
       />
       {/* Outside the tabs, so every tab shows what the imports brought in. */}
-      <div className="border-t border-slate-200 pt-6">
+      <div className="pt-2">
         <ImportHistory />
       </div>
     </section>

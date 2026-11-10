@@ -194,6 +194,8 @@ const SYNC_RUN_FIELDS = /* GraphQL */ `
   savedSearchName
   scheduled
   summary
+  source
+  boards
 `;
 
 const SAVED_SEARCH_FIELDS = /* GraphQL */ `

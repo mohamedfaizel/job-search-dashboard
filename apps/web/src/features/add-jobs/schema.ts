@@ -173,7 +173,7 @@ export const defaultSyncForm: SyncFormValues = {
   excludeTitles: '',
   employmentTypes: [],
   minSalaryEur: '',
-  maxAgeDays: '7',
+  maxAgeDays: '1',
   pageSize: '25',
   maxPages: '1',
   onlyNew: true,

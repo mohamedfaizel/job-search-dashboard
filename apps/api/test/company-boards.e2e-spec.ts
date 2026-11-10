@@ -163,6 +163,22 @@ describe('Company board import', () => {
     expect(await t.prisma.job.findFirst({ where: { title: 'Account Executive' } })).toBeNull();
   });
 
+  it('lists the boards apart from the search in the import history', async () => {
+    await t.gql(SYNC, { input: input() });
+
+    const history = await t.gql<{ syncRuns: Record<string, unknown>[] }>(
+      `query { syncRuns { source boards summary } }`,
+    );
+
+    expect(history.data?.syncRuns).toEqual([
+      {
+        source: 'COMPANY_BOARDS',
+        boards: ['greenhouse:acme', 'lever:netflix', 'ashby:ramp'],
+        summary: 'frontend',
+      },
+    ]);
+  });
+
   it('does not save a posting twice', async () => {
     await t.gql(SYNC, { input: input() });
     const again = await t.gql<{ syncJobs: Record<string, unknown> }>(SYNC, { input: input() });

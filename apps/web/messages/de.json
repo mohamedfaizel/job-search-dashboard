@@ -1890,7 +1890,7 @@
     },
     "sync": {
       "heading": "Aus JobHunter importieren",
-      "intro": "Jeder geholte Job kostet einen JobHunter-Credit. Jobs, die du schon hast, werden aktualisiert, nie doppelt hinzugefügt, und im selben Monat erneut zu holen ist kostenlos.",
+      "intro": "Jeder geholte Job kostet einen JobHunter-Credit. Jobs, die du schon hast, werden aktualisiert, nie doppelt hinzugefügt, und im selben Monat erneut zu holen kostet nichts.",
       "fillProfile": "Aus meinem Profil übernehmen",
       "titles": "Jobtitel",
       "commaSeparated": "Mit Kommas getrennt",
@@ -1904,7 +1904,7 @@
       "filtersOn": "{count} aktiv",
       "adLanguage": "Anzeige geschrieben auf",
       "languagesHint": "Nichts angehakt = jede Sprache. Viele deutsche Jobs werden auf Englisch ausgeschrieben, und Anzeigen ohne Sprache bleiben drin.",
-      "skipGerman": "Anzeigen überspringen, die fließend Deutsch verlangen",
+      "skipGerman": "Ohne fließend Deutsch",
       "skipGermanHint": "Erkennt deutsche Anzeigen, die fließende, verhandlungssichere oder C1-Deutschkenntnisse verlangen. Englische Anzeigen mit „fluent German“ bekommen stattdessen in den Stellenanzeigen die Markierung Deutsch.",
       "remoteOnly": "Nur Remote",
       "excludeTitles": "Titel überspringen mit",
@@ -1913,14 +1913,14 @@
       "jobTypeHint": "Nichts angehakt = jede Art. Anzeigen ohne Angabe bleiben drin.",
       "minSalary": "Mindestgehalt (€ pro Jahr)",
       "minSalaryHint": "Nur etwa die Hälfte der Anzeigen nennt ein Gehalt, der Rest wird übersprungen. Lass es leer, um sie zu behalten.",
-      "minSalaryPlaceholder": "z. B. 60000",
+      "minSalaryPlaceholder": "60000",
       "pageSettings": "Seiteneinstellungen",
-      "pageSummary": "· höchstens {days} Tage alt · {size} pro Seite · {pages, plural, one {# Seite} other {# Seiten}}",
-      "maxAge": "Höchstalter (Tage)",
+      "pageSummary": "Anzahl Tage: {days} · {size} pro Seite · {pages, plural, one {# Seite} other {# Seiten}}",
+      "maxAge": "Anzahl Tage",
       "pageSize": "Jobs pro Seite",
-      "pageSizeHint": "Free-Plan: höchstens 25",
+      "pageSizeHint": "Dein JobHunter-Plan erlaubt evtl. höchstens 25",
       "maxPages": "Höchstzahl Seiten",
-      "onlyNew": "Nur Jobs, die seit meinem letzten Import neu sind",
+      "onlyNew": "Nur neue seit letztem Import",
       "onlyNewHint": "Überspringt Anzeigen, die diese Suche schon geholt hat. Nimm den Haken weg, um alles neu zu holen.",
       "import": "Importieren",
       "importUpTo": "Importieren (bis zu {count} Credits)",
@@ -1931,11 +1931,11 @@
       "fetchedUpdated": "{jobs} geholt: {created} neu, {updated} schon in deiner Tabelle (aktualisiert, nicht doppelt hinzugefügt).",
       "total": "Insgesamt passen {jobs} zu dieser Suche.",
       "used": "{credits} verbraucht",
-      "alreadyPaid": " ({jobs} diesen Monat schon bezahlt, also kostenlos)",
+      "alreadyPaid": " ({jobs} diesen Monat schon bezahlt, also ohne Kosten)",
       "left": ", {count, number} übrig",
       "moreWaiting": "Auf den nächsten Seiten warten weitere Jobs.",
       "continueUpTo": "Import fortsetzen (bis zu {credits})",
-      "saveAs": "Diese Suche speichern als",
+      "saveAs": "Speichern als",
       "saveAsHint": "Starte sie mit einem Klick erneut unter Gespeicherte Suchen",
       "namePlaceholder": "z. B. Frontend in Berlin",
       "update": "Gespeicherte Suche aktualisieren",
@@ -1943,31 +1943,33 @@
       "saveError": "Konnte nicht gespeichert werden: {error}",
       "saved": "„{name}“ gespeichert.",
       "headingBoards": "Von Firmen-Karriereseiten importieren",
-      "introBoards": "Liest die offenen Stellen direkt von den Karriereseiten der Firmen (Greenhouse, Lever, Ashby). Kostenlos, keine Credits. Nur passende Stellen werden gespeichert.",
+      "introBoards": "Liest die offenen Stellen direkt von den Karriereseiten der Firmen (Greenhouse, Lever, Ashby). Keine Credits. Nur passende Stellen werden gespeichert.",
       "headingFree": "Von der Arbeitsagentur importieren",
-      "introFree": "Die Jobbörse der Bundesagentur für Arbeit. Kostenlos, ohne Credits. Nur Deutschland. Es gelten nur einige Filter, die anderen sind ausgeblendet.",
+      "introFree": "Die Jobbörse der Bundesagentur für Arbeit. Keine Credits. Nur Deutschland. Es gelten nur einige Filter, die anderen sind ausgeblendet.",
       "source": "Wo suchen",
       "sources": {
         "JOBHUNTER": {
           "name": "JobHunter",
-          "hint": "Weltweit. Jeder Job kostet einen Credit."
+          "hint": "Weltweit · 1 Credit pro Job"
         },
         "ARBEITSAGENTUR": {
-          "name": "Arbeitsagentur (kostenlos)",
-          "hint": "Nur Deutschland. Keine Credits. Liest jede Anzeige vollständig."
+          "name": "Arbeitsagentur",
+          "hint": "Nur Deutschland · 0 Credits"
         },
         "COMPANY_BOARDS": {
-          "name": "Firmen-Karriereseiten (kostenlos)",
-          "hint": "Greenhouse, Lever und Ashby. Keine Credits. Du wählst die Firmen."
+          "name": "Firmen-Karriereseiten",
+          "hint": "Greenhouse, Lever, Ashby · 0 Credits"
         }
       },
       "boards": "Firmen-Karriereseiten",
       "boardsHint": "Mit Komma getrennt: greenhouse:name, lever:name, ashby:name oder die Adresse der Karriereseite einfügen",
       "boardsPlaceholder": "z. B. greenhouse:stripe, lever:netflix, ashby:ramp",
-      "pageSummaryBoards": "· höchstens {days} Tage alt",
+      "pageSummaryBoards": "Anzahl Tage: {days}",
       "warnings": "Das solltest du wissen:",
-      "usedFree": "Kostenlos: keine Credits verbraucht.",
-      "continueFree": "Import fortsetzen"
+      "usedFree": "Keine Credits verbraucht.",
+      "continueFree": "Import fortsetzen",
+      "locationsPlaceholder": "z. B. Berlin, Bayern",
+      "excludePlaceholder": "z. B. Werkstudent, Praktikum"
     },
     "saved": {
       "heading": "Gespeicherte Suchen",
@@ -2011,25 +2013,34 @@
       "nextRun": "Nächster Lauf: {date}",
       "scheduleError": "Der Zeitplan konnte nicht gespeichert werden: {error}",
       "boardsBadge": "Karriereseiten",
-      "freeBadge": "Kostenlos",
-      "lastDaysFree": "Letzte {days} Tage · kostenlos",
-      "free": "Kostenlos: keine Credits verbraucht."
+      "freeBadge": "Arbeitsagentur",
+      "lastDaysFree": "Letzte {days} Tage · 0 Credits",
+      "free": "Keine Credits verbraucht."
     },
     "history": {
       "heading": "Import-Verlauf",
       "loading": "Import-Verlauf wird geladen…",
       "loadError": "Der Import-Verlauf konnte nicht geladen werden: {error}",
       "none": "Noch keine Importe.",
-      "caption": "Die letzten 20 Importe aus JobHunter",
+      "caption": "Deine letzten Importe",
       "when": "Wann",
       "search": "Suche",
       "new": "Neu",
-      "alreadySaved": "Schon gespeichert",
+      "alreadySaved": "Gespeichert",
       "credits": "Credits",
       "pages": "Seiten",
       "scheduled": "Geplant",
-      "allFetched": "Alles geholt",
-      "moreLeft": "Noch mehr da"
+      "allFetched": "Fertig",
+      "moreLeft": "Noch mehr da",
+      "allFetchedTip": "Alle Seiten geholt",
+      "boards": "{count, plural, one {# Karriereseite} other {# Karriereseiten}}",
+      "showMore": "{count} weitere zeigen",
+      "showLess": "Weniger zeigen",
+      "sources": {
+        "JOBHUNTER": "JobHunter",
+        "ARBEITSAGENTUR": "Arbeitsagentur",
+        "COMPANY_BOARDS": "Firmen"
+      }
     },
     "tokenHint": "Importe von JobHunter nutzen den Token aus deinen Einstellungen, also deine eigenen Credits.",
     "openSettings": "Einstellungen öffnen",
@@ -2049,7 +2060,8 @@
       "removeShown": "Alle {count} entfernen",
       "none": "Keine Firma passt.",
       "hint": "Firmen wechseln manchmal ihr Bewerbungstool. Kann eine Seite nicht gelesen werden, nennt der Import sie, und du kannst den Haken entfernen."
-    }
+    },
+    "moreAbout": "Mehr zu {field}"
   },
   "Errors": {
     "NETWORK": "Die API unter {url} ist nicht erreichbar. Läuft sie?",
