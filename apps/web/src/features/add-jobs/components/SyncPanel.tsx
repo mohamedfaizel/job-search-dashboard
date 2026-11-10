@@ -3,12 +3,14 @@ import type { SavedSearch } from '@jobsearch/data';
 import {
   EMPLOYMENT_TYPES,
   IMPORT_SOURCES,
+  useMyApiKeys,
   useMyProfile,
   useSaveSearch,
   useSyncJobs,
 } from '@jobsearch/data';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
@@ -68,6 +70,15 @@ export function SyncPanel({ loaded = null }: Props) {
   });
 
   const source = useWatch({ control, name: 'source' });
+  // No JobHunter token yet: start on the free German job board instead, once, and say why.
+  const keys = useMyApiKeys();
+  const noToken = keys.isSuccess && !keys.data.some((key) => key.kind === 'JOBHUNTER');
+  const pickedFree = useRef(false);
+  useEffect(() => {
+    if (!noToken || loaded || pickedFree.current) return;
+    pickedFree.current = true;
+    setValue('source', 'ARBEITSAGENTUR');
+  }, [noToken, loaded, setValue]);
   // The free sources: no credits, and only some of the filters apply.
   const free = source !== 'JOBHUNTER';
   const boards = source === 'COMPANY_BOARDS';
@@ -185,6 +196,14 @@ export function SyncPanel({ loaded = null }: Props) {
             </label>
           ))}
         </div>
+        {noToken && (
+          <p className="text-xs text-slate-600">
+            {t(source === 'JOBHUNTER' ? 'sync.noToken.picked' : 'sync.noToken.free')}{' '}
+            <Link href="/settings" className="font-medium underline">
+              {t('sync.noToken.link')}
+            </Link>
+          </p>
+        )}
       </fieldset>
 
       {hasProfile && (

@@ -90,6 +90,17 @@ export function WelcomePage() {
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-slate-900">{t('key.title')}</h2>
             <p className="text-sm text-slate-600">{t('key.intro')}</p>
+            <p className="text-sm text-slate-600">
+              {t('key.where')}{' '}
+              <a
+                href="https://jobspipe.dev"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-slate-900 underline"
+              >
+                {t('key.whereLink')}
+              </a>
+            </p>
           </div>
           {keys.isPending ? (
             <p className="text-sm text-slate-500">{t('loading')}</p>

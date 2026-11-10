@@ -319,6 +319,38 @@ describe('JobsDashboard', () => {
     expect(all).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('tells a brand-new account there are no jobs yet, with a button to add some', async () => {
+    server.use(
+      api.query('JobsPage', () =>
+        HttpResponse.json({ data: { jobsPage: { items: [], total: 0, page: 1, pageSize: 25 } } }),
+      ),
+    );
+    renderDashboard('de');
+
+    expect(await screen.findByText('Noch keine Jobs')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '+ Jobs hinzufügen' })).toHaveAttribute(
+      'href',
+      '/jobs/add',
+    );
+    // Not the "clear your filters" hint: there are no filters to clear.
+    expect(screen.queryByText(/Setz ein paar Filter zurück/)).not.toBeInTheDocument();
+  });
+
+  it('says to clear filters when a search finds nothing', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    server.use(
+      api.query('JobsPage', () =>
+        HttpResponse.json({ data: { jobsPage: { items: [], total: 0, page: 1, pageSize: 25 } } }),
+      ),
+    );
+    await user.type(screen.getByRole('searchbox'), 'zzz');
+
+    expect(await screen.findByText(/Try clearing some filters/)).toBeInTheDocument();
+    expect(screen.queryByText('No jobs yet')).not.toBeInTheDocument();
+  });
+
   it('shows the New chip with 0 on your first visit, and a chip for every status', async () => {
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });

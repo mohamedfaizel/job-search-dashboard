@@ -65,6 +65,29 @@ describe('AuthForm', () => {
     expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
   });
 
+  it('keeps the language the sign-up page was in, without a click on the switch', async () => {
+    const user = userEvent.setup();
+    const queryClient = createQueryClient();
+    render(
+      <Intl locale="de">
+        <DataProvider store={makeStore()} queryClient={queryClient}>
+          <AuthForm mode="sign-up" />
+        </DataProvider>
+      </Intl>,
+    );
+
+    await user.type(screen.getByLabelText('Name'), 'Lena');
+    await user.type(screen.getByLabelText('E-Mail'), 'lena@example.com');
+    await user.type(screen.getByLabelText(/Passwort/), 'long password');
+    await user.click(screen.getByRole('button', { name: 'Konto erstellen' }));
+
+    await vi.waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith('/jobs');
+    });
+    // The new account says German, so the app does not switch to English after sign-up.
+    expect(queryClient.getQueryData<{ locale: string }>(['me'])?.locale).toBe('de');
+  });
+
   it('saves the language you picked here on your account when you log in', async () => {
     const user = userEvent.setup();
     const queryClient = createQueryClient();

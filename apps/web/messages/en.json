@@ -909,6 +909,11 @@
     "loading": "Loading jobs…",
     "noHidden": "No hidden jobs match.",
     "noJobs": "No jobs match. Try clearing some filters, or add jobs from the “Add jobs” page.",
+    "empty": {
+      "title": "No jobs yet",
+      "text": "Import jobs from JobHunter, the Arbeitsagentur or company career pages, or add one by hand.",
+      "addJobs": "+ Add jobs"
+    },
     "status": {
       "NONE": "Not applied",
       "SAVED": "Saved",
@@ -1967,7 +1972,12 @@
       "pageSummaryBoards": "· {days} days old at most",
       "warnings": "Some things to know:",
       "usedFree": "Free: no credits used.",
-      "continueFree": "Continue import"
+      "continueFree": "Continue import",
+      "noToken": {
+        "free": "You have no JobHunter token yet, so this starts on a free source.",
+        "picked": "JobHunter needs your own token first.",
+        "link": "Add it in Settings › API keys"
+      }
     },
     "saved": {
       "heading": "Saved searches",
@@ -2148,7 +2158,9 @@
     "back": "Back",
     "key": {
       "title": "1. Your job data key",
-      "intro": "Job Search Hunter finds jobs with a JobHunter token. Paste yours to import jobs and run saved searches. It stays private to your account."
+      "intro": "Job Search Hunter finds jobs with a JobHunter token. Paste yours to import jobs and run saved searches. It stays private to your account.",
+      "where": "No token yet? Sign up with your own email, then copy your API key (it starts with jp_).",
+      "whereLink": "Get a token at jobspipe.dev"
     },
     "resume": {
       "title": "2. Your resume",

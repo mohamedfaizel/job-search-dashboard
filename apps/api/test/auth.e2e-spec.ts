@@ -187,6 +187,18 @@ describe('auth', () => {
     );
   });
 
+  it('keeps the language the sign-up page was in, and only languages the app has', async () => {
+    const gql = browser();
+    const res = await gql<{ signUp: { locale: string } }>(
+      `mutation ($input: SignUpInput!) { signUp(input: $input) { locale } }`,
+      { input: { ...MOHAMED, locale: 'de' } },
+    );
+    expect(res.body.data?.signUp).toEqual({ locale: 'de' });
+
+    const wrong = await browser()(SIGN_UP, { input: { ...VISITOR, locale: 'xx' } });
+    expect(wrong.body.errors).toBeDefined();
+  });
+
   it('ignores a forged session cookie', async () => {
     const forged = await request(t.server)
       .post('/graphql')
