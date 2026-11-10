@@ -59,7 +59,7 @@ describe('App tabs', () => {
       'aria-selected',
       'true',
     );
-    expect(screen.getByLabelText(/^Save this search as/)).toHaveValue('Frontend in Berlin');
+    expect(screen.getByLabelText(/^Save as/)).toHaveValue('Frontend in Berlin');
   });
 
   it('shows the import history under every tab', async () => {

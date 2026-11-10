@@ -247,8 +247,12 @@ export interface SyncRun {
   savedSearchName: string | null;
   /** True when the scheduler started it. */
   scheduled: boolean;
-  /** e.g. "frontend · DE · Berlin" */
+  /** e.g. "frontend · DE · Berlin". Company boards are not in it: see `boards`. */
   summary: string;
+  /** Where the import looked. */
+  source: ImportSource;
+  /** The company career pages it read, e.g. "greenhouse:n26". */
+  boards: string[];
 }
 
 export interface SavedSearch {

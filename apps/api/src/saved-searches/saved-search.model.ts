@@ -54,6 +54,14 @@ export class SyncRunModel {
 
   @Field({ description: 'Short description of what was searched, e.g. "frontend · DE · Berlin"' })
   summary!: string;
+
+  @Field(() => ImportSource, { description: 'Where the import looked for jobs' })
+  source!: ImportSource;
+
+  @Field(() => [String], {
+    description: 'The company career pages it read, e.g. "greenhouse:n26" (COMPANY_BOARDS only)',
+  })
+  boards!: string[];
 }
 
 @ObjectType()

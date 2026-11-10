@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { apiError } from '../common/api-error';
 import type { Prisma, SavedSearch as SavedSearchRow } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ImportSource } from '../sync/import-source';
 import type { SyncJobsInput, SyncJobsResult } from '../sync/sync.input';
 import { SyncService } from '../sync/sync.service';
 import type { SavedSearch, SavedSearchInput, SyncRunModel } from './saved-search.model';
@@ -20,10 +21,27 @@ function languageName(code: string): string {
   );
 }
 
-/** "frontend, react dev · DE · Berlin" from the input an import stored. */
+/** One list field of the input an import stored, or none. */
+function listOf(input: Prisma.JsonValue, key: string): string[] {
+  const obj = (input ?? {}) as Record<string, unknown>;
+  return Array.isArray(obj[key]) ? (obj[key] as string[]) : [];
+}
+
+/** Where a stored import looked. JobHunter runs stored no source. */
+function sourceOf(input: Prisma.JsonValue): ImportSource {
+  const value = ((input ?? {}) as Record<string, unknown>)['source'];
+  return Object.values(ImportSource).includes(value as ImportSource)
+    ? (value as ImportSource)
+    : ImportSource.JOBHUNTER;
+}
+
+/**
+ * "frontend, react dev · DE · Berlin" from the input an import stored. The company boards are
+ * left out: a run can have 90 of them, so the history lists them apart (see `boards`).
+ */
 function summarize(input: Prisma.JsonValue): string {
   const obj = (input ?? {}) as Record<string, unknown>;
-  const list = (key: string) => (Array.isArray(obj[key]) ? (obj[key] as string[]) : []);
+  const list = (key: string) => listOf(input, key);
   const extras = [
     list('languages').length ? `in ${list('languages').map(languageName).join('/')}` : '',
     obj['remoteOnly'] === true ? 'remote' : '',
@@ -32,7 +50,7 @@ function summarize(input: Prisma.JsonValue): string {
     list('excludeTitles').length ? `not ${list('excludeTitles').join(', ')}` : '',
     typeof obj['minSalaryEur'] === 'number' ? `€${obj['minSalaryEur'].toLocaleString('en')}+` : '',
   ];
-  return [list('boards'), list('titles'), list('skills'), list('countryCodes'), list('locations')]
+  return [list('titles'), list('skills'), list('countryCodes'), list('locations')]
     .filter((part) => part.length > 0)
     .map((part) => part.join(', '))
     .concat(extras.filter(Boolean))
@@ -54,6 +72,8 @@ function toRunModel(run: RunRow): SyncRunModel {
     savedSearchName: run.savedSearch?.name ?? null,
     scheduled: run.scheduled,
     summary: summarize(run.input),
+    source: sourceOf(run.input),
+    boards: listOf(run.input, 'boards'),
   };
 }
 

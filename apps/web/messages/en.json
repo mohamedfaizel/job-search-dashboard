@@ -1890,7 +1890,7 @@
     },
     "sync": {
       "heading": "Import from JobHunter",
-      "intro": "Each job fetched uses one JobHunter credit. Jobs you already have are updated, never added twice, and fetching them again in the same month is free.",
+      "intro": "Each job fetched uses one JobHunter credit. Jobs you already have are updated, never added twice, and fetching them again in the same month costs nothing.",
       "fillProfile": "Fill from my profile",
       "titles": "Job titles",
       "commaSeparated": "Comma separated",
@@ -1904,23 +1904,23 @@
       "filtersOn": "{count} on",
       "adLanguage": "Ad written in",
       "languagesHint": "None ticked = any language. Many German jobs are posted in English, and ads with no language yet are kept.",
-      "skipGerman": "Skip ads that need fluent German",
+      "skipGerman": "Skip fluent-German ads",
       "skipGermanHint": "Catches German ads asking for fließende, verhandlungssichere or C1 Deutschkenntnisse. English ads saying “fluent German” get the German tag in Job posts instead.",
       "remoteOnly": "Remote only",
       "excludeTitles": "Skip titles with",
       "excludeHint": "Comma separated, e.g. Werkstudent, Praktikum, Intern. Matches part of a word.",
       "jobType": "Job type",
       "jobTypeHint": "None ticked = any type. Ads that don’t say are kept.",
-      "minSalary": "Minimum salary (€ a year)",
+      "minSalary": "Min salary (€ a year)",
       "minSalaryHint": "Only about half of ads post a salary, and the rest are skipped. Leave empty to keep them.",
-      "minSalaryPlaceholder": "e.g. 60000",
+      "minSalaryPlaceholder": "60000",
       "pageSettings": "Page settings",
-      "pageSummary": "· {days} days old at most · {size} per page · {pages, plural, one {# page} other {# pages}}",
-      "maxAge": "Max age (days)",
+      "pageSummary": "No. of days: {days} · {size} per page · {pages, plural, one {# page} other {# pages}}",
+      "maxAge": "No. of days",
       "pageSize": "Jobs per page",
-      "pageSizeHint": "Free plan: max 25",
+      "pageSizeHint": "Your JobHunter plan may allow at most 25",
       "maxPages": "Max pages",
-      "onlyNew": "Only jobs new since my last import",
+      "onlyNew": "New since last import",
       "onlyNewHint": "Skips postings this search already brought in. Untick to fetch everything again.",
       "import": "Import",
       "importUpTo": "Import (up to {count} credits)",
@@ -1931,11 +1931,11 @@
       "fetchedUpdated": "Fetched {jobs}: {created} new, {updated} already in your table (updated, not added twice).",
       "total": "{jobs} match this search in total.",
       "used": "Used {credits}",
-      "alreadyPaid": " ({jobs} already paid this month, so free)",
+      "alreadyPaid": " ({jobs} already paid this month, so no charge)",
       "left": ", {count, number} left",
       "moreWaiting": "More jobs are waiting on the next pages.",
       "continueUpTo": "Continue import (up to {credits})",
-      "saveAs": "Save this search as",
+      "saveAs": "Save as",
       "saveAsHint": "Run it again in one click from Saved searches",
       "namePlaceholder": "e.g. Frontend in Berlin",
       "update": "Update saved search",
@@ -1943,31 +1943,33 @@
       "saveError": "Could not save: {error}",
       "saved": "Saved \"{name}\".",
       "headingBoards": "Import from company career pages",
-      "introBoards": "Reads the open jobs straight from companies’ own career pages (Greenhouse, Lever, Ashby). Free, no credits. Only jobs that match your search are saved.",
+      "introBoards": "Reads the open jobs straight from companies’ own career pages (Greenhouse, Lever, Ashby). No credits. Only jobs that match your search are saved.",
       "headingFree": "Import from Arbeitsagentur",
-      "introFree": "The German Federal Employment Agency’s job board. Free, no credits. Germany only. Only some filters apply, so the rest are hidden.",
+      "introFree": "The German Federal Employment Agency’s job board. No credits. Germany only. Only some filters apply, so the rest are hidden.",
       "source": "Where to look",
       "sources": {
         "JOBHUNTER": {
           "name": "JobHunter",
-          "hint": "Worldwide. Each job uses one credit."
+          "hint": "Worldwide · 1 credit per job"
         },
         "ARBEITSAGENTUR": {
-          "name": "Arbeitsagentur (free)",
-          "hint": "Germany only. No credits. Reads each ad in full."
+          "name": "Arbeitsagentur",
+          "hint": "Germany only · 0 credits"
         },
         "COMPANY_BOARDS": {
-          "name": "Company career pages (free)",
-          "hint": "Greenhouse, Lever and Ashby. No credits. You pick the companies."
+          "name": "Company career pages",
+          "hint": "Greenhouse, Lever, Ashby · 0 credits"
         }
       },
       "boards": "Company career pages",
       "boardsHint": "Comma separated: greenhouse:name, lever:name, ashby:name, or paste the career page address",
       "boardsPlaceholder": "e.g. greenhouse:stripe, lever:netflix, ashby:ramp",
-      "pageSummaryBoards": "· {days} days old at most",
+      "pageSummaryBoards": "No. of days: {days}",
       "warnings": "Some things to know:",
-      "usedFree": "Free: no credits used.",
-      "continueFree": "Continue import"
+      "usedFree": "No credits used.",
+      "continueFree": "Continue import",
+      "locationsPlaceholder": "e.g. Berlin, Bavaria",
+      "excludePlaceholder": "e.g. Werkstudent, Praktikum"
     },
     "saved": {
       "heading": "Saved searches",
@@ -2011,25 +2013,34 @@
       "nextRun": "Next run: {date}",
       "scheduleError": "Could not save the schedule: {error}",
       "boardsBadge": "Career pages",
-      "freeBadge": "Free",
-      "lastDaysFree": "Last {days} days · free",
-      "free": "Free: no credits used."
+      "freeBadge": "Arbeitsagentur",
+      "lastDaysFree": "Last {days} days · 0 credits",
+      "free": "No credits used."
     },
     "history": {
       "heading": "Import history",
       "loading": "Loading import history…",
       "loadError": "Could not load import history: {error}",
       "none": "No imports yet.",
-      "caption": "The last 20 imports from JobHunter",
+      "caption": "Your last imports",
       "when": "When",
       "search": "Search",
       "new": "New",
-      "alreadySaved": "Already saved",
+      "alreadySaved": "Saved",
       "credits": "Credits",
       "pages": "Pages",
       "scheduled": "Scheduled",
-      "allFetched": "All fetched",
-      "moreLeft": "More left"
+      "allFetched": "Done",
+      "moreLeft": "More left",
+      "allFetchedTip": "All pages fetched",
+      "boards": "{count, plural, one {# board} other {# boards}}",
+      "showMore": "Show {count} more",
+      "showLess": "Show less",
+      "sources": {
+        "JOBHUNTER": "JobHunter",
+        "ARBEITSAGENTUR": "Arbeitsagentur",
+        "COMPANY_BOARDS": "Company"
+      }
     },
     "tokenHint": "Imports from JobHunter use the token in your Settings, so you spend your own credits.",
     "openSettings": "Open Settings",
@@ -2049,7 +2060,8 @@
       "removeShown": "Remove all {count}",
       "none": "No company matches.",
       "hint": "Companies sometimes move to another hiring tool. If one can't be read, the import tells you which, and you can untick it."
-    }
+    },
+    "moreAbout": "More about {field}"
   },
   "Errors": {
     "NETWORK": "Can’t reach the API at {url}. Is it running?",

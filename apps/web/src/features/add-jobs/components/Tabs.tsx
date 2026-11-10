@@ -45,11 +45,11 @@ export function Tabs<Id extends string>({ label, tabs, selected, onSelect }: Pro
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div
         role="tablist"
         aria-label={label}
-        className="flex gap-1 overflow-x-auto border-b border-slate-200"
+        className="flex w-full gap-0.5 overflow-x-auto rounded-lg bg-slate-200/70 p-[3px] sm:w-fit"
       >
         {tabs.map((tab) => {
           const active = tab.id === selected;
@@ -70,10 +70,10 @@ export function Tabs<Id extends string>({ label, tabs, selected, onSelect }: Pro
               onClick={() => {
                 onSelect(tab.id);
               }}
-              className={`-mb-px border-b-2 px-3 py-2 sm:px-4 text-sm font-medium whitespace-nowrap ${
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm whitespace-nowrap sm:flex-none ${
                 active
-                  ? 'border-brand-600 text-brand-700'
-                  : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                  ? 'bg-white font-semibold text-slate-900 shadow-sm'
+                  : 'font-medium text-slate-600 hover:text-slate-900'
               }`}
             >
               {tab.short === undefined ? (

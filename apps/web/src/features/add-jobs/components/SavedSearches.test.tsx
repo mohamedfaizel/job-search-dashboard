@@ -20,7 +20,7 @@ describe('SavedSearches', () => {
     expect(card.getByText(/20 new, 5 already saved, 20 credits\./)).toBeInTheDocument();
   });
 
-  it('marks a free search and shows no credits for it', async () => {
+  it('marks an Arbeitsagentur search and shows no credits for it', async () => {
     server.use(
       api.query('SavedSearches', () =>
         HttpResponse.json({
@@ -30,8 +30,8 @@ describe('SavedSearches', () => {
     );
     const card = await renderCard();
 
-    expect(card.getByText('Free')).toBeInTheDocument();
-    expect(card.getByText(/Last 7 days · free · only new jobs/)).toBeInTheDocument();
+    expect(card.getByText('Arbeitsagentur')).toBeInTheDocument();
+    expect(card.getByText(/Last 7 days · 0 credits · only new jobs/)).toBeInTheDocument();
     expect(card.queryByText(/credits per run/)).not.toBeInTheDocument();
     expect(card.getByText(/Last run .*: 20 new, 5 already saved\./)).toBeInTheDocument();
   });

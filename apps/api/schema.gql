@@ -2145,6 +2145,11 @@ type SyncJobsResult {
 }
 
 type SyncRunModel {
+  """
+  The company career pages it read, e.g. "greenhouse:n26" (COMPANY_BOARDS only)
+  """
+  boards: [String!]!
+
   """False when pages were left unfetched"""
   complete: Boolean!
   created: Int!
@@ -2160,6 +2165,9 @@ type SyncRunModel {
 
   """True when the scheduler started it"""
   scheduled: Boolean!
+
+  """Where the import looked for jobs"""
+  source: ImportSource!
 
   """When the import started (for a continued import: the run it continued)"""
   startedAt: DateTime!
