@@ -149,7 +149,7 @@ import is saved once and listed for both.
 **Settings** (the gear in the header) has three tabs:
 
 - _API keys_: paste your JobHunter token. It is stored encrypted (AES-256-GCM, key from
-  `SETTINGS_KEY`, else `JWT_SECRET`) and only its last 4 characters are ever shown. _Test_ runs a
+  `SETTINGS_KEY`, else `JWT_SECRET`) and it is never shown again once saved. _Test_ runs a
   one-job search (at most 1 credit) and shows the credits you have left. A token from an older
   `.env` is copied once into the first account's Settings, then `.env` is not read for it again.
   Below it, pick your AI (**Claude** or **OpenAI**) and paste its key and model, for the AI score

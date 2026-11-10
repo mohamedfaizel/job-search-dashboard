@@ -24,7 +24,11 @@ describe('Settings > API keys', () => {
       operation: 'SaveApiKey',
       variables: { input: { kind: 'JOBHUNTER', value: 'jp_secret_a9F2', model: null } },
     });
-    expect(await jobHunter.findByLabelText('Saved key ending in a9F2')).toHaveTextContent(/•+a9F2/);
+    // Once saved, the key is not shown at all, not even its last letters.
+    expect(await jobHunter.findByRole('button', { name: 'Replace' })).toBeVisible();
+    expect(jobHunter.getByText('✓ Saved')).toBeVisible();
+    expect(jobHunter.queryByText(/a9F2/)).not.toBeInTheDocument();
+    expect(jobHunter.queryByLabelText('JobHunter token')).not.toBeInTheDocument();
     expect(jobHunter.queryByText(/jp_secret/)).not.toBeInTheDocument();
   });
 
@@ -89,7 +93,8 @@ describe('Settings > API keys > AI', () => {
         input: { kind: 'ANTHROPIC', value: 'sk-ant-secret-Zx9q', model: 'claude-haiku-5-5' },
       },
     });
-    expect(await claude.findByLabelText('Saved key ending in Zx9q')).toBeVisible();
+    expect(await claude.findByRole('button', { name: 'Replace' })).toBeVisible();
+    expect(claude.queryByText(/Zx9q/)).not.toBeInTheDocument();
     expect(claude.getByLabelText('Model')).toHaveValue('claude-haiku-5-5');
 
     await user.click(claude.getByRole('button', { name: 'Test' }));

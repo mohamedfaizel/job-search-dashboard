@@ -37,7 +37,8 @@ describe('Welcome steps', () => {
     );
     await user.type(await screen.findByLabelText('JobHunter token'), 'jh_live_1234');
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(await screen.findByText(/1234/)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Replace' })).toBeInTheDocument();
+    expect(screen.queryByText(/1234/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Next ›' }));
 
     expect(screen.getByRole('heading', { name: '2. Your resume' })).toBeInTheDocument();

@@ -293,7 +293,7 @@
     },
     "keys": {
       "heading": "API-Schlüssel",
-      "intro": "Deine eigenen Schlüssel für bezahlte Dienste, damit du deine eigenen Credits nutzt. Sie werden verschlüsselt gespeichert, und danach werden nur die letzten 4 Zeichen angezeigt.",
+      "intro": "Deine eigenen Schlüssel für bezahlte Dienste, damit du deine eigenen Credits nutzt. Sie werden verschlüsselt gespeichert und nach dem Speichern nie wieder angezeigt.",
       "loading": "Deine Schlüssel werden geladen…",
       "loadFailed": "Deine Schlüssel konnten nicht geladen werden: {error}",
       "jobhunter": {
@@ -317,7 +317,6 @@
       "deleteLabel": "Deinen {name} löschen",
       "confirmDelete": "Diesen Schlüssel löschen? Importe stoppen, bis du wieder einen hinzufügst.",
       "saveFailed": "Konnte nicht gespeichert werden: {error}",
-      "masked": "Gespeicherter Schlüssel endet auf {last4}",
       "ai": {
         "heading": "KI",
         "intro": "Wähle deine KI und füge ihren Schlüssel ein. Der KI-Score (Resume-Matcher) nutzt deinen Schlüssel und dein Guthaben, und die Kopieren-und-öffnen-Knöpfe öffnen den Chat dieser KI.",
