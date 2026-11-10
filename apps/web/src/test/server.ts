@@ -25,7 +25,28 @@ export const bell: Notifications = { items: [], unread: 0 };
 /** The fake API's session: who the cookie says is logged in. */
 export const session: { user: User | null } = { user: null };
 
+/** What the fake API says the sign-up page can do; `invites` holds codes that work. */
+export const signup: { mode: 'OPEN' | 'INVITE' | 'CLOSED'; invites: string[]; sent: unknown[] } = {
+  mode: 'OPEN',
+  invites: [],
+  sent: [],
+};
+
 export const server = setupServer(
+  api.query('SignupState', ({ variables }) => {
+    const invite = variables['invite'] as string | null;
+    const state =
+      signup.mode === 'OPEN'
+        ? 'OPEN'
+        : signup.mode === 'CLOSED'
+          ? 'CLOSED'
+          : !invite
+            ? 'NEEDS_INVITE'
+            : signup.invites.includes(invite)
+              ? 'INVITED'
+              : 'INVITE_INVALID';
+    return HttpResponse.json({ data: { signupState: state } });
+  }),
   api.query('Me', () => HttpResponse.json({ data: { me: session.user } })),
   api.mutation('LogIn', ({ variables }) => {
     const input = variables['input'] as { email: string; password: string };
@@ -37,6 +58,7 @@ export const server = setupServer(
   }),
   api.mutation('SignUp', ({ variables }) => {
     const input = variables['input'] as { name: string; email: string; locale?: string };
+    signup.sent.push(input);
     session.user = {
       id: 2,
       email: input.email,

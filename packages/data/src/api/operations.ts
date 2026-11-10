@@ -1421,3 +1421,67 @@ export const DELETE_USER = /* GraphQL */ `
     deleteUser(input: $input)
   }
 `;
+
+export const SIGNUP_STATE = /* GraphQL */ `
+  query SignupState($invite: String) {
+    signupState(invite: $invite)
+  }
+`;
+
+const APP_SETTINGS_FIELDS = `
+  signupMode
+  dailyCreditCap
+  maxSavedSearches
+  schedulerOn
+  stillOpenOn
+  schedulerOffInEnv
+  stillOpenOffInEnv
+`;
+
+export const APP_SETTINGS = /* GraphQL */ `
+  query AppSettings {
+    appSettings {
+      ${APP_SETTINGS_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_APP_SETTINGS = /* GraphQL */ `
+  mutation UpdateAppSettings($input: UpdateAppSettingsInput!) {
+    updateAppSettings(input: $input) {
+      ${APP_SETTINGS_FIELDS}
+    }
+  }
+`;
+
+const INVITE_FIELDS = `
+  id
+  token
+  createdAt
+  expiresAt
+  maxUses
+  uses
+  state
+`;
+
+export const INVITES = /* GraphQL */ `
+  query Invites {
+    invites {
+      ${INVITE_FIELDS}
+    }
+  }
+`;
+
+export const CREATE_INVITE = /* GraphQL */ `
+  mutation CreateInvite($input: CreateInviteInput!) {
+    createInvite(input: $input) {
+      ${INVITE_FIELDS}
+    }
+  }
+`;
+
+export const CANCEL_INVITE = /* GraphQL */ `
+  mutation CancelInvite($id: Int!) {
+    cancelInvite(id: $id)
+  }
+`;

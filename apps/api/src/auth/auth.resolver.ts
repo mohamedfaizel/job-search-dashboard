@@ -5,7 +5,7 @@ import { apiError } from '../common/api-error';
 import { AuthLimits } from './attempt-limiter';
 import type { SessionUser } from './auth.decorators';
 import { CurrentUser, Public } from './auth.decorators';
-import { LogInInput, SignUpInput, UserModel } from './auth.model';
+import { LogInInput, SignUpInput, SignupState, UserModel } from './auth.model';
 import { AuthService, toUserModel } from './auth.service';
 import { SESSION_COOKIE, sessionCookieOptions } from './session';
 
@@ -29,6 +29,15 @@ export class AuthResolver {
     if (!session) return null;
     const user = await this.auth.findById(session.id);
     return user ? toUserModel(user) : null;
+  }
+
+  @Query(() => SignupState, {
+    description: 'Whether the sign-up page can make an account, with this invite code or none',
+  })
+  signupState(
+    @Args('invite', { type: () => String, nullable: true }) invite?: string | null,
+  ): Promise<SignupState> {
+    return this.auth.signupState(invite);
   }
 
   @Mutation(() => UserModel, { description: 'Create an account and log in' })

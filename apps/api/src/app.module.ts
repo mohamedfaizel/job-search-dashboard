@@ -22,6 +22,7 @@ import { ResumeMatcherModule } from './resume-matcher/resume-matcher.module';
 import { SalaryModule } from './salary/salary.module';
 import { SavedAnswersModule } from './saved-answers/saved-answers.module';
 import { SavedSearchesModule } from './saved-searches/saved-searches.module';
+import { SettingsModule } from './settings/settings.module';
 import { StoriesModule } from './stories/stories.module';
 import { SyncModule } from './sync/sync.module';
 
@@ -43,6 +44,7 @@ import { SyncModule } from './sync/sync.module';
     // Runs @Cron jobs, like the saved-search scheduler.
     ScheduleModule.forRoot(),
     PrismaModule,
+    SettingsModule,
     ApiKeysModule,
     AuthModule,
     HealthModule,

@@ -4,15 +4,15 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { hash, verify } from '@node-rs/argon2';
 import { apiError } from '../common/api-error';
-import type { User } from '../generated/prisma/client';
+import type { SignupMode, User } from '../generated/prisma/client';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 import type { LogInInput, SignUpInput, UserModel } from './auth.model';
-import { LOCALES } from './auth.model';
+import { LOCALES, SignupState } from './auth.model';
 import { SESSION_DAYS } from './session';
 
 /** A real hash to compare against when the email is unknown, so both cases take as long. */
@@ -23,24 +23,38 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
-    private readonly config: ConfigService,
+    private readonly settings: SettingsService,
   ) {}
 
+  /**
+   * Can someone make an account now, with this invite code (or none)? Admin › Sign-up & access
+   * sets the mode. The very first account is always allowed: it becomes the admin.
+   */
+  async signupState(invite?: string | null): Promise<SignupState> {
+    if ((await this.prisma.user.count()) === 0) return SignupState.OPEN;
+    const { signupMode } = await this.settings.get();
+    if (signupMode === 'OPEN') return SignupState.OPEN;
+    if (signupMode === 'CLOSED') return SignupState.CLOSED;
+    if (!invite) return SignupState.NEEDS_INVITE;
+    return (await this.settings.usableInvite(invite))
+      ? SignupState.INVITED
+      : SignupState.INVITE_INVALID;
+  }
+
   async signUp(input: SignUpInput): Promise<User> {
-    if (this.config.get<string>('ALLOW_SIGNUP') === 'false') {
-      throw apiError(ForbiddenException, 'SIGNUP_CLOSED', 'Sign-up is closed on this server');
-    }
+    const { signupMode } = await this.settings.get();
     const passwordHash = await hash(input.password);
     try {
       return await this.prisma.$transaction(async (tx) => {
-        // The very first account runs the place: it can import jobs and spend credits.
-        const role = (await tx.user.count()) === 0 ? 'ADMIN' : 'USER';
+        // The very first account runs the place, whatever the sign-up mode says.
+        const first = (await tx.user.count()) === 0;
+        if (!first) await this.letIn(tx, signupMode, input.invite);
         return tx.user.create({
           data: {
             email: input.email,
             name: input.name,
             passwordHash,
-            role,
+            role: first ? 'ADMIN' : 'USER',
             ...(input.locale ? { locale: input.locale } : {}),
           },
         });
@@ -55,6 +69,28 @@ export class AuthService {
       }
       throw error;
     }
+  }
+
+  /** Throws unless the mode (and, when invite only, the invite) lets a new account in. */
+  private async letIn(
+    tx: Prisma.TransactionClient,
+    mode: SignupMode,
+    invite: string | null | undefined,
+  ): Promise<void> {
+    if (mode === 'CLOSED') {
+      throw apiError(ForbiddenException, 'SIGNUP_CLOSED', 'Sign-up is closed on this server');
+    }
+    // While sign-up is open, an invite link still counts its use, but it isn't needed.
+    const took = invite ? await this.settings.takeInvite(tx, invite) : false;
+    if (mode === 'OPEN' || took) return;
+    if (!invite) {
+      throw apiError(ForbiddenException, 'INVITE_NEEDED', 'Sign-up needs an invite link');
+    }
+    throw apiError(
+      ForbiddenException,
+      'INVITE_INVALID',
+      'This invite link has expired, was used up or was canceled',
+    );
   }
 
   async logIn(input: LogInInput): Promise<User> {

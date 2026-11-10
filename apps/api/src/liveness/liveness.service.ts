@@ -4,6 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import { apiError } from '../common/api-error';
 import { ApplicationStatus, PostingCheck } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 import type { Verdict } from './judge';
 import { judge } from './judge';
 import { PageFetcher } from './page-fetcher';
@@ -37,6 +38,7 @@ export class LivenessService {
     private readonly prisma: PrismaService,
     private readonly fetcher: PageFetcher,
     private readonly config: ConfigService,
+    private readonly settings: SettingsService,
   ) {}
 
   private get timeoutMs(): number {
@@ -115,7 +117,7 @@ export class LivenessService {
   // Every night at 03:00 server time, when nobody is waiting for it.
   @Cron('0 3 * * *')
   async nightly(): Promise<void> {
-    if (this.config.get<string>('STILL_OPEN_CHECK_ENABLED') === 'false' || this.running) return;
+    if (this.running || !(await this.settings.stillOpenOn())) return;
     this.running = true;
     try {
       const counts = await this.checkDue(new Date());
