@@ -63,7 +63,7 @@ export class FitService {
 
   /** Changes whenever anything the scores depend on changes. */
   private async stamp(userId: number): Promise<string> {
-    const [profile, others, removed, jobs] = await Promise.all([
+    const [profile, others, removed, jobs, listed] = await Promise.all([
       this.prisma.profile.findUnique({ where: { userId }, select: { updatedAt: true } }),
       this.prisma.languageResume.aggregate({
         where: { userId },
@@ -76,6 +76,8 @@ export class FitService {
         _max: { createdAt: true },
       }),
       this.prisma.job.aggregate({ _count: true, _max: { updatedAt: true } }),
+      // Jobs put on your list without changing them (someone else imported them first).
+      this.prisma.userJob.aggregate({ where: { userId }, _count: true, _max: { addedAt: true } }),
     ]);
     return [
       profile?.updatedAt.toISOString() ?? '',
@@ -85,11 +87,13 @@ export class FitService {
       removed._max.createdAt?.toISOString() ?? '',
       jobs._count,
       jobs._max.updatedAt?.toISOString() ?? '',
+      listed._count,
+      listed._max.addedAt?.toISOString() ?? '',
     ].join('|');
   }
 
   /**
-   * Scores every job against the user's master resume (in the ad's language when they have it)
+   * Scores every job on the user's list against the user's master resume (in the ad's language when they have it)
    * and skills, and replaces their JobFit rows.
    */
   private async recalculate(userId: number): Promise<void> {
@@ -129,6 +133,7 @@ export class FitService {
     const [corpus, jobs] = await Promise.all([
       this.corpora.corpus(),
       this.prisma.job.findMany({
+        where: { listedFor: { some: { userId } } },
         select: {
           id: true,
           title: true,

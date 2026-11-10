@@ -174,7 +174,7 @@ export class SyncService {
         token,
       );
 
-      const saved = await this.jobs.upsertMany(page.data.map(mapJobHunterJob));
+      const saved = await this.jobs.upsertMany(page.data.map(mapJobHunterJob), options.userId);
       result.pages += 1;
       result.fetched += page.data.length;
       result.created += saved.created;

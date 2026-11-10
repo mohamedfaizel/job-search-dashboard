@@ -120,3 +120,15 @@ export async function saveAiKey(gql: Gql, value = 'sk-ant-test-key'): Promise<vo
   );
   if (res.errors) throw new Error(res.errors[0]?.message);
 }
+
+/**
+ * Puts every saved job on this user's Job posts list, as if they had imported the same jobs too.
+ * Each user sees only their own list, so tests where two users act on one job need this.
+ */
+export async function listAllJobsFor(prisma: PrismaService, userId: number): Promise<void> {
+  const jobs = await prisma.job.findMany({ select: { id: true } });
+  await prisma.userJob.createMany({
+    data: jobs.map((job) => ({ userId, jobId: job.id })),
+    skipDuplicates: true,
+  });
+}

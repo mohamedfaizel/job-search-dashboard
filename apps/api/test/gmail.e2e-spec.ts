@@ -51,6 +51,7 @@ describe('Gmail suggestions', () => {
         source: 'MANUAL',
         postedAt: new Date(),
         company: { create: { name: 'Acme GmbH' } },
+        listedFor: { create: { userId: 2 } },
       },
     });
     jobId = job.id;

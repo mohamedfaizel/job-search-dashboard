@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { matchScore } from '../src/insights/score';
 import { NotificationsService } from '../src/notifications/notifications.service';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers, listAllJobsFor } from './helpers';
 
 const CREATE_JOB = /* GraphQL */ `
   mutation CreateJob($input: CreateJobInput!) {
@@ -238,6 +238,7 @@ describe('job insights without AI', () => {
       input: { companyName: 'Acme', ...input },
     });
     expect(res.errors).toBeUndefined();
+    await listAllJobsFor(t.prisma, 2);
     return res.data!.createJob;
   }
   async function insights(jobId: string) {

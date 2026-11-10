@@ -56,6 +56,7 @@ describe('still-open check', () => {
         url,
         postedAt,
         company: { connectOrCreate: { where: { name: 'Acme' }, create: { name: 'Acme' } } },
+        listedFor: { create: [{ userId: 1 }, { userId: 2 }] },
       },
     });
   }

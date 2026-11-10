@@ -82,8 +82,8 @@ export class JobsResolver {
   }
 
   @Query(() => JobFilterOptions, { description: 'Values to offer in each column filter' })
-  jobFilterOptions(): Promise<JobFilterOptions> {
-    return this.jobs.filterOptions();
+  jobFilterOptions(@CurrentUser() user: SessionUser): Promise<JobFilterOptions> {
+    return this.jobs.filterOptions(user.id);
   }
 
   // Jobs are shared by every user: anyone can add one, like anyone can import.

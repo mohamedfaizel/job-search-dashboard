@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers, listAllJobsFor } from './helpers';
 
 const CREATE_JOB = `mutation ($input: CreateJobInput!) { createJob(input: $input) { id applicationStatus } }`;
 const SET = `mutation ($id: ID!, $status: ApplicationStatus!) {
@@ -38,6 +38,8 @@ describe('applications (tracker)', () => {
       });
       ids[title] = res.data!.createJob.id;
     }
+    // The user imported the same jobs, so both have them on their list.
+    await listAllJobsFor(t.prisma, 2);
   });
 
   const statuses = async (as: TestApp['gql']) => {
@@ -128,7 +130,9 @@ describe('applications (tracker)', () => {
     });
 
     expect(res.data!.createJob.applicationStatus).toBe('SAVED');
-    expect((await statuses(t.asUser))['Designer']).toBe('NONE');
+    expect((await statuses(t.gql))['Designer']).toBe('SAVED');
+    // The job is on the admin's list only.
+    expect((await statuses(t.asUser))['Designer']).toBeUndefined();
   });
 
   it('counts your funnel from each status a job moved through', async () => {

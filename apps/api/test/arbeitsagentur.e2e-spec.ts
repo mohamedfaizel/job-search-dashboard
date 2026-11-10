@@ -175,6 +175,20 @@ describe('Arbeitsagentur import', () => {
     expect(await t.prisma.job.count()).toBe(3);
   });
 
+  it('puts jobs another user already saved on your list without reading them again', async () => {
+    await t.gql(SYNC, { input: input({ onlyNew: false }) });
+    detailRequests = [];
+
+    const mine = await t.asUser<{ syncJobs: Record<string, unknown> }>(SYNC, {
+      input: input({ onlyNew: false }),
+    });
+
+    expect(mine.data?.syncJobs).toMatchObject({ fetched: 3, created: 3, updated: 0 });
+    expect(detailRequests).toEqual([]);
+    expect(await t.prisma.job.count()).toBe(3);
+    expect(await t.prisma.userJob.count({ where: { userId: 2 } })).toBe(3);
+  });
+
   it('asks only for the days since the last run when "only new" is on', async () => {
     await t.gql(SYNC, { input: input({ maxAgeDays: 30 }) });
     searches = [];

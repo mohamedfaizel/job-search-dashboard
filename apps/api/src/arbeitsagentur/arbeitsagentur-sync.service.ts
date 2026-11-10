@@ -128,7 +128,7 @@ export class ArbeitsagenturSyncService {
       const wanted = listings.filter(
         (l) => ![...skip].some((word) => l.titel.toLowerCase().includes(word)),
       );
-      const saved = await this.save(wanted);
+      const saved = await this.save(wanted, options.userId);
       result.created += saved.created;
       result.updated += saved.updated;
       detailsFailed += saved.detailsFailed;
@@ -193,17 +193,32 @@ export class ArbeitsagenturSyncService {
     return result;
   }
 
-  /** Saves the listings we don't have yet, with their full ad. */
+  /**
+   * Saves the listings we don't have yet, with their full ad, and puts them all on the user's
+   * list. "created" counts the ones new to that list.
+   */
   private async save(
     listings: Parameters<typeof mapArbeitsagenturJob>[0][],
+    userId?: number,
   ): Promise<{ created: number; updated: number; detailsFailed: number }> {
     if (listings.length === 0) return { created: 0, updated: 0, detailsFailed: 0 };
     const known = await this.prisma.job.findMany({
       where: { externalId: { in: listings.map((l) => baExternalId(l.refnr)) } },
-      select: { externalId: true },
+      select: {
+        id: true,
+        externalId: true,
+        listedFor: { where: { userId: userId ?? -1 }, select: { userId: true } },
+      },
     });
     const knownIds = new Set(known.map((job) => job.externalId));
     const fresh = listings.filter((l) => !knownIds.has(baExternalId(l.refnr)));
+    // Saved before (maybe by someone else) but not on this user's list yet.
+    const notMine = userId === undefined ? [] : known.filter((job) => job.listedFor.length === 0);
+    if (userId !== undefined)
+      await this.jobs.list(
+        userId,
+        notMine.map((job) => job.id),
+      );
 
     let detailsFailed = 0;
     const mapped: MappedJob[] = [];
@@ -222,8 +237,9 @@ export class ArbeitsagenturSyncService {
       });
       if (i + DETAIL_PARALLEL < fresh.length) await wait(PAUSE_MS);
     }
-    await this.jobs.upsertMany(mapped);
-    return { created: fresh.length, updated: listings.length - fresh.length, detailsFailed };
+    await this.jobs.upsertMany(mapped, userId);
+    const created = fresh.length + notMine.length;
+    return { created, updated: listings.length - created, detailsFailed };
   }
 
   private async resumePoint(key: string) {

@@ -172,19 +172,20 @@ describe('scheduled imports', () => {
 
     beforeEach(async () => {});
 
-    it('tells each user about the new jobs that fit them, best first', async () => {
+    it('tells the search’s owner about the new jobs that fit them, best first, and nobody else', async () => {
+      // The admin owns the search, so the jobs go on the admin's list only.
+      await t.prisma.profile.create({
+        data: { userId: 1, resumeText: RESUME, skills: ['React'], matchFitMin: 1 },
+      });
+      // The user would like these jobs too, but they are not on the user's list.
       await t.prisma.profile.create({
         data: { userId: 2, resumeText: RESUME, skills: ['React'], matchFitMin: 1 },
-      });
-      // The admin turned it off.
-      await t.prisma.profile.create({
-        data: { userId: 1, resumeText: RESUME, notifyNewMatches: false },
       });
       await dueSearch('Frontend Hamburg');
 
       expect(await scheduler.runDue(new Date())).toBe(1);
 
-      const res = await t.asUser<{
+      const res = await t.gql<{
         notifications: {
           unread: number;
           items: { count: number; jobs: { fit: number }[] }[];
@@ -202,11 +203,22 @@ describe('scheduled imports', () => {
       expect(notice!.jobs.length).toBe(Math.min(notice!.count, 3));
       const fits = notice!.jobs.map((job) => job.fit);
       expect(fits).toEqual([...fits].sort((a, b) => b - a));
-      expect(await t.prisma.notification.count({ where: { userId: 1 } })).toBe(0);
+      expect(await t.prisma.notification.count({ where: { userId: 2 } })).toBe(0);
+    });
+
+    it('stays quiet when you turned it off', async () => {
+      await t.prisma.profile.create({
+        data: { userId: 1, resumeText: RESUME, notifyNewMatches: false, matchFitMin: 1 },
+      });
+      await dueSearch();
+
+      expect(await scheduler.runDue(new Date())).toBe(1);
+
+      expect(await t.prisma.notification.count()).toBe(0);
     });
 
     it('stays quiet when no new job reaches your Fit %', async () => {
-      await t.prisma.profile.create({ data: { userId: 2, resumeText: 'Gardener. Roses.' } });
+      await t.prisma.profile.create({ data: { userId: 1, resumeText: 'Gardener. Roses.' } });
       await dueSearch();
 
       expect(await scheduler.runDue(new Date())).toBe(1);

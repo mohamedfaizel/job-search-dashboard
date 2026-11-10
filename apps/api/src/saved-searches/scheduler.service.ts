@@ -95,7 +95,7 @@ export class SchedulerService {
           `Ran at ${formatTime(now)}: ${result.created} new, ${result.updated} already saved.`,
         );
         ran += 1;
-        if (result.created > 0) await this.tellUsers(search.name, startedAt);
+        if (result.created > 0) await this.tellOwner(search.userId, search.name, startedAt);
       } catch (error) {
         this.logger.warn(`Scheduled run of "${search.name}" failed: ${getErrorMessage(error)}`);
         await this.note(search.id, `Failed at ${formatTime(now)}: ${getErrorMessage(error)}`);
@@ -104,16 +104,20 @@ export class SchedulerService {
     return ran;
   }
 
-  /** Tells each user about the jobs this run imported that fit them. Never fails the run. */
-  private async tellUsers(searchName: string, startedAt: Date): Promise<void> {
+  /**
+   * Tells the search's owner about the jobs this run put on their list that fit them. Other users
+   * don't see these jobs, so they aren't told. Never fails the run.
+   */
+  private async tellOwner(userId: number, searchName: string, startedAt: Date): Promise<void> {
     try {
-      const created = await this.prisma.job.findMany({
-        where: { createdAt: { gte: startedAt } },
-        select: { id: true },
+      const added = await this.prisma.userJob.findMany({
+        where: { userId, addedAt: { gte: startedAt } },
+        select: { jobId: true },
       });
       await this.notifications.newMatches(
         searchName,
-        created.map((job) => job.id),
+        added.map((row) => row.jobId),
+        userId,
       );
     } catch (error) {
       this.logger.warn(`Could not send new-match notifications: ${getErrorMessage(error)}`);

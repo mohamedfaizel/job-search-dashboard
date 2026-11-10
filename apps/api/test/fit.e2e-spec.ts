@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, resetDatabase, seedTestUsers, listAllJobsFor } from './helpers';
 
 const CREATE_JOB = /* GraphQL */ `
   mutation CreateJob($input: CreateJobInput!) {
@@ -68,6 +68,7 @@ describe('Fit % for every job', () => {
       input: { companyName: 'Acme', title, skills, description },
     });
     expect(res.errors).toBeUndefined();
+    await listAllJobsFor(t.prisma, 2);
     return res.data!.createJob.id;
   }
   async function jobs(variables: Record<string, unknown> = {}) {

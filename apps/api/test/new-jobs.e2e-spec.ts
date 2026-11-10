@@ -76,7 +76,7 @@ describe('New since your last visit', () => {
 
   it('lists only the jobs added after a time', async () => {
     const add = (title: string) =>
-      t.gql(CREATE_JOB, { input: { companyName: 'Acme', title, description: 'React.' } });
+      t.asUser(CREATE_JOB, { input: { companyName: 'Acme', title, description: 'React.' } });
     await add('Old job');
     const before = new Date();
     await new Promise((resolve) => setTimeout(resolve, 20));
