@@ -72,7 +72,7 @@ test.describe('desktop', () => {
     await expect(page.getByRole('heading', { name: '1. Dein Job-Daten-Schlüssel' })).toBeVisible();
     await page.getByRole('button', { name: 'Einrichtung überspringen' }).click();
     await expect(page).toHaveURL(/\/jobs$/);
-    await expect(page.getByRole('heading', { name: 'Stellenanzeigen' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Meine Jobs' })).toBeVisible();
 
     await page.goto('/jobs/add');
     await page.getByRole('tab', { name: /Jobs importieren|^Import$/ }).click();

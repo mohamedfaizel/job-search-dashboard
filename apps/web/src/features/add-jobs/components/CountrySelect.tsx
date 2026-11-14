@@ -2,6 +2,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 import { splitList } from '../../../lib/split-list';
 import { countriesIn, countryName } from '../countries';
+import type { Region } from '../regions';
+import { REGIONS, groupPicked, pickedIn } from '../regions';
 import { inputClass } from './Field';
 
 interface Props {
@@ -14,9 +16,17 @@ interface Props {
   describedBy?: string | undefined;
 }
 
+/** One row of the list: Worldwide, a region (several countries at once) or one country. */
+type Option =
+  | { kind: 'world'; key: string; label: string }
+  | { kind: 'region'; key: string; label: string; region: Region }
+  | { kind: 'country'; key: string; label: string; code: string };
+
 /**
- * Pick several countries from JobHunter's list, or Worldwide. Type to filter by name or code;
- * a 2-letter code that isn't in the list can still be added. Chips show what's picked.
+ * Pick several countries from JobHunter's list, whole regions (DACH, European Union, Middle
+ * East…), or Worldwide. Regions sit at the top of the list. Type to filter by name or code; a
+ * 2-letter code that isn't in the list can still be added. Chips show what's picked, with a
+ * complete region as one chip.
  */
 export function CountrySelect({ id, value, onChange, invalid, describedBy }: Props) {
   const t = useTranslations('AddJobs.country');
@@ -52,33 +62,137 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
     ? countries.filter((c) => rank(c) < 3).sort((a, b) => rank(a) - rank(b))
     : countries;
   const typedCode = /^[a-z]{2}$/.test(query) && !matches.some(([c]) => c.toLowerCase() === query);
-  const options: { code: string | null; label: string }[] = [
-    ...(query ? [] : [{ code: null, label: t('worldwide') }]),
-    ...matches.map(([code, label]) => ({ code, label: `${label} · ${code}` })),
+  const regionName = (region: Region) => t(`region.${region.id}`);
+  // A region matches on the start of any word of its name ("mid", "gulf") or its key ("eu").
+  const regionMatches = (region: Region) =>
+    region.id.toLowerCase() === query ||
+    regionName(region)
+      .toLowerCase()
+      .split(/[^\p{L}]+/u)
+      .some((word) => word.startsWith(query));
+  const regions = REGIONS.filter((region) => !query || regionMatches(region));
+  const worldOptions: Option[] = query
+    ? []
+    : [{ kind: 'world', key: 'world', label: t('worldwide') }];
+  const regionOptions: Option[] = regions.map((region) => ({
+    kind: 'region',
+    key: `region-${region.id}`,
+    label: regionName(region),
+    region,
+  }));
+  const countryOptions: Option[] = [
+    ...matches.map(([code, label]) => ({
+      kind: 'country' as const,
+      key: code,
+      label: `${label} · ${code}`,
+      code,
+    })),
     ...(typedCode
-      ? [{ code: query.toUpperCase(), label: t('useCode', { code: query.toUpperCase() }) }]
+      ? [
+          {
+            kind: 'country' as const,
+            key: `typed-${query}`,
+            label: t('useCode', { code: query.toUpperCase() }),
+            code: query.toUpperCase(),
+          },
+        ]
       : []),
   ];
+  const options = [...worldOptions, ...regionOptions, ...countryOptions];
 
   const set = (codes: string[]) => {
     onChange(codes.join(', '));
   };
-  const choose = (code: string | null) => {
-    if (code === null) set([]);
-    else set(picked.includes(code) ? picked.filter((c) => c !== code) : [...picked, code]);
+  const toggleRegion = (region: Region) => {
+    if (pickedIn(region, picked) === region.codes.length) {
+      set(picked.filter((c) => !region.codes.includes(c)));
+    } else {
+      set([...picked, ...region.codes.filter((c) => !picked.includes(c))]);
+    }
+  };
+  const choose = (option: Option) => {
+    if (option.kind === 'world') set([]);
+    else if (option.kind === 'region') toggleRegion(option.region);
+    else
+      set(
+        picked.includes(option.code)
+          ? picked.filter((c) => c !== option.code)
+          : [...picked, option.code],
+      );
     setFilter('');
     setActive(0);
+  };
+  const isSelected = (option: Option) =>
+    option.kind === 'world'
+      ? picked.length === 0
+      : option.kind === 'region'
+        ? pickedIn(option.region, picked) === option.region.codes.length
+        : picked.includes(option.code);
+  const chips = groupPicked(picked);
+  const chipClass =
+    'inline-flex items-center gap-1 rounded py-0.5 pr-0.5 pl-1.5 text-xs font-medium ring-1 ring-inset';
+
+  /** One row of the list. `index` counts across every section, for the arrow keys. */
+  const renderOption = (option: Option, index: number) => {
+    const selected = isSelected(option);
+    const partial = option.kind === 'region' && !selected ? pickedIn(option.region, picked) : 0;
+    return (
+      <div
+        key={option.key}
+        id={`${listId}-${index}`}
+        role="option"
+        tabIndex={-1}
+        aria-selected={selected}
+        className={`flex cursor-pointer items-center justify-between gap-2 px-3 py-1.5 ${index === active ? 'bg-brand-50' : ''} ${option.kind === 'world' ? 'border-b border-slate-100 font-medium' : ''} ${option.kind === 'region' ? 'font-medium' : ''}`}
+        onMouseEnter={() => {
+          setActive(index);
+        }}
+        onMouseDown={(e) => {
+          // Keep focus in the input, so the list stays open for the next pick.
+          e.preventDefault();
+          choose(option);
+        }}
+      >
+        <span>{option.label}</span>
+        <span className="flex shrink-0 items-center gap-2">
+          {option.kind === 'region' && (
+            <span className="text-xs font-normal text-slate-500">
+              {partial
+                ? t('regionPartial', { picked: partial, count: option.region.codes.length })
+                : t('regionCount', { count: option.region.codes.length })}
+            </span>
+          )}
+          {selected && <span className="text-brand-600">✓</span>}
+        </span>
+      </div>
+    );
   };
 
   return (
     <div ref={box} className="relative">
-      <div className={`${inputClass} flex min-h-[38px] flex-wrap items-center gap-1 py-1`}>
+      <div className={`${inputClass} flex min-h-[34px] flex-wrap items-center gap-1 py-1`}>
         <ul className="contents" aria-label={t('picked')}>
-          {picked.map((code) => (
+          {chips.regions.map((region) => (
             <li
-              key={code}
-              className="inline-flex items-center gap-1 rounded bg-brand-50 py-0.5 pr-0.5 pl-1.5 text-xs font-medium text-brand-800 ring-1 ring-brand-200 ring-inset"
+              key={`region-${region.id}`}
+              className={`${chipClass} bg-brand-100 text-slate-900 ring-brand-400`}
             >
+              {regionName(region)} · {region.codes.length}
+              <button
+                type="button"
+                aria-label={t('remove', { country: regionName(region) })}
+                className="rounded px-1 leading-none hover:bg-brand-200"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleRegion(region);
+                }}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+          {chips.countries.map((code) => (
+            <li key={code} className={`${chipClass} bg-brand-50 text-brand-800 ring-brand-200`}>
               {name(code)} · {code}
               <button
                 type="button"
@@ -86,7 +200,7 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
                 className="rounded px-1 leading-none hover:bg-brand-100"
                 onClick={(e) => {
                   e.stopPropagation();
-                  choose(code);
+                  set(picked.filter((c) => c !== code));
                 }}
               >
                 ×
@@ -105,7 +219,7 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
           aria-describedby={describedBy}
           value={filter}
           placeholder={picked.length ? t('add') : t('worldwide')}
-          className="min-w-32 flex-1 border-0 p-0.5 text-sm outline-none focus:ring-0"
+          className="h-6 min-w-32 flex-1 border-0 p-0.5 text-sm leading-5 outline-none focus:ring-0"
           onFocus={() => {
             setOpen(true);
           }}
@@ -126,7 +240,7 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
               // Enter picks a country instead of submitting the form.
               if (open && options[active]) {
                 e.preventDefault();
-                choose(options[active].code);
+                choose(options[active]);
               }
             } else if (e.key === 'Escape') {
               setOpen(false);
@@ -142,34 +256,40 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
           role="listbox"
           aria-label={t('list')}
           aria-multiselectable
-          className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
+          className="absolute z-30 mt-1 max-h-80 w-full min-w-64 overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
         >
           {options.length === 0 && <p className="px-3 py-2 text-slate-500">{t('none')}</p>}
-          {options.map((option, i) => {
-            const selected =
-              option.code === null ? picked.length === 0 : picked.includes(option.code);
-            return (
-              <div
-                key={option.code ?? 'worldwide'}
-                id={`${listId}-${i}`}
-                role="option"
-                tabIndex={-1}
-                aria-selected={selected}
-                className={`flex cursor-pointer items-center justify-between px-3 py-1.5 ${i === active ? 'bg-brand-50' : ''} ${option.code === null ? 'border-b border-slate-100 font-medium' : ''}`}
-                onMouseEnter={() => {
-                  setActive(i);
-                }}
-                onMouseDown={(e) => {
-                  // Keep focus in the input, so the list stays open for the next pick.
-                  e.preventDefault();
-                  choose(option.code);
-                }}
+          {worldOptions.map((option, i) => renderOption(option, i))}
+          {regionOptions.length > 0 && (
+            <div role="group" aria-labelledby={`${listId}-regions`}>
+              <p
+                id={`${listId}-regions`}
+                role="presentation"
+                className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-slate-600 uppercase"
               >
-                {option.label}
-                {selected && <span className="text-brand-600">✓</span>}
-              </div>
-            );
-          })}
+                {t('regions')}
+              </p>
+              {regionOptions.map((option, i) => renderOption(option, worldOptions.length + i))}
+            </div>
+          )}
+          {countryOptions.length > 0 && (
+            <div
+              role="group"
+              aria-labelledby={`${listId}-countries`}
+              className={regionOptions.length ? 'mt-1 border-t border-slate-100' : ''}
+            >
+              <p
+                id={`${listId}-countries`}
+                role="presentation"
+                className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-slate-600 uppercase"
+              >
+                {t('countries')}
+              </p>
+              {countryOptions.map((option, i) =>
+                renderOption(option, worldOptions.length + regionOptions.length + i),
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

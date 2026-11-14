@@ -23,9 +23,9 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/icons/app-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
     ],
     shortcuts: [
-      { name: 'Job posts', url: '/jobs' },
+      { name: 'My Jobs', url: '/jobs' },
       { name: 'Tracker', url: '/tracker' },
-      { name: 'Add jobs', url: '/jobs/add' },
+      { name: 'Job Market', url: '/jobs/add' },
     ],
   };
 }

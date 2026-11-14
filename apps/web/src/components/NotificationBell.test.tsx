@@ -59,7 +59,7 @@ describe('NotificationBell', () => {
       within(list).getByRole('link', { name: /React Developer.*Acme.*82% fit/ }),
     ).toHaveAttribute('href', '/jobs?job=job-1');
     expect(
-      within(list).getByRole('link', { name: '3 more in Job posts (marked New)' }),
+      within(list).getByRole('link', { name: '3 more in My Jobs (marked New)' }),
     ).toHaveAttribute('href', '/jobs');
     // Opening the list reads them: the badge goes.
     expect(await screen.findByRole('button', { name: 'Notifications' })).toBeInTheDocument();

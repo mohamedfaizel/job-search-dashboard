@@ -31,8 +31,8 @@ import { ChipCheckbox, Field, GROUP_LABEL, inputClass } from './Field';
 /** The ad languages you can filter by, named in your language. */
 const LANGUAGES = ['en', 'de'] as const;
 
-/** A thin line between groups of chips. */
-const DIVIDER = <span aria-hidden="true" className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />;
+/** The chips of one group, wrapping onto more lines when they don't fit. */
+const CHIP_ROW = 'flex flex-wrap items-center gap-1.5';
 
 /** Adds a value to a list, or takes it out. */
 function toggle<T>(list: T[], value: T): T[] {
@@ -56,6 +56,7 @@ export function SyncPanel({ loaded = null }: Props) {
   const dateTime = useDateTime();
   const languagesId = useId();
   const typesId = useId();
+  const filtersId = useId();
   const schema = useMemo(() => syncFormSchema((key, values) => t(`errors.${key}`, values)), [t]);
   const sync = useSyncJobs();
   const save = useSaveSearch();
@@ -152,61 +153,64 @@ export function SyncPanel({ loaded = null }: Props) {
           {t(boards ? 'sync.headingBoards' : noCredits ? 'sync.headingFree' : 'sync.heading')}
         </h2>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <fieldset className="contents">
-            <legend className="sr-only">{t('sync.source')}</legend>
-            <span aria-hidden="true" className={`${GROUP_LABEL} flex items-center gap-1`}>
-              {t('sync.source')}
-            </span>
-            <InfoTip
-              label={t('moreAbout', { field: t('sync.source') })}
-              text={t(boards ? 'sync.introBoards' : noCredits ? 'sync.introFree' : 'sync.intro')}
-            />
-            <div className="flex w-full min-w-0 gap-2 overflow-x-auto sm:w-auto sm:flex-wrap">
-              {IMPORT_SOURCES.map((value) => (
-                <label
-                  key={value}
-                  className="flex shrink-0 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-500"
-                >
-                  <input
-                    type="radio"
-                    value={value}
-                    {...register('source')}
-                    className="size-3.5 border-slate-300 text-slate-900"
-                  />
-                  <span className="leading-tight">
-                    <span className="block font-semibold text-slate-900">
-                      {t(`sync.sources.${value}.name`)}
-                    </span>
-                    <span className="block text-[11px] text-slate-600">
-                      {t(`sync.sources.${value}.hint`)}
-                    </span>
-                  </span>
-                </label>
-              ))}
+        <fieldset className="space-y-2">
+          <legend className="sr-only">{t('sync.source')}</legend>
+          <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <span aria-hidden="true" className={GROUP_LABEL}>
+                {t('sync.source')}
+              </span>
+              <InfoTip
+                label={t('moreAbout', { field: t('sync.source') })}
+                text={t(boards ? 'sync.introBoards' : noCredits ? 'sync.introFree' : 'sync.intro')}
+              />
             </div>
-          </fieldset>
-          {hasProfile && (
-            <button
-              type="button"
-              onClick={fillFromProfile}
-              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-slate-300 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:ml-auto"
-            >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="size-3.5"
+            {hasProfile && (
+              <button
+                type="button"
+                onClick={fillFromProfile}
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-slate-300 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
               >
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
-              </svg>
-              {t('sync.fillProfile')}
-            </button>
-          )}
-        </div>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="size-3.5"
+                >
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+                </svg>
+                {t('sync.fillProfile')}
+              </button>
+            )}
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {IMPORT_SOURCES.map((value) => (
+              <label
+                key={value}
+                className="flex min-w-0 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-500"
+              >
+                <input
+                  type="radio"
+                  value={value}
+                  {...register('source')}
+                  className="size-3.5 border-slate-300 text-slate-900"
+                />
+                <span className="leading-tight">
+                  <span className="block font-semibold text-slate-900">
+                    {t(`sync.sources.${value}.name`)}
+                  </span>
+                  <span className="block text-[11px] text-slate-600">
+                    {t(`sync.sources.${value}.hint`)}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         {noToken && (
           <p className="text-xs text-slate-600">
             {t(source === 'JOBHUNTER' ? 'sync.noToken.picked' : 'sync.noToken.other')}{' '}
@@ -294,32 +298,36 @@ export function SyncPanel({ loaded = null }: Props) {
           </Field>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        {/* One row per group: the name in a fixed column, its chips beside it, so they line up. */}
+        <div className="grid gap-x-3 gap-y-2 rounded-md border border-slate-100 bg-slate-50 p-3 sm:grid-cols-[10rem_minmax(0,1fr)] sm:items-center">
           {!noCredits && (
             <Controller
               control={control}
               name="languages"
               render={({ field }) => (
-                <div role="group" aria-labelledby={languagesId} className="contents">
-                  <span id={languagesId} className={GROUP_LABEL}>
-                    {t('sync.adLanguage')}
-                  </span>
-                  <InfoTip
-                    label={t('moreAbout', { field: t('sync.adLanguage') })}
-                    text={t('sync.languagesHint')}
-                  />
-                  {LANGUAGES.map((code) => (
-                    <ChipCheckbox
-                      key={code}
-                      label={f.language(code)}
-                      checked={field.value.includes(code)}
-                      onChange={() => {
-                        field.onChange(toggle(field.value, code));
-                      }}
+                <>
+                  <div className="flex items-center gap-1">
+                    <span id={languagesId} className={GROUP_LABEL}>
+                      {t('sync.adLanguage')}
+                    </span>
+                    <InfoTip
+                      label={t('moreAbout', { field: t('sync.adLanguage') })}
+                      text={t('sync.languagesHint')}
                     />
-                  ))}
-                  {DIVIDER}
-                </div>
+                  </div>
+                  <div role="group" aria-labelledby={languagesId} className={CHIP_ROW}>
+                    {LANGUAGES.map((code) => (
+                      <ChipCheckbox
+                        key={code}
+                        label={f.language(code)}
+                        checked={field.value.includes(code)}
+                        onChange={() => {
+                          field.onChange(toggle(field.value, code));
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             />
           )}
@@ -327,58 +335,67 @@ export function SyncPanel({ loaded = null }: Props) {
             control={control}
             name="employmentTypes"
             render={({ field }) => (
-              <div role="group" aria-labelledby={typesId} className="contents">
-                <span id={typesId} className={GROUP_LABEL}>
-                  {t('sync.jobType')}
-                </span>
-                <InfoTip
-                  label={t('moreAbout', { field: t('sync.jobType') })}
-                  text={t('sync.jobTypeHint')}
-                />
-                {EMPLOYMENT_TYPES.filter(
-                  (type) =>
-                    source !== 'ARBEITSAGENTUR' || type === 'full-time' || type === 'part-time',
-                ).map((type) => (
-                  <ChipCheckbox
-                    key={type}
-                    label={t(`jobTypes.${type}`)}
-                    checked={field.value.includes(type)}
-                    onChange={() => {
-                      field.onChange(toggle(field.value, type));
-                    }}
+              <>
+                <div className="flex items-center gap-1">
+                  <span id={typesId} className={GROUP_LABEL}>
+                    {t('sync.jobType')}
+                  </span>
+                  <InfoTip
+                    label={t('moreAbout', { field: t('sync.jobType') })}
+                    text={t('sync.jobTypeHint')}
                   />
-                ))}
-                {DIVIDER}
-              </div>
+                </div>
+                <div role="group" aria-labelledby={typesId} className={CHIP_ROW}>
+                  {EMPLOYMENT_TYPES.filter(
+                    (type) =>
+                      source !== 'ARBEITSAGENTUR' || type === 'full-time' || type === 'part-time',
+                  ).map((type) => (
+                    <ChipCheckbox
+                      key={type}
+                      label={t(`jobTypes.${type}`)}
+                      checked={field.value.includes(type)}
+                      onChange={() => {
+                        field.onChange(toggle(field.value, type));
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
             )}
           />
-          {!noCredits && (
-            <>
-              <ChipCheckbox label={t('sync.skipGerman')} {...register('skipFluentGerman')} />
-              <InfoTip
-                label={t('moreAbout', { field: t('sync.skipGerman') })}
-                text={t('sync.skipGermanHint')}
-              />
-            </>
-          )}
-          <ChipCheckbox label={t('sync.remoteOnly')} {...register('remoteOnly')} />
-          {!boards && (
-            <>
-              <ChipCheckbox label={t('sync.onlyNew')} {...register('onlyNew')} />
-              <InfoTip
-                label={t('moreAbout', { field: t('sync.onlyNew') })}
-                text={t('sync.onlyNewHint')}
-              />
-            </>
-          )}
+          <span id={filtersId} className={GROUP_LABEL}>
+            {t('sync.filters')}
+          </span>
+          <div role="group" aria-labelledby={filtersId} className={CHIP_ROW}>
+            <ChipCheckbox label={t('sync.remoteOnly')} {...register('remoteOnly')} />
+            {!boards && (
+              <span className="inline-flex items-center gap-1">
+                <ChipCheckbox label={t('sync.onlyNew')} {...register('onlyNew')} />
+                <InfoTip
+                  label={t('moreAbout', { field: t('sync.onlyNew') })}
+                  text={t('sync.onlyNewHint')}
+                />
+              </span>
+            )}
+            {!noCredits && (
+              <span className="inline-flex items-center gap-1">
+                <ChipCheckbox label={t('sync.skipGerman')} {...register('skipFluentGerman')} />
+                <InfoTip
+                  label={t('moreAbout', { field: t('sync.skipGerman') })}
+                  text={t('sync.skipGermanHint')}
+                />
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-end gap-3">
+        {/* Skip titles, min salary and the page settings share one 12-column row. */}
+        <div className="grid gap-3 sm:grid-cols-12 sm:items-end">
           <Field
             label={t('sync.excludeTitles')}
             htmlFor="sync-excludeTitles"
             tip={t('sync.excludeHint')}
-            className="min-w-48 flex-[2_1_16rem]"
+            className={noCredits ? 'sm:col-span-8' : 'sm:col-span-5'}
           >
             <input
               placeholder={t('sync.excludePlaceholder')}
@@ -393,7 +410,7 @@ export function SyncPanel({ loaded = null }: Props) {
               htmlFor="sync-minSalaryEur"
               error={errors.minSalaryEur?.message}
               tip={t('sync.minSalaryHint')}
-              className="min-w-36 flex-[1_1_9rem]"
+              className="sm:col-span-3"
             >
               <input
                 inputMode="numeric"
@@ -409,9 +426,9 @@ export function SyncPanel({ loaded = null }: Props) {
             onToggle={(e) => {
               setPageSettingsOpen(e.currentTarget.open);
             }}
-            className="group relative"
+            className="group relative sm:col-span-4"
           >
-            <summary className="flex h-[34px] cursor-pointer list-none items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:border-slate-500 [&::-webkit-details-marker]:hidden">
+            <summary className="flex h-[34px] w-full cursor-pointer list-none items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:border-slate-500 [&::-webkit-details-marker]:hidden">
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"

@@ -21,7 +21,7 @@ function renderFrame(locale: Locale = 'en') {
 }
 
 describe('AppFrame', () => {
-  it('shows the main pages, the gold Add jobs and the phone tabs', async () => {
+  it('shows the main pages, the gold Job Market and the phone tabs', async () => {
     session.user = ADMIN;
     location.pathname = '/jobs/add';
     renderFrame();
@@ -31,12 +31,13 @@ describe('AppFrame', () => {
       within(nav)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Job posts', 'Tracker', 'Resume']);
-    // /jobs/add is "Add jobs", not "Job posts".
-    expect(within(nav).getByRole('link', { name: 'Job posts' })).not.toHaveAttribute(
+    ).toEqual(['My Jobs', 'Tracker', 'Resume']);
+    // /jobs/add is "Job Market", not "My Jobs".
+    expect(within(nav).getByRole('link', { name: 'My Jobs' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: 'Job Market' })).toHaveAttribute(
       'aria-current',
+      'page',
     );
-    expect(screen.getByRole('link', { name: 'Add jobs' })).toHaveAttribute('aria-current', 'page');
 
     const tabs = screen.getByRole('navigation', { name: 'Tabs' });
     expect(
@@ -184,8 +185,8 @@ describe('AppFrame', () => {
       within(nav)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Stellenanzeigen', 'Bewerbungen', 'Lebenslauf']);
-    expect(screen.getByRole('link', { name: 'Jobs hinzufügen' })).toBeInTheDocument();
+    ).toEqual(['Meine Jobs', 'Bewerbungen', 'Lebenslauf']);
+    expect(screen.getByRole('link', { name: 'Stellenmarkt' })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Tabs' })).toHaveTextContent('Hinzufügen');
     // Already in your language: nothing to switch.
     expect(router.refresh).not.toHaveBeenCalled();

@@ -38,6 +38,7 @@ const COUNTRIES: readonly (readonly [string, string])[] = [
   ['IT', 'Italy'],
   ['CH', 'Switzerland'],
   ['AT', 'Austria'],
+  ['LU', 'Luxembourg'],
   ['SE', 'Sweden'],
   ['DK', 'Denmark'],
   ['NO', 'Norway'],

@@ -20,15 +20,64 @@ const value = () => screen.getByRole('status', { name: 'Value' }).textContent;
 const input = () => screen.getByRole('combobox', { name: 'Countries' });
 
 describe('CountrySelect', () => {
-  it('starts on Worldwide and lists JobHunter’s countries', async () => {
+  it('starts on Worldwide, then lists the regions and JobHunter’s countries', async () => {
     render(<Harness />);
     await userEvent.click(input());
 
-    const options = within(screen.getByRole('listbox')).getAllByRole('option');
+    const list = screen.getByRole('listbox');
+    const options = within(list).getAllByRole('option');
     expect(options[0]).toHaveTextContent('Worldwide (any country)');
     expect(options[0]).toHaveAttribute('aria-selected', 'true');
-    expect(options[1]).toHaveTextContent('United States · US');
-    expect(options).toHaveLength(46);
+    const regions = within(within(list).getByRole('group', { name: 'Regions' })).getAllByRole(
+      'option',
+    );
+    expect(regions.map((o) => o.textContent)).toEqual([
+      'DACH3 countries',
+      'European Union27 countries',
+      'Benelux3 countries',
+      'Nordics5 countries',
+      'UK & Ireland2 countries',
+      'Middle East12 countries',
+      'GCC (Gulf)6 countries',
+    ]);
+    const countries = within(within(list).getByRole('group', { name: 'Countries' })).getAllByRole(
+      'option',
+    );
+    expect(countries[0]).toHaveTextContent('United States · US');
+    expect(countries).toHaveLength(46);
+  });
+
+  it('picks a whole region as one chip, and removes it again', async () => {
+    render(<Harness initial="LU" />);
+    await userEvent.click(input());
+    expect(screen.getByRole('option', { name: /Benelux/ })).toHaveTextContent('1 of 3 picked');
+
+    await userEvent.click(screen.getByRole('option', { name: /DACH/ }));
+    expect(value()).toBe('LU, DE, AT, CH');
+    const picked = screen.getByRole('list', { name: 'Picked countries' });
+    expect(
+      within(picked)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['DACH · 3×', 'Luxembourg · LU×']);
+    expect(screen.getByRole('option', { name: /DACH/ })).toHaveAttribute('aria-selected', 'true');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove DACH' }));
+    expect(value()).toBe('LU');
+  });
+
+  it('picks the country, not a region, for its exact code', async () => {
+    render(<Harness />);
+    await userEvent.type(input(), 'lu{Enter}');
+
+    expect(value()).toBe('LU');
+  });
+
+  it('finds a region by typing its name', async () => {
+    render(<Harness />);
+    await userEvent.type(input(), 'middle{Enter}');
+
+    expect(value()).toBe('AE, SA, QA, KW, BH, OM, IL, JO, LB, IQ, EG, TR');
   });
 
   it('picks several countries by name or code, and removes one', async () => {
@@ -56,12 +105,12 @@ describe('CountrySelect', () => {
 
   it('accepts a 2-letter code that isn’t in the list', async () => {
     render(<Harness />);
-    await userEvent.type(input(), 'lu');
-    await userEvent.click(screen.getByRole('option', { name: 'Use code LU' }));
+    await userEvent.type(input(), 'li');
+    await userEvent.click(screen.getByRole('option', { name: 'Use code LI' }));
 
-    expect(value()).toBe('LU');
+    expect(value()).toBe('LI');
     expect(screen.getByRole('list', { name: 'Picked countries' })).toHaveTextContent(
-      'Luxembourg · LU',
+      'Liechtenstein · LI',
     );
   });
 });

@@ -56,7 +56,7 @@ describe('JobsDashboard', () => {
   it('shows the list in German', async () => {
     renderDashboard('de');
 
-    expect(await screen.findByRole('heading', { name: 'Stellenanzeigen' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Meine Jobs' })).toBeInTheDocument();
     const row = (await screen.findByRole('button', { name: 'Senior Frontend Engineer' })).closest(
       'tr',
     )!;
@@ -328,7 +328,7 @@ describe('JobsDashboard', () => {
     renderDashboard('de');
 
     expect(await screen.findByText('Noch keine Jobs')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '+ Jobs hinzufügen' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '+ Stellenmarkt' })).toHaveAttribute(
       'href',
       '/jobs/add',
     );
@@ -743,7 +743,7 @@ describe('JobsDashboard', () => {
     expect(
       await screen.findByRole('button', { name: 'Senior Frontend Engineer' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Job posts' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'My Jobs' })).toBeInTheDocument();
   });
 
   it('undoes a hide', async () => {
