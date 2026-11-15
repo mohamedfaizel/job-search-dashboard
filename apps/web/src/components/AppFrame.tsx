@@ -123,7 +123,7 @@ const PILL =
 
 /**
  * The header: a black bar with a red and gold stripe under it, the German flag. Left: the logo
- * and the main pages (the one you are on is a gold pill). Right: a gold "+ Add jobs", the 🔔 and
+ * and the main pages (the one you are on is a gold pill). Right: a gold "+ Job Market", the 🔔 and
  * your avatar, which opens My profile, Settings, the language and Log out.
  *
  * On phones (under 768 px) the main pages move to a tab bar at the bottom, like a phone app.
@@ -183,7 +183,7 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
   );
 }
 
-/** The phone tab bar: the main pages and + Add jobs, each an icon with a short label. */
+/** The phone tab bar: the main pages and + Job Market, each an icon with a short label. */
 function PhoneTabs({ current }: { current: string | undefined }) {
   const t = useTranslations('Nav');
   return (

@@ -9,10 +9,10 @@
   },
   "Nav": {
     "main": "Hauptmenü",
-    "jobs": "Stellenanzeigen",
+    "jobs": "Meine Jobs",
     "tracker": "Bewerbungen",
     "resume": "Lebenslauf",
-    "addJobs": "Jobs hinzufügen",
+    "addJobs": "Stellenmarkt",
     "profile": "Mein Profil",
     "settings": "Einstellungen",
     "admin": "Admin",
@@ -872,7 +872,7 @@
     }
   },
   "Jobs": {
-    "title": "Stellenanzeigen",
+    "title": "Meine Jobs",
     "hiddenTitle": "Ausgeblendete Jobs",
     "intro": "Durchsuche, filtere und verfolge die Jobs, die du importiert hast. Klick auf einen Titel für Details.",
     "hiddenIntro": "Nur du siehst diese nicht mehr. Blende einen Job wieder ein, um ihn zurück in deine Tabelle zu holen, oder klick auf „Alle Jobs“, um zurückzugehen.",
@@ -913,11 +913,11 @@
     },
     "loading": "Jobs werden geladen…",
     "noHidden": "Keine ausgeblendeten Jobs passen.",
-    "noJobs": "Keine Jobs passen. Setz ein paar Filter zurück oder füge Jobs auf der Seite „Jobs hinzufügen“ hinzu.",
+    "noJobs": "Keine Jobs passen. Setz ein paar Filter zurück oder füge Jobs auf der Seite „Stellenmarkt“ hinzu.",
     "empty": {
       "title": "Noch keine Jobs",
       "text": "Importiere Jobs von JobHunter, der Arbeitsagentur oder Karriereseiten von Firmen, oder füge einen von Hand hinzu.",
-      "addJobs": "+ Jobs hinzufügen"
+      "addJobs": "+ Stellenmarkt"
     },
     "status": {
       "NONE": "Nicht beworben",
@@ -1765,7 +1765,7 @@
     "loadError": "Deine Bewerbungen konnten nicht geladen werden: {error}",
     "moveError": "Der Job konnte nicht verschoben werden: {error}",
     "loading": "Deine Bewerbungen werden geladen…",
-    "empty": "Hier ist noch nichts. Gib einem Job unter Stellenanzeigen einen Status (Gemerkt, Beworben…), dann erscheint er hier.",
+    "empty": "Hier ist noch nichts. Gib einem Job unter Meine Jobs einen Status (Gemerkt, Beworben…), dann erscheint er hier.",
     "moved": "Verschoben am {date}",
     "mail": {
       "title": "{count, plural, one {1 E-Mail schlägt eine Änderung vor} other {# E-Mails schlagen Änderungen vor}}",
@@ -1826,7 +1826,7 @@
     }
   },
   "AddJobs": {
-    "title": "Jobs hinzufügen",
+    "title": "Stellenmarkt",
     "loading": "Wird geladen…",
     "tabsLabel": "Wege, Jobs hinzuzufügen",
     "tabs": {
@@ -1864,7 +1864,7 @@
     },
     "form": {
       "heading": "Job von Hand hinzufügen",
-      "saved": "„{title}“ gespeichert. Der Job steht jetzt in der Tabelle Stellenanzeigen.",
+      "saved": "„{title}“ gespeichert. Der Job steht jetzt unter Meine Jobs.",
       "saveError": "Der Job konnte nicht gespeichert werden: {error}",
       "title": "Jobtitel",
       "company": "Firma",
@@ -1891,9 +1891,22 @@
       "useCode": "Code {code} verwenden",
       "picked": "Ausgewählte Länder",
       "remove": "{country} entfernen",
-      "add": "Land hinzufügen…",
+      "add": "Weitere hinzufügen…",
       "list": "Länder",
-      "none": "Kein Land gefunden"
+      "none": "Kein Land gefunden",
+      "regions": "Regionen",
+      "countries": "Länder",
+      "regionCount": "{count} Länder",
+      "regionPartial": "{picked} von {count} gewählt",
+      "region": {
+        "dach": "DACH",
+        "eu": "Europäische Union",
+        "benelux": "Benelux",
+        "nordics": "Nordische Länder",
+        "ukIreland": "UK & Irland",
+        "middleEast": "Naher Osten",
+        "gcc": "Golfstaaten (GCC)"
+      }
     },
     "sync": {
       "heading": "Aus JobHunter importieren",
@@ -1904,7 +1917,7 @@
       "skills": "Fähigkeiten",
       "skillsHint": "Optional, mit Kommas getrennt",
       "countries": "Länder",
-      "countriesHint": "Wähle eins oder mehrere, oder lass es auf Weltweit",
+      "countriesHint": "Wähle Regionen oder Länder, oder lass es auf Weltweit. Eine Region fügt all ihre Länder hinzu.",
       "locations": "Städte oder Regionen",
       "locationsHint": "Optional, mit Kommas getrennt, z. B. Berlin, Bayern",
       "moreFilters": "Weitere Filter",
@@ -1912,7 +1925,7 @@
       "adLanguage": "Anzeige geschrieben auf",
       "languagesHint": "Nichts angehakt = jede Sprache. Viele deutsche Jobs werden auf Englisch ausgeschrieben, und Anzeigen ohne Sprache bleiben drin.",
       "skipGerman": "Ohne fließend Deutsch",
-      "skipGermanHint": "Erkennt deutsche Anzeigen, die fließende, verhandlungssichere oder C1-Deutschkenntnisse verlangen. Englische Anzeigen mit „fluent German“ bekommen stattdessen in den Stellenanzeigen die Markierung Deutsch.",
+      "skipGermanHint": "Erkennt deutsche Anzeigen, die fließende, verhandlungssichere oder C1-Deutschkenntnisse verlangen. Englische Anzeigen mit „fluent German“ bekommen stattdessen unter Meine Jobs die Markierung Deutsch.",
       "remoteOnly": "Nur Remote",
       "excludeTitles": "Titel überspringen mit",
       "excludeHint": "Mit Kommas getrennt, z. B. Werkstudent, Praktikum, Intern. Passt auch auf Wortteile.",
@@ -1981,7 +1994,8 @@
         "other": "Du hast noch keinen JobHunter-Token, darum startet es mit der Arbeitsagentur (ohne Credits).",
         "picked": "JobHunter braucht zuerst deinen eigenen Token.",
         "link": "In Einstellungen › API-Schlüssel hinzufügen"
-      }
+      },
+      "filters": "Filter"
     },
     "saved": {
       "heading": "Gespeicherte Suchen",
@@ -2165,7 +2179,7 @@
     "newMatches": "{count, plural, one {# neuer Job passt zu dir} other {# neue Jobs passen zu dir}} aus der Suche „{search}“",
     "fitAtLeast": "Fit ab {fit} %",
     "fit": "{fit} % Fit",
-    "more": "{count, plural, one {# weiterer} other {# weitere}} unter Stellenanzeigen (als Neu markiert)",
+    "more": "{count, plural, one {# weiterer} other {# weitere}} unter Meine Jobs (als Neu markiert)",
     "show": "Anzeigen",
     "close": "Schließen",
     "interviewSoon": "Interview bald: {when}",
@@ -2212,7 +2226,7 @@
       "later": "Du kannst all das später in den Einstellungen und in Mein Profil ändern.",
       "profile": "Mein Profil prüfen",
       "addJobs": "Meine ersten Jobs finden ›",
-      "jobs": "Zu den Stellenanzeigen ›"
+      "jobs": "Zu Meine Jobs ›"
     }
   },
   "Admin": {

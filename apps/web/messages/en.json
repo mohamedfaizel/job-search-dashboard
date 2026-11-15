@@ -9,10 +9,10 @@
   },
   "Nav": {
     "main": "Main",
-    "jobs": "Job posts",
+    "jobs": "My Jobs",
     "tracker": "Tracker",
     "resume": "Resume",
-    "addJobs": "Add jobs",
+    "addJobs": "Job Market",
     "profile": "My profile",
     "settings": "Settings",
     "admin": "admin",
@@ -872,7 +872,7 @@
     }
   },
   "Jobs": {
-    "title": "Job posts",
+    "title": "My Jobs",
     "hiddenTitle": "Hidden jobs",
     "intro": "Search, filter and track the jobs you imported. Click a title for details.",
     "hiddenIntro": "Only you don’t see these. Unhide a job to put it back in your table, or click “All jobs” to go back.",
@@ -913,11 +913,11 @@
     },
     "loading": "Loading jobs…",
     "noHidden": "No hidden jobs match.",
-    "noJobs": "No jobs match. Try clearing some filters, or add jobs from the “Add jobs” page.",
+    "noJobs": "No jobs match. Try clearing some filters, or find more on the “Job Market” page.",
     "empty": {
       "title": "No jobs yet",
       "text": "Import jobs from JobHunter, the Arbeitsagentur or company career pages, or add one by hand.",
-      "addJobs": "+ Add jobs"
+      "addJobs": "+ Job Market"
     },
     "status": {
       "NONE": "Not applied",
@@ -1765,7 +1765,7 @@
     "loadError": "Could not load your tracker: {error}",
     "moveError": "Could not move that job: {error}",
     "loading": "Loading your tracker…",
-    "empty": "Nothing on your tracker yet. Set a status on a job in Job posts (Saved, Applied…) and it shows up here.",
+    "empty": "Nothing on your tracker yet. Set a status on a job in My Jobs (Saved, Applied…) and it shows up here.",
     "moved": "Moved {date}",
     "mail": {
       "title": "{count, plural, one {1 email suggests a change} other {# emails suggest changes}}",
@@ -1826,7 +1826,7 @@
     }
   },
   "AddJobs": {
-    "title": "Add jobs",
+    "title": "Job Market",
     "loading": "Loading…",
     "tabsLabel": "Ways to add jobs",
     "tabs": {
@@ -1864,7 +1864,7 @@
     },
     "form": {
       "heading": "Add a job by hand",
-      "saved": "Saved “{title}”. It’s now in the Job posts table.",
+      "saved": "Saved “{title}”. It’s now in My Jobs.",
       "saveError": "Could not save the job: {error}",
       "title": "Job title",
       "company": "Company",
@@ -1891,9 +1891,22 @@
       "useCode": "Use code {code}",
       "picked": "Picked countries",
       "remove": "Remove {country}",
-      "add": "Add a country…",
+      "add": "Add more…",
       "list": "Countries",
-      "none": "No country found"
+      "none": "No country found",
+      "regions": "Regions",
+      "countries": "Countries",
+      "regionCount": "{count} countries",
+      "regionPartial": "{picked} of {count} picked",
+      "region": {
+        "dach": "DACH",
+        "eu": "European Union",
+        "benelux": "Benelux",
+        "nordics": "Nordics",
+        "ukIreland": "UK & Ireland",
+        "middleEast": "Middle East",
+        "gcc": "GCC (Gulf)"
+      }
     },
     "sync": {
       "heading": "Import from JobHunter",
@@ -1904,7 +1917,7 @@
       "skills": "Skills",
       "skillsHint": "Optional, comma separated",
       "countries": "Countries",
-      "countriesHint": "Pick one or more, or leave it on Worldwide",
+      "countriesHint": "Pick regions or countries, or leave it on Worldwide. A region adds all of its countries.",
       "locations": "Cities or regions",
       "locationsHint": "Optional, comma separated, e.g. Berlin, Bavaria",
       "moreFilters": "More filters",
@@ -1912,7 +1925,7 @@
       "adLanguage": "Ad written in",
       "languagesHint": "None ticked = any language. Many German jobs are posted in English, and ads with no language yet are kept.",
       "skipGerman": "Skip fluent-German ads",
-      "skipGermanHint": "Catches German ads asking for fließende, verhandlungssichere or C1 Deutschkenntnisse. English ads saying “fluent German” get the German tag in Job posts instead.",
+      "skipGermanHint": "Catches German ads asking for fließende, verhandlungssichere or C1 Deutschkenntnisse. English ads saying “fluent German” get the German tag in My Jobs instead.",
       "remoteOnly": "Remote only",
       "excludeTitles": "Skip titles with",
       "excludeHint": "Comma separated, e.g. Werkstudent, Praktikum, Intern. Matches part of a word.",
@@ -1981,7 +1994,8 @@
         "other": "You have no JobHunter token yet, so this starts on the Arbeitsagentur (no credits needed).",
         "picked": "JobHunter needs your own token first.",
         "link": "Add it in Settings › API keys"
-      }
+      },
+      "filters": "Filters"
     },
     "saved": {
       "heading": "Saved searches",
@@ -2165,7 +2179,7 @@
     "newMatches": "{count, plural, one {# new job fits you} other {# new jobs fit you}} from the search “{search}”",
     "fitAtLeast": "Fit {fit}% or more",
     "fit": "{fit}% fit",
-    "more": "{count, plural, one {# more} other {# more}} in Job posts (marked New)",
+    "more": "{count, plural, one {# more} other {# more}} in My Jobs (marked New)",
     "show": "Show",
     "close": "Close",
     "interviewSoon": "Interview soon: {when}",
@@ -2212,7 +2226,7 @@
       "later": "You can change all of this later in Settings and My profile.",
       "profile": "Check My profile",
       "addJobs": "Find my first jobs ›",
-      "jobs": "Go to Job posts ›"
+      "jobs": "Go to My Jobs ›"
     }
   },
   "Admin": {
