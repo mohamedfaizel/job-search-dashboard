@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
 import {
+  ADMIN_OVERVIEW,
   ADMIN_USERS,
   APP_SETTINGS,
   CANCEL_INVITE,
@@ -12,7 +13,15 @@ import {
   SIGNUP_STATE,
   UPDATE_APP_SETTINGS,
 } from './operations';
-import type { AdminUser, AppSettings, AppSettingsChange, Invite, Role, SignupState } from './types';
+import type {
+  AdminOverview,
+  AdminUser,
+  AppSettings,
+  AppSettingsChange,
+  Invite,
+  Role,
+  SignupState,
+} from './types';
 
 export const adminUsersKey = ['admin', 'users'] as const;
 
@@ -148,5 +157,16 @@ export function useSignupState(invite: string | null, enabled = true) {
           invite: invite ?? null,
         })
       ).signupState,
+  });
+}
+
+export const adminOverviewKey = ['admin', 'overview'] as const;
+
+/** Admin › Overview. Each fetch checks the server's parts again. */
+export function useAdminOverview() {
+  return useQuery({
+    queryKey: adminOverviewKey,
+    queryFn: async () =>
+      (await graphqlClient.request<{ adminOverview: AdminOverview }>(ADMIN_OVERVIEW)).adminOverview,
   });
 }

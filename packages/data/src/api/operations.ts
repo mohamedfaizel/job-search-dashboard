@@ -1485,3 +1485,26 @@ export const CANCEL_INVITE = /* GraphQL */ `
     cancelInvite(id: $id)
   }
 `;
+
+export const ADMIN_OVERVIEW = /* GraphQL */ `
+  query AdminOverview {
+    adminOverview {
+      users
+      newThisWeek
+      activeThisWeek
+      withJobKey
+      importsToday
+      jobsAddedToday
+      week {
+        day
+        imports
+      }
+      health {
+        service
+        state
+        offInEnv
+        nextRunAt
+      }
+    }
+  }
+`;

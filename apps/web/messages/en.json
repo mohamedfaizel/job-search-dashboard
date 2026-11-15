@@ -2280,6 +2280,7 @@
     },
     "tabs": {
       "label": "Admin sections",
+      "overview": "Overview",
       "users": "Users",
       "access": "Sign-up & access",
       "limits": "Limits"
@@ -2344,6 +2345,52 @@
       "note": "Changes save on their own and work right away. If the server’s .env switches the scheduler off, it stays off here too, and the switch says so.",
       "saved": "Saved.",
       "loading": "Loading…"
+    },
+    "overview": {
+      "loading": "Loading…",
+      "users": "Users",
+      "usersNote": "{count} new this week",
+      "active": "Active this week",
+      "activeNote": "used the app at least once",
+      "keys": "Have a job data key",
+      "keysValue": "{count} of {total}",
+      "keysNote": "{count} use free sources only",
+      "imports": "Imports today",
+      "importsNote": "{count} jobs added",
+      "healthHeading": "Server health",
+      "checkAgain": "Check again",
+      "checking": "Checking…",
+      "healthNote": "Setup hints that mention .env show only here. Users just see “not available right now”.",
+      "service": {
+        "DATABASE": "Database",
+        "PDF_MAKER": "PDF maker",
+        "RESUME_MATCHER": "Resume-Matcher",
+        "GMAIL": "Gmail",
+        "SCHEDULER": "Scheduled searches",
+        "STILL_OPEN": "“Still open?” check"
+      },
+      "state": {
+        "running": "Running",
+        "setUp": "Set up",
+        "dbDown": "Not reachable: check DATABASE_URL in .env and that PostgreSQL runs.",
+        "pdfDown": "Not reachable: start it with pnpm pdf:up.",
+        "pdfOff": "Off: set PDF_RENDERER_URL in .env. Downloads are plain PDFs meanwhile.",
+        "rmDown": "Not reachable: start it with pnpm rm:up.",
+        "rmOff": "Off: set RESUME_MATCHER_URL in .env.",
+        "gmailOff": "Not set up: add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env.",
+        "next": "On · next run {when}",
+        "idle": "On · no search is scheduled",
+        "nightly": "On · runs every night at 03:00",
+        "offEnv": "Off in the server’s .env file",
+        "offLimits": "Off on the Limits tab"
+      },
+      "mark": {
+        "OK": "OK",
+        "DOWN": "Problem",
+        "OFF": "Off"
+      },
+      "weekHeading": "Last 7 days",
+      "weekNote": "Imports per day, all users. Each user pays with their own key."
     }
   }
 }

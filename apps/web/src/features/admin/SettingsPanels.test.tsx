@@ -1,4 +1,4 @@
-import type { AppSettings, Invite } from '@jobsearch/data';
+import type { AdminOverview, AppSettings, Invite } from '@jobsearch/data';
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -9,6 +9,27 @@ import { AdminPage } from './AdminPage';
 
 let settings: AppSettings;
 let invites: Invite[];
+const day = (back: number) => new Date(Date.now() - back * 86_400_000).toISOString();
+const overview: AdminOverview = {
+  users: 24,
+  newThisWeek: 3,
+  activeThisWeek: 11,
+  withJobKey: 17,
+  importsToday: 8,
+  jobsAddedToday: 312,
+  week: [6, 5, 4, 3, 2, 1, 0].map((back, i) => ({
+    day: day(back),
+    imports: [4, 7, 3, 9, 12, 6, 8][i] ?? 0,
+  })),
+  health: [
+    { service: 'DATABASE', state: 'OK', offInEnv: false, nextRunAt: null },
+    { service: 'PDF_MAKER', state: 'OK', offInEnv: false, nextRunAt: null },
+    { service: 'RESUME_MATCHER', state: 'DOWN', offInEnv: false, nextRunAt: null },
+    { service: 'GMAIL', state: 'OFF', offInEnv: true, nextRunAt: null },
+    { service: 'SCHEDULER', state: 'OK', offInEnv: false, nextRunAt: day(-1) },
+    { service: 'STILL_OPEN', state: 'OFF', offInEnv: false, nextRunAt: null },
+  ],
+};
 const sent: { operation: string; input: unknown }[] = [];
 
 beforeEach(() => {
@@ -36,6 +57,7 @@ beforeEach(() => {
   ];
   server.use(
     api.query('AdminUsers', () => HttpResponse.json({ data: { adminUsers: [] } })),
+    api.query('AdminOverview', () => HttpResponse.json({ data: { adminOverview: overview } })),
     api.query('AppSettings', () => HttpResponse.json({ data: { appSettings: settings } })),
     api.mutation('UpdateAppSettings', ({ variables }) => {
       sent.push({ operation: 'UpdateAppSettings', input: variables['input'] });
@@ -109,6 +131,36 @@ describe('Admin › Sign-up & access', () => {
   });
 });
 
+describe('Admin › Overview', () => {
+  it('opens first, with counts, server health with fix hints, and the week', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByRole('tab', { name: 'Overview' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(await screen.findByText('17 of 24')).toBeInTheDocument();
+    expect(screen.getByText('7 use free sources only')).toBeInTheDocument();
+    expect(screen.getByText('312 jobs added')).toBeInTheDocument();
+
+    const health = within(screen.getByRole('region', { name: 'Server health' }));
+    const row = (name: string) => within(health.getByText(name).closest('li') as HTMLElement);
+    expect(row('Resume-Matcher').getByText(/start it with pnpm rm:up/)).toBeInTheDocument();
+    expect(row('Resume-Matcher').getByRole('img', { name: 'Problem' })).toBeInTheDocument();
+    expect(row('Gmail').getByText(/add GOOGLE_CLIENT_ID/)).toBeInTheDocument();
+    expect(row('Scheduled searches').getByText(/On · next run/)).toBeInTheDocument();
+    expect(row('“Still open?” check').getByText('Off on the Limits tab')).toBeInTheDocument();
+
+    // The chart's numbers, for screen readers too.
+    const week = within(screen.getByRole('region', { name: 'Last 7 days' }));
+    expect(week.getAllByRole('row')).toHaveLength(7);
+
+    await user.click(health.getByRole('button', { name: 'Check again' }));
+    expect(await health.findByRole('button', { name: 'Check again' })).toBeEnabled();
+  });
+});
+
 describe('Admin › Limits', () => {
   it('saves a number when you leave the box, and a switch at once', async () => {
     const user = userEvent.setup();
@@ -151,7 +203,9 @@ describe('Admin › Limits', () => {
     const user = userEvent.setup();
     renderPage();
     const users = await screen.findByRole('tab', { name: 'Users' });
-    users.focus();
+    await user.click(users);
+    await user.keyboard('{ArrowLeft}');
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true');
     await user.keyboard('{ArrowLeft}');
     expect(screen.getByRole('tab', { name: 'Limits' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: 'Limits' })).toHaveFocus();
