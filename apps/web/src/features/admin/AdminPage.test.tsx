@@ -1,6 +1,6 @@
 import type { AdminUser } from '@jobsearch/data';
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { Intl } from '@/test/intl';
@@ -48,6 +48,7 @@ beforeEach(() => {
     }),
   ];
   server.use(
+    api.query('AdminOverview', () => HttpResponse.json({ data: { adminOverview: null } })),
     api.query('AdminUsers', () => HttpResponse.json({ data: { adminUsers: users } })),
     api.mutation('SetUserRole', ({ variables }) => {
       const input = variables['input'] as { userId: number; role: 'ADMIN' | 'USER' };
@@ -70,7 +71,13 @@ beforeEach(() => {
   );
 });
 
-function renderPage() {
+/** Opens the Admin page on its Users tab (Overview comes first). */
+async function renderPage() {
+  renderAsIs();
+  fireEvent.click(await screen.findByRole('tab', { name: 'Users' }));
+}
+
+function renderAsIs() {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false }, mutations: { retry: false } });
   render(
@@ -90,7 +97,7 @@ const rowOf = async (name: string) =>
 describe('AdminPage', () => {
   it('lists every account with counts, and no buttons on your own', async () => {
     session.user = ADMIN;
-    renderPage();
+    await renderPage();
 
     expect(await screen.findByRole('heading', { name: 'Users (3)' })).toBeInTheDocument();
     const me = await rowOf('Mohamed');
@@ -108,7 +115,7 @@ describe('AdminPage', () => {
   it('finds users by name or email and by filter', async () => {
     session.user = ADMIN;
     const user = userEvent.setup();
-    renderPage();
+    await renderPage();
     await table();
 
     await user.type(screen.getByRole('searchbox', { name: 'Find a user' }), 'POSTEO');
@@ -129,7 +136,7 @@ describe('AdminPage', () => {
   it('makes a user admin, switches one on, and switches one off', async () => {
     session.user = ADMIN;
     const user = userEvent.setup();
-    renderPage();
+    await renderPage();
 
     await user.click((await rowOf('Sara Klein')).getByRole('button', { name: 'Make admin' }));
     expect(
@@ -156,7 +163,7 @@ describe('AdminPage', () => {
   it('deletes an account only after its email is typed again', async () => {
     session.user = ADMIN;
     const user = userEvent.setup();
-    renderPage();
+    await renderPage();
 
     const sara = await rowOf('Sara Klein');
     await user.click(sara.getByRole('button', { name: 'More for Sara Klein' }));
@@ -180,7 +187,7 @@ describe('AdminPage', () => {
 
   it('shows a normal user only a short note, without asking for the list', async () => {
     session.user = { ...ADMIN, id: 2, role: 'USER' };
-    renderPage();
+    renderAsIs();
 
     expect(await screen.findByText('Only admins can open this page.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).toBeNull();

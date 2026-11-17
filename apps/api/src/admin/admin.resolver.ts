@@ -8,12 +8,24 @@ import {
   SetUserRoleInput,
 } from './admin.model';
 import { AdminService } from './admin.service';
+import { AdminOverviewModel } from './overview.model';
+import { OverviewService } from './overview.service';
 
 /** Admin pages. Every call here is for admins only. */
 @Roles('ADMIN')
 @Resolver()
 export class AdminResolver {
-  constructor(private readonly service: AdminService) {}
+  constructor(
+    private readonly service: AdminService,
+    private readonly overview: OverviewService,
+  ) {}
+
+  @Query(() => AdminOverviewModel, {
+    description: 'Counts, imports this week and server health (admins only)',
+  })
+  adminOverview(): Promise<AdminOverviewModel> {
+    return this.overview.overview();
+  }
 
   @Query(() => [AdminUserModel], { description: 'Every account, oldest first (admins only)' })
   adminUsers(): Promise<AdminUserModel[]> {

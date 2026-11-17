@@ -2280,6 +2280,7 @@
     },
     "tabs": {
       "label": "Admin-Bereiche",
+      "overview": "Übersicht",
       "users": "Nutzer",
       "access": "Registrierung & Zugang",
       "limits": "Grenzen"
@@ -2344,6 +2345,52 @@
       "note": "Änderungen speichern sich selbst und gelten sofort. Schaltet die .env des Servers den Zeitplan aus, bleibt er auch hier aus, und der Schalter sagt es.",
       "saved": "Gespeichert.",
       "loading": "Wird geladen…"
+    },
+    "overview": {
+      "loading": "Wird geladen…",
+      "users": "Nutzer",
+      "usersNote": "{count} neu diese Woche",
+      "active": "Aktiv diese Woche",
+      "activeNote": "haben die App mindestens einmal genutzt",
+      "keys": "Mit Job-Daten-Schlüssel",
+      "keysValue": "{count} von {total}",
+      "keysNote": "{count} nutzen nur kostenlose Quellen",
+      "imports": "Importe heute",
+      "importsNote": "{count} Jobs hinzugefügt",
+      "healthHeading": "Server-Zustand",
+      "checkAgain": "Erneut prüfen",
+      "checking": "Wird geprüft…",
+      "healthNote": "Hinweise zur Einrichtung mit .env stehen nur hier. Nutzer sehen nur „gerade nicht verfügbar“.",
+      "service": {
+        "DATABASE": "Datenbank",
+        "PDF_MAKER": "PDF-Ersteller",
+        "RESUME_MATCHER": "Resume-Matcher",
+        "GMAIL": "Gmail",
+        "SCHEDULER": "Geplante Suchen",
+        "STILL_OPEN": "Prüfung „noch offen?“"
+      },
+      "state": {
+        "running": "Läuft",
+        "setUp": "Eingerichtet",
+        "dbDown": "Nicht erreichbar: prüfe DATABASE_URL in .env und ob PostgreSQL läuft.",
+        "pdfDown": "Nicht erreichbar: starte ihn mit pnpm pdf:up.",
+        "pdfOff": "Aus: setze PDF_RENDERER_URL in .env. Bis dahin sind Downloads einfache PDFs.",
+        "rmDown": "Nicht erreichbar: starte ihn mit pnpm rm:up.",
+        "rmOff": "Aus: setze RESUME_MATCHER_URL in .env.",
+        "gmailOff": "Nicht eingerichtet: trage GOOGLE_CLIENT_ID und GOOGLE_CLIENT_SECRET in .env ein.",
+        "next": "An · nächster Lauf {when}",
+        "idle": "An · keine Suche geplant",
+        "nightly": "An · läuft jede Nacht um 03:00",
+        "offEnv": "In der .env-Datei des Servers ausgeschaltet",
+        "offLimits": "Auf dem Tab Grenzen ausgeschaltet"
+      },
+      "mark": {
+        "OK": "OK",
+        "DOWN": "Problem",
+        "OFF": "Aus"
+      },
+      "weekHeading": "Letzte 7 Tage",
+      "weekNote": "Importe pro Tag, alle Nutzer. Alle zahlen mit ihrem eigenen Schlüssel."
     }
   }
 }

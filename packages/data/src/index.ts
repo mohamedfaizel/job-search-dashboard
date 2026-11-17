@@ -2,9 +2,11 @@ export * from './api/types';
 export { API_URL, ApiError, getErrorCode, getErrorMessage, setApiUrl } from './api/client';
 export type { ErrorCode } from './api/client';
 export {
+  adminOverviewKey,
   adminUsersKey,
   appSettingsKey,
   invitesKey,
+  useAdminOverview,
   useAdminUsers,
   useAppSettings,
   useCancelInvite,

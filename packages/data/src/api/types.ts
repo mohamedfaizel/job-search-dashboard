@@ -1144,3 +1144,30 @@ export interface Invite {
   uses: number;
   state: 'ACTIVE' | 'EXPIRED' | 'USED_UP';
 }
+
+export type HealthService =
+  'DATABASE' | 'PDF_MAKER' | 'RESUME_MATCHER' | 'GMAIL' | 'SCHEDULER' | 'STILL_OPEN';
+
+/** One part of the server on Admin › Overview. */
+export interface HealthCheck {
+  service: HealthService;
+  /** OK = running; DOWN = set up but not answering; OFF = switched off. */
+  state: 'OK' | 'DOWN' | 'OFF';
+  /** OFF because of .env, not the Admin › Limits switch. */
+  offInEnv: boolean;
+  /** Scheduler: when the next saved search is due. */
+  nextRunAt: string | null;
+}
+
+/** Admin › Overview: counts over every account, and server health. */
+export interface AdminOverview {
+  users: number;
+  newThisWeek: number;
+  activeThisWeek: number;
+  withJobKey: number;
+  importsToday: number;
+  jobsAddedToday: number;
+  /** Imports per day, oldest first, today last. */
+  week: { day: string; imports: number }[];
+  health: HealthCheck[];
+}

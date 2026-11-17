@@ -6,9 +6,10 @@ import type { KeyboardEvent } from 'react';
 import { useState } from 'react';
 import { AccessPanel } from './components/AccessPanel';
 import { LimitsPanel } from './components/LimitsPanel';
+import { OverviewPanel } from './components/OverviewPanel';
 import { UsersPanel } from './components/UsersPanel';
 
-const TABS = ['users', 'access', 'limits'] as const;
+const TABS = ['overview', 'users', 'access', 'limits'] as const;
 type Tab = (typeof TABS)[number];
 
 /**
@@ -19,14 +20,14 @@ type Tab = (typeof TABS)[number];
 export function AdminPage() {
   const t = useTranslations('Admin');
   const { data: me } = useMe();
-  const [tab, setTab] = useState<Tab>('users');
+  const [tab, setTab] = useState<Tab>('overview');
   if (!me) return null;
 
   // Arrow keys move between tabs, like any tab list.
   const onKey = (event: KeyboardEvent<HTMLButtonElement>) => {
     const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
     if (!step) return;
-    const next = TABS[(TABS.indexOf(tab) + step + TABS.length) % TABS.length] ?? 'users';
+    const next = TABS[(TABS.indexOf(tab) + step + TABS.length) % TABS.length] ?? 'overview';
     setTab(next);
     document.getElementById(`admin-tab-${next}`)?.focus();
   };
@@ -66,6 +67,7 @@ export function AdminPage() {
             ))}
           </div>
           <div id={`admin-panel-${tab}`} role="tabpanel" aria-labelledby={`admin-tab-${tab}`}>
+            {tab === 'overview' && <OverviewPanel />}
             {tab === 'users' && <UsersPanel meId={me.id} />}
             {tab === 'access' && <AccessPanel />}
             {tab === 'limits' && <LimitsPanel />}
