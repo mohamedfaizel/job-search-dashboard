@@ -129,6 +129,9 @@ describe('SyncPanel', () => {
 
     await userEvent.click(screen.getByText('Page settings'));
     const pageSize = screen.getByLabelText('Jobs per page');
+    // The plan limit is plain helper text under the fields, not a tooltip that covers them.
+    expect(pageSize).toHaveAccessibleDescription('Your JobHunter plan may allow at most 25');
+    expect(fold?.querySelector('[role="tooltip"]')).toBeNull();
     await userEvent.clear(pageSize);
     await userEvent.type(pageSize, '0');
     await userEvent.click(screen.getByText('Page settings'));

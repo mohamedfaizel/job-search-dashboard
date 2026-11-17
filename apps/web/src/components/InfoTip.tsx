@@ -4,11 +4,13 @@ import { useId } from 'react';
  * A small ⓘ that shows its text on hover and on keyboard focus: details that would make a form
  * long stay one tap or hover away. Screen readers read the text as the button's description.
  * The tip is display:none until shown, so a hidden tip near the screen edge can't widen the page.
+ * It uses a named group (`group/tip`), so a parent that is also a `group` (like a <details> fold)
+ * can't open it when you hover or type in a field next to it.
  */
 export function InfoTip({ label, text }: { label: string; text: string }) {
   const tipId = useId();
   return (
-    <span className="group relative inline-flex align-middle">
+    <span className="group/tip relative inline-flex align-middle">
       <button
         type="button"
         aria-label={label}
@@ -20,7 +22,7 @@ export function InfoTip({ label, text }: { label: string; text: string }) {
       <span
         id={tipId}
         role="tooltip"
-        className="pointer-events-none absolute top-full left-1/2 z-20 mt-1 hidden w-64 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded bg-slate-900 px-2.5 py-1.5 text-xs font-normal text-white shadow group-focus-within:block group-hover:block"
+        className="pointer-events-none absolute top-full left-1/2 z-20 mt-1 hidden w-64 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded bg-slate-900 px-2.5 py-1.5 text-xs font-normal text-white shadow group-focus-within/tip:block group-hover/tip:block"
       >
         {text}
       </span>

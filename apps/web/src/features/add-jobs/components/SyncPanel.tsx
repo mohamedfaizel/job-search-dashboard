@@ -476,12 +476,16 @@ export function SyncPanel({ loaded = null }: Props) {
                     label={t('sync.pageSize')}
                     htmlFor="sync-pageSize"
                     error={errors.pageSize?.message}
-                    tip={t('sync.pageSizeHint')}
                   >
                     <input
                       inputMode="numeric"
                       {...register('pageSize')}
                       {...a11y('pageSize')}
+                      aria-describedby={
+                        errors.pageSize
+                          ? 'sync-pageSize-error sync-pageSize-hint'
+                          : 'sync-pageSize-hint'
+                      }
                       className={inputClass}
                     />
                   </Field>
@@ -497,6 +501,10 @@ export function SyncPanel({ loaded = null }: Props) {
                       className={inputClass}
                     />
                   </Field>
+                  {/* Helper text under the fields, not a tooltip, so nothing covers the inputs. */}
+                  <p id="sync-pageSize-hint" className="text-xs text-slate-500 sm:col-span-3">
+                    {t('sync.pageSizeHint')}
+                  </p>
                 </>
               )}
             </div>
