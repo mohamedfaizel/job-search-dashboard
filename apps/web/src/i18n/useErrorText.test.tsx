@@ -38,7 +38,11 @@ describe('useErrorText', () => {
   });
 
   it('says so when the API can not be reached', () => {
-    expect(errorText('en')(new TypeError('Failed to fetch'))).toMatch(/Can’t reach the API at/);
-    expect(errorText('de')(new TypeError('Failed to fetch'))).toMatch(/nicht erreichbar/);
+    expect(errorText('en')(new TypeError('Failed to fetch'))).toBe(
+      'Can’t connect right now. Check your internet, or try again in a minute.',
+    );
+    expect(errorText('de')(new TypeError('Failed to fetch'))).toBe(
+      'Gerade keine Verbindung. Prüfe dein Internet oder versuche es in einer Minute erneut.',
+    );
   });
 });

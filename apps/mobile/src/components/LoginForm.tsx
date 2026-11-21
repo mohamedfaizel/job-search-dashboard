@@ -5,9 +5,8 @@ import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslations } from 'use-intl';
 import logo from '../../assets/icon.png';
-import { API_URL } from '../lib/api';
 import { colors } from '../lib/theme';
-import { useErrorText } from '../lib/useErrorText';
+import { isNetworkError, useErrorText } from '../lib/useErrorText';
 
 /** Email and password, the same account as on the website. */
 export function LoginForm() {
@@ -17,6 +16,7 @@ export function LoginForm() {
   const logIn = useLogIn();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const offline = logIn.isError && isNetworkError(logIn.error);
   const ready = email.trim() !== '' && password !== '' && !logIn.isPending;
 
   const submit = () => {
@@ -29,6 +29,11 @@ export function LoginForm() {
         },
       },
     );
+  };
+
+  const buttonLabel = () => {
+    if (logIn.isPending) return t('loggingIn');
+    return offline ? t('tryAgain') : t('logIn');
   };
 
   return (
@@ -63,7 +68,13 @@ export function LoginForm() {
           style={styles.input}
         />
 
-        {logIn.isError && (
+        {offline && (
+          <View accessible accessibilityRole="alert" style={styles.offline}>
+            <Text style={styles.offlineTitle}>{t('offlineTitle')}</Text>
+            <Text style={styles.offlineBody}>{t('offlineBody')}</Text>
+          </View>
+        )}
+        {logIn.isError && !offline && (
           <Text accessibilityRole="alert" style={styles.error}>
             {errorText(logIn.error)}
           </Text>
@@ -80,9 +91,8 @@ export function LoginForm() {
             pressed && styles.buttonPressed,
           ]}
         >
-          <Text style={styles.buttonText}>{logIn.isPending ? t('loggingIn') : t('logIn')}</Text>
+          <Text style={styles.buttonText}>{buttonLabel()}</Text>
         </Pressable>
-        <Text style={styles.server}>{t('server', { url: API_URL })}</Text>
       </View>
     </SafeAreaView>
   );
@@ -104,6 +114,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
   },
+  offline: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    gap: 2,
+  },
+  offlineTitle: { color: colors.redText, fontSize: 14, fontWeight: '700' },
+  offlineBody: { color: colors.redText, fontSize: 14 },
   error: { color: colors.redText, fontSize: 14, marginTop: 8 },
   button: {
     backgroundColor: colors.gold,
@@ -115,5 +136,4 @@ const styles = StyleSheet.create({
   buttonOff: { opacity: 0.5 },
   buttonPressed: { opacity: 0.8 },
   buttonText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  server: { fontSize: 12, color: colors.muted, textAlign: 'center', marginTop: 10 },
 });

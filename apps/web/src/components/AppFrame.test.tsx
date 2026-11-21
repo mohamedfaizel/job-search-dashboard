@@ -226,6 +226,37 @@ describe('AppFrame', () => {
     expect(savedLocales).toEqual([]);
   });
 
+  it('shows a friendly page when the API is down, and Try again brings the app back', async () => {
+    session.user = ADMIN;
+    let down = true;
+    server.use(
+      api.query('Me', () =>
+        down ? HttpResponse.error() : HttpResponse.json({ data: { me: session.user } }),
+      ),
+    );
+    renderFrame();
+
+    const card = await screen.findByRole('alert', {}, { timeout: 5000 });
+    expect(within(card).getByRole('heading', { name: 'Can’t connect right now' })).toBeVisible();
+    expect(card).toHaveTextContent('Your jobs and applications are safe.');
+    expect(card).toHaveTextContent('tries again by itself every 30 seconds');
+    // Plain words only: no address and no commands.
+    expect(card).not.toHaveTextContent(/localhost|graphql|API|pnpm/);
+    expect(screen.getByText('Job Search Hunter')).toBeInTheDocument();
+
+    down = false;
+    await userEvent.click(within(card).getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByText('Page content')).toBeInTheDocument();
+  });
+
+  it('says the API is down in German too', async () => {
+    server.use(api.query('Me', () => HttpResponse.error()));
+    renderFrame('de');
+    const card = await screen.findByRole('alert', {}, { timeout: 5000 });
+    expect(within(card).getByRole('heading', { name: 'Gerade keine Verbindung' })).toBeVisible();
+    expect(within(card).getByRole('button', { name: 'Erneut versuchen' })).toBeEnabled();
+  });
+
   it('makes initials from a name', () => {
     expect(initialsOf('Mohamed Faizel Jamal')).toBe('MF');
     expect(initialsOf('  anna ')).toBe('A');
