@@ -39,7 +39,11 @@ export class ResumeSyncService {
       this.prisma.matcherResume.findUnique({ where: { userId } }),
     ]);
     const uploadedAt = profile?.resumeUploadedAt ?? null;
-    const base = { fileName: copy?.fileName ?? null, syncedAt: copy?.syncedAt ?? null };
+    const base = {
+      fileName: copy?.fileName ?? null,
+      syncedAt: copy?.syncedAt ?? null,
+      error: null,
+    };
 
     if (!uploadedAt) {
       return { ...base, state: MatcherResumeState.NO_FILE, message: NO_FILE_MESSAGE };
@@ -63,6 +67,7 @@ export class ResumeSyncService {
         ...base,
         state: MatcherResumeState.FAILED,
         message: copy.error ?? AI_FAILED_MESSAGE,
+        error: copy.error,
       };
     }
     return {

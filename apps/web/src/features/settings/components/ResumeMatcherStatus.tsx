@@ -9,6 +9,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { markKeyFailed, noteAiResult } from '../../../lib/ai-status';
+import { useMatcherText } from '../../../lib/matcher-text';
 
 /**
  * Shows whether Resume-Matcher, which scores jobs against your resume with your AI key, is
@@ -24,6 +25,7 @@ export function ResumeMatcherStatus() {
   const ready = status.data?.reachable ?? false;
   // "Not running" is the admin's to fix; everyone else just reads that it's not available.
   const isAdmin = useMe().data?.role === 'ADMIN';
+  const text = useMatcherText();
 
   return (
     <section
@@ -54,7 +56,12 @@ export function ResumeMatcherStatus() {
           {t('checkFailed', { error: errorText(status.error) })}
         </p>
       ) : (
-        status.data && <p className="text-sm text-slate-700">{status.data.message}</p>
+        status.data && (
+          <Sentence
+            text={text.status(status.data, isAdmin)}
+            detail={text.detail(status.data.error)}
+          />
+        )
       )}
       {ready && (
         <div className="flex flex-wrap items-center gap-3">
@@ -81,9 +88,11 @@ export function ResumeMatcherStatus() {
       {/* aria-live reads the result out to screen readers when it arrives. */}
       <div aria-live="polite">
         {aiResult && (
-          <p className={`text-sm ${aiResult.aiHealthy ? 'text-emerald-700' : 'text-red-700'}`}>
-            {aiResult.message}
-          </p>
+          <Sentence
+            className={aiResult.aiHealthy ? 'text-emerald-700' : 'text-red-700'}
+            text={text.status(aiResult, isAdmin)}
+            detail={text.detail(aiResult.error)}
+          />
         )}
         {testAi.isError && <p className="text-sm text-red-700">{errorText(testAi.error)}</p>}
       </div>
@@ -100,6 +109,7 @@ function MatcherResumePanel() {
   // Also true when the upload above started the send.
   const syncing = useIsSyncingResume();
   const state = resume.data?.state;
+  const text = useMatcherText();
 
   return (
     <div className="space-y-2 border-t border-slate-100 pt-3">
@@ -126,9 +136,11 @@ function MatcherResumePanel() {
           <p className="text-sm text-red-700">{errorText(resume.error)}</p>
         ) : (
           resume.data && (
-            <p className={`text-sm ${state === 'FAILED' ? 'text-red-700' : 'text-slate-700'}`}>
-              {resume.data.message}
-            </p>
+            <Sentence
+              className={state === 'FAILED' ? 'text-red-700' : 'text-slate-700'}
+              text={text.resume(resume.data)}
+              detail={text.detail(resume.data.error)}
+            />
           )
         )}
         {sync.isError && !syncing && (
@@ -147,6 +159,24 @@ function MatcherResumePanel() {
           {state === 'NOT_SENT' ? t('send') : t('sendAgain')}
         </button>
       )}
+    </div>
+  );
+}
+
+/** One translated sentence, with the raw (English) error in small print under it. */
+function Sentence({
+  text,
+  detail,
+  className = 'text-slate-700',
+}: {
+  text: string;
+  detail: string | null;
+  className?: string;
+}) {
+  return (
+    <div className={`text-sm ${className}`}>
+      <p>{text}</p>
+      {detail && <p className="mt-0.5 break-words text-xs opacity-80">{detail}</p>}
     </div>
   );
 }

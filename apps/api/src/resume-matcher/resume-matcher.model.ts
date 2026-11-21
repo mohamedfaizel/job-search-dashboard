@@ -40,6 +40,13 @@ export class ResumeMatcherStatusModel {
 
   @Field({ description: 'One sentence for the user saying what works and what to fix' })
   message!: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'The raw error from Resume-Matcher or the AI, in English, so the app can show it under its own translated sentence',
+  })
+  error!: string | null;
 }
 
 /** Where your master resume stands in Resume-Matcher. */
@@ -68,6 +75,12 @@ export class MatcherResumeModel {
 
   @Field({ description: 'One sentence for the user saying where things stand' })
   message!: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'What Resume-Matcher said went wrong, in English. Null unless FAILED',
+  })
+  error!: string | null;
 }
 
 @ObjectType('JobMatch', {

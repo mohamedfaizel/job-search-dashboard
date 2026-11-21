@@ -34,6 +34,7 @@ export class ResumeMatcherService {
       aiProvider: null,
       aiModel: null,
       message: '',
+      error: null,
     };
     if (!status.configured) {
       status.message = isAdmin
@@ -46,6 +47,8 @@ export class ResumeMatcherService {
       await this.client.health();
       status.reachable = true;
     } catch (error) {
+      // The raw error names hosts and ports, so only admins get it.
+      if (isAdmin) status.error = errorText(error);
       status.message = isAdmin ? `${errorText(error)}. Start it with pnpm rm:up.` : RM_UNAVAILABLE;
       return status;
     }
@@ -75,7 +78,8 @@ export class ResumeMatcherService {
       status.aiConfigured = rm.llm_configured;
       status.aiHealthy = rm.llm_healthy;
     } catch (error) {
-      status.message = errorText(error);
+      status.error = errorText(error);
+      status.message = status.error;
       return status;
     }
     status.message = status.aiHealthy

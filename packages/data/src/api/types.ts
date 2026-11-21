@@ -480,7 +480,10 @@ export interface ResumeMatcherStatus {
   /** The provider and model Resume-Matcher really uses; its own Settings page beats .env. */
   aiProvider: string | null;
   aiModel: string | null;
+  /** English, for logs and old clients; the app builds its own translated sentence. */
   message: string;
+  /** The raw error from Resume-Matcher or the AI, shown under the translated sentence. */
+  error: string | null;
 }
 
 export type MatcherResumeState = 'NO_FILE' | 'NOT_SENT' | 'OUTDATED' | 'READY' | 'FAILED';
@@ -492,6 +495,8 @@ export interface MatcherResume {
   fileName: string | null;
   syncedAt: string | null;
   message: string;
+  /** What Resume-Matcher said went wrong. Null unless FAILED. */
+  error: string | null;
 }
 
 export type JobMatchStatus = 'PENDING' | 'READY' | 'FAILED';

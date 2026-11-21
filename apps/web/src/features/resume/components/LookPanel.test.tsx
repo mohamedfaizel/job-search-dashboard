@@ -1,7 +1,16 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { renderWithData } from '../../profile/test/render';
-import { myDesign, requests, SAVED_DESIGN, wordTemplate } from '../../profile/test/server';
+import {
+  api,
+  ME,
+  myDesign,
+  requests,
+  SAVED_DESIGN,
+  server,
+  wordTemplate,
+} from '../../profile/test/server';
 import { LookPanel } from './LookPanel';
 
 /** Changes save half a second after the last one. */
@@ -127,9 +136,20 @@ describe('Look tab', () => {
     expect(screen.queryByText('Small.')).not.toBeInTheDocument();
   });
 
-  it('says how to start the renderer when it is not running', async () => {
+  it('tells a normal user only that templates are not available now', async () => {
     await renderLook();
-    expect(screen.getByText(/isn’t running/)).toHaveTextContent('pnpm pdf:up');
+    expect(
+      await screen.findByText(/PDF templates are not available right now/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/pnpm pdf:up/)).not.toBeInTheDocument();
+  });
+
+  it('tells an admin how to start the renderer when it is not running', async () => {
+    server.use(
+      api.query('Me', () => HttpResponse.json({ data: { me: { ...ME, role: 'ADMIN' } } })),
+    );
+    await renderLook();
+    expect(await screen.findByText(/isn’t running/)).toHaveTextContent('pnpm pdf:up');
     // Without a photo, it can't be switched on.
     expect(screen.getByRole('checkbox', { name: 'Show my photo on the resume' })).toBeDisabled();
   });

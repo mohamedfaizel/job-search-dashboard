@@ -448,6 +448,7 @@ export const RESUME_MATCHER_STATUS = /* GraphQL */ `
       aiProvider
       aiModel
       message
+      error
     }
   }
 `;
@@ -457,6 +458,7 @@ const MATCHER_RESUME_FIELDS = /* GraphQL */ `
   fileName
   syncedAt
   message
+  error
 `;
 
 export const MY_MATCHER_RESUME = /* GraphQL */ `

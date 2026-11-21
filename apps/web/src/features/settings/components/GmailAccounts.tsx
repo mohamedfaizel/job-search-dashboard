@@ -1,4 +1,4 @@
-import { GMAIL_CONNECT_URL, useDisconnectGmail, useGmailStatus } from '@jobsearch/data';
+import { GMAIL_CONNECT_URL, useDisconnectGmail, useGmailStatus, useMe } from '@jobsearch/data';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -28,6 +28,8 @@ function clearCameBack(): void {
 export function GmailAccounts() {
   const errorText = useErrorText();
   const t = useTranslations('Settings.mail');
+  // The .env names are for whoever runs the server; everyone else reads it isn't there.
+  const isAdmin = useMe().data?.role === 'ADMIN';
   const format = useFormatter();
   const status = useGmailStatus();
   const disconnect = useDisconnectGmail();
@@ -121,7 +123,9 @@ export function GmailAccounts() {
                 {accounts.length === 0 ? t('connect') : t('connectAnother')}
               </a>
             ) : (
-              <p className="text-sm text-amber-800">{t('notConfigured')}</p>
+              <p className="text-sm text-amber-800">
+                {isAdmin ? t('notConfigured') : t('notAvailable')}
+              </p>
             )}
           </div>
         </>

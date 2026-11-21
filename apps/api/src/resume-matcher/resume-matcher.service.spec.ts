@@ -74,6 +74,7 @@ describe('ResumeMatcherService.getStatus', () => {
       aiProvider: 'Claude',
       aiModel: 'claude-sonnet-5-5',
       message: 'Resume-Matcher is running.',
+      error: null,
     });
     // /status sends a paid test message to the AI provider, so it must not run here.
     expect(calls).toEqual(['health']);
