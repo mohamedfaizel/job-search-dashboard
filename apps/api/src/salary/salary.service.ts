@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { apiError } from '../common/api-error';
+import { listedFor } from '../jobs/listed-for';
 import { PrismaService } from '../prisma/prisma.service';
 import { buildNegotiationPrompt } from './negotiation-prompt';
 import { salaryRange } from './salary';
@@ -19,8 +20,8 @@ export class SalaryService {
     jobId: string,
     now = new Date(),
   ): Promise<SalaryRange & { expectation: string; prompt: string }> {
-    const job = await this.prisma.job.findUnique({
-      where: { id: jobId },
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, ...listedFor(userId) },
       include: { company: { select: { name: true } } },
     });
     if (!job)

@@ -81,10 +81,25 @@ export function AppFrame({ children }: { children: ReactNode }) {
     if (user?.onboarded === false && pathname !== WELCOME) router.replace(WELCOME);
   }, [user, pathname, router]);
 
+  // The API says nobody is logged in, but the browser may still hold the old session cookie (it
+  // expired, or an admin switched the account off or deleted it). The server only checks that the
+  // cookie is there, so it would send you from /login straight back here, and the page would hang
+  // on "Loading…". Logging out first clears that cookie.
+  const clearingCookie = useRef(false);
+  const { mutate: clearSession } = logOut;
   useEffect(() => {
     if (isPending || error || user) return;
-    router.replace(loggingOut.current ? '/login' : `/login?next=${encodeURIComponent(pathname)}`);
-  }, [isPending, error, user, router, pathname]);
+    if (loggingOut.current) {
+      router.replace('/login');
+      return;
+    }
+    if (clearingCookie.current) return;
+    clearingCookie.current = true;
+    const toLogin = () => {
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    };
+    clearSession(undefined, { onSettled: toLogin });
+  }, [isPending, error, user, router, pathname, clearSession]);
 
   if (error) {
     return (

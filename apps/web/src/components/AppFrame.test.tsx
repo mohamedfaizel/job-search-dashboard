@@ -1,10 +1,11 @@
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import type { Locale } from '@/i18n/config';
 import { Intl } from '../test/intl';
 import { location, router } from '../test/navigation';
-import { ADMIN, savedLocales, session } from '../test/server';
+import { ADMIN, api, savedLocales, server, session } from '../test/server';
 import { initialsOf } from './AccountMenu';
 import { AppFrame } from './AppFrame';
 
@@ -157,6 +158,25 @@ describe('AppFrame', () => {
       expect(router.replace).toHaveBeenCalledWith('/login?next=%2Ftracker');
     });
     expect(screen.queryByText('Page content')).toBeNull();
+  });
+
+  it('clears an old cookie before /login, so the page never hangs on Loading', async () => {
+    // The API says nobody, but the browser still has a cookie (expired, or the account was
+    // switched off): without logging out first, the server sends /login straight back here.
+    let loggedOut = 0;
+    server.use(
+      api.mutation('LogOut', () => {
+        loggedOut += 1;
+        return HttpResponse.json({ data: { logOut: true } });
+      }),
+    );
+    location.pathname = '/jobs';
+    renderFrame();
+
+    await vi.waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith('/login?next=%2Fjobs');
+    });
+    expect(loggedOut).toBe(1);
   });
 
   it('switches to German and saves it on your account', async () => {

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, listAllJobsFor, resetDatabase, seedTestUsers } from './helpers';
 
 const FIELDS = 'id title situation task action result reflection tags';
 const LIST = `query { stories { ${FIELDS} } }`;
@@ -89,6 +89,7 @@ describe('story bank', () => {
         description: 'You build pipelines with Airflow and dbt.',
       },
     });
+    await listAllJobsFor(t.prisma, 2);
     const res = await t.asUser<{ jobInsights: { interviewPrompt: string } }>(
       `query ($jobId: ID!) { jobInsights(jobId: $jobId) { interviewPrompt } }`,
       { jobId: job.data!.createJob.id },

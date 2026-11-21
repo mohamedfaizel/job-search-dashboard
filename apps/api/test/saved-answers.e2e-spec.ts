@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, listAllJobsFor, resetDatabase, seedTestUsers } from './helpers';
 
 const LIST = `query { savedAnswers { id question answer } }`;
 const SAVE = `mutation ($question: String!, $answer: String!) { saveAnswer(question: $question, answer: $answer) { id question answer } }`;
@@ -70,6 +70,7 @@ describe('saved answers', () => {
         description: 'Please tell us your salary expectation.',
       },
     });
+    await listAllJobsFor(t.prisma, 2);
     const insights = await t.asUser<{ jobInsights: { prompt: string } }>(
       `query ($jobId: ID!) { jobInsights(jobId: $jobId) { prompt } }`,
       { jobId: job.data!.createJob.id },
@@ -95,6 +96,7 @@ describe('saved answers', () => {
       input: { title: 'Frontend Engineer', companyName: 'Acme' },
     });
     const jobId = job.data!.createJob.id;
+    await listAllJobsFor(t.prisma, 2);
     const none = await t.asUser(SAVE_ANSWERS, { jobId, answers: '{}' });
     expect(none.errors?.[0]?.extensions).toMatchObject({ apiCode: 'JOB_RESUME_MISSING' });
 

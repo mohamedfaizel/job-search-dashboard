@@ -59,9 +59,12 @@ export const build = {
   current: { ...START },
   /** Pages the next PDF has. */
   pages: 1,
+  /** False: the PDF maker is off, so the next PDF is the plain one. */
+  styled: true,
   reset() {
     this.current = { ...START };
     this.pages = 1;
+    this.styled = true;
   },
 };
 
@@ -162,7 +165,7 @@ export const builderHandlers = [
       headers: {
         'Content-Type': 'application/pdf',
         'X-Pdf-Pages': String(build.pages),
-        'X-Pdf-Styled': '1',
+        'X-Pdf-Styled': build.styled ? '1' : '0',
       },
     });
   }),

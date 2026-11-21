@@ -1,8 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { router } from '../../test/navigation';
 import { renderWithData } from '../profile/test/render';
-import { requests, server } from '../profile/test/server';
+import { api, ME, requests, server } from '../profile/test/server';
 import { ResumeBuilderPage } from './ResumeBuilderPage';
 import { build, builderHandlers, lastSaved } from './test/server';
 
@@ -53,6 +54,26 @@ describe('Resume builder', () => {
       expect(meter).toHaveAttribute('aria-valuetext', '3 of 2');
     });
     expect(screen.getByText(/Longer than your page limit of 2/)).toBeInTheDocument();
+  });
+
+  it('says the preview is the plain PDF, with the start command for admins only', async () => {
+    build.styled = false;
+    await renderBuilder();
+    expect(
+      await screen.findByText(
+        'This is the plain PDF. Your template shows here again when PDF templates are back.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/pnpm/)).toBeNull();
+  });
+
+  it('shows admins how to start the PDF maker when the preview is plain', async () => {
+    build.styled = false;
+    server.use(
+      api.query('Me', () => HttpResponse.json({ data: { me: { ...ME, role: 'ADMIN' } } })),
+    );
+    await renderBuilder();
+    expect(await screen.findByText(/Start the PDF box \(pnpm pdf:up\)/)).toBeInTheDocument();
   });
 
   it('hides, moves and deletes sections, and Undo brings them back', async () => {

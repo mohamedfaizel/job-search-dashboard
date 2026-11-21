@@ -518,6 +518,7 @@
     "letterTooLong": "Your cover letter is longer than {max, plural, one {# page} other {# pages}}. Shorten it.",
     "noLetterYet": "Write your letter to see the PDF",
     "plainPreview": "This is the plain PDF. Start the PDF box (pnpm pdf:up) to see your template here.",
+    "plainPreviewUser": "This is the plain PDF. Your template shows here again when PDF templates are back.",
     "previewTitle": "PDF preview of your resume",
     "makingPdf": "Making your PDF…",
     "improve": {
