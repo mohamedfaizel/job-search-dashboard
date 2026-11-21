@@ -2,6 +2,7 @@ import { useMe, useTestAiConnection } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { AiState } from '../../../lib/ai-status';
 import { markKeyFailed, noteAiResult, useAiState } from '../../../lib/ai-status';
+import { useMatcherText } from '../../../lib/matcher-text';
 
 const TAG = {
   chat: 'text-amber-500',
@@ -42,6 +43,7 @@ export function AiOffNote({ state, compact = false }: { state: AiState; compact?
   const t = useTranslations('Jobs.aiLabels');
   const test = useTestAiConnection();
   const { data: me } = useMe();
+  const text = useMatcherText();
   if (state === 'on') return null;
   // How to set Resume-Matcher up or start it is for admins; everyone else reads it's not there now.
   const serverSide = state === 'notSetUp' || state === 'notRunning';
@@ -82,7 +84,9 @@ export function AiOffNote({ state, compact = false }: { state: AiState; compact?
           {t('openSettings')}
         </a>
         {test.data && !(test.data.aiConfigured && test.data.aiHealthy) && (
-          <span className="basis-full text-xs text-red-700">{test.data.message}</span>
+          <span className="basis-full break-words text-xs text-red-700">
+            {text.status(test.data, me?.role === 'ADMIN')} {text.detail(test.data.error)}
+          </span>
         )}
       </div>
     </div>

@@ -369,6 +369,7 @@
       "connect": "Gmail verbinden",
       "connectAnother": "Weiteres Gmail-Konto verbinden",
       "notConfigured": "Gmail ist auf diesem Server noch nicht eingerichtet. Trage GOOGLE_CLIENT_ID und GOOGLE_CLIENT_SECRET in deine .env-Datei ein (siehe README).",
+      "notAvailable": "Gmail ist auf diesem Server noch nicht verfügbar.",
       "disconnect": "Trennen",
       "disconnectLabel": "{email} trennen",
       "lastChecked": "Zuletzt geprüft: {date}",
@@ -401,7 +402,27 @@
       },
       "sending": "Wird gesendet… Die KI von Resume-Matcher liest deinen Lebenslauf, das kann eine Minute dauern.",
       "send": "Lebenslauf senden",
-      "sendAgain": "Erneut senden"
+      "sendAgain": "Erneut senden",
+      "text": {
+        "status": {
+          "off": "Resume-Matcher ist ausgeschaltet: Setze RESUME_MATCHER_URL in der .env.",
+          "unavailable": "Resume-Matcher ist gerade nicht verfügbar. Bitte versuche es später noch einmal.",
+          "down": "Resume-Matcher antwortet nicht. Starte es mit pnpm rm:up.",
+          "running": "Resume-Matcher läuft.",
+          "noKey": "Resume-Matcher läuft, aber du hast noch keinen KI-Schlüssel. Füge einen unter Einstellungen › API-Schlüssel hinzu.",
+          "aiOk": "Resume-Matcher läuft und {provider} hat geantwortet.",
+          "aiFailed": "Resume-Matcher läuft, aber {provider} ({model}) hat nicht geantwortet: Prüfe Schlüssel, Modell und Guthaben.",
+          "aiError": "Der KI-Test hat nicht geklappt."
+        },
+        "resume": {
+          "NO_FILE": "Lade deinen Lebenslauf auf der Seite Lebenslauf als PDF- oder Word-Datei hoch, damit Resume-Matcher ihn nutzen kann.",
+          "NOT_SENT": "Dein Lebenslauf wurde noch nicht an Resume-Matcher gesendet.",
+          "OUTDATED": "Du hast einen neueren Lebenslauf hochgeladen. Sende ihn erneut, damit Jobs damit abgeglichen werden.",
+          "READY": "Resume-Matcher hat {file} gelesen. Jobs werden damit abgeglichen.",
+          "FAILED": "Resume-Matcher hat die Datei bekommen, aber seine KI konnte sie nicht lesen. Prüfe den Schlüssel mit „KI-Verbindung testen“ und sende sie dann erneut."
+        },
+        "detail": "Details: {error}"
+      }
     }
   },
   "Resume": {

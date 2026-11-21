@@ -622,6 +622,7 @@ const handlers = [
           aiProvider: 'Claude',
           aiModel: 'claude-sonnet-5-5',
           message: 'Resume-Matcher is running.',
+          error: null,
         },
       },
     }),

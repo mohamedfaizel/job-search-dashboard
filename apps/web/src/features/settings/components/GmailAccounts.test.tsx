@@ -1,8 +1,9 @@
 import { API_URL, GMAIL_CONNECT_URL } from '@jobsearch/data';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { renderWithData } from '../../profile/test/render';
-import { gmail, requests } from '../../profile/test/server';
+import { api, gmail, ME, requests, server } from '../../profile/test/server';
 import { SettingsPage } from '../SettingsPage';
 
 const ACCOUNT = {
@@ -41,13 +42,25 @@ describe('Gmail accounts in Settings', () => {
     expect(within(section).queryByRole('button', { name: /Check/ })).not.toBeInTheDocument();
   });
 
-  it('says so when the server has no Google client', async () => {
+  it('tells a normal user only that Gmail is not available, without the .env names', async () => {
     gmail.configured = false;
+    const { section } = await openGmailTab();
+    expect(
+      await within(section).findByText('Gmail is not available on this server yet.'),
+    ).toBeVisible();
+    expect(within(section).queryByText(/GOOGLE_CLIENT_ID/)).not.toBeInTheDocument();
+    expect(within(section).queryByRole('link', { name: 'Connect Gmail' })).not.toBeInTheDocument();
+  });
+
+  it('tells an admin how to set Gmail up', async () => {
+    gmail.configured = false;
+    server.use(
+      api.query('Me', () => HttpResponse.json({ data: { me: { ...ME, role: 'ADMIN' } } })),
+    );
     const { section } = await openGmailTab();
     expect(
       await within(section).findByText(/Gmail is not set up on this server yet/),
     ).toBeVisible();
-    expect(within(section).queryByRole('link', { name: 'Connect Gmail' })).not.toBeInTheDocument();
   });
 
   it('shows the reason when an account could not be read', async () => {

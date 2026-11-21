@@ -30,23 +30,67 @@ describe('ResumeMatcherStatus', () => {
   });
 
   it('tells an admin how to start it', async () => {
-    downWith('Resume-Matcher at http://localhost:3100 is not reachable. Start it with pnpm rm:up.');
+    downWith(
+      'Resume-Matcher at http://localhost:3100 is not reachable. Start it with pnpm rm:up.',
+      'Resume-Matcher at http://localhost:3100 is not reachable',
+    );
     server.use(
       api.query('Me', () => HttpResponse.json({ data: { me: { ...ME, role: 'ADMIN' } } })),
     );
     renderWithData(<ResumeMatcherStatus />);
 
     expect(await screen.findByText('Not running')).toBeInTheDocument();
-    expect(screen.getByText(/Start it with pnpm rm:up/)).toBeInTheDocument();
+    expect(
+      screen.getByText("Resume-Matcher doesn't answer. Start it with pnpm rm:up."),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Details: .*localhost:3100/)).toBeInTheDocument();
+  });
+
+  it('speaks German, though the server sends English', async () => {
+    const user = userEvent.setup();
+    renderWithData(<ResumeMatcherStatus />, 'de');
+
+    expect(await screen.findByText('Läuft')).toBeInTheDocument();
+    expect(screen.getByText('Resume-Matcher läuft.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Dein Lebenslauf wurde noch nicht an Resume-Matcher gesendet.'),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'KI-Verbindung testen' }));
+
+    expect(
+      await screen.findByText('Resume-Matcher läuft und Claude hat geantwortet.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/answered|running/)).toBeNull();
+  });
+
+  it('keeps the AI error as a detail under the translated sentence', async () => {
+    const user = userEvent.setup();
+    server.use(
+      api.query('ResumeMatcherStatus', ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            resumeMatcherStatus: variables['checkAi']
+              ? { ...RM_RUNNING, message: '401 invalid x-api-key', error: '401 invalid x-api-key' }
+              : RM_RUNNING,
+          },
+        }),
+      ),
+    );
+    renderWithData(<ResumeMatcherStatus />, 'de');
+
+    await user.click(await screen.findByRole('button', { name: 'KI-Verbindung testen' }));
+
+    expect(await screen.findByText('Der KI-Test hat nicht geklappt.')).toBeInTheDocument();
+    expect(screen.getByText('Details: 401 invalid x-api-key')).toBeInTheDocument();
   });
 });
 
-/** Resume-Matcher is down, and the API says so with this message. */
-function downWith(message: string) {
+/** Resume-Matcher is down, and the API says so with this message (and error, for admins). */
+function downWith(message: string, error: string | null = null) {
   server.use(
     api.query('ResumeMatcherStatus', () =>
       HttpResponse.json({
-        data: { resumeMatcherStatus: { ...RM_RUNNING, reachable: false, message } },
+        data: { resumeMatcherStatus: { ...RM_RUNNING, reachable: false, message, error } },
       }),
     ),
   );
@@ -58,7 +102,9 @@ describe('your resume in Resume-Matcher', () => {
     renderWithData(<ResumeMatcherStatus />);
 
     expect(await screen.findByText('Not sent')).toBeInTheDocument();
-    expect(screen.getByText("ada.pdf hasn't been sent to Resume-Matcher yet.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your resume hasn't been sent to Resume-Matcher yet."),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Send resume' }));
 

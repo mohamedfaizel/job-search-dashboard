@@ -139,6 +139,7 @@ export const RM_RUNNING: ResumeMatcherStatus = {
   aiProvider: 'Claude',
   aiModel: 'claude-sonnet-5-5',
   message: 'Resume-Matcher is running.',
+  error: null,
 };
 
 export const MATCHER_RESUME: MatcherResume = {
@@ -146,6 +147,7 @@ export const MATCHER_RESUME: MatcherResume = {
   fileName: null,
   syncedAt: null,
   message: "ada.pdf hasn't been sent to Resume-Matcher yet.",
+  error: null,
 };
 
 /** The Gmail accounts connected in the current test, and whether the server has Google set up. */
