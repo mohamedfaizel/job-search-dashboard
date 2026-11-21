@@ -1,6 +1,11 @@
-import { API_URL, getErrorCode, getErrorMessage } from '@jobsearch/data';
+import { getErrorCode, getErrorMessage } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
+
+/** fetch() throws a TypeError when the API can't be reached at all (server down, no internet). */
+export function isNetworkError(error: unknown): boolean {
+  return error instanceof TypeError;
+}
 
 /**
  * Turns a failed request into a sentence in the language you picked. The API sends a code
@@ -14,8 +19,7 @@ export function useErrorText() {
     (error: unknown): string => {
       const known = getErrorCode(error);
       if (known && t.has(known.code)) return t(known.code, known.params);
-      // fetch() throws a TypeError when the API can't be reached at all.
-      if (error instanceof TypeError) return t('NETWORK', { url: API_URL });
+      if (isNetworkError(error)) return t('NETWORK');
       return getErrorMessage(error);
     },
     [t],

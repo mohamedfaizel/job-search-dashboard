@@ -7,6 +7,13 @@
     "en": "English",
     "de": "Deutsch"
   },
+  "ServerDown": {
+    "title": "Can’t connect right now",
+    "body": "Your jobs and applications are safe. Check your internet, or try again in a minute.",
+    "tryAgain": "Try again",
+    "trying": "Trying…",
+    "auto": "The page also tries again by itself every 30 seconds."
+  },
   "Nav": {
     "main": "Main",
     "jobs": "My Jobs",
@@ -2148,7 +2155,7 @@
     "moreAbout": "More about {field}"
   },
   "Errors": {
-    "NETWORK": "Can’t reach the API at {url}. Is it running?",
+    "NETWORK": "Can’t connect right now. Check your internet, or try again in a minute.",
     "LOGIN_REQUIRED": "Please log in.",
     "ADMIN_ONLY": "Only the admin can do this.",
     "SIGNUP_CLOSED": "Sign-up is closed on this server.",

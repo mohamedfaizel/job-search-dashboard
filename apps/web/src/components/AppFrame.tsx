@@ -6,16 +6,17 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { isLocale, writeLocaleCookie } from '@/i18n/config';
 import { AiNameIntl } from '@/lib/ai-chat';
 import { APP_NAME } from '@/lib/app-name';
-import { useErrorText } from '../i18n/useErrorText';
+import { isNetworkError, useErrorText } from '../i18n/useErrorText';
 import { AccountMenu } from './AccountMenu';
 import { FlagStripe } from './FlagStripe';
 import { Logo } from './Logo';
 import { JobsIcon, PlusIcon, ResumeIcon, SettingsIcon, TrackerIcon } from './NavIcons';
 import { NotificationBell } from './NotificationBell';
+import { ServerDown } from './ServerDown';
 
 interface NavItem {
   href: string;
@@ -60,7 +61,10 @@ function currentHref(pathname: string): string | undefined {
  */
 export function AppFrame({ children }: { children: ReactNode }) {
   const errorText = useErrorText();
-  const { data: user, isPending, error } = useMe();
+  const { data: user, isPending, error, refetch, isFetching } = useMe();
+  const retry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const router = useRouter();
   const pathname = usePathname();
   const logOut = useLogOut();
@@ -101,6 +105,8 @@ export function AppFrame({ children }: { children: ReactNode }) {
     clearSession(undefined, { onSettled: toLogin });
   }, [isPending, error, user, router, pathname, clearSession]);
 
+  // The API is down (or there is no internet): a friendly page that tries again by itself.
+  if (error && isNetworkError(error)) return <ServerDown onRetry={retry} retrying={isFetching} />;
   if (error) {
     return (
       <p role="alert" className="p-6 text-sm text-red-700">

@@ -7,6 +7,13 @@
     "en": "English",
     "de": "Deutsch"
   },
+  "ServerDown": {
+    "title": "Gerade keine Verbindung",
+    "body": "Deine Jobs und Bewerbungen sind sicher. Prüfe dein Internet oder versuche es in einer Minute erneut.",
+    "tryAgain": "Erneut versuchen",
+    "trying": "Wird versucht…",
+    "auto": "Die Seite versucht es außerdem alle 30 Sekunden von selbst."
+  },
   "Nav": {
     "main": "Hauptmenü",
     "jobs": "Meine Jobs",
@@ -2148,7 +2155,7 @@
     "moreAbout": "Mehr zu {field}"
   },
   "Errors": {
-    "NETWORK": "Die API unter {url} ist nicht erreichbar. Läuft sie?",
+    "NETWORK": "Gerade keine Verbindung. Prüfe dein Internet oder versuche es in einer Minute erneut.",
     "LOGIN_REQUIRED": "Bitte melde dich an.",
     "ADMIN_ONLY": "Das darf nur der Admin.",
     "SIGNUP_CLOSED": "Die Registrierung ist auf diesem Server geschlossen.",

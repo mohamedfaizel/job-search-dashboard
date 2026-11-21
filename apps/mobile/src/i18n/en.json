@@ -10,7 +10,9 @@
     "logIn": "Log in",
     "loggingIn": "Logging in…",
     "logOut": "Log out",
-    "server": "Server: {url}"
+    "offlineTitle": "Can’t connect right now",
+    "offlineBody": "Check your internet and try again in a minute.",
+    "tryAgain": "Try again"
   },
   "Jobs": {
     "title": "Jobs",
@@ -59,7 +61,7 @@
     "channel": "New jobs and interviews"
   },
   "Errors": {
-    "NETWORK": "Can’t reach the API at {url}. Is `pnpm dev` running on your computer, on the same Wi-Fi?",
+    "NETWORK": "Can’t connect right now. Check your internet and try again in a minute.",
     "WRONG_LOGIN": "Wrong email or password.",
     "TOO_MANY_TRIES": "Too many tries. Please wait {minutes} minutes and try again.",
     "unknown": "Something went wrong: {message}"

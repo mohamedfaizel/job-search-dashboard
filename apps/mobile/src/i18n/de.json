@@ -10,7 +10,9 @@
     "logIn": "Anmelden",
     "loggingIn": "Anmelden…",
     "logOut": "Abmelden",
-    "server": "Server: {url}"
+    "offlineTitle": "Gerade keine Verbindung",
+    "offlineBody": "Prüfe dein Internet und versuche es in einer Minute erneut.",
+    "tryAgain": "Erneut versuchen"
   },
   "Jobs": {
     "title": "Stellen",
@@ -59,7 +61,7 @@
     "channel": "Neue Jobs und Interviews"
   },
   "Errors": {
-    "NETWORK": "Die API unter {url} ist nicht erreichbar. Läuft `pnpm dev` auf deinem Computer, im selben WLAN?",
+    "NETWORK": "Gerade keine Verbindung. Prüfe dein Internet und versuche es in einer Minute erneut.",
     "WRONG_LOGIN": "E-Mail oder Passwort falsch.",
     "TOO_MANY_TRIES": "Zu viele Versuche. Bitte warte {minutes} Minuten und versuche es erneut.",
     "unknown": "Etwas ist schiefgelaufen: {message}"
