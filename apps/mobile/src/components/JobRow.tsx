@@ -43,7 +43,11 @@ export const JobRow = memo(function JobRow({ job, isNew }: { job: Job; isNew: bo
     >
       <View style={styles.main}>
         <View style={styles.titleLine}>
-          {isNew && <Text style={styles.new}>{t('new')}</Text>}
+          {isNew && (
+            <Text style={styles.new} numberOfLines={1}>
+              {t('new')}
+            </Text>
+          )}
           <Text style={styles.title} numberOfLines={2}>
             {job.title}
           </Text>
@@ -85,7 +89,8 @@ const styles = StyleSheet.create({
   main: { flex: 1, gap: 2 },
   titleLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   title: { flexShrink: 1, fontSize: 16, fontWeight: '600', color: colors.text },
-  new: { ...pill, backgroundColor: colors.gold, color: colors.black },
+  // Never squeezed by a long title: on small phones it broke into "Ne / w".
+  new: { ...pill, flexShrink: 0, backgroundColor: colors.gold, color: colors.black },
   status: { ...pill, alignSelf: 'flex-start', backgroundColor: colors.black, color: colors.gold },
   company: { fontSize: 14, color: colors.text },
   place: { fontSize: 13, color: colors.muted },

@@ -156,6 +156,13 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
 
   return (
     <div className="min-h-screen">
+      {/* The first Tab stop: keyboard users jump past the top bar to the page itself. */}
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-md bg-brand-400 px-3 py-2 text-sm font-semibold text-black focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        {t('skip')}
+      </a>
       <header className="bg-flag-black text-white">
         <div className="flex items-center gap-3 px-4 py-2.5 sm:px-6">
           <Link
@@ -205,7 +212,11 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
         </div>
       </header>
       <FlagStripe afterBlack />
-      <main className="px-4 py-6 pb-[calc(1.5rem+var(--tabbar))] sm:px-6">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="px-4 py-6 pb-[calc(1.5rem+var(--tabbar))] focus:outline-none sm:px-6"
+      >
         <AiNameIntl>{children}</AiNameIntl>
       </main>
       <PhoneTabs current={current} />

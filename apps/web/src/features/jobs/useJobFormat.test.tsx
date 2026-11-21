@@ -39,12 +39,16 @@ describe('useJobFormat', () => {
       '2 y ago',
     ]);
     const de = format('de');
-    expect([0, 3, 21, 90, 800].map((days) => de.timeAgo(ago(days), NOW))).toEqual([
+    expect([0, 1, 3, 14, 21, 60, 90, 365, 800].map((days) => de.timeAgo(ago(days), NOW))).toEqual([
       'Heute',
-      'vor 3 T.',
-      'vor 3 Wo.',
-      'vor 3 Mon.',
-      'vor 2 J.',
+      'vor 1 Tag',
+      'vor 3 Tagen',
+      'vor 2 Wochen',
+      'vor 3 Wochen',
+      'vor 2 Monaten',
+      'vor 3 Monaten',
+      'vor 1 Jahr',
+      'vor 2 Jahren',
     ]);
   });
 

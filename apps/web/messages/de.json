@@ -7,6 +7,11 @@
     "en": "English",
     "de": "Deutsch"
   },
+  "ImportWarnings": {
+    "boardNotFound": "{company} ({tool}): unter diesem Namen gibt es keine Karriereseite. Prüfe die Schreibweise.",
+    "boardDown": "{company} ({tool}): die Karriereseite antwortet gerade nicht. Versuche es später erneut.",
+    "tooMany": "{fit} Jobs passen; nur die neuesten {saved} wurden gespeichert. Grenze den Jobtitel oder die Orte ein."
+  },
   "ServerDown": {
     "title": "Gerade keine Verbindung",
     "body": "Deine Jobs und Bewerbungen sind sicher. Prüfe dein Internet oder versuche es in einer Minute erneut.",
@@ -15,6 +20,7 @@
     "auto": "Die Seite versucht es außerdem alle 30 Sekunden von selbst."
   },
   "Nav": {
+    "skip": "Zum Inhalt springen",
     "main": "Hauptmenü",
     "jobs": "Meine Jobs",
     "tracker": "Bewerbungen",
@@ -27,7 +33,7 @@
     "loading": "Wird geladen…",
     "tabs": "Tabs",
     "add": "Hinzufügen",
-    "account": "Kontomenü von {name}",
+    "account": "{initials}, Kontomenü von {name}",
     "accountMenu": "Konto",
     "language": "Sprache",
     "install": "App installieren",
@@ -944,6 +950,7 @@
     "loading": "Jobs werden geladen…",
     "noHidden": "Keine ausgeblendeten Jobs passen.",
     "noJobs": "Keine Jobs passen. Setz ein paar Filter zurück oder füge Jobs auf der Seite „Stellenmarkt“ hinzu.",
+    "allTracked": "Alle deine Jobs sind jetzt bei den Bewerbungen. Mehr findest du auf der Seite „Stellenmarkt“.",
     "empty": {
       "title": "Noch keine Jobs",
       "text": "Importiere Jobs von JobHunter, der Arbeitsagentur oder Karriereseiten von Firmen, oder füge einen von Hand hinzu.",
@@ -973,10 +980,10 @@
       "from": "ab {min}",
       "upTo": "bis {max}",
       "today": "Heute",
-      "days": "vor {n} T.",
-      "weeks": "vor {n} Wo.",
-      "months": "vor {n} Mon.",
-      "years": "vor {n} J.",
+      "days": "{n, plural, one {vor # Tag} other {vor # Tagen}}",
+      "weeks": "{n, plural, one {vor # Woche} other {vor # Wochen}}",
+      "months": "{n, plural, one {vor # Monat} other {vor # Monaten}}",
+      "years": "{n, plural, one {vor # Jahr} other {vor # Jahren}}",
       "aboutLevel": "etwa {level}",
       "estimatedLevelHint": "Aus den Worten der Anzeige geschätzt: Grundkenntnisse ≈ A2, gut ≈ B2, fließend oder verhandlungssicher ≈ C1, Muttersprache ≈ C2"
     },
@@ -1080,7 +1087,7 @@
       "estimated": "geschätzt",
       "statusFor": "Status für {job}",
       "fitEmpty": "Füge deinen Lebenslauf auf der Seite Lebenslauf hinzu, um zu sehen, wie gut du zu jedem Job passt",
-      "fitLabel": "Fit für {title}: {score} %",
+      "fitLabel": "Fit {score} %: {title}",
       "fitHint": "Wie viel von den Fähigkeiten, Schlagwörtern und dem Titel des Jobs dein Lebenslauf abdeckt. Klick für Details",
       "applyEmpty": "Speichere eine Antwort von {ai} im Bewerbungs-Kit, um ihre Bewertung zu sehen",
       "applyLabel": "Bewerbungs-Kit-Bewertung für {title}: {score} %",
@@ -2214,6 +2221,9 @@
     "ANSWERS_INVALID": "Deine Antworten konnten nicht gelesen werden.",
     "API_KEY_INVALID": "Das sieht nicht wie ein Schlüssel aus. Füge den ganzen Schlüssel ohne Leerzeichen ein.",
     "JOBHUNTER_TOKEN_MISSING": "Füge zuerst deinen JobHunter-Token unter Einstellungen › API-Schlüssel hinzu.",
+    "JOBHUNTER_TOKEN_REJECTED": "JobHunter hat deinen Token nicht angenommen. Prüfe ihn unter Einstellungen › API-Schlüssel.",
+    "JOBHUNTER_NO_CREDITS": "Dein JobHunter-Konto hat keine Credits mehr.",
+    "SOURCE_DOWN": "{source} antwortet gerade nicht. Versuche es in ein paar Minuten erneut.",
     "AI_KEY_MISSING": "Füge zuerst deinen Claude- oder OpenAI-API-Schlüssel unter Einstellungen › API-Schlüssel hinzu.",
     "API_KEY_NOT_FOUND": "Speichere zuerst den Schlüssel.",
     "RESUME_BUILD_INVALID": "Dieser Lebenslauf konnte nicht gespeichert werden. Lade die Seite neu und versuch es erneut.",
@@ -2228,7 +2238,7 @@
     "INVITE_NEEDED": "Für die Registrierung auf diesem Server brauchst du einen Einladungslink.",
     "INVITE_INVALID": "Dieser Einladungslink ist abgelaufen, aufgebraucht oder wurde zurückgezogen.",
     "INVITE_NOT_FOUND": "Diesen Einladungslink gibt es schon nicht mehr.",
-    "SAVED_SEARCHES_FULL": "Du kannst höchstens {max} gespeicherte Suchen behalten. Lösche zuerst eine."
+    "SAVED_SEARCHES_FULL": "Du kannst höchstens {max, plural, one {# gespeicherte Suche} other {# gespeicherte Suchen}} behalten. Lösche zuerst eine."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",

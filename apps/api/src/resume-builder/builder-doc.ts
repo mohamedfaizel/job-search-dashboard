@@ -287,16 +287,53 @@ export const isLanguagesSection = (title: string) => LANGUAGE_TITLES.test(title.
  * typed or pasted. Without languages on My profile the section stays as written.
  */
 export function lockLanguages(doc: BuilderDoc, languages: string[]): BuilderDoc {
-  const items = languages.map((l) => l.trim()).filter(Boolean);
+  // One language per line, even when My profile has "English C1, German A2" in one field.
+  const items = languages
+    .flatMap((l) => l.split(/[,;\n]/))
+    .map((l) => l.trim())
+    .filter(Boolean);
   if (!items.length) return doc;
   return {
     ...doc,
-    sections: doc.sections.map((section) =>
-      isLanguagesSection(section.title)
-        ? { ...section, blocks: [{ id: section.blocks[0]?.id ?? newId(), kind: 'bullets', items }] }
-        : section,
-    ),
+    sections: doc.sections.map((section) => {
+      if (!isLanguagesSection(section.title)) return section;
+      const lines = GERMAN_TITLE.test(section.title) ? items.map(toGerman) : items;
+      const block = {
+        id: section.blocks[0]?.id ?? newId(),
+        kind: 'bullets' as const,
+        items: lines,
+      };
+      return { ...section, blocks: [block] };
+    }),
   };
+}
+
+/** "Sprachen", "Sprachkenntnisse": the section of a German resume. */
+const GERMAN_TITLE = /^sprach/i;
+
+/** Language names and level words, English to German. The level itself (A2, C1) never changes. */
+const GERMAN_WORDS: Record<string, string> = {
+  english: 'Englisch',
+  german: 'Deutsch',
+  french: 'Französisch',
+  spanish: 'Spanisch',
+  italian: 'Italienisch',
+  portuguese: 'Portugiesisch',
+  dutch: 'Niederländisch',
+  polish: 'Polnisch',
+  russian: 'Russisch',
+  turkish: 'Türkisch',
+  arabic: 'Arabisch',
+  chinese: 'Chinesisch',
+  japanese: 'Japanisch',
+  native: 'Muttersprache',
+  fluent: 'fließend',
+  basic: 'Grundkenntnisse',
+};
+
+/** "German A2" → "Deutsch A2", "Tamil (native)" → "Tamil (Muttersprache)". */
+function toGerman(line: string): string {
+  return line.replace(/\p{L}+/gu, (word) => GERMAN_WORDS[word.toLowerCase()] ?? word);
 }
 
 /** One line: no line breaks, single spaces. */

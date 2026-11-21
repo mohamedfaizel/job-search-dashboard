@@ -172,7 +172,7 @@ export class SavedSearchesService {
       throw apiError(
         BadRequestException,
         'SAVED_SEARCHES_FULL',
-        `You can keep up to ${maxSavedSearches} saved searches. Delete one first.`,
+        `You can keep up to ${maxSavedSearches} saved ${maxSavedSearches === 1 ? 'search' : 'searches'}. Delete one first.`,
         { max: maxSavedSearches },
       );
     }

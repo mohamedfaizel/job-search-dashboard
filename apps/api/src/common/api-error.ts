@@ -80,6 +80,9 @@ export const API_ERROR_CODES = [
   'USER_NOT_FOUND',
   'NOT_ON_YOURSELF',
   'CONFIRM_EMAIL_MISMATCH',
+  'JOBHUNTER_TOKEN_REJECTED',
+  'JOBHUNTER_NO_CREDITS',
+  'SOURCE_DOWN',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

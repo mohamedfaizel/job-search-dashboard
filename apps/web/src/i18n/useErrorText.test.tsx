@@ -37,6 +37,17 @@ describe('useErrorText', () => {
     expect(errorText('de')(new Error('Boom'))).toBe('Boom');
   });
 
+  it('counts saved searches right, and names a source that is down', () => {
+    const full = (max: number) => new ApiError('full', 'SAVED_SEARCHES_FULL', { max });
+    expect(errorText('en')(full(1))).toBe('You can keep at most 1 saved search. Delete one first.');
+    expect(errorText('de')(full(5))).toBe(
+      'Du kannst höchstens 5 gespeicherte Suchen behalten. Lösche zuerst eine.',
+    );
+    expect(errorText('en')(failed('JOBHUNTER_TOKEN_REJECTED'))).toBe(
+      'JobHunter didn’t accept your token. Check it in Settings › API keys.',
+    );
+  });
+
   it('says so when the API can not be reached', () => {
     expect(errorText('en')(new TypeError('Failed to fetch'))).toBe(
       'Can’t connect right now. Check your internet, or try again in a minute.',

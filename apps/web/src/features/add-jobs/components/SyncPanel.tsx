@@ -25,6 +25,7 @@ import {
   toSavedSearchInput,
   toSyncJobsInput,
 } from '../schema';
+import { useWarningText } from '../useWarningText';
 import { CountrySelect } from './CountrySelect';
 import { ChipCheckbox, Field, GROUP_LABEL, inputClass } from './Field';
 
@@ -52,6 +53,7 @@ interface Props {
 export function SyncPanel({ loaded = null }: Props) {
   const errorText = useErrorText();
   const t = useTranslations('AddJobs');
+  const warningText = useWarningText();
   const f = useJobFormat();
   const dateTime = useDateTime();
   const languagesId = useId();
@@ -554,7 +556,7 @@ export function SyncPanel({ loaded = null }: Props) {
                 <p className="font-medium">{t('sync.warnings')}</p>
                 <ul className="list-disc pl-5">
                   {sync.data.warnings.map((warning) => (
-                    <li key={warning}>{warning}</li>
+                    <li key={warning}>{warningText(warning)}</li>
                   ))}
                 </ul>
               </div>

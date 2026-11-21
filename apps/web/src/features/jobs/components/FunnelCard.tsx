@@ -3,6 +3,9 @@
 import type { Funnel } from '@jobsearch/data';
 import { useFunnel } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { useDismiss } from '@/lib/use-dismiss';
 
 const percent = (value: number | null) =>
   value === null ? '–' : `${String(Math.round(value * 100))}%`;
@@ -44,6 +47,32 @@ function FunnelSteps({ funnel }: { funnel: Funnel }) {
   );
 }
 
+/** A <details> that also closes on Escape or a click outside, like the app's other pop-ups. */
+function MorePanel({ label, children }: { label: string; children: ReactNode }) {
+  const box = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => {
+    if (box.current) box.current.open = false;
+    setOpen(false);
+    box.current?.querySelector('summary')?.focus();
+  }, []);
+  useDismiss(open, box, close);
+  return (
+    <details
+      ref={box}
+      className="group text-sm"
+      onToggle={(event) => {
+        setOpen(event.currentTarget.open);
+      }}
+    >
+      <summary className="cursor-pointer list-none text-xs font-medium text-slate-500 underline hover:text-slate-700">
+        {label}
+      </summary>
+      {children}
+    </details>
+  );
+}
+
 /**
  * Your funnel in the Tracker's title line: how far your applications got, how many got an answer,
  * how long answers take, and which job sources bring interviews. It counts each status a job
@@ -82,10 +111,7 @@ export function FunnelCard() {
         ))}
       </dl>
       {/* The rest opens in a small panel, so the header stays one line. */}
-      <details className="group text-sm">
-        <summary className="cursor-pointer list-none text-xs font-medium text-slate-500 underline hover:text-slate-700">
-          {t('more')}
-        </summary>
+      <MorePanel label={t('more')}>
         <div className="absolute top-full right-0 left-0 z-20 mt-1 max-w-lg space-y-2 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
           <dl className="flex flex-wrap gap-x-4 gap-y-1">
             {stats.slice(2).map((stat) => (
@@ -122,7 +148,7 @@ export function FunnelCard() {
           )}
           <p className="text-xs text-slate-500">{t('hint')}</p>
         </div>
-      </details>
+      </MorePanel>
     </section>
   );
 }

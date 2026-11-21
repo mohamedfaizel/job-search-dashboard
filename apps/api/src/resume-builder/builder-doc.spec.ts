@@ -172,6 +172,23 @@ describe('lockLanguages', () => {
     expect(lockLanguages(doc, [])).toBe(doc);
   });
 
+  it('puts one language per line, in German on a German resume, and keeps the levels', () => {
+    const german = {
+      ...textToBuilderDoc(MARKDOWN, 'x'),
+      sections: [{ id: 's', title: 'Sprachen', hidden: false, blocks: [] }],
+    };
+    const doc = lockLanguages(german, ['English C1, German A2', 'Tamil (native)']);
+    expect(doc.sections[0]?.blocks).toEqual([
+      {
+        id: expect.any(String),
+        kind: 'bullets',
+        items: ['Englisch C1', 'Deutsch A2', 'Tamil (Muttersprache)'],
+      },
+    ]);
+    const english = lockLanguages(textToBuilderDoc(MARKDOWN, 'x'), ['English C1; German A2']);
+    expect(toMarkdown(english)).toContain('- English C1\n- German A2');
+  });
+
   it('knows the section in German too', () => {
     expect(isLanguagesSection('Sprachkenntnisse')).toBe(true);
     expect(isLanguagesSection('Skills')).toBe(false);

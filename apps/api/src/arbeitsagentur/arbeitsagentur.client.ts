@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { apiError } from '../common/api-error';
 import type { BaDetail, BaSearchResponse } from './arbeitsagentur.types';
 
 /** What we ask the search for. `days` is "published in the last N days". */
@@ -33,8 +34,13 @@ export class ArbeitsagenturClient {
       signal: AbortSignal.timeout(20_000),
     });
     if (!res.ok) {
-      // Don't echo the body: the status line is enough to debug.
-      throw new Error(`Arbeitsagentur request failed: ${res.status} ${res.statusText}`);
+      // Don't echo the body: the status code is enough to debug.
+      throw apiError(
+        ServiceUnavailableException,
+        'SOURCE_DOWN',
+        `The Arbeitsagentur isn't answering right now (${res.status}). Try again in a few minutes.`,
+        { source: 'Arbeitsagentur' },
+      );
     }
     return (await res.json()) as T;
   }
