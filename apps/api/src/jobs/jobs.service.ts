@@ -1,5 +1,11 @@
 import type { OnApplicationBootstrap } from '@nestjs/common';
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { apiError } from '../common/api-error';
 import type { Prisma } from '../generated/prisma/client';
 import { ApplicationStatus, JobSource } from '../generated/prisma/enums';
@@ -333,8 +339,46 @@ export class JobsService implements OnApplicationBootstrap {
   }
 
   /** Adds a job by hand. A status in the input becomes the creator's own application. */
+  /**
+   * Stops a job being added by hand twice: the same link, or the same title at the same company,
+   * already on your list. You can still add it with `allowDuplicate`.
+   */
+  private async refuseDuplicate(userId: number, title: string, company: string, url?: string) {
+    const match = await this.prisma.job.findFirst({
+      where: {
+        ...listedFor(userId),
+        OR: [
+          ...(url?.trim() ? [{ url: url.trim() }] : []),
+          {
+            title: { equals: title.trim(), mode: 'insensitive' as const },
+            company: { name: { equals: company.trim(), mode: 'insensitive' as const } },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        company: { select: { name: true } },
+        listedFor: { where: { userId }, select: { addedAt: true } },
+      },
+    });
+    if (!match) return;
+    throw apiError(
+      ConflictException,
+      'JOB_ALREADY_LISTED',
+      `This job is already on your list: ${match.title} at ${match.company.name}.`,
+      {
+        id: match.id,
+        title: match.title,
+        company: match.company.name,
+        addedAt: (match.listedFor[0]?.addedAt ?? new Date()).toISOString(),
+      },
+    );
+  }
+
   async create(userId: number, input: CreateJobInput) {
-    const { companyName, salaryMinUsd, salaryMaxUsd, applicationStatus, ...rest } = input;
+    const { companyName, salaryMinUsd, salaryMaxUsd, applicationStatus, allowDuplicate, ...rest } =
+      input;
     if (salaryMinUsd !== undefined && salaryMaxUsd !== undefined && salaryMinUsd > salaryMaxUsd) {
       throw apiError(
         BadRequestException,
@@ -342,6 +386,8 @@ export class JobsService implements OnApplicationBootstrap {
         'salaryMinUsd cannot be greater than salaryMaxUsd',
       );
     }
+
+    if (!allowDuplicate) await this.refuseDuplicate(userId, rest.title, companyName, rest.url);
 
     const job = await this.prisma.job.create({
       data: {

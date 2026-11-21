@@ -149,7 +149,7 @@ export function JobsTable({
       {/* Scrolls inside its own box so the header can stick to the top while you scroll. */}
       <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 bg-white">
         <table className="min-w-full text-left text-[13px]">
-          <thead className="sticky top-0 z-10 bg-white/95 text-xs text-slate-500 shadow-[inset_0_-1px_0_var(--color-slate-200)] backdrop-blur">
+          <thead className="sticky top-0 z-10 bg-white/95 text-xs text-slate-600 shadow-[inset_0_-1px_0_var(--color-slate-200)] backdrop-blur">
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>
                 {group.headers.map((header) => {

@@ -26,7 +26,7 @@ const BUTTON =
 
 /** A small icon button; its name shows as a tooltip. */
 export const ICON =
-  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-white hover:text-slate-900 hover:ring-1 hover:ring-slate-200 disabled:opacity-40';
+  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-600 hover:bg-white hover:text-slate-900 hover:ring-1 hover:ring-slate-200 disabled:opacity-40';
 export const SVG =
   'h-4 w-4 fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]';
 
@@ -256,7 +256,7 @@ function PageView({
             }`}
           >
             {line.kind === 'bullet' && (
-              <span aria-hidden="true" className="-ml-3 mr-1.5 inline-block w-1.5 text-slate-500">
+              <span aria-hidden="true" className="-ml-3 mr-1.5 inline-block w-1.5 text-slate-600">
                 •
               </span>
             )}
@@ -277,7 +277,7 @@ function PageView({
           </button>
         );
       })}
-      {text.trim() === '' && <p className="text-slate-500">{t('empty')}</p>}
+      {text.trim() === '' && <p className="text-slate-600">{t('empty')}</p>}
     </div>
   );
 }
@@ -538,7 +538,7 @@ export function ReplyPreview({
               className={`-mb-px border-b-2 px-3 py-2 text-sm ${
                 p === shown
                   ? 'border-brand-600 font-medium text-slate-900'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
+                  : 'border-transparent text-slate-600 hover:text-slate-800'
               }`}
             >
               {t(`parts.${p}`)}

@@ -12,6 +12,13 @@ import {
 } from './columns';
 
 /**
+ * Every button, link and menu in a card is at least 44 px to tap, as phones need. The cells look
+ * the same as in the table; only their tap area grows.
+ */
+const TOUCH =
+  '[&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center [&_button]:min-h-11 [&_button]:min-w-11 [&_select]:h-11 [&_select]:px-2.5 [&_select]:text-sm';
+
+/**
  * The job list on a phone: one card per job with the same parts as a table row (it reuses the
  * cells), stacked so nothing needs scrolling sideways.
  */
@@ -23,12 +30,15 @@ export function JobCards({ jobs, isFetching }: { jobs: Job[]; isFetching: boolea
       className={`space-y-3 ${isFetching ? 'opacity-60 transition-opacity' : ''}`}
     >
       {jobs.map((job) => (
-        <li key={job.id} className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+        <li
+          key={job.id}
+          className={`space-y-3 rounded-xl border border-slate-200 bg-white p-4 ${TOUCH}`}
+        >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1 text-[13px]">
               <JobCell job={job} />
             </div>
-            <SelectCell job={job} />
+            <SelectCell job={job} touch />
           </div>
           {(job.fitScore !== null || job.applyScore !== null || job.matchStatus) && (
             <ScoresCell job={job} inline />

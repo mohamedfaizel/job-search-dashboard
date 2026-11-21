@@ -14,7 +14,7 @@ const FIRST_ROWS = 8;
  */
 const LINE = 'block px-3 sm:table-cell sm:py-1.5';
 const COUNT =
-  'inline-flex gap-1 pl-3 tabular-nums before:text-slate-500 before:content-[attr(data-label)] sm:table-cell sm:py-1.5 sm:pl-3 sm:pr-3 sm:text-right sm:before:content-none';
+  'inline-flex gap-1 pl-3 tabular-nums before:text-slate-600 before:content-[attr(data-label)] sm:table-cell sm:py-1.5 sm:pl-3 sm:pr-3 sm:text-right sm:before:content-none';
 
 const SOURCE_TAG: Record<ImportSource, string> = {
   JOBHUNTER: 'bg-brand-50 text-amber-900 ring-brand-300',
@@ -36,13 +36,13 @@ export function ImportHistory() {
       <h2 id="history-heading" className="text-base font-semibold text-slate-900">
         {t('heading')}
       </h2>
-      {isPending && <p className="text-sm text-slate-500">{t('loading')}</p>}
+      {isPending && <p className="text-sm text-slate-600">{t('loading')}</p>}
       {error && (
         <p role="alert" className="text-sm text-red-700">
           {t('loadError', { error: errorText(error) })}
         </p>
       )}
-      {runs?.length === 0 && <p className="text-sm text-slate-500">{t('none')}</p>}
+      {runs?.length === 0 && <p className="text-sm text-slate-600">{t('none')}</p>}
       {shown && shown.length > 0 && (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
           <div className="overflow-x-auto">
@@ -109,7 +109,7 @@ function RunRow({ run }: { run: SyncRun }) {
   return (
     <tr className="flex flex-wrap items-baseline gap-y-0.5 border-t border-slate-100 py-2 align-top text-slate-700 first:border-t-0 sm:table-row sm:py-0">
       <td
-        className={`${LINE} basis-full text-xs whitespace-nowrap text-slate-500 sm:text-sm sm:text-slate-600`}
+        className={`${LINE} basis-full text-xs whitespace-nowrap text-slate-600 sm:text-sm sm:text-slate-600`}
       >
         {dateTime(run.finishedAt)}
       </td>
@@ -196,7 +196,7 @@ function MoreLeft({ run }: { run: SyncRun }) {
   const errorText = useErrorText();
   const t = useTranslations('AddJobs.history');
   const continueImport = useContinueImport();
-  const grey = 'text-xs text-slate-500';
+  const grey = 'text-xs text-slate-600';
 
   if (run.complete) {
     return (

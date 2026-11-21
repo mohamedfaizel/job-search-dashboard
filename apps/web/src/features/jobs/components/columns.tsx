@@ -113,7 +113,7 @@ function CompanyLogo({ job }: { job: Job }) {
   ) : (
     <span
       aria-hidden="true"
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-500"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600"
     >
       {name.charAt(0).toUpperCase()}
     </span>
@@ -145,7 +145,7 @@ export function JobCell({ job }: { job: Job }) {
         >
           {job.title}
         </button>
-        <span className="flex max-w-[15rem] items-center gap-1.5 text-slate-500">
+        <span className="flex max-w-[15rem] items-center gap-1.5 text-slate-600">
           {fresh && (
             <Badge tone="flag" title={t('newHint')}>
               {t('new')}
@@ -185,7 +185,7 @@ export function LocationCell({ job }: { job: Job }) {
         {top ?? f.workplace('REMOTE')}
       </span>
       {below && top && (
-        <span className="block truncate text-xs text-slate-500" title={below}>
+        <span className="block truncate text-xs text-slate-600" title={below}>
           {below}
         </span>
       )}
@@ -199,7 +199,7 @@ export function PostedCell({ job }: { job: Job }) {
     <time
       dateTime={job.postedAt}
       title={f.date(job.postedAt)}
-      className="whitespace-nowrap text-slate-500"
+      className="whitespace-nowrap text-slate-600"
     >
       {f.timeAgo(job.postedAt)}
     </time>
@@ -249,7 +249,7 @@ function SkillsCell({ skills }: { skills: string[] }) {
         <Badge key={skill}>{skill}</Badge>
       ))}
       {rest > 0 && (
-        <span className="text-xs text-slate-500" title={skills.slice(2).join(', ')}>
+        <span className="text-xs text-slate-600" title={skills.slice(2).join(', ')}>
           +{rest}
         </span>
       )}
@@ -278,7 +278,7 @@ export function StatusCell({ job }: { job: Job }) {
  */
 /** The small "Fit" / "Kit" / "AI" word in front of a score in the Scores column. */
 function ScoreLabel({ text }: { text: string | undefined }) {
-  return text ? <span className="mr-1 text-[10px] font-semibold opacity-70">{text}</span> : null;
+  return text ? <span className="mr-1 text-[10px] font-semibold">{text}</span> : null;
 }
 
 export function FitCell({ job, labelled = false }: { job: Job; labelled?: boolean }) {
@@ -416,11 +416,12 @@ export function DetailsCell({ job }: { job: Job }) {
   );
 }
 
-export function SelectCell({ job }: { job: Job }) {
+/** `touch` (phone cards): the whole 44 px square around the box ticks it, not just the box. */
+export function SelectCell({ job, touch = false }: { job: Job; touch?: boolean }) {
   const { selected, toggleSelected } = useRowActions();
   const f = useJobFormat();
   const t = useTranslations('Jobs.row');
-  return (
+  const box = (
     <input
       type="checkbox"
       aria-label={t('select', { job: f.jobName(job) })}
@@ -430,6 +431,11 @@ export function SelectCell({ job }: { job: Job }) {
       }}
       className="h-4 w-4 rounded border-slate-300 accent-brand-600"
     />
+  );
+  return touch ? (
+    <label className="-m-3.5 flex h-11 w-11 shrink-0 items-center justify-center">{box}</label>
+  ) : (
+    box
   );
 }
 

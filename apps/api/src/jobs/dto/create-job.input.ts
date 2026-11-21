@@ -1,6 +1,7 @@
 import { Field, GraphQLISODateTime, InputType, Int } from '@nestjs/graphql';
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsEnum,
   IsInt,
@@ -109,4 +110,12 @@ export class CreateJobInput {
   @IsOptional()
   @IsEnum(ApplicationStatus)
   applicationStatus?: ApplicationStatus;
+
+  @Field({
+    nullable: true,
+    description: 'Add it even when the same job (link, or title and company) is on your list',
+  })
+  @IsOptional()
+  @IsBoolean()
+  allowDuplicate?: boolean;
 }

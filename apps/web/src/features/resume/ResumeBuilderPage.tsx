@@ -19,6 +19,7 @@ import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { SidePanel } from '../../components/SidePanel';
 import { useErrorText } from '../../i18n/useErrorText';
+import { useIsPhone } from '../jobs/useIsPhone';
 import { CheckPanel } from './components/CheckPanel';
 import { DownloadCard } from './components/DownloadCard';
 import { FormatBar } from './components/FormatBar';
@@ -112,7 +113,7 @@ function MasterBuilderPage() {
     if (param('tab') === 'achievements') window.location.replace('/profile?tab=achievements');
   }, []);
 
-  if (build.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (build.isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (build.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
@@ -147,7 +148,7 @@ function JobBuilderPage({ jobId }: { jobId: string }) {
   const job = useJobResumeBuild(jobId);
   const start = useStartJobResumeBuild();
 
-  if (job.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (job.isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (job.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
@@ -252,6 +253,9 @@ function Builder({
   const [letterVersion, setLetterVersion] = useState('first');
   const [outOfDate, setOutOfDate] = useState(build.outOfDate);
   const [view, setView] = useState<View>('edit');
+  // On a phone the text and design tools start folded, so your resume is the first thing you see.
+  const isPhone = useIsPhone();
+  const [toolsOpen, setToolsOpen] = useState(false);
   const editRef = useRef<HTMLDivElement>(null);
   const doc = history.present;
   const json = JSON.stringify(doc);
@@ -393,7 +397,7 @@ function Builder({
             )}
           </div>
           {!job && (
-            <p className="flex min-w-0 flex-wrap items-center gap-x-3 text-xs text-slate-600">
+            <p className="hidden min-w-0 flex-wrap items-center gap-x-3 text-xs text-slate-600 sm:flex">
               <SetupSummary />
             </p>
           )}
@@ -405,7 +409,7 @@ function Builder({
               save.isError && unsaved
                 ? 'text-red-700'
                 : unsaved || save.isPending
-                  ? 'text-slate-500'
+                  ? 'text-slate-600'
                   : 'text-emerald-700'
             }`}
           >
@@ -481,18 +485,37 @@ function Builder({
         <StepBar steps={steps} current={tab} onSelect={onTab} />
       ) : (
         <>
+          {isPhone && (
+            <button
+              type="button"
+              aria-expanded={toolsOpen}
+              aria-controls="resume-tools"
+              onClick={() => {
+                setToolsOpen((was) => !was);
+              }}
+              className="flex h-11 w-full items-center justify-between rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900"
+            >
+              {t('ribbon.toggle')}
+              <span aria-hidden className="text-slate-600">
+                {toolsOpen ? '▴' : '▾'}
+              </span>
+            </button>
+          )}
           {/* One row for the text and the look, on screen while you scroll. */}
-          <div
-            role="group"
-            aria-label={t('ribbon.label')}
-            className="sticky top-2 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 shadow-sm"
-          >
-            <FormatBar scope={editRef} bare />
-            <span aria-hidden className="hidden h-6 w-px bg-slate-200 sm:block" />
-            <div className="min-w-0 flex-1">
-              <LookPanel onSaved={lookSaved} wide />
+          {(!isPhone || toolsOpen) && (
+            <div
+              id="resume-tools"
+              role="group"
+              aria-label={t('ribbon.label')}
+              className="z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 shadow-sm md:sticky md:top-2"
+            >
+              <FormatBar scope={editRef} bare />
+              <span aria-hidden className="hidden h-6 w-px bg-slate-200 sm:block" />
+              <div className="min-w-0 flex-1">
+                <LookPanel onSaved={lookSaved} wide />
+              </div>
             </div>
-          </div>
+          )}
           {tab === 'files' && (
             <SidePanel
               title={t('ribbon.setup')}
@@ -643,7 +666,7 @@ function Builder({
             hidden={!!job && tab !== 'edit' && tab !== 'match'}
             className="space-y-3"
           >
-            <p className="text-xs text-slate-500">{t('intro')}</p>
+            <p className="text-xs text-slate-600">{t('intro')}</p>
             {job && <FormatBar scope={editRef} />}
             <HeaderCard doc={doc} onChange={change} />
             {doc.sections.map((section, index) => (

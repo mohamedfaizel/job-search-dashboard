@@ -20,7 +20,7 @@ export function NotificationSettings() {
         {t('heading')}
       </h2>
       {profile.isPending ? (
-        <p className="text-sm text-slate-500">…</p>
+        <p className="text-sm text-slate-600">…</p>
       ) : profile.isError ? (
         <p role="alert" className="text-sm text-red-700">
           {errorText(profile.error)}
@@ -60,7 +60,7 @@ function NotificationForm({ profile }: { profile: Profile }) {
         />
         <span>
           {t('newMatches')}
-          <span className="block text-xs text-slate-500">{t('newMatchesHint')}</span>
+          <span className="block text-xs text-slate-600">{t('newMatchesHint')}</span>
         </span>
       </label>
       <div className="space-y-1">
@@ -84,13 +84,13 @@ function NotificationForm({ profile }: { profile: Profile }) {
             </option>
           ))}
         </select>
-        <p id="matchFitMin-hint" className="text-xs text-slate-500">
+        <p id="matchFitMin-hint" className="text-xs text-slate-600">
           {t('fitMinHint')}
         </p>
       </div>
       <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
         <p className="font-medium text-slate-800">{t('interview')}</p>
-        <p className="text-xs text-slate-500">{t('interviewHint')}</p>
+        <p className="text-xs text-slate-600">{t('interviewHint')}</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <button

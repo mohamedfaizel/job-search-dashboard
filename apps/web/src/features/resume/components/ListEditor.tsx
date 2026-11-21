@@ -107,7 +107,7 @@ export function ListEditor({
             {lineBreak && item === lineBreak.item ? (
               <span
                 title={lineBreak.hint}
-                className="flex min-h-8 flex-1 items-center gap-2 text-xs font-medium text-slate-500"
+                className="flex min-h-8 flex-1 items-center gap-2 text-xs font-medium text-slate-600"
               >
                 <span aria-hidden className="h-px flex-1 border-t border-dashed border-slate-300" />
                 ↵ {lineBreak.label}

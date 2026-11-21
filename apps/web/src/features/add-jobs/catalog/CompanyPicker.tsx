@@ -140,7 +140,7 @@ export function CompanyPicker({ value, onChange }: Props) {
             )}
           </div>
           {shown.length === 0 ? (
-            <p className="text-sm text-slate-500">{t('none')}</p>
+            <p className="text-sm text-slate-600">{t('none')}</p>
           ) : (
             <ul className="grid max-h-72 gap-x-4 gap-y-1 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
               {shown.map((c) => (
@@ -155,13 +155,13 @@ export function CompanyPicker({ value, onChange }: Props) {
                       className="size-4 rounded border-slate-300 text-brand-600"
                     />
                     <span>{c.name}</span>
-                    <span className="text-xs text-slate-500">{c.place}</span>
+                    <span className="text-xs text-slate-600">{c.place}</span>
                   </label>
                 </li>
               ))}
             </ul>
           )}
-          <p className="text-xs text-slate-500">{t('hint')}</p>
+          <p className="text-xs text-slate-600">{t('hint')}</p>
         </div>
       )}
     </div>

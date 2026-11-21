@@ -126,7 +126,7 @@ export function ReplyInput({ jobId, onSaved }: { jobId: string; onSaved: () => v
           {save.isPending ? t('making') : t('paste')}
         </button>
       </div>
-      {clipboardBlocked && <p className="text-xs text-slate-500">{t('blocked')}</p>}
+      {clipboardBlocked && <p className="text-xs text-slate-600">{t('blocked')}</p>}
 
       <form
         className="space-y-2"
@@ -171,7 +171,7 @@ export function ReplyInput({ jobId, onSaved }: { jobId: string; onSaved: () => v
                 className={`rounded-md px-2 py-0.5 ring-1 ring-inset ${
                   found
                     ? 'bg-emerald-50 text-emerald-800 ring-emerald-200'
-                    : 'bg-slate-50 text-slate-500 ring-slate-200'
+                    : 'bg-slate-50 text-slate-600 ring-slate-200'
                 }`}
               >
                 {found ? '✓' : '–'} {label}
@@ -277,7 +277,7 @@ function PdfPill({ pdf }: { pdf: PdfCheckState }) {
       aria-label={t('pdfTitle')}
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
         !pdf.done
-          ? 'bg-slate-100 text-slate-500'
+          ? 'bg-slate-100 text-slate-600'
           : bad
             ? 'bg-amber-50 text-amber-800 ring-1 ring-amber-300 ring-inset'
             : 'bg-emerald-50 text-emerald-700'
@@ -332,7 +332,7 @@ function PdfNotice({ pdf }: { pdf: PdfCheckState }) {
       )}
       {pdf.passed.length > 0 && (
         <details>
-          <summary className="cursor-pointer text-slate-500 hover:text-slate-800">
+          <summary className="cursor-pointer text-slate-600 hover:text-slate-800">
             {t('pdfDetails', { count: pdf.passed.length })}
           </summary>
           <ul className="mt-1 space-y-0.5" aria-label={t('pdfAllLabel')}>
@@ -465,7 +465,7 @@ function AiMatch({ jobId, jobResume }: { jobId: string; jobResume: JobResumeScor
     >
       <div className="flex flex-wrap items-center gap-2">
         <p
-          className={`text-sm font-semibold ${off ? 'text-slate-500' : 'text-slate-900'}`}
+          className={`text-sm font-semibold ${off ? 'text-slate-600' : 'text-slate-900'}`}
           title={t('aiTitleHint')}
         >
           {t('aiTitle')}
@@ -603,7 +603,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
     if (part === 'coverLetter') {
       return (
         <>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-600">
             {t('words', { count: words(jobResume.coverLetter) })}
           </span>
           <span className="flex-1" />
@@ -622,7 +622,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
 
   const tabsEnd = (
     <>
-      <span className="text-xs text-slate-500" title={jobResume.fileName ?? t('pastedText')}>
+      <span className="text-xs text-slate-600" title={jobResume.fileName ?? t('pastedText')}>
         {t('saved', { date: f.date(jobResume.updatedAt) })}
       </span>
       <button

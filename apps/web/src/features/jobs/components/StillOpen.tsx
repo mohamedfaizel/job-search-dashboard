@@ -79,7 +79,7 @@ export function StillOpen({ job, autoCheck = false }: { job: Job; autoCheck?: bo
         {check.isPending ? t('checking') : text}
       </span>
       {when && !check.isPending && tone !== 'open' && (
-        <span className="text-slate-500">· {t('checkedWhen', { when })}</span>
+        <span className="text-slate-600">· {t('checkedWhen', { when })}</span>
       )}
       {job.url && (
         <button

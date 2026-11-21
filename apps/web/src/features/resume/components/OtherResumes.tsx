@@ -100,7 +100,7 @@ function SavedResume({
     <div className="space-y-2 rounded-md border border-slate-200 p-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="font-medium text-slate-900">{name}</h3>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-600">
           {resume.fileName ?? t('pasted')} ·{' '}
           {t('savedOn', {
             date: format.dateTime(new Date(resume.updatedAt), { dateStyle: 'medium' }),
@@ -226,7 +226,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
           )}
           {prompt.data && (
             <details open={copied === 'failed'}>
-              <summary className="cursor-pointer text-xs text-slate-500">{t('showPrompt')}</summary>
+              <summary className="cursor-pointer text-xs text-slate-600">{t('showPrompt')}</summary>
               <textarea
                 readOnly
                 value={prompt.data}
@@ -270,7 +270,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
             >
               {save.isPending ? t('saving') : t('saveResume', { language: name })}
             </button>
-            <span className="text-slate-500">{t('or')}</span>
+            <span className="text-slate-600">{t('or')}</span>
             <UploadButton
               language={language}
               onDone={() => {
@@ -278,7 +278,7 @@ function AddResume({ languages, onSaved }: { languages: string[]; onSaved: OnSav
               }}
             />
           </div>
-          <p className="text-xs text-slate-500">{t('uploadSaves')}</p>
+          <p className="text-xs text-slate-600">{t('uploadSaves')}</p>
           {save.isError && (
             <p role="alert" className="text-red-700">
               {errorText(save.error)}

@@ -63,14 +63,14 @@ export function CheckPanel({ jobId, version }: Props) {
           {t('facts')}
         </h3>
         {facts === undefined || facts === null ? (
-          <p className="text-xs text-slate-500">{t('noFacts')}</p>
+          <p className="text-xs text-slate-600">{t('noFacts')}</p>
         ) : facts.length === 0 ? (
           <p role="status" className="text-sm text-emerald-800">
             ✓ {t('factsOk')}
           </p>
         ) : (
           <>
-            <p className="text-xs text-slate-500">{t('factsHint')}</p>
+            <p className="text-xs text-slate-600">{t('factsHint')}</p>
             <ul className="space-y-1">
               {facts.map((f) => (
                 <li

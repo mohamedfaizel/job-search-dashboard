@@ -359,7 +359,7 @@ export function SectionCard({
                 </div>
               );
             })}
-            <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
               <span>{t('add')}</span>
               {/* Skills lead with their own row; a job fits Experience best. */}
               {(skills

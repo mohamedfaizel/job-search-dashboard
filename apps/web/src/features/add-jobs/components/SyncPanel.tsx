@@ -504,7 +504,7 @@ export function SyncPanel({ loaded = null }: Props) {
                     />
                   </Field>
                   {/* Helper text under the fields, not a tooltip, so nothing covers the inputs. */}
-                  <p id="sync-pageSize-hint" className="text-xs text-slate-500 sm:col-span-3">
+                  <p id="sync-pageSize-hint" className="text-xs text-slate-600 sm:col-span-3">
                     {t('sync.pageSizeHint')}
                   </p>
                 </>

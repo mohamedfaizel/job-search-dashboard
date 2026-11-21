@@ -55,7 +55,7 @@ export function MailSuggestions() {
             <blockquote className="mt-1 border-l-2 border-slate-200 pl-2 text-xs text-slate-600">
               <p className="font-medium">{item.subject}</p>
               <p>{item.snippet}</p>
-              <p className="mt-0.5 text-slate-500">
+              <p className="mt-0.5 text-slate-600">
                 {t('from', {
                   sender: item.fromAddress,
                   account: item.accountEmail,

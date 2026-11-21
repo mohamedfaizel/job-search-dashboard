@@ -69,7 +69,8 @@ export function UsersPanel({ meId }: { meId: number }) {
         {t('heading', { count: users.data.length })}
       </h2>
       <div className="flex flex-wrap items-center gap-2">
-        <label className="flex min-w-0 flex-1 sm:max-w-sm">
+        {/* Its own full-width row on a phone; next to the filters on a wider screen. */}
+        <label className="flex w-full min-w-0 sm:w-auto sm:max-w-sm sm:flex-1">
           <span className="sr-only">{t('search')}</span>
           <input
             type="search"
@@ -78,7 +79,7 @@ export function UsersPanel({ meId }: { meId: number }) {
               setQuery(event.target.value);
             }}
             placeholder={t('searchPlaceholder')}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="h-11 w-full rounded-md border border-slate-300 px-3 text-base sm:h-auto sm:py-2 sm:text-sm"
           />
         </label>
         <div role="group" aria-label={t('filters')} className="flex flex-wrap gap-1.5">
@@ -292,7 +293,7 @@ function Actions({ user, actions, wide }: { user: AdminUser; actions: RowActions
 function UserRow({ user, actions }: { user: AdminUser; actions: RowActions }) {
   const when = useWhen();
   return (
-    <tr className={`border-t border-slate-100 ${user.disabled ? 'text-slate-500' : ''}`}>
+    <tr className={`border-t border-slate-100 ${user.disabled ? 'text-slate-600' : ''}`}>
       <td className="px-4 py-2.5">
         <span className="block font-semibold text-slate-900">{user.name}</span>
         <span className="block text-xs text-slate-600">{user.email}</span>

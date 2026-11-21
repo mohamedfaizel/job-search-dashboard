@@ -40,7 +40,7 @@ export function ResumeSwitcher({
   return (
     <label className="flex min-w-0 items-center gap-2 text-sm">
       {/* On your own resume the list picks its language; elsewhere it is a plain switcher. */}
-      <span className={job || letter ? 'sr-only' : 'shrink-0 text-xs font-medium text-slate-500'}>
+      <span className={job || letter ? 'sr-only' : 'shrink-0 text-xs font-medium text-slate-600'}>
         {job || letter ? t('label') : t('languageLabel')}
       </span>
       <select

@@ -15,7 +15,7 @@ export function InfoTip({ label, text }: { label: string; text: string }) {
         type="button"
         aria-label={label}
         aria-describedby={tipId}
-        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-400 text-[10px] leading-none font-semibold text-slate-500 hover:border-slate-600 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-500"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-400 text-[10px] leading-none font-semibold text-slate-600 hover:border-slate-600 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-brand-500"
       >
         i
       </button>

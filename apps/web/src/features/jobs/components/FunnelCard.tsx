@@ -35,7 +35,7 @@ function FunnelSteps({ funnel }: { funnel: Funnel }) {
               <span className="text-slate-600">{t(`steps.${step.id}`)}</span>
               <b className="tabular-nums text-slate-900">{step.count}</b>
               {before !== null && before > 0 && (
-                <span className="text-xs tabular-nums text-slate-500">
+                <span className="text-xs tabular-nums text-slate-600">
                   {percent(step.count / before)}
                 </span>
               )}
@@ -65,7 +65,7 @@ function MorePanel({ label, children }: { label: string; children: ReactNode }) 
         setOpen(event.currentTarget.open);
       }}
     >
-      <summary className="cursor-pointer list-none text-xs font-medium text-slate-500 underline hover:text-slate-700">
+      <summary className="cursor-pointer list-none text-xs font-medium text-slate-600 underline hover:text-slate-700">
         {label}
       </summary>
       {children}
@@ -102,7 +102,7 @@ export function FunnelCard() {
       className="relative flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
     >
       <FunnelSteps funnel={f} />
-      <dl className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+      <dl className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
         {stats.slice(0, 2).map((stat) => (
           <div key={stat.id} className="flex items-baseline gap-1">
             <dt>{t(`stats.${stat.id}`)}</dt>
@@ -116,18 +116,18 @@ export function FunnelCard() {
           <dl className="flex flex-wrap gap-x-4 gap-y-1">
             {stats.slice(2).map((stat) => (
               <div key={stat.id} className="flex items-baseline gap-1.5">
-                <dt className="text-xs text-slate-500">{t(`stats.${stat.id}`)}</dt>
+                <dt className="text-xs text-slate-600">{t(`stats.${stat.id}`)}</dt>
                 <dd className="font-semibold tabular-nums text-slate-900">{stat.value}</dd>
               </div>
             ))}
           </dl>
           {sources.length > 1 && (
             <table className="w-full text-sm">
-              <caption className="mb-1 text-left text-xs font-medium text-slate-500">
+              <caption className="mb-1 text-left text-xs font-medium text-slate-600">
                 {t('bySource')}
               </caption>
               <thead>
-                <tr className="text-left text-xs text-slate-500">
+                <tr className="text-left text-xs text-slate-600">
                   <th className="font-medium">{t('source')}</th>
                   <th className="text-right font-medium">{t('steps.applied')}</th>
                   <th className="text-right font-medium">{t('steps.interviews')}</th>
@@ -146,7 +146,7 @@ export function FunnelCard() {
               </tbody>
             </table>
           )}
-          <p className="text-xs text-slate-500">{t('hint')}</p>
+          <p className="text-xs text-slate-600">{t('hint')}</p>
         </div>
       </MorePanel>
     </section>

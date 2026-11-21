@@ -62,7 +62,7 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
         )}
         {headline(item)}
       </p>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-600">
         {interview ? t('interviewHint') : t('fitAtLeast', { fit: item.fitMin })} ·{' '}
         {timeAgo(item.createdAt, locale)}
       </p>

@@ -67,7 +67,7 @@ export function ChipList({
         <h3 id={headingId} className="font-semibold text-slate-900">
           {label}
         </h3>
-        <span className="text-xs text-slate-500">{items.length}</span>
+        <span className="text-xs text-slate-600">{items.length}</span>
         {missing.length > 0 && (
           <div className="ml-auto">
             <Popover
@@ -132,7 +132,7 @@ export function ChipList({
                   onClick={() => {
                     remove(index);
                   }}
-                  className="rounded-full px-1 text-xs text-slate-500 hover:bg-slate-200 hover:text-slate-900"
+                  className="rounded-full px-1 text-xs text-slate-600 hover:bg-slate-200 hover:text-slate-900"
                 >
                   ✕
                 </button>
@@ -155,7 +155,7 @@ export function ChipList({
           )}
         </ul>
       )}
-      {hint && !error && <p className="text-xs text-slate-500">{hint}</p>}
+      {hint && !error && <p className="text-xs text-slate-600">{hint}</p>}
       {error && (
         <p role="alert" className="text-xs text-red-700">
           {error}

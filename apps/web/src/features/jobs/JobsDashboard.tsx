@@ -528,7 +528,7 @@ export function JobsDashboard() {
         }}
       />
 
-      {jobsQuery.isPending && <p className="text-center text-sm text-slate-500">{t('loading')}</p>}
+      {jobsQuery.isPending && <p className="text-center text-sm text-slate-600">{t('loading')}</p>}
       {jobsQuery.isSuccess && jobs.length === 0 && nothingYet && (
         <div className="space-y-3 rounded-lg border border-dashed border-slate-300 p-8 text-center">
           <p className="text-base font-semibold text-slate-900">{t('empty.title')}</p>
@@ -542,19 +542,23 @@ export function JobsDashboard() {
         </div>
       )}
       {jobsQuery.isSuccess && jobs.length === 0 && !nothingYet && (
-        <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+        <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">
           {emptyText()}
         </p>
       )}
 
       {jobsQuery.data && (
-        <Pagination
-          page={tableState.page}
-          pageSize={tableState.pageSize}
-          total={jobsQuery.data.total}
-          onPageChange={(page) => dispatch(setPage(page))}
-          onPageSizeChange={(size) => dispatch(setPageSize(size))}
-        />
+        // Room under the page buttons for the round Apply queue button, which floats at the
+        // bottom right: scrolled to the end, it sits below "Next" instead of on top of it.
+        <div data-testid="pager" className={showingHidden ? undefined : 'pb-20'}>
+          <Pagination
+            page={tableState.page}
+            pageSize={tableState.pageSize}
+            total={jobsQuery.data.total}
+            onPageChange={(page) => dispatch(setPage(page))}
+            onPageSizeChange={(size) => dispatch(setPageSize(size))}
+          />
+        </div>
       )}
 
       <JobDetailsDialog

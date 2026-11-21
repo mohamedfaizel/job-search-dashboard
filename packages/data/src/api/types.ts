@@ -168,6 +168,8 @@ export interface CreateJobInput {
   industry?: string;
   description?: string;
   applicationStatus?: ApplicationStatus;
+  /** Add it even when the same job is already on your list. */
+  allowDuplicate?: boolean;
 }
 
 /** The job types the import can filter on (JobHunter's employment_type_or). */

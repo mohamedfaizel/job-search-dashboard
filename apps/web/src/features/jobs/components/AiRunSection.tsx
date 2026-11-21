@@ -62,13 +62,13 @@ export function AiRunSection<T extends Run>({
       {/* aria-live announces the progress and the result to screen readers. */}
       <div aria-live="polite" className="space-y-3">
         {loading ? (
-          <p className="text-sm text-slate-500">{t('loading')}</p>
+          <p className="text-sm text-slate-600">{t('loading')}</p>
         ) : pending ? (
           <p className="text-sm text-slate-700">{t('pending')}</p>
         ) : !data ? (
           <div className="flex flex-wrap items-center gap-3">
             {startButton(t('start'))}
-            <span className="text-xs text-slate-500">{t('startHint')}</span>
+            <span className="text-xs text-slate-600">{t('startHint')}</span>
           </div>
         ) : data.status === 'FAILED' ? (
           <div className="space-y-2">

@@ -200,19 +200,19 @@ function InviteRow({
 
   return (
     <li className="grid gap-2 border-t border-slate-100 px-4 py-3 text-sm first:border-t-0 sm:px-5 md:grid-cols-[2.4fr_1fr_1fr_1fr_auto] md:items-center">
-      <code className={`truncate text-xs ${dead ? 'text-slate-500' : 'text-slate-700'}`}>
+      <code className={`truncate text-xs ${dead ? 'text-slate-600' : 'text-slate-700'}`}>
         /signup?invite={code}
       </code>
       <span className="text-slate-700">
-        <span className="text-xs text-slate-500 md:sr-only">{t('made')}: </span>
+        <span className="text-xs text-slate-600 md:sr-only">{t('made')}: </span>
         {format.dateTime(new Date(invite.createdAt), { day: 'numeric', month: 'short' })}
       </span>
       <span className={invite.state === 'EXPIRED' ? 'text-red-700' : 'text-slate-700'}>
-        <span className="text-xs text-slate-500 md:sr-only">{t('expires')}: </span>
+        <span className="text-xs text-slate-600 md:sr-only">{t('expires')}: </span>
         {expires}
       </span>
       <span className="text-slate-700">
-        <span className="text-xs text-slate-500 md:sr-only">{t('used')}: </span>
+        <span className="text-xs text-slate-600 md:sr-only">{t('used')}: </span>
         {invite.maxUses === null
           ? t('usedAny', { uses: invite.uses })
           : t('usedOf', { uses: invite.uses, max: invite.maxUses })}

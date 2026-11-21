@@ -114,7 +114,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
       </p>
     );
   }
-  if (!user) return <p className="p-6 text-sm text-slate-500">{t('loading')}</p>;
+  if (!user) return <p className="p-6 text-sm text-slate-600">{t('loading')}</p>;
 
   return (
     <TopBar

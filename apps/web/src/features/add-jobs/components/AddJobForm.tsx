@@ -1,9 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { APPLICATION_STATUSES, useCreateJob, WORKPLACES } from '@jobsearch/data';
+import type { CreateJobInput } from '@jobsearch/data';
+import { APPLICATION_STATUSES, getErrorCode, useCreateJob, WORKPLACES } from '@jobsearch/data';
+import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AutoHide } from '../../../components/AutoHide';
+import { jobLink } from '../../../components/NotificationBell';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
 import { countriesIn } from '../countries';
@@ -30,14 +33,21 @@ export function AddJobForm() {
     defaultValues: emptyJobForm,
   });
 
-  const onSubmit = handleSubmit(async (values) => {
+  // The job you tried to add when the API said it is already on your list.
+  const [pending, setPending] = useState<CreateJobInput | null>(null);
+  const save = async (input: CreateJobInput) => {
     setSavedTitle(null);
-    const job = await createJob.mutateAsync(toCreateJobInput(values)).catch(() => null);
+    setPending(input);
+    const job = await createJob.mutateAsync(input).catch(() => null);
     if (job) {
+      setPending(null);
       setSavedTitle(f.jobName(job));
       reset(emptyJobForm);
     }
-  });
+  };
+  const onSubmit = handleSubmit((values) => save(toCreateJobInput(values)));
+  const known = getErrorCode(createJob.error);
+  const duplicate = createJob.isError && known?.code === 'JOB_ALREADY_LISTED' ? known.params : null;
 
   // Props that link each input to its error message for screen readers.
   const a11y = (name: keyof JobFormValues) => ({
@@ -66,7 +76,40 @@ export function AddJobForm() {
           </p>
         </AutoHide>
       )}
-      {createJob.isError && (
+      {duplicate && pending && (
+        <div
+          role="alert"
+          className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3.5 text-sm text-amber-900"
+        >
+          <p className="font-semibold">{t('form.dupTitle')}</p>
+          <p>
+            {t('form.dupText', {
+              title: String(duplicate['title'] ?? ''),
+              company: String(duplicate['company'] ?? ''),
+              when: f.timeAgo(String(duplicate['addedAt'] ?? new Date().toISOString())),
+            })}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={jobLink(String(duplicate['id'] ?? ''))}
+              className="inline-flex h-10 items-center rounded-lg bg-slate-900 px-3.5 font-semibold text-white hover:bg-slate-800"
+            >
+              {t('form.dupOpen')}
+            </Link>
+            <button
+              type="button"
+              disabled={createJob.isPending}
+              onClick={() => {
+                void save({ ...pending, allowDuplicate: true });
+              }}
+              className="h-10 rounded-lg border border-amber-800 px-3.5 font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+            >
+              {t('form.dupAdd')}
+            </button>
+          </div>
+        </div>
+      )}
+      {createJob.isError && !duplicate && (
         <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
           {t('form.saveError', { error: errorText(createJob.error) })}
         </p>

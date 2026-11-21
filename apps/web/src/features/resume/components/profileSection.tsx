@@ -15,7 +15,7 @@ export function WithProfile({ children }: { children: (profile: Profile) => Reac
   const errorText = useErrorText();
   const t = useTranslations('Resume.files');
   const profile = useMyProfile();
-  if (profile.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (profile.isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (profile.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
@@ -77,7 +77,7 @@ export function SaveBar({
   return (
     <div className="flex items-center gap-3">
       {auto ? (
-        busy && <p className="text-sm text-slate-500">{t('saving')}</p>
+        busy && <p className="text-sm text-slate-600">{t('saving')}</p>
       ) : (
         <button
           type="submit"

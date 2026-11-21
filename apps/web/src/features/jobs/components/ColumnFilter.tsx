@@ -165,7 +165,7 @@ export function ColumnFilter({
                   )}
                   <ul aria-label={list.name}>
                     {visible.length === 0 && (
-                      <li className="px-2 py-1 text-sm text-slate-500">{t('none')}</li>
+                      <li className="px-2 py-1 text-sm text-slate-600">{t('none')}</li>
                     )}
                     {visible.map((option) => (
                       <li key={option.value}>

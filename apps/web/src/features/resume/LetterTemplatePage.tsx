@@ -22,7 +22,7 @@ export function LetterTemplatePage({ language }: { language: string }) {
     setVersion(`template-${String(Date.now())}`);
   }, []);
 
-  if (build.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (build.isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (build.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">

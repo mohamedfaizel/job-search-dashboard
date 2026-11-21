@@ -336,7 +336,7 @@ export function ApplyQueuePanel({
                     }}
                     aria-label={t('moveUp', { title: item.title })}
                     title={t('moveUpHint')}
-                    className="h-3.5 px-1 text-[10px] leading-none text-slate-500 hover:text-slate-900 disabled:opacity-25"
+                    className="h-3.5 px-1 text-[10px] leading-none text-slate-600 hover:text-slate-900 disabled:opacity-25"
                   >
                     ▲
                   </button>
@@ -348,7 +348,7 @@ export function ApplyQueuePanel({
                     }}
                     aria-label={t('moveDown', { title: item.title })}
                     title={t('moveDownHint')}
-                    className="h-3.5 px-1 text-[10px] leading-none text-slate-500 hover:text-slate-900 disabled:opacity-25"
+                    className="h-3.5 px-1 text-[10px] leading-none text-slate-600 hover:text-slate-900 disabled:opacity-25"
                   >
                     ▼
                   </button>
@@ -364,7 +364,7 @@ export function ApplyQueuePanel({
                   >
                     {item.title}
                   </button>{' '}
-                  <span className="text-slate-500">{t('at', { company: item.company })}</span>
+                  <span className="text-slate-600">{t('at', { company: item.company })}</span>
                 </span>
                 <span
                   className={

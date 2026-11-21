@@ -68,7 +68,7 @@ export function CopyText({
         )}
       </div>
       <details open={copied === 'failed'}>
-        <summary className="cursor-pointer text-xs text-slate-500">{t('show')}</summary>
+        <summary className="cursor-pointer text-xs text-slate-600">{t('show')}</summary>
         <textarea
           readOnly
           value={text}

@@ -7,11 +7,13 @@ import {
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useDismiss } from '@/lib/use-dismiss';
 import { useAiState } from '../../../lib/ai-status';
 import { capitalize } from '../format';
 import { MessagesPanel } from '../messages/MessagesPanel';
 import { SalaryPanel } from '../salary/SalaryPanel';
+import { useIsPhone } from '../useIsPhone';
 import { useJobFormat } from '../useJobFormat';
 import { AiOffNote, AiStateTag, AiTag } from './AiLabels';
 import { ApplyKitPanel, useApplyStep } from './ApplyKitPanel';
@@ -49,9 +51,15 @@ const TABS = ['fit', 'apply', 'interview', 'salary', 'messages', 'ad', 'match'] 
 type Tab = (typeof TABS)[number];
 
 const ICON_BUTTON =
-  'h-11 w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 sm:h-9 sm:w-9';
+  'h-11 w-11 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:h-9 sm:w-9';
 const BUTTON =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50';
+/** 44 px icon buttons in the phone footer. */
+const PHONE_ICON =
+  'h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700';
+/** The popup's main button: one row with the icons on a phone, its own size on a computer. */
+const PRIMARY =
+  'inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 sm:h-9 sm:flex-none';
 const FIT_PILL = {
   green: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   orange: 'bg-amber-50 text-amber-700 ring-amber-200',
@@ -135,6 +143,16 @@ function JobDetails({
   // A failed PDF check shows on the Apply tab too, so you see it from any tab.
   const pdfCheck = useLastPdfCheck(job.id);
   const pdfProblem = pdfCheck?.items.some((item) => !item.ok) ?? false;
+  // On a phone the footer is one row: Hide, Save and More (status, queue, posting) as icons,
+  // next to the main button, so the tabs get most of the screen.
+  const isPhone = useIsPhone();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const footer = useRef<HTMLElement>(null);
+  const closeMore = useCallback(() => {
+    setMoreOpen(false);
+  }, []);
+  useDismiss(moreOpen, footer, closeMore);
+  const extras = !isPhone || moreOpen;
   const layout = useMemo(
     () => ({ wide: maximized, adText: job.description ?? '' }),
     [maximized, job.description],
@@ -159,7 +177,7 @@ function JobDetails({
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <h2
                 id={`job-dialog-title-${job.id}`}
-                className="text-base font-semibold text-slate-900 sm:text-lg"
+                className="max-w-full truncate text-base font-semibold text-slate-900 sm:max-w-none sm:text-lg sm:whitespace-normal"
               >
                 {job.title}
               </h2>
@@ -350,28 +368,22 @@ function JobDetails({
         </div>
       </PopupLayoutContext.Provider>
 
-      <footer className="flex flex-wrap items-center gap-2 border-t border-slate-200 px-4 py-3 sm:px-5">
-        <span className="flex items-center gap-2 text-sm text-slate-600">
-          <span aria-hidden="true">{t('status')}</span>
-          <StatusSelect
-            label={t('statusLabel')}
-            value={job.applicationStatus}
-            onChange={onStatusChange}
-          />
-        </span>
-        {onToggleHidden && (
-          <button
-            type="button"
-            onClick={() => {
-              onToggleHidden(job);
-            }}
-            className={`${BUTTON} sm:hidden`}
-          >
-            {showingHidden ? t('bringBack') : t('hide')}
-          </button>
+      <footer
+        ref={footer}
+        className="flex flex-wrap items-center gap-2 border-t border-slate-200 px-3 py-2.5 sm:px-5 sm:py-3"
+      >
+        {extras && (
+          <span className="flex items-center gap-2 text-sm text-slate-600 max-sm:w-full">
+            <span aria-hidden="true">{t('status')}</span>
+            <StatusSelect
+              label={t('statusLabel')}
+              value={job.applicationStatus}
+              onChange={onStatusChange}
+            />
+          </span>
         )}
-        <span className="flex-1" />
-        {tab === 'apply' && !sent && (
+        <span className="hidden flex-1 sm:block" />
+        {extras && tab === 'apply' && !sent && (
           <button
             type="button"
             disabled={changeQueue.isPending}
@@ -385,7 +397,7 @@ function JobDetails({
             {queued ? t('inQueue') : t('addQueue')}
           </button>
         )}
-        {job.url && (
+        {extras && job.url && (
           <a
             href={job.url}
             target="_blank"
@@ -399,13 +411,60 @@ function JobDetails({
             {t('openPosting')}
           </a>
         )}
+        {isPhone && (
+          <>
+            {onToggleHidden && (
+              <button
+                type="button"
+                onClick={() => {
+                  onToggleHidden(job);
+                }}
+                aria-label={showingHidden ? t('bringBackLabel') : t('hideLabel')}
+                className={`${PHONE_ICON} inline-flex`}
+              >
+                {showingHidden ? (
+                  <EyeIcon className="h-5 w-5" />
+                ) : (
+                  <EyeSlashIcon className="h-5 w-5" />
+                )}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                onStatusChange(saved ? 'NONE' : 'SAVED');
+              }}
+              disabled={sent}
+              aria-pressed={saved}
+              aria-label={t('saveLabel')}
+              className={`${PHONE_ICON} inline-flex disabled:opacity-60 ${saved ? 'text-brand-600' : ''}`}
+            >
+              <BookmarkIcon filled={saved} className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-expanded={moreOpen}
+              aria-label={t('moreActions')}
+              onClick={() => {
+                setMoreOpen((was) => !was);
+              }}
+              className={`${PHONE_ICON} inline-flex`}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+                <circle cx="5" cy="12" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="19" cy="12" r="2" />
+              </svg>
+            </button>
+          </>
+        )}
         {tab !== 'apply' ? (
           <button
             type="button"
             onClick={() => {
               setTab('apply');
             }}
-            className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 sm:w-auto"
+            className={PRIMARY}
           >
             {t('apply')}
           </button>
@@ -417,7 +476,7 @@ function JobDetails({
                 onStatusChange('APPLIED');
                 onApplyAnswered(job);
               }}
-              className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 sm:w-auto"
+              className={PRIMARY}
             >
               {t('markApplied')}
             </button>
@@ -458,7 +517,7 @@ function AiMatch({ jobId, hasDescription }: { jobId: string; hasDescription: boo
           <TailorPanel jobId={jobId} />
         </div>
       ) : (
-        <p className="text-sm text-slate-500">{t('noDescription')}</p>
+        <p className="text-sm text-slate-600">{t('noDescription')}</p>
       )}
     </div>
   );
@@ -663,7 +722,7 @@ function JobDock({
 }) {
   const t = useTranslations('Jobs.popup');
   const ICON =
-    'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900';
+    'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900';
   return (
     <div className="flex items-center gap-0.5 bg-white py-1 pr-1 pl-2.5">
       <button
@@ -675,7 +734,7 @@ function JobDock({
         <span id={titleId} className="truncate text-sm font-medium text-slate-900">
           {job.title}
         </span>
-        <span className="truncate text-xs text-slate-500">{job.company.name}</span>
+        <span className="truncate text-xs text-slate-600">{job.company.name}</span>
       </button>
       <button
         type="button"

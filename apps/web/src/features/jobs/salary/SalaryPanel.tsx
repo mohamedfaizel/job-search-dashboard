@@ -66,7 +66,7 @@ function RangeBar({ data, language }: { data: SalaryResearch; language: string }
       <dl className="grid grid-cols-3 gap-2 text-sm">
         {(['low', 'median', 'high'] as const).map((key) => (
           <div key={key} className="rounded-lg bg-slate-50 px-3 py-2">
-            <dt className="text-xs text-slate-500">{t(key)}</dt>
+            <dt className="text-xs text-slate-600">{t(key)}</dt>
             <dd className="font-semibold text-slate-900 tabular-nums">{m(data[key] ?? 0)}</dd>
           </div>
         ))}
@@ -95,7 +95,7 @@ export function SalaryPanel({ job, active }: { job: Job; active: boolean }) {
       </p>
     );
   }
-  if (isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
 
   const language = job.language === 'de' ? 'de' : 'en';
   const ask = parseAmount(askText ?? (data.ask === null ? '' : String(data.ask)));
@@ -129,7 +129,7 @@ export function SalaryPanel({ job, active }: { job: Job; active: boolean }) {
               {data.estimatedCount > 0 && ` ${t('estimated', { count: data.estimatedCount })}`}
             </p>
             <RangeBar data={data} language={language} />
-            <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+            <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
               <span className="inline-flex items-center gap-1.5">
                 <span aria-hidden="true" className="h-2 w-4 rounded-full bg-emerald-200" />
                 {t('legendRange')}
@@ -194,7 +194,7 @@ export function SalaryPanel({ job, active }: { job: Job; active: boolean }) {
             />
           </label>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-600">
           {t('askHint')}
           {data.expectation.trim() && ` ${t('yourExpectation', { text: data.expectation.trim() })}`}
         </p>

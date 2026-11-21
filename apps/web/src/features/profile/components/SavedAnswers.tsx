@@ -23,7 +23,7 @@ function SavedAnswerRow({ item }: { item: SavedAnswer }) {
 
   return (
     <li className="space-y-1 rounded-lg border border-slate-200 px-3 py-2 text-sm">
-      <p className="text-slate-500">{item.question}</p>
+      <p className="text-slate-600">{item.question}</p>
       {draft === null ? (
         <p className="flex flex-wrap items-center gap-x-3 text-slate-900">
           <span className="min-w-0 flex-1">{item.answer}</span>
@@ -99,7 +99,7 @@ export function SavedAnswers() {
     );
   }
   if (!answers.data || answers.data.length === 0) {
-    return <p className="text-sm text-slate-500">{answers.isPending ? t('loading') : t('none')}</p>;
+    return <p className="text-sm text-slate-600">{answers.isPending ? t('loading') : t('none')}</p>;
   }
   return (
     <ul aria-label={t('listLabel')} className="space-y-2">

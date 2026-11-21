@@ -39,7 +39,7 @@ export function JobMatchPanel({ jobId, doc, onAddSkill, onAddBullet }: Props) {
   const profile = useMyProfile();
   const setHave = useSetHaveTerm();
 
-  if (insights.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (insights.isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (insights.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
@@ -82,7 +82,7 @@ export function JobMatchPanel({ jobId, doc, onAddSkill, onAddBullet }: Props) {
           {t('covered', { have: have.length + ready.length, total: state.length })}
         </span>
       </div>
-      <p className="text-xs text-slate-500">{t('fitHint')}</p>
+      <p className="text-xs text-slate-600">{t('fitHint')}</p>
 
       {setHave.isError && (
         <p role="alert" className="text-sm text-red-700">
@@ -97,7 +97,7 @@ export function JobMatchPanel({ jobId, doc, onAddSkill, onAddBullet }: Props) {
           <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-800">
             {t('missing')}
           </h3>
-          <p className="text-xs text-slate-500">{t('missingHint')}</p>
+          <p className="text-xs text-slate-600">{t('missingHint')}</p>
           <ul className="flex flex-wrap gap-1.5">
             {missing.map((c) => (
               <li
@@ -133,7 +133,7 @@ export function JobMatchPanel({ jobId, doc, onAddSkill, onAddBullet }: Props) {
           <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-800">
             {t('ready')}
           </h3>
-          <p className="text-xs text-slate-500">{t('readyHint')}</p>
+          <p className="text-xs text-slate-600">{t('readyHint')}</p>
           <ul className="flex flex-wrap gap-1.5">
             {ready.map((c) => (
               <li
@@ -185,10 +185,10 @@ export function JobMatchPanel({ jobId, doc, onAddSkill, onAddBullet }: Props) {
           {t('achievements')}
         </h3>
         {achievements.length === 0 ? (
-          <p className="text-xs text-slate-500">{t('noAchievements')}</p>
+          <p className="text-xs text-slate-600">{t('noAchievements')}</p>
         ) : (
           <>
-            <p className="text-xs text-slate-500">{t('achievementsHint')}</p>
+            <p className="text-xs text-slate-600">{t('achievementsHint')}</p>
             <ul className="space-y-1">
               {achievements.map((line) => (
                 <li key={line} className="flex items-start gap-2 text-sm text-slate-800">

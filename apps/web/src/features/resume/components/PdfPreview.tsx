@@ -70,7 +70,7 @@ export function PdfPreview({
         <span className={`tabular-nums font-semibold ${over ? 'text-red-700' : 'text-slate-900'}`}>
           {pdf.data ? t('pagesOf', { pages, max: maxPages }) : '…'}
         </span>
-        {pdf.isFetching && <span className="text-xs text-slate-500">{t('updating')}</span>}
+        {pdf.isFetching && <span className="text-xs text-slate-600">{t('updating')}</span>}
       </div>
       {over && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-800">
@@ -94,7 +94,7 @@ export function PdfPreview({
           className="h-[75vh] min-h-[480px] w-full rounded-md border border-slate-200 bg-white shadow-sm"
         />
       ) : (
-        <div className="flex h-[60vh] items-center justify-center rounded-md border border-dashed border-slate-300 text-sm text-slate-500">
+        <div className="flex h-[60vh] items-center justify-center rounded-md border border-dashed border-slate-300 text-sm text-slate-600">
           {pdf.isError ? '' : letter && !enabled ? t('noLetterYet') : t('makingPdf')}
         </div>
       )}

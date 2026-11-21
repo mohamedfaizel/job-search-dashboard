@@ -46,6 +46,31 @@ describe('Resume builder', () => {
     expect(await screen.findByText('✓ Saved')).toBeInTheDocument();
   });
 
+  it('folds the text and design tools on a phone, and opens them on a tap', async () => {
+    // jsdom has no matchMedia (so tests get the desktop); this one says "phone".
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      })),
+    );
+    try {
+      const user = await renderBuilder();
+      expect(screen.queryByRole('group', { name: 'Resume tools' })).not.toBeInTheDocument();
+      // The resume itself is right there.
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Ada Lovelace');
+      const toggle = screen.getByRole('button', { name: 'Text and design' });
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await user.click(toggle);
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('group', { name: 'Resume tools' })).toBeInTheDocument();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('shows the PDF pages against your page limit', async () => {
     build.pages = 3;
     await renderBuilder();

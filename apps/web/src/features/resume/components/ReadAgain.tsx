@@ -162,7 +162,7 @@ export function SortWithAi({
         >
           <span aria-hidden>📋</span>
           {prompt.isFetching ? t('gettingPrompt') : t('copyPrompt', { ai: chat.name })}
-          <span aria-hidden className="ml-auto text-slate-500">
+          <span aria-hidden className="ml-auto text-slate-600">
             ↗
           </span>
         </button>

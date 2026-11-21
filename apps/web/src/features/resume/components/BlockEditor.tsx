@@ -157,7 +157,7 @@ function ProjectEditor({
         ) : (
           <span className="min-w-0 flex-1 truncate text-sm text-slate-700">
             {label}
-            <span className="ml-2 text-xs text-slate-500">
+            <span className="ml-2 text-xs text-slate-600">
               {t('projectBullets', { count: project.bullets.filter((b) => b.trim()).length })}
             </span>
           </span>
@@ -287,7 +287,7 @@ function EntryEditor({
         {open ? <DownIcon /> : <UpIcon />}
         <span className="min-w-0 flex-1 truncate font-medium text-slate-800">{name}</span>
         {!open && projects.length > 0 && (
-          <span className="shrink-0 text-xs text-slate-500">
+          <span className="shrink-0 text-xs text-slate-600">
             {t('projectCount', { count: projects.length })}
           </span>
         )}

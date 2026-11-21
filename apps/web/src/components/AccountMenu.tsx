@@ -140,20 +140,20 @@ export function AccountMenu({
                 </span>
               )}
             </p>
-            <p className="truncate text-xs text-slate-500">{user.email}</p>
+            <p className="truncate text-xs text-slate-600">{user.email}</p>
           </div>
           <nav aria-label={t('accountMenu')} className="py-1">
             <Link href="/profile" onClick={close} className={ITEM}>
-              <ProfileIcon className="h-4 w-4 text-slate-500" />
+              <ProfileIcon className="h-4 w-4 text-slate-600" />
               {t('profile')}
             </Link>
             <Link href="/settings" onClick={close} className={ITEM}>
-              <SettingsIcon className="h-4 w-4 text-slate-500" />
+              <SettingsIcon className="h-4 w-4 text-slate-600" />
               {t('settings')}
             </Link>
             {user.role === 'ADMIN' && (
               <Link href="/admin" onClick={close} className={ITEM}>
-                <AdminIcon className="h-4 w-4 text-slate-500" />
+                <AdminIcon className="h-4 w-4 text-slate-600" />
                 {t('adminPage')}
               </Link>
             )}
@@ -166,20 +166,20 @@ export function AccountMenu({
                 }}
                 className={ITEM}
               >
-                <InstallIcon className="h-4 w-4 text-slate-500" />
+                <InstallIcon className="h-4 w-4 text-slate-600" />
                 {t('install')}
               </button>
             )}
             {app.state === 'ios' && (
               <p className="flex items-start gap-2.5 px-2.5 py-2 text-xs text-slate-600">
-                <InstallIcon className="h-4 w-4 shrink-0 text-slate-500" />
+                <InstallIcon className="h-4 w-4 shrink-0 text-slate-600" />
                 {t('installIos')}
               </p>
             )}
           </nav>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-2.5 py-2 text-sm">
             <span className="flex items-center gap-2.5">
-              <LanguageIcon className="h-4 w-4 text-slate-500" />
+              <LanguageIcon className="h-4 w-4 text-slate-600" />
               {t('language')}
             </span>
             <LanguageSwitch

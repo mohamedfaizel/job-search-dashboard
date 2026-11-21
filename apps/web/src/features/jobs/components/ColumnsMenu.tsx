@@ -58,7 +58,7 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
         }
         className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
       >
-        <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 fill-current text-slate-500">
+        <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 fill-current text-slate-600">
           <path d="M1 2h4v12H1zM6 2h4v12H6zM11 2h4v12h-4z" />
         </svg>
         {hiddenCount > 0 && (

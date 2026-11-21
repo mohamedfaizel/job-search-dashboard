@@ -107,7 +107,7 @@ export function InterviewPrepView({
         <PartBody part={shown} jobId={jobId} focus={focus} known={known} setKnown={setKnown} />
       </div>
       <details>
-        <summary className="cursor-pointer text-xs text-slate-500">{t('wholeReply')}</summary>
+        <summary className="cursor-pointer text-xs text-slate-600">{t('wholeReply')}</summary>
         <div className="mt-1 whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-3 text-sm leading-relaxed text-slate-800">
           {text}
         </div>
@@ -187,12 +187,12 @@ function Questions({
       aria-label={t('card', { n: at + 1, total: questions.length })}
       className="space-y-2 rounded-xl border border-slate-200 bg-white p-3"
     >
-      <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+      <div className="flex items-center justify-between gap-2 text-xs text-slate-600">
         <span className="tabular-nums">{t('card', { n: at + 1, total: questions.length })}</span>
         {isKnown && <span className="font-medium text-emerald-700">✓ {t('known')}</span>}
       </div>
       <p className="text-sm font-semibold text-slate-900">{q.question}</p>
-      {q.why && <p className="text-xs text-slate-500">{t('why', { why: q.why })}</p>}
+      {q.why && <p className="text-xs text-slate-600">{t('why', { why: q.why })}</p>}
       {revealed ? (
         <p className="whitespace-pre-wrap rounded-r-md border-l-[3px] border-emerald-500 bg-emerald-50 px-3 py-2 text-sm text-slate-800">
           {q.answer || t('noAnswer')}
@@ -313,7 +313,7 @@ function Research({ body, jobId }: { body: string; jobId: string }) {
                 setDone(item, e.target.checked);
               }}
             />
-            <span className={done.includes(item) ? 'text-slate-500 line-through' : undefined}>
+            <span className={done.includes(item) ? 'text-slate-600 line-through' : undefined}>
               {item}
             </span>
           </label>

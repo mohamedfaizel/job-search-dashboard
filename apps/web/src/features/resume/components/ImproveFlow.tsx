@@ -171,7 +171,7 @@ export function ImproveFlow<T>({ title, hint, getPrompt, run, onKeep, onClose }:
           type="button"
           title={t('close')}
           aria-label={t('close')}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-200"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-200"
           onClick={onClose}
         >
           <XIcon />
