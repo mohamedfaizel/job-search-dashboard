@@ -8,8 +8,8 @@ import {
 import { useTranslations } from 'next-intl';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDismiss } from '@/lib/use-dismiss';
 import { useAiState } from '../../../lib/ai-status';
+import { useDismiss } from '../../../lib/use-dismiss';
 import { capitalize } from '../format';
 import { MessagesPanel } from '../messages/MessagesPanel';
 import { SalaryPanel } from '../salary/SalaryPanel';
