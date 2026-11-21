@@ -44,7 +44,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
     if (boxOpen) box.current?.focus();
   }, [boxOpen]);
 
-  if (insights.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (insights.isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (insights.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
@@ -123,7 +123,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-slate-500">{prep ? t('gapsHintSaved') : t('gapsHint')}</p>
+            <p className="text-xs text-slate-600">{prep ? t('gapsHintSaved') : t('gapsHint')}</p>
           </>
         )}
         {data.germanRequired && (
@@ -139,7 +139,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
           <div role="region" aria-label={t('savedBox')}>
             <InterviewPrepView jobId={jobId} text={prep.text} focus={focus} />
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-600">
             {t('savedAt', { date: f.date(prep.updatedAt) })} ·{' '}
             <button
               type="button"
@@ -205,7 +205,7 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
                 </button>
               )}
             </div>
-            {clipboardBlocked && <p className="text-xs text-slate-500">{t('blocked')}</p>}
+            {clipboardBlocked && <p className="text-xs text-slate-600">{t('blocked')}</p>}
             <form
               hidden={!boxOpen}
               className="space-y-2"
@@ -323,7 +323,7 @@ function InterviewDate({ jobId, at }: { jobId: string; at: string | null }) {
           <span className="rounded-md bg-brand-50 px-2 py-0.5 font-medium text-brand-800 ring-1 ring-brand-200 ring-inset">
             📅 {t('on', { when: f.dateTime(at) })}
           </span>
-          <span className="text-xs text-slate-500">{t('reminder')}</span>
+          <span className="text-xs text-slate-600">{t('reminder')}</span>
           <button
             type="button"
             className={LINK + ' text-xs'}
@@ -374,7 +374,7 @@ function InterviewDate({ jobId, at }: { jobId: string; at: string | null }) {
           >
             {t('cancel')}
           </button>
-          <span className="basis-full text-xs text-slate-500">{t('hint')}</span>
+          <span className="basis-full text-xs text-slate-600">{t('hint')}</span>
         </form>
       ) : (
         <button

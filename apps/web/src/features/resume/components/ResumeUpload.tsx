@@ -57,7 +57,7 @@ export function ResumeUpload({ fileName, onUploaded }: Props) {
             }}
           />
         </label>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-600">
           {fileName ? t('lastUpload', { file: fileName }) : t('uploadHint')}
         </span>
       </div>

@@ -75,7 +75,7 @@ export function ProfilePage() {
         {t('title')}
       </h1>
       {isPending ? (
-        <p className="text-sm text-slate-500">{t('loading')}</p>
+        <p className="text-sm text-slate-600">{t('loading')}</p>
       ) : error ? (
         <>
           <p role="alert" className="text-sm text-red-700">

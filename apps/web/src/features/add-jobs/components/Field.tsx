@@ -37,7 +37,7 @@ export function Field({
         {tip && <InfoTip label={t('moreAbout', { field: label })} text={tip} />}
       </div>
       {children}
-      {hint && !error && <p className="text-xs text-slate-500">{hint}</p>}
+      {hint && !error && <p className="text-xs text-slate-600">{hint}</p>}
       {error && (
         <p id={`${htmlFor}-error`} role="alert" className="text-xs text-red-700">
           {error}

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useDismiss } from '@/lib/use-dismiss';
+import { useDismiss } from '../lib/use-dismiss';
 import { useToast } from './Toasts';
 
 /** A job's link: Job posts opens its popup. */
@@ -62,7 +62,7 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
         )}
         {headline(item)}
       </p>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-600">
         {interview ? t('interviewHint') : t('fitAtLeast', { fit: item.fitMin })} ·{' '}
         {timeAgo(item.createdAt, locale)}
       </p>

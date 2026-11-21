@@ -75,6 +75,39 @@ describe('Jobs GraphQL API', () => {
     });
   });
 
+  it('warns before adding the same job twice, and adds it anyway when asked', async () => {
+    const first = await addJob({
+      title: 'Frontend Engineer',
+      companyName: 'Acme',
+      url: 'https://acme.example/jobs/1',
+    });
+    const extensionsOf = (res: { errors?: { extensions?: Record<string, unknown> }[] }) =>
+      res.errors?.[0]?.extensions;
+
+    // Same title and company, in other letter case.
+    const again = await t.gql(CREATE_JOB, {
+      input: { title: 'frontend engineer', companyName: 'ACME' },
+    });
+    expect(extensionsOf(again)).toMatchObject({
+      apiCode: 'JOB_ALREADY_LISTED',
+      apiParams: { id: first, title: 'Frontend Engineer', company: 'Acme' },
+    });
+    // The same link, under another title.
+    const sameLink = await t.gql(CREATE_JOB, {
+      input: { title: 'FE Dev', companyName: 'Other', url: 'https://acme.example/jobs/1' },
+    });
+    expect(extensionsOf(sameLink)?.['apiCode']).toBe('JOB_ALREADY_LISTED');
+
+    // Someone else's list doesn't count.
+    const other = await t.asUser(CREATE_JOB, {
+      input: { title: 'Frontend Engineer', companyName: 'Acme' },
+    });
+    expect(other.errors).toBeUndefined();
+
+    await addJob({ title: 'Frontend Engineer', companyName: 'Acme', allowDuplicate: true });
+    expect(await t.prisma.job.count({ where: { title: 'Frontend Engineer' } })).toBe(3);
+  });
+
   it('rejects invalid input with a readable message', async () => {
     const res = await t.gql(CREATE_JOB, {
       input: { title: '', companyName: 'Acme', url: 'not a url' },

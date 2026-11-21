@@ -64,7 +64,7 @@ export function GmailAccounts() {
       )}
 
       {status.isPending ? (
-        <p className="text-sm text-slate-500">{t('loading')}</p>
+        <p className="text-sm text-slate-600">{t('loading')}</p>
       ) : status.isError ? (
         <p role="alert" className="text-sm text-red-700">
           {t('loadFailed', { error: errorText(status.error) })}
@@ -72,7 +72,7 @@ export function GmailAccounts() {
       ) : (
         <>
           {accounts.length === 0 ? (
-            <p className="text-sm text-slate-500">{t('none')}</p>
+            <p className="text-sm text-slate-600">{t('none')}</p>
           ) : (
             <ul className="divide-y divide-slate-100 rounded-md border border-slate-200">
               {accounts.map((account) => (
@@ -82,7 +82,7 @@ export function GmailAccounts() {
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-900">{account.email}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-600">
                       {account.lastSyncAt
                         ? t('lastChecked', {
                             date: format.dateTime(new Date(account.lastSyncAt), {
@@ -130,7 +130,7 @@ export function GmailAccounts() {
           </div>
         </>
       )}
-      <p className="text-xs text-slate-500">{t('privacy')}</p>
+      <p className="text-xs text-slate-600">{t('privacy')}</p>
     </section>
   );
 }

@@ -85,7 +85,7 @@ function Stepper({ step, onChoose }: { step: ApplyStep; onChoose: (s: ApplyStep)
                   ? 'text-emerald-700'
                   : state === 'current'
                     ? 'text-slate-900'
-                    : 'text-slate-500'
+                    : 'text-slate-600'
               }`}
             >
               <span
@@ -95,7 +95,7 @@ function Stepper({ step, onChoose }: { step: ApplyStep; onChoose: (s: ApplyStep)
                     ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
                     : state === 'current'
                       ? 'border-brand-600 bg-brand-600 text-white'
-                      : 'border-slate-300 text-slate-500'
+                      : 'border-slate-300 text-slate-600'
                 }`}
               >
                 {state === 'done' ? '✓' : n}
@@ -274,7 +274,7 @@ function ApplyKit({
       </p>
     );
   }
-  if (!data) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (!data) return <p className="text-sm text-slate-600">{t('loading')}</p>;
 
   const copyClaudePrompt = async () => {
     setCopyFailed(!(await copyAndOpen(data.prompt, chat.url)));
@@ -411,7 +411,7 @@ function ApplyKit({
               </button>
               <ShowText label={t('chromeBox')} text={chromePrompt(job)} />
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-600">
               {t.rich('readsKit', {
                 link: (chunks) => (
                   <a href={applyKitUrl(job.id)} target="_blank" rel="noreferrer" className={LINK}>

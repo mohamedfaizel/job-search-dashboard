@@ -118,6 +118,10 @@ describe('AdminPage', () => {
     await renderPage();
     await table();
 
+    // A full-width row on a phone (it used to shrink to a tiny square next to the filters).
+    expect(screen.getByRole('searchbox', { name: 'Find a user' }).closest('label')).toHaveClass(
+      'w-full',
+    );
     await user.type(screen.getByRole('searchbox', { name: 'Find a user' }), 'POSTEO');
     expect((await table()).queryByText('Sara Klein')).toBeNull();
     expect((await table()).getByText('Tom Becker')).toBeInTheDocument();

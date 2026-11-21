@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 
 function Loading() {
-  return <p className="text-sm text-slate-500">Loading…</p>;
+  return <p className="text-sm text-slate-600">Loading…</p>;
 }
 
 // These screens remember choices in browser storage (hidden columns, jobs you went to apply

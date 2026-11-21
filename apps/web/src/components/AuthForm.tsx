@@ -149,7 +149,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 className={field}
               />
               {mode === 'sign-up' && (
-                <span className="mt-1 block text-xs font-normal text-slate-500">
+                <span className="mt-1 block text-xs font-normal text-slate-600">
                   {t('passwordHint')}
                 </span>
               )}

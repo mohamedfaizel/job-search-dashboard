@@ -72,7 +72,7 @@ export function WelcomePage() {
           onClick={() => {
             done('/jobs');
           }}
-          className="text-sm text-slate-500 underline hover:text-slate-800"
+          className="text-sm text-slate-600 underline hover:text-slate-800"
         >
           {t('skipAll')}
         </button>
@@ -103,7 +103,7 @@ export function WelcomePage() {
             </p>
           </div>
           {keys.isPending ? (
-            <p className="text-sm text-slate-500">{t('loading')}</p>
+            <p className="text-sm text-slate-600">{t('loading')}</p>
           ) : keys.isError ? (
             <p role="alert" className="text-sm text-red-700">
               {errorText(keys.error)}

@@ -3,7 +3,7 @@ import { APPLICATION_STATUSES } from '@jobsearch/data';
 import { useJobFormat } from '../useJobFormat';
 
 const TONE: Record<ApplicationStatus, string> = {
-  NONE: 'text-slate-500',
+  NONE: 'text-slate-600',
   SAVED: 'text-sky-700',
   APPLIED: 'text-brand-700',
   INTERVIEWING: 'text-amber-700',

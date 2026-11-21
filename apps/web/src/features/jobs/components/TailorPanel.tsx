@@ -65,7 +65,7 @@ function TailorResult({ jobId, tailored }: { jobId: string; tailored: TailoredRe
           </p>
         </details>
       ) : (
-        <p className="text-sm text-slate-500">{t('noCover')}</p>
+        <p className="text-sm text-slate-600">{t('noCover')}</p>
       )}
     </div>
   );

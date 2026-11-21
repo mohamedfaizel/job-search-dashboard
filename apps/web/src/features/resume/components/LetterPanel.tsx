@@ -44,7 +44,7 @@ export function LetterPanel({ jobId, onSaved }: Props) {
   const letter = useJobCoverLetter(jobId);
   const save = useSaveJobCoverLetter();
   const template = useCoverLetterTemplate(letter.data?.language ?? '', !!letter.data);
-  if (letter.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (letter.isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (letter.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
@@ -99,7 +99,7 @@ export function TemplatePanel({ language, onSaved }: { language: string; onSaved
   const errorText = useErrorText();
   const template = useCoverLetterTemplate(language);
   const save = useSaveCoverLetterTemplate();
-  if (template.isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (template.isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (template.isError) {
     return (
       <p role="alert" className="text-sm text-red-700">
@@ -208,7 +208,7 @@ function LetterEditor({
     >
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="mr-auto text-sm font-semibold text-slate-900">{title}</h2>
-        <span role="status" className="text-xs text-slate-500">
+        <span role="status" className="text-xs text-slate-600">
           {saving ? t('saving') : unsaved ? t('notSaved') : `✓ ${t('saved')}`}
         </span>
         <span className="text-xs tabular-nums text-slate-600">{t('words', { count })}</span>
@@ -228,7 +228,7 @@ function LetterEditor({
           </button>
         )}
       </div>
-      <p className="text-xs text-slate-500">{hint}</p>
+      <p className="text-xs text-slate-600">{hint}</p>
 
       {asking && (
         <ImproveFlow<string>

@@ -515,7 +515,7 @@ export function ProfileForm({ profile, accountName = '', tab, onTab }: Props) {
                         }}
                         aria-label={t('custom.remove', { n: index + 1 })}
                         title={t('custom.removeTitle')}
-                        className="rounded-md px-2 py-1.5 text-sm text-slate-500 hover:bg-red-50 hover:text-red-700"
+                        className="rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-red-50 hover:text-red-700"
                       >
                         ✕
                       </button>

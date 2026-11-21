@@ -156,7 +156,7 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
         <span>{option.label}</span>
         <span className="flex shrink-0 items-center gap-2">
           {option.kind === 'region' && (
-            <span className="text-xs font-normal text-slate-500">
+            <span className="text-xs font-normal text-slate-600">
               {partial
                 ? t('regionPartial', { picked: partial, count: option.region.codes.length })
                 : t('regionCount', { count: option.region.codes.length })}
@@ -258,7 +258,7 @@ export function CountrySelect({ id, value, onChange, invalid, describedBy }: Pro
           aria-multiselectable
           className="absolute z-30 mt-1 max-h-80 w-full min-w-64 overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
         >
-          {options.length === 0 && <p className="px-3 py-2 text-slate-500">{t('none')}</p>}
+          {options.length === 0 && <p className="px-3 py-2 text-slate-600">{t('none')}</p>}
           {worldOptions.map((option, i) => renderOption(option, i))}
           {regionOptions.length > 0 && (
             <div role="group" aria-labelledby={`${listId}-regions`}>

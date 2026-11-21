@@ -41,7 +41,7 @@ export function ApiKeys() {
         <p className="text-sm text-slate-600">{t('intro')}</p>
       </div>
       {keys.isPending ? (
-        <p className="text-sm text-slate-500">{t('loading')}</p>
+        <p className="text-sm text-slate-600">{t('loading')}</p>
       ) : keys.isError ? (
         <p role="alert" className="text-sm text-red-700">
           {t('loadFailed', { error: errorText(keys.error) })}
@@ -102,7 +102,7 @@ function AiKeys({ keys }: { keys: ApiKey[] }) {
             </button>
           ))}
         </div>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-600">
           {t('chatOpens', { chat: AI_CHATS[provider].name })}
         </span>
       </div>
@@ -330,7 +330,7 @@ export function KeyCard({
           {t('testFailed', { error: errorText(test.error) })}
         </p>
       )}
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-600">
         {hint} {saved && testHint}
       </p>
     </div>
@@ -372,7 +372,7 @@ function ModelBox({
           <option key={option} value={option} />
         ))}
       </datalist>
-      <span id={`${id}-hint`} className="text-xs text-slate-500">
+      <span id={`${id}-hint`} className="text-xs text-slate-600">
         {t('modelHint', { model: models.default })}
       </span>
     </span>

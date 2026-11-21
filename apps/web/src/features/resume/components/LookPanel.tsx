@@ -28,7 +28,7 @@ const BUTTON =
   'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
 const SELECT = 'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm';
 const LINK = 'text-sm text-brand-700 hover:underline';
-const BAR_LABEL = 'text-sm text-slate-500';
+const BAR_LABEL = 'text-sm text-slate-600';
 const BAR_SELECT = 'rounded-md border border-slate-300 bg-white px-2 py-1 text-sm';
 const BAR_BUTTON =
   'rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand-500';
@@ -138,7 +138,7 @@ function Photo({ style, onSaved }: { style: DocumentStyle; onSaved: () => void }
           {t('removePhoto')}
         </button>
       )}
-      <span className="text-xs text-slate-500">{t('photoHint')}</span>
+      <span className="text-xs text-slate-600">{t('photoHint')}</span>
       {(tooBig || error) && (
         <p role="alert" className="basis-full text-sm text-red-700">
           {tooBig ? t('photoTooBig') : errorText(error)}
@@ -154,7 +154,7 @@ function Photo({ style, onSaved }: { style: DocumentStyle; onSaved: () => void }
 function WordFileNote({ word }: { word: WordTemplate | null }) {
   const t = useTranslations('Resume.look');
   if (!word) {
-    return <p className="text-xs text-slate-500">{t('wordNone')}</p>;
+    return <p className="text-xs text-slate-600">{t('wordNone')}</p>;
   }
   if (!word.usable) {
     return (
@@ -461,7 +461,7 @@ function Spacing({
         {t('spacing')}
       </legend>
       {!inline && (
-        <p className="text-xs text-slate-500">{word ? t('wordSpacing') : t('spacingHint')}</p>
+        <p className="text-xs text-slate-600">{word ? t('wordSpacing') : t('spacingHint')}</p>
       )}
       <div
         className={`grid gap-4 ${inline ? 'w-full sm:w-[34rem] sm:grid-cols-3' : 'sm:grid-cols-3'} ${word ? 'opacity-50' : ''}`}
@@ -701,7 +701,7 @@ function DesignForm({
   const statusLine = (
     <p
       role="status"
-      className={`text-sm font-medium ${update.isError ? 'text-red-700' : changed || isPending ? 'text-slate-500' : 'text-emerald-700'}`}
+      className={`text-sm font-medium ${update.isError ? 'text-red-700' : changed || isPending ? 'text-slate-600' : 'text-emerald-700'}`}
     >
       {isPending
         ? t('status.saving')
@@ -758,7 +758,7 @@ function DesignForm({
           />
         </div>
         {draft.resumeTemplate === 'mine' && (
-          <p className="text-xs text-slate-500">{t('wordColours')}</p>
+          <p className="text-xs text-slate-600">{t('wordColours')}</p>
         )}
       </div>
       <div className="space-y-1">
@@ -832,7 +832,7 @@ function DesignForm({
           {t('previewLetter')}
         </a>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-600">
         {data?.coverLetterLayouts.find((l) => l.id === draft.coverLetterLayout)?.description}
       </p>
     </div>
@@ -988,9 +988,9 @@ export function LookPanel({ onSaved, wide = false }: { onSaved: () => void; wide
   const style = useDocumentStyle();
   return (
     <div className={wide ? 'space-y-2' : 'space-y-4'}>
-      {!wide && <p className="text-xs text-slate-500">{t('intro')}</p>}
+      {!wide && <p className="text-xs text-slate-600">{t('intro')}</p>}
       {style.isPending ? (
-        <p className="text-sm text-slate-500">{t('loading')}</p>
+        <p className="text-sm text-slate-600">{t('loading')}</p>
       ) : style.isError ? (
         <p role="alert" className="text-sm text-red-700">
           {errorText(style.error)}

@@ -24,7 +24,7 @@ export function CopyButton({ text }: { text: string }) {
         {t('button')}
       </button>
       {done && (
-        <span role="status" className="text-xs text-slate-500">
+        <span role="status" className="text-xs text-slate-600">
           {done === 'yes' ? t('done') : t('failedShort')}
         </span>
       )}

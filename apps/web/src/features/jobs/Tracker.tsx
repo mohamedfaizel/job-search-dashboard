@@ -101,9 +101,9 @@ export function TrackerPage() {
       )}
 
       {applications.isPending ? (
-        <p className="text-sm text-slate-500">{t('loading')}</p>
+        <p className="text-sm text-slate-600">{t('loading')}</p>
       ) : list.length === 0 && applications.isSuccess ? (
-        <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+        <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">
           {t('empty')}
         </p>
       ) : (

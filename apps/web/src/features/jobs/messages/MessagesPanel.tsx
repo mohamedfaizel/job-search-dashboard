@@ -26,7 +26,7 @@ function Drafts({ job }: { job: Job }) {
   const [recipient, setRecipient] = useState('');
 
   if (profile.isPending || insights.isPending) {
-    return <p className="text-sm text-slate-500">{t('loading')}</p>;
+    return <p className="text-sm text-slate-600">{t('loading')}</p>;
   }
 
   const p = profile.data;
@@ -70,7 +70,7 @@ function Drafts({ job }: { job: Job }) {
             className="h-9 w-full max-w-xs rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 focus:outline-none"
           />
         </label>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-600">
           {t(language === 'de' ? 'inGerman' : 'inEnglish')} {!p?.headline && t('addHeadline')}
         </p>
         <ul className="space-y-3">
@@ -81,7 +81,7 @@ function Drafts({ job }: { job: Job }) {
                 <span className="flex items-center gap-3">
                   {id === 'connect' && (
                     <span
-                      className={`text-xs tabular-nums ${drafts.connect.length > CONNECT_LIMIT ? 'font-medium text-red-700' : 'text-slate-500'}`}
+                      className={`text-xs tabular-nums ${drafts.connect.length > CONNECT_LIMIT ? 'font-medium text-red-700' : 'text-slate-600'}`}
                     >
                       {t('chars', { count: drafts.connect.length, limit: CONNECT_LIMIT })}
                     </span>
@@ -89,14 +89,14 @@ function Drafts({ job }: { job: Job }) {
                   <CopyButton text={drafts[id]} />
                 </span>
               </div>
-              <p className="text-xs text-slate-500">{t(`when.${id}`)}</p>
+              <p className="text-xs text-slate-600">{t(`when.${id}`)}</p>
               <p lang={language} className="text-sm whitespace-pre-line text-slate-700">
                 {drafts[id]}
               </p>
             </li>
           ))}
         </ul>
-        <p className="text-xs text-slate-500">{t('followUpHint')}</p>
+        <p className="text-xs text-slate-600">{t('followUpHint')}</p>
       </section>
 
       <section aria-labelledby="messages-ai" className="space-y-2">

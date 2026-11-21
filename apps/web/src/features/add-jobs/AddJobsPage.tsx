@@ -22,7 +22,7 @@ export function AddJobsPage() {
   const errorText = useErrorText();
   const { isPending, error } = useMe();
   const t = useTranslations('AddJobs');
-  if (isPending) return <p className="text-sm text-slate-500">{t('loading')}</p>;
+  if (isPending) return <p className="text-sm text-slate-600">{t('loading')}</p>;
   if (error) {
     return (
       <p role="alert" className="text-sm text-red-700">

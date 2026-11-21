@@ -81,7 +81,7 @@ export function ResumeMatcherStatus() {
           >
             {testAi.isPending ? t('testing') : t('test')}
           </button>
-          <span className="text-xs text-slate-500">{t('testHint')}</span>
+          <span className="text-xs text-slate-600">{t('testHint')}</span>
         </div>
       )}
       {ready && <MatcherResumePanel />}

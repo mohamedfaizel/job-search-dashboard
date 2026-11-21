@@ -132,7 +132,7 @@ function Action({
         ) : (
           <p className="text-slate-600">{t('suggestIntro')}</p>
         )}
-        <p className="text-slate-500 line-through">{readLine(raw).text}</p>
+        <p className="text-slate-600 line-through">{readLine(raw).text}</p>
         <p className="text-slate-800">{readLine(after).text}</p>
         <button
           type="button"
@@ -464,7 +464,7 @@ export function MissingKeywords({
                   )}
                   <CopyTerm term={term} />
                   {check?.relatedTo && !isIn && !isSkipped && (
-                    <span className="ml-2 text-xs font-normal text-slate-500 no-underline">
+                    <span className="ml-2 text-xs font-normal text-slate-600 no-underline">
                       {t('relatedTo', { term: check.relatedTo })}
                     </span>
                   )}
@@ -499,7 +499,7 @@ export function MissingKeywords({
                 )}
                 {isSkipped && (
                   <>
-                    <span className="text-xs text-slate-500">{t('skipped')}</span>
+                    <span className="text-xs text-slate-600">{t('skipped')}</span>
                     <button
                       type="button"
                       className={LINK}

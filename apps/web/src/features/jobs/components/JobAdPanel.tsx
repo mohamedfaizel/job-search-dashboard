@@ -68,7 +68,7 @@ export function JobAdPanel({ jobId, description }: { jobId: string; description:
     });
   }, [description, marked, data, t]);
 
-  if (!parts) return <p className="text-sm text-slate-500">{t('none')}</p>;
+  if (!parts) return <p className="text-sm text-slate-600">{t('none')}</p>;
 
   return (
     <div className="space-y-3">

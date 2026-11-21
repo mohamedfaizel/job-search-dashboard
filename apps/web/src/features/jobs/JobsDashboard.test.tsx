@@ -370,6 +370,12 @@ describe('JobsDashboard', () => {
     expect(screen.queryByText(/Try clearing some filters/)).not.toBeInTheDocument();
   });
 
+  it('leaves room under the page buttons for the round Apply queue button', async () => {
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    expect(screen.getByTestId('pager')).toHaveClass('pb-20');
+  });
+
   it('says to clear filters when a search finds nothing', async () => {
     const user = userEvent.setup();
     renderDashboard();
@@ -877,6 +883,41 @@ describe('JobsDashboard', () => {
     });
     afterEach(() => {
       vi.unstubAllGlobals();
+    });
+
+    it('keeps the job popup footer to one row, with the rest behind More', async () => {
+      const user = userEvent.setup();
+      renderDashboard();
+      await user.click(await screen.findByRole('button', { name: 'Senior Frontend Engineer' }));
+      const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+      expect(within(dialog).queryByRole('combobox', { name: 'Application status' })).toBeNull();
+      expect(within(dialog).getAllByRole('button', { name: 'Save to tracker' })).toHaveLength(2);
+      expect(within(dialog).getAllByRole('button', { name: 'Hide this job' })).toHaveLength(2);
+      expect(within(dialog).getByRole('button', { name: 'Apply →' })).toBeInTheDocument();
+
+      const more = within(dialog).getByRole('button', { name: /^More: status/ });
+      await user.click(more);
+      expect(more).toHaveAttribute('aria-expanded', 'true');
+      expect(
+        within(dialog).getByRole('combobox', { name: 'Application status' }),
+      ).toBeInTheDocument();
+      expect(within(dialog).getByRole('link', { name: /open original posting/i })).toBeVisible();
+      await user.keyboard('{Escape}');
+      expect(more).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('gives every control in a job card a 44 px tap area', async () => {
+      const user = userEvent.setup();
+      renderDashboard();
+      await screen.findByText('Senior Frontend Engineer');
+      const card = screen.getAllByRole('listitem')[0]!;
+      expect(card.className).toContain('[&_button]:min-h-11');
+      expect(card.className).toContain('[&_select]:h-11');
+      const box = within(card).getByRole('checkbox');
+      const square = box.closest('label')!;
+      expect(square).toHaveClass('h-11', 'w-11');
+      await user.click(square);
+      expect(box).toBeChecked();
     });
 
     it('shows cards, a full-width search and every filter in one sheet', async () => {

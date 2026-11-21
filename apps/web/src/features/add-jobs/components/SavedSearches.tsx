@@ -59,7 +59,7 @@ export function SavedSearches({ onLoad, loadedId = null }: Props) {
           </button>
         )}
       </div>
-      {isPending && <p className="text-sm text-slate-500">{t('saved.loading')}</p>}
+      {isPending && <p className="text-sm text-slate-600">{t('saved.loading')}</p>}
       {error && (
         <p role="alert" className="text-sm text-red-700">
           {t('saved.loadError', { error: errorText(error) })}
@@ -173,7 +173,7 @@ function SavedSearchRow({
         {describe(search)}
       </p>
       <div className="flex items-center gap-1.5">
-        <p className="min-w-0 flex-1 truncate text-xs text-slate-500">
+        <p className="min-w-0 flex-1 truncate text-xs text-slate-600">
           {last
             ? t(last.creditsCharged === null || free ? 'saved.lastRun' : 'saved.lastRunCredits', {
                 date: dateTime(last.finishedAt),
@@ -251,7 +251,7 @@ function SavedSearchRow({
       )}
 
       <div id={moreId} hidden={!open} className="space-y-2 border-t border-slate-200 pt-2">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-600">
           {free
             ? t('saved.lastDaysFree', { days: search.maxAgeDays })
             : t('saved.lastDays', {

@@ -353,6 +353,8 @@ describe('job insights without AI', () => {
       title: 'Frontend Engineer',
       description:
         'We build web apps in React for customers across Europe. Office language is English.',
+      // Same title and company as the first one, on purpose.
+      allowDuplicate: true,
     });
     await t.prisma.profile.create({
       data: { userId: 2, resumeText: 'React.', languages: ['German A2', 'English C1'] },

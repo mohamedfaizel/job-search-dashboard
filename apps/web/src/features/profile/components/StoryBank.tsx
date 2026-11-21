@@ -76,7 +76,7 @@ export function StoryBank() {
           }}
         />
       )}
-      {stories.isPending && <p className="text-sm text-slate-500">{t('loading')}</p>}
+      {stories.isPending && <p className="text-sm text-slate-600">{t('loading')}</p>}
       {stories.isError && (
         <p role="alert" className="text-sm text-red-700">
           {errorText(stories.error)}
@@ -138,7 +138,7 @@ function StoryRow({ story }: { story: Story }) {
           <dl className="mt-2 grid gap-x-3 gap-y-1 sm:grid-cols-[7rem_1fr]">
             {PARTS.filter((part) => story[part].trim()).map((part) => (
               <div key={part} className="contents">
-                <dt className="font-medium text-slate-500">{t(`parts.${part}`)}</dt>
+                <dt className="font-medium text-slate-600">{t(`parts.${part}`)}</dt>
                 <dd className="whitespace-pre-line text-slate-800">{story[part]}</dd>
               </div>
             ))}
@@ -245,7 +245,7 @@ function StoryForm({ initial, onDone }: { initial: StoryInput; onDone: () => voi
         <label key={part} className="block space-y-1 text-sm">
           <span className="font-medium text-slate-700">
             {t(`parts.${part}`)}
-            <span className="ml-2 font-normal text-slate-500">{t(`hints.${part}`)}</span>
+            <span className="ml-2 font-normal text-slate-600">{t(`hints.${part}`)}</span>
           </span>
           <textarea
             rows={2}

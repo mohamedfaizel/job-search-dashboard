@@ -57,13 +57,13 @@ export function SidePanel({
           <h2 id={titleId} className="text-base font-semibold text-slate-900">
             {title}
           </h2>
-          {note && <span className="text-xs text-slate-500">{note}</span>}
+          {note && <span className="text-xs text-slate-600">{note}</span>}
           <button
             ref={close}
             type="button"
             aria-label={closeLabel}
             onClick={onClose}
-            className="ml-auto rounded-md px-2 py-1 text-lg leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="ml-auto rounded-md px-2 py-1 text-lg leading-none text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             ✕
           </button>

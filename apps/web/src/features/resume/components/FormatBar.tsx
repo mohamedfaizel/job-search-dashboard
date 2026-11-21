@@ -203,7 +203,7 @@ export function FormatBar({
       )}
       {/* In the page's tool row there is no room: the hint is the toolbar's tooltip. */}
       {!bare && (
-        <span className="ml-1 hidden text-xs text-slate-500 sm:inline">
+        <span className="ml-1 hidden text-xs text-slate-600 sm:inline">
           {active ? t('hint') : t('hintIdle')}
         </span>
       )}

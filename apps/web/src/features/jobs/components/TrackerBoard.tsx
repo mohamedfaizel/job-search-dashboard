@@ -169,7 +169,7 @@ export function TrackerBoard({ applications, onMove, onOpen, onFollowedUp }: Pro
           const name = (
             <>
               {f.status(status)}{' '}
-              <span className="font-normal text-slate-500">({allCards.length})</span>
+              <span className="font-normal text-slate-600">({allCards.length})</span>
             </>
           );
           return (
@@ -211,7 +211,7 @@ export function TrackerBoard({ applications, onMove, onOpen, onFollowedUp }: Pro
                   >
                     <span className="flex-1">{name}</span>
                     {folded && allCards.length > 0 && (
-                      <span className="text-xs font-normal text-slate-500">
+                      <span className="text-xs font-normal text-slate-600">
                         {t('fold.tapToOpen')}
                       </span>
                     )}
@@ -266,7 +266,7 @@ export function TrackerBoard({ applications, onMove, onOpen, onFollowedUp }: Pro
                         <FollowUp app={app} onFollowedUp={onFollowedUp} />
                       )}
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-slate-600">
                           {t('moved', { date: f.date(updatedAt) })}
                           {app.followedUpAt && !app.followUpDue && (
                             <span className="block">

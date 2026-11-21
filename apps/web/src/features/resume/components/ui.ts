@@ -1,6 +1,6 @@
 /** Shared class names, so every card and button in the builder looks the same. */
 export const ICON_BUTTON =
-  'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-500 disabled:opacity-30 disabled:hover:bg-transparent';
+  'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-brand-500 disabled:opacity-30 disabled:hover:bg-transparent';
 export const GRIP =
   'inline-flex h-7 w-5 shrink-0 cursor-grab items-center justify-center text-slate-400 hover:text-slate-700 active:cursor-grabbing';
 export const FIELD =

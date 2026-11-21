@@ -71,13 +71,13 @@ function MatchResult({ match }: { match: JobMatch }) {
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
         <p className="text-3xl font-semibold text-slate-900">
           {Math.round(score)}
-          <span className="text-base font-normal text-slate-500">{t('match.outOf')}</span>
+          <span className="text-base font-normal text-slate-600">{t('match.outOf')}</span>
         </p>
         <Badge tone={scoreTone(score)}>
           {score >= 75 ? t('match.strong') : score >= 50 ? t('match.partial') : t('match.weak')}
         </Badge>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-600">
         {match.keywordMatchBefore === null
           ? t('match.scored', { file })
           : t('match.scoredBefore', { file, percent: Math.round(match.keywordMatchBefore) })}

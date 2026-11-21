@@ -16,7 +16,7 @@ import { scoreTone } from './MatchPanel';
 const CHIP =
   'inline-flex h-7 items-center gap-1 rounded-md pl-2 text-xs font-medium ring-1 ring-inset';
 const CHIP_BUTTON = 'h-6 rounded px-1.5 leading-none hover:bg-black/10';
-const LABEL = 'text-xs font-semibold tracking-wide text-slate-500 uppercase';
+const LABEL = 'text-xs font-semibold tracking-wide text-slate-600 uppercase';
 
 const RING_COLOR = { green: '#059669', orange: '#d97706', red: '#dc2626' } as const;
 
@@ -218,7 +218,7 @@ function RemovedTerms({
       </summary>
       <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t('removedLabel')}>
         {removed.map(({ term, everywhere }) => (
-          <li key={term} className={`${CHIP} bg-white pr-0.5 text-slate-500 ring-slate-200`}>
+          <li key={term} className={`${CHIP} bg-white pr-0.5 text-slate-600 ring-slate-200`}>
             <span className="line-through">{term}</span>
             {everywhere ? (
               <span className="text-slate-400">{t('allJobsTag')}</span>
@@ -230,7 +230,7 @@ function RemovedTerms({
                 }}
                 aria-label={t('removeEverywhere', { term })}
                 title={t('removeEverywhereHint')}
-                className={`${CHIP_BUTTON} text-slate-500 underline decoration-dotted`}
+                className={`${CHIP_BUTTON} text-slate-600 underline decoration-dotted`}
               >
                 {t('allJobs')}
               </button>
@@ -285,10 +285,10 @@ function Summary({ insights }: { insights: JobInsights }) {
           <summary className="cursor-pointer list-none text-brand-600 hover:text-brand-800">
             {t('howWorked')}
           </summary>
-          <p className="mt-1 text-xs text-slate-500">{t('howText')}</p>
+          <p className="mt-1 text-xs text-slate-600">{t('howText')}</p>
           <ul
             aria-label={t('partsLabel')}
-            className="mt-1 flex flex-wrap gap-x-3 text-xs text-slate-500"
+            className="mt-1 flex flex-wrap gap-x-3 text-xs text-slate-600"
           >
             {scoreParts(insights).map((part) => {
               const label = t(`parts.${part.key}`);
@@ -315,7 +315,7 @@ function Language({ insights }: { insights: JobInsights }) {
   const t = useTranslations('Jobs.fit');
   const level = f.germanLevel(insights);
   return (
-    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-600">
       <span>
         {t('adIn')}{' '}
         <span className="font-medium text-slate-700">
@@ -371,7 +371,7 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
   const t = useTranslations('Jobs.fit');
 
   if (insights.isPending) {
-    return <p className="text-sm text-slate-500">{t('reading')}</p>;
+    return <p className="text-sm text-slate-600">{t('reading')}</p>;
   }
   if (insights.isError) {
     return (
@@ -429,7 +429,7 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
           <h4 className={LABEL}>
             {hasResume ? t('keywordsMissing') : t('keywords')} · {missingKeywords.length}
           </h4>
-          <p className="text-xs text-slate-500">{t('keywordsHint')}</p>
+          <p className="text-xs text-slate-600">{t('keywordsHint')}</p>
           <MissingList
             label={t('missingKeywordsLabel')}
             terms={missingKeywords}
@@ -446,7 +446,7 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
           <h4 className={LABEL}>
             {t('youHave')} · {youHave.length}
           </h4>
-          <p className="text-xs text-slate-500">{t('youHaveHint')}</p>
+          <p className="text-xs text-slate-600">{t('youHaveHint')}</p>
           <ul className="flex flex-wrap gap-1.5" aria-label={t('youHave')}>
             {youHave.map((item) => (
               <li key={item.term}>
@@ -493,7 +493,7 @@ export function InsightsPanel({ jobId }: { jobId: string }) {
 
       <div className="space-y-1 border-t border-slate-100 pt-3">
         {normalizedTitle && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-600">
             {t.rich('titleRead', {
               title: normalizedTitle,
               b: (chunks) => <span className="font-medium text-slate-700">{chunks}</span>,
