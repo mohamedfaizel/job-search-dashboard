@@ -34,6 +34,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { InfoTip } from '@/components/InfoTip';
 import { useErrorText } from '../../i18n/useErrorText';
 import { ApplyQueuePanel } from './components/ApplyQueuePanel';
 import { DEFAULT_HIDDEN_COLUMNS, MENU_COLUMNS } from './components/columns';
@@ -46,6 +47,7 @@ import type { StatCardKey } from './components/StatCards';
 import { StatCards } from './components/StatCards';
 import { Toolbar } from './components/Toolbar';
 import { useColumnVisibility } from './useColumnVisibility';
+import { useIsPhone } from './useIsPhone';
 import { usePendingApplies } from './usePendingApplies';
 import { useSavedTableSettings } from './useSavedTableSettings';
 
@@ -75,6 +77,7 @@ export function JobsDashboard() {
   const hiddenCount = useHiddenJobCount();
   const applications = useMyApplications();
   const columnVisibility = useColumnVisibility(DEFAULT_HIDDEN_COLUMNS);
+  const isPhone = useIsPhone();
   const [openJobId, setOpenJobId] = useState<string | null>(null);
   // A link like /jobs?job=<id> (from a notification) opens that job, then the URL is tidied.
   const searchParams = useSearchParams();
@@ -227,29 +230,73 @@ export function JobsDashboard() {
     dispatch(setFilterValues({ key: 'applicationStatuses', values }));
   };
 
+  const activeFilterCount = countActiveFilters(tableState);
+  // Fit % updates by itself; this is only a "just in case" button.
+  const recalculateButton = (
+    <button
+      type="button"
+      onClick={() => {
+        recalculateFit.mutate();
+      }}
+      disabled={recalculateFit.isPending}
+      aria-label={recalculateFit.isPending ? t('recalculate.busy') : t('recalculate.button')}
+      title={t('recalculate.hint')}
+      className={`flex shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60 ${
+        isPhone ? 'h-11 w-11 text-lg' : 'h-8 w-8 text-base'
+      }`}
+    >
+      <span aria-hidden="true" className={recalculateFit.isPending ? 'animate-spin' : undefined}>
+        ↻
+      </span>
+    </button>
+  );
+
   return (
     <section aria-labelledby="job-posts-heading" className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1
-            id="job-posts-heading"
-            className="text-2xl font-semibold tracking-tight text-slate-900"
-          >
-            {showingHidden ? t('hiddenTitle') : t('title')}
-          </h1>
-          {!showingHidden && <p className="text-sm text-slate-500">{t('intro')}</p>}
+      {/* One line: the title, the status chips and two small tools. On a phone the chips go
+          to their own line and scroll sideways. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 id="job-posts-heading" className="text-xl font-semibold tracking-tight text-slate-900">
+          {showingHidden ? t('hiddenTitle') : t('title')}
+        </h1>
+        <StatCards
+          className="order-last w-full md:order-none md:w-auto md:min-w-0 md:flex-1"
+          total={foundQuery.data?.total}
+          applications={applications.data}
+          hiddenCount={hiddenCount.data}
+          active={activeCard}
+          onSelect={selectCard}
+          newCount={newSince === null ? 0 : newCountQuery.data?.total}
+          newOnly={tableState.newOnly}
+          onToggleNew={showingHidden ? undefined : () => dispatch(setNewOnly(!tableState.newOnly))}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          {!isPhone && activeFilterCount > 0 && (
+            <span className="flex items-center gap-2 text-sm whitespace-nowrap">
+              <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
+                {t('toolbar.active', { count: activeFilterCount })}
+              </span>
+              <button
+                type="button"
+                onClick={() => dispatch(clearAll())}
+                className="text-brand-700 hover:underline"
+              >
+                {t('toolbar.clearAll')}
+              </button>
+            </span>
+          )}
+          {!isPhone && recalculateButton}
+          {!isPhone && (
+            <ColumnsMenu
+              columns={columnChoices}
+              visibility={columnVisibility.visibility}
+              onToggle={columnVisibility.toggle}
+              onShowAll={columnVisibility.showAll}
+            />
+          )}
+          {!showingHidden && <InfoTip label={t('infoLabel')} text={t('intro')} />}
         </div>
       </div>
-      <StatCards
-        total={foundQuery.data?.total}
-        applications={applications.data}
-        hiddenCount={hiddenCount.data}
-        active={activeCard}
-        onSelect={selectCard}
-        newCount={newSince === null ? 0 : newCountQuery.data?.total}
-        newOnly={tableState.newOnly}
-        onToggleNew={showingHidden ? undefined : () => dispatch(setNewOnly(!tableState.newOnly))}
-      />
       {showingHidden && <p className="text-sm text-slate-600">{t('hiddenIntro')}</p>}
 
       {lastChange && (
@@ -337,43 +384,29 @@ export function JobsDashboard() {
         />
       )}
 
-      <Toolbar
-        search={tableState.search}
-        onSearch={handleSearch}
-        activeFilterCount={countActiveFilters(tableState)}
-        onClearAll={() => dispatch(clearAll())}
-        quickFilters={
-          <QuickFilters
-            filters={tableState.filters}
-            filterOptions={filterOptions.data}
-            postedWithinDays={tableState.postedWithinDays}
-            minFit={tableState.minFit}
-            onToggleFilter={handleToggleFilter}
-            onClearFilter={handleClearFilter}
-            onPostedWithin={(days) => dispatch(setPostedWithinDays(days))}
-            onMinFit={(minFit) => dispatch(setMinFit(minFit))}
-          />
-        }
-      >
-        {/* Fit % updates by itself; this is only a "just in case" button. */}
-        <button
-          type="button"
-          onClick={() => {
-            recalculateFit.mutate();
-          }}
-          disabled={recalculateFit.isPending}
-          title={t('recalculate.hint')}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
+      {/* On a computer the search box and the filters sit in the table's header. */}
+      {isPhone && (
+        <Toolbar
+          search={tableState.search}
+          onSearch={handleSearch}
+          activeFilterCount={activeFilterCount}
+          onClearAll={() => dispatch(clearAll())}
+          quickFilters={
+            <QuickFilters
+              filters={tableState.filters}
+              filterOptions={filterOptions.data}
+              postedWithinDays={tableState.postedWithinDays}
+              minFit={tableState.minFit}
+              onToggleFilter={handleToggleFilter}
+              onClearFilter={handleClearFilter}
+              onPostedWithin={(days) => dispatch(setPostedWithinDays(days))}
+              onMinFit={(minFit) => dispatch(setMinFit(minFit))}
+            />
+          }
         >
-          {recalculateFit.isPending ? t('recalculate.busy') : t('recalculate.button')}
-        </button>
-        <ColumnsMenu
-          columns={columnChoices}
-          visibility={columnVisibility.visibility}
-          onToggle={columnVisibility.toggle}
-          onShowAll={columnVisibility.showAll}
-        />
-      </Toolbar>
+          {recalculateButton}
+        </Toolbar>
+      )}
 
       {selectedJobs.length > 0 && (
         <div
@@ -471,6 +504,14 @@ export function JobsDashboard() {
         columnVisibility={columnVisibility.visibility}
         selected={selected}
         onSelectionChange={setChecked}
+        headerControls={{
+          search: tableState.search,
+          onSearch: handleSearch,
+          minFit: tableState.minFit,
+          onMinFit: (minFit) => dispatch(setMinFit(minFit)),
+          postedWithinDays: tableState.postedWithinDays,
+          onPostedWithin: (days) => dispatch(setPostedWithinDays(days)),
+        }}
       />
 
       {jobsQuery.isPending && <p className="text-center text-sm text-slate-500">{t('loading')}</p>}

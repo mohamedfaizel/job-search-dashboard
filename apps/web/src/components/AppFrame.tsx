@@ -14,7 +14,7 @@ import { useErrorText } from '../i18n/useErrorText';
 import { AccountMenu } from './AccountMenu';
 import { FlagStripe } from './FlagStripe';
 import { Logo } from './Logo';
-import { JobsIcon, PlusIcon, ResumeIcon, TrackerIcon } from './NavIcons';
+import { JobsIcon, PlusIcon, ResumeIcon, SettingsIcon, TrackerIcon } from './NavIcons';
 import { NotificationBell } from './NotificationBell';
 
 interface NavItem {
@@ -24,7 +24,7 @@ interface NavItem {
   icon: (props: { className?: string }) => ReactNode;
 }
 
-/** The main pages. My profile and Settings live in the avatar menu (AccountMenu). */
+/** The main pages. Settings is the gear next to the 🔔; My profile lives in the avatar menu. */
 const NAV_ITEMS: NavItem[] = [
   { href: '/jobs', label: 'jobs', icon: JobsIcon },
   { href: '/tracker', label: 'tracker', icon: TrackerIcon },
@@ -170,6 +170,15 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
               {t('addJobs')}
             </Link>
             <NotificationBell />
+            <Link
+              href="/settings"
+              aria-label={t('settings')}
+              title={t('settings')}
+              aria-current={current === '/settings' ? 'page' : undefined}
+              className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-brand-400 bg-neutral-800 text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white aria-[current=page]:bg-brand-400 aria-[current=page]:text-black"
+            >
+              <SettingsIcon className="h-5 w-5" />
+            </Link>
             <AccountMenu user={user} loggingOut={loggingOut} onLogOut={onLogOut} />
           </div>
         </div>

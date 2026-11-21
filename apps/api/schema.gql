@@ -2,6 +2,47 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AdminOverviewModel {
+  """Accounts that used the app in the last 7 days"""
+  activeThisWeek: Int!
+  health: [HealthCheckModel!]!
+  importsToday: Int!
+
+  """New jobs the imports added today"""
+  jobsAddedToday: Int!
+
+  """Accounts made in the last 7 days"""
+  newThisWeek: Int!
+  users: Int!
+
+  """Imports per day, oldest first, today last"""
+  week: [ImportDayModel!]!
+
+  """Accounts with a JobHunter token saved"""
+  withJobKey: Int!
+}
+
+type AdminUserModel {
+  """True when an admin switched the account off"""
+  disabled: Boolean!
+  email: String!
+
+  """
+  Has saved a JobHunter token in Settings (the token itself never leaves)
+  """
+  hasJobKey: Boolean!
+  id: Int!
+
+  """Imports run this calendar month, by hand or scheduled"""
+  importsThisMonth: Int!
+  joinedAt: DateTime!
+
+  """Null = never used the app since this was added"""
+  lastSeenAt: DateTime
+  name: String!
+  role: Role!
+}
+
 enum AiProvider {
   ANTHROPIC
   OPENAI
@@ -35,6 +76,27 @@ type ApiKeyTest {
 
   """True when the service accepted the key."""
   ok: Boolean!
+}
+
+type AppSettings {
+  """Per user and day: scheduled runs stop before going over it"""
+  dailyCreditCap: Int!
+
+  """The most saved searches one user can keep"""
+  maxSavedSearches: Int!
+
+  """SCHEDULER_ENABLED=false in .env keeps the scheduler off anyway"""
+  schedulerOffInEnv: Boolean!
+
+  """Saved searches run on their schedule"""
+  schedulerOn: Boolean!
+  signupMode: SignupMode!
+
+  """STILL_OPEN_CHECK_ENABLED=false in .env keeps the check off anyway"""
+  stillOpenOffInEnv: Boolean!
+
+  """The nightly "still open?" check runs"""
+  stillOpenOn: Boolean!
 }
 
 """A job on your tracker board"""
@@ -118,6 +180,14 @@ type CoverLetterTemplate {
   text: String!
 }
 
+input CreateInviteInput {
+  """Null = never expires"""
+  expiresInDays: Int
+
+  """Null = any number of times"""
+  maxUses: Int
+}
+
 input CreateJobInput {
   applicationStatus: ApplicationStatus
   city: String
@@ -151,6 +221,11 @@ input CreateJobInput {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+input DeleteUserInput {
+  confirmEmail: String!
+  userId: Int!
+}
 
 """How your resume and cover letter PDFs look"""
 type DocumentStyle {
@@ -344,12 +419,43 @@ type GmailSyncResult {
   warnings: [String!]!
 }
 
+type HealthCheckModel {
+  """Scheduler: when the next saved search is due"""
+  nextRunAt: DateTime
+
+  """OFF because of .env (not the Admin › Limits switch)"""
+  offInEnv: Boolean!
+  service: HealthService!
+  state: HealthState!
+}
+
+enum HealthService {
+  DATABASE
+  GMAIL
+  PDF_MAKER
+  RESUME_MATCHER
+  SCHEDULER
+  STILL_OPEN
+}
+
+enum HealthState {
+  DOWN
+  OFF
+  OK
+}
+
 type ImportBudget {
-  """DAILY_CREDIT_CAP, per user: scheduled runs stop before going over it"""
+  """Admin › Limits, per user: scheduled runs stop before going over it"""
   cap: Int!
 
   """Credits used by every import since midnight (server time)"""
   used: Int!
+}
+
+type ImportDayModel {
+  """Midnight (server time) that starts the day"""
+  day: DateTime!
+  imports: Int!
 }
 
 """
@@ -397,6 +503,28 @@ What Claude wrote to prepare you for an interview for this job, pasted back
 type InterviewPrep {
   text: String!
   updatedAt: DateTime!
+}
+
+type Invite {
+  createdAt: DateTime!
+
+  """Null = never expires"""
+  expiresAt: DateTime
+  id: Int!
+
+  """Null = any number of times"""
+  maxUses: Int
+  state: InviteState!
+
+  """Goes in the link: /signup?invite=<token>"""
+  token: String!
+  uses: Int!
+}
+
+enum InviteState {
+  ACTIVE
+  EXPIRED
+  USED_UP
 }
 
 type Job {
@@ -963,6 +1091,9 @@ type MailSuggestion {
 }
 
 type MatcherResume {
+  """What Resume-Matcher said went wrong, in English. Null unless FAILED"""
+  error: String
+
   """The file Resume-Matcher last received"""
   fileName: String
 
@@ -987,13 +1118,20 @@ type Mutation {
   """Moves the job to the status the email points to."""
   approveMailSuggestion(id: Int!): Boolean!
 
+  """Cancels an invite link. Returns its id"""
+  cancelInvite(id: Int!): Int!
+
   """
   Opens the job's link to see if it is still open. A closed job becomes "expired". Checked in the last 10 minutes: returns the saved answer.
   """
   checkJobStillOpen(id: ID!): Job!
 
+  """Fetch the pages an import left (Import history > Continue)"""
+  continueImport(runId: Int!): SyncJobsResult!
+
   """Puts one section of a job’s resume into your master resume"""
   copySectionToMaster(jobId: String!, sectionId: String!): JobResumeBuild!
+  createInvite(input: CreateInviteInput!): Invite!
 
   """Add a job by hand"""
   createJob(input: CreateJobInput!): Job!
@@ -1022,6 +1160,9 @@ type Mutation {
 
   """Deletes a story. Returns its id"""
   deleteStory(id: Int!): Int!
+
+  """Deletes an account and all its data. Returns its id"""
+  deleteUser(input: DeleteUserInput!): Int!
 
   """Removes a Gmail account and its pending suggestions."""
   disconnectGmail(id: Int!): Boolean!
@@ -1201,6 +1342,12 @@ type Mutation {
   """Turn scheduled runs of a saved search on or off"""
   setSavedSearchSchedule(id: Int!, input: ScheduleInput!): SavedSearch!
 
+  """Switches an account off (no login) or on again"""
+  setUserDisabled(input: SetUserDisabledInput!): AdminUserModel!
+
+  """Makes an account admin or a normal user"""
+  setUserRole(input: SetUserRoleInput!): AdminUserModel!
+
   """Create an account and log in"""
   signUp(input: SignUpInput!): User!
 
@@ -1235,6 +1382,9 @@ type Mutation {
 
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
+
+  """Changes them; works at once"""
+  updateAppSettings(input: UpdateAppSettingsInput!): AppSettings!
   updateDocumentStyle(input: DocumentStyleInput!): DocumentStyle!
 
   """
@@ -1552,6 +1702,15 @@ input ProfileInput {
 }
 
 type Query {
+  """Counts, imports this week and server health (admins only)"""
+  adminOverview: AdminOverviewModel!
+
+  """Every account, oldest first (admins only)"""
+  adminUsers: [AdminUserModel!]!
+
+  """Sign-up mode and limits (admins only)"""
+  appSettings: AppSettings!
+
   """One Claude prompt for the queued jobs that have no reply yet (up to 5)"""
   applyQueuePrompt: ApplyQueuePrompt!
 
@@ -1571,7 +1730,7 @@ type Query {
   """How many jobs you have hidden"""
   hiddenJobCount: Int!
 
-  """Today's credits you used against DAILY_CREDIT_CAP"""
+  """Today's credits you used against the daily limit (Admin › Limits)"""
   importBudget: ImportBudget!
 
   """AI chat prompt that writes or improves a job’s cover letter"""
@@ -1581,6 +1740,9 @@ type Query {
   AI chat prompt that improves one section of your resume (master or a job copy)
   """
   improveSectionPrompt(input: ImproveSectionInput!): String!
+
+  """Invite links not canceled, newest first"""
+  invites: [Invite!]!
   job(id: ID!): Job!
 
   """The cover letter saved for one job"""
@@ -1666,6 +1828,11 @@ type Query {
   """Your saved searches, by name, with their last import"""
   savedSearches: [SavedSearch!]!
 
+  """
+  Whether the sign-up page can make an account, with this invite code or none
+  """
+  signupState(invite: String): SignupState!
+
   """Your story bank, the story changed last first"""
   stories: [Story!]!
 
@@ -1744,6 +1911,11 @@ type ResumeMatcherStatus {
 
   """False when RESUME_MATCHER_URL is not set in .env"""
   configured: Boolean!
+
+  """
+  The raw error from Resume-Matcher or the AI, in English, so the app can show it under its own translated sentence
+  """
+  error: String
 
   """One sentence for the user saying what works and what to fix"""
   message: String!
@@ -1991,11 +2163,36 @@ type SectionSuggestion {
   sectionId: String!
 }
 
+input SetUserDisabledInput {
+  disabled: Boolean!
+  userId: Int!
+}
+
+input SetUserRoleInput {
+  role: Role!
+  userId: Int!
+}
+
 input SignUpInput {
   email: String!
+  invite: String
   locale: String
   name: String!
   password: String!
+}
+
+enum SignupMode {
+  CLOSED
+  INVITE
+  OPEN
+}
+
+enum SignupState {
+  CLOSED
+  INVITED
+  INVITE_INVALID
+  NEEDS_INVITE
+  OPEN
 }
 
 enum SortDirection {
@@ -2151,6 +2348,11 @@ type SyncRunModel {
   """
   boards: [String!]!
 
+  """
+  True when this import stopped with pages left and is the newest import of its search, so "Continue" can fetch the rest
+  """
+  canContinue: Boolean!
+
   """False when pages were left unfetched"""
   complete: Boolean!
   created: Int!
@@ -2222,6 +2424,14 @@ type TermCheck {
   Not in your resume text, but on the Skills list of My profile ("I have this"). It counts as covered, and the prompt tells Claude it must be in the resume
   """
   youHave: Boolean!
+}
+
+input UpdateAppSettingsInput {
+  dailyCreditCap: Int
+  maxSavedSearches: Int
+  schedulerOn: Boolean
+  signupMode: SignupMode
+  stillOpenOn: Boolean
 }
 
 type User {

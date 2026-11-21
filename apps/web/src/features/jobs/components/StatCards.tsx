@@ -17,6 +17,8 @@ interface Props {
   /** True while the table shows only the New jobs. */
   newOnly?: boolean;
   onToggleNew?: (() => void) | undefined;
+  /** Where the strip sits in its row (width, order). */
+  className?: string;
 }
 
 const CARDS: { key: StatCardKey; dot: string }[] = [
@@ -42,6 +44,7 @@ export function StatCards({
   newCount = 0,
   newOnly = false,
   onToggleNew,
+  className = '',
 }: Props) {
   const t = useTranslations('Jobs.cards');
   const value = (key: StatCardKey) => {
@@ -51,7 +54,7 @@ export function StatCards({
   };
 
   const pill = (pressed: boolean) =>
-    `flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none ${
+    `flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[13px] whitespace-nowrap transition focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none ${
       pressed
         ? 'border-slate-900 bg-slate-900 text-white'
         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
@@ -77,7 +80,7 @@ export function StatCards({
     <div
       role="group"
       aria-label={t('label')}
-      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
+      className={`flex gap-1.5 overflow-x-auto pb-1 md:flex-wrap md:pb-0 ${className}`}
     >
       {CARDS.flatMap(({ key, dot }) => {
         const pressed = active === key;

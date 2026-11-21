@@ -118,7 +118,7 @@ describe('Tracker board', () => {
     renderTracker([tracked(FRONTEND, 'APPLIED')], 'de');
 
     expect(await screen.findByRole('button', { name: FRONTEND.title })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Bewerbungen' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Tracker' })).toBeInTheDocument();
     expect(within(column(/^Beworben/)).getByText(FRONTEND.title)).toBeInTheDocument();
     expect(column(/^Im Gespräch/)).toHaveTextContent('Im Gespräch (0)');
     expect(screen.getByText('Verschoben am 26. Okt. 2026')).toBeInTheDocument();
@@ -154,5 +154,88 @@ describe('Tracker board', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Copy email' }));
     expect(await screen.findByText(/Couldn’t copy/)).toBeInTheDocument();
+  });
+
+  it('shows only the jobs to follow up on, or hides the reminder', async () => {
+    const user = userEvent.setup();
+    renderTracker([
+      { ...tracked(FRONTEND, 'APPLIED'), followUpDue: true },
+      tracked(BACKEND, 'APPLIED'),
+    ]);
+
+    await user.click(await screen.findByRole('button', { name: 'Show only these' }));
+    expect(within(column(/^Applied/)).queryByText(BACKEND.title)).toBeNull();
+    expect(within(column(/^Applied/)).getByText(FRONTEND.title)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Show all' }));
+    expect(within(column(/^Applied/)).getByText(BACKEND.title)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Hide this' }));
+    expect(screen.queryByText(/had no news for a week/)).toBeNull();
+  });
+
+  describe('on a phone', () => {
+    beforeEach(() => {
+      localStorage.clear();
+      // jsdom has no matchMedia (so tests get the desktop); this one says "phone".
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn(() => ({
+          matches: true,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+        })),
+      );
+    });
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const many = (count: number) =>
+      Array.from({ length: count }, (_, i) =>
+        tracked({ ...FRONTEND, id: `job-${String(i)}`, title: `Job ${String(i)}` }, 'APPLIED'),
+      );
+
+    it('folds a column with one tap and remembers it', async () => {
+      const user = userEvent.setup();
+      renderTracker([tracked(BACKEND, 'SAVED'), tracked(FRONTEND, 'APPLIED')]);
+
+      const saved = await screen.findByRole('button', { name: /^Saved \(1\)/ });
+      // Columns with cards start open, empty ones folded.
+      expect(saved).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('button', { name: /^Offer \(0\)/ })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+
+      await user.click(saved);
+      expect(saved).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.getByText('tap to open')).toBeInTheDocument();
+      expect(screen.queryByText(BACKEND.title)).toBeNull();
+      expect(JSON.parse(localStorage.getItem('tracker-folds')!)).toEqual({ SAVED: false });
+
+      await user.click(screen.getByRole('button', { name: 'Fold all' }));
+      expect(screen.queryByText(FRONTEND.title)).toBeNull();
+      await user.click(screen.getByRole('button', { name: 'Open all' }));
+      expect(screen.getByText(FRONTEND.title)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Offer \(0\)/ })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+    });
+
+    it('starts the way you left it, and shows 3 cards of a long column', async () => {
+      const user = userEvent.setup();
+      localStorage.setItem('tracker-folds', JSON.stringify({ APPLIED: true, SAVED: true }));
+      renderTracker(many(5));
+
+      expect(await screen.findByText('Job 2')).toBeInTheDocument();
+      expect(screen.queryByText('Job 3')).toBeNull();
+      expect(screen.getByRole('button', { name: /^Saved \(0\)/ })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+      await user.click(screen.getByRole('button', { name: '+ 2 more · Show all' }));
+      expect(screen.getByText('Job 4')).toBeInTheDocument();
+    });
   });
 });

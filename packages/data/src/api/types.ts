@@ -253,6 +253,8 @@ export interface SyncRun {
   source: ImportSource;
   /** The company career pages it read, e.g. "greenhouse:n26". */
   boards: string[];
+  /** Stopped with pages left and is the newest import of its search: "Continue" can go on. */
+  canContinue: boolean;
 }
 
 export interface SavedSearch {

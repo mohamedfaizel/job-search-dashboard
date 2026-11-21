@@ -16,7 +16,7 @@ interface Props {
   onShowAll: () => void;
 }
 
-/** "Columns" button with a checklist to show or hide each table column. */
+/** A small ▥ button (its name and tooltip say "Columns") with a checklist to show or hide each table column. */
 export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props) {
   const t = useTranslations('Jobs.columns');
   const [open, setOpen] = useState(false);
@@ -50,15 +50,23 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
         onClick={() => {
           setOpen((o) => !o);
         }}
-        className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+        aria-label={
+          hiddenCount > 0 ? `${t('menu')} (${t('hiddenCount', { count: hiddenCount })})` : t('menu')
+        }
+        title={
+          hiddenCount > 0 ? `${t('menu')} (${t('hiddenCount', { count: hiddenCount })})` : t('menu')
+        }
+        className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
       >
         <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 fill-current text-slate-500">
           <path d="M1 2h4v12H1zM6 2h4v12H6zM11 2h4v12h-4z" />
         </svg>
-        {t('menu')}
         {hiddenCount > 0 && (
-          <span className="rounded-full bg-brand-100 px-1.5 text-xs text-brand-700">
-            {t('hiddenCount', { count: hiddenCount })}
+          <span
+            aria-hidden="true"
+            className="rounded-full bg-brand-100 px-1.5 text-xs text-brand-700"
+          >
+            {hiddenCount}
           </span>
         )}
       </button>

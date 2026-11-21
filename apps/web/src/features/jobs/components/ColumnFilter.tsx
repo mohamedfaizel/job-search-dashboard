@@ -1,4 +1,5 @@
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import { useEffect, useId, useRef, useState } from 'react';
 
 interface Option {
@@ -26,6 +27,10 @@ interface Props {
   onClear: () => void;
   /** Shows a labelled chip (the quick filters above the table) instead of the funnel icon. */
   chip?: boolean;
+  /** Your own panel content instead of checklists, like the Fit ≥ box. */
+  panel?: ReactNode;
+  /** With `panel`: how many things it filters now (0 = off). */
+  activeCount?: number;
 }
 
 /**
@@ -40,6 +45,8 @@ export function ColumnFilter({
   groups,
   onClear,
   chip = false,
+  panel,
+  activeCount = 0,
 }: Props) {
   const t = useTranslations('Jobs.filter');
   const [open, setOpen] = useState(false);
@@ -68,7 +75,9 @@ export function ColumnFilter({
     { options, selected, onToggle },
   ];
   const optionCount = lists.reduce((n, list) => n + list.options.length, 0);
-  const selectedCount = lists.reduce((n, list) => n + list.selected.length, 0);
+  const selectedCount = panel
+    ? activeCount
+    : lists.reduce((n, list) => n + list.selected.length, 0);
   const matches = (o: Option) => o.label.toLowerCase().includes(query.toLowerCase());
   const active = selectedCount > 0;
 
@@ -131,7 +140,8 @@ export function ColumnFilter({
               : 'absolute top-full left-0 w-64'
           } border border-slate-200 bg-white p-2 text-left font-normal shadow-lg`}
         >
-          {optionCount > 8 && (
+          {panel}
+          {!panel && optionCount > 8 && (
             <input
               type="search"
               aria-label={t('search', { column })}
@@ -143,7 +153,7 @@ export function ColumnFilter({
               className="mb-2 w-full rounded border border-slate-200 px-2 py-1 text-sm"
             />
           )}
-          <div className="max-h-64 overflow-y-auto">
+          <div className={panel ? 'hidden' : 'max-h-64 overflow-y-auto'}>
             {lists.map((list) => {
               const visible = list.options.filter(matches);
               return (
@@ -176,7 +186,7 @@ export function ColumnFilter({
               );
             })}
           </div>
-          {active && (
+          {active && !panel && (
             <button
               type="button"
               onClick={onClear}

@@ -14,7 +14,9 @@ import { useJobFormat } from '../useJobFormat';
 import { ColumnFilter } from './ColumnFilter';
 import type { ColumnNameKey, RowActions } from './columns';
 import { COLUMN_CONTROLS, columns, features, RowActionsContext } from './columns';
+import { FitFilter, PostedFilter } from './HeaderFilters';
 import { JobCards } from './JobCards';
+import { SearchBox } from './SearchBox';
 import { SortButton } from './SortButton';
 
 export interface JobsTableProps extends RowActions {
@@ -32,6 +34,17 @@ export interface JobsTableProps extends RowActions {
   /** Ids of the ticked rows. */
   selected?: ReadonlySet<string>;
   onSelectionChange?: (selected: Set<string>) => void;
+  /** The header's own controls: the search box (Job), Fit ≥ (Scores) and Posted within. */
+  headerControls?: HeaderControls;
+}
+
+export interface HeaderControls {
+  search: string;
+  onSearch: (value: string) => void;
+  minFit: number | null;
+  onMinFit: (minFit: number | null) => void;
+  postedWithinDays: number | null;
+  onPostedWithin: (days: number | null) => void;
 }
 
 /**
@@ -70,6 +83,7 @@ export function JobsTable({
   columnVisibility = NO_HIDDEN_COLUMNS,
   selected = NO_SELECTION,
   onSelectionChange = noop,
+  headerControls,
 }: JobsTableProps) {
   const isPhone = useIsPhone();
   const f = useJobFormat();
@@ -136,7 +150,15 @@ export function JobsTable({
                     controls.sortField && sort?.field === controls.sortField
                       ? sort.direction
                       : null;
-                  const label = <table.FlexRender header={header} />;
+                  const special = headerControls ? controls.special : undefined;
+                  const columnName = special ? t(header.column.id as ColumnNameKey) : '';
+                  // With the search box in its place, "Job" is only read out, not shown.
+                  const label =
+                    special === 'search' ? (
+                      <span className="sr-only">{columnName}</span>
+                    ) : (
+                      <table.FlexRender header={header} />
+                    );
 
                   return (
                     <th
@@ -154,6 +176,14 @@ export function JobsTable({
                       }`}
                     >
                       <div className="flex items-center gap-1">
+                        {special === 'search' && headerControls && (
+                          <SearchBox
+                            search={headerControls.search}
+                            onSearch={headerControls.onSearch}
+                            className="mr-1 w-56"
+                            inputClassName="h-8 text-xs"
+                          />
+                        )}
                         {controls.sortField ? (
                           <SortButton
                             direction={direction}
@@ -177,6 +207,20 @@ export function JobsTable({
                             onClear={() => {
                               if (controls.filter) onClearFilter(controls.filter.key);
                             }}
+                          />
+                        )}
+                        {special === 'fit' && headerControls && (
+                          <FitFilter
+                            column={columnName}
+                            minFit={headerControls.minFit}
+                            onMinFit={headerControls.onMinFit}
+                          />
+                        )}
+                        {special === 'posted' && headerControls && (
+                          <PostedFilter
+                            column={columnName}
+                            postedWithinDays={headerControls.postedWithinDays}
+                            onPostedWithin={headerControls.onPostedWithin}
                           />
                         )}
                         {controls.filters && (

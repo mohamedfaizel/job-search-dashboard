@@ -1001,9 +1001,11 @@
     },
     "toolbar": {
       "search": "Jobs suchen",
-      "placeholder": "Titel oder Firma suchen…",
+      "placeholder": "Jobtitel oder Firma",
       "active": "{count, plural, one {# Filter aktiv} other {# Filter aktiv}}",
-      "clearAll": "Alles zurücksetzen"
+      "clearAll": "Alles zurücksetzen",
+      "filters": "Filter",
+      "done": "Fertig"
     },
     "pagination": {
       "label": "Seiten",
@@ -1039,7 +1041,8 @@
       "alwaysShown": "(immer sichtbar)",
       "showAll": "Alle Spalten zeigen",
       "scores": "Bewertungen",
-      "details": "Details"
+      "details": "Details",
+      "country": "Land"
     },
     "filter": {
       "button": "{column} filtern",
@@ -1047,7 +1050,16 @@
       "search": "Werte für {column} suchen",
       "placeholder": "Suchen…",
       "none": "Keine Werte",
-      "clear": "Filter zurücksetzen"
+      "clear": "Filter zurücksetzen",
+      "fit": "Fit ≥",
+      "fitLabel": "Niedrigster Fit in %",
+      "anyTime": "Jederzeit",
+      "within": {
+        "d1": "Letzte 24 Stunden",
+        "d3": "Letzte 3 Tage",
+        "d7": "Letzte Woche",
+        "d30": "Letzter Monat"
+      }
     },
     "row": {
       "jobs": "Jobs",
@@ -1779,10 +1791,11 @@
       },
       "chatHint": "KI-Chat: du fügst einen Prompt in Claude, ChatGPT oder einen anderen KI-Chat ein",
       "openSettings": "Einstellungen › API-Schlüssel öffnen ↗"
-    }
+    },
+    "infoLabel": "Über diese Seite"
   },
   "Tracker": {
-    "title": "Bewerbungen",
+    "title": "Tracker",
     "intro": "Zieh eine Karte in eine andere Spalte oder ändere ihren Status. Nur du siehst deine Übersicht.",
     "loadError": "Deine Bewerbungen konnten nicht geladen werden: {error}",
     "moveError": "Der Job konnte nicht verschoben werden: {error}",
@@ -1809,8 +1822,11 @@
       "copyFailed": "Kopieren ging nicht. Dein Browser blockiert die Zwischenablage.",
       "done": "Nachgefasst",
       "followedUp": "Nachgefasst am {date}",
-      "banner": "{count, plural, one {# Bewerbung hat} other {# Bewerbungen haben}} seit einer Woche keine Antwort. Achte unten auf „Nachfassen?“.",
-      "error": "Konnte nicht gespeichert werden: {error}"
+      "banner": "{count, plural, one {# Bewerbung hat} other {# Bewerbungen haben}} seit einer Woche keine Antwort.",
+      "error": "Konnte nicht gespeichert werden: {error}",
+      "onlyThese": "Nur diese zeigen",
+      "showAll": "Alle zeigen",
+      "dismiss": "Ausblenden"
     },
     "gmailCheck": {
       "checkNow": "Gmail jetzt prüfen",
@@ -1845,6 +1861,13 @@
         "COMPANY_BOARD": "Karriereseiten von Firmen"
       },
       "hint": "Eine Stelle zählt für jeden Schritt, den sie erreicht hat: eine Absage nach einem Gespräch bleibt ein Gespräch. Prozent = Anteil am Schritt darüber."
+    },
+    "infoLabel": "Über den Tracker",
+    "fold": {
+      "all": "Alle zuklappen",
+      "openAll": "Alle aufklappen",
+      "tapToOpen": "zum Öffnen tippen",
+      "showAll": "+ {count} weitere · Alle zeigen"
     }
   },
   "AddJobs": {
@@ -2082,11 +2105,10 @@
       "new": "Neu",
       "alreadySaved": "Gespeichert",
       "credits": "Credits",
-      "pages": "Seiten",
+      "pages": "Noch mehr da",
       "scheduled": "Geplant",
-      "allFetched": "Fertig",
-      "moreLeft": "Noch mehr da",
-      "allFetchedTip": "Alle Seiten geholt",
+      "allFetched": "Nichts mehr",
+      "allFetchedTip": "Alle Seiten dieser Suche wurden geholt",
       "boards": "{count, plural, one {# Karriereseite} other {# Karriereseiten}}",
       "showMore": "{count} weitere zeigen",
       "showLess": "Weniger zeigen",
@@ -2094,7 +2116,14 @@
         "JOBHUNTER": "JobHunter",
         "ARBEITSAGENTUR": "Arbeitsagentur",
         "COMPANY_BOARDS": "Firmen"
-      }
+      },
+      "continue": "Weiter ›",
+      "continueTip": "Die nächsten Seiten derselben Suche holen",
+      "continueCredits": "Die nächsten Seiten derselben Suche holen. Verbraucht deine JobHunter-Credits.",
+      "continuing": "Läuft…",
+      "newer": "Neuerer Import lief",
+      "newerTip": "Ein neuerer Import dieser Suche lief, mach dort weiter",
+      "continueFailed": "Konnte nicht weitermachen: {error}"
     },
     "tokenHint": "Importe von JobHunter nutzen den Token aus deinen Einstellungen, also deine eigenen Credits.",
     "openSettings": "Einstellungen öffnen",
@@ -2147,6 +2176,7 @@
     "NOT_IN_QUEUE": "Dieser Job ist nicht in deiner Bewerbungs-Warteschlange.",
     "QUEUE_REPLY_EMPTY": "Keine Zeilen „=== JOB 1: … ===“ gefunden. Füge die ganze Antwort von {ai} auf den Warteschlangen-Prompt ein.",
     "SAVED_SEARCH_NOT_FOUND": "Die gespeicherte Suche {id} wurde nicht gefunden.",
+    "SYNC_RUN_NOT_FOUND": "Der Import {id} wurde nicht gefunden.",
     "SAVED_SEARCH_NAME_TAKEN": "Eine gespeicherte Suche namens „{name}“ gibt es schon.",
     "INVALID_BOARD": "Das Firmen-Board „{entry}“ konnte nicht gelesen werden. Nutze greenhouse:name, lever:name oder ashby:name oder füge die Adresse der Karriereseite ein.",
     "NO_BOARDS": "Füge mindestens ein Firmen-Board hinzu, zum Beispiel greenhouse:stripe.",

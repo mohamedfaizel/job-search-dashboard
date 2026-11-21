@@ -62,6 +62,12 @@ export class SyncRunModel {
     description: 'The company career pages it read, e.g. "greenhouse:n26" (COMPANY_BOARDS only)',
   })
   boards!: string[];
+
+  @Field({
+    description:
+      'True when this import stopped with pages left and is the newest import of its search, so "Continue" can fetch the rest',
+  })
+  canContinue!: boolean;
 }
 
 @ObjectType()

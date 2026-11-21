@@ -80,7 +80,8 @@ export type ColumnNameKey =
   | 'status'
   | 'actions'
   | 'company'
-  | 'city';
+  | 'city'
+  | 'country';
 
 /**
  * A column's header in your language. Headers are components, not strings, because the
@@ -643,6 +644,8 @@ export interface ColumnControls {
   filter?: ColumnFilterControl;
   /** Several filters in one funnel, each with its own titled list (Details: Seniority and Visa). */
   filters?: (ColumnFilterControl & { name: ColumnNameKey })[];
+  /** A control of its own in the header: the search box, Fit ≥ or Posted within. */
+  special?: 'search' | 'fit' | 'posted';
 }
 
 export interface ColumnFilterControl {
@@ -663,13 +666,27 @@ export const COLUMN_CONTROLS: Record<string, ColumnControls> = {
   title: {
     sortField: 'TITLE',
     filter: { key: 'companies', name: 'company', options: (o) => plain(o?.companies) },
+    special: 'search',
   },
+  // One funnel for where: city, country and remote / hybrid / on-site.
   location: {
     sortField: 'CITY',
-    filter: { key: 'cities', name: 'city', options: (o) => plain(o?.cities) },
+    filters: [
+      { key: 'cities', name: 'city', options: (o) => plain(o?.cities) },
+      {
+        key: 'countryCodes',
+        name: 'country',
+        options: (o, f) => (o?.countryCodes ?? []).map((v) => ({ value: v, label: f.country(v) })),
+      },
+      {
+        key: 'workplaces',
+        name: 'workplace',
+        options: (_, f) => WORKPLACES.map((w) => ({ value: w, label: f.workplace(w) })),
+      },
+    ],
   },
-  scores: { sortField: 'FIT' },
-  postedAt: { sortField: 'POSTED_AT' },
+  scores: { sortField: 'FIT', special: 'fit' },
+  postedAt: { sortField: 'POSTED_AT', special: 'posted' },
   jobFunction: { filter: { key: 'jobFunctions', options: (o) => plain(o?.jobFunctions) } },
   skills: { filter: { key: 'skills', options: (o) => plain(o?.skills) } },
   language: {
