@@ -6,7 +6,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { makeDocx } from './docx-fixture';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, listAllJobsFor, resetDatabase, seedTestUsers } from './helpers';
 
 const RENDERER = 'http://pdf-renderer.test';
 const CREATE_JOB = `mutation ($input: CreateJobInput!) { createJob(input: $input) { id } }`;
@@ -104,6 +104,7 @@ describe('resume and cover letter templates', () => {
       },
     });
     jobId = job.data!.createJob.id;
+    await listAllJobsFor(t.prisma, 2);
     const saved = await t.asUser(SAVE_TEXT, { jobId, text: REPLY });
     expect(saved.errors).toBeUndefined();
   });

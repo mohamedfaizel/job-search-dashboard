@@ -518,6 +518,7 @@
     "letterTooLong": "Dein Anschreiben ist länger als {max, plural, one {# Seite} other {# Seiten}}. Kürze es.",
     "noLetterYet": "Schreibe dein Anschreiben, um das PDF zu sehen",
     "plainPreview": "Das ist das einfache PDF. Starte die PDF-Box (pnpm pdf:up), um hier deine Vorlage zu sehen.",
+    "plainPreviewUser": "Das ist das einfache PDF. Deine Vorlage erscheint hier wieder, sobald die PDF-Vorlagen wieder verfügbar sind.",
     "previewTitle": "PDF-Vorschau deines Lebenslaufs",
     "makingPdf": "Dein PDF wird erstellt…",
     "improve": {

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, listAllJobsFor, resetDatabase, seedTestUsers } from './helpers';
 
 const FIELDS = 'language doc outOfDate languages profileLanguages maxPages savedAt';
 const GET = `query ($language: String) { resumeBuild(language: $language) { ${FIELDS} } }`;
@@ -223,6 +223,7 @@ Berlin | 01/2020 – today
         input: { title: 'Frontend Engineer', companyName: 'Acme GmbH', city: 'Berlin' },
       });
       jobId = job.data!.createJob.id;
+      await listAllJobsFor(t.prisma, 2);
     });
 
     const getJob = async () => {
@@ -332,6 +333,7 @@ Berlin | 01/2020 – today
           },
         });
         const id = job.data!.createJob.id;
+        await listAllJobsFor(t.prisma, 2);
         await t.asUser(START_JOB, { jobId: id });
         await t.asUser(HAVE_TERM, { jobId: id, term: 'GraphQL' });
         const built = await t.asUser<{ jobResumeBuild: JobBuild }>(GET_JOB, { jobId: id });

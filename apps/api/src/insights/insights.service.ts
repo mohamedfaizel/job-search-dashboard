@@ -9,6 +9,7 @@ import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
 import { parseResume } from '../documents/resume-doc';
 import { ApplicationStatus, JobMatchStatus } from '../generated/prisma/enums';
+import { listedFor } from '../jobs/listed-for';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from '../profile/custom-fields';
 import { capLanguageLevels } from '../profile/resume-review';
@@ -134,8 +135,8 @@ export class InsightsService implements OnApplicationBootstrap {
       application,
       storyRows,
     ] = await Promise.all([
-      this.prisma.job.findUnique({
-        where: { id: jobId },
+      this.prisma.job.findFirst({
+        where: { id: jobId, ...listedFor(userId) },
         select: {
           title: true,
           description: true,
@@ -352,7 +353,7 @@ export class InsightsService implements OnApplicationBootstrap {
       throw apiError(BadRequestException, 'TERM_LENGTH', 'A term is 1 to 100 characters');
     }
     const scope = everywhere ? null : jobId;
-    await this.assertJob(jobId);
+    await this.assertJob(userId, jobId);
     const existing = await this.prisma.removedTerm.findFirst({
       where: { userId, jobId: scope, term: clean },
     });
@@ -372,7 +373,7 @@ export class InsightsService implements OnApplicationBootstrap {
     if (!clean || clean.length > 100) {
       throw apiError(BadRequestException, 'TERM_LENGTH', 'A term is 1 to 100 characters');
     }
-    await this.assertJob(jobId);
+    await this.assertJob(userId, jobId);
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
       select: { skills: true, keywords: true },
@@ -401,7 +402,7 @@ export class InsightsService implements OnApplicationBootstrap {
    * nothing new = back to your profile's Languages.
    */
   async setJobLanguages(userId: number, jobId: string, text: string | null) {
-    await this.assertJob(jobId);
+    await this.assertJob(userId, jobId);
     const clean = (text ?? '').trim();
     if (clean.length > 300) {
       throw apiError(
@@ -438,7 +439,7 @@ export class InsightsService implements OnApplicationBootstrap {
     // An Apply kit reply has the cover letter and form answers after the resume: keep them apart,
     // so only the resume is scored and downloaded.
     const reply = splitReply(text);
-    await this.assertJob(jobId);
+    await this.assertJob(userId, jobId);
     const clean = capLanguageLevels(
       cleanResume(reply.resume),
       await this.languagesFor(userId, jobId),
@@ -635,7 +636,7 @@ export class InsightsService implements OnApplicationBootstrap {
         { max: MAX_INTERVIEW_PREP_CHARS },
       );
     }
-    await this.assertJob(jobId);
+    await this.assertJob(userId, jobId);
     await this.prisma.interviewPrep.upsert({
       where: { userId_jobId: { userId, jobId } },
       create: { userId, jobId, text: clean },
@@ -649,7 +650,7 @@ export class InsightsService implements OnApplicationBootstrap {
    * moves there, and a new date means a new reminder the day before.
    */
   async setInterviewDate(userId: number, jobId: string, at: Date | null) {
-    await this.assertJob(jobId);
+    await this.assertJob(userId, jobId);
     const current = await this.prisma.application.findUnique({
       where: { userId_jobId: { userId, jobId } },
       select: { status: true },
@@ -731,8 +732,8 @@ export class InsightsService implements OnApplicationBootstrap {
   /** The Apply kit page for one job: your details, the form answers, cover letter and resume. */
   async applyKit(userId: number, jobId: string, resumeUrl: string): Promise<string> {
     const [job, user, jobResume, answerBank] = await Promise.all([
-      this.prisma.job.findUnique({
-        where: { id: jobId },
+      this.prisma.job.findFirst({
+        where: { id: jobId, ...listedFor(userId) },
         select: { title: true, url: true, company: { select: { name: true } } },
       }),
       this.prisma.user.findUniqueOrThrow({
@@ -815,7 +816,7 @@ export class InsightsService implements OnApplicationBootstrap {
   /** Adds jobs to the end of your Apply queue. Jobs already in it keep their place. */
   async addToApplyQueue(userId: number, jobIds: string[]): Promise<ApplyQueueItemModel[]> {
     const jobs = await this.prisma.job.findMany({
-      where: { id: { in: jobIds } },
+      where: { id: { in: jobIds }, ...listedFor(userId) },
       select: { id: true },
     });
     const last = await this.prisma.applyQueueItem.aggregate({
@@ -919,8 +920,13 @@ export class InsightsService implements OnApplicationBootstrap {
     );
   }
 
-  private async assertJob(jobId: string) {
-    if (!(await this.prisma.job.findUnique({ where: { id: jobId }, select: { id: true } }))) {
+  /** This job is on your list; someone else's job is "not found", like a wrong id. */
+  private async assertJob(userId: number, jobId: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, ...listedFor(userId) },
+      select: { id: true },
+    });
+    if (!job) {
       throw apiError(NotFoundException, 'JOB_NOT_FOUND', `Job ${jobId} not found`, { id: jobId });
     }
   }
@@ -942,7 +948,7 @@ export class InsightsService implements OnApplicationBootstrap {
     if (!valid) {
       throw apiError(BadRequestException, 'ANSWERS_INVALID', 'The answers are not valid JSON');
     }
-    await this.assertJob(jobId);
+    await this.assertJob(userId, jobId);
     const { count } = await this.prisma.jobResume.updateMany({
       where: { userId, jobId },
       data: { claudeAnswers: answers },

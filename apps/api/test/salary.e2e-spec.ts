@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TestApp } from './helpers';
-import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
+import { createTestApp, listAllJobsFor, resetDatabase, seedTestUsers } from './helpers';
 
 const RESEARCH = /* GraphQL */ `
   query ($jobId: ID!) {
@@ -55,6 +55,7 @@ describe('salary research', () => {
     await job('Data Analyst', 'US', 200000, 200000);
     await job('Data Analyst', 'DE', null, null);
     await t.prisma.profile.create({ data: { userId: 2, salaryExpectation: '65.000 €' } });
+    await listAllJobsFor(t.prisma, 2);
 
     const res = await t.asUser<{ salaryResearch: Record<string, unknown> }>(RESEARCH, {
       jobId: mine.id,

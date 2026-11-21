@@ -12,6 +12,7 @@ import type { JobFilterInput, JobsArgs, JobSortInput } from './dto/jobs.args';
 import { isFollowUpDue } from './follow-up';
 import { funnelStats } from './funnel';
 import type { Funnel } from './funnel';
+import { listedFor } from './listed-for';
 import { JobSortField, SortDirection } from './models/enums';
 import type { JobFilterOptions, JobPage } from './models/job.model';
 import { checkTrust, REPOST_LOOKBACK_DAYS } from './trust';
@@ -41,11 +42,6 @@ function withStatus({ applications, matches, fits, jobResumes, ...job }: JobForU
     fitScore: fits[0]?.score ?? null,
     applyScore: jobResumes[0]?.score ?? null,
   };
-}
-
-/** Only the jobs on this user's list: the ones they imported or added. */
-function listedFor(userId: number) {
-  return { listedFor: { some: { userId } } } satisfies Prisma.JobWhereInput;
 }
 
 /** Opening Job posts again within this long counts as the same visit, so the New badges stay. */

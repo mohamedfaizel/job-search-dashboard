@@ -12,6 +12,7 @@ import { FitService } from '../insights/fit.service';
 import { InsightsService } from '../insights/insights.service';
 import { achievementLines } from '../insights/prompt';
 import { mentions } from '../insights/skills';
+import { listedFor } from '../jobs/listed-for';
 import { PrismaService } from '../prisma/prisma.service';
 import { RESUME_LANGUAGES } from '../profile/resumes';
 import type { BuilderDoc } from './builder-doc';
@@ -218,8 +219,8 @@ export class ResumeBuilderService {
     if (jobId) {
       const [built, job, found] = await Promise.all([
         this.getJob(userId, jobId),
-        this.prisma.job.findUniqueOrThrow({
-          where: { id: jobId },
+        this.prisma.job.findFirstOrThrow({
+          where: { id: jobId, ...listedFor(userId) },
           select: { title: true, description: true, company: { select: { name: true } } },
         }),
         this.insights.forJob(userId, jobId),
@@ -295,7 +296,7 @@ export class ResumeBuilderService {
   async getLetter(userId: number, jobId: string): Promise<JobCoverLetterModel> {
     const [me, job, row] = await Promise.all([
       this.me(userId),
-      this.job(jobId),
+      this.job(userId, jobId),
       this.prisma.jobResume.findUnique({
         where: { userId_jobId: { userId, jobId } },
         select: { coverLetter: true, updatedAt: true },
@@ -315,7 +316,7 @@ export class ResumeBuilderService {
 
   /** Saves the letter for this job. Needs a resume copy first: the letter is stored with it. */
   async saveLetter(userId: number, jobId: string, text: string): Promise<JobCoverLetterModel> {
-    await this.job(jobId);
+    await this.job(userId, jobId);
     tooLongLetter(text);
     const { count } = await this.prisma.jobResume.updateMany({
       where: { userId, jobId },
@@ -412,8 +413,8 @@ export class ResumeBuilderService {
   private async letterContext(userId: number, input: ImproveLetterInput) {
     const [built, job, found, letter, me] = await Promise.all([
       this.getJob(userId, input.jobId),
-      this.prisma.job.findUniqueOrThrow({
-        where: { id: input.jobId },
+      this.prisma.job.findFirstOrThrow({
+        where: { id: input.jobId, ...listedFor(userId) },
         select: { title: true, description: true, company: { select: { name: true } } },
       }),
       this.insights.forJob(userId, input.jobId),
@@ -478,7 +479,7 @@ export class ResumeBuilderService {
   async getJob(userId: number, jobId: string): Promise<JobResumeBuildModel> {
     const [me, job, row] = await Promise.all([
       this.me(userId),
-      this.job(jobId),
+      this.job(userId, jobId),
       this.prisma.jobResume.findUnique({
         where: { userId_jobId: { userId, jobId } },
         select: { text: true, doc: true, updatedAt: true },
@@ -520,7 +521,7 @@ export class ResumeBuilderService {
   /** Saves this job's resume. The text the Apply kit and the score read is written from it. */
   async saveJob(userId: number, jobId: string, json: string): Promise<JobResumeBuildModel> {
     const me = await this.me(userId);
-    await this.job(jobId);
+    await this.job(userId, jobId);
     await this.writeJob(userId, jobId, JSON.stringify(lockLanguages(read(json), me.languages)));
     return this.getJob(userId, jobId);
   }
@@ -573,9 +574,10 @@ export class ResumeBuilderService {
     return { ...file, pages };
   }
 
-  private async job(jobId: string) {
-    const job = await this.prisma.job.findUnique({
-      where: { id: jobId },
+  /** A job on your list; someone else's job is "not found", like a wrong id. */
+  private async job(userId: number, jobId: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, ...listedFor(userId) },
       select: { title: true, language: true, company: { select: { name: true } } },
     });
     if (!job) {

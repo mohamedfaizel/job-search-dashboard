@@ -3,6 +3,7 @@ import {
   useCoverLetterTemplatePdf,
   useJobCoverLetterPdf,
   useJobResumeBuildPdf,
+  useMe,
   useResumeBuildPdf,
 } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
@@ -35,6 +36,8 @@ export function PdfPreview({
   enabled = true,
 }: Props) {
   const t = useTranslations('Resume');
+  // How to start the PDF maker is for admins; everyone else just reads that it is plain for now.
+  const isAdmin = useMe().data?.role === 'ADMIN';
   const errorText = useErrorText();
   // Both hooks always run; only one of them has a request to make.
   const master = useResumeBuildPdf(jobId ? '' : language, version, !jobId && !letter);
@@ -76,7 +79,7 @@ export function PdfPreview({
       )}
       {pdf.data && !pdf.data.styled && (
         <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          {t('plainPreview')}
+          {t(isAdmin ? 'plainPreview' : 'plainPreviewUser')}
         </p>
       )}
       {pdf.isError && !pdf.data && (
