@@ -28,18 +28,22 @@ export function SettingsPage() {
   });
 
   return (
-    <section aria-labelledby="settings-title" className="mx-auto max-w-3xl space-y-6">
-      <h1 id="settings-title" className="text-xl font-semibold text-slate-900">
-        {t('title')}
-      </h1>
-      <TabList
-        label={t('sections')}
-        idPrefix="settings-tab"
-        panelId="settings-panel"
-        tabs={tabs}
-        selected={tab}
-        onSelect={setTab}
-      />
+    <section aria-labelledby="settings-title" className="mx-auto max-w-3xl space-y-4">
+      {/* Like My Jobs: the title and the tabs (as chips) share one line. */}
+      <div className="flex items-center gap-3">
+        <h1 id="settings-title" className="shrink-0 text-xl font-semibold text-slate-900">
+          {t('title')}
+        </h1>
+        <TabList
+          label={t('sections')}
+          idPrefix="settings-tab"
+          panelId="settings-panel"
+          tabs={tabs}
+          selected={tab}
+          onSelect={setTab}
+          variant="chips"
+        />
+      </div>
       <div id="settings-panel" role="tabpanel" aria-labelledby={`settings-tab-${tab}`}>
         {tab === 'keys' && <ApiKeys />}
         {/* Only while open: it asks the server about Gmail, which other tabs don't need. */}

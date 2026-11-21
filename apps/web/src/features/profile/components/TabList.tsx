@@ -15,6 +15,8 @@ interface Props<Id extends string> {
   tabs: TabItem<Id>[];
   selected: Id;
   onSelect: (id: Id) => void;
+  /** "chips": round pills that sit next to a page title, like the My Jobs status chips. */
+  variant?: 'underline' | 'chips';
 }
 
 /**
@@ -29,6 +31,7 @@ export function TabList<Id extends string>({
   tabs,
   selected,
   onSelect,
+  variant = 'underline',
 }: Props<Id>) {
   const buttons = useRef(new Map<Id, HTMLButtonElement>());
 
@@ -56,7 +59,11 @@ export function TabList<Id extends string>({
     <div
       role="tablist"
       aria-label={label}
-      className="flex gap-1 overflow-x-auto border-b border-slate-200"
+      className={
+        variant === 'chips'
+          ? 'flex min-w-0 gap-1.5 overflow-x-auto'
+          : 'flex gap-1 overflow-x-auto border-b border-slate-200'
+      }
     >
       {tabs.map((tab) => {
         const active = tab.id === selected;
@@ -77,11 +84,19 @@ export function TabList<Id extends string>({
             onClick={() => {
               onSelect(tab.id);
             }}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap sm:px-4 ${
-              active
-                ? 'border-brand-600 text-brand-700'
-                : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900'
-            }`}
+            className={
+              variant === 'chips'
+                ? `shrink-0 rounded-full border px-3 py-1 text-[13px] whitespace-nowrap transition focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none ${
+                    active
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                  }`
+                : `-mb-px border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap sm:px-4 ${
+                    active
+                      ? 'border-brand-600 text-brand-700'
+                      : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                  }`
+            }
           >
             {tab.label}
           </button>

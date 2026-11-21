@@ -196,6 +196,7 @@ const SYNC_RUN_FIELDS = /* GraphQL */ `
   summary
   source
   boards
+  canContinue
 `;
 
 const SAVED_SEARCH_FIELDS = /* GraphQL */ `
@@ -268,6 +269,14 @@ export const DELETE_SAVED_SEARCH = /* GraphQL */ `
 export const RUN_SAVED_SEARCH = /* GraphQL */ `
   mutation RunSavedSearch($id: Int!, $resume: Boolean) {
     runSavedSearch(id: $id, resume: $resume) {
+      ${SYNC_RESULT_FIELDS}
+    }
+  }
+`;
+
+export const CONTINUE_IMPORT = /* GraphQL */ `
+  mutation ContinueImport($runId: Int!) {
+    continueImport(runId: $runId) {
       ${SYNC_RESULT_FIELDS}
     }
   }

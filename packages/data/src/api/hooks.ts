@@ -17,6 +17,7 @@ import {
   MARK_FOLLOWED_UP,
   MY_APPLICATIONS,
   RUN_SAVED_SEARCH,
+  CONTINUE_IMPORT,
   SAVED_SEARCHES,
   SET_SAVED_SEARCH_SCHEDULE,
   START_JOBS_VISIT,
@@ -366,6 +367,21 @@ export function useRunSavedSearch() {
         { id, resume },
       );
       return data.runSavedSearch;
+    },
+    onSuccess: () => refreshAfterImport(queryClient),
+  });
+}
+
+/** "Continue" in the import history: fetch the pages an import left. */
+export function useContinueImport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (runId: number) => {
+      const data = await graphqlClient.request<{ continueImport: SyncJobsResult }>(
+        CONTINUE_IMPORT,
+        { runId },
+      );
+      return data.continueImport;
     },
     onSuccess: () => refreshAfterImport(queryClient),
   });

@@ -1,5 +1,5 @@
 import type { ImportSource, SyncRun } from '@jobsearch/data';
-import { useSyncRuns } from '@jobsearch/data';
+import { useContinueImport, useSyncRuns } from '@jobsearch/data';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -65,7 +65,7 @@ export function ImportHistory() {
                   <th scope="col" className="w-20 px-3 py-2 text-right font-semibold">
                     {t('credits')}
                   </th>
-                  <th scope="col" className="w-28 px-3 py-2 font-semibold">
+                  <th scope="col" className="w-32 px-3 py-2 font-semibold whitespace-nowrap">
                     {t('pages')}
                   </th>
                 </tr>
@@ -181,30 +181,55 @@ function RunRow({ run }: { run: SyncRun }) {
       <td data-label={t('credits')} className={COUNT}>
         {run.creditsCharged ?? '–'}
       </td>
-      <td className="pl-3 sm:table-cell sm:px-3 sm:py-1.5">
-        {run.complete ? (
-          <span
-            title={t('allFetchedTip')}
-            className="inline-flex items-center gap-1 text-xs text-slate-700"
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              className="size-3.5"
-            >
-              <path d="M5 12l5 5 9-10" />
-            </svg>
-            {t('allFetched')}
-          </span>
-        ) : (
-          <span className="rounded-full border border-orange-300 bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-800">
-            {t('moreLeft')}
-          </span>
-        )}
+      <td className="pl-3 whitespace-nowrap sm:table-cell sm:px-3 sm:py-1.5">
+        <MoreLeft run={run} />
       </td>
     </tr>
+  );
+}
+
+/**
+ * The "More left" cell: "Continue ›" when the import stopped with pages left (it fetches the
+ * next pages of that same search), else a grey "Nothing left".
+ */
+function MoreLeft({ run }: { run: SyncRun }) {
+  const errorText = useErrorText();
+  const t = useTranslations('AddJobs.history');
+  const continueImport = useContinueImport();
+  const grey = 'text-xs text-slate-500';
+
+  if (run.complete) {
+    return (
+      <span title={t('allFetchedTip')} className={grey}>
+        {t('allFetched')}
+      </span>
+    );
+  }
+  if (!run.canContinue) {
+    return (
+      <span title={t('newerTip')} className={grey}>
+        {t('newer')}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex flex-col items-start gap-1">
+      <button
+        type="button"
+        disabled={continueImport.isPending}
+        title={run.source === 'JOBHUNTER' ? t('continueCredits') : t('continueTip')}
+        onClick={() => {
+          continueImport.mutate(run.id);
+        }}
+        className="rounded-md bg-slate-900 px-3 py-1 text-xs font-semibold whitespace-nowrap text-white hover:bg-black disabled:opacity-60"
+      >
+        {continueImport.isPending ? t('continuing') : t('continue')}
+      </button>
+      {continueImport.isError && (
+        <span role="alert" className="text-xs whitespace-normal text-red-700">
+          {t('continueFailed', { error: errorText(continueImport.error) })}
+        </span>
+      )}
+    </span>
   );
 }

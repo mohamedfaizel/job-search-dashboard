@@ -270,5 +270,54 @@ describe('syncJobs', () => {
 
       expect(res.errors?.[0]?.message).toMatch(/Nothing to continue/);
     });
+
+    const HISTORY = /* GraphQL */ `
+      query {
+        syncRuns {
+          id
+          complete
+          canContinue
+        }
+      }
+    `;
+    const CONTINUE = /* GraphQL */ `
+      mutation Continue($runId: Int!) {
+        continueImport(runId: $runId) {
+          resumed
+          fetched
+          hasMore
+        }
+      }
+    `;
+    type History = { syncRuns: { id: number; complete: boolean; canContinue: boolean }[] };
+
+    it('continues an import from the history with the search it stored', async () => {
+      await t.gql(SYNC, { input: { titles: ['frontend'], skills: ['react'], maxPages: 1 } });
+      const before = await t.gql<History>(HISTORY);
+      const run = before.data!.syncRuns[0]!;
+      expect(run).toMatchObject({ complete: false, canContinue: true });
+      requests.length = 0;
+
+      const res = await t.gql(CONTINUE, { runId: run.id });
+
+      expect(res.data).toEqual({ continueImport: { resumed: true, fetched: 1, hasMore: false } });
+      expect(requests[0]).toMatchObject({ cursor: 'page-2', job_title_or: ['frontend'] });
+      const after = await t.gql<History>(HISTORY);
+      // The new run finished the search; the old one can't be continued twice.
+      expect(after.data!.syncRuns.map((r) => [r.complete, r.canContinue])).toEqual([
+        [true, false],
+        [false, false],
+      ]);
+    });
+
+    it('only continues the newest import of a search, and only your own', async () => {
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1 } });
+      await t.gql(SYNC, { input: { titles: ['frontend'], maxPages: 1 } });
+      const history = await t.gql<History>(HISTORY);
+      expect(history.data!.syncRuns.map((r) => r.canContinue)).toEqual([true, false]);
+
+      const someoneElse = await t.asUser(CONTINUE, { runId: history.data!.syncRuns[0]!.id });
+      expect(someoneElse.errors?.[0]?.extensions?.['apiCode']).toBe('SYNC_RUN_NOT_FOUND');
+    });
   });
 });

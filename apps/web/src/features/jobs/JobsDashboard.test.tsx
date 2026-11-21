@@ -75,9 +75,11 @@ describe('JobsDashboard', () => {
     expect(screen.getByRole('columnheader', { name: /Details/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /Bewertungen/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Alle Jobs/ })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Veröffentlicht' })).toHaveDisplayValue(
-      'Veröffentlicht: jederzeit',
+    expect(screen.getByRole('searchbox', { name: 'Jobs suchen' })).toHaveAttribute(
+      'placeholder',
+      'Jobtitel oder Firma',
     );
+    expect(screen.getByRole('button', { name: 'Veröffentlicht filtern' })).toBeInTheDocument();
     expect(screen.getByText('1–2 von 2')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Firma filtern' }));
@@ -414,7 +416,8 @@ describe('JobsDashboard', () => {
       await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
       expect(requests.filter((r) => r.operation === 'SaveTableSettings')).toEqual([]);
 
-      await user.click(screen.getByRole('button', { name: 'Remote' }));
+      await user.click(screen.getByRole('button', { name: /^Filter City/ }));
+      await user.click(screen.getByRole('checkbox', { name: 'Remote' }));
 
       await waitFor(
         () => {
@@ -489,7 +492,9 @@ describe('JobsDashboard', () => {
     expect(screen.queryByRole('columnheader', { name: /Details/ })).not.toBeInTheDocument();
     expect(screen.queryByText('$90k - $120k')).not.toBeInTheDocument();
     // Details plus the six columns that start hidden.
-    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('7 hidden');
+    expect(screen.getByRole('button', { name: /Columns/ })).toHaveAccessibleName(
+      'Columns (7 hidden)',
+    );
     await waitFor(
       () => {
         expect(JSON.parse(tableSettings.current!)).toMatchObject({ columns: { details: false } });
@@ -505,7 +510,9 @@ describe('JobsDashboard', () => {
     await userEvent.click(within(menu).getByRole('checkbox', { name: 'Skills' }));
     expect(screen.queryByRole('columnheader', { name: /Skills/ })).not.toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /Function/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Columns/ })).toHaveTextContent('1 hidden');
+    expect(screen.getByRole('button', { name: /Columns/ })).toHaveAccessibleName(
+      'Columns (1 hidden)',
+    );
   });
 
   it('starts with only the columns you decide on, the rest in the menu', async () => {
@@ -525,7 +532,8 @@ describe('JobsDashboard', () => {
     ]) {
       expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument();
     }
-    for (const name of [/^Job/, /Scores/, /Location/, /Posted/, /Details/, /Status/]) {
+    // The Job header holds the search box, so its name doesn't start with "Job".
+    for (const name of [/Job/, /Scores/, /Location/, /Posted/, /Details/, /Status/]) {
       expect(screen.getByRole('columnheader', { name })).toBeInTheDocument();
     }
 
@@ -771,17 +779,20 @@ describe('JobsDashboard', () => {
     );
   });
 
-  it('filters from the quick filter chips', async () => {
+  it('filters from the column headers: where, posted and Fit ≥', async () => {
     const user = userEvent.setup();
     renderDashboard();
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
 
-    await user.click(screen.getByRole('button', { name: 'Remote' }));
-    expect(screen.getByRole('button', { name: 'Remote' })).toHaveAttribute('aria-pressed', 'true');
-    await user.click(screen.getByRole('button', { name: 'Country' }));
+    // Location's funnel covers the city, the country and remote / hybrid / on-site.
+    await user.click(screen.getByRole('button', { name: /^Filter City · Country · Workplace/ }));
+    await user.click(screen.getByRole('checkbox', { name: 'Remote' }));
     await user.click(screen.getByRole('checkbox', { name: 'Germany' }));
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Posted' }), '3');
-    await user.click(screen.getByRole('button', { name: 'Fit ≥ 70%' }));
+    await user.click(screen.getByRole('button', { name: 'Filter Posted' }));
+    await user.click(screen.getByRole('radio', { name: 'Last 3 days' }));
+    await user.click(screen.getByRole('button', { name: 'Filter Scores' }));
+    await user.click(screen.getByRole('button', { name: '≥ 70%' }));
+    expect(screen.getByRole('spinbutton', { name: 'Lowest Fit %' })).toHaveValue(70);
 
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({
@@ -796,12 +807,70 @@ describe('JobsDashboard', () => {
     expect(screen.getByText('4 filters active')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Clear all' }));
-    expect(screen.getByRole('combobox', { name: 'Posted' })).toHaveValue('');
-    expect(screen.getByRole('button', { name: 'Remote' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByRole('button', { name: 'Fit ≥ 70%' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
+    expect(screen.queryByText('4 filters active')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Filter Scores' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Filter Posted' })).toBeInTheDocument();
+  });
+
+  it('types a Fit % of your own, and clears it from the panel', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+
+    await user.click(screen.getByRole('button', { name: 'Filter Scores' }));
+    await user.type(screen.getByRole('spinbutton', { name: 'Lowest Fit %' }), '85');
+    await waitFor(() => {
+      expect(lastJobsPageVariables()).toMatchObject({ filter: { minFit: 85 } });
+    });
+    expect(screen.getByRole('button', { name: /^Filter Scores \(1/ })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Clear filter' }));
+    await waitFor(() => {
+      expect(lastJobsPageVariables()?.filter).not.toHaveProperty('minFit');
+    });
+  });
+
+  describe('on a phone', () => {
+    beforeEach(() => {
+      // jsdom has no matchMedia (so tests get the desktop); this one says "phone".
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn(() => ({
+          matches: true,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+        })),
+      );
+    });
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('shows cards, a full-width search and every filter in one sheet', async () => {
+      const user = userEvent.setup();
+      renderDashboard();
+      await screen.findByText('Senior Frontend Engineer');
+      expect(screen.queryByRole('table')).toBeNull();
+      expect(screen.getByRole('searchbox', { name: 'Search jobs' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Recalculate Fit' })).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Filters' }));
+      const sheet = screen.getByRole('dialog', { name: 'Filters' });
+      await user.click(within(sheet).getByRole('button', { name: 'Remote' }));
+      await user.click(within(sheet).getByRole('button', { name: 'Fit ≥ 70%' }));
+      await waitFor(() => {
+        expect(lastJobsPageVariables()).toMatchObject({
+          filter: { workplaces: ['REMOTE'], minFit: 70 },
+        });
+      });
+      expect(
+        screen.getByRole('button', { name: 'Filters (2 filters active)' }),
+      ).toBeInTheDocument();
+
+      await user.click(within(sheet).getByRole('button', { name: 'Clear all' }));
+      expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument();
+      await user.click(within(sheet).getByRole('button', { name: 'Done' }));
+      expect(screen.queryByRole('dialog', { name: 'Filters' })).toBeNull();
+    });
   });
 
   it('saves a job with the bookmark icon', async () => {

@@ -131,6 +131,7 @@ export {
   useTableSettings,
   useMarkFollowedUp,
   useRunSavedSearch,
+  useContinueImport,
   useSavedSearches,
   useSaveSearch,
   useSetSchedule,

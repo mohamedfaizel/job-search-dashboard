@@ -58,7 +58,7 @@ function summarize(input: Prisma.JsonValue): string {
     .join(' · ');
 }
 
-function toRunModel(run: RunRow): SyncRunModel {
+function toRunModel(run: RunRow, canContinue = false): SyncRunModel {
   return {
     id: run.id,
     startedAt: run.startedAt,
@@ -75,6 +75,33 @@ function toRunModel(run: RunRow): SyncRunModel {
     summary: summarize(run.input),
     source: sourceOf(run.input),
     boards: listOf(run.input, 'boards'),
+    canContinue,
+  };
+}
+
+/** A stored import's input as a new import of the same search that picks up where it stopped. */
+function continueInput(stored: Prisma.JsonValue): SyncJobsInput {
+  const obj = (stored ?? {}) as Record<string, unknown>;
+  const num = (key: string, fallback: number) =>
+    typeof obj[key] === 'number' ? obj[key] : fallback;
+  return {
+    source: sourceOf(stored),
+    boards: listOf(stored, 'boards'),
+    titles: listOf(stored, 'titles'),
+    skills: listOf(stored, 'skills'),
+    countryCodes: listOf(stored, 'countryCodes'),
+    locations: listOf(stored, 'locations'),
+    languages: listOf(stored, 'languages'),
+    skipFluentGerman: obj['skipFluentGerman'] === true,
+    remoteOnly: obj['remoteOnly'] === true,
+    excludeTitles: listOf(stored, 'excludeTitles'),
+    employmentTypes: listOf(stored, 'employmentTypes'),
+    minSalaryEur: typeof obj['minSalaryEur'] === 'number' ? obj['minSalaryEur'] : null,
+    maxAgeDays: num('maxAgeDays', 7),
+    pageSize: num('pageSize', 10),
+    maxPages: num('maxPages', 1),
+    onlyNew: obj['onlyNew'] === true,
+    resume: true,
   };
 }
 
@@ -95,7 +122,9 @@ export class SavedSearchesService {
     });
     return rows.map(({ runs, ...row }) => ({
       ...row,
-      lastRun: runs[0] ? toRunModel(runs[0]) : null,
+      lastRun: runs[0]
+        ? toRunModel(runs[0], !runs[0].complete && runs[0].nextCursor !== null)
+        : null,
     }));
   }
 
@@ -106,7 +135,34 @@ export class SavedSearchesService {
       take: limit,
       include: withSearchName,
     });
-    return runs.map(toRunModel);
+    // Only the newest import of a search keeps a cursor that still works.
+    const stopped = runs.filter((run) => !run.complete && run.nextCursor);
+    const newest = new Map<string, number>();
+    if (stopped.length > 0) {
+      const latest = await this.prisma.syncRun.findMany({
+        where: { userId, searchKey: { in: [...new Set(stopped.map((run) => run.searchKey))] } },
+        orderBy: { id: 'desc' },
+        distinct: ['searchKey'],
+        select: { id: true, searchKey: true },
+      });
+      for (const row of latest) newest.set(row.searchKey, row.id);
+    }
+    return runs.map((run) =>
+      toRunModel(run, stopped.includes(run) && newest.get(run.searchKey) === run.id),
+    );
+  }
+
+  /** "Continue" in the import history: fetch the pages an import left, with the same search. */
+  async continueRun(userId: number, runId: number): Promise<SyncJobsResult> {
+    const run = await this.prisma.syncRun.findFirst({ where: { id: runId, userId } });
+    if (!run)
+      throw apiError(NotFoundException, 'SYNC_RUN_NOT_FOUND', `Import ${runId} not found`, {
+        id: runId,
+      });
+    return this.sync.sync(continueInput(run.input), {
+      userId,
+      ...(run.savedSearchId === null ? {} : { savedSearchId: run.savedSearchId }),
+    });
   }
 
   async create(userId: number, input: SavedSearchInput): Promise<SavedSearch> {

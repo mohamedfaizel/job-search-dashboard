@@ -1001,9 +1001,11 @@
     },
     "toolbar": {
       "search": "Search jobs",
-      "placeholder": "Search title or company…",
+      "placeholder": "Job title or company",
       "active": "{count, plural, one {# filter active} other {# filters active}}",
-      "clearAll": "Clear all"
+      "clearAll": "Clear all",
+      "filters": "Filters",
+      "done": "Done"
     },
     "pagination": {
       "label": "Pagination",
@@ -1039,7 +1041,8 @@
       "alwaysShown": "(always shown)",
       "showAll": "Show all columns",
       "scores": "Scores",
-      "details": "Details"
+      "details": "Details",
+      "country": "Country"
     },
     "filter": {
       "button": "Filter {column}",
@@ -1047,7 +1050,16 @@
       "search": "Search {column} values",
       "placeholder": "Search…",
       "none": "No values",
-      "clear": "Clear filter"
+      "clear": "Clear filter",
+      "fit": "Fit ≥",
+      "fitLabel": "Lowest Fit %",
+      "anyTime": "Any time",
+      "within": {
+        "d1": "Last 24 hours",
+        "d3": "Last 3 days",
+        "d7": "Last week",
+        "d30": "Last month"
+      }
     },
     "row": {
       "jobs": "Jobs",
@@ -1779,10 +1791,11 @@
       },
       "chatHint": "AI chat: you paste a prompt into Claude, ChatGPT or any AI chat",
       "openSettings": "Open Settings › API keys ↗"
-    }
+    },
+    "infoLabel": "About this page"
   },
   "Tracker": {
-    "title": "Application tracker",
+    "title": "Tracker",
     "intro": "Drag a card to another column, or change its status. Only you see your board.",
     "loadError": "Could not load your tracker: {error}",
     "moveError": "Could not move that job: {error}",
@@ -1809,8 +1822,11 @@
       "copyFailed": "Couldn’t copy. Your browser blocked the clipboard.",
       "done": "I followed up",
       "followedUp": "Followed up {date}",
-      "banner": "{count, plural, one {# application has} other {# applications have}} had no news for a week. Look for “Follow up?” below.",
-      "error": "Could not save that: {error}"
+      "banner": "{count, plural, one {# application has} other {# applications have}} had no news for a week.",
+      "error": "Could not save that: {error}",
+      "onlyThese": "Show only these",
+      "showAll": "Show all",
+      "dismiss": "Hide this"
     },
     "gmailCheck": {
       "checkNow": "Check Gmail now",
@@ -1845,6 +1861,13 @@
         "COMPANY_BOARD": "Company career pages"
       },
       "hint": "A job counts for every step it reached: a rejection after an interview is still an interview. Percent = share of the step above."
+    },
+    "infoLabel": "About the tracker",
+    "fold": {
+      "all": "Fold all",
+      "openAll": "Open all",
+      "tapToOpen": "tap to open",
+      "showAll": "+ {count} more · Show all"
     }
   },
   "AddJobs": {
@@ -2082,11 +2105,10 @@
       "new": "New",
       "alreadySaved": "Saved",
       "credits": "Credits",
-      "pages": "Pages",
+      "pages": "More left",
       "scheduled": "Scheduled",
-      "allFetched": "Done",
-      "moreLeft": "More left",
-      "allFetchedTip": "All pages fetched",
+      "allFetched": "Nothing left",
+      "allFetchedTip": "Every page of this search was fetched",
       "boards": "{count, plural, one {# board} other {# boards}}",
       "showMore": "Show {count} more",
       "showLess": "Show less",
@@ -2094,7 +2116,14 @@
         "JOBHUNTER": "JobHunter",
         "ARBEITSAGENTUR": "Arbeitsagentur",
         "COMPANY_BOARDS": "Company"
-      }
+      },
+      "continue": "Continue ›",
+      "continueTip": "Fetch the next pages of this same search",
+      "continueCredits": "Fetch the next pages of this same search. Uses your JobHunter credits.",
+      "continuing": "Continuing…",
+      "newer": "Newer import ran",
+      "newerTip": "A newer import of this search ran, so continue from that one",
+      "continueFailed": "Could not continue: {error}"
     },
     "tokenHint": "Imports from JobHunter use the token in your Settings, so you spend your own credits.",
     "openSettings": "Open Settings",
@@ -2147,6 +2176,7 @@
     "NOT_IN_QUEUE": "That job is not in your Apply queue.",
     "QUEUE_REPLY_EMPTY": "No “=== JOB 1: … ===” lines found. Paste {ai}’s whole reply to the queue prompt.",
     "SAVED_SEARCH_NOT_FOUND": "Saved search {id} was not found.",
+    "SYNC_RUN_NOT_FOUND": "Import {id} was not found.",
     "SAVED_SEARCH_NAME_TAKEN": "A saved search named “{name}” already exists.",
     "INVALID_BOARD": "Could not read the company board “{entry}”. Use greenhouse:name, lever:name or ashby:name, or paste the career page address.",
     "NO_BOARDS": "Add at least one company board, for example greenhouse:stripe.",

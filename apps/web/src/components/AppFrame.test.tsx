@@ -66,7 +66,10 @@ describe('AppFrame', () => {
 
     const avatar = await screen.findByRole('button', { name: 'Account menu for Mohamed Faizel' });
     expect(avatar).toHaveTextContent('MF');
-    expect(screen.queryByRole('link', { name: 'Settings' })).toBeNull();
+    // The ⚙ next to the 🔔 opens Settings in one click; it is gold on the Settings page.
+    const gear = screen.getByRole('link', { name: 'Settings' });
+    expect(gear).toHaveAttribute('href', '/settings');
+    expect(gear).toHaveAttribute('aria-current', 'page');
 
     await user.click(avatar);
     const menu = screen.getByRole('navigation', { name: 'Account' });

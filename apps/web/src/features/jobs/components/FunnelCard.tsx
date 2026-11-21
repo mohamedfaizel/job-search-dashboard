@@ -27,7 +27,7 @@ function FunnelSteps({ funnel }: { funnel: Funnel }) {
                 ›
               </span>
             )}
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[13px]">
               <span aria-hidden="true" className={`size-2 rounded-full ${step.dot}`} />
               <span className="text-slate-600">{t(`steps.${step.id}`)}</span>
               <b className="tabular-nums text-slate-900">{step.count}</b>
@@ -45,7 +45,7 @@ function FunnelSteps({ funnel }: { funnel: Funnel }) {
 }
 
 /**
- * Your funnel at the top of the Tracker: how far your applications got, how many got an answer,
+ * Your funnel in the Tracker's title line: how far your applications got, how many got an answer,
  * how long answers take, and which job sources bring interviews. It counts each status a job
  * moved through, so a rejection after an interview still counts as an interview.
  */
@@ -70,50 +70,58 @@ export function FunnelCard() {
   return (
     <section
       aria-label={t('title')}
-      className="space-y-2 rounded-lg border border-slate-200 bg-white px-4 py-3"
+      className="relative flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
     >
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <h2 className="text-sm font-semibold text-slate-900">{t('title')}</h2>
-        <FunnelSteps funnel={f} />
-        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-          {stats.map((stat) => (
-            <div key={stat.id} className="flex items-baseline gap-1.5">
-              <dt className="text-xs text-slate-500">{t(`stats.${stat.id}`)}</dt>
-              <dd className="font-semibold tabular-nums text-slate-900">{stat.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-      <details className="text-sm">
-        <summary className="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
+      <FunnelSteps funnel={f} />
+      <dl className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+        {stats.slice(0, 2).map((stat) => (
+          <div key={stat.id} className="flex items-baseline gap-1">
+            <dt>{t(`stats.${stat.id}`)}</dt>
+            <dd className="font-semibold tabular-nums text-slate-900">{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {/* The rest opens in a small panel, so the header stays one line. */}
+      <details className="group text-sm">
+        <summary className="cursor-pointer list-none text-xs font-medium text-slate-500 underline hover:text-slate-700">
           {t('more')}
         </summary>
-        {sources.length > 1 && (
-          <table className="mt-2 w-full max-w-lg text-sm">
-            <caption className="mb-1 text-left text-xs font-medium text-slate-500">
-              {t('bySource')}
-            </caption>
-            <thead>
-              <tr className="text-left text-xs text-slate-500">
-                <th className="font-medium">{t('source')}</th>
-                <th className="text-right font-medium">{t('steps.applied')}</th>
-                <th className="text-right font-medium">{t('steps.interviews')}</th>
-                <th className="text-right font-medium">{t('steps.offers')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sources.map((s) => (
-                <tr key={s.source} className="border-t border-slate-100">
-                  <td className="py-1">{t(`sources.${s.source}`)}</td>
-                  <td className="text-right tabular-nums">{s.applied}</td>
-                  <td className="text-right tabular-nums">{s.interviews}</td>
-                  <td className="text-right tabular-nums">{s.offers}</td>
+        <div className="absolute top-full right-0 left-0 z-20 mt-1 max-w-lg space-y-2 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+          <dl className="flex flex-wrap gap-x-4 gap-y-1">
+            {stats.slice(2).map((stat) => (
+              <div key={stat.id} className="flex items-baseline gap-1.5">
+                <dt className="text-xs text-slate-500">{t(`stats.${stat.id}`)}</dt>
+                <dd className="font-semibold tabular-nums text-slate-900">{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
+          {sources.length > 1 && (
+            <table className="w-full text-sm">
+              <caption className="mb-1 text-left text-xs font-medium text-slate-500">
+                {t('bySource')}
+              </caption>
+              <thead>
+                <tr className="text-left text-xs text-slate-500">
+                  <th className="font-medium">{t('source')}</th>
+                  <th className="text-right font-medium">{t('steps.applied')}</th>
+                  <th className="text-right font-medium">{t('steps.interviews')}</th>
+                  <th className="text-right font-medium">{t('steps.offers')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <p className="mt-2 text-xs text-slate-500">{t('hint')}</p>
+              </thead>
+              <tbody>
+                {sources.map((s) => (
+                  <tr key={s.source} className="border-t border-slate-100">
+                    <td className="py-1">{t(`sources.${s.source}`)}</td>
+                    <td className="text-right tabular-nums">{s.applied}</td>
+                    <td className="text-right tabular-nums">{s.interviews}</td>
+                    <td className="text-right tabular-nums">{s.offers}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p className="text-xs text-slate-500">{t('hint')}</p>
+        </div>
       </details>
     </section>
   );

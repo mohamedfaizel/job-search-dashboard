@@ -1,19 +1,23 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { SearchBox } from './SearchBox';
 
 interface Props {
   search: string;
   onSearch: (value: string) => void;
   activeFilterCount: number;
   onClearAll: () => void;
-  /** Filter chips shown next to the search box. */
+  /** The filters, shown in a sheet that the ⏷ button opens. */
   quickFilters?: ReactNode;
-  /** Extra controls on the right, like the Columns menu. */
+  /** Extra buttons after ⏷, like ↻ Recalculate Fit. */
   children?: ReactNode;
 }
 
-/** Search box (debounced so we don't query on every keystroke) and a "clear filters" button. */
+/**
+ * The phone toolbar (the table header holds these on a computer): a full-width search box, one
+ * ⏷ button that opens every filter in a sheet at the bottom, and the extra buttons.
+ */
 export function Toolbar({
   search,
   onSearch,
@@ -23,65 +27,97 @@ export function Toolbar({
   children,
 }: Props) {
   const t = useTranslations('Jobs.toolbar');
-  const [value, setValue] = useState(search);
-
-  // Keep the box in sync when the search is cleared from elsewhere (e.g. "Clear all").
-  // Adjusting state while rendering is React's recommended alternative to an effect here.
-  const [lastSearch, setLastSearch] = useState(search);
-  if (search !== lastSearch) {
-    setLastSearch(search);
-    setValue(search);
-  }
-
-  useEffect(() => {
-    if (value === search) return;
-    const timer = setTimeout(() => {
-      onSearch(value);
-    }, 300);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [value, search, onSearch]);
-
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const sheetId = useId();
   const hasAnything = activeFilterCount > 0 || search !== '';
 
+  useEffect(() => {
+    if (!open) return;
+    const outside = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="relative w-full sm:w-auto">
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 20 20"
-          className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 fill-current text-slate-400"
-        >
-          <path d="M8.5 3a5.5 5.5 0 0 1 4.38 8.83l3.65 3.64-1.06 1.06-3.64-3.65A5.5 5.5 0 1 1 8.5 3Zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
-        </svg>
-        <input
-          type="search"
-          aria-label={t('search')}
-          placeholder={t('placeholder')}
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-          }}
-          className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm shadow-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none sm:w-72"
-        />
-      </div>
-      {quickFilters}
-      {activeFilterCount > 0 && (
-        <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
-          {t('active', { count: activeFilterCount })}
-        </span>
-      )}
-      {hasAnything && (
+    <div ref={box} className="flex items-center gap-2">
+      <SearchBox
+        search={search}
+        onSearch={onSearch}
+        className="min-w-0 flex-1"
+        inputClassName="h-11 text-base"
+      />
+      {quickFilters && (
         <button
           type="button"
-          onClick={onClearAll}
-          className="text-sm text-brand-700 hover:underline"
+          aria-expanded={open}
+          aria-controls={sheetId}
+          aria-label={
+            activeFilterCount > 0
+              ? `${t('filters')} (${t('active', { count: activeFilterCount })})`
+              : t('filters')
+          }
+          onClick={() => {
+            setOpen((o) => !o);
+          }}
+          className="flex h-11 shrink-0 items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-sm"
         >
-          {t('clearAll')}
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+            <path d="M1.5 2h13l-5 6.2V13l-3 1.5V8.2z" />
+          </svg>
+          {activeFilterCount > 0 && (
+            <span
+              aria-hidden="true"
+              className="rounded-full bg-slate-900 px-1.5 text-xs text-white"
+            >
+              {activeFilterCount}
+            </span>
+          )}
         </button>
       )}
-      {children && <div className="hidden items-center gap-2 md:ml-auto md:flex">{children}</div>}
+      {children}
+      {open && (
+        <div
+          id={sheetId}
+          role="dialog"
+          aria-label={t('filters')}
+          className="fixed inset-x-0 bottom-[var(--tabbar)] z-40 max-h-[70vh] space-y-3 overflow-y-auto rounded-t-2xl border-t border-slate-200 bg-white p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.12)]"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-900">{t('filters')}</p>
+            <div className="flex items-center gap-3">
+              {hasAnything && (
+                <button
+                  type="button"
+                  onClick={onClearAll}
+                  className="text-sm text-brand-700 hover:underline"
+                >
+                  {t('clearAll')}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                }}
+                className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+              >
+                {t('done')}
+              </button>
+            </div>
+          </div>
+          {quickFilters}
+        </div>
+      )}
     </div>
   );
 }

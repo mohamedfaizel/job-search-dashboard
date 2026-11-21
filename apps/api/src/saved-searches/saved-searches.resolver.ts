@@ -81,6 +81,16 @@ export class SavedSearchesResolver {
     return this.service.remove(user.id, id);
   }
 
+  @Mutation(() => SyncJobsResult, {
+    description: 'Fetch the pages an import left (Import history > Continue)',
+  })
+  continueImport(
+    @CurrentUser() user: SessionUser,
+    @Args('runId', { type: () => Int }) runId: number,
+  ): Promise<SyncJobsResult> {
+    return this.service.continueRun(user.id, runId);
+  }
+
   @Mutation(() => SyncJobsResult, { description: 'Import from JobHunter with a saved search' })
   runSavedSearch(
     @CurrentUser() user: SessionUser,

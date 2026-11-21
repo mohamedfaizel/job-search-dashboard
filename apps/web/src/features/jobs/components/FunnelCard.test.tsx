@@ -67,7 +67,7 @@ describe('FunnelCard', () => {
       bySource: [],
     };
     renderCard('de');
-    expect(await screen.findByText('Dein Trichter')).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Dein Trichter' })).toBeInTheDocument();
     expect(screen.getByText('Antwort erhalten').nextSibling).toHaveTextContent('–');
     expect(screen.queryByRole('table')).toBeNull();
   });
@@ -76,6 +76,6 @@ describe('FunnelCard', () => {
     funnel.current = { ...FUNNEL, tracked: 0 };
     renderCard();
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(screen.queryByText('Your funnel')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Your funnel' })).toBeNull();
   });
 });

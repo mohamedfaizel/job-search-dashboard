@@ -25,6 +25,7 @@ const LAST_RUN: SyncRun = {
   summary: 'frontend · react · DE · Berlin',
   source: 'JOBHUNTER',
   boards: [],
+  canContinue: false,
 };
 
 export const SAVED: SavedSearch = {
@@ -180,6 +181,7 @@ export const server = setupServer(
             savedSearchName: null,
             summary: 'backend',
             complete: false,
+            canContinue: true,
             scheduled: true,
           },
           {
@@ -218,6 +220,27 @@ export const server = setupServer(
     requests.push({ operation: 'SetSavedSearchSchedule', variables });
     const input = variables['input'] as Pick<SavedSearch, 'schedule' | 'runAt'>;
     return HttpResponse.json({ data: { setSavedSearchSchedule: { ...SAVED, ...input } } });
+  }),
+  api.mutation('ContinueImport', ({ variables }) => {
+    requests.push({ operation: 'ContinueImport', variables });
+    return HttpResponse.json({
+      data: {
+        continueImport: {
+          pages: 1,
+          fetched: 10,
+          created: 8,
+          updated: 2,
+          totalAvailable: 30,
+          hasMore: true,
+          creditsRemaining: 90,
+          creditsCharged: 8,
+          jobsAlreadyPaid: 2,
+          newSince: null,
+          resumed: true,
+          warnings: [],
+        },
+      },
+    });
   }),
   api.mutation('RunSavedSearch', ({ variables }) => {
     requests.push({ operation: 'RunSavedSearch', variables });
