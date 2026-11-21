@@ -12,6 +12,7 @@ import {
   useDeletePhoto,
   useDocumentStyle,
   useDocumentTemplates,
+  useMe,
   useSaveMyDesign,
   useUpdateDocumentStyle,
   useUploadPhoto,
@@ -654,6 +655,8 @@ function DesignForm({
   const t = useTranslations('Resume.look');
   const templates = useDocumentTemplates();
   const update = useUpdateDocumentStyle();
+  // How to switch the renderer on is for admins; everyone else reads it isn't there now.
+  const isAdmin = useMe().data?.role === 'ADMIN';
   const [draft, setDraft] = useState<DocumentStyleInput>(() => inputOf(saved));
   // What the server has now, so a change made while saving is saved next.
   const [sent, setSent] = useState<DocumentStyleInput>(() => inputOf(saved));
@@ -709,12 +712,19 @@ function DesignForm({
             : t('status.saved')}
     </p>
   );
-  const rendererNote = data && !data.rendererAvailable && (
-    <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-      {data.rendererConfigured ? t('rendererOff') : t('rendererMissing')}{' '}
-      <code className="rounded bg-amber-100 px-1">pnpm pdf:up</code>.
-    </p>
-  );
+  const rendererNote =
+    data &&
+    !data.rendererAvailable &&
+    (isAdmin ? (
+      <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        {data.rendererConfigured ? t('rendererOff') : t('rendererMissing')}{' '}
+        <code className="rounded bg-amber-100 px-1">pnpm pdf:up</code>.
+      </p>
+    ) : (
+      <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        {t('rendererUnavailable')}
+      </p>
+    ));
   const colourAndType = (
     <div className="flex flex-wrap items-end gap-6">
       <div className="space-y-1">

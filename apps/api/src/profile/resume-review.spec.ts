@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMasterReviewPrompt, reviewResume } from './resume-review';
+import { buildMasterReviewPrompt, capLanguageLevels, reviewResume } from './resume-review';
 
 const RESUME = `USER EXAMPLE
 Senior Frontend Engineer
@@ -69,5 +69,31 @@ describe('master resume suggestions', () => {
     expect(prompt).toContain('German A2, English C1');
     expect(prompt).toContain('never invent one');
     expect(prompt).toContain('USER EXAMPLE');
+  });
+});
+
+describe('capLanguageLevels', () => {
+  const mine = ['German A2', 'English C1'];
+
+  it('puts your real level on a language the reply rated higher, in either language', () => {
+    const text = '# Alex\n\n## Sprachen\n\n- Deutsch C1\n- Englisch C1\n- Tamil (Muttersprache)';
+    expect(capLanguageLevels(text, mine)).toBe(
+      '# Alex\n\n## Sprachen\n\n- Deutsch A2\n- Englisch C1\n- Tamil (Muttersprache)',
+    );
+  });
+
+  it('gives a line without a level your level instead of words like fluent', () => {
+    expect(capLanguageLevels('## Languages\n- German – fluent\n- English: C2', mine)).toBe(
+      '## Languages\n- German A2\n- English: C1',
+    );
+  });
+
+  it('leaves everything outside the Languages section alone', () => {
+    const text = '## Profile\nWorked in German (C1 course) teams.\n## Skills\nDeutsch C1';
+    expect(capLanguageLevels(text, mine)).toBe(text);
+  });
+
+  it('changes nothing without languages on My profile', () => {
+    expect(capLanguageLevels('## Languages\n- German C1', [])).toBe('## Languages\n- German C1');
   });
 });

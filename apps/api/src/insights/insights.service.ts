@@ -11,6 +11,7 @@ import { parseResume } from '../documents/resume-doc';
 import { ApplicationStatus, JobMatchStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { customFieldsOf } from '../profile/custom-fields';
+import { capLanguageLevels } from '../profile/resume-review';
 import { cleanResume, tidy } from '../profile/resume-text';
 import type { MasterResumes } from '../profile/resumes';
 import { resumeFor } from '../profile/resumes';
@@ -437,8 +438,11 @@ export class InsightsService implements OnApplicationBootstrap {
     // An Apply kit reply has the cover letter and form answers after the resume: keep them apart,
     // so only the resume is scored and downloaded.
     const reply = splitReply(text);
-    const clean = cleanResume(reply.resume);
     await this.assertJob(jobId);
+    const clean = capLanguageLevels(
+      cleanResume(reply.resume),
+      await this.languagesFor(userId, jobId),
+    );
     // A reply with only a resume (a file, or Claude's answer to a follow-up question) keeps the
     // cover letter, form answers and notes saved before, instead of wiping them.
     const resumeOnly = !reply.coverLetter && !reply.formAnswers && !reply.check;
@@ -471,6 +475,18 @@ export class InsightsService implements OnApplicationBootstrap {
     return this.forJob(userId, jobId);
   }
 
+  /** Your languages with real levels for this job: its own languages line, else My profile's. */
+  private async languagesFor(userId: number, jobId: string): Promise<string[]> {
+    const [custom, profile] = await Promise.all([
+      this.prisma.jobLanguages.findUnique({
+        where: { userId_jobId: { userId, jobId } },
+        select: { text: true },
+      }),
+      this.prisma.profile.findUnique({ where: { userId }, select: { languages: true } }),
+    ]);
+    return custom ? splitLanguages(custom.text) : (profile?.languages ?? []);
+  }
+
   /**
    * Saves your edits to the reply you saved for a job: the resume, cover letter and form answers
    * as you changed them in the preview. The uploaded file (if any) stays as the original; the
@@ -481,7 +497,10 @@ export class InsightsService implements OnApplicationBootstrap {
     jobId: string,
     edit: { resume: string; coverLetter: string; formAnswers: string },
   ) {
-    const text = cleanResume(edit.resume);
+    const text = capLanguageLevels(
+      cleanResume(edit.resume),
+      await this.languagesFor(userId, jobId),
+    );
     for (const part of [edit.coverLetter, edit.formAnswers]) {
       if (part.length > MAX_REPLY_PART_CHARS) {
         throw apiError(

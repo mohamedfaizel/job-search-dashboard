@@ -626,6 +626,7 @@
       "loading": "Loading…",
       "rendererOff": "The PDF renderer isn’t running, so downloads are plain PDFs for now. Start it with",
       "rendererMissing": "PDF templates are switched off: set PDF_RENDERER_URL in .env, then start the renderer with",
+      "rendererUnavailable": "PDF templates are not available right now, so downloads are plain PDFs for now.",
       "template": "Resume template",
       "colour": "Accent colour",
       "ownColour": "Your own colour",

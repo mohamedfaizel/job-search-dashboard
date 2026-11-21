@@ -627,6 +627,24 @@ describe('job insights without AI', () => {
       await request(t.server).get(`/job-resume/${job.id}`).expect(401);
     });
 
+    it('keeps your real language levels, whatever level the reply gives', async () => {
+      const job = await addJob({ title: 'Frontend Entwickler', skills: ['react'] });
+      await t.prisma.profile.create({
+        data: { userId: 2, resumeText: 'React.', languages: ['German A2', 'English C1'] },
+      });
+
+      const res = await t.asUser<{ saveJobResumeText: Insights }>(SAVE_TEXT, {
+        jobId: job.id,
+        text: '=== RESUME ===\n# Ada\n## Sprachen\n- Deutsch C1\n- Englisch C1',
+      });
+
+      expect(res.errors).toBeUndefined();
+      const file = await download(job.id).expect(200);
+      expect((file.body as Buffer).toString()).toBe(
+        '# Ada\n## Sprachen\n- Deutsch A2\n- Englisch C1',
+      );
+    });
+
     it('flags numbers and skills that are not in your resume or profile', async () => {
       const job = await backendJob();
 

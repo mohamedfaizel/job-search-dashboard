@@ -1,4 +1,5 @@
 import { LONG_DASH_DATE } from '../insights/pdf-check';
+import { isLanguagesSection } from '../resume-builder/builder-doc';
 
 /**
  * Suggestions for your master resume, shown on My profile as soon as you upload or edit it.
@@ -56,6 +57,13 @@ const LANGUAGE_NAMES: Record<string, string[]> = {
   english: ['english', 'englisch'],
   french: ['french', 'französisch'],
   spanish: ['spanish', 'spanisch'],
+  italian: ['italian', 'italienisch'],
+  dutch: ['dutch', 'niederländisch'],
+  portuguese: ['portuguese', 'portugiesisch'],
+  polish: ['polish', 'polnisch'],
+  turkish: ['turkish', 'türkisch'],
+  russian: ['russian', 'russisch'],
+  arabic: ['arabic', 'arabisch'],
 };
 
 const LEVEL = /\b([ABC][12])\b/;
@@ -89,6 +97,51 @@ function levelMismatches(text: string, languages: string[]): string[] {
     }
   }
   return unique(found);
+}
+
+/** "German A2" -> the names it goes by ("german", "deutsch") and its level, "A2". */
+function parseLanguage(entry: string): { names: string[]; level: string } | null {
+  const [, name = '', level = ''] = /^(\p{L}+).*?\b([ABC][12])\b/iu.exec(entry) ?? [];
+  if (!name || !level) return null;
+  return {
+    names: LANGUAGE_NAMES[name.toLowerCase()] ?? [name.toLowerCase()],
+    level: level.toUpperCase(),
+  };
+}
+
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Puts your real levels into the Languages section of a resume an AI chat wrote ("Deutsch C1"
+ * becomes "Deutsch A2" when My profile says German A2), so a resume never claims more than you
+ * have, whatever the reply says. A line without a level ("Deutsch – fließend") gets yours in
+ * place of the words after the language. Lines outside the Languages section, and languages
+ * that are not on your list, stay as they are.
+ */
+export function capLanguageLevels(text: string, languages: string[]): string {
+  const mine = languages.map(parseLanguage).filter((l) => l !== null);
+  if (!mine.length) return text;
+  let inLanguages = false;
+  return text
+    .split('\n')
+    .map((line) => {
+      const heading = /^#{1,3}\s+(.+?)\s*$/.exec(line);
+      if (heading) {
+        inLanguages = isLanguagesSection(heading[1] ?? '');
+        return line;
+      }
+      if (!inLanguages) return line;
+      for (const { names, level } of mine) {
+        const name = new RegExp(`(${names.map(escape).join('|')})\\p{L}*`, 'iu').exec(line);
+        if (!name) continue;
+        const after = name.index + name[0].length;
+        const rest = line.slice(after);
+        if (LEVEL.test(rest)) return line.slice(0, after) + rest.replace(LEVEL, level);
+        return `${line.slice(0, after)} ${level}`;
+      }
+      return line;
+    })
+    .join('\n');
 }
 
 /** The lines of the resume's Achievements section, without bullet marks. */

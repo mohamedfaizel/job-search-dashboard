@@ -626,6 +626,7 @@
       "loading": "Wird geladen…",
       "rendererOff": "Der PDF-Renderer läuft nicht, darum sind Downloads vorerst einfache PDFs. Starte ihn mit",
       "rendererMissing": "PDF-Vorlagen sind aus: setze PDF_RENDERER_URL in .env und starte den Renderer mit",
+      "rendererUnavailable": "PDF-Vorlagen sind gerade nicht verfügbar, deshalb sind Downloads vorerst einfache PDFs.",
       "template": "Lebenslauf-Vorlage",
       "colour": "Akzentfarbe",
       "ownColour": "Eigene Farbe",
