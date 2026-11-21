@@ -49,7 +49,7 @@ describe('AppFrame', () => {
     expect(within(tabs).getByRole('link', { name: 'Add' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByText('Page content')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Account menu for Mohamed' }));
+    await userEvent.click(screen.getByRole('button', { name: 'M, account menu for Mohamed' }));
     expect(screen.getByText('admin')).toBeInTheDocument();
     // Only admins get the Admin page in their menu.
     expect(
@@ -65,7 +65,9 @@ describe('AppFrame', () => {
     const user = userEvent.setup();
     renderFrame();
 
-    const avatar = await screen.findByRole('button', { name: 'Account menu for Mohamed Faizel' });
+    const avatar = await screen.findByRole('button', {
+      name: 'MF, account menu for Mohamed Faizel',
+    });
     expect(avatar).toHaveTextContent('MF');
     // The ⚙ next to the 🔔 opens Settings in one click; it is gold on the Settings page.
     const gear = screen.getByRole('link', { name: 'Settings' });
@@ -104,7 +106,7 @@ describe('AppFrame', () => {
     session.user = ADMIN;
     const user = userEvent.setup();
     renderFrame();
-    const avatar = await screen.findByRole('button', { name: /Account menu/ });
+    const avatar = await screen.findByRole('button', { name: /account menu/ });
     await user.click(avatar);
     expect(screen.queryByRole('button', { name: 'Install app' })).toBeNull();
 
@@ -128,7 +130,7 @@ describe('AppFrame', () => {
     session.user = ADMIN;
     const user = userEvent.setup();
     renderFrame();
-    await user.click(await screen.findByRole('button', { name: /Account menu/ }));
+    await user.click(await screen.findByRole('button', { name: /account menu/ }));
     expect(screen.getByText(/tap Share, then "Add to Home Screen"/)).toBeInTheDocument();
     Object.defineProperty(navigator, 'userAgent', { value: agent, configurable: true });
   });
@@ -184,13 +186,13 @@ describe('AppFrame', () => {
     const user = userEvent.setup();
     renderFrame();
 
-    await user.click(await screen.findByRole('button', { name: /Account menu/ }));
+    await user.click(await screen.findByRole('button', { name: /account menu/ }));
     const language = screen.getByRole('group', { name: 'Language' });
-    expect(within(language).getByRole('button', { name: 'English' })).toHaveAttribute(
+    expect(within(language).getByRole('button', { name: 'EN English' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    await user.click(within(language).getByRole('button', { name: 'Deutsch' }));
+    await user.click(within(language).getByRole('button', { name: 'DE Deutsch' }));
 
     expect(document.cookie).toContain('locale=de');
     expect(router.refresh).toHaveBeenCalled();
@@ -255,6 +257,33 @@ describe('AppFrame', () => {
     const card = await screen.findByRole('alert', {}, { timeout: 5000 });
     expect(within(card).getByRole('heading', { name: 'Gerade keine Verbindung' })).toBeVisible();
     expect(within(card).getByRole('button', { name: 'Erneut versuchen' })).toBeEnabled();
+  });
+
+  it('moves through the account menu with the arrow keys', async () => {
+    session.user = ADMIN;
+    renderFrame();
+    const avatar = await screen.findByRole('button', { name: /account menu/ });
+    avatar.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    const menu = within(screen.getByRole('navigation', { name: 'Account' }));
+    expect(menu.getByRole('link', { name: 'My profile' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(menu.getByRole('link', { name: 'Settings' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+    expect(screen.getByRole('button', { name: 'Log out' })).toHaveFocus();
+    await userEvent.keyboard('{Home}');
+    expect(menu.getByRole('link', { name: 'My profile' })).toHaveFocus();
+  });
+
+  it('starts with a Skip to content link that jumps to the page', async () => {
+    session.user = ADMIN;
+    renderFrame();
+    await screen.findByText('Page content');
+    await userEvent.tab();
+    const skip = screen.getByRole('link', { name: 'Skip to content' });
+    expect(skip).toHaveFocus();
+    expect(skip).toHaveAttribute('href', '#main');
+    expect(document.getElementById('main')).toContainElement(screen.getByText('Page content'));
   });
 
   it('makes initials from a name', () => {

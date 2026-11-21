@@ -1,5 +1,6 @@
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Intl } from '@/test/intl';
 import { funnel } from '../test/server';
 import { FunnelCard } from './FunnelCard';
@@ -54,6 +55,23 @@ describe('FunnelCard', () => {
     // A source with no applications is left out.
     expect(within(table).getAllByRole('row')).toHaveLength(3);
     expect(within(table).getByRole('row', { name: 'Arbeitsagentur 3 0 0' })).toBeInTheDocument();
+  });
+
+  it('closes the sources panel on Escape or a click outside', async () => {
+    funnel.current = FUNNEL;
+    renderCard();
+    const toggle = await screen.findByText('Sources and how it counts');
+    const panel = toggle.closest('details');
+    await userEvent.click(toggle);
+    expect(panel).toHaveAttribute('open');
+    await userEvent.keyboard('{Escape}');
+    expect(panel).not.toHaveAttribute('open');
+    expect(toggle).toHaveFocus();
+
+    await userEvent.click(toggle);
+    expect(panel).toHaveAttribute('open');
+    await userEvent.click(document.body);
+    expect(panel).not.toHaveAttribute('open');
   });
 
   it('shows dashes before any answer, in German', async () => {

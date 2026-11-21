@@ -138,6 +138,20 @@ export function JobsDashboard() {
     foundQuery.data?.total === 0 &&
     hiddenCount.data === 0 &&
     applications.data?.length === 0;
+  // No filter set, yet the list is empty: every job has moved to the Tracker.
+  const allTracked =
+    !showingHidden &&
+    !tableState.newOnly &&
+    !tableState.queueOnly &&
+    countActiveFilters(tableState) === 0 &&
+    !tableState.search.trim() &&
+    foundQuery.data?.total === 0 &&
+    (applications.data?.length ?? 0) > 0;
+
+  const emptyText = () => {
+    if (showingHidden) return t('noHidden');
+    return allTracked ? t('allTracked') : t('noJobs');
+  };
 
   // Opening Job posts starts a visit; jobs imported since the last one are New.
   const visit = useJobsVisit();
@@ -529,7 +543,7 @@ export function JobsDashboard() {
       )}
       {jobsQuery.isSuccess && jobs.length === 0 && !nothingYet && (
         <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
-          {showingHidden ? t('noHidden') : t('noJobs')}
+          {emptyText()}
         </p>
       )}
 

@@ -100,7 +100,7 @@ describe('AuthForm', () => {
     );
     const { rerender } = render(page('en'));
 
-    await user.click(screen.getByRole('button', { name: 'Deutsch' }));
+    await user.click(screen.getByRole('button', { name: 'DE Deutsch' }));
     expect(document.cookie).toContain('locale=de');
     expect(router.refresh).toHaveBeenCalled();
     // The refresh brings the page back in German; the form keeps its state.

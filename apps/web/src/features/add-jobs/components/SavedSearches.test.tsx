@@ -81,7 +81,11 @@ describe('SavedSearches', () => {
     expect(card.getByText('Career pages')).toBeInTheDocument();
     expect(card.getByText(/greenhouse:stripe, lever:netflix · frontend/)).toBeInTheDocument();
     await userEvent.click(card.getByRole('button', { name: 'Run now' }));
-    expect(await card.findByText('lever:netflix: 404 Not Found')).toBeInTheDocument();
+    expect(
+      await card.findByText(
+        'Netflix (Lever): no career page found under this name. Check the spelling.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('runs a search, then continues it when pages are left', async () => {

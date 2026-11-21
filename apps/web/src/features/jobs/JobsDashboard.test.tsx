@@ -5,8 +5,16 @@ import { HttpResponse } from 'msw';
 import { Intl } from '@/test/intl';
 import { location, router } from '@/test/navigation';
 import { JobsDashboard } from './JobsDashboard';
-import { makeJob } from './test/fixtures';
-import { api, applyQueue, OFF_PAGE_JOB_ID, requests, server, tableSettings } from './test/server';
+import { JOBS, makeJob } from './test/fixtures';
+import {
+  api,
+  applications,
+  applyQueue,
+  OFF_PAGE_JOB_ID,
+  requests,
+  server,
+  tableSettings,
+} from './test/server';
 
 function renderDashboard(locale: 'en' | 'de' = 'en') {
   const queryClient = createQueryClient();
@@ -82,10 +90,10 @@ describe('JobsDashboard', () => {
     expect(screen.getByRole('button', { name: 'Veröffentlicht filtern' })).toBeInTheDocument();
     expect(screen.getByText('1–2 von 2')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Firma filtern' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Job (Firma) filtern' }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Acme' }));
     expect(
-      await screen.findByRole('button', { name: 'Firma filtern (1 ausgewählt)' }),
+      await screen.findByRole('button', { name: 'Job (Firma) filtern (1 ausgewählt)' }),
     ).toBeInTheDocument();
     expect(screen.getByText('1 Filter aktiv')).toBeInTheDocument();
 
@@ -100,7 +108,7 @@ describe('JobsDashboard', () => {
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
 
     // Details sorts by salary.
-    await userEvent.click(screen.getByRole('button', { name: /details/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^details/i }));
     await waitFor(() => {
       expect(lastJobsPageVariables()).toMatchObject({
         sort: { field: 'SALARY', direction: 'ASC' },
@@ -117,7 +125,7 @@ describe('JobsDashboard', () => {
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
 
     // The Job column filters by company.
-    await userEvent.click(screen.getByRole('button', { name: 'Filter Company' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Filter Job (Company)' }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Acme' }));
 
     await waitFor(() => {
@@ -126,7 +134,9 @@ describe('JobsDashboard', () => {
         page: 1,
       });
     });
-    expect(screen.getByRole('button', { name: 'Filter Company (1 selected)' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Filter Job (Company) (1 selected)' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('1 filter active')).toBeInTheDocument();
   });
 
@@ -138,7 +148,9 @@ describe('JobsDashboard', () => {
     expect(within(table).getByText('No sponsorship')).toBeInTheDocument();
 
     // One funnel on the Details column filters seniority and visa.
-    await userEvent.click(screen.getByRole('button', { name: 'Filter Seniority · Visa' }));
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Filter Details (Seniority · Visa)' }),
+    );
     const visaList = screen.getByRole('list', { name: 'Visa' });
     await userEvent.click(within(visaList).getByRole('checkbox', { name: 'Visa support' }));
 
@@ -146,7 +158,7 @@ describe('JobsDashboard', () => {
       expect(lastJobsPageVariables()).toMatchObject({ filter: { visas: ['OFFERS'] } });
     });
     expect(
-      screen.getByRole('button', { name: 'Filter Seniority · Visa (1 selected)' }),
+      screen.getByRole('button', { name: 'Filter Details (Seniority · Visa) (1 selected)' }),
     ).toBeInTheDocument();
   });
 
@@ -230,7 +242,7 @@ describe('JobsDashboard', () => {
     renderDashboard();
 
     const fit = await screen.findByRole('button', {
-      name: 'Fit for Senior Frontend Engineer: 82%',
+      name: 'Fit 82%: Senior Frontend Engineer',
     });
     expect(lastJobsPageVariables()).toMatchObject({
       sort: { field: 'POSTED_AT', direction: 'DESC' },
@@ -338,6 +350,26 @@ describe('JobsDashboard', () => {
     expect(screen.queryByText(/Setz ein paar Filter zurück/)).not.toBeInTheDocument();
   });
 
+  it('says every job is on the Tracker when nothing is left and no filter is set', async () => {
+    const job = JOBS[0] as (typeof JOBS)[number];
+    applications.push({
+      status: 'APPLIED',
+      updatedAt: '2026-10-26T09:00:00.000Z',
+      followedUpAt: null,
+      followUpDue: false,
+      job: { ...job, applicationStatus: 'APPLIED' },
+    });
+    server.use(
+      api.query('JobsPage', () =>
+        HttpResponse.json({ data: { jobsPage: { items: [], total: 0, page: 1, pageSize: 25 } } }),
+      ),
+    );
+    renderDashboard();
+
+    expect(await screen.findByText(/All your jobs are on the Tracker now/)).toBeInTheDocument();
+    expect(screen.queryByText(/Try clearing some filters/)).not.toBeInTheDocument();
+  });
+
   it('says to clear filters when a search finds nothing', async () => {
     const user = userEvent.setup();
     renderDashboard();
@@ -416,7 +448,7 @@ describe('JobsDashboard', () => {
       await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
       expect(requests.filter((r) => r.operation === 'SaveTableSettings')).toEqual([]);
 
-      await user.click(screen.getByRole('button', { name: /^Filter City/ }));
+      await user.click(screen.getByRole('button', { name: /^Filter Location \(City/ }));
       await user.click(screen.getByRole('checkbox', { name: 'Remote' }));
 
       await waitFor(
@@ -785,7 +817,9 @@ describe('JobsDashboard', () => {
     await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
 
     // Location's funnel covers the city, the country and remote / hybrid / on-site.
-    await user.click(screen.getByRole('button', { name: /^Filter City · Country · Workplace/ }));
+    await user.click(
+      screen.getByRole('button', { name: /^Filter Location \(City · Country · Workplace\)/ }),
+    );
     await user.click(screen.getByRole('checkbox', { name: 'Remote' }));
     await user.click(screen.getByRole('checkbox', { name: 'Germany' }));
     await user.click(screen.getByRole('button', { name: 'Filter Posted' }));

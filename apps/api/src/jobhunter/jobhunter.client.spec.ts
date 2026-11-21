@@ -41,8 +41,25 @@ describe('JobHunterClient', () => {
     expect(res.data).toHaveLength(3);
   });
 
-  it('turns an HTTP error into a ServiceUnavailableException', async () => {
-    server.use(http.post(`${BASE_URL}/jobs/search`, () => new HttpResponse(null, { status: 401 })));
-    await expect(client.searchJobs({}, 'bad')).rejects.toBeInstanceOf(ServiceUnavailableException);
+  const codeOf = async (status: number) => {
+    server.use(http.post(`${BASE_URL}/jobs/search`, () => new HttpResponse(null, { status })));
+    const error: unknown = await client.searchJobs({}, 'bad').catch((e: unknown) => e);
+    return (error as { getResponse(): { code: string } }).getResponse().code;
+  };
+
+  it('says in plain words when the token is wrong, or the credits are used up', async () => {
+    expect(await codeOf(401)).toBe('JOBHUNTER_TOKEN_REJECTED');
+    expect(await codeOf(403)).toBe('JOBHUNTER_TOKEN_REJECTED');
+    expect(await codeOf(402)).toBe('JOBHUNTER_NO_CREDITS');
+  });
+
+  it('turns other HTTP errors, and no answer at all, into SOURCE_DOWN', async () => {
+    server.use(http.post(`${BASE_URL}/jobs/search`, () => new HttpResponse(null, { status: 500 })));
+    await expect(client.searchJobs({}, 'x')).rejects.toBeInstanceOf(ServiceUnavailableException);
+    expect(await codeOf(503)).toBe('SOURCE_DOWN');
+    server.use(http.post(`${BASE_URL}/jobs/search`, () => HttpResponse.error()));
+    await expect(client.searchJobs({}, 'x')).rejects.toMatchObject({
+      message: "JobHunter isn't answering right now. Try again in a few minutes.",
+    });
   });
 });

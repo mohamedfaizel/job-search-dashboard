@@ -7,6 +7,11 @@
     "en": "English",
     "de": "Deutsch"
   },
+  "ImportWarnings": {
+    "boardNotFound": "{company} ({tool}): no career page found under this name. Check the spelling.",
+    "boardDown": "{company} ({tool}): the career page isn’t answering right now. Try again later.",
+    "tooMany": "{fit} jobs fit; only the newest {saved} were saved. Narrow the job title or places."
+  },
   "ServerDown": {
     "title": "Can’t connect right now",
     "body": "Your jobs and applications are safe. Check your internet, or try again in a minute.",
@@ -15,6 +20,7 @@
     "auto": "The page also tries again by itself every 30 seconds."
   },
   "Nav": {
+    "skip": "Skip to content",
     "main": "Main",
     "jobs": "My Jobs",
     "tracker": "Tracker",
@@ -27,7 +33,7 @@
     "loading": "Loading…",
     "tabs": "Tabs",
     "add": "Add",
-    "account": "Account menu for {name}",
+    "account": "{initials}, account menu for {name}",
     "accountMenu": "Account",
     "language": "Language",
     "install": "Install app",
@@ -944,6 +950,7 @@
     "loading": "Loading jobs…",
     "noHidden": "No hidden jobs match.",
     "noJobs": "No jobs match. Try clearing some filters, or find more on the “Job Market” page.",
+    "allTracked": "All your jobs are on the Tracker now. Find more on the “Job Market” page.",
     "empty": {
       "title": "No jobs yet",
       "text": "Import jobs from JobHunter, the Arbeitsagentur or company career pages, or add one by hand.",
@@ -1080,7 +1087,7 @@
       "estimated": "est.",
       "statusFor": "Status for {job}",
       "fitEmpty": "Add your resume on the Resume page to see how well you fit each job",
-      "fitLabel": "Fit for {title}: {score}%",
+      "fitLabel": "Fit {score}%: {title}",
       "fitHint": "How much of the job’s skills, keywords and title your resume covers. Click for details",
       "applyEmpty": "Save a reply from {ai} in the Apply kit to see its score",
       "applyLabel": "Apply kit score for {title}: {score}%",
@@ -2214,6 +2221,9 @@
     "ANSWERS_INVALID": "Your answers could not be read.",
     "API_KEY_INVALID": "That does not look like a key. Paste the whole key, without spaces.",
     "JOBHUNTER_TOKEN_MISSING": "Add your JobHunter token in Settings › API keys first.",
+    "JOBHUNTER_TOKEN_REJECTED": "JobHunter didn’t accept your token. Check it in Settings › API keys.",
+    "JOBHUNTER_NO_CREDITS": "Your JobHunter account has no credits left.",
+    "SOURCE_DOWN": "{source} isn’t answering right now. Try again in a few minutes.",
     "AI_KEY_MISSING": "Add your Claude or OpenAI API key in Settings › API keys first.",
     "API_KEY_NOT_FOUND": "Save the key first.",
     "RESUME_BUILD_INVALID": "This resume could not be saved. Reload the page and try again.",
@@ -2228,7 +2238,7 @@
     "INVITE_NEEDED": "Sign-up on this server needs an invite link.",
     "INVITE_INVALID": "This invite link has expired, was used up or was canceled.",
     "INVITE_NOT_FOUND": "This invite link is already gone.",
-    "SAVED_SEARCHES_FULL": "You can keep at most {max} saved searches. Delete one first."
+    "SAVED_SEARCHES_FULL": "You can keep at most {max, plural, one {# saved search} other {# saved searches}}. Delete one first."
   },
   "Notifications": {
     "bell": "Notifications",

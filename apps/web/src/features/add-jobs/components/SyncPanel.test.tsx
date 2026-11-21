@@ -370,7 +370,9 @@ describe('SyncPanel', () => {
 
       const status = await screen.findByRole('status');
       expect(status).toHaveTextContent('Some things to know:');
-      expect(status).toHaveTextContent('greenhouse:gone: 404 Not Found');
+      expect(status).toHaveTextContent(
+        'Gone (Greenhouse): no career page found under this name. Check the spelling.',
+      );
     });
 
     it('opens a saved search with its companies', () => {

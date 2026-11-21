@@ -65,6 +65,14 @@ const noop = () => undefined;
  * JobsDashboard container decides what data to fetch. That split makes it easy to
  * test and to show in Storybook.
  */
+/**
+ * A filter button's name starts with the column's own header, so voice control ("click Filter
+ * Job") finds it: "Job (Company)", "Location (City · Country · Workplace)".
+ */
+function filterName(header: string, filters: string | null): string {
+  return filters && filters !== header ? `${header} (${filters})` : header;
+}
+
 export function JobsTable({
   jobs,
   sort,
@@ -198,7 +206,10 @@ export function JobsTable({
                         )}
                         {controls.filter && (
                           <ColumnFilter
-                            column={t(controls.filter.name ?? (header.column.id as ColumnNameKey))}
+                            column={filterName(
+                              t(header.column.id as ColumnNameKey),
+                              controls.filter.name ? t(controls.filter.name) : null,
+                            )}
                             options={controls.filter.options(filterOptions, f)}
                             selected={filters[controls.filter.key] ?? []}
                             onToggle={(value) => {
@@ -225,7 +236,10 @@ export function JobsTable({
                         )}
                         {controls.filters && (
                           <ColumnFilter
-                            column={controls.filters.map((c) => t(c.name)).join(' · ')}
+                            column={filterName(
+                              t(header.column.id as ColumnNameKey),
+                              controls.filters.map((c) => t(c.name)).join(' · '),
+                            )}
                             groups={controls.filters.map((c) => ({
                               name: t(c.name),
                               options: c.options(filterOptions, f),

@@ -33,7 +33,8 @@ export function LanguageSwitch({
           type="button"
           lang={locale}
           title={t(locale)}
-          aria-label={t(locale)}
+          // Starts with what the button shows ("EN"), so voice control can find it.
+          aria-label={`${locale.toUpperCase()} ${t(locale)}`}
           aria-pressed={locale === current}
           onClick={() => {
             if (locale === current) return;

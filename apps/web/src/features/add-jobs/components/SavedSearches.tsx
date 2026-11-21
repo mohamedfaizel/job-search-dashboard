@@ -13,6 +13,7 @@ import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
 import { countryName } from '../countries';
 import { useDateTime } from '../format';
+import { useWarningText } from '../useWarningText';
 
 interface Props {
   /** Put a saved search into the import form to edit it. */
@@ -307,6 +308,7 @@ function SavedSearchRow({
 
 function RunResult({ result, free }: { result: SyncJobsResult; free: boolean }) {
   const t = useTranslations('AddJobs');
+  const warningText = useWarningText();
   return (
     <div role="status" className="rounded-md bg-emerald-50 p-2 text-sm text-emerald-800">
       <p>
@@ -322,7 +324,7 @@ function RunResult({ result, free }: { result: SyncJobsResult; free: boolean }) 
       {result.warnings.length > 0 && (
         <ul className="mt-1 list-disc pl-5 text-amber-900">
           {result.warnings.map((warning) => (
-            <li key={warning}>{warning}</li>
+            <li key={warning}>{warningText(warning)}</li>
           ))}
         </ul>
       )}

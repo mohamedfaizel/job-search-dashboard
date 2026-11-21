@@ -142,7 +142,9 @@ describe('scheduled imports', () => {
     expect(await scheduler.runDue(new Date())).toBe(0);
 
     const after = await t.prisma.savedSearch.findUniqueOrThrow({ where: { id: search.id } });
-    expect(after.scheduleNote).toMatch(/^Failed at .+: JobHunter search failed: 402/);
+    expect(after.scheduleNote).toMatch(
+      /^Failed at .+: Your JobHunter account has no credits left \(402\)/,
+    );
     expect(after.nextRunAt!.getTime()).toBeGreaterThan(Date.now());
   });
 

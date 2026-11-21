@@ -4,7 +4,7 @@ import type { User } from '@jobsearch/data';
 import { useSetLocale } from '@jobsearch/data';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useInstallApp } from '@/lib/install-app';
 import { useDismiss } from '@/lib/use-dismiss';
 import { LanguageSwitch } from './LanguageSwitch';
@@ -16,6 +16,31 @@ import {
   ProfileIcon,
   SettingsIcon,
 } from './NavIcons';
+
+/** Everything you can reach in the open menu, top to bottom. */
+function menuItems(menu: HTMLElement | null): HTMLElement[] {
+  return Array.from(menu?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []);
+}
+
+/**
+ * ↓ and ↑ move through the menu (and wrap), Home and End jump to the first and last item. ↓ on
+ * the avatar opens the menu on its first item. Tab still works as before.
+ */
+function moveFocus(event: { key: string; preventDefault(): void }, menu: HTMLElement | null) {
+  const items = menuItems(menu);
+  if (!items.length) return;
+  const at = items.indexOf(document.activeElement as HTMLElement);
+  const next: Record<string, number> = {
+    ArrowDown: at < 0 ? 0 : (at + 1) % items.length,
+    ArrowUp: at < 0 ? items.length - 1 : (at - 1 + items.length) % items.length,
+    Home: 0,
+    End: items.length - 1,
+  };
+  const index = next[event.key];
+  if (index === undefined) return;
+  event.preventDefault();
+  items[index]?.focus();
+}
 
 /** "Mohamed Faizel" → "MF"; one word → its first letter; an empty name → "?". */
 export function initialsOf(name: string): string {
@@ -49,10 +74,24 @@ export function AccountMenu({
   const setLocale = useSetLocale();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  // ↓ on the closed avatar: open, then focus the first item once the menu is drawn.
+  const focusFirst = useRef(false);
   const close = useCallback(() => {
     setOpen(false);
   }, []);
   useDismiss(open, box, close);
+  useEffect(() => {
+    const element = menu.current;
+    if (!open || !element) return;
+    const onKey = (event: KeyboardEvent) => {
+      moveFocus(event, element);
+    };
+    element.addEventListener('keydown', onKey);
+    return () => {
+      element.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
   const app = useInstallApp();
 
   return (
@@ -62,10 +101,19 @@ export function AccountMenu({
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls="account-menu"
-        aria-label={t('account', { name: user.name })}
+        aria-label={t('account', { initials: initialsOf(user.name), name: user.name })}
         title={user.name}
         onClick={() => {
           setOpen((was) => !was);
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+          event.preventDefault();
+          if (open) moveFocus(event, menu.current);
+          else {
+            focusFirst.current = true;
+            setOpen(true);
+          }
         }}
         className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white ring-2 ring-neutral-700 hover:ring-brand-400 aria-expanded:ring-brand-400"
       >
@@ -73,6 +121,13 @@ export function AccountMenu({
       </button>
       {open && (
         <div
+          ref={(element) => {
+            menu.current = element;
+            if (element && focusFirst.current) {
+              focusFirst.current = false;
+              menuItems(element)[0]?.focus();
+            }
+          }}
           id="account-menu"
           className="absolute right-0 z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-1.5 text-slate-800 shadow-xl"
         >
