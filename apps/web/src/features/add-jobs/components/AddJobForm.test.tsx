@@ -95,7 +95,7 @@ describe('AddJobForm', () => {
 
     const warning = await screen.findByRole('alert');
     expect(warning).toHaveTextContent('This job is already in your list');
-    expect(warning).toHaveTextContent('Dev at Acme');
+    expect(warning).toHaveTextContent('Dev at Acme, added today.');
     expect(screen.getByRole('link', { name: 'Open it' })).toHaveAttribute(
       'href',
       expect.stringContaining('job-7'),

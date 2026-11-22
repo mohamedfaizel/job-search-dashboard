@@ -124,9 +124,7 @@ export function MissingChip({
       className={`${CHIP} pr-0.5 ${related ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-red-50 text-red-700 ring-red-200'}`}
     >
       {term}
-      {related && (
-        <span className="font-normal opacity-75">{t('relatedTo', { term: relatedTo })}</span>
-      )}
+      {related && <span className="font-normal">{t('relatedTo', { term: relatedTo })}</span>}
       <IconButton
         label={t('iHave', { term })}
         tooltip={haveHint}

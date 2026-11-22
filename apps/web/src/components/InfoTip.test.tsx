@@ -6,6 +6,8 @@ describe('InfoTip', () => {
     render(<InfoTip label="More about Skills" text="One skill per comma" />);
     const button = screen.getByRole('button', { name: 'More about Skills' });
     expect(button).toHaveAccessibleDescription('One skill per comma');
+    // 24px to tap, even though the circle you see is 16px.
+    expect(button).toHaveClass('h-6', 'w-6');
   });
 
   it('opens only from its own ⓘ, not from a parent group like a fold', () => {

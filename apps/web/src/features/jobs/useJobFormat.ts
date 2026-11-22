@@ -28,7 +28,23 @@ export function useJobFormat() {
     const languages = new Intl.DisplayNames([locale], { type: 'language' });
     const thousands = (value: number) => t('format.thousands', { n: Math.round(value / 1000) });
 
+    /** "Today", "1 d ago", "3 w ago", "5 mo ago": how long ago a job was posted. */
+    const timeAgo = (iso: string, now = Date.now()): string => {
+      const days = Math.floor((now - new Date(iso).getTime()) / DAY_MS);
+      if (days < 1) return t('format.today');
+      if (days < 14) return t('format.days', { n: days });
+      if (days < 60) return t('format.weeks', { n: Math.floor(days / 7) });
+      if (days < 365) return t('format.months', { n: Math.floor(days / 30) });
+      return t('format.years', { n: Math.floor(days / 365) });
+    };
+
     return {
+      timeAgo,
+      /** timeAgo for the middle of a sentence: "added today", "hinzugefügt heute". */
+      timeAgoInSentence: (iso: string, now = Date.now()): string => {
+        const text = timeAgo(iso, now);
+        return text.charAt(0).toLocaleLowerCase(locale) + text.slice(1);
+      },
       /** "Nov 2, 2026" / "2. Nov. 2026". */
       date: (iso: string) =>
         format.dateTime(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -52,16 +68,6 @@ export function useJobFormat() {
         if (min !== null) return t('format.from', { min: thousands(min) });
         if (max !== null) return t('format.upTo', { max: thousands(max) });
         return '';
-      },
-
-      /** "Today", "1 d ago", "3 w ago", "5 mo ago": how long ago a job was posted. */
-      timeAgo: (iso: string, now = Date.now()): string => {
-        const days = Math.floor((now - new Date(iso).getTime()) / DAY_MS);
-        if (days < 1) return t('format.today');
-        if (days < 14) return t('format.days', { n: days });
-        if (days < 60) return t('format.weeks', { n: Math.floor(days / 7) });
-        if (days < 365) return t('format.months', { n: Math.floor(days / 30) });
-        return t('format.years', { n: Math.floor(days / 365) });
       },
 
       status: (status: ApplicationStatus) => t(`status.${status}`),

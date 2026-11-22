@@ -50,9 +50,6 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
         onClick={() => {
           setOpen((o) => !o);
         }}
-        aria-label={
-          hiddenCount > 0 ? `${t('menu')} (${t('hiddenCount', { count: hiddenCount })})` : t('menu')
-        }
         title={
           hiddenCount > 0 ? `${t('menu')} (${t('hiddenCount', { count: hiddenCount })})` : t('menu')
         }
@@ -61,12 +58,12 @@ export function ColumnsMenu({ columns, visibility, onToggle, onShowAll }: Props)
         <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 fill-current text-slate-600">
           <path d="M1 2h4v12H1zM6 2h4v12H6zM11 2h4v12h-4z" />
         </svg>
+        {/* Named by its own words (no aria-label), so the "6" you see is part of the name. */}
+        <span className="sr-only">{t('menu')} </span>
         {hiddenCount > 0 && (
-          <span
-            aria-hidden="true"
-            className="rounded-full bg-brand-100 px-1.5 text-xs text-brand-700"
-          >
+          <span className="rounded-full bg-brand-100 px-1.5 text-xs text-brand-700">
             {hiddenCount}
+            <span className="sr-only"> {t('hiddenWord')}</span>
           </span>
         )}
       </button>

@@ -138,7 +138,8 @@ describe('InsightsPanel', () => {
     renderPanel();
 
     const missing = await screen.findByRole('list', { name: 'Missing skills' });
-    expect(within(missing).getByText('(you have graphql)')).toBeInTheDocument();
+    // Full colour, not faded: faded amber was below 4.5:1 contrast.
+    expect(within(missing).getByText('(you have graphql)')).not.toHaveClass('opacity-75');
     expect(within(missing).getByRole('button', { name: 'I have apollo' })).toBeInTheDocument();
   });
 
