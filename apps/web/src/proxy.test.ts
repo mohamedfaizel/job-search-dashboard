@@ -18,7 +18,16 @@ describe('proxy', () => {
     expect(redirectedTo('/tracker?status=APPLIED', false)).toBe(
       '/login?next=%2Ftracker%3Fstatus%3DAPPLIED',
     );
-    expect(redirectedTo('/', false)).toBe('/login');
+  });
+
+  it('shows visitors the intro page and sends logged-in people to My Jobs', () => {
+    expect(redirectedTo('/', false)).toBeNull();
+    expect(redirectedTo('/', true)).toBe('/jobs');
+  });
+
+  it('opens About us for everyone', () => {
+    expect(redirectedTo('/about', false)).toBeNull();
+    expect(redirectedTo('/about', true)).toBeNull();
   });
 
   it('lets a logged-out visitor open the login and sign-up pages', () => {
