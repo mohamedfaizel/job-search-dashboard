@@ -104,12 +104,12 @@ export function AboutPage({ loggedIn }: { loggedIn: boolean }) {
                 {t('contactTitle')}
               </h2>
               <p className="mt-2">{t('contactText')}</p>
-              <MakerLinks />
+              <MakerLinks loggedIn={loggedIn} />
             </div>
           </div>
         </section>
       </main>
-      <SiteFooter />
+      <SiteFooter loggedIn={loggedIn} />
     </div>
   );
 }

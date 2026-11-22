@@ -130,6 +130,8 @@ model User {
   savedAnswers      SavedAnswer[]
   tableSettings     TableSettings?
   notifications     Notification[]
+  /// Your messages to the app's makers (Message Mohamed Faizel) and their answers.
+  messages          Message[]
   /// When you last opened Job posts (any page load counts). A gap of 30+ minutes starts a new visit.
   jobsLastSeenAt    DateTime?
   /// Jobs imported after this are "New" for this visit: the end of your previous visit.
@@ -837,6 +839,29 @@ model Notification {
   /// When you opened the bell list after it came. Null = unread.
   readAt    DateTime?
   createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+/// One line in a conversation between a user and the admins (Message Mohamed Faizel).
+/// Each user has one conversation: their own messages and the admins' answers, in order.
+model Message {
+  id            Int       @id @default(autoincrement())
+  /// Whose conversation this is: the user who wrote in, also on the admins' answers.
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int
+  /// True for an admin's answer, false for the user's own message.
+  fromAdmin     Boolean   @default(false)
+  /// The name shown on an admin's answer, kept when that admin's account goes.
+  authorName    String    @default("")
+  /// QUESTION, SUGGESTION or BROKEN on a user's message. Null on answers.
+  topic         String?
+  body          String
+  /// When the user saw this answer. Null = unread (only on answers).
+  readByUserAt  DateTime?
+  /// When an admin opened this message. Null = unread (only on user messages).
+  readByAdminAt DateTime?
+  createdAt     DateTime  @default(now())
 
   @@index([userId, createdAt])
 }

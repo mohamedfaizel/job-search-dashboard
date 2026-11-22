@@ -38,7 +38,8 @@
     "language": "Sprache",
     "install": "App installieren",
     "installIos": "Zum Installieren: Teilen antippen, dann „Zum Home-Bildschirm“.",
-    "adminPage": "Admin"
+    "adminPage": "Admin",
+    "questions": "Fragen?"
   },
   "Auth": {
     "logInTitle": "Anmelden",
@@ -2246,7 +2247,10 @@
     "INVITE_NEEDED": "Für die Registrierung auf diesem Server brauchst du einen Einladungslink.",
     "INVITE_INVALID": "Dieser Einladungslink ist abgelaufen, aufgebraucht oder wurde zurückgezogen.",
     "INVITE_NOT_FOUND": "Diesen Einladungslink gibt es schon nicht mehr.",
-    "SAVED_SEARCHES_FULL": "Du kannst höchstens {max, plural, one {# gespeicherte Suche} other {# gespeicherte Suchen}} behalten. Lösche zuerst eine."
+    "SAVED_SEARCHES_FULL": "Du kannst höchstens {max, plural, one {# gespeicherte Suche} other {# gespeicherte Suchen}} behalten. Lösche zuerst eine.",
+    "MESSAGE_LENGTH": "Eine Nachricht hat 1 bis {max} Zeichen.",
+    "MESSAGE_LIMIT": "Du kannst {max} Nachrichten pro Stunde senden. Bitte versuch es später noch einmal.",
+    "CONVERSATION_NOT_FOUND": "Diese Unterhaltung gibt es nicht mehr."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",
@@ -2261,7 +2265,9 @@
     "show": "Anzeigen",
     "close": "Schließen",
     "interviewSoon": "Interview bald: {when}",
-    "interviewHint": "Öffne den Job und übe im Tab Interview"
+    "interviewHint": "Öffne den Job und übe im Tab Interview",
+    "messageReply": "{name} hat auf deine Nachricht geantwortet",
+    "messageHint": "Zum Lesen öffnen"
   },
   "Welcome": {
     "title": "Willkommen, {name}!",
@@ -2361,7 +2367,9 @@
       "overview": "Übersicht",
       "users": "Nutzer",
       "access": "Registrierung & Zugang",
-      "limits": "Grenzen"
+      "limits": "Grenzen",
+      "messages": "Nachrichten",
+      "waiting": ", {count} warten"
     },
     "access": {
       "modeHeading": "Wer kann ein Konto erstellen?",
@@ -2469,6 +2477,21 @@
       },
       "weekHeading": "Letzte 7 Tage",
       "weekNote": "Importe pro Tag, alle Nutzer. Alle zahlen mit ihrem eigenen Schlüssel."
+    },
+    "messages": {
+      "loading": "Nachrichten werden geladen…",
+      "empty": "Noch keine Nachrichten. Wenn jemand aus der App schreibt, erscheint es hier.",
+      "list": "Unterhaltungen",
+      "pick": "Wähle eine Unterhaltung, um sie zu lesen und zu beantworten.",
+      "new": "{count} neu",
+      "you": "Du",
+      "back": "Alle Nachrichten",
+      "conversation": "Unterhaltung mit {name}",
+      "replyLabel": "Deine Antwort an {name}",
+      "replyPlaceholder": "Schreib deine Antwort",
+      "send": "Senden",
+      "sending": "Wird gesendet…",
+      "bellNote": "Die Person bekommt einen Hinweis in der Glocke. Andere Admins sehen deine Antwort auch."
     }
   },
   "Site": {
@@ -2620,7 +2643,27 @@
       "tests": "Tests bei jeder Änderung",
       "phoneApp": "Expo-Handy-App",
       "contactTitle": "Fragen und Vorschläge willkommen",
-      "contactText": "Etwas ist unklar oder Sie haben eine Idee? Ich freue mich darauf."
+      "contactText": "Etwas ist unklar oder Sie haben eine Idee? Ich freue mich darauf.",
+      "messageButton": "Nachricht an {name}"
     }
+  },
+  "Messages": {
+    "title": "Nachricht an {name}",
+    "sub": "Fragen und Vorschläge willkommen",
+    "close": "Schließen",
+    "hello": "Hallo! Ich habe Job Search Hunter für meine eigene Jobsuche gebaut. Wenn etwas unklar ist, nicht funktioniert oder du eine Idee hast, schreib mir hier.",
+    "loading": "Deine Nachrichten werden geladen…",
+    "conversation": "Deine Nachrichten",
+    "topic": "Worum geht es?",
+    "topics": {
+      "QUESTION": "Frage",
+      "SUGGESTION": "Vorschlag",
+      "BROKEN": "Etwas funktioniert nicht"
+    },
+    "label": "Deine Nachricht",
+    "placeholder": "Schreib deine Nachricht",
+    "send": "Senden",
+    "sending": "Wird gesendet…",
+    "answeredBy": "{name} hat geantwortet"
   }
 }

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { MAKER } from '../lib/maker';
+import { openMessageWindow } from '../lib/message-window';
 import { useDismiss } from '../lib/use-dismiss';
 import { useToast } from './Toasts';
 
@@ -33,15 +35,17 @@ function useHeadline() {
   const locale = useLocale();
   return useCallback(
     (item: AppNotification) =>
-      item.kind === 'INTERVIEW_SOON' && item.at
-        ? t('interviewSoon', {
-            when: new Intl.DateTimeFormat(locale, {
-              weekday: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            }).format(new Date(item.at)),
-          })
-        : t('newMatches', { count: item.count, search: item.searchName }),
+      item.kind === 'MESSAGE_REPLY'
+        ? t('messageReply', { name: item.searchName || MAKER.name })
+        : item.kind === 'INTERVIEW_SOON' && item.at
+          ? t('interviewSoon', {
+              when: new Intl.DateTimeFormat(locale, {
+                weekday: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              }).format(new Date(item.at)),
+            })
+          : t('newMatches', { count: item.count, search: item.searchName }),
     [t, locale],
   );
 }
@@ -51,6 +55,33 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
   const locale = useLocale();
   const headline = useHeadline();
   const interview = item.kind === 'INTERVIEW_SOON';
+  if (item.kind === 'MESSAGE_REPLY') {
+    return (
+      <li className={item.readAt ? '' : 'bg-brand-50'}>
+        <button
+          type="button"
+          onClick={() => {
+            onOpen();
+            openMessageWindow();
+          }}
+          className="w-full space-y-1 px-3 py-2.5 text-left hover:bg-slate-100"
+        >
+          <span className="block text-sm text-slate-900">
+            {!item.readAt && (
+              <span
+                aria-label={t('unread')}
+                className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-600"
+              />
+            )}
+            {headline(item)}
+          </span>
+          <span className="block text-xs text-slate-600">
+            {t('messageHint')} · {timeAgo(item.createdAt, locale)}
+          </span>
+        </button>
+      </li>
+    );
+  }
   return (
     <li className={`space-y-1.5 px-3 py-2.5 ${item.readAt ? '' : 'bg-brand-50'}`}>
       <p className="text-sm text-slate-900">
@@ -122,14 +153,17 @@ export function NotificationBell() {
         const first = item.jobs[0];
         toast(headline(item), {
           tone: 'info',
-          action: first
-            ? {
-                label: t('show'),
-                onClick: () => {
-                  router.push(jobLink(first.id));
-                },
-              }
-            : undefined,
+          action:
+            item.kind === 'MESSAGE_REPLY'
+              ? { label: t('show'), onClick: openMessageWindow }
+              : first
+                ? {
+                    label: t('show'),
+                    onClick: () => {
+                      router.push(jobLink(first.id));
+                    },
+                  }
+                : undefined,
         });
       }
     }

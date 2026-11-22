@@ -1519,3 +1519,73 @@ export const ADMIN_OVERVIEW = /* GraphQL */ `
     }
   }
 `;
+
+const MESSAGE_FIELDS = /* GraphQL */ `
+  fragment MessageFields on Message {
+    id
+    fromAdmin
+    authorName
+    topic
+    body
+    createdAt
+  }
+`;
+
+export const MY_MESSAGES = /* GraphQL */ `
+  query MyMessages {
+    myMessages {
+      unread
+      items {
+        ...MessageFields
+      }
+    }
+  }
+  ${MESSAGE_FIELDS}
+`;
+
+export const SEND_MESSAGE = /* GraphQL */ `
+  mutation SendMessage($input: SendMessageInput!) {
+    sendMessage(input: $input) {
+      ...MessageFields
+    }
+  }
+  ${MESSAGE_FIELDS}
+`;
+
+export const MARK_MY_MESSAGES_READ = /* GraphQL */ `
+  mutation MarkMyMessagesRead {
+    markMyMessagesRead
+  }
+`;
+
+export const ADMIN_CONVERSATIONS = /* GraphQL */ `
+  query AdminConversations {
+    adminConversations {
+      userId
+      name
+      email
+      lastBody
+      lastFromAdmin
+      lastAt
+      unread
+    }
+  }
+`;
+
+export const ADMIN_CONVERSATION = /* GraphQL */ `
+  query AdminConversation($userId: Int!) {
+    adminConversation(userId: $userId) {
+      ...MessageFields
+    }
+  }
+  ${MESSAGE_FIELDS}
+`;
+
+export const REPLY_MESSAGE = /* GraphQL */ `
+  mutation ReplyMessage($input: ReplyMessageInput!) {
+    replyMessage(input: $input) {
+      ...MessageFields
+    }
+  }
+  ${MESSAGE_FIELDS}
+`;

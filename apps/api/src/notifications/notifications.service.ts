@@ -183,6 +183,11 @@ export class NotificationsService {
     return made;
   }
 
+  /** An admin answered your message: `from` is their name, shown as the bell's "search". */
+  async messageReply(userId: number, from: string): Promise<void> {
+    await this.add(userId, 'MESSAGE_REPLY', { searchName: from, count: 1, fitMin: 0, jobs: [] });
+  }
+
   @Cron(CronExpression.EVERY_10_MINUTES)
   async remindInterviews(): Promise<void> {
     if (process.env['SCHEDULER_ENABLED'] === 'false') return;

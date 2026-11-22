@@ -1,18 +1,25 @@
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Locale } from '@/i18n/config';
+import { closeMessageWindow, useMessageWindowOpen } from '@/lib/message-window';
 import { Intl } from '../test/intl';
 import { router } from '../test/navigation';
 import { bell } from '../test/server';
 import { NotificationBell } from './NotificationBell';
 import { ToastProvider } from './Toasts';
 
+/** Shows whether the message window is open, so a test can see the bell open it. */
+function WindowState() {
+  return <p>{useMessageWindowOpen() ? 'window open' : 'window closed'}</p>;
+}
+
 function renderBell(locale: Locale = 'en', queryClient = createQueryClient()) {
   render(
     <Intl locale={locale}>
       <DataProvider store={makeStore()} queryClient={queryClient}>
         <ToastProvider>
+          <WindowState />
           <NotificationBell />
         </ToastProvider>
       </DataProvider>
@@ -91,6 +98,55 @@ describe('NotificationBell', () => {
       'href',
       '/jobs?job=job-1',
     );
+  });
+
+  it('tells you when an admin answered your message, and opens the message window', async () => {
+    bell.items = [
+      {
+        ...NEW_MATCHES,
+        id: 3,
+        kind: 'MESSAGE_REPLY',
+        searchName: 'Mohamed Faizel',
+        count: 1,
+        fitMin: 0,
+        jobs: [],
+      },
+    ];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    const item = screen.getByRole('button', { name: /Mohamed Faizel replied to your message/ });
+    expect(item).toHaveTextContent('Open to read it');
+    await user.click(item);
+    expect(screen.getByText('window open')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Notifications' })).toBeNull();
+    act(() => {
+      closeMessageWindow();
+    });
+  });
+
+  it('pops up a toast for an answer that opens the message window', async () => {
+    const queryClient = createQueryClient();
+    const user = userEvent.setup();
+    renderBell('de', queryClient);
+    await vi.waitFor(() => {
+      expect(queryClient.getQueryData(['notifications'])).toBeDefined();
+    });
+    bell.items = [
+      { ...NEW_MATCHES, id: 4, kind: 'MESSAGE_REPLY', searchName: '', count: 1, jobs: [] },
+    ];
+    bell.unread = 1;
+    await queryClient.invalidateQueries({ queryKey: ['notifications'] });
+
+    const toast = await screen.findByRole('status');
+    expect(toast).toHaveTextContent('Mohamed Faizel hat auf deine Nachricht geantwortet');
+    await user.click(within(toast).getByRole('button', { name: 'Anzeigen' }));
+    expect(screen.getByText('window open')).toBeInTheDocument();
+    act(() => {
+      closeMessageWindow();
+    });
   });
 
   it('says so when there is nothing yet, in German too', async () => {

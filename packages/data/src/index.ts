@@ -27,6 +27,15 @@ export {
   useSignUp,
 } from './api/auth';
 export {
+  MESSAGES_POLL_MS,
+  useAdminConversation,
+  useAdminConversations,
+  useMarkMyMessagesRead,
+  useMyMessages,
+  useReplyMessage,
+  useSendMessage,
+} from './api/messages';
+export {
   NOTIFICATIONS_POLL_MS,
   useMarkNotificationsRead,
   useNotifications,

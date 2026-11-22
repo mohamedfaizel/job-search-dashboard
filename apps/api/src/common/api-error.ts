@@ -84,6 +84,9 @@ export const API_ERROR_CODES = [
   'JOBHUNTER_NO_CREDITS',
   'SOURCE_DOWN',
   'JOB_ALREADY_LISTED',
+  'MESSAGE_LENGTH',
+  'MESSAGE_LIMIT',
+  'CONVERSATION_NOT_FOUND',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

@@ -38,7 +38,8 @@
     "language": "Language",
     "install": "Install app",
     "installIos": "To install: tap Share, then \"Add to Home Screen\".",
-    "adminPage": "Admin"
+    "adminPage": "Admin",
+    "questions": "Questions?"
   },
   "Auth": {
     "logInTitle": "Log in",
@@ -2246,7 +2247,10 @@
     "INVITE_NEEDED": "Sign-up on this server needs an invite link.",
     "INVITE_INVALID": "This invite link has expired, was used up or was canceled.",
     "INVITE_NOT_FOUND": "This invite link is already gone.",
-    "SAVED_SEARCHES_FULL": "You can keep at most {max, plural, one {# saved search} other {# saved searches}}. Delete one first."
+    "SAVED_SEARCHES_FULL": "You can keep at most {max, plural, one {# saved search} other {# saved searches}}. Delete one first.",
+    "MESSAGE_LENGTH": "A message is 1 to {max} characters.",
+    "MESSAGE_LIMIT": "You can send {max} messages an hour. Please try again later.",
+    "CONVERSATION_NOT_FOUND": "This conversation is not there any more."
   },
   "Notifications": {
     "bell": "Notifications",
@@ -2261,7 +2265,9 @@
     "show": "Show",
     "close": "Close",
     "interviewSoon": "Interview soon: {when}",
-    "interviewHint": "Open the job to practise on the Interview tab"
+    "interviewHint": "Open the job to practise on the Interview tab",
+    "messageReply": "{name} replied to your message",
+    "messageHint": "Open to read it"
   },
   "Welcome": {
     "title": "Welcome, {name}!",
@@ -2361,7 +2367,9 @@
       "overview": "Overview",
       "users": "Users",
       "access": "Sign-up & access",
-      "limits": "Limits"
+      "limits": "Limits",
+      "messages": "Messages",
+      "waiting": ", {count} waiting"
     },
     "access": {
       "modeHeading": "Who can make an account?",
@@ -2469,6 +2477,21 @@
       },
       "weekHeading": "Last 7 days",
       "weekNote": "Imports per day, all users. Each user pays with their own key."
+    },
+    "messages": {
+      "loading": "Loading messages…",
+      "empty": "No messages yet. When someone writes from the app, it shows here.",
+      "list": "Conversations",
+      "pick": "Pick a conversation to read and answer it.",
+      "new": "{count} new",
+      "you": "You",
+      "back": "All messages",
+      "conversation": "Conversation with {name}",
+      "replyLabel": "Your answer to {name}",
+      "replyPlaceholder": "Write your answer",
+      "send": "Send",
+      "sending": "Sending…",
+      "bellNote": "They get a note in their bell. Other admins see your answer too."
     }
   },
   "Site": {
@@ -2620,7 +2643,27 @@
       "tests": "Tests on every change",
       "phoneApp": "Expo phone app",
       "contactTitle": "Queries and suggestions welcome",
-      "contactText": "Found something unclear or have an idea? I'd like to hear it."
+      "contactText": "Found something unclear or have an idea? I'd like to hear it.",
+      "messageButton": "Message {name}"
     }
+  },
+  "Messages": {
+    "title": "Message {name}",
+    "sub": "Queries and suggestions welcome",
+    "close": "Close",
+    "hello": "Hi! I built Job Search Hunter for my own job search. If something is unclear, broken, or you have an idea, write to me here.",
+    "loading": "Loading your messages…",
+    "conversation": "Your messages",
+    "topic": "What is it about?",
+    "topics": {
+      "QUESTION": "Question",
+      "SUGGESTION": "Suggestion",
+      "BROKEN": "Something is broken"
+    },
+    "label": "Your message",
+    "placeholder": "Write your message",
+    "send": "Send",
+    "sending": "Sending…",
+    "answeredBy": "{name} replied"
   }
 }
