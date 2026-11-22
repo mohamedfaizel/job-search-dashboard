@@ -1,8 +1,9 @@
 import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { Intl } from '@/test/intl';
-import { keyPool } from '@/test/server';
+import { api, keyPool, server } from '@/test/server';
 import { KeyPoolPanel } from './components/KeyPoolPanel';
 
 function renderPanel() {
@@ -103,5 +104,83 @@ describe('Admin › Key pool', () => {
       operation: 'TakeBackPoolKey',
       variables: { id: 2, passOn: false },
     });
+  });
+  it('switches auto-approve and saves a new limit, but not a wrong one', async () => {
+    const settings: unknown[] = [];
+    server.use(
+      api.mutation('UpdateAppSettings', ({ variables }) => {
+        settings.push(variables);
+        return HttpResponse.json({
+          data: {
+            updateAppSettings: {
+              signupMode: 'OPEN',
+              poolAutoApprove: false,
+              poolKeyLimit: 300,
+            },
+          },
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(
+      await screen.findByRole('switch', { name: 'Auto-approve a user’s first request' }),
+    );
+    const limit = screen.getByLabelText('Limit per user');
+    await user.clear(limit);
+    await user.type(limit, '300{Enter}');
+    await user.clear(limit);
+    await user.type(limit, '-5');
+    await user.tab();
+    expect(limit).toHaveValue(500);
+    expect(settings).toEqual([
+      { input: { poolAutoApprove: false } },
+      { input: { poolKeyLimit: 300 } },
+    ]);
+  });
+
+  it('filters the keys and asks before removing a free one', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(await screen.findByRole('button', { name: 'Free 1' }));
+    expect(screen.queryByText('Key #2')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Remove from pool' }));
+    const dialog = within(screen.getByRole('alertdialog'));
+    await user.click(dialog.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Remove from pool' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove from pool' }),
+    );
+    expect(keyPool.sent).toContainEqual({ operation: 'RemovePoolKey', variables: { id: 1 } });
+    await waitFor(() => {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    });
+  });
+
+  it('closes the deny note with Cancel, and keeps a note on new keys', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    const row = within((await screen.findByText('Cara Weber')).closest('li') as HTMLElement);
+    await user.click(row.getByRole('button', { name: 'Deny (optional note)' }));
+    await user.click(row.getByRole('button', { name: 'Cancel' }));
+    expect(row.queryByLabelText('Note for the user (optional)')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Add to pool' }));
+    expect(keyPool.sent.some((sent) => sent.operation === 'AddPoolKeys')).toBe(false);
+    await user.type(screen.getByLabelText('Paste one or many keys'), 'jp_c_3333');
+    await user.type(screen.getByPlaceholderText('Note, e.g. Seeker plan, Nov 2026'), 'Nov');
+    await user.click(screen.getByRole('button', { name: 'Add to pool' }));
+    expect(keyPool.sent).toContainEqual({
+      operation: 'AddPoolKeys',
+      variables: { input: { keys: 'jp_c_3333', note: 'Nov' } },
+    });
+  });
+
+  it('says so when the pool can’t load', async () => {
+    server.use(api.query('KeyPool', () => HttpResponse.json({ errors: [{ message: 'down' }] })));
+    renderPanel();
+    expect(await screen.findByRole('alert')).toBeVisible();
   });
 });

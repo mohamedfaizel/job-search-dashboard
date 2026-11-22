@@ -268,4 +268,60 @@ describe('Key pool', () => {
       notifications: { items: [{ kind: 'KEY_TAKEN_BACK' }, { kind: 'KEY_APPROVED' }] },
     });
   });
+  it('cancels a waiting request', async () => {
+    await t.asUser(REQUEST);
+    expect((await t.asUser('mutation { cancelPoolKeyRequest { state } }')).data).toEqual({
+      cancelPoolKeyRequest: { state: 'NONE' },
+    });
+    expect((await t.gql<Pool>(POOL)).data?.keyPool.requests).toEqual([]);
+  });
+
+  it('removes a key, telling its holder, and says when a key or request is gone', async () => {
+    await addKeys('jp_pool_one_1111');
+    await t.asUser(REQUEST);
+    const keyId = (await t.gql<Pool>(POOL)).data?.keyPool.keys[0]?.id;
+
+    const passOn = await t.gql(TAKE_BACK, { id: keyId, passOn: true });
+    expect(passOn.errors?.[0]?.extensions?.['apiCode']).toBe('POOL_NO_REQUEST');
+    expect(
+      (await t.gql('mutation ($id: Int!) { removePoolKey(id: $id) { free } }', { id: keyId })).data,
+    ).toEqual({ removePoolKey: { free: 0 } });
+    expect((await t.asUser(BELL)).data).toMatchObject({
+      notifications: { items: [{ kind: 'KEY_TAKEN_BACK' }, { kind: 'KEY_APPROVED' }] },
+    });
+
+    const gone = await t.gql(TAKE_BACK, { id: 999, passOn: false });
+    expect(gone.errors?.[0]?.extensions?.['apiCode']).toBe('POOL_KEY_NOT_FOUND');
+    const removeGone = await t.gql('mutation { removePoolKey(id: 999) { free } }');
+    expect(removeGone.errors?.[0]?.extensions?.['apiCode']).toBe('POOL_KEY_NOT_FOUND');
+    const noRequest = await t.gql(APPROVE, { id: 999 });
+    expect(noRequest.errors?.[0]?.extensions?.['apiCode']).toBe('KEY_REQUEST_NOT_FOUND');
+  });
+
+  it('tells the holder once when an import reaches the limit', async () => {
+    await addKeys('jp_pool_one_1111');
+    await t.asUser(REQUEST);
+    await t.gql('mutation { updateAppSettings(input: { poolKeyLimit: 3 }) { poolKeyLimit } }');
+    await t.asUser(SYNC, { pageSize: 25, maxPages: 1 });
+    expect((await t.asUser(BELL)).data).toMatchObject({
+      notifications: { items: [{ kind: 'KEY_LIMIT', count: 3 }, { kind: 'KEY_APPROVED' }] },
+    });
+  });
+
+  it('closes a request when the user saved their own token meanwhile', async () => {
+    await t.gql(
+      'mutation { updateAppSettings(input: { poolAutoApprove: false }) { poolAutoApprove } }',
+    );
+    await addKeys('jp_pool_one_1111');
+    await t.asUser(REQUEST);
+    const id = (await t.gql<Pool>(POOL)).data?.keyPool.requests[0]?.id;
+    await t.prisma.keyRequest.update({ where: { id: id ?? 0 }, data: { status: 'PENDING' } });
+    await t.asUser(
+      'mutation { saveApiKey(input: { kind: JOBHUNTER, value: "jp_own_token" }) { kind } }',
+    );
+    // saveApiKey cancels it; put it back to see the admin side catch it too.
+    await t.prisma.keyRequest.update({ where: { id: id ?? 0 }, data: { status: 'PENDING' } });
+    const res = await t.gql(APPROVE, { id });
+    expect(res.errors?.[0]?.extensions?.['apiCode']).toBe('KEY_REQUEST_DONE');
+  });
 });

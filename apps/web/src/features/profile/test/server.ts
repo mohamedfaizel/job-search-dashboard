@@ -194,6 +194,11 @@ export const server = setupServer(
     Object.assign(poolKey, { state: 'APPROVED', used: 0 });
     return HttpResponse.json({ data: { requestPoolKey: { ...poolKey } } });
   }),
+  api.mutation('CancelPoolKeyRequest', () => {
+    requests.push({ operation: 'CancelPoolKeyRequest', variables: {} });
+    Object.assign(poolKey, { state: 'NONE', requestedAt: null });
+    return HttpResponse.json({ data: { cancelPoolKeyRequest: { ...poolKey } } });
+  }),
   api.mutation('GivePoolKeyBack', () => {
     requests.push({ operation: 'GivePoolKeyBack', variables: {} });
     Object.assign(poolKey, { state: 'NONE' });

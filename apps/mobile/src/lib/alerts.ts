@@ -16,7 +16,6 @@ export function alertLink(item: AppNotification): string {
   return item.kind === 'INTERVIEW_SOON' && first ? `/job/${first.id}` : '/alerts';
 }
 
-/** A notification's first line, in your language, the same words as the website's bell. */
 /** Key pool notifications: one line each, no jobs. */
 const KEY_POOL_TEXT: Partial<
   Record<
@@ -39,6 +38,7 @@ const KEY_POOL_TEXT: Partial<
   KEY_TAKEN_BACK: 'keyTakenBack',
 };
 
+/** A notification's first line, in your language, the same words as the website's bell. */
 export function useHeadline() {
   const t = useTranslations('Alerts');
   const locale = useLocale();
