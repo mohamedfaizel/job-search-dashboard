@@ -1688,6 +1688,13 @@
       "answeredBeforeList": "Answered before"
     },
     "stillOpen": {
+      "short": {
+        "never": "Still open? Check",
+        "checking": "Checking…",
+        "open": "Open",
+        "expired": "Closed",
+        "unsure": "Unsure · Check"
+      },
       "never": "Not checked yet if the ad is still open",
       "checking": "Checking if the ad is still open…",
       "open": "Still open (checked {when})",
@@ -1712,6 +1719,11 @@
       }
     },
     "trust": {
+      "short": {
+        "ok": "No warning signs",
+        "caution": "{count} to check",
+        "warning": "May be a scam"
+      },
       "ok": "No warning signs in this ad",
       "caution": "{count, plural, one {# thing} other {# things}} to check before you apply",
       "warning": "Careful: this may be a scam",

@@ -5,11 +5,11 @@ import { Intl } from '@/test/intl';
 import { trust } from '../test/server';
 import { JobTrust } from './JobTrust';
 
-function renderTrust(locale: 'en' | 'de' = 'en') {
+function renderTrust(locale: 'en' | 'de' = 'en', compact = false) {
   render(
     <Intl locale={locale}>
       <DataProvider store={makeStore()} queryClient={createQueryClient()}>
-        <JobTrust job={{ id: 'j1' }} />
+        <JobTrust job={{ id: 'j1' }} compact={compact} />
       </DataProvider>
     </Intl>,
   );
@@ -40,6 +40,24 @@ describe('JobTrust', () => {
     expect(screen.getByText(/Open for 60 days/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Hide' }));
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  });
+
+  it('is one small chip on a phone that opens its list', async () => {
+    trust.set('j1', {
+      level: 'CAUTION',
+      flags: ['OLD_AD'],
+      reposts: 0,
+      firstPostedAt: null,
+      ageDays: 60,
+    });
+    renderTrust('en', true);
+    const chip = await screen.findByRole('button', {
+      name: '1 to check: 1 thing to check before you apply',
+    });
+    expect(chip).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(chip);
+    expect(chip).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText(/Open for 60 days/)).toBeInTheDocument();
   });
 
   it('shows scam signs right away, in German too', async () => {
