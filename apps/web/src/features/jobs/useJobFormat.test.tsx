@@ -52,6 +52,13 @@ describe('useJobFormat', () => {
     ]);
   });
 
+  it('starts lowercase in the middle of a sentence ("added today")', () => {
+    expect(format('en').timeAgoInSentence(ago(0), NOW)).toBe('today');
+    expect(format('en').timeAgoInSentence(ago(3), NOW)).toBe('3 d ago');
+    expect(format('de').timeAgoInSentence(ago(0), NOW)).toBe('heute');
+    expect(format('de').timeAgoInSentence(ago(3), NOW)).toBe('vor 3 Tagen');
+  });
+
   it('names dates, countries, languages and statuses in your language', () => {
     const de = format('de');
     expect(de.date('2026-10-24T12:00:00.000Z')).toBe('24. Okt. 2026');

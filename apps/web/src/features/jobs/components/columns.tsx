@@ -278,7 +278,7 @@ export function StatusCell({ job }: { job: Job }) {
  */
 /** The small "Fit" / "Kit" / "AI" word in front of a score in the Scores column. */
 function ScoreLabel({ text }: { text: string | undefined }) {
-  return text ? <span className="mr-1 text-[10px] font-semibold">{text}</span> : null;
+  return text ? <span className="text-[10px] font-semibold">{`${text} `}</span> : null;
 }
 
 export function FitCell({ job, labelled = false }: { job: Job; labelled?: boolean }) {

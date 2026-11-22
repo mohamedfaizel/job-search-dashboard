@@ -86,7 +86,7 @@ export function AddJobForm() {
             {t('form.dupText', {
               title: String(duplicate['title'] ?? ''),
               company: String(duplicate['company'] ?? ''),
-              when: f.timeAgo(String(duplicate['addedAt'] ?? new Date().toISOString())),
+              when: f.timeAgoInSentence(String(duplicate['addedAt'] ?? new Date().toISOString())),
             })}
           </p>
           <div className="flex flex-wrap gap-2">

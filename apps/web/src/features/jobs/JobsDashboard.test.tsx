@@ -279,13 +279,13 @@ describe('JobsDashboard', () => {
     renderDashboard();
 
     const score = await screen.findByRole('button', {
-      name: 'Apply kit score for Senior Frontend Engineer: 88%',
+      name: 'Kit 88%: apply kit score for Senior Frontend Engineer',
     });
     // Shown in the Scores column, labelled Kit, next to Fit.
     expect(screen.getByRole('columnheader', { name: /Scores/ })).toBeInTheDocument();
-    expect(score).toHaveTextContent('Kit88%');
+    expect(score).toHaveTextContent('Kit 88%');
     expect(
-      screen.queryByRole('button', { name: /Apply kit score for Backend Developer/ }),
+      screen.queryByRole('button', { name: /apply kit score for Backend Developer/ }),
     ).not.toBeInTheDocument();
 
     await userEvent.click(score);
@@ -508,7 +508,7 @@ describe('JobsDashboard', () => {
     renderDashboard();
 
     const score = await screen.findByRole('button', {
-      name: 'Resume match for Senior Frontend Engineer: 82',
+      name: 'AI 82: resume match for Senior Frontend Engineer',
     });
     expect(screen.getByText('Matching…')).toBeInTheDocument();
 
@@ -531,7 +531,7 @@ describe('JobsDashboard', () => {
     expect(screen.queryByText('$90k - $120k')).not.toBeInTheDocument();
     // Details plus the six columns that start hidden.
     expect(screen.getByRole('button', { name: /Columns/ })).toHaveAccessibleName(
-      'Columns (7 hidden)',
+      /^Columns\s*7\s*hidden$/,
     );
     await waitFor(
       () => {
@@ -549,7 +549,7 @@ describe('JobsDashboard', () => {
     expect(screen.queryByRole('columnheader', { name: /Skills/ })).not.toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /Function/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Columns/ })).toHaveAccessibleName(
-      'Columns (1 hidden)',
+      /^Columns\s*1\s*hidden$/,
     );
   });
 
