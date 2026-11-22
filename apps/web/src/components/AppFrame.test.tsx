@@ -59,6 +59,18 @@ describe('AppFrame', () => {
     ).toHaveAttribute('href', '/admin');
   });
 
+  it('ends every page with the maker line and a link for questions', async () => {
+    session.user = ADMIN;
+    location.pathname = '/jobs';
+    renderFrame();
+
+    const footer = await screen.findByRole('contentinfo');
+    expect(within(footer).getByText('Made by Mohamed Faizel')).toBeInTheDocument();
+    expect(
+      within(footer).getByRole('link', { name: /Queries and suggestions welcome/ }),
+    ).toHaveAttribute('href', '/about#contact');
+  });
+
   it('opens the avatar menu with My profile, Settings and Log out', async () => {
     session.user = { ...ADMIN, role: 'USER', name: 'Mohamed Faizel' };
     location.pathname = '/settings';

@@ -2470,5 +2470,157 @@
       "weekHeading": "Last 7 days",
       "weekNote": "Imports per day, all users. Each user pays with their own key."
     }
+  },
+  "Site": {
+    "nav": {
+      "how": "How it works",
+      "features": "Features",
+      "about": "About us",
+      "logIn": "Log in",
+      "signUp": "Sign up",
+      "openApp": "Open My Jobs",
+      "main": "Site"
+    },
+    "message": {
+      "eyebrow": "A message from Mohamed Faizel",
+      "title": "I built this for my own job search",
+      "p1": "Looking for a job meant many sites, many ads and a new resume for each one. So I made one place that does it all for me.",
+      "p2": "Now I'm glad to share it with you. I hope it makes your path to the next job a little easier.",
+      "sign": "Good luck with your search, Mohamed Faizel",
+      "photoAlt": "Mohamed Faizel at his desk with a laptop"
+    },
+    "hero": {
+      "eyebrow": "Job search for Germany and beyond",
+      "titleStart": "Find the right jobs.",
+      "titleMark": "Apply faster.",
+      "titleEnd": "Keep track.",
+      "lead": "Job Search Hunter puts jobs from the Arbeitsagentur, company career pages and JobHunter into one list. It shows how well each job fits your resume and helps you apply in English or German.",
+      "cta": "Create my account",
+      "watch": "Watch the demo",
+      "fine": "Sign up with your email. It takes about a minute, and your account comes with 500 JobHunter credits.",
+      "shotAlt": "My Jobs: a table of jobs with fit scores, places and status"
+    },
+    "sources": {
+      "label": "Jobs from",
+      "germany": "Germany",
+      "careers": "Company career pages",
+      "jobHunter": "40 live sources · 500 credits included",
+      "byHand": "Add a job by hand"
+    },
+    "how": {
+      "title": "How it works",
+      "sub": "Three steps, the same every day.",
+      "s1Title": "Find jobs",
+      "s1": "Pick where to look, type a job title and import. New jobs land in My Jobs with a New badge.",
+      "s2Title": "Apply with help",
+      "s2": "See your Fit score and the skills you're missing. Claude writes your resume, cover letter and form answers. You check them and send.",
+      "s3Title": "Keep track",
+      "s3": "Move each job on your board. Gmail spots replies and suggests the next step."
+    },
+    "unique": {
+      "title": "What makes it different",
+      "sub": "Most job sites stop at a list of ads. Job Search Hunter keeps working for you after that.",
+      "u1Title": "It remembers your missing skills",
+      "u1": "Each job shows the skills and keywords your resume is missing. Tick the ones you really have and they are saved to your profile, so they count for every job after that.",
+      "u1Alt": "Fit tab with missing skills and keywords",
+      "u2Title": "Every job detail, highlighted",
+      "u2": "The job popup marks seniority, remote or on-site, salary, visa support and the ad's language. It also warns you about scams and reposted ads.",
+      "u2Alt": "Job popup warning that an ad may be a scam",
+      "tags": {
+        "seniority": "Seniority",
+        "remote": "Remote",
+        "salary": "Salary",
+        "visa": "Visa",
+        "language": "Language",
+        "scam": "Scam check"
+      },
+      "u3Title": "Scheduled searches and alerts",
+      "u3": "Save a search and let it run on a schedule. The bell tells you when new jobs that fit you arrive, on the web and on your phone.",
+      "u3Alt": "Notification: new jobs that fit you from a saved search",
+      "u4Title": "Know what to ask for",
+      "u4": "The Salary tab compares the pay with similar jobs in the same country and gives you ready lines for the salary talk.",
+      "u4Alt": "Salary tab comparing the pay with similar jobs"
+    },
+    "sourceList": {
+      "title": "Live jobs from 40+ sources",
+      "sub": "The Arbeitsagentur and company career pages are built in. Every new account also gets 500 JobHunter credits, so you can search all of these live from day one:",
+      "boards": "Job boards",
+      "public": "Public employment services",
+      "ats": "Company career sites"
+    },
+    "features": {
+      "marketTag": "Job Market",
+      "marketTitle": "One search, many job boards",
+      "market1": "Search the Arbeitsagentur, company career pages and JobHunter from one form.",
+      "market2": "Save a search and run it again on a schedule.",
+      "market3": "Skip titles you don't want, like Werkstudent or Praktikum.",
+      "marketAlt": "Job Market form with three sources",
+      "applyTag": "Apply",
+      "applyTitle": "Apply in three short steps",
+      "apply1": "Fit score shows which skills and keywords your resume is missing.",
+      "apply2": "Claude writes a resume, cover letter and answers for this one job, using your own AI key.",
+      "apply3": "Put many jobs in the Apply queue and work through them in one go.",
+      "applyAlt": "Job popup on the Apply tab",
+      "resumeTag": "Resume",
+      "resumeTitle": "A clean PDF resume in one click",
+      "resume1": "10 designs. Pick colour, size and spacing.",
+      "resume2": "Keep an English and a German resume side by side.",
+      "resume3": "Your language levels stay exactly as you set them.",
+      "resumeAlt": "Four resume PDF designs side by side",
+      "trackerTag": "Tracker",
+      "trackerTitle": "See where every application stands",
+      "tracker1": "Drag cards from Saved to Applied, Interview and Offer.",
+      "tracker2": "Your funnel shows how many get an answer and how long it takes.",
+      "tracker3": "Connect Gmail and the app suggests the right status for each reply.",
+      "trackerAlt": "Tracker board with the funnel"
+    },
+    "trust": {
+      "title": "Your data stays yours",
+      "t1Title": "Only you see your jobs",
+      "t1": "Your jobs, resume and board are private. Admins only see counts.",
+      "t2Title": "Your own AI key",
+      "t2": "Add your Claude or OpenAI key in Settings. You pay your provider directly.",
+      "t3Title": "English and German",
+      "t3": "Switch the whole app with one tap. Write resumes in either language.",
+      "t4Title": "On your phone too",
+      "t4": "Check new jobs and change a status from the phone app.",
+      "phoneAlt": "The phone app's job list"
+    },
+    "final": {
+      "title": "Start your job search today",
+      "text": "Create an account, upload your resume and import your first jobs."
+    },
+    "footer": {
+      "madeBy": "Made by Mohamed Faizel",
+      "queries": "Queries and suggestions welcome"
+    },
+    "about": {
+      "metaTitle": "About us",
+      "eyebrow": "About us",
+      "title": "One person's job search, now shared with everyone",
+      "lead": "Job Search Hunter started as a tool I built for myself. Today anyone can use it to find jobs, apply with help and keep track.",
+      "storyTitle": "The story",
+      "s1Title": "The problem",
+      "s1": "Looking for a job meant many websites, many ads and a new resume for each one. It was easy to lose track of where I had applied.",
+      "s2Title": "What I built",
+      "s2": "One place that brings the jobs together, shows how well each one fits, helps write the application and keeps track of every answer.",
+      "s3Title": "Why I share it",
+      "s3": "It made my own search easier. I hope it does the same for you, wherever you are looking.",
+      "valuesTitle": "What we believe",
+      "v1Title": "Your data is yours",
+      "v1": "Only you see your jobs, resume and board. Admins only see counts.",
+      "v2Title": "You stay in control",
+      "v2": "Claude writes a draft. You check every word before anything is sent.",
+      "v3Title": "Honest job ads",
+      "v3": "The app warns you about scams and old, reposted ads.",
+      "v4Title": "Two languages",
+      "v4": "The whole app works in English and German, and so do your resumes.",
+      "builtTitle": "How it's built",
+      "builtSub": "For anyone who is curious about the technology.",
+      "tests": "Tests on every change",
+      "phoneApp": "Expo phone app",
+      "contactTitle": "Queries and suggestions welcome",
+      "contactText": "Found something unclear or have an idea? I'd like to hear it."
+    }
   }
 }
