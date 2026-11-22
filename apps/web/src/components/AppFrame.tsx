@@ -14,6 +14,7 @@ import { isNetworkError, useErrorText } from '../i18n/useErrorText';
 import { AccountMenu } from './AccountMenu';
 import { FlagStripe } from './FlagStripe';
 import { Logo } from './Logo';
+import { MakerLine } from './MakerLine';
 import { JobsIcon, PlusIcon, ResumeIcon, SettingsIcon, TrackerIcon } from './NavIcons';
 import { NotificationBell } from './NotificationBell';
 import { ServerDown } from './ServerDown';
@@ -212,13 +213,13 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
         </div>
       </header>
       <FlagStripe afterBlack />
-      <main
-        id="main"
-        tabIndex={-1}
-        className="px-4 py-6 pb-[calc(1.5rem+var(--tabbar))] focus:outline-none sm:px-6"
-      >
+      <main id="main" tabIndex={-1} className="px-4 py-6 focus:outline-none sm:px-6">
         <AiNameIntl>{children}</AiNameIntl>
       </main>
+      {/* Under every page: who made the app and where to send questions. */}
+      <footer className="border-t border-slate-200 px-4 pt-4 pb-[calc(1rem+var(--tabbar))] sm:px-6">
+        <MakerLine />
+      </footer>
       <PhoneTabs current={current} />
     </div>
   );
