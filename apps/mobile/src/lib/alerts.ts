@@ -17,12 +17,36 @@ export function alertLink(item: AppNotification): string {
 }
 
 /** A notification's first line, in your language, the same words as the website's bell. */
+/** Key pool notifications: one line each, no jobs. */
+const KEY_POOL_TEXT: Partial<
+  Record<
+    string,
+    | 'keyRequest'
+    | 'poolLow'
+    | 'keyApproved'
+    | 'keyDenied'
+    | 'keyEmpty'
+    | 'keyLimit'
+    | 'keyTakenBack'
+  >
+> = {
+  KEY_REQUEST: 'keyRequest',
+  POOL_LOW: 'poolLow',
+  KEY_APPROVED: 'keyApproved',
+  KEY_DENIED: 'keyDenied',
+  KEY_EMPTY: 'keyEmpty',
+  KEY_LIMIT: 'keyLimit',
+  KEY_TAKEN_BACK: 'keyTakenBack',
+};
+
 export function useHeadline() {
   const t = useTranslations('Alerts');
   const locale = useLocale();
   return useCallback(
-    (item: AppNotification) =>
-      item.kind === 'INTERVIEW_SOON' && item.at
+    (item: AppNotification) => {
+      const key = KEY_POOL_TEXT[item.kind];
+      if (key) return t(key, { name: item.searchName, count: item.count });
+      return item.kind === 'INTERVIEW_SOON' && item.at
         ? t('interviewSoon', {
             when: new Intl.DateTimeFormat(locale, {
               weekday: 'short',
@@ -30,7 +54,8 @@ export function useHeadline() {
               minute: '2-digit',
             }).format(new Date(item.at)),
           })
-        : t('newMatches', { count: item.count, search: item.searchName }),
+        : t('newMatches', { count: item.count, search: item.searchName });
+    },
     [t, locale],
   );
 }

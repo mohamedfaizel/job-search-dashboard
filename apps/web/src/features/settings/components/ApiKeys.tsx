@@ -13,6 +13,7 @@ import { useId, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { AI_CHATS } from '../../../lib/ai-chat';
 import { noteAiResult } from '../../../lib/ai-status';
+import { JobHunterKey } from './PoolKeyRequest';
 import { ResumeMatcherStatus } from './ResumeMatcherStatus';
 
 const card = 'space-y-4 rounded-lg border border-slate-200 bg-white p-5';
@@ -48,14 +49,19 @@ export function ApiKeys() {
         </p>
       ) : (
         <>
-          <KeyCard
-            kind="JOBHUNTER"
-            name={t('jobhunter.name')}
-            hint={t('jobhunter.hint')}
-            testHint={t('jobhunter.testHint')}
-            paste={t('paste')}
-            confirmDelete={t('confirmDelete')}
-            saved={keys.data.find((key) => key.kind === 'JOBHUNTER') ?? null}
+          <JobHunterKey
+            own={keys.data.find((key) => key.kind === 'JOBHUNTER') ?? null}
+            ownCard={
+              <KeyCard
+                kind="JOBHUNTER"
+                name={t('jobhunter.name')}
+                hint={t('jobhunter.hint')}
+                testHint={t('jobhunter.testHint')}
+                paste={t('paste')}
+                confirmDelete={t('confirmDelete')}
+                saved={keys.data.find((key) => key.kind === 'JOBHUNTER') ?? null}
+              />
+            }
           />
           <AiKeys keys={keys.data} />
         </>

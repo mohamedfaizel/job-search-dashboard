@@ -58,7 +58,14 @@
     "interviewHint": "Übe im Tab Interview auf der Website.",
     "more": "{count, plural, one {# weiterer} other {# weitere}} in der Jobliste (als Neu markiert)",
     "loading": "Lädt…",
-    "channel": "Neue Jobs und Interviews"
+    "channel": "Neue Jobs und Interviews",
+    "keyRequest": "{name} möchte einen JobHunter-Token",
+    "poolLow": "Schlüssel-Pool wird knapp: {count, plural, =0 {kein freier Schlüssel} one {# freier Schlüssel} other {# freie Schlüssel}} übrig",
+    "keyApproved": "Token-Anfrage freigegeben. Er ist schon in deinen Einstellungen eingetragen, mit einem Limit von {count} Credits.",
+    "keyDenied": "Token-Anfrage abgelehnt.",
+    "keyEmpty": "Dein Token vom Admin ist leer (Credits aufgebraucht). Frag einen neuen an oder trag deinen eigenen ein.",
+    "keyLimit": "Du hast alle {count} Credits deines Tokens vom Admin genutzt.",
+    "keyTakenBack": "Der Admin hat deinen Token zurückgeholt. Imports brauchen jetzt deinen eigenen Token."
   },
   "Errors": {
     "NETWORK": "Gerade keine Verbindung. Prüfe dein Internet und versuche es in einer Minute erneut.",

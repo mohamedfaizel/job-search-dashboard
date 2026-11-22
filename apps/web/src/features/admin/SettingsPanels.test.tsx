@@ -43,6 +43,8 @@ beforeEach(() => {
     stillOpenOn: true,
     schedulerOffInEnv: false,
     stillOpenOffInEnv: true,
+    poolAutoApprove: true,
+    poolKeyLimit: 500,
   };
   invites = [
     {
@@ -206,6 +208,8 @@ describe('Admin › Limits', () => {
     await user.click(users);
     await user.keyboard('{ArrowLeft}');
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true');
+    await user.keyboard('{ArrowLeft}');
+    expect(screen.getByRole('tab', { name: 'Key pool' })).toHaveAttribute('aria-selected', 'true');
     await user.keyboard('{ArrowLeft}');
     expect(screen.getByRole('tab', { name: 'Limits' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: 'Limits' })).toHaveFocus();

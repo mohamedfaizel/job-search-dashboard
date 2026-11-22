@@ -1015,6 +1015,7 @@ export const NOTIFICATIONS = /* GraphQL */ `
         count
         fitMin
         at
+        refId
         readAt
         createdAt
         jobs {
@@ -1445,6 +1446,8 @@ const APP_SETTINGS_FIELDS = `
   maxSavedSearches
   schedulerOn
   stillOpenOn
+  poolAutoApprove
+  poolKeyLimit
   schedulerOffInEnv
   stillOpenOffInEnv
 `;
@@ -1516,6 +1519,121 @@ export const ADMIN_OVERVIEW = /* GraphQL */ `
         offInEnv
         nextRunAt
       }
+    }
+  }
+`;
+
+const MY_POOL_KEY_FIELDS = `
+  state
+  requestedAt
+  note
+  askAgainAt
+  limit
+  used
+  poolEmpty
+`;
+
+export const MY_POOL_KEY = /* GraphQL */ `
+  query MyPoolKey {
+    myPoolKey {
+      ${MY_POOL_KEY_FIELDS}
+    }
+  }
+`;
+
+export const REQUEST_POOL_KEY = /* GraphQL */ `
+  mutation RequestPoolKey {
+    requestPoolKey {
+      ${MY_POOL_KEY_FIELDS}
+    }
+  }
+`;
+
+export const CANCEL_POOL_KEY_REQUEST = /* GraphQL */ `
+  mutation CancelPoolKeyRequest {
+    cancelPoolKeyRequest {
+      ${MY_POOL_KEY_FIELDS}
+    }
+  }
+`;
+
+export const GIVE_POOL_KEY_BACK = /* GraphQL */ `
+  mutation GivePoolKeyBack {
+    givePoolKeyBack {
+      ${MY_POOL_KEY_FIELDS}
+    }
+  }
+`;
+
+const KEY_POOL_FIELDS = `
+  free
+  assigned
+  empty
+  limit
+  autoApprove
+  keys {
+    id
+    status
+    holder
+    used
+    credits
+    note
+    createdAt
+  }
+  requests {
+    id
+    name
+    email
+    createdAt
+  }
+`;
+
+export const KEY_POOL = /* GraphQL */ `
+  query KeyPool {
+    keyPool {
+      ${KEY_POOL_FIELDS}
+    }
+  }
+`;
+
+export const ADD_POOL_KEYS = /* GraphQL */ `
+  mutation AddPoolKeys($input: AddPoolKeysInput!) {
+    addPoolKeys(input: $input) {
+      added
+      duplicates
+      invalid
+    }
+  }
+`;
+
+export const APPROVE_KEY_REQUEST = /* GraphQL */ `
+  mutation ApproveKeyRequest($id: Int!) {
+    approveKeyRequest(id: $id) {
+      ${KEY_POOL_FIELDS}
+    }
+  }
+`;
+
+export const DENY_KEY_REQUEST = /* GraphQL */ `
+  mutation DenyKeyRequest($input: DenyKeyRequestInput!) {
+    denyKeyRequest(input: $input) {
+      ${KEY_POOL_FIELDS}
+    }
+  }
+`;
+
+export const TAKE_BACK_POOL_KEY = /* GraphQL */ `
+  mutation TakeBackPoolKey($id: Int!, $passOn: Boolean) {
+    takeBackPoolKey(id: $id, passOn: $passOn) {
+      ${KEY_POOL_FIELDS}
+    }
+  }
+`;
+
+export const REMOVE_POOL_KEY = /* GraphQL */ `
+  mutation RemovePoolKey($id: Int!) {
+    removePoolKey(id: $id) {
+      ${KEY_POOL_FIELDS}
     }
   }
 `;

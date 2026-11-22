@@ -167,4 +167,32 @@ describe('Settings > Notifications', () => {
       variables: { input: { notifyNewMatches: PROFILE.notifyNewMatches, matchFitMin: 70 } },
     });
   });
+
+  it('asks the admin for a token and shows a lent one without any part of it', async () => {
+    const user = userEvent.setup();
+    renderWithData(<SettingsPage />);
+    await user.click(await screen.findByRole('button', { name: 'Request a token' }));
+    expect(requests).toContainEqual({ operation: 'RequestPoolKey', variables: {} });
+
+    expect(await screen.findByText('From the admin')).toBeVisible();
+    expect(screen.getByText('Limit: 500 credits · 0 used')).toBeVisible();
+    expect(screen.getByText('(hidden)')).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: 'Give back to the pool' }));
+    expect(requests).toContainEqual({ operation: 'GivePoolKeyBack', variables: {} });
+    expect(await screen.findByRole('button', { name: 'Request a token' })).toBeVisible();
+  });
+
+  it('hides the request when you have your own token', async () => {
+    apiKeys.push({
+      kind: 'JOBHUNTER',
+      last4: 'a9F2',
+      model: null,
+      credits: null,
+      updatedAt: '2026-11-08T12:00:00.000Z',
+    });
+    renderWithData(<SettingsPage />);
+    expect(await screen.findByText('✓ Saved')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Request a token' })).not.toBeInTheDocument();
+  });
 });

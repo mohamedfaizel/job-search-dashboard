@@ -145,6 +145,9 @@ model User {
   /// When this account last used the app (updated at most every few minutes), for Admin › Users.
   lastSeenAt        DateTime?
   apiKeys           ApiKey[]
+  /// The JobHunter token lent to this user from the admins' Key pool, if any.
+  poolKey           PoolKey?
+  keyRequests       KeyRequest[]
   /// The old .env keys already copied into this account's Settings (first account only), so
   /// each is copied once and a key you delete stays deleted.
   adoptedEnvKeys    ApiKeyKind[]          @default([])
@@ -864,6 +867,10 @@ model AppSetting {
   schedulerOn      Boolean    @default(true)
   /// Off stops the nightly "still open?" check (STILL_OPEN_CHECK_ENABLED=false in .env wins).
   stillOpenOn      Boolean    @default(true)
+  /// Key pool: a user's first token request gets a free key at once, without an admin.
+  poolAutoApprove  Boolean    @default(true)
+  /// Key pool: how many credits each user may spend with a lent key.
+  poolKeyLimit     Int        @default(500)
   updatedAt        DateTime   @updatedAt
 }
 
@@ -879,4 +886,50 @@ model Invite {
   uses       Int       @default(0)
   /// Set when an admin cancels the link.
   canceledAt DateTime?
+}
+
+/// A JobHunter token in the admins' Key pool (Admin › Key pool), lent to one user at a time.
+/// Stored encrypted like ApiKey and never shown again to anyone, not even a part of it.
+model PoolKey {
+  id          Int       @id @default(autoincrement())
+  /// Encrypted with AES-256-GCM (api-keys.service.ts).
+  secret      String
+  /// A keyed hash of the token, so the same token can't be added twice.
+  fingerprint String    @unique
+  /// The admin's note, e.g. "Seeker plan, Nov 2026".
+  note        String    @default("")
+  /// JobHunter credits left on the key, as its last answer said. 0 = empty.
+  credits     Int?
+  /// Who has it now. Null = free. One key per user.
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      Int?      @unique
+  assignedAt  DateTime?
+  /// Credits its holder spent since they got it, for the per-user limit (AppSetting.poolKeyLimit).
+  used        Int       @default(0)
+  createdAt   DateTime  @default(now())
+}
+
+enum KeyRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+  /// The user took it back, or saved their own token.
+  CANCELED
+}
+
+/// A user asking the admins for a token from the Key pool.
+model KeyRequest {
+  id        Int              @id @default(autoincrement())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  status    KeyRequestStatus @default(PENDING)
+  /// The admin's note when saying no.
+  note      String?
+  /// Approved by the server (a first request with auto-approve on), not by an admin.
+  auto      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  decidedAt DateTime?
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
 }
