@@ -29,6 +29,12 @@ export class AppSettingsModel {
   @Field({ description: 'The nightly "still open?" check runs' })
   stillOpenOn!: boolean;
 
+  @Field({ description: "Key pool: a user's first token request gets a free key at once" })
+  poolAutoApprove!: boolean;
+
+  @Field(() => Int, { description: 'Key pool: credits each user may spend with a lent key' })
+  poolKeyLimit!: number;
+
   @Field({ description: 'SCHEDULER_ENABLED=false in .env keeps the scheduler off anyway' })
   schedulerOffInEnv!: boolean;
 
@@ -67,6 +73,18 @@ export class UpdateAppSettingsInput {
   @IsOptional()
   @IsBoolean()
   stillOpenOn?: boolean;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  poolAutoApprove?: boolean;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(1_000_000)
+  poolKeyLimit?: number;
 }
 
 @ObjectType('Invite')

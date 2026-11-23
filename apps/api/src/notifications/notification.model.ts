@@ -25,7 +25,7 @@ export class NotificationModel {
 
   @Field({
     description:
-      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day',
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK',
   })
   kind!: string;
 
@@ -46,6 +46,12 @@ export class NotificationModel {
     description: 'INTERVIEW_SOON: when the interview is. Null for other kinds',
   })
   at!: Date | null;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'KEY_REQUEST: the token request it is about, so admins can answer from the bell',
+  })
+  refId!: number | null;
 
   @Field(() => Date, { nullable: true, description: 'When you read it. Null = unread' })
   readAt!: Date | null;

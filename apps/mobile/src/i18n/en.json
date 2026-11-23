@@ -58,7 +58,14 @@
     "interviewHint": "Practise on the website’s Interview tab.",
     "more": "{count, plural, one {# more} other {# more}} in the job list (marked New)",
     "loading": "Loading…",
-    "channel": "New jobs and interviews"
+    "channel": "New jobs and interviews",
+    "keyRequest": "{name} asks for a JobHunter token",
+    "poolLow": "Key pool is running low: {count, plural, =0 {no free keys} one {# free key} other {# free keys}} left",
+    "keyApproved": "Token request approved. It is already set in your Settings, with a limit of {count} credits.",
+    "keyDenied": "Token request denied.",
+    "keyEmpty": "Your token from the admin is empty (credits used up). Ask for a new one or add your own.",
+    "keyLimit": "You used all {count} credits of your token from the admin.",
+    "keyTakenBack": "The admin took your token back. Imports now need your own token."
   },
   "Errors": {
     "NETWORK": "Can’t connect right now. Check your internet and try again in a minute.",

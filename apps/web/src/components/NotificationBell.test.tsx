@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { Locale } from '@/i18n/config';
 import { Intl } from '../test/intl';
 import { router } from '../test/navigation';
-import { bell } from '../test/server';
+import { bell, keyPool } from '../test/server';
 import { NotificationBell } from './NotificationBell';
 import { ToastProvider } from './Toasts';
 
@@ -27,6 +27,7 @@ const NEW_MATCHES = {
   count: 5,
   fitMin: 60,
   at: null,
+  refId: null,
   readAt: null,
   createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
   jobs: [
@@ -135,5 +136,73 @@ describe('NotificationBell', () => {
     await user.click(button);
     await user.click(document.body);
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('lets an admin approve a token request from the bell', async () => {
+    bell.items = [
+      {
+        ...NEW_MATCHES,
+        id: 9,
+        kind: 'KEY_REQUEST',
+        searchName: 'Cara Weber',
+        count: 7,
+        refId: 42,
+        jobs: [],
+      },
+    ];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    const list = screen.getByRole('dialog', { name: 'Notifications' });
+    expect(within(list).getByText('Cara Weber asks for a JobHunter token')).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: 'Open Key pool' })).toHaveAttribute(
+      'href',
+      '/admin?tab=keys',
+    );
+    await user.click(within(list).getByRole('button', { name: 'Approve: give the next free key' }));
+    expect(keyPool.sent).toContainEqual({ operation: 'ApproveKeyRequest', variables: { id: 42 } });
+    expect(await within(list).findByText(/Answered/)).toBeInTheDocument();
+  });
+
+  it('says no to a token request from the bell', async () => {
+    bell.items = [
+      {
+        ...NEW_MATCHES,
+        id: 9,
+        kind: 'KEY_REQUEST',
+        searchName: 'Cara',
+        count: 7,
+        refId: 42,
+        jobs: [],
+      },
+    ];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    const list = screen.getByRole('dialog', { name: 'Notifications' });
+    await user.click(within(list).getByRole('button', { name: 'Deny' }));
+    expect(keyPool.sent).toContainEqual({
+      operation: 'DenyKeyRequest',
+      variables: { input: { id: 42 } },
+    });
+    await user.click(within(list).getByRole('link', { name: 'Open Key pool' }));
+    expect(screen.queryByRole('dialog', { name: 'Notifications' })).not.toBeInTheDocument();
+  });
+
+  it('tells a user their token was approved, with the limit', async () => {
+    bell.items = [{ ...NEW_MATCHES, id: 10, kind: 'KEY_APPROVED', count: 500, jobs: [] }];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell('de');
+    await user.click(await screen.findByRole('button', { name: /Benachrichtigungen/ }));
+    expect(
+      screen.getByText(/Token-Anfrage freigegeben.*Limit von 500 Credits/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Einstellungen öffnen' })).toHaveAttribute(
+      'href',
+      '/settings',
+    );
   });
 });

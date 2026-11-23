@@ -66,6 +66,16 @@ describe('AlertList', () => {
     expect(router.push).toHaveBeenCalledWith('/job/6');
   });
 
+  it('shows Key pool news in one line', async () => {
+    api([notification({ id: 3, kind: 'KEY_APPROVED', count: 500, jobs: [] })]);
+    await renderApp(<AlertList />);
+    expect(
+      await screen.findByText(
+        'Token request approved. It is already set in your Settings, with a limit of 500 credits.',
+      ),
+    ).toBeOnTheScreen();
+  });
+
   it('says when there is nothing yet, without marking anything read', async () => {
     const calls = api([]);
     await renderApp(<AlertList />);

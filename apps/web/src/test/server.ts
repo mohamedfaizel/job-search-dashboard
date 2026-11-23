@@ -1,4 +1,4 @@
-import type { Notifications, User } from '@jobsearch/data';
+import type { KeyPool, Notifications, User } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -21,6 +21,26 @@ export const savedLocales: string[] = [];
 
 /** The fake API's bell list. Tests put notifications in it. */
 export const bell: Notifications = { items: [], unread: 0 };
+
+/** The fake API's Key pool (Admin › Key pool). Tests change it; `sent` records each change. */
+export const keyPool: { pool: KeyPool; sent: { operation: string; variables: unknown }[] } = {
+  pool: {
+    free: 0,
+    assigned: 0,
+    empty: 0,
+    limit: 500,
+    autoApprove: true,
+    keys: [],
+    requests: [],
+  },
+  sent: [],
+};
+
+const poolChange = (operation: string, field: string) =>
+  api.mutation(operation, ({ variables }) => {
+    keyPool.sent.push({ operation, variables });
+    return HttpResponse.json({ data: { [field]: keyPool.pool } });
+  });
 
 /** The fake API's session: who the cookie says is logged in. */
 export const session: { user: User | null } = { user: null };
@@ -81,6 +101,15 @@ export const server = setupServer(
   api.mutation('FinishOnboarding', () => {
     if (session.user) session.user = { ...session.user, onboarded: true };
     return HttpResponse.json({ data: { finishOnboarding: session.user } });
+  }),
+  api.query('KeyPool', () => HttpResponse.json({ data: { keyPool: keyPool.pool } })),
+  poolChange('ApproveKeyRequest', 'approveKeyRequest'),
+  poolChange('DenyKeyRequest', 'denyKeyRequest'),
+  poolChange('TakeBackPoolKey', 'takeBackPoolKey'),
+  poolChange('RemovePoolKey', 'removePoolKey'),
+  api.mutation('AddPoolKeys', ({ variables }) => {
+    keyPool.sent.push({ operation: 'AddPoolKeys', variables });
+    return HttpResponse.json({ data: { addPoolKeys: { added: 2, duplicates: 1, invalid: 0 } } });
   }),
   api.query('Notifications', () => HttpResponse.json({ data: { notifications: bell } })),
   api.mutation('MarkNotificationsRead', () => {

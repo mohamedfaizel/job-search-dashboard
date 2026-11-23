@@ -88,6 +88,7 @@ export function notification(over: Partial<AppNotification> & Pick<AppNotificati
     fitMin: 60,
     jobs: [{ id: '5', title: 'Data Engineer', company: 'HelloFresh', fit: 82 }],
     at: null,
+    refId: null,
     readAt: null,
     createdAt: '2026-11-09T08:00:00.000Z',
     ...over,

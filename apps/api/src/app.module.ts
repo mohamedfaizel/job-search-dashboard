@@ -13,6 +13,7 @@ import { GmailModule } from './gmail/gmail.module';
 import { HealthModule } from './health/health.module';
 import { InsightsModule } from './insights/insights.module';
 import { JobsModule } from './jobs/jobs.module';
+import { KeyPoolModule } from './key-pool/key-pool.module';
 import { LivenessModule } from './liveness/liveness.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -60,6 +61,7 @@ import { SyncModule } from './sync/sync.module';
     SavedAnswersModule,
     StoriesModule,
     AdminModule,
+    KeyPoolModule,
     SalaryModule,
     GmailModule,
   ],

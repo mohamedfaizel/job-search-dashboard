@@ -106,8 +106,10 @@ export function useUpdateAppSettings() {
           input,
         })
       ).updateAppSettings,
-    onSuccess: (settings) => {
+    onSuccess: async (settings) => {
       queryClient.setQueryData(appSettingsKey, settings);
+      // Admin › Key pool shows the pool's switch and limit too.
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'keyPool'] });
     },
   });
 }

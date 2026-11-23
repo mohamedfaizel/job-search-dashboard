@@ -11,6 +11,7 @@ const notice = (id: number, readAt: string | null): AppNotification => ({
   fitMin: 60,
   jobs: [],
   at: null,
+  refId: null,
   readAt,
   createdAt: '2026-11-05T10:00:00.000Z',
 });

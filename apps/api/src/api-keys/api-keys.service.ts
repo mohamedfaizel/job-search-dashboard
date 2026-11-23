@@ -32,13 +32,8 @@ export class ApiKeysService {
     private readonly config: ConfigService,
   ) {}
 
-  /** SETTINGS_KEY scrambles stored keys; without it, the login secret does. */
   private get key(): Buffer {
-    const secret =
-      this.config.get<string>('SETTINGS_KEY') ||
-      this.config.get<string>('JWT_SECRET') ||
-      'dev-only-secret-change-me';
-    return createHash('sha256').update(`api-key:${secret}`).digest();
+    return settingsCipherKey(this.config);
   }
 
   async list(userId: number): Promise<ApiKeyModel[]> {
@@ -60,7 +55,48 @@ export class ApiKeysService {
     if (plain.length < 8 || /\s/.test(plain)) {
       throw apiError(BadRequestException, 'API_KEY_INVALID', 'That does not look like a key.');
     }
-    return this.store(userId, kind, plain, model);
+    const saved = await this.store(userId, kind, plain, model);
+    // Your own token wins: a key lent from the Key pool goes back, and a request waiting is over.
+    if (kind === 'JOBHUNTER') await this.leavePool(userId);
+    return saved;
+  }
+
+  /** Gives back a lent pool key and cancels a waiting request. True when a key went back. */
+  async leavePool(userId: number): Promise<boolean> {
+    const now = new Date();
+    const [returned] = await this.prisma.$transaction([
+      this.prisma.poolKey.updateMany({
+        where: { userId },
+        data: { userId: null, assignedAt: null, used: 0 },
+      }),
+      this.prisma.keyRequest.updateMany({
+        where: { userId, status: 'PENDING' },
+        data: { status: 'CANCELED', decidedAt: now },
+      }),
+    ]);
+    return returned.count > 0;
+  }
+
+  /**
+   * The JobHunter token an import uses: your own first, else the one lent to you from the Key
+   * pool (then `poolKeyId` says which, so its credits count towards your limit).
+   */
+  async jobHunterToken(
+    userId: number,
+  ): Promise<{ token: string; poolKeyId: number | null } | null> {
+    const own = await this.secret(userId, 'JOBHUNTER');
+    if (own) return { token: own, poolKeyId: null };
+    const lent = await this.prisma.poolKey.findUnique({
+      where: { userId },
+      select: { id: true, secret: true },
+    });
+    if (!lent) return null;
+    try {
+      return { token: decryptToken(lent.secret, this.key), poolKeyId: lent.id };
+    } catch {
+      this.logger.warn(`Pool key ${lent.id} can no longer be read (SETTINGS_KEY changed?)`);
+      return null;
+    }
   }
 
   private store(
@@ -171,6 +207,15 @@ export class ApiKeysService {
       data: { adoptedEnvKeys: { push: pending.map(([kind]) => kind) } },
     });
   }
+}
+
+/** SETTINGS_KEY scrambles stored keys; without it, the login secret does. */
+export function settingsCipherKey(config: ConfigService): Buffer {
+  const secret =
+    config.get<string>('SETTINGS_KEY') ||
+    config.get<string>('JWT_SECRET') ||
+    'dev-only-secret-change-me';
+  return createHash('sha256').update(`api-key:${secret}`).digest();
 }
 
 /** The Claude model Resume-Matcher used from .env (RM_LLM_MODEL), copied with the key. */
