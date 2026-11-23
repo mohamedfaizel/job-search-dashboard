@@ -10,13 +10,13 @@ import { StillOpen } from './StillOpen';
 
 const JOB = { ...JOBS[0]!, url: 'https://jobs.example.com/1' };
 
-function renderLine(job: Job, autoCheck = false) {
+function renderLine(job: Job, autoCheck = false, compact = false) {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   return render(
     <Intl>
       <DataProvider store={makeStore()} queryClient={queryClient}>
-        <StillOpen job={job} autoCheck={autoCheck} />
+        <StillOpen job={job} autoCheck={autoCheck} compact={compact} />
       </DataProvider>
     </Intl>,
   );
@@ -32,6 +32,23 @@ describe('StillOpen', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Check now' }));
 
     expect(checks()).toEqual([{ operation: 'CheckJobStillOpen', variables: { id: JOB.id } }]);
+  });
+
+  it('is one small chip on a phone: short words, the full sentence for screen readers', async () => {
+    renderLine(JOB, false, true);
+    const chip = screen.getByRole('button', {
+      name: 'Still open? Check: Not checked yet if the ad is still open',
+    });
+    expect(chip).toHaveClass('h-8');
+
+    await userEvent.click(chip);
+
+    expect(checks()).toEqual([{ operation: 'CheckJobStillOpen', variables: { id: JOB.id } }]);
+  });
+
+  it('says Closed on the phone chip for an expired job', () => {
+    renderLine({ ...JOB, postingStatus: 'expired' }, false, true);
+    expect(screen.getByRole('button', { name: /^Closed: Expired/ })).toBeInTheDocument();
   });
 
   it('shows an expired job and why', () => {

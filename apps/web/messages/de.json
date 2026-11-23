@@ -1716,6 +1716,13 @@
       "answeredBeforeList": "Schon beantwortet"
     },
     "stillOpen": {
+      "short": {
+        "never": "Noch offen? Prüfen",
+        "checking": "Prüfe…",
+        "open": "Offen",
+        "expired": "Geschlossen",
+        "unsure": "Unklar · Prüfen"
+      },
       "never": "Noch nicht geprüft, ob die Anzeige noch online ist",
       "checking": "Prüfe, ob die Anzeige noch online ist…",
       "open": "Noch offen (geprüft {when})",
@@ -1740,6 +1747,11 @@
       }
     },
     "trust": {
+      "short": {
+        "ok": "Keine Warnzeichen",
+        "caution": "{count} zu prüfen",
+        "warning": "Vielleicht Betrug"
+      },
       "ok": "Keine Warnzeichen in dieser Anzeige",
       "caution": "{count, plural, one {# Punkt} other {# Punkte}} vor der Bewerbung prüfen",
       "warning": "Vorsicht: das könnte Betrug sein",
