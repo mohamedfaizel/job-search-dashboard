@@ -59,9 +59,9 @@ describe('AppFrame', () => {
     ).toHaveAttribute('href', '/admin');
   });
 
-  it('ends every page with the maker line, which opens the message window', async () => {
+  it('has ? and i in the header instead of a footer', async () => {
     session.user = ADMIN;
-    location.pathname = '/jobs';
+    location.pathname = '/messages';
     server.use(
       api.query('MyMessages', () =>
         HttpResponse.json({ data: { myMessages: { items: [], unread: 0 } } }),
@@ -70,25 +70,33 @@ describe('AppFrame', () => {
     const user = userEvent.setup();
     renderFrame();
 
-    const footer = await screen.findByRole('contentinfo');
-    expect(within(footer).getByText('Made by Mohamed Faizel')).toBeInTheDocument();
-    // The intro's How it works and Features, and About us, are one click away.
-    const site = within(within(footer).getByRole('navigation', { name: 'Site' }));
-    expect(site.getByRole('link', { name: 'How it works' })).toHaveAttribute('href', '/#how');
-    expect(site.getByRole('link', { name: 'Features' })).toHaveAttribute('href', '/#features');
-    expect(site.getByRole('link', { name: 'About us' })).toHaveAttribute('href', '/about');
-    await user.click(
-      within(footer).getByRole('button', { name: /Queries and suggestions welcome/ }),
-    );
-    const dialog = screen.getByRole('dialog', { name: 'Message Mohamed Faizel' });
-    await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+    const help = await screen.findByRole('link', { name: 'Queries and suggestions' });
+    expect(help).toHaveAttribute('href', '/messages');
+    expect(help).toHaveAttribute('title', 'Queries and suggestions');
+    expect(help).toHaveAttribute('aria-current', 'page');
+    const about = screen.getByRole('link', { name: 'About us' });
+    expect(about).toHaveAttribute('href', '/about');
+    expect(about).toHaveAttribute('title', 'About us');
+    expect(screen.queryByRole('contentinfo')).toBeNull();
+    expect(screen.queryByText('Made by Mohamed Faizel')).toBeNull();
 
-    // The account menu opens it too.
+    // The account menu still opens the message window.
     await user.click(screen.getByRole('button', { name: /account menu/ }));
     await user.click(screen.getByRole('button', { name: 'Questions?' }));
     expect(screen.getByRole('dialog', { name: 'Message Mohamed Faizel' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Account' })).toBeNull();
     await user.keyboard('{Escape}');
+  });
+
+  it('names the ? and i in German', async () => {
+    session.user = { ...ADMIN, locale: 'de' };
+    location.pathname = '/jobs';
+    renderFrame('de');
+    expect(await screen.findByRole('link', { name: 'Fragen und Vorschläge' })).toHaveAttribute(
+      'href',
+      '/messages',
+    );
+    expect(screen.getByRole('link', { name: 'Über uns' })).toHaveAttribute('href', '/about');
   });
 
   it('opens the avatar menu with My profile, Settings and Log out', async () => {

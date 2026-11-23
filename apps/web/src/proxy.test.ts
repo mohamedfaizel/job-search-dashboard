@@ -41,8 +41,9 @@ describe('proxy', () => {
   });
 
   it('skips the login page when already logged in', () => {
-    expect(redirectedTo('/login', true)).toBe('/jobs');
+    expect(redirectedTo('/login', true)).toBe('/about');
     expect(redirectedTo('/login?next=/tracker', true)).toBe('/tracker');
-    expect(redirectedTo('/login?next=https://evil.example', true)).toBe('/jobs');
+    expect(redirectedTo('/login?next=https://evil.example', true)).toBe('/about');
+    expect(redirectedTo('/signup', true)).toBe('/jobs');
   });
 });

@@ -38,6 +38,23 @@ describe('AuthForm', () => {
     );
   });
 
+  it('logs in and opens About us when no page was asked for', async () => {
+    const user = userEvent.setup();
+    renderForm('log-in');
+
+    await user.type(screen.getByLabelText('Email'), 'mohamed@example.com');
+    await user.type(screen.getByLabelText('Password'), 'correct horse');
+    await user.click(screen.getByRole('button', { name: 'Log in' }));
+
+    await vi.waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith('/about');
+    });
+    expect(screen.getByRole('link', { name: 'Create an account' })).toHaveAttribute(
+      'href',
+      '/signup',
+    );
+  });
+
   it('shows the API error and stays on the page', async () => {
     const user = userEvent.setup();
     renderForm('log-in');

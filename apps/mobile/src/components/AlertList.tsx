@@ -8,7 +8,6 @@ import { useHeadline } from '../lib/alerts';
 import { colors } from '../lib/theme';
 import { useErrorText } from '../lib/useErrorText';
 import { FitPill } from './JobRow';
-import { MakerLine } from './MakerLine';
 
 /**
  * Your notifications, newest first: new jobs from scheduled searches, interview reminders and
@@ -50,7 +49,6 @@ export function AlertList() {
       keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => <Alert item={item} unread={wasUnread?.has(item.id) ?? false} />}
       ListEmptyComponent={<Text style={styles.empty}>{t('empty')}</Text>}
-      ListFooterComponent={<MakerLine />}
     />
   );
 }

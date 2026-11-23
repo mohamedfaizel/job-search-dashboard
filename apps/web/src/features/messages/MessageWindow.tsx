@@ -3,6 +3,7 @@
 import type { ChatMessage, MessageTopic } from '@jobsearch/data';
 import { useMarkMyMessagesRead, useMyMessages, useSendMessage } from '@jobsearch/data';
 import { useLocale, useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useErrorText } from '@/i18n/useErrorText';
 import { MAKER } from '@/lib/maker';
@@ -63,8 +64,87 @@ export function MessageWindow() {
 
 function Window() {
   const t = useTranslations('Messages');
-  const errorText = useErrorText();
   const titleId = useId();
+
+  useEffect(() => {
+    const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeMessageWindow();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      before?.focus();
+    };
+  }, []);
+
+  return (
+    <div
+      role="dialog"
+      aria-labelledby={titleId}
+      className="fixed inset-0 z-[60] flex flex-col bg-white text-slate-900 sm:inset-auto sm:right-6 sm:bottom-6 sm:h-[36rem] sm:max-h-[calc(100vh-3rem)] sm:w-[24rem] sm:overflow-hidden sm:rounded-xl sm:border sm:border-slate-200 sm:shadow-2xl"
+    >
+      <MakerHeader titleId={titleId} title={t('title', { name: MAKER.name })}>
+        <button
+          type="button"
+          onClick={closeMessageWindow}
+          aria-label={t('close')}
+          className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-xl text-neutral-300 hover:bg-neutral-800 hover:text-white"
+        >
+          ×
+        </button>
+      </MakerHeader>
+      <Conversation focusBox />
+    </div>
+  );
+}
+
+/** The black bar on top: the round photo, a title and a short line under it. */
+export function MakerHeader({
+  titleId,
+  title,
+  sub,
+  page = false,
+  children,
+}: {
+  titleId: string;
+  title: string;
+  /** The small line under the title; "Queries and suggestions welcome" when left out. */
+  sub?: string;
+  /** On its own page the title is the page's h1. */
+  page?: boolean;
+  children?: ReactNode;
+}) {
+  const t = useTranslations('Messages');
+  const Heading = page ? 'h1' : 'h2';
+  return (
+    <header className="flex items-center gap-3 border-b-[3px] border-brand-400 bg-black px-4 py-3 text-white">
+      <img
+        src={MAKER.face}
+        alt=""
+        width={44}
+        height={44}
+        className="h-11 w-11 shrink-0 rounded-full border-2 border-brand-400"
+      />
+      <div className="min-w-0">
+        <Heading id={titleId} className="truncate font-bold">
+          {title}
+        </Heading>
+        <p className="text-xs text-neutral-300">{sub ?? t('sub')}</p>
+      </div>
+      {children}
+    </header>
+  );
+}
+
+/**
+ * Your conversation with the maker and the box to write in. The message window and the
+ * Queries and suggestions page both show it.
+ */
+export function Conversation({ focusBox = false }: { focusBox?: boolean }) {
+  const t = useTranslations('Messages');
+  const errorText = useErrorText();
+  const id = useId();
   const { data, isPending } = useMyMessages();
   const send = useSendMessage();
   const markRead = useMarkMyMessagesRead();
@@ -75,17 +155,8 @@ function Window() {
   const unread = data?.unread ?? 0;
 
   useEffect(() => {
-    const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    box.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeMessageWindow();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      before?.focus();
-    };
-  }, []);
+    if (focusBox) box.current?.focus();
+  }, [focusBox]);
 
   // Answers you can see now are read.
   const { mutate: markMine } = markRead;
@@ -103,34 +174,7 @@ function Window() {
   const text = body.trim();
 
   return (
-    <div
-      role="dialog"
-      aria-labelledby={titleId}
-      className="fixed inset-0 z-[60] flex flex-col bg-white text-slate-900 sm:inset-auto sm:right-6 sm:bottom-6 sm:h-[36rem] sm:max-h-[calc(100vh-3rem)] sm:w-[24rem] sm:overflow-hidden sm:rounded-xl sm:border sm:border-slate-200 sm:shadow-2xl"
-    >
-      <header className="flex items-center gap-3 border-b-[3px] border-brand-400 bg-black px-4 py-3 text-white">
-        <img
-          src={MAKER.face}
-          alt=""
-          width={44}
-          height={44}
-          className="h-11 w-11 shrink-0 rounded-full border-2 border-brand-400"
-        />
-        <div className="min-w-0">
-          <h2 id={titleId} className="truncate font-bold">
-            {t('title', { name: MAKER.name })}
-          </h2>
-          <p className="text-xs text-neutral-300">{t('sub')}</p>
-        </div>
-        <button
-          type="button"
-          onClick={closeMessageWindow}
-          aria-label={t('close')}
-          className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-xl text-neutral-300 hover:bg-neutral-800 hover:text-white"
-        >
-          ×
-        </button>
-      </header>
+    <>
       <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto bg-slate-100 p-4">
         <p className="rounded-xl rounded-bl-sm border border-slate-200 bg-white px-3 py-2 text-sm">
           {t('hello')}
@@ -170,7 +214,7 @@ function Window() {
               >
                 <input
                   type="radio"
-                  name="topic"
+                  name={`${id}-topic`}
                   value={value}
                   checked={topic === value}
                   onChange={() => {
@@ -184,11 +228,11 @@ function Window() {
           </div>
         </fieldset>
         <div className="flex items-end gap-2">
-          <label className="sr-only" htmlFor={`${titleId}-body`}>
+          <label className="sr-only" htmlFor={`${id}-body`}>
             {t('label')}
           </label>
           <textarea
-            id={`${titleId}-body`}
+            id={`${id}-body`}
             ref={box}
             rows={2}
             maxLength={MAX_BODY}
@@ -218,6 +262,6 @@ function Window() {
           </p>
         )}
       </form>
-    </div>
+    </>
   );
 }

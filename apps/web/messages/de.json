@@ -39,7 +39,9 @@
     "install": "App installieren",
     "installIos": "Zum Installieren: Teilen antippen, dann „Zum Home-Bildschirm“.",
     "adminPage": "Admin",
-    "questions": "Fragen?"
+    "questions": "Fragen?",
+    "help": "Fragen und Vorschläge",
+    "about": "Über uns"
   },
   "Auth": {
     "logInTitle": "Anmelden",
@@ -2780,6 +2782,8 @@
     "placeholder": "Schreib deine Nachricht",
     "send": "Senden",
     "sending": "Wird gesendet…",
-    "answeredBy": "{name} hat geantwortet"
+    "answeredBy": "{name} hat geantwortet",
+    "pageTitle": "Fragen und Vorschläge",
+    "pageWho": "Schreib an {name}. Antworten erscheinen hier und in der 🔔."
   }
 }

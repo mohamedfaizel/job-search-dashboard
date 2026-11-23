@@ -70,9 +70,7 @@
     "messageHint": "Open to read it"
   },
   "Maker": {
-    "madeBy": "Made by {name}",
-    "queries": "Queries and suggestions welcome",
-    "opensWindow": "Opens a message window"
+    "help": "Queries and suggestions"
   },
   "Messages": {
     "title": "Message {name}",

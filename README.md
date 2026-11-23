@@ -112,7 +112,7 @@ Open <http://localhost:3001>. Check the API at <http://localhost:3000/health>.
 **admin**. Every account, admin or not, can add jobs: imports use the JobHunter token each person
 saves in **Settings**, so everyone spends their own credits. Jobs are one shared list, so a job is
 never paid for twice; statuses, hidden jobs and saved searches are your own. Passwords are stored as argon2 hashes, and the session lives in an httpOnly cookie
-for 7 days. Set `JWT_SECRET` in `.env` (see `.env.example`); `ALLOW_SIGNUP=false` closes sign-up.
+for 15 days. Set `JWT_SECRET` in `.env` (see `.env.example`); `ALLOW_SIGNUP=false` closes sign-up.
 
 **Tracker:** give a job a status (Saved, Applied, Interviewing, Offer, Rejected) from the table or
 its popup and it lands on your **Tracker** board. Drag cards between columns, or use each card's

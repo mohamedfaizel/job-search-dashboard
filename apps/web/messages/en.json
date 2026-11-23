@@ -39,7 +39,9 @@
     "install": "Install app",
     "installIos": "To install: tap Share, then \"Add to Home Screen\".",
     "adminPage": "Admin",
-    "questions": "Questions?"
+    "questions": "Questions?",
+    "help": "Queries and suggestions",
+    "about": "About us"
   },
   "Auth": {
     "logInTitle": "Log in",
@@ -2780,6 +2782,8 @@
     "placeholder": "Write your message",
     "send": "Send",
     "sending": "Sending…",
-    "answeredBy": "{name} replied"
+    "answeredBy": "{name} replied",
+    "pageTitle": "Queries and suggestions",
+    "pageWho": "Write to {name}. Answers show up here and in the 🔔."
   }
 }

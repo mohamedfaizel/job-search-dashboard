@@ -3,6 +3,7 @@ import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { useTranslations } from 'use-intl';
 import { BellButton } from '../components/BellButton';
+import { HelpButton } from '../components/HelpButton';
 import { JobList } from '../components/JobList';
 import { LogOutButton } from '../components/LogOutButton';
 import { PhoneAlerts } from '../components/PhoneAlerts';
@@ -28,6 +29,7 @@ export default function JobsScreen() {
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <BellButton />
+              <HelpButton />
               <LogOutButton />
             </View>
           ),
