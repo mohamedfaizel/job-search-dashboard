@@ -219,7 +219,10 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
       </main>
       {/* Under every page: who made the app and where to send questions. */}
       <footer className="border-t border-slate-200 px-4 pt-4 pb-[calc(1rem+var(--tabbar))] sm:px-6">
-        <MakerLine loggedIn />
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <MakerLine loggedIn />
+          <SiteLinks />
+        </div>
       </footer>
       <MessageWindowHost />
       <PhoneTabs current={current} />
@@ -249,6 +252,32 @@ function PhoneTabs({ current }: { current: string | undefined }) {
             </Link>
           </li>
         ))}
+      </ul>
+    </nav>
+  );
+}
+
+/** The public pages, from inside the app: the intro's How it works and Features, and About us. */
+function SiteLinks() {
+  const t = useTranslations('Site.nav');
+  return (
+    <nav aria-label={t('main')}>
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+        <li>
+          <Link href="/#how" className="hover:text-black hover:underline">
+            {t('how')}
+          </Link>
+        </li>
+        <li>
+          <Link href="/#features" className="hover:text-black hover:underline">
+            {t('features')}
+          </Link>
+        </li>
+        <li>
+          <Link href="/about" className="hover:text-black hover:underline">
+            {t('about')}
+          </Link>
+        </li>
       </ul>
     </nav>
   );

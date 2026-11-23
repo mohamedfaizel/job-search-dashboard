@@ -7,7 +7,7 @@ export const SESSION_COOKIE = 'session';
 
 const AUTH_PAGES = new Set(['/login', '/signup']);
 /** Pages anyone can open, logged in or not. */
-const PUBLIC_PAGES = new Set(['/about']);
+const PUBLIC_PAGES = new Set(['/', '/about']);
 
 /**
  * Runs on the server before a page renders. It only checks that the session cookie is there:
@@ -26,10 +26,6 @@ export function proxy(request: NextRequest) {
   }
 
   if (PUBLIC_PAGES.has(pathname)) return NextResponse.next();
-  // The intro page is for visitors. Logged in, you start on My Jobs.
-  if (pathname === '/') {
-    return loggedIn ? NextResponse.redirect(new URL('/jobs', request.url)) : NextResponse.next();
-  }
 
   if (loggedIn) return NextResponse.next();
   const login = new URL('/login', request.url);
