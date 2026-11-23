@@ -8,6 +8,7 @@ import { JobHunterClient } from '../jobhunter/jobhunter.client';
 import { mapJobHunterJob } from '../jobhunter/jobhunter.mapper';
 import type { JobHunterSearchRequest } from '../jobhunter/jobhunter.types';
 import { JobsService } from '../jobs/jobs.service';
+import { KeyPoolService } from '../key-pool/key-pool.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EUR_TO_USD } from '../salary/salary';
 import type { SyncJobsInput, SyncJobsResult } from './sync.input';
@@ -122,6 +123,7 @@ export class SyncService {
     private readonly arbeitsagentur: ArbeitsagenturSyncService,
     private readonly companyBoards: CompanyBoardsSyncService,
     private readonly keys: ApiKeysService,
+    private readonly pool: KeyPoolService,
   ) {}
 
   async sync(input: SyncJobsInput, options: SyncOptions): Promise<SyncJobsResult> {
@@ -132,14 +134,29 @@ export class SyncService {
     if (input.source === ImportSource.COMPANY_BOARDS) {
       return this.companyBoards.sync(input, options);
     }
-    // Each user pays with their own token (Settings > API keys).
-    const token = await this.keys.secret(options.userId, 'JOBHUNTER');
-    if (!token) {
+    // Each user pays with their own token (Settings > API keys), or one lent from the Key pool.
+    const found = await this.keys.jobHunterToken(options.userId);
+    if (!found) {
       throw apiError(
         BadRequestException,
         'JOBHUNTER_TOKEN_MISSING',
         'Add your JobHunter token in Settings > API keys first.',
       );
+    }
+    const { token, poolKeyId } = found;
+    let { pageSize, maxPages } = input;
+    if (poolKeyId !== null) {
+      // A lent key may spend at most the per-user limit: cut the run down to what is left.
+      const left = await this.pool.allowance(poolKeyId);
+      if (left <= 0) {
+        throw apiError(
+          BadRequestException,
+          'POOL_LIMIT_REACHED',
+          'You used all credits of the token from the admin. Ask for more or add your own.',
+        );
+      }
+      pageSize = Math.min(pageSize, left);
+      maxPages = Math.max(1, Math.min(maxPages, Math.floor(left / pageSize)));
     }
     const key = searchKey(input);
     const start = input.resume
@@ -167,7 +184,7 @@ export class SyncService {
       const page = await this.jobHunter.searchJobs(
         {
           ...filters,
-          limit: input.pageSize,
+          limit: pageSize,
           include_total_results: result.pages === 0,
           ...(cursor ? { cursor } : {}),
         },
@@ -184,10 +201,14 @@ export class SyncService {
       result.creditsCharged += page.metadata.credits_charged;
       result.jobsAlreadyPaid += page.metadata.jobs_already_paid;
       cursor = page.metadata.next_cursor;
-    } while (cursor && result.pages < input.maxPages);
+    } while (cursor && result.pages < maxPages);
 
     result.hasMore = cursor !== null;
-    await this.keys.noteCredits(options.userId, 'JOBHUNTER', result.creditsRemaining);
+    if (poolKeyId === null) {
+      await this.keys.noteCredits(options.userId, 'JOBHUNTER', result.creditsRemaining);
+    } else {
+      await this.pool.recordUse(poolKeyId, result.creditsCharged, result.creditsRemaining);
+    }
 
     // Remember the run. Only a complete one (no pages left unfetched) moves the "only new"
     // starting point forward; an incomplete one keeps its cursor so it can be continued.

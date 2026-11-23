@@ -36,6 +36,20 @@ export {
   useSendMessage,
 } from './api/messages';
 export {
+  keyPoolKey,
+  myPoolKeyKey,
+  useAddPoolKeys,
+  useApproveKeyRequest,
+  useCancelPoolKeyRequest,
+  useDenyKeyRequest,
+  useGivePoolKeyBack,
+  useKeyPool,
+  useMyPoolKey,
+  useRemovePoolKey,
+  useRequestPoolKey,
+  useTakeBackPoolKey,
+} from './api/keyPool';
+export {
   NOTIFICATIONS_POLL_MS,
   useMarkNotificationsRead,
   useNotifications,

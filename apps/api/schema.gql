@@ -2,6 +2,22 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddPoolKeysInput {
+  """One or many tokens, split by spaces, commas or new lines"""
+  keys: String!
+  note: String
+}
+
+type AddPoolKeysResult {
+  added: Int!
+
+  """Already in the pool"""
+  duplicates: Int!
+
+  """Did not look like a token"""
+  invalid: Int!
+}
+
 """One user’s conversation on Admin › Messages: who and the latest line"""
 type AdminConversation {
   email: String!
@@ -101,6 +117,12 @@ type AppSettings {
 
   """The most saved searches one user can keep"""
   maxSavedSearches: Int!
+
+  """Key pool: a user's first token request gets a free key at once"""
+  poolAutoApprove: Boolean!
+
+  """Key pool: credits each user may spend with a lent key"""
+  poolKeyLimit: Int!
 
   """SCHEDULER_ENABLED=false in .env keeps the scheduler off anyway"""
   schedulerOffInEnv: Boolean!
@@ -246,6 +268,13 @@ scalar DateTime
 input DeleteUserInput {
   confirmEmail: String!
   userId: Int!
+}
+
+input DenyKeyRequestInput {
+  id: Int!
+
+  """Shown to the user"""
+  note: String
 }
 
 """How your resume and cover letter PDFs look"""
@@ -1060,6 +1089,32 @@ enum JobTrustLevel {
   WARNING
 }
 
+type KeyPool {
+  assigned: Int!
+
+  """A user's first request gets a free key at once"""
+  autoApprove: Boolean!
+  empty: Int!
+  free: Int!
+
+  """Newest first"""
+  keys: [PoolKey!]!
+
+  """Credits each user may spend with a lent key"""
+  limit: Int!
+
+  """Waiting requests, oldest first"""
+  requests: [KeyRequest!]!
+}
+
+"""A user waiting for a key"""
+type KeyRequest {
+  createdAt: DateTime!
+  email: String!
+  id: Int!
+  name: String!
+}
+
 type LanguageResume {
   """The uploaded file, null when pasted"""
   fileName: String
@@ -1159,14 +1214,23 @@ enum MessageTopic {
 }
 
 type Mutation {
+  """Adds one or many pasted tokens"""
+  addPoolKeys(input: AddPoolKeysInput!): AddPoolKeysResult!
+
   """Adds jobs to your Apply queue. Jobs already in it keep their place."""
   addToApplyQueue(jobIds: [ID!]!): [ApplyQueueItem!]!
+
+  """Lends the next free key to this request"""
+  approveKeyRequest(id: Int!): KeyPool!
 
   """Moves the job to the status the email points to."""
   approveMailSuggestion(id: Int!): Boolean!
 
   """Cancels an invite link. Returns its id"""
   cancelInvite(id: Int!): Int!
+
+  """Cancels your waiting request"""
+  cancelPoolKeyRequest: MyPoolKey!
 
   """
   Opens the job's link to see if it is still open. A closed job becomes "expired". Checked in the last 10 minutes: returns the saved answer.
@@ -1211,6 +1275,9 @@ type Mutation {
   """Deletes an account and all its data. Returns its id"""
   deleteUser(input: DeleteUserInput!): Int!
 
+  """Says no to a request, with an optional note"""
+  denyKeyRequest(input: DenyKeyRequestInput!): KeyPool!
+
   """Removes a Gmail account and its pending suggestions."""
   disconnectGmail(id: Int!): Boolean!
 
@@ -1224,6 +1291,9 @@ type Mutation {
 
   """The first-login steps are done (or skipped)"""
   finishOnboarding: User!
+
+  """Gives your lent key back to the pool"""
+  givePoolKeyBack: MyPoolKey!
 
   """Hide a job from your table. Other users still see it."""
   hideJob(id: ID!): Boolean!
@@ -1277,6 +1347,9 @@ type Mutation {
   """
   removeInsightTerm(everywhere: Boolean! = false, jobId: ID!, term: String!): JobInsights!
 
+  """Deletes a key from the pool"""
+  removePoolKey(id: Int!): KeyPool!
+
   """
   Takes the skills the fact check flagged out of the Skills section of the resume you wrote for this job, then scores it again
   """
@@ -1284,6 +1357,9 @@ type Mutation {
 
   """Answers a user. Rings their bell (admins only)"""
   replyMessage(input: ReplyMessageInput!): Message!
+
+  """Asks the admins for a token from the Key pool"""
+  requestPoolKey: MyPoolKey!
 
   """Throws a job’s changes away: the copy becomes your master resume again"""
   resetJobResumeBuild(jobId: String!): JobResumeBuild!
@@ -1432,6 +1508,11 @@ type Mutation {
   tailorResume(jobId: ID!): TailoredResume!
 
   """
+  Takes a lent key back; with passOn it goes to the oldest waiting request
+  """
+  takeBackPoolKey(id: Int!, passOn: Boolean! = false): KeyPool!
+
+  """
   Tries a saved key: JobHunter with a one-job search (at most 1 credit), Claude and OpenAI by listing their models (free).
   """
   testApiKey(kind: ApiKeyKind!): ApiKeyTest!
@@ -1506,6 +1587,27 @@ type MyMessages {
   unread: Int!
 }
 
+type MyPoolKey {
+  """DENIED: when you can ask again"""
+  askAgainAt: DateTime
+
+  """How many credits you may spend with a lent key"""
+  limit: Int!
+
+  """DENIED: the admin's note"""
+  note: String
+
+  """No key is free right now: a new request joins the waiting list"""
+  poolEmpty: Boolean!
+
+  """When you asked (PENDING, DENIED)"""
+  requestedAt: DateTime
+  state: PoolKeyState!
+
+  """APPROVED: credits you spent with it so far"""
+  used: Int!
+}
+
 """
 Something the app tells you in the bell list. The web app writes the words from `kind` and the numbers, in your language
 """
@@ -1525,12 +1627,17 @@ type Notification {
   jobs: [NotificationJob!]!
 
   """
-  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. MESSAGE_REPLY: an admin (searchName) answered your message
+  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message
   """
   kind: String!
 
   """When you read it. Null = unread"""
   readAt: DateTime
+
+  """
+  KEY_REQUEST: the token request it is about, so admins can answer from the bell
+  """
+  refId: Int
 
   """
   The saved search that found them; for MESSAGE_REPLY, who answered. Empty otherwise
@@ -1578,6 +1685,36 @@ type PdfCheckItem {
   """
   detail: String!
   ok: Boolean!
+}
+
+"""A key in the pool, by number only. The key is never sent"""
+type PoolKey {
+  createdAt: DateTime!
+
+  """Credits left on the key, as JobHunter last said"""
+  credits: Int
+
+  """Who has it (so you can take it back)"""
+  holder: String
+  id: Int!
+  note: String!
+  status: PoolKeyStatus!
+
+  """Credits its holder spent since they got it"""
+  used: Int!
+}
+
+enum PoolKeyState {
+  APPROVED
+  DENIED
+  NONE
+  PENDING
+}
+
+enum PoolKeyStatus {
+  ASSIGNED
+  EMPTY
+  FREE
 }
 
 enum PostingCheck {
@@ -1843,6 +1980,9 @@ type Query {
   """Jobs for the dashboard table: filter, sort and paginate"""
   jobsPage(filter: JobFilterInput, page: Int! = 1, pageSize: Int! = 25, sort: JobSortInput): JobPage!
 
+  """Counts, keys by number and waiting requests"""
+  keyPool: KeyPool!
+
   """Tracker changes suggested by employer emails, waiting for your answer."""
   mailSuggestions: [MailSuggestion!]!
 
@@ -1865,6 +2005,9 @@ type Query {
 
   """Your messages and the answers, oldest first"""
   myMessages: MyMessages!
+
+  """Where your token request stands. Never any part of a key"""
+  myPoolKey: MyPoolKey!
   myProfile: Profile!
 
   """
@@ -2514,6 +2657,8 @@ type TermCheck {
 input UpdateAppSettingsInput {
   dailyCreditCap: Int
   maxSavedSearches: Int
+  poolAutoApprove: Boolean
+  poolKeyLimit: Int
   schedulerOn: Boolean
   signupMode: SignupMode
   stillOpenOn: Boolean

@@ -15,13 +15,15 @@ export const KEEP = 30;
 /** How many jobs a "new matches" notification names. */
 export const TOP_JOBS = 3;
 
-interface NotificationData {
+export interface NotificationData {
   searchName: string;
   count: number;
   fitMin: number;
   jobs: NotificationJobModel[];
   /** INTERVIEW_SOON: the interview time, as ISO text. */
   at?: string;
+  /** KEY_REQUEST: the token request's id, so admins can answer it from the bell. */
+  refId?: number;
 }
 
 /** How long before an interview the bell reminds you. */
@@ -43,6 +45,7 @@ function toModel(row: {
     fitMin: data.fitMin ?? 0,
     jobs: Array.isArray(data.jobs) ? data.jobs : [],
     at: data.at ? new Date(data.at) : null,
+    refId: data.refId ?? null,
     readAt: row.readAt,
     createdAt: row.createdAt,
   };
@@ -192,6 +195,11 @@ export class NotificationsService {
   async remindInterviews(): Promise<void> {
     if (process.env['SCHEDULER_ENABLED'] === 'false') return;
     await this.interviewReminders();
+  }
+
+  /** Adds one notification to a user's bell list (the Key pool uses it too). */
+  push(userId: number, kind: string, data: NotificationData): Promise<void> {
+    return this.add(userId, kind, data);
   }
 
   private async add(userId: number, kind: string, data: NotificationData): Promise<void> {

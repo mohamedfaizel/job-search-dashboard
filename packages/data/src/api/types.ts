@@ -854,6 +854,8 @@ export interface AppNotification {
   jobs: NotificationJob[];
   /** INTERVIEW_SOON: ISO time of the interview. */
   at: string | null;
+  /** KEY_REQUEST: the token request's id, so admins can answer it from the bell. */
+  refId: number | null;
   /** ISO time you read it; null = unread. */
   readAt: string | null;
   createdAt: string;
@@ -1129,6 +1131,10 @@ export interface AppSettings {
   maxSavedSearches: number;
   schedulerOn: boolean;
   stillOpenOn: boolean;
+  /** Key pool: a user's first token request gets a free key at once. */
+  poolAutoApprove: boolean;
+  /** Key pool: credits each user may spend with a lent key. */
+  poolKeyLimit: number;
   /** SCHEDULER_ENABLED=false in .env keeps the scheduler off whatever the switch says. */
   schedulerOffInEnv: boolean;
   stillOpenOffInEnv: boolean;
@@ -1137,7 +1143,13 @@ export interface AppSettings {
 export type AppSettingsChange = Partial<
   Pick<
     AppSettings,
-    'signupMode' | 'dailyCreditCap' | 'maxSavedSearches' | 'schedulerOn' | 'stillOpenOn'
+    | 'signupMode'
+    | 'dailyCreditCap'
+    | 'maxSavedSearches'
+    | 'schedulerOn'
+    | 'stillOpenOn'
+    | 'poolAutoApprove'
+    | 'poolKeyLimit'
   >
 >;
 
@@ -1179,6 +1191,57 @@ export interface AdminOverview {
   /** Imports per day, oldest first, today last. */
   week: { day: string; imports: number }[];
   health: HealthCheck[];
+}
+
+/** Where your token request from the Key pool stands. Never any part of a key. */
+export interface MyPoolKey {
+  state: 'NONE' | 'PENDING' | 'APPROVED' | 'DENIED';
+  requestedAt: string | null;
+  /** DENIED: the admin's note. */
+  note: string | null;
+  /** DENIED: when you can ask again. */
+  askAgainAt: string | null;
+  /** Credits you may spend with a lent key. */
+  limit: number;
+  /** APPROVED: credits you spent with it so far. */
+  used: number;
+  /** No key is free right now: a new request joins the waiting list. */
+  poolEmpty: boolean;
+}
+
+/** A key in the Key pool, by number only. */
+export interface PoolKey {
+  id: number;
+  status: 'FREE' | 'ASSIGNED' | 'EMPTY';
+  holder: string | null;
+  used: number;
+  credits: number | null;
+  note: string;
+  createdAt: string;
+}
+
+export interface KeyRequest {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: string;
+}
+
+/** Admin › Key pool. */
+export interface KeyPool {
+  free: number;
+  assigned: number;
+  empty: number;
+  limit: number;
+  autoApprove: boolean;
+  keys: PoolKey[];
+  requests: KeyRequest[];
+}
+
+export interface AddPoolKeysResult {
+  added: number;
+  duplicates: number;
+  invalid: number;
 }
 
 /** What a message to the makers is about. */

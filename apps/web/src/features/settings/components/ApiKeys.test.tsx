@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithData } from '../../profile/test/render';
-import { apiKeys, me, PROFILE, requests } from '../../profile/test/server';
+import { apiKeys, me, poolKey, PROFILE, requests } from '../../profile/test/server';
 import { SettingsPage } from '../SettingsPage';
 
 /** One key's card, found by its heading ("JobHunter token", "Claude API key"…). */
@@ -166,5 +166,62 @@ describe('Settings > Notifications', () => {
       operation: 'UpdateNotificationSettings',
       variables: { input: { notifyNewMatches: PROFILE.notifyNewMatches, matchFitMin: 70 } },
     });
+  });
+
+  it('asks the admin for a token and shows a lent one without any part of it', async () => {
+    const user = userEvent.setup();
+    renderWithData(<SettingsPage />);
+    await user.click(await screen.findByRole('button', { name: 'Request a token' }));
+    expect(requests).toContainEqual({ operation: 'RequestPoolKey', variables: {} });
+
+    expect(await screen.findByText('From the admin')).toBeVisible();
+    expect(screen.getByText('Limit: 500 credits · 0 used')).toBeVisible();
+    expect(screen.getByText('(hidden)')).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: 'Give back to the pool' }));
+    expect(requests).toContainEqual({ operation: 'GivePoolKeyBack', variables: {} });
+    expect(await screen.findByRole('button', { name: 'Request a token' })).toBeVisible();
+  });
+
+  it('hides the request when you have your own token', async () => {
+    apiKeys.push({
+      kind: 'JOBHUNTER',
+      last4: 'a9F2',
+      model: null,
+      credits: null,
+      updatedAt: '2026-11-08T12:00:00.000Z',
+    });
+    renderWithData(<SettingsPage />);
+    expect(await screen.findByText('✓ Saved')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Request a token' })).not.toBeInTheDocument();
+  });
+  it('shows a waiting request that can be cancelled', async () => {
+    Object.assign(poolKey, { state: 'PENDING', requestedAt: new Date().toISOString() });
+    const user = userEvent.setup();
+    renderWithData(<SettingsPage />);
+    expect(await screen.findByText('Request sent')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Cancel request' }));
+    expect(requests).toContainEqual({ operation: 'CancelPoolKeyRequest', variables: {} });
+    expect(await screen.findByRole('button', { name: 'Request a token' })).toBeVisible();
+  });
+
+  it('shows a no with its note and the date to ask again', async () => {
+    Object.assign(poolKey, {
+      state: 'DENIED',
+      note: 'Try later',
+      askAgainAt: '2026-11-29T10:00:00.000Z',
+    });
+    renderWithData(<SettingsPage />);
+    expect(await screen.findByText('Request denied')).toBeVisible();
+    expect(screen.getByText('Note: “Try later”', { exact: false })).toBeVisible();
+    expect(screen.getByText(/You can ask again on Nov 29, 2026/)).toBeVisible();
+    expect(screen.getByText('use your own key')).toBeVisible();
+  });
+
+  it('offers the waiting list when the pool is empty', async () => {
+    poolKey.poolEmpty = true;
+    renderWithData(<SettingsPage />);
+    expect(await screen.findByText('No keys are free right now.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Join the waiting list' })).toBeVisible();
   });
 });

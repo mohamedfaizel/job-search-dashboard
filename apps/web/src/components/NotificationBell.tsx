@@ -1,21 +1,54 @@
 'use client';
 
 import type { AppNotification } from '@jobsearch/data';
-import { useMarkNotificationsRead, useNotifications } from '@jobsearch/data';
+import {
+  useApproveKeyRequest,
+  useDenyKeyRequest,
+  useMarkNotificationsRead,
+  useNotifications,
+} from '@jobsearch/data';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useErrorText } from '../i18n/useErrorText';
 import { MAKER } from '../lib/maker';
 import { openMessageWindow } from '../lib/message-window';
 import { useDismiss } from '../lib/use-dismiss';
+import { TipButton } from './TipButton';
 import { useToast } from './Toasts';
 
 /** A job's link: Job posts opens its popup. */
 export const jobLink = (jobId: string) => `/jobs?job=${encodeURIComponent(jobId)}`;
 
+/** Key pool notifications: their text, and the page they open (admins' or your Settings). */
+const KEY_POOL: Partial<
+  Record<
+    string,
+    {
+      text:
+        | 'keyRequest'
+        | 'poolLow'
+        | 'keyApproved'
+        | 'keyDenied'
+        | 'keyEmpty'
+        | 'keyLimit'
+        | 'keyTakenBack';
+      link: string;
+    }
+  >
+> = {
+  KEY_REQUEST: { text: 'keyRequest', link: '/admin?tab=keys' },
+  POOL_LOW: { text: 'poolLow', link: '/admin?tab=keys' },
+  KEY_APPROVED: { text: 'keyApproved', link: '/settings' },
+  KEY_DENIED: { text: 'keyDenied', link: '/settings' },
+  KEY_EMPTY: { text: 'keyEmpty', link: '/settings' },
+  KEY_LIMIT: { text: 'keyLimit', link: '/settings' },
+  KEY_TAKEN_BACK: { text: 'keyTakenBack', link: '/settings' },
+};
+
 /** "5 minutes ago", in the app's language. */
-function timeAgo(iso: string, locale: string, now = Date.now()): string {
+export function timeAgo(iso: string, locale: string, now = Date.now()): string {
   const seconds = Math.round((new Date(iso).getTime() - now) / 1000);
   const format = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
   const steps: [Intl.RelativeTimeFormatUnit, number][] = [
@@ -34,19 +67,93 @@ function useHeadline() {
   const t = useTranslations('Notifications');
   const locale = useLocale();
   return useCallback(
-    (item: AppNotification) =>
-      item.kind === 'MESSAGE_REPLY'
-        ? t('messageReply', { name: item.searchName || MAKER.name })
-        : item.kind === 'INTERVIEW_SOON' && item.at
-          ? t('interviewSoon', {
-              when: new Intl.DateTimeFormat(locale, {
-                weekday: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              }).format(new Date(item.at)),
-            })
-          : t('newMatches', { count: item.count, search: item.searchName }),
+    (item: AppNotification) => {
+      if (item.kind === 'MESSAGE_REPLY') {
+        return t('messageReply', { name: item.searchName || MAKER.name });
+      }
+      const pool = KEY_POOL[item.kind];
+      if (pool) return t(pool.text, { name: item.searchName, count: item.count });
+      return item.kind === 'INTERVIEW_SOON' && item.at
+        ? t('interviewSoon', {
+            when: new Intl.DateTimeFormat(locale, {
+              weekday: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            }).format(new Date(item.at)),
+          })
+        : t('newMatches', { count: item.count, search: item.searchName });
+    },
     [t, locale],
+  );
+}
+
+/** A Key pool notification: one line, a link, and ✓ / ✕ for a token request. */
+function KeyItem({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
+  const t = useTranslations('Notifications');
+  const locale = useLocale();
+  const headline = useHeadline();
+  const errorText = useErrorText();
+  const approve = useApproveKeyRequest();
+  const deny = useDenyKeyRequest();
+  const pool = KEY_POOL[item.kind];
+  const answered = approve.isSuccess || deny.isSuccess;
+  const error = approve.error ?? deny.error;
+  if (!pool) return null;
+  return (
+    <li className={`space-y-1.5 px-3 py-2.5 ${item.readAt ? '' : 'bg-brand-50'}`}>
+      <div className="flex items-start gap-2">
+        <p className="flex-1 text-sm text-slate-900">
+          {!item.readAt && (
+            <span
+              aria-label={t('unread')}
+              className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-600"
+            />
+          )}
+          {headline(item)}
+        </p>
+        {item.kind === 'KEY_REQUEST' && item.refId !== null && !answered && (
+          <div className="flex gap-1">
+            <TipButton
+              tip={t('approve')}
+              tone="yes"
+              disabled={approve.isPending || deny.isPending}
+              onClick={() => {
+                if (item.refId !== null) approve.mutate(item.refId);
+              }}
+            >
+              ✓
+            </TipButton>
+            <TipButton
+              tip={t('deny')}
+              tone="no"
+              disabled={approve.isPending || deny.isPending}
+              onClick={() => {
+                if (item.refId !== null) deny.mutate({ id: item.refId });
+              }}
+            >
+              ✕
+            </TipButton>
+          </div>
+        )}
+      </div>
+      {item.kind === 'KEY_DENIED' && item.searchName && (
+        <p className="text-xs text-slate-700">{t('keyDeniedNote', { note: item.searchName })}</p>
+      )}
+      {error && (
+        <p role="alert" className="text-xs text-red-700">
+          {errorText(error)}
+        </p>
+      )}
+      <p className="text-xs text-slate-600">
+        {item.kind === 'KEY_REQUEST' && (
+          <>{answered ? t('answered') : t('keyRequestHint', { count: item.count })} · </>
+        )}
+        {timeAgo(item.createdAt, locale)} ·{' '}
+        <Link href={pool.link} onClick={onOpen} className="text-brand-700 hover:underline">
+          {pool.link.startsWith('/admin') ? t('openKeyPool') : t('openSettings')}
+        </Link>
+      </p>
+    </li>
   );
 }
 
@@ -151,19 +258,27 @@ export function NotificationBell() {
       for (const item of data.items) {
         if (seen.current.has(item.id) || item.readAt) continue;
         const first = item.jobs[0];
+        const pool = KEY_POOL[item.kind];
         toast(headline(item), {
           tone: 'info',
           action:
             item.kind === 'MESSAGE_REPLY'
               ? { label: t('show'), onClick: openMessageWindow }
-              : first
+              : pool
                 ? {
                     label: t('show'),
                     onClick: () => {
-                      router.push(jobLink(first.id));
+                      router.push(pool.link);
                     },
                   }
-                : undefined,
+                : first
+                  ? {
+                      label: t('show'),
+                      onClick: () => {
+                        router.push(jobLink(first.id));
+                      },
+                    }
+                  : undefined,
         });
       }
     }
@@ -207,15 +322,25 @@ export function NotificationBell() {
           <p className="border-b border-slate-200 px-3 py-2 text-sm font-semibold">{t('title')}</p>
           {data?.items.length ? (
             <ul className="max-h-[70vh] divide-y divide-slate-100 overflow-y-auto">
-              {data.items.map((item) => (
-                <Item
-                  key={item.id}
-                  item={item}
-                  onOpen={() => {
-                    setOpen(false);
-                  }}
-                />
-              ))}
+              {data.items.map((item) =>
+                KEY_POOL[item.kind] ? (
+                  <KeyItem
+                    key={item.id}
+                    item={item}
+                    onOpen={() => {
+                      setOpen(false);
+                    }}
+                  />
+                ) : (
+                  <Item
+                    key={item.id}
+                    item={item}
+                    onOpen={() => {
+                      setOpen(false);
+                    }}
+                  />
+                ),
+              )}
             </ul>
           ) : (
             <p className="px-3 py-4 text-sm text-slate-600">{t('empty')}</p>

@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import {
   apiKeys,
+  poolKey,
   gmail,
   me,
   myDesign,
@@ -23,6 +24,14 @@ afterEach(() => {
   server.resetHandlers();
   requests.length = 0;
   apiKeys.length = 0;
+  Object.assign(poolKey, {
+    state: 'NONE',
+    used: 0,
+    poolEmpty: false,
+    requestedAt: null,
+    note: null,
+    askAgainAt: null,
+  });
   me.aiProvider = 'ANTHROPIC';
   syncs.length = 0;
   otherResumes.length = 0;

@@ -1,4 +1,5 @@
 import type {
+  MyPoolKey,
   ApiKey,
   MyDesign,
   GmailAccount,
@@ -160,6 +161,17 @@ export const gmail: { configured: boolean; accounts: GmailAccount[]; found: numb
 /** Keys saved in Settings during the current test. */
 export const apiKeys: ApiKey[] = [];
 
+/** Where the fake user's Key pool request stands. */
+export const poolKey: MyPoolKey = {
+  state: 'NONE',
+  requestedAt: null,
+  note: null,
+  askAgainAt: null,
+  limit: 500,
+  used: 0,
+  poolEmpty: false,
+};
+
 /** The AI the fake user picked in Settings. */
 export const me: { aiProvider: 'ANTHROPIC' | 'OPENAI' } = { aiProvider: 'ANTHROPIC' };
 
@@ -175,6 +187,23 @@ export const ME = {
 };
 
 export const server = setupServer(
+  api.query('MyPoolKey', () => HttpResponse.json({ data: { myPoolKey: { ...poolKey } } })),
+  api.mutation('RequestPoolKey', () => {
+    requests.push({ operation: 'RequestPoolKey', variables: {} });
+    // Like the server's auto-approve: a first request gets a key at once.
+    Object.assign(poolKey, { state: 'APPROVED', used: 0 });
+    return HttpResponse.json({ data: { requestPoolKey: { ...poolKey } } });
+  }),
+  api.mutation('CancelPoolKeyRequest', () => {
+    requests.push({ operation: 'CancelPoolKeyRequest', variables: {} });
+    Object.assign(poolKey, { state: 'NONE', requestedAt: null });
+    return HttpResponse.json({ data: { cancelPoolKeyRequest: { ...poolKey } } });
+  }),
+  api.mutation('GivePoolKeyBack', () => {
+    requests.push({ operation: 'GivePoolKeyBack', variables: {} });
+    Object.assign(poolKey, { state: 'NONE' });
+    return HttpResponse.json({ data: { givePoolKeyBack: { ...poolKey } } });
+  }),
   api.query('MyApiKeys', () => HttpResponse.json({ data: { myApiKeys: [...apiKeys] } })),
   api.mutation('SaveApiKey', ({ variables }) => {
     requests.push({ operation: 'SaveApiKey', variables });

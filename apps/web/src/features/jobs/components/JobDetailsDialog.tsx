@@ -74,19 +74,22 @@ const SENT: ReadonlySet<ApplicationStatus> = new Set([
   'REJECTED',
 ]);
 
-/** Company · place · posted · seniority · workplace · visa · salary · German, on one line. */
-function MetaLine({ job }: { job: Job }) {
+/**
+ * Company · place · posted · seniority · workplace · visa · salary · German, on one line.
+ * On a phone the header shows only `short` (company · city · seniority · workplace, one line),
+ * and the Job ad tab shows the `rest` (posted, visa, salary, German).
+ */
+function MetaLine({ job, part = 'all' }: { job: Job; part?: 'all' | 'short' | 'rest' }) {
   const insights = useJobInsights(job.id);
   const f = useJobFormat();
   const t = useTranslations('Jobs.popup');
   const salary = f.salary(job.salaryMinUsd, job.salaryMaxUsd);
   const level = insights.data ? f.germanLevel(insights.data) : '';
-  const parts: ReactNode[] = [
-    job.company.name,
-    [job.city, job.countryCode].filter(Boolean).join(', '),
-    t('posted', { date: f.date(job.postedAt) }),
-    job.seniority && capitalize(job.seniority),
-    job.workplace && f.workplace(job.workplace),
+  const place = [job.city, job.countryCode].filter(Boolean).join(', ');
+  const posted = t('posted', { date: f.date(job.postedAt) });
+  const seniority = job.seniority && capitalize(job.seniority);
+  const workplace = job.workplace && f.workplace(job.workplace);
+  const rest: ReactNode[] = [
     job.visa === 'OFFERS' && f.visa('OFFERS'),
     salary && (job.salaryEstimated ? t('estimated', { salary }) : salary),
     insights.data?.germanRequired && (
@@ -97,13 +100,19 @@ function MetaLine({ job }: { job: Job }) {
         {level ? t('germanLevelRequired', { level }) : t('germanRequired')}
       </span>
     ),
-  ].filter(Boolean);
+  ];
+  const byPart: Record<typeof part, ReactNode[]> = {
+    all: [job.company.name, place, posted, seniority, workplace, ...rest],
+    short: [job.company.name, job.city ?? place, seniority, workplace],
+    rest: [posted, ...rest],
+  };
+  const parts = byPart[part].filter(Boolean);
   return (
-    <p className="text-sm text-slate-600">
-      {parts.map((part, i) => (
+    <p className={`text-sm text-slate-600 ${part === 'short' ? 'truncate' : ''}`}>
+      {parts.map((item, i) => (
         <span key={i}>
           {i > 0 && ' · '}
-          {part}
+          {item}
         </span>
       ))}
     </p>
@@ -174,26 +183,36 @@ function JobDetails({
       <header className="flex flex-col gap-2 border-b border-slate-200 px-4 pt-3 sm:px-5 sm:pt-4">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1 space-y-1 pt-1.5 sm:pt-1">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <div className="flex items-center gap-x-2.5 gap-y-1 sm:flex-wrap">
               <h2
                 id={`job-dialog-title-${job.id}`}
-                className="max-w-full truncate text-base font-semibold text-slate-900 sm:max-w-none sm:text-lg sm:whitespace-normal"
+                className="max-w-full min-w-0 truncate text-base font-semibold text-slate-900 sm:max-w-none sm:text-lg sm:whitespace-normal"
               >
                 {job.title}
               </h2>
               {job.fitScore !== null && (
                 <span
                   title={t('fitPillHint')}
-                  className={`inline-flex h-6 items-center rounded-full px-2 text-xs font-medium ring-1 ring-inset ${FIT_PILL[scoreTone(job.fitScore) as keyof typeof FIT_PILL]}`}
+                  className={`inline-flex h-6 shrink-0 items-center rounded-full px-2 text-xs font-medium whitespace-nowrap ring-1 ring-inset ${FIT_PILL[scoreTone(job.fitScore) as keyof typeof FIT_PILL]}`}
                 >
                   {t('fitPill', { score: job.fitScore })}
                 </span>
               )}
             </div>
-            <MetaLine job={job} />
-            {/* Opening the Apply tab checks again, so you don't apply to a closed ad. */}
-            <StillOpen job={job} autoCheck={tab === 'apply'} />
-            <JobTrust job={job} />
+            <MetaLine job={job} part={isPhone ? 'short' : 'all'} />
+            {/* Opening the Apply tab checks again, so you don't apply to a closed ad. On a phone
+                both checks are small chips in one row, so the tabs get the screen. */}
+            {isPhone ? (
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <StillOpen job={job} autoCheck={tab === 'apply'} compact />
+                <JobTrust job={job} compact />
+              </div>
+            ) : (
+              <>
+                <StillOpen job={job} autoCheck={tab === 'apply'} />
+                <JobTrust job={job} />
+              </>
+            )}
           </div>
           <div className="flex shrink-0 items-center">
             <button
@@ -360,6 +379,11 @@ function JobDetails({
             <MessagesPanel job={job} active={tab === 'messages'} />
           </TabPanel>
           <TabPanel id="ad" active={tab}>
+            {isPhone && (
+              <div className="mb-3">
+                <MetaLine job={job} part="rest" />
+              </div>
+            )}
             <JobAdPanel jobId={job.id} description={job.description} />
           </TabPanel>
           <TabPanel id="match" active={tab}>
