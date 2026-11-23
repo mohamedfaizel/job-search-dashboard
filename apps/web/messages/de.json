@@ -2614,7 +2614,6 @@
   },
   "Site": {
     "nav": {
-      "how": "So funktioniert's",
       "features": "Funktionen",
       "about": "Über uns",
       "logIn": "Anmelden",
@@ -2630,23 +2629,6 @@
     },
     "hero": {
       "cta": "Konto erstellen"
-    },
-    "sources": {
-      "label": "Jobs von",
-      "germany": "Deutschland",
-      "careers": "Karriereseiten von Firmen",
-      "jobHunter": "40 Live-Quellen · 500 Credits inklusive",
-      "byHand": "Job selbst hinzufügen"
-    },
-    "how": {
-      "title": "So funktioniert's",
-      "sub": "Drei Schritte, jeden Tag gleich.",
-      "s1Title": "Jobs finden",
-      "s1": "Quelle wählen, Jobtitel eingeben, importieren. Neue Jobs erscheinen in Meine Jobs mit dem Hinweis Neu.",
-      "s2Title": "Mit Hilfe bewerben",
-      "s2": "Sehen Sie Ihren Fit-Wert und die fehlenden Skills. Claude schreibt Lebenslauf, Anschreiben und Antworten. Sie prüfen und senden.",
-      "s3Title": "Den Überblick behalten",
-      "s3": "Verschieben Sie jeden Job auf Ihrem Board. Gmail erkennt Antworten und schlägt den nächsten Schritt vor."
     },
     "unique": {
       "title": "Was die App anders macht",
