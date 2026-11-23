@@ -9,8 +9,8 @@ const H2 = 'text-3xl font-bold tracking-tight text-balance sm:text-4xl';
 /**
  * The intro page, open to everyone at / and at /about (the i in the app's header). Top to
  * bottom: the maker's welcome (big desk photo, who built the app and why, Message / LinkedIn /
- * GitHub), the job sources, how it works, what makes it different (a slider), the Job Market
- * with its 40+ live sources, three features, privacy, and a last call to action.
+ * GitHub), the Job Market with its 40+ live sources and Apply, what makes it different (a
+ * slider), Resume and Tracker, privacy, and a last call to action.
  */
 export function IntroPage({ loggedIn, current }: { loggedIn: boolean; current?: 'about' }) {
   return (
@@ -29,76 +29,22 @@ export function IntroContent({ loggedIn }: { loggedIn: boolean }) {
   return (
     <>
       <MakerWelcome title={t('title')} page loggedIn={loggedIn} />
-      <SourceChips />
-      <HowItWorks />
+      <div id="features" className="scroll-mt-4">
+        <LiveSources />
+        <Features keys={['apply']} />
+      </div>
       <WhatIsDifferent />
-      <LiveSources />
-      <Features />
+      <Features keys={['resume', 'tracker']} />
       <Trust />
       <FinalCall loggedIn={loggedIn} />
     </>
   );
 }
 
-function SourceChips() {
-  const t = useTranslations('Site.sources');
-  const chip =
-    'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold';
-  return (
-    <div className="border-b border-slate-200 bg-slate-100 py-8">
-      <ul className={`${WRAP} flex flex-wrap items-center gap-3`} aria-label={t('label')}>
-        <li
-          className="mr-1 text-sm font-bold tracking-wide text-slate-500 uppercase"
-          aria-hidden="true"
-        >
-          {t('label')}
-        </li>
-        <li className={chip}>
-          Arbeitsagentur <small className="font-normal text-slate-500">{t('germany')}</small>
-        </li>
-        <li className={chip}>
-          {t('careers')}{' '}
-          <small className="font-normal text-slate-500">Greenhouse · Lever · Ashby</small>
-        </li>
-        <li className={chip}>
-          JobHunter <small className="font-normal text-slate-500">{t('jobHunter')}</small>
-        </li>
-        <li className={chip}>{t('byHand')}</li>
-      </ul>
-    </div>
-  );
-}
-
-function HowItWorks() {
-  const t = useTranslations('Site.how');
-  const steps = [1, 2, 3] as const;
-  return (
-    <section id="how" aria-labelledby="how-title" className="scroll-mt-4 py-16">
-      <div className={WRAP}>
-        <h2 id="how-title" className={H2}>
-          {t('title')}
-        </h2>
-        <p className="mt-2 mb-8 text-slate-600">{t('sub')}</p>
-        <ol className="grid gap-6 md:grid-cols-3">
-          {steps.map((n) => (
-            <li key={n} className="border-t-[3px] border-black pt-4">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-400 text-sm font-black">
-                {n}
-              </span>
-              <h3 className="mt-3 text-lg font-bold">{t(`s${n}Title`)}</h3>
-              <p className="mt-1 text-slate-700">{t(`s${n}`)}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
 function WhatIsDifferent() {
   const t = useTranslations('Site.unique');
   return (
-    <section aria-labelledby="unique-title" className="bg-slate-100 py-16">
+    <section aria-labelledby="unique-title" className="py-16">
       <div className={WRAP}>
         <h2 id="unique-title" className={H2}>
           {t('title')}
@@ -162,11 +108,14 @@ const FEATURES = [
   { key: 'tracker', img: '/site/tracker.jpg', h: 773 },
 ] as const;
 
-function Features() {
+type FeatureKey = (typeof FEATURES)[number]['key'];
+
+/** Feature blocks, grey and white in turn, the picture switching sides. */
+function Features({ keys }: { keys: readonly FeatureKey[] }) {
   const t = useTranslations('Site.features');
   return (
-    <div id="features" className="scroll-mt-4">
-      {FEATURES.map(({ key, img, h }, i) => {
+    <>
+      {FEATURES.filter(({ key }) => keys.includes(key)).map(({ key, img, h }, i) => {
         const flip = i % 2 === 1;
         return (
           <section
@@ -203,7 +152,7 @@ function Features() {
           </section>
         );
       })}
-    </div>
+    </>
   );
 }
 

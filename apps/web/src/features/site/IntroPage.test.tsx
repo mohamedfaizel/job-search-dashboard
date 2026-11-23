@@ -132,6 +132,19 @@ describe('IntroPage', () => {
     }
   });
 
+  it('puts the Job Market and Apply right after the welcome, before the slider', () => {
+    renderIntro();
+    const h2s = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    expect(h2s.slice(0, 3)).toEqual([
+      'Live jobs from 40+ sources',
+      'Apply in three short steps',
+      'What makes it different',
+    ]);
+    // The sources strip and How it works are gone, also from the header.
+    expect(screen.queryByRole('list', { name: 'Jobs from' })).not.toBeInTheDocument();
+    expect(screen.queryByText('How it works')).not.toBeInTheDocument();
+  });
+
   it('shows the Job Market next to all 40 live sources', () => {
     renderIntro();
     const market = screen.getByRole('region', { name: 'Live jobs from 40+ sources' });

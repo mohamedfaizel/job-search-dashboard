@@ -44,11 +44,6 @@ export function SiteHeader({ loggedIn, current }: { loggedIn: boolean; current?:
           <nav aria-label={t('main')} className="ml-6 hidden lg:block">
             <ul className="flex gap-6 text-sm text-neutral-300">
               <li>
-                <Link href="/#how" className="hover:text-white">
-                  {t('how')}
-                </Link>
-              </li>
-              <li>
                 <Link href="/#features" className="hover:text-white">
                   {t('features')}
                 </Link>

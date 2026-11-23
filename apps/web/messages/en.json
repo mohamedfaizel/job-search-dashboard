@@ -2614,7 +2614,6 @@
   },
   "Site": {
     "nav": {
-      "how": "How it works",
       "features": "Features",
       "about": "About us",
       "logIn": "Log in",
@@ -2630,23 +2629,6 @@
     },
     "hero": {
       "cta": "Create my account"
-    },
-    "sources": {
-      "label": "Jobs from",
-      "germany": "Germany",
-      "careers": "Company career pages",
-      "jobHunter": "40 live sources · 500 credits included",
-      "byHand": "Add a job by hand"
-    },
-    "how": {
-      "title": "How it works",
-      "sub": "Three steps, the same every day.",
-      "s1Title": "Find jobs",
-      "s1": "Pick where to look, type a job title and import. New jobs land in My Jobs with a New badge.",
-      "s2Title": "Apply with help",
-      "s2": "See your Fit score and the skills you're missing. Claude writes your resume, cover letter and form answers. You check them and send.",
-      "s3Title": "Keep track",
-      "s3": "Move each job on your board. Gmail spots replies and suggests the next step."
     },
     "unique": {
       "title": "What makes it different",
