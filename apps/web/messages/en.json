@@ -2623,23 +2623,13 @@
       "main": "Site"
     },
     "message": {
-      "eyebrow": "A message from Mohamed Faizel",
-      "title": "I built this for my own job search",
       "p1": "Looking for a job meant many sites, many ads and a new resume for each one. So I made one place that does it all for me.",
       "p2": "Now I'm glad to share it with you. I hope it makes your path to the next job a little easier.",
       "sign": "Good luck with your search, Mohamed Faizel",
       "photoAlt": "Mohamed Faizel at his desk with a laptop"
     },
     "hero": {
-      "eyebrow": "Job search for Germany and beyond",
-      "titleStart": "Find the right jobs.",
-      "titleMark": "Apply faster.",
-      "titleEnd": "Keep track.",
-      "lead": "Job Search Hunter puts jobs from the Arbeitsagentur, company career pages and JobHunter into one list. It shows how well each job fits your resume and helps you apply in English or German.",
-      "cta": "Create my account",
-      "watch": "Watch the demo",
-      "fine": "Sign up with your email. It takes about a minute, and your account comes with 500 JobHunter credits.",
-      "shotAlt": "My Jobs: a table of jobs with fit scores, places and status"
+      "cta": "Create my account"
     },
     "sources": {
       "label": "Jobs from",
@@ -2723,26 +2713,6 @@
     "about": {
       "metaTitle": "About us",
       "title": "One person's job search, now shared with everyone",
-      "storyTitle": "The story",
-      "s1Title": "The problem",
-      "s1": "Looking for a job meant many websites, many ads and a new resume for each one. It was easy to lose track of where I had applied.",
-      "s2Title": "What I built",
-      "s2": "One place that brings the jobs together, shows how well each one fits, helps write the application and keeps track of every answer.",
-      "s3Title": "Why I share it",
-      "s3": "It made my own search easier. I hope it does the same for you, wherever you are looking.",
-      "valuesTitle": "What we believe",
-      "v1Title": "Your data is yours",
-      "v1": "Only you see your jobs, resume and board. Admins only see counts.",
-      "v2Title": "You stay in control",
-      "v2": "Claude writes a draft. You check every word before anything is sent.",
-      "v3Title": "Honest job ads",
-      "v3": "The app warns you about scams and old, reposted ads.",
-      "v4Title": "Two languages",
-      "v4": "The whole app works in English and German, and so do your resumes.",
-      "builtTitle": "How it's built",
-      "builtSub": "For anyone who is curious about the technology.",
-      "tests": "Tests on every change",
-      "phoneApp": "Expo phone app",
       "messageButton": "Message {name}"
     }
   },

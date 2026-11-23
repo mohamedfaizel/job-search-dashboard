@@ -1,8 +1,7 @@
 import type { CookieOptions } from 'express';
 
 export const SESSION_COOKIE = 'session';
-/** How long you stay logged in, on the website and the phone app. */
-export const SESSION_DAYS = 15;
+export const SESSION_DAYS = 7;
 
 /**
  * httpOnly: page JavaScript can't read it, so an XSS bug can't steal the session.

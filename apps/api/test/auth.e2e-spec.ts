@@ -60,7 +60,7 @@ describe('auth', () => {
       role: 'ADMIN',
     });
     expect(String(signUp.cookies)).toMatch(
-      /^session=.+; Max-Age=1296000; Path=\/;.*HttpOnly; SameSite=Lax/,
+      /^session=.+; Max-Age=604800; Path=\/;.*HttpOnly; SameSite=Lax/,
     );
     expect((await gql<{ me: { email: string } }>(ME)).body.data?.me.email).toBe(
       'mohamed@example.com',

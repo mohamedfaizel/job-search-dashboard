@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { Locale } from '@/i18n/config';
 import { Intl } from '../../test/intl';
 import { SLIDE_MS } from './DifferentSlider';
-import { IntroPage } from './IntroPage';
+import { IntroContent, IntroPage } from './IntroPage';
 import { JOB_HUNTER_SOURCES, SOURCE_COUNT } from './sources';
 
 function renderIntro({
@@ -17,17 +17,53 @@ function renderIntro({
 }
 
 describe('IntroPage', () => {
-  it('opens with the message from the maker, then the promise and Sign up', () => {
+  it('opens with the maker welcome from About us, and ends with Sign up', () => {
     renderIntro();
     const headings = screen.getAllByRole('heading').map((h) => h.textContent);
-    expect(headings[0]).toBe('I built this for my own job search');
+    expect(headings[0]).toBe("One person's job search, now shared with everyone");
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Find the right jobs. Apply faster. Keep track.',
+      "One person's job search, now shared with everyone",
     );
-    for (const link of screen.getAllByRole('link', { name: 'Create my account' })) {
-      expect(link).toHaveAttribute('href', '/signup');
-    }
-    expect(screen.getByText(/comes with 500 JobHunter credits/)).toBeInTheDocument();
+    const welcome = screen.getByRole('region', { name: /One person's job search/ });
+    expect(
+      within(welcome).getByRole('img', { name: 'Mohamed Faizel at his desk with a laptop' }),
+    ).toBeInTheDocument();
+    expect(within(welcome).getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+      'href',
+      'https://github.com/mohamedfaizel',
+    );
+    // A visitor logs in first, then comes back with the message window open.
+    expect(within(welcome).getByRole('link', { name: 'Message Mohamed Faizel' })).toHaveAttribute(
+      'href',
+      '/login?next=%2Fabout%3Fmessage%3D1',
+    );
+    // The old big title and the story, values and technology cards are gone.
+    expect(screen.queryByText(/Apply faster/)).not.toBeInTheDocument();
+    expect(screen.queryByText('The story')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Create my account' })).toHaveAttribute(
+      'href',
+      '/signup',
+    );
+  });
+
+  it('marks About us as the page you are on when opened from /about', () => {
+    render(
+      <Intl>
+        <IntroPage loggedIn={false} current="about" />
+      </Intl>,
+    );
+    expect(screen.getByRole('link', { name: 'About us', current: 'page' })).toBeInTheDocument();
+  });
+
+  it('inside the app, opens the message window and ends with My Jobs', () => {
+    render(
+      <Intl>
+        <IntroContent loggedIn />
+      </Intl>,
+    );
+    expect(screen.getByRole('button', { name: 'Message Mohamed Faizel' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open My Jobs' })).toHaveAttribute('href', '/jobs');
+    expect(screen.queryByRole('link', { name: 'Create my account' })).not.toBeInTheDocument();
   });
 
   it('shows Log in and Sign up to visitors, and My Jobs when logged in', () => {
@@ -109,11 +145,6 @@ describe('IntroPage', () => {
     expect(screen.queryByText('One search, many job boards')).not.toBeInTheDocument();
   });
 
-  it('hides the demo button until there is a video', () => {
-    renderIntro();
-    expect(screen.queryByRole('link', { name: /Watch the demo/ })).not.toBeInTheDocument();
-  });
-
   it('has no footer', () => {
     renderIntro();
     expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument();
@@ -122,7 +153,7 @@ describe('IntroPage', () => {
   it('speaks German', () => {
     renderIntro({ locale: 'de' });
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Passende Jobs finden. Schneller bewerben. Den Überblick behalten.',
+      'Die Jobsuche einer Person, jetzt für alle',
     );
     expect(screen.getAllByRole('link', { name: 'Konto erstellen' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument();

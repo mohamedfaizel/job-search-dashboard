@@ -11,6 +11,3 @@ export const MAKER = {
   github: process.env.NEXT_PUBLIC_MAKER_GITHUB_URL ?? 'https://github.com/mohamedfaizel',
   linkedin: process.env.NEXT_PUBLIC_MAKER_LINKEDIN_URL ?? '',
 } as const;
-
-/** The demo video. Until it is set, the intro page hides its "Watch the demo" button. */
-export const DEMO_VIDEO_URL = process.env.NEXT_PUBLIC_DEMO_VIDEO_URL ?? '';

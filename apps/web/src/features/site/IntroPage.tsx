@@ -1,83 +1,42 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { DEMO_VIDEO_URL } from '@/lib/maker';
 import { DifferentSlider } from './DifferentSlider';
-import { GOLD_BUTTON, MakerWelcome, Shot, SiteHeader, Tag, TickList, WRAP } from './SiteChrome';
+import { MakerWelcome, Shot, SiteHeader, Tag, TickList, WRAP } from './SiteChrome';
 import { JOB_HUNTER_SOURCES } from './sources';
 
 const H2 = 'text-3xl font-bold tracking-tight text-balance sm:text-4xl';
 
 /**
- * The page people see before they log in (/). Top to bottom: a message from the maker, what
- * the app does with a big screenshot, the job sources, how it works, what makes it different
- * (a slider), the Job Market with its 40+ live sources, three features, privacy, and a last
- * Sign up button.
+ * The intro page, open to everyone at / and at /about (the i in the app's header). Top to
+ * bottom: the maker's welcome (big desk photo, who built the app and why, Message / LinkedIn /
+ * GitHub), the job sources, how it works, what makes it different (a slider), the Job Market
+ * with its 40+ live sources, three features, privacy, and a last call to action.
  */
-export function IntroPage({ loggedIn }: { loggedIn: boolean }) {
+export function IntroPage({ loggedIn, current }: { loggedIn: boolean; current?: 'about' }) {
   return (
     <div className="bg-white text-slate-900">
-      <SiteHeader loggedIn={loggedIn} />
+      <SiteHeader loggedIn={loggedIn} {...(current ? { current } : {})} />
       <main id="main">
-        <MakerMessage />
-        <Hero />
-        <SourceChips />
-        <HowItWorks />
-        <WhatIsDifferent />
-        <LiveSources />
-        <Features />
-        <Trust />
-        <FinalCall />
+        <IntroContent loggedIn={loggedIn} />
       </main>
     </div>
   );
 }
 
-function MakerMessage() {
-  const t = useTranslations('Site.message');
-  return <MakerWelcome eyebrow={t('eyebrow')} title={t('title')} />;
-}
-
-function Hero() {
-  const t = useTranslations('Site.hero');
+/** The page's sections without a header, so the app can show them inside its own frame. */
+export function IntroContent({ loggedIn }: { loggedIn: boolean }) {
+  const t = useTranslations('Site.about');
   return (
-    <section className="pt-14">
-      <div className={WRAP}>
-        <p className="text-sm font-bold tracking-wide text-slate-500 uppercase">{t('eyebrow')}</p>
-        <h1 className="mt-3 max-w-[16ch] text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-6xl">
-          {t('titleStart')}{' '}
-          <span className="bg-[linear-gradient(transparent_62%,var(--color-brand-400)_62%_92%,transparent_92%)]">
-            {t('titleMark')}
-          </span>{' '}
-          {t('titleEnd')}
-        </h1>
-        <p className="mt-5 max-w-[60ch] text-lg text-slate-700">{t('lead')}</p>
-        <div className="mt-7 flex flex-wrap gap-3">
-          <Link href="/signup" className={`${GOLD_BUTTON} w-full sm:w-auto`}>
-            {t('cta')}
-          </Link>
-          {DEMO_VIDEO_URL && (
-            <a
-              href={DEMO_VIDEO_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 py-3 font-semibold hover:bg-slate-50 sm:w-auto"
-            >
-              <span
-                aria-hidden="true"
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-[10px] text-brand-400"
-              >
-                ▶
-              </span>
-              {t('watch')}
-            </a>
-          )}
-        </div>
-        <p className="mt-3 text-sm text-slate-500">{t('fine')}</p>
-        <div className="relative z-10 mt-10 -mb-16 sm:-mb-28">
-          <Shot src="/site/my-jobs.jpg" alt={t('shotAlt')} width={1280} height={900} />
-        </div>
-      </div>
-    </section>
+    <>
+      <MakerWelcome title={t('title')} page loggedIn={loggedIn} />
+      <SourceChips />
+      <HowItWorks />
+      <WhatIsDifferent />
+      <LiveSources />
+      <Features />
+      <Trust />
+      <FinalCall loggedIn={loggedIn} />
+    </>
   );
 }
 
@@ -86,7 +45,7 @@ function SourceChips() {
   const chip =
     'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold';
   return (
-    <div className="border-b border-slate-200 bg-slate-100 pt-24 pb-8 sm:pt-36">
+    <div className="border-b border-slate-200 bg-slate-100 py-8">
       <ul className={`${WRAP} flex flex-wrap items-center gap-3`} aria-label={t('label')}>
         <li
           className="mr-1 text-sm font-bold tracking-wide text-slate-500 uppercase"
@@ -280,7 +239,8 @@ function Trust() {
   );
 }
 
-function FinalCall() {
+/** Visitors are asked to sign up; someone logged in goes back to My Jobs. */
+function FinalCall({ loggedIn }: { loggedIn: boolean }) {
   const t = useTranslations('Site');
   return (
     <section className="bg-brand-400 py-14 text-center">
@@ -288,10 +248,10 @@ function FinalCall() {
         <h2 className={H2}>{t('final.title')}</h2>
         <p className="mx-auto mt-3 max-w-prose">{t('final.text')}</p>
         <Link
-          href="/signup"
+          href={loggedIn ? '/jobs' : '/signup'}
           className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-black px-6 py-3 font-bold text-brand-400 hover:bg-neutral-800 sm:w-auto"
         >
-          {t('hero.cta')}
+          {loggedIn ? t('nav.openApp') : t('hero.cta')}
         </Link>
       </div>
     </section>

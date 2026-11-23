@@ -16,7 +16,6 @@ import { MAKER } from '@/lib/maker';
 export const WRAP = 'mx-auto w-full max-w-6xl px-4 sm:px-10';
 const GOLD =
   'inline-flex items-center justify-center rounded-lg bg-brand-400 font-bold whitespace-nowrap text-black hover:bg-brand-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black';
-export const GOLD_BUTTON = `${GOLD} px-5 py-3`;
 /** The smaller gold button in the header. */
 const GOLD_SMALL = `${GOLD} px-2.5 py-1.5 text-sm sm:px-3`;
 /** On the gold contact band: black with gold text. */

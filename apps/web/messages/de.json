@@ -2623,23 +2623,13 @@
       "main": "Website"
     },
     "message": {
-      "eyebrow": "Eine Nachricht von Mohamed Faizel",
-      "title": "Ich habe die App für meine eigene Jobsuche gebaut",
       "p1": "Jobsuche hieß für mich: viele Seiten, viele Anzeigen und für jede einen neuen Lebenslauf. Also habe ich einen Ort gebaut, der das alles für mich erledigt.",
       "p2": "Jetzt teile ich die App gern mit Ihnen. Ich hoffe, sie macht Ihren Weg zum nächsten Job ein wenig leichter.",
       "sign": "Viel Erfolg bei Ihrer Suche, Mohamed Faizel",
       "photoAlt": "Mohamed Faizel an seinem Schreibtisch mit Laptop"
     },
     "hero": {
-      "eyebrow": "Jobsuche für Deutschland und weltweit",
-      "titleStart": "Passende Jobs finden.",
-      "titleMark": "Schneller bewerben.",
-      "titleEnd": "Den Überblick behalten.",
-      "lead": "Job Search Hunter holt Jobs von der Arbeitsagentur, von Karriereseiten und von JobHunter in eine Liste. Die App zeigt, wie gut jede Stelle zu Ihrem Lebenslauf passt, und hilft beim Bewerben auf Deutsch oder Englisch.",
-      "cta": "Konto erstellen",
-      "watch": "Demo ansehen",
-      "fine": "Registrierung mit Ihrer E-Mail. Dauert etwa eine Minute, und Ihr Konto hat gleich 500 JobHunter-Credits.",
-      "shotAlt": "Meine Jobs: eine Tabelle mit Fit-Werten, Orten und Status"
+      "cta": "Konto erstellen"
     },
     "sources": {
       "label": "Jobs von",
@@ -2723,26 +2713,6 @@
     "about": {
       "metaTitle": "Über uns",
       "title": "Die Jobsuche einer Person, jetzt für alle",
-      "storyTitle": "Die Geschichte",
-      "s1Title": "Das Problem",
-      "s1": "Jobsuche hieß: viele Webseiten, viele Anzeigen und für jede einen neuen Lebenslauf. Schnell wusste ich nicht mehr, wo ich mich beworben hatte.",
-      "s2Title": "Was ich gebaut habe",
-      "s2": "Einen Ort, der die Jobs sammelt, zeigt, wie gut jede Stelle passt, beim Schreiben der Bewerbung hilft und jede Antwort festhält.",
-      "s3Title": "Warum ich sie teile",
-      "s3": "Sie hat meine eigene Suche leichter gemacht. Ich hoffe, sie hilft auch Ihnen, egal wo Sie suchen.",
-      "valuesTitle": "Was uns wichtig ist",
-      "v1Title": "Ihre Daten gehören Ihnen",
-      "v1": "Nur Sie sehen Ihre Jobs, Ihren Lebenslauf und Ihr Board. Admins sehen nur Zahlen.",
-      "v2Title": "Sie behalten die Kontrolle",
-      "v2": "Claude schreibt einen Entwurf. Sie prüfen jedes Wort, bevor etwas gesendet wird.",
-      "v3Title": "Ehrliche Anzeigen",
-      "v3": "Die App warnt vor Betrug und alten, neu eingestellten Anzeigen.",
-      "v4Title": "Zwei Sprachen",
-      "v4": "Die ganze App funktioniert auf Deutsch und Englisch, Ihre Lebensläufe auch.",
-      "builtTitle": "So ist die App gebaut",
-      "builtSub": "Für alle, die die Technik interessiert.",
-      "tests": "Tests bei jeder Änderung",
-      "phoneApp": "Expo-Handy-App",
       "messageButton": "Nachricht an {name}"
     }
   },
