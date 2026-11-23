@@ -65,7 +65,32 @@
     "keyDenied": "Token-Anfrage abgelehnt.",
     "keyEmpty": "Dein Token vom Admin ist leer (Credits aufgebraucht). Frag einen neuen an oder trag deinen eigenen ein.",
     "keyLimit": "Du hast alle {count} Credits deines Tokens vom Admin genutzt.",
-    "keyTakenBack": "Der Admin hat deinen Token zurückgeholt. Imports brauchen jetzt deinen eigenen Token."
+    "keyTakenBack": "Der Admin hat deinen Token zurückgeholt. Imports brauchen jetzt deinen eigenen Token.",
+    "messageReply": "{name} hat auf deine Nachricht geantwortet",
+    "messageHint": "Zum Lesen öffnen"
+  },
+  "Maker": {
+    "madeBy": "Entwickelt von {name}",
+    "queries": "Fragen und Vorschläge willkommen",
+    "opensWindow": "Öffnet ein Nachrichtenfenster"
+  },
+  "Messages": {
+    "title": "Nachricht an {name}",
+    "sub": "Fragen und Vorschläge willkommen",
+    "close": "Schließen",
+    "hello": "Hallo! Ich habe Job Search Hunter für meine eigene Jobsuche gebaut. Wenn etwas unklar ist, nicht funktioniert oder du eine Idee hast, schreib mir hier.",
+    "loading": "Deine Nachrichten werden geladen…",
+    "topic": "Worum geht es?",
+    "topics": {
+      "QUESTION": "Frage",
+      "SUGGESTION": "Vorschlag",
+      "BROKEN": "Etwas funktioniert nicht"
+    },
+    "label": "Deine Nachricht",
+    "placeholder": "Schreib deine Nachricht",
+    "send": "Senden",
+    "sending": "Wird gesendet…",
+    "answeredBy": "{name} hat geantwortet"
   },
   "Errors": {
     "NETWORK": "Gerade keine Verbindung. Prüfe dein Internet und versuche es in einer Minute erneut.",

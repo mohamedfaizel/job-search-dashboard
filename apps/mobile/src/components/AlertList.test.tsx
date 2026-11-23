@@ -76,6 +76,33 @@ describe('AlertList', () => {
     ).toBeOnTheScreen();
   });
 
+  it('shows an answer to your message and opens the message window', async () => {
+    api([
+      notification({ id: 4, kind: 'MESSAGE_REPLY', searchName: 'Sam', jobs: [] }),
+      notification({
+        id: 5,
+        kind: 'MESSAGE_REPLY',
+        searchName: '',
+        jobs: [],
+        readAt: '2026-11-09T09:00:00.000Z',
+      }),
+    ]);
+    await renderApp(<AlertList />);
+    await fireEvent.press(await screen.findByText('Sam replied to your message'));
+    expect(router.push).toHaveBeenCalledWith('/messages');
+    // Without a name, the maker answered.
+    expect(screen.getByText('Mohamed Faizel replied to your message')).toBeOnTheScreen();
+    expect(screen.getAllByText('Open to read it ›')).toHaveLength(2);
+    expect(screen.getAllByLabelText('unread')).toHaveLength(1);
+  });
+
+  it('ends with the maker line', async () => {
+    api([]);
+    await renderApp(<AlertList />);
+    await fireEvent.press(await screen.findByRole('link', { name: /Queries and suggestions/ }));
+    expect(router.push).toHaveBeenCalledWith('/messages');
+  });
+
   it('says when there is nothing yet, without marking anything read', async () => {
     const calls = api([]);
     await renderApp(<AlertList />);

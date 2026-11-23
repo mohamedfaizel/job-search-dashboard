@@ -8,9 +8,11 @@ import { useHeadline } from '../lib/alerts';
 import { colors } from '../lib/theme';
 import { useErrorText } from '../lib/useErrorText';
 import { FitPill } from './JobRow';
+import { MakerLine } from './MakerLine';
 
 /**
- * Your notifications, newest first: new jobs from scheduled searches and interview reminders.
+ * Your notifications, newest first: new jobs from scheduled searches, interview reminders and
+ * answers to your messages (tap one to open the message window).
  * Opening the list marks them read; the ones that were new keep a red dot until you leave.
  */
 export function AlertList() {
@@ -48,6 +50,7 @@ export function AlertList() {
       keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => <Alert item={item} unread={wasUnread?.has(item.id) ?? false} />}
       ListEmptyComponent={<Text style={styles.empty}>{t('empty')}</Text>}
+      ListFooterComponent={<MakerLine />}
     />
   );
 }
@@ -56,6 +59,23 @@ function Alert({ item, unread }: { item: AppNotification; unread: boolean }) {
   const t = useTranslations('Alerts');
   const headline = useHeadline();
   const more = item.count - item.jobs.length;
+  if (item.kind === 'MESSAGE_REPLY') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          router.push('/messages');
+        }}
+        style={({ pressed }) => [styles.card, unread && styles.unread, pressed && styles.pressed]}
+      >
+        <View style={styles.headLine}>
+          {unread && <View accessibilityLabel={t('unread')} style={styles.dot} />}
+          <Text style={styles.headline}>{headline(item)}</Text>
+        </View>
+        <Text style={styles.hint}>{t('messageHint')} ›</Text>
+      </Pressable>
+    );
+  }
   return (
     <View style={[styles.card, unread && styles.unread]}>
       <View style={styles.headLine}>

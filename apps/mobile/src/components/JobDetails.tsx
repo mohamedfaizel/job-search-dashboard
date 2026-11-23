@@ -13,6 +13,7 @@ import { useFormatter, useTranslations } from 'use-intl';
 import { colors } from '../lib/theme';
 import { useErrorText } from '../lib/useErrorText';
 import { FitPill, placeOf } from './JobRow';
+import { MakerLine } from './MakerLine';
 import { StatusPicker } from './StatusPicker';
 
 /** "$90,000 – $120,000", or one end when only one is known. */
@@ -116,6 +117,7 @@ export function JobDetails({ id }: { id: string }) {
           {data.description ?? t('noAd')}
         </Text>
       </View>
+      <MakerLine />
     </ScrollView>
   );
 }

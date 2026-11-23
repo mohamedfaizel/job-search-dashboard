@@ -65,7 +65,32 @@
     "keyDenied": "Token request denied.",
     "keyEmpty": "Your token from the admin is empty (credits used up). Ask for a new one or add your own.",
     "keyLimit": "You used all {count} credits of your token from the admin.",
-    "keyTakenBack": "The admin took your token back. Imports now need your own token."
+    "keyTakenBack": "The admin took your token back. Imports now need your own token.",
+    "messageReply": "{name} replied to your message",
+    "messageHint": "Open to read it"
+  },
+  "Maker": {
+    "madeBy": "Made by {name}",
+    "queries": "Queries and suggestions welcome",
+    "opensWindow": "Opens a message window"
+  },
+  "Messages": {
+    "title": "Message {name}",
+    "sub": "Queries and suggestions welcome",
+    "close": "Close",
+    "hello": "Hi! I built Job Search Hunter for my own job search. If something is unclear, broken, or you have an idea, write to me here.",
+    "loading": "Loading your messages…",
+    "topic": "What is it about?",
+    "topics": {
+      "QUESTION": "Question",
+      "SUGGESTION": "Suggestion",
+      "BROKEN": "Something is broken"
+    },
+    "label": "Your message",
+    "placeholder": "Write your message",
+    "send": "Send",
+    "sending": "Sending…",
+    "answeredBy": "{name} replied"
   },
   "Errors": {
     "NETWORK": "Can’t connect right now. Check your internet and try again in a minute.",
