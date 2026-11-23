@@ -15,8 +15,15 @@ import { isNetworkError, useErrorText } from '../i18n/useErrorText';
 import { AccountMenu } from './AccountMenu';
 import { FlagStripe } from './FlagStripe';
 import { Logo } from './Logo';
-import { MakerLine } from './MakerLine';
-import { JobsIcon, PlusIcon, ResumeIcon, SettingsIcon, TrackerIcon } from './NavIcons';
+import {
+  HelpIcon,
+  InfoIcon,
+  JobsIcon,
+  PlusIcon,
+  ResumeIcon,
+  SettingsIcon,
+  TrackerIcon,
+} from './NavIcons';
 import { NotificationBell } from './NotificationBell';
 import { ServerDown } from './ServerDown';
 
@@ -45,6 +52,8 @@ const ALL_HREFS = [
   '/profile',
   '/settings',
   '/admin',
+  '/messages',
+  '/about',
 ];
 
 /** The first-login steps' page. */
@@ -141,13 +150,43 @@ interface TopBarProps {
   children: ReactNode;
 }
 
+/** The Settings gear: a dark box that turns gold on its page. */
+const GEAR =
+  'flex h-10 w-10 items-center justify-center rounded-md bg-neutral-800 text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white aria-[current=page]:bg-brand-400 aria-[current=page]:text-black';
+
+/** An icon in the same dark box as the Settings gear, with its name as a tooltip: ? and i. */
+function HeaderIcon({
+  href,
+  label,
+  current,
+  children,
+}: {
+  href: string;
+  label: string;
+  current: string | undefined;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      title={label}
+      aria-current={current === href ? 'page' : undefined}
+      className={GEAR}
+    >
+      {children}
+    </Link>
+  );
+}
+
 const PILL =
   'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white aria-[current=page]:bg-brand-400 aria-[current=page]:font-semibold aria-[current=page]:text-black';
 
 /**
  * The header: a black bar with a red and gold stripe under it, the German flag. Left: the logo
- * and the main pages (the one you are on is a gold pill). Right: a gold "+ Job Market", the 🔔 and
- * your avatar, which opens My profile, Settings, the language and Log out.
+ * and the main pages (the one you are on is a gold pill). Right: a gold "+ Job Market", the 🔔,
+ * the Settings gear, ? (Queries and suggestions), i (About us) and your avatar, which opens My
+ * profile, Settings, the language and Log out. There is no footer.
  *
  * On phones (under 768 px) the main pages move to a tab bar at the bottom, like a phone app.
  */
@@ -172,7 +211,8 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
             className="flex shrink-0 items-center gap-2 rounded-md font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
           >
             <Logo onDark className="h-9 w-9" />
-            {APP_NAME}
+            {/* Phones show only the logo, so the ?, i and the other icons fit on one line. */}
+            <span className="sr-only sm:not-sr-only">{APP_NAME}</span>
           </Link>
           <nav aria-label={t('main')} className="ml-4 hidden md:block">
             <ul className="flex gap-1">
@@ -190,7 +230,7 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
               ))}
             </ul>
           </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <Link
               href={ADD_JOBS.href}
               aria-current={current === ADD_JOBS.href ? 'page' : undefined}
@@ -205,25 +245,28 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
               aria-label={t('settings')}
               title={t('settings')}
               aria-current={current === '/settings' ? 'page' : undefined}
-              className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-brand-400 bg-neutral-800 text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white aria-[current=page]:bg-brand-400 aria-[current=page]:text-black"
+              className={GEAR}
             >
               <SettingsIcon className="h-5 w-5" />
             </Link>
+            <HeaderIcon href="/messages" label={t('help')} current={current}>
+              <HelpIcon className="h-5 w-5" />
+            </HeaderIcon>
+            <HeaderIcon href="/about" label={t('about')} current={current}>
+              <InfoIcon className="h-5 w-5" />
+            </HeaderIcon>
             <AccountMenu user={user} loggingOut={loggingOut} onLogOut={onLogOut} />
           </div>
         </div>
       </header>
       <FlagStripe afterBlack />
-      <main id="main" tabIndex={-1} className="px-4 py-6 focus:outline-none sm:px-6">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="px-4 pt-6 pb-[calc(1.5rem+var(--tabbar))] focus:outline-none sm:px-6"
+      >
         <AiNameIntl>{children}</AiNameIntl>
       </main>
-      {/* Under every page: who made the app and where to send questions. */}
-      <footer className="border-t border-slate-200 px-4 pt-4 pb-[calc(1rem+var(--tabbar))] sm:px-6">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <MakerLine loggedIn />
-          <SiteLinks />
-        </div>
-      </footer>
       <MessageWindowHost />
       <PhoneTabs current={current} />
     </div>
@@ -252,32 +295,6 @@ function PhoneTabs({ current }: { current: string | undefined }) {
             </Link>
           </li>
         ))}
-      </ul>
-    </nav>
-  );
-}
-
-/** The public pages, from inside the app: the intro's How it works and Features, and About us. */
-function SiteLinks() {
-  const t = useTranslations('Site.nav');
-  return (
-    <nav aria-label={t('main')}>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-        <li>
-          <Link href="/#how" className="hover:text-black hover:underline">
-            {t('how')}
-          </Link>
-        </li>
-        <li>
-          <Link href="/#features" className="hover:text-black hover:underline">
-            {t('features')}
-          </Link>
-        </li>
-        <li>
-          <Link href="/about" className="hover:text-black hover:underline">
-            {t('about')}
-          </Link>
-        </li>
       </ul>
     </nav>
   );

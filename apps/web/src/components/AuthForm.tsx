@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import type { SubmitEvent } from 'react';
 import { useId, useRef } from 'react';
 import { APP_NAME } from '@/lib/app-name';
-import { safeNextPath } from '@/lib/safe-next';
+import { AFTER_LOGIN, safeNextPath } from '@/lib/safe-next';
 import { useErrorText } from '../i18n/useErrorText';
 import { LanguageSwitch } from './LanguageSwitch';
 import { Logo } from './Logo';
@@ -34,13 +34,15 @@ const field =
 
 /**
  * The log-in and sign-up form. Each has its own page (/login, /signup), so a link can open
- * either one. After success you go back to the page you wanted (?next=/tracker).
+ * either one. After success you go back to the page you wanted (?next=/tracker). With no
+ * ?next=, logging in opens About us; a new account goes to My Jobs (and its first-login steps).
  */
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const errorText = useErrorText();
   const router = useRouter();
   const params = useSearchParams();
-  const next = safeNextPath(params.get('next'));
+  const asked = params.get('next');
+  const next = safeNextPath(asked, mode === 'log-in' ? AFTER_LOGIN : '/jobs');
   // /signup?invite=… from an invite link an admin made.
   const invite = params.get('invite');
   const signupState = useSignupState(invite, mode === 'sign-up');
@@ -75,7 +77,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   // Keep ?next= when switching between the two pages.
-  const otherQuery = next === '/jobs' ? {} : { next };
+  const otherQuery = asked ? { next } : {};
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">

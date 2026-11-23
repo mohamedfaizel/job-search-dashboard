@@ -2,6 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { Request, Response } from 'express';
 import { apiError } from '../common/api-error';
+import { KeyPoolService } from '../key-pool/key-pool.service';
 import { AuthLimits } from './attempt-limiter';
 import type { SessionUser } from './auth.decorators';
 import { CurrentUser, Public } from './auth.decorators';
@@ -22,7 +23,10 @@ const addressOf = (ctx: GqlContext) => ctx.req?.ip ?? 'unknown';
 @Public()
 @Resolver(() => UserModel)
 export class AuthResolver {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly keyPool: KeyPoolService,
+  ) {}
 
   @Query(() => UserModel, { nullable: true, description: 'Who is logged in, or null' })
   async me(@CurrentUser() session: SessionUser | undefined): Promise<UserModel | null> {
@@ -44,6 +48,8 @@ export class AuthResolver {
   async signUp(@Args('input') input: SignUpInput, @Context() ctx: GqlContext): Promise<UserModel> {
     limits.signUp(addressOf(ctx));
     const user = await this.auth.signUp(input);
+    // A new account gets a JobHunter key from the Key pool at once, when one is free.
+    await this.keyPool.assignOnSignup(user.id);
     ctx.res.cookie(SESSION_COOKIE, await this.auth.sessionToken(user), sessionCookieOptions());
     return toUserModel(user);
   }

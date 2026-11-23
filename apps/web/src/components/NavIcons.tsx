@@ -97,3 +97,19 @@ export const MessageIcon = (props: IconProps) => (
     <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />
   </Icon>
 );
+
+/** A ? in a circle: Queries and suggestions. */
+export const HelpIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5h.01" />
+  </Icon>
+);
+
+/** An i in a circle: About us. */
+export const InfoIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5.5M12 7.5h.01" />
+  </Icon>
+);

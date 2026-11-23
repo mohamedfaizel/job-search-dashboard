@@ -96,13 +96,6 @@ describe('AlertList', () => {
     expect(screen.getAllByLabelText('unread')).toHaveLength(1);
   });
 
-  it('ends with the maker line', async () => {
-    api([]);
-    await renderApp(<AlertList />);
-    await fireEvent.press(await screen.findByRole('link', { name: /Queries and suggestions/ }));
-    expect(router.push).toHaveBeenCalledWith('/messages');
-  });
-
   it('says when there is nothing yet, without marking anything read', async () => {
     const calls = api([]);
     await renderApp(<AlertList />);

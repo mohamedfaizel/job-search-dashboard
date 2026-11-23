@@ -324,4 +324,46 @@ describe('Key pool', () => {
     const res = await t.gql(APPROVE, { id });
     expect(res.errors?.[0]?.extensions?.['apiCode']).toBe('KEY_REQUEST_DONE');
   });
+
+  describe('on sign-up', () => {
+    const SIGN_UP = 'mutation ($input: SignUpInput!) { signUp(input: $input) { id } }';
+    const signUp = async (email: string) => {
+      const res = await t.anonymous<{ signUp: { id: number } }>(SIGN_UP, {
+        input: { name: 'New', email, password: 'a-long-password' },
+      });
+      return res.data?.signUp.id ?? 0;
+    };
+    const lentTo = async (userId: number) => t.prisma.poolKey.count({ where: { userId } });
+
+    it('gives a new account a key at once, so a later request waits for an admin', async () => {
+      await addKeys('jp_pool_one_1111 jp_pool_two_2222');
+      const id = await signUp('new@example.com');
+      expect(await lentTo(id)).toBe(1);
+      expect(await t.prisma.keyRequest.findMany({ where: { userId: id } })).toMatchObject([
+        { status: 'APPROVED', auto: true },
+      ]);
+      expect(await t.prisma.notification.findMany({ where: { userId: id } })).toMatchObject([
+        { kind: 'KEY_APPROVED' },
+      ]);
+
+      // Gives it back and asks again: not the first request, so an admin decides.
+      await t.prisma.poolKey.updateMany({ where: { userId: id }, data: { userId: null } });
+      await t.prisma.keyRequest.create({ data: { userId: id, status: 'PENDING' } });
+      expect((await t.gql<Pool>(POOL)).data?.keyPool.requests).toHaveLength(1);
+    });
+
+    it('signs up without a key when none is free or auto-approve is off', async () => {
+      const none = await signUp('none@example.com');
+      expect(await lentTo(none)).toBe(0);
+      expect(await t.prisma.keyRequest.count({ where: { userId: none } })).toBe(0);
+
+      await addKeys('jp_pool_one_1111');
+      await t.gql(
+        'mutation { updateAppSettings(input: { poolAutoApprove: false }) { poolAutoApprove } }',
+      );
+      const off = await signUp('off@example.com');
+      expect(await lentTo(off)).toBe(0);
+      expect((await t.gql<Pool>(POOL)).data?.keyPool.free).toBe(1);
+    });
+  });
 });

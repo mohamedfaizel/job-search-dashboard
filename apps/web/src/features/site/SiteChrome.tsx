@@ -4,20 +4,18 @@ import type { ReactNode } from 'react';
 import { FlagStripe } from '@/components/FlagStripe';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { Logo } from '@/components/Logo';
-import { MakerLine } from '@/components/MakerLine';
-import { MessageOpener, MessageWindowHost } from '@/features/messages/MessageOpener';
+import { MessageOpener } from '@/features/messages/MessageOpener';
 import { APP_NAME } from '@/lib/app-name';
 import { MAKER } from '@/lib/maker';
 
 /*
- * The pieces the public pages share: the black header, the footer, and the small parts the
+ * The pieces the public pages share: the black header, and the small parts the
  * intro and About us pages repeat (a screenshot in a browser frame, a gold-ticked list).
  */
 
 export const WRAP = 'mx-auto w-full max-w-6xl px-4 sm:px-10';
 const GOLD =
   'inline-flex items-center justify-center rounded-lg bg-brand-400 font-bold whitespace-nowrap text-black hover:bg-brand-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black';
-export const GOLD_BUTTON = `${GOLD} px-5 py-3`;
 /** The smaller gold button in the header. */
 const GOLD_SMALL = `${GOLD} px-2.5 py-1.5 text-sm sm:px-3`;
 /** On the gold contact band: black with gold text. */
@@ -93,35 +91,6 @@ export function SiteHeader({ loggedIn, current }: { loggedIn: boolean; current?:
   );
 }
 
-/**
- * The bottom of the public pages: the maker line, About us and GitHub. Logged in, the maker
- * line opens the message window.
- */
-export function SiteFooter({ loggedIn = false }: { loggedIn?: boolean }) {
-  const t = useTranslations('Site.nav');
-  return (
-    <footer className="border-t border-slate-200 bg-white py-6">
-      <div className={`${WRAP} flex flex-wrap items-center gap-x-6 gap-y-3`}>
-        <span className="text-sm text-slate-600">© 2026 {APP_NAME}</span>
-        <MakerLine loggedIn={loggedIn} />
-        <span className="flex-1" />
-        <Link href="/about" className="text-sm text-slate-600 hover:text-black">
-          {t('about')}
-        </Link>
-        <a
-          href={MAKER.github}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm text-slate-600 hover:text-black"
-        >
-          GitHub
-        </a>
-      </div>
-      {loggedIn && <MessageWindowHost />}
-    </footer>
-  );
-}
-
 /** A screenshot in a light browser frame. */
 export function Shot({ src, alt, width, height }: ShotProps) {
   return (
@@ -185,7 +154,7 @@ export function Tag({ children }: { children: ReactNode }) {
  * Message Mohamed (when `loggedIn` is given; a visitor logs in first), then LinkedIn and GitHub.
  * LinkedIn only shows when its address is set.
  */
-export function MakerLinks({ loggedIn }: { loggedIn?: boolean }) {
+export function MakerLinks({ loggedIn }: { loggedIn?: boolean | undefined }) {
   const t = useTranslations('Site.about');
   return (
     <div className="mt-5 flex flex-wrap gap-2">
@@ -203,5 +172,57 @@ export function MakerLinks({ loggedIn }: { loggedIn?: boolean }) {
         GitHub
       </a>
     </div>
+  );
+}
+
+/**
+ * The maker's welcome: the big desk photo on the left, then a title, two short paragraphs,
+ * the sign-off and the buttons. The intro page opens with it, and so does About us.
+ */
+export function MakerWelcome({
+  title,
+  eyebrow,
+  page = false,
+  loggedIn,
+}: {
+  title: string;
+  /** A small black label above the title (the intro page). */
+  eyebrow?: string;
+  /** On About us the title is the page's h1. */
+  page?: boolean;
+  /** Given: show the Message button (a visitor logs in first). */
+  loggedIn?: boolean | undefined;
+}) {
+  const t = useTranslations('Site.message');
+  const Heading = page ? 'h1' : 'h2';
+  return (
+    <section
+      id="contact"
+      aria-labelledby="maker-title"
+      className="scroll-mt-4 border-b border-slate-200 bg-slate-100 py-12"
+    >
+      <div className={`${WRAP} grid items-center gap-8 md:grid-cols-[5fr_6fr] md:gap-12`}>
+        <img
+          src={MAKER.photo}
+          alt={t('photoAlt')}
+          width={1000}
+          height={839}
+          className="h-auto w-full rounded-2xl border-b-[6px] border-brand-400 shadow-xl"
+        />
+        <div>
+          {eyebrow && <Tag>{eyebrow}</Tag>}
+          <Heading
+            id="maker-title"
+            className={`${eyebrow ? 'mt-3 ' : ''}text-3xl font-bold tracking-tight text-balance sm:text-4xl`}
+          >
+            {title}
+          </Heading>
+          <p className="mt-3 max-w-prose text-slate-700">{t('p1')}</p>
+          <p className="mt-3 max-w-prose text-slate-700">{t('p2')}</p>
+          <p className="mt-3 font-bold italic">{t('sign')}</p>
+          <MakerLinks loggedIn={loggedIn} />
+        </div>
+      </div>
+    </section>
   );
 }

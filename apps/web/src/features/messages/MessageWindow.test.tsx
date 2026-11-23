@@ -3,12 +3,12 @@ import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
-import { MakerLine } from '@/components/MakerLine';
 import type { Locale } from '@/i18n/config';
 import { closeMessageWindow, openMessageWindow } from '@/lib/message-window';
 import { Intl } from '@/test/intl';
 import { api, server } from '@/test/server';
 import { LOGIN_TO_MESSAGE, MessageOpener, MessageWindowHost } from './MessageOpener';
+import { MessagesPage } from './MessagesPage';
 
 let items: ChatMessage[] = [];
 let unread = 0;
@@ -84,7 +84,7 @@ function renderWindow(locale: Locale = 'en') {
   render(
     <Intl locale={locale}>
       <DataProvider store={makeStore()} queryClient={createQueryClient()}>
-        <MakerLine loggedIn />
+        <MessageOpener loggedIn>Queries and suggestions welcome ›</MessageOpener>
         <MessageWindowHost />
       </DataProvider>
     </Intl>,
@@ -92,7 +92,7 @@ function renderWindow(locale: Locale = 'en') {
 }
 
 describe('MessageWindow', () => {
-  it('opens from the footer line, shows the conversation and marks answers read', async () => {
+  it('opens from a button, shows the conversation and marks answers read', async () => {
     items = [MINE, ANSWER];
     unread = 1;
     const user = userEvent.setup();
@@ -165,5 +165,47 @@ describe('MessageWindow', () => {
     );
     expect(screen.getByRole('link', { name: 'Message' })).toHaveAttribute('href', LOGIN_TO_MESSAGE);
     expect(LOGIN_TO_MESSAGE).toBe('/login?next=%2Fabout%3Fmessage%3D1');
+  });
+});
+
+describe('MessagesPage', () => {
+  function renderPage(locale: Locale = 'en') {
+    render(
+      <Intl locale={locale}>
+        <DataProvider store={makeStore()} queryClient={createQueryClient()}>
+          <MessagesPage />
+        </DataProvider>
+      </Intl>,
+    );
+  }
+
+  it('shows the conversation on its own page and sends from there', async () => {
+    items = [MINE, ANSWER];
+    unread = 1;
+    const user = userEvent.setup();
+    renderPage();
+
+    const page = screen.getByRole('region', { name: 'Queries and suggestions' });
+    expect(within(page).getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Queries and suggestions',
+    );
+    const list = await within(page).findByRole('list', { name: 'Your messages' });
+    expect(within(list).getByText(ANSWER.body)).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(markedRead).toBe(1);
+    });
+
+    await user.click(within(page).getByRole('radio', { name: 'Suggestion' }));
+    await user.type(within(page).getByRole('textbox', { name: 'Your message' }), 'Dark mode?');
+    await user.click(within(page).getByRole('button', { name: 'Send' }));
+    expect(await within(page).findByText('Dark mode?')).toBeInTheDocument();
+    expect(sent).toEqual([{ topic: 'SUGGESTION', body: 'Dark mode?' }]);
+  });
+
+  it('is in German for a German account', () => {
+    renderPage('de');
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Fragen und Vorschläge' }),
+    ).toBeInTheDocument();
   });
 });

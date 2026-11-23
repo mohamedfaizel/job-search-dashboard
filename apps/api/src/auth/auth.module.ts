@@ -2,6 +2,7 @@ import { Logger, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { KeyPoolModule } from '../key-pool/key-pool.module';
 import { AuthGuard } from './auth.guard';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
@@ -20,6 +21,7 @@ function jwtSecret(config: ConfigService): string {
 
 @Module({
   imports: [
+    KeyPoolModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({ secret: jwtSecret(config) }),

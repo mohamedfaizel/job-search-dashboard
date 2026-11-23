@@ -126,6 +126,25 @@ export class KeyPoolService {
     return this.mine(userId, now);
   }
 
+  /**
+   * A new account gets a key straight away: its first request, approved by the server, when
+   * auto-approve is on and a key is free. Later requests go to the admins as usual. Never stops
+   * the sign-up: if it fails, the user can still ask in Settings.
+   */
+  async assignOnSignup(userId: number): Promise<void> {
+    try {
+      const { poolAutoApprove } = await this.settings.get();
+      if (!poolAutoApprove || (await this.prisma.poolKey.count({ where: FREE })) === 0) return;
+      const request = await this.prisma.keyRequest.create({ data: { userId } });
+      // Taken by someone else meanwhile: forget the request, so asking later still counts as first.
+      if (!(await this.lend(request.id, userId, true))) {
+        await this.prisma.keyRequest.delete({ where: { id: request.id } });
+      }
+    } catch (error) {
+      this.logger.warn(`No key for new user ${userId}: ${getErrorMessage(error)}`);
+    }
+  }
+
   async cancel(userId: number): Promise<MyPoolKeyModel> {
     await this.prisma.keyRequest.updateMany({
       where: { userId, status: 'PENDING' },

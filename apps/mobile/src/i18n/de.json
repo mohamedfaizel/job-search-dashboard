@@ -70,9 +70,7 @@
     "messageHint": "Zum Lesen öffnen"
   },
   "Maker": {
-    "madeBy": "Entwickelt von {name}",
-    "queries": "Fragen und Vorschläge willkommen",
-    "opensWindow": "Öffnet ein Nachrichtenfenster"
+    "help": "Fragen und Vorschläge"
   },
   "Messages": {
     "title": "Nachricht an {name}",

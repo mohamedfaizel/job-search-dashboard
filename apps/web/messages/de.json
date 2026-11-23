@@ -39,7 +39,9 @@
     "install": "App installieren",
     "installIos": "Zum Installieren: Teilen antippen, dann „Zum Home-Bildschirm“.",
     "adminPage": "Admin",
-    "questions": "Fragen?"
+    "questions": "Fragen?",
+    "help": "Fragen und Vorschläge",
+    "about": "Über uns"
   },
   "Auth": {
     "logInTitle": "Anmelden",
@@ -2621,23 +2623,13 @@
       "main": "Website"
     },
     "message": {
-      "eyebrow": "Eine Nachricht von Mohamed Faizel",
-      "title": "Ich habe die App für meine eigene Jobsuche gebaut",
       "p1": "Jobsuche hieß für mich: viele Seiten, viele Anzeigen und für jede einen neuen Lebenslauf. Also habe ich einen Ort gebaut, der das alles für mich erledigt.",
       "p2": "Jetzt teile ich die App gern mit Ihnen. Ich hoffe, sie macht Ihren Weg zum nächsten Job ein wenig leichter.",
       "sign": "Viel Erfolg bei Ihrer Suche, Mohamed Faizel",
       "photoAlt": "Mohamed Faizel an seinem Schreibtisch mit Laptop"
     },
     "hero": {
-      "eyebrow": "Jobsuche für Deutschland und weltweit",
-      "titleStart": "Passende Jobs finden.",
-      "titleMark": "Schneller bewerben.",
-      "titleEnd": "Den Überblick behalten.",
-      "lead": "Job Search Hunter holt Jobs von der Arbeitsagentur, von Karriereseiten und von JobHunter in eine Liste. Die App zeigt, wie gut jede Stelle zu Ihrem Lebenslauf passt, und hilft beim Bewerben auf Deutsch oder Englisch.",
-      "cta": "Konto erstellen",
-      "watch": "Demo ansehen",
-      "fine": "Registrierung mit Ihrer E-Mail. Dauert etwa eine Minute, und Ihr Konto hat gleich 500 JobHunter-Credits.",
-      "shotAlt": "Meine Jobs: eine Tabelle mit Fit-Werten, Orten und Status"
+      "cta": "Konto erstellen"
     },
     "sources": {
       "label": "Jobs von",
@@ -2660,25 +2652,15 @@
       "title": "Was die App anders macht",
       "sub": "Die meisten Jobseiten zeigen nur eine Liste. Job Search Hunter arbeitet danach weiter für Sie.",
       "u1Title": "Fehlende Skills werden gemerkt",
-      "u1": "Jeder Job zeigt, welche Skills und Begriffe in Ihrem Lebenslauf fehlen. Haken Sie an, was Sie wirklich können: Es wird in Ihrem Profil gespeichert und zählt ab dann für jeden Job.",
       "u1Alt": "Fit-Tab mit fehlenden Skills und Begriffen",
       "u2Title": "Jedes Job-Detail hervorgehoben",
-      "u2": "Das Job-Fenster markiert Level, Remote oder vor Ort, Gehalt, Visum und die Sprache der Anzeige. Es warnt auch vor Betrug und neu eingestellten Anzeigen.",
       "u2Alt": "Job-Fenster mit Warnung vor möglichem Betrug",
-      "tags": {
-        "seniority": "Level",
-        "remote": "Remote",
-        "salary": "Gehalt",
-        "visa": "Visum",
-        "language": "Sprache",
-        "scam": "Betrugs-Check"
-      },
       "u3Title": "Geplante Suchen und Hinweise",
-      "u3": "Suche speichern und automatisch laufen lassen. Die Glocke meldet neue passende Jobs, im Web und auf dem Handy.",
       "u3Alt": "Hinweis: neue passende Jobs aus einer gespeicherten Suche",
       "u4Title": "Wissen, was Sie verlangen können",
-      "u4": "Der Gehalt-Tab vergleicht das Gehalt mit ähnlichen Jobs im selben Land und gibt Ihnen fertige Sätze für das Gehaltsgespräch.",
-      "u4Alt": "Gehalt-Tab mit Vergleich zu ähnlichen Jobs"
+      "u4Alt": "Gehalt-Tab mit Vergleich zu ähnlichen Jobs",
+      "previous": "Zurück",
+      "next": "Weiter"
     },
     "sourceList": {
       "title": "Live-Jobs aus über 40 Quellen",
@@ -2689,7 +2671,6 @@
     },
     "features": {
       "marketTag": "Jobmarkt",
-      "marketTitle": "Eine Suche, viele Jobbörsen",
       "market1": "Arbeitsagentur, Karriereseiten und JobHunter in einem Formular durchsuchen.",
       "market2": "Suche speichern und automatisch wiederholen lassen.",
       "market3": "Unerwünschte Titel ausblenden, z. B. Werkstudent oder Praktikum.",
@@ -2729,37 +2710,9 @@
       "title": "Starten Sie Ihre Jobsuche heute",
       "text": "Konto erstellen, Lebenslauf hochladen und die ersten Jobs importieren."
     },
-    "footer": {
-      "madeBy": "Entwickelt von Mohamed Faizel",
-      "queries": "Fragen und Vorschläge willkommen"
-    },
     "about": {
       "metaTitle": "Über uns",
-      "eyebrow": "Über uns",
       "title": "Die Jobsuche einer Person, jetzt für alle",
-      "lead": "Job Search Hunter begann als Werkzeug, das ich für mich selbst gebaut habe. Heute kann es jeder nutzen, um Jobs zu finden, sich mit Hilfe zu bewerben und den Überblick zu behalten.",
-      "storyTitle": "Die Geschichte",
-      "s1Title": "Das Problem",
-      "s1": "Jobsuche hieß: viele Webseiten, viele Anzeigen und für jede einen neuen Lebenslauf. Schnell wusste ich nicht mehr, wo ich mich beworben hatte.",
-      "s2Title": "Was ich gebaut habe",
-      "s2": "Einen Ort, der die Jobs sammelt, zeigt, wie gut jede Stelle passt, beim Schreiben der Bewerbung hilft und jede Antwort festhält.",
-      "s3Title": "Warum ich sie teile",
-      "s3": "Sie hat meine eigene Suche leichter gemacht. Ich hoffe, sie hilft auch Ihnen, egal wo Sie suchen.",
-      "valuesTitle": "Was uns wichtig ist",
-      "v1Title": "Ihre Daten gehören Ihnen",
-      "v1": "Nur Sie sehen Ihre Jobs, Ihren Lebenslauf und Ihr Board. Admins sehen nur Zahlen.",
-      "v2Title": "Sie behalten die Kontrolle",
-      "v2": "Claude schreibt einen Entwurf. Sie prüfen jedes Wort, bevor etwas gesendet wird.",
-      "v3Title": "Ehrliche Anzeigen",
-      "v3": "Die App warnt vor Betrug und alten, neu eingestellten Anzeigen.",
-      "v4Title": "Zwei Sprachen",
-      "v4": "Die ganze App funktioniert auf Deutsch und Englisch, Ihre Lebensläufe auch.",
-      "builtTitle": "So ist die App gebaut",
-      "builtSub": "Für alle, die die Technik interessiert.",
-      "tests": "Tests bei jeder Änderung",
-      "phoneApp": "Expo-Handy-App",
-      "contactTitle": "Fragen und Vorschläge willkommen",
-      "contactText": "Etwas ist unklar oder Sie haben eine Idee? Ich freue mich darauf.",
       "messageButton": "Nachricht an {name}"
     }
   },
@@ -2780,6 +2733,8 @@
     "placeholder": "Schreib deine Nachricht",
     "send": "Senden",
     "sending": "Wird gesendet…",
-    "answeredBy": "{name} hat geantwortet"
+    "answeredBy": "{name} hat geantwortet",
+    "pageTitle": "Fragen und Vorschläge",
+    "pageWho": "Schreib an {name}. Antworten erscheinen hier und in der 🔔."
   }
 }

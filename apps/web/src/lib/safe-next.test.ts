@@ -11,4 +11,9 @@ describe('safeNextPath', () => {
       expect(safeNextPath(next)).toBe('/jobs');
     },
   );
+
+  it('uses the given page when none was asked for', () => {
+    expect(safeNextPath(null, '/about')).toBe('/about');
+    expect(safeNextPath('//evil.example', '/about')).toBe('/about');
+  });
 });

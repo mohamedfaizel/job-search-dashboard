@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { safeNextPath } from './lib/safe-next';
+import { AFTER_LOGIN, safeNextPath } from './lib/safe-next';
 
 /** The httpOnly cookie the API sets when you log in (apps/api/src/auth/session.ts). */
 export const SESSION_COOKIE = 'session';
@@ -21,7 +21,8 @@ export function proxy(request: NextRequest) {
   if (AUTH_PAGES.has(pathname)) {
     if (!loggedIn) return NextResponse.next();
     // Already logged in: skip the login page.
-    const next = safeNextPath(request.nextUrl.searchParams.get('next'));
+    const fallback = pathname === '/login' ? AFTER_LOGIN : '/jobs';
+    const next = safeNextPath(request.nextUrl.searchParams.get('next'), fallback);
     return NextResponse.redirect(new URL(next, request.url));
   }
 

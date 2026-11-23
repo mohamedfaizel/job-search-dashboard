@@ -1,113 +1,42 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { DEMO_VIDEO_URL, MAKER } from '@/lib/maker';
-import {
-  GOLD_BUTTON,
-  MakerLinks,
-  Shot,
-  SiteFooter,
-  SiteHeader,
-  Tag,
-  TickList,
-  WRAP,
-} from './SiteChrome';
+import { DifferentSlider } from './DifferentSlider';
+import { MakerWelcome, Shot, SiteHeader, Tag, TickList, WRAP } from './SiteChrome';
 import { JOB_HUNTER_SOURCES } from './sources';
 
 const H2 = 'text-3xl font-bold tracking-tight text-balance sm:text-4xl';
 
 /**
- * The page people see before they log in (/). Top to bottom: a message from the maker, what
- * the app does with a big screenshot, the job sources, how it works, what makes it different,
- * the 40+ live sources, four features, privacy, and a last Sign up button.
+ * The intro page, open to everyone at / and at /about (the i in the app's header). Top to
+ * bottom: the maker's welcome (big desk photo, who built the app and why, Message / LinkedIn /
+ * GitHub), the job sources, how it works, what makes it different (a slider), the Job Market
+ * with its 40+ live sources, three features, privacy, and a last call to action.
  */
-export function IntroPage({ loggedIn }: { loggedIn: boolean }) {
+export function IntroPage({ loggedIn, current }: { loggedIn: boolean; current?: 'about' }) {
   return (
     <div className="bg-white text-slate-900">
-      <SiteHeader loggedIn={loggedIn} />
+      <SiteHeader loggedIn={loggedIn} {...(current ? { current } : {})} />
       <main id="main">
-        <MakerMessage />
-        <Hero />
-        <SourceChips />
-        <HowItWorks />
-        <WhatIsDifferent />
-        <LiveSources />
-        <Features />
-        <Trust />
-        <FinalCall />
+        <IntroContent loggedIn={loggedIn} />
       </main>
-      <SiteFooter loggedIn={loggedIn} />
     </div>
   );
 }
 
-function MakerMessage() {
-  const t = useTranslations('Site.message');
+/** The page's sections without a header, so the app can show them inside its own frame. */
+export function IntroContent({ loggedIn }: { loggedIn: boolean }) {
+  const t = useTranslations('Site.about');
   return (
-    <section aria-labelledby="maker-title" className="border-b border-slate-200 bg-slate-100 py-12">
-      <div className={`${WRAP} grid items-center gap-8 md:grid-cols-[5fr_6fr] md:gap-12`}>
-        <img
-          src={MAKER.photo}
-          alt={t('photoAlt')}
-          width={1000}
-          height={839}
-          className="h-auto w-full rounded-2xl border-b-[6px] border-brand-400 shadow-xl"
-        />
-        <div>
-          <Tag>{t('eyebrow')}</Tag>
-          <h2 id="maker-title" className={`${H2} mt-3`}>
-            {t('title')}
-          </h2>
-          <p className="mt-3 max-w-prose text-slate-700">{t('p1')}</p>
-          <p className="mt-3 max-w-prose text-slate-700">{t('p2')}</p>
-          <p className="mt-3 font-bold italic">{t('sign')}</p>
-          <MakerLinks />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Hero() {
-  const t = useTranslations('Site.hero');
-  return (
-    <section className="pt-14">
-      <div className={WRAP}>
-        <p className="text-sm font-bold tracking-wide text-slate-500 uppercase">{t('eyebrow')}</p>
-        <h1 className="mt-3 max-w-[16ch] text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-6xl">
-          {t('titleStart')}{' '}
-          <span className="bg-[linear-gradient(transparent_62%,var(--color-brand-400)_62%_92%,transparent_92%)]">
-            {t('titleMark')}
-          </span>{' '}
-          {t('titleEnd')}
-        </h1>
-        <p className="mt-5 max-w-[60ch] text-lg text-slate-700">{t('lead')}</p>
-        <div className="mt-7 flex flex-wrap gap-3">
-          <Link href="/signup" className={`${GOLD_BUTTON} w-full sm:w-auto`}>
-            {t('cta')}
-          </Link>
-          {DEMO_VIDEO_URL && (
-            <a
-              href={DEMO_VIDEO_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 py-3 font-semibold hover:bg-slate-50 sm:w-auto"
-            >
-              <span
-                aria-hidden="true"
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-[10px] text-brand-400"
-              >
-                ▶
-              </span>
-              {t('watch')}
-            </a>
-          )}
-        </div>
-        <p className="mt-3 text-sm text-slate-500">{t('fine')}</p>
-        <div className="relative z-10 mt-10 -mb-16 sm:-mb-28">
-          <Shot src="/site/my-jobs.jpg" alt={t('shotAlt')} width={1280} height={900} />
-        </div>
-      </div>
-    </section>
+    <>
+      <MakerWelcome title={t('title')} page loggedIn={loggedIn} />
+      <SourceChips />
+      <HowItWorks />
+      <WhatIsDifferent />
+      <LiveSources />
+      <Features />
+      <Trust />
+      <FinalCall loggedIn={loggedIn} />
+    </>
   );
 }
 
@@ -116,7 +45,7 @@ function SourceChips() {
   const chip =
     'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold';
   return (
-    <div className="border-b border-slate-200 bg-slate-100 pt-24 pb-8 sm:pt-36">
+    <div className="border-b border-slate-200 bg-slate-100 py-8">
       <ul className={`${WRAP} flex flex-wrap items-center gap-3`} aria-label={t('label')}>
         <li
           className="mr-1 text-sm font-bold tracking-wide text-slate-500 uppercase"
@@ -166,14 +95,6 @@ function HowItWorks() {
   );
 }
 
-const UNIQUE = [
-  { n: 1, img: '/site/missing-skills.jpg', w: 760, h: 263 },
-  { n: 2, img: '/site/scam-check.jpg', w: 760, h: 297 },
-  { n: 3, img: '/site/alerts.jpg', w: 760, h: 560 },
-  { n: 4, img: '/site/salary.jpg', w: 760, h: 396 },
-] as const;
-const DETAIL_TAGS = ['seniority', 'remote', 'salary', 'visa', 'language'] as const;
-
 function WhatIsDifferent() {
   const t = useTranslations('Site.unique');
   return (
@@ -183,54 +104,19 @@ function WhatIsDifferent() {
           {t('title')}
         </h2>
         <p className="mt-2 mb-8 max-w-prose text-slate-600">{t('sub')}</p>
-        <div className="grid gap-6 md:grid-cols-2">
-          {UNIQUE.map(({ n, img, w, h }) => (
-            <article
-              key={n}
-              className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white"
-            >
-              <div className="h-44 overflow-hidden border-b border-slate-200 bg-slate-50 sm:h-52">
-                <img
-                  src={img}
-                  alt={t(`u${n}Alt`)}
-                  width={w}
-                  height={h}
-                  loading="lazy"
-                  className="h-full w-full object-cover object-left-top"
-                />
-              </div>
-              <div className="grid gap-2 p-5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-xs font-black text-brand-400">
-                  {n}
-                </span>
-                <h3 className="text-lg font-bold">{t(`u${n}Title`)}</h3>
-                <p className="text-slate-700">{t(`u${n}`)}</p>
-                {n === 2 && (
-                  <ul className="mt-1 flex flex-wrap gap-1.5 text-xs font-bold">
-                    {DETAIL_TAGS.map((tag) => (
-                      <li
-                        key={tag}
-                        className="rounded border border-brand-300 bg-brand-50 px-2 py-0.5"
-                      >
-                        {t(`tags.${tag}`)}
-                      </li>
-                    ))}
-                    <li className="rounded border border-red-300 bg-red-50 px-2 py-0.5 text-red-800">
-                      {t('tags.scam')}
-                    </li>
-                  </ul>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
+        <DifferentSlider />
       </div>
     </section>
   );
 }
 
+/**
+ * The Job Market and the 40+ live sources, in one section: the text and the form side by side,
+ * then the three lists of sources under both.
+ */
 function LiveSources() {
   const t = useTranslations('Site.sourceList');
+  const tf = useTranslations('Site.features');
   const groups = [
     { key: 'boards', names: JOB_HUNTER_SOURCES.boards },
     { key: 'public', names: JOB_HUNTER_SOURCES.public },
@@ -239,11 +125,20 @@ function LiveSources() {
   return (
     <section aria-labelledby="sources-title" className="py-16">
       <div className={WRAP}>
-        <h2 id="sources-title" className={H2}>
-          {t('title')}
-        </h2>
-        <p className="mt-2 mb-8 max-w-prose text-slate-600">{t('sub')}</p>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid items-center gap-8 md:grid-cols-12 md:gap-12">
+          <div className="md:col-span-5">
+            <Tag>{tf('marketTag')}</Tag>
+            <h2 id="sources-title" className={`mt-3 ${H2}`}>
+              {t('title')}
+            </h2>
+            <p className="mt-2 max-w-prose text-slate-600">{t('sub')}</p>
+            <TickList items={[tf('market1'), tf('market2'), tf('market3')]} />
+          </div>
+          <div className="md:col-span-7">
+            <Shot src="/site/job-market.jpg" alt={tf('marketAlt')} width={1100} height={548} />
+          </div>
+        </div>
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
           {groups.map(({ key, names }) => (
             <div key={key} className="border-t-[3px] border-brand-400 pt-3">
               <h3 className="flex items-baseline gap-2 font-bold">
@@ -262,7 +157,6 @@ function LiveSources() {
 }
 
 const FEATURES = [
-  { key: 'market', img: '/site/job-market.jpg', h: 773 },
   { key: 'apply', img: '/site/apply.jpg', h: 773 },
   { key: 'resume', img: '/site/resume-designs.jpg', h: 247 },
   { key: 'tracker', img: '/site/tracker.jpg', h: 773 },
@@ -345,7 +239,8 @@ function Trust() {
   );
 }
 
-function FinalCall() {
+/** Visitors are asked to sign up; someone logged in goes back to My Jobs. */
+function FinalCall({ loggedIn }: { loggedIn: boolean }) {
   const t = useTranslations('Site');
   return (
     <section className="bg-brand-400 py-14 text-center">
@@ -353,10 +248,10 @@ function FinalCall() {
         <h2 className={H2}>{t('final.title')}</h2>
         <p className="mx-auto mt-3 max-w-prose">{t('final.text')}</p>
         <Link
-          href="/signup"
+          href={loggedIn ? '/jobs' : '/signup'}
           className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-black px-6 py-3 font-bold text-brand-400 hover:bg-neutral-800 sm:w-auto"
         >
-          {t('hero.cta')}
+          {loggedIn ? t('nav.openApp') : t('hero.cta')}
         </Link>
       </div>
     </section>
