@@ -18,4 +18,8 @@ describe('alertLink', () => {
     expect(alertLink(notification({ id: 1 }))).toBe('/alerts');
     expect(alertLink(notification({ id: 1, kind: 'INTERVIEW_SOON', jobs: [] }))).toBe('/alerts');
   });
+
+  it('opens the message window for an answer to your message', () => {
+    expect(alertLink(notification({ id: 1, kind: 'MESSAGE_REPLY', jobs: [] }))).toBe('/messages');
+  });
 });

@@ -53,6 +53,7 @@ describe('PhoneAlerts', () => {
         at: '2026-11-10T09:30:00.000Z',
         jobs: [{ id: '7', title: 'ML Engineer', company: 'N26', fit: 70 }],
       }),
+      notification({ id: 4, kind: 'MESSAGE_REPLY', searchName: 'Sam', jobs: [] }),
     ]);
     await renderApp(<PhoneAlerts />, client);
     await waitFor(() => {
@@ -64,9 +65,9 @@ describe('PhoneAlerts', () => {
 
     await act(() => client.refetchQueries({ queryKey: ['notifications'] }));
     await waitFor(() => {
-      expect(Notifications.setBadgeCountAsync).toHaveBeenCalledWith(3);
+      expect(Notifications.setBadgeCountAsync).toHaveBeenCalledWith(4);
     });
-    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(2);
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(3);
     expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith({
       content: {
         title: '1 new job fits you from the search “Data jobs”',
@@ -84,9 +85,20 @@ describe('PhoneAlerts', () => {
       }),
     );
 
+    // An answer to your message opens the message window.
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: {
+          title: 'Sam replied to your message',
+          body: 'Open to read it',
+          data: { url: '/messages' },
+        },
+      }),
+    );
+
     // The next ask has nothing new: no second pop-up for the same notification.
     await act(() => client.refetchQueries({ queryKey: ['notifications'] }));
-    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(2);
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(3);
   });
 
   it('uses its own channel on Android', async () => {

@@ -1,6 +1,7 @@
 import type { AppNotification } from '@jobsearch/data';
 import { useCallback } from 'react';
 import { useLocale, useTranslations } from 'use-intl';
+import { MAKER } from './maker';
 
 /** The notifications that came in since the last check: unread, and not seen before. */
 export function freshAlerts(
@@ -10,8 +11,12 @@ export function freshAlerts(
   return items.filter((item) => item.readAt === null && !seen.has(item.id));
 }
 
-/** Where tapping a phone alert takes you: the job for an interview, else the list of alerts. */
+/**
+ * Where tapping a phone alert takes you: the message window for an answer, the job for an
+ * interview, else the list of alerts.
+ */
 export function alertLink(item: AppNotification): string {
+  if (item.kind === 'MESSAGE_REPLY') return '/messages';
   const first = item.jobs[0];
   return item.kind === 'INTERVIEW_SOON' && first ? `/job/${first.id}` : '/alerts';
 }
@@ -44,6 +49,9 @@ export function useHeadline() {
   const locale = useLocale();
   return useCallback(
     (item: AppNotification) => {
+      if (item.kind === 'MESSAGE_REPLY') {
+        return t('messageReply', { name: item.searchName || MAKER.name });
+      }
       const key = KEY_POOL_TEXT[item.kind];
       if (key) return t(key, { name: item.searchName, count: item.count });
       return item.kind === 'INTERVIEW_SOON' && item.at

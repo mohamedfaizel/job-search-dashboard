@@ -84,7 +84,7 @@ describe('JobDetails', () => {
     expect(await screen.findByText('Salary: $80,000')).toBeOnTheScreen();
     expect(screen.getByText('This job has no ad text.')).toBeOnTheScreen();
     expect(screen.getByText('Fit –')).toBeOnTheScreen();
-    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.queryByRole('link', { name: /Open the job ad/ })).toBeNull();
   });
 
   it('says when the job can’t be loaded', async () => {

@@ -79,13 +79,17 @@ function NativeAlerts() {
       for (const item of freshAlerts(data.items, seen.current)) {
         seen.current.add(item.id);
         void Notifications.scheduleNotificationAsync({
-          content: { title: headline(item), body: jobLines(item), data: { url: alertLink(item) } },
+          content: {
+            title: headline(item),
+            body: item.kind === 'MESSAGE_REPLY' ? t('messageHint') : jobLines(item),
+            data: { url: alertLink(item) },
+          },
           trigger: Platform.OS === 'android' ? { channelId: CHANNEL } : null,
         }).catch(() => undefined);
       }
     }
     void Notifications.setBadgeCountAsync(data.unread).catch(() => undefined);
-  }, [list.data, headline]);
+  }, [list.data, headline, t]);
 
   return null;
 }

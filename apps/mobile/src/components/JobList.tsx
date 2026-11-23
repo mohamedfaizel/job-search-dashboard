@@ -5,6 +5,7 @@ import { useTranslations } from 'use-intl';
 import { colors } from '../lib/theme';
 import { useErrorText } from '../lib/useErrorText';
 import { JobRow } from './JobRow';
+import { MakerLine } from './MakerLine';
 
 /** How many jobs one scroll to the end adds. */
 export const PAGE_SIZE = 30;
@@ -68,7 +69,9 @@ export function JobList() {
       ListFooterComponent={
         items.length < total ? (
           <ActivityIndicator style={styles.more} color={colors.black} />
-        ) : undefined
+        ) : (
+          <MakerLine />
+        )
       }
     />
   );
