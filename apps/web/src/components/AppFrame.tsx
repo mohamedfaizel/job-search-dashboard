@@ -150,11 +150,11 @@ interface TopBarProps {
   children: ReactNode;
 }
 
-/** The gold-ringed gear: Settings. */
+/** The Settings gear: a dark box that turns gold on its page. */
 const GEAR =
-  'flex h-10 w-10 items-center justify-center rounded-md border-2 border-brand-400 bg-neutral-800 text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white aria-[current=page]:bg-brand-400 aria-[current=page]:text-black';
+  'flex h-10 w-10 items-center justify-center rounded-md bg-neutral-800 text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white aria-[current=page]:bg-brand-400 aria-[current=page]:text-black';
 
-/** An icon in the same gold-ringed box as the Settings gear, with its name as a tooltip: ? and i. */
+/** An icon in the same dark box as the Settings gear, with its name as a tooltip: ? and i. */
 function HeaderIcon({
   href,
   label,
