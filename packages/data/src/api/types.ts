@@ -1243,3 +1243,35 @@ export interface AddPoolKeysResult {
   duplicates: number;
   invalid: number;
 }
+
+/** What a message to the makers is about. */
+export type MessageTopic = 'QUESTION' | 'SUGGESTION' | 'BROKEN';
+
+/** One line in your conversation with the makers: yours, or an admin's answer. */
+export interface ChatMessage {
+  id: number;
+  fromAdmin: boolean;
+  /** Who wrote an answer. Empty on your own messages. */
+  authorName: string;
+  topic: MessageTopic | null;
+  body: string;
+  createdAt: string;
+}
+
+export interface MyMessages {
+  items: ChatMessage[];
+  /** Answers you have not seen yet. */
+  unread: number;
+}
+
+/** One user's conversation on Admin › Messages. */
+export interface AdminConversation {
+  userId: number;
+  name: string;
+  email: string;
+  lastBody: string;
+  lastFromAdmin: boolean;
+  lastAt: string;
+  /** Messages from the user no admin has opened yet. */
+  unread: number;
+}

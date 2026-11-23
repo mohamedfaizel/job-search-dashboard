@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../i18n/useErrorText';
+import { MAKER } from '../lib/maker';
+import { openMessageWindow } from '../lib/message-window';
 import { useDismiss } from '../lib/use-dismiss';
 import { TipButton } from './TipButton';
 import { useToast } from './Toasts';
@@ -66,6 +68,9 @@ function useHeadline() {
   const locale = useLocale();
   return useCallback(
     (item: AppNotification) => {
+      if (item.kind === 'MESSAGE_REPLY') {
+        return t('messageReply', { name: item.searchName || MAKER.name });
+      }
       const pool = KEY_POOL[item.kind];
       if (pool) return t(pool.text, { name: item.searchName, count: item.count });
       return item.kind === 'INTERVIEW_SOON' && item.at
@@ -157,6 +162,33 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
   const locale = useLocale();
   const headline = useHeadline();
   const interview = item.kind === 'INTERVIEW_SOON';
+  if (item.kind === 'MESSAGE_REPLY') {
+    return (
+      <li className={item.readAt ? '' : 'bg-brand-50'}>
+        <button
+          type="button"
+          onClick={() => {
+            onOpen();
+            openMessageWindow();
+          }}
+          className="w-full space-y-1 px-3 py-2.5 text-left hover:bg-slate-100"
+        >
+          <span className="block text-sm text-slate-900">
+            {!item.readAt && (
+              <span
+                aria-label={t('unread')}
+                className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-600"
+              />
+            )}
+            {headline(item)}
+          </span>
+          <span className="block text-xs text-slate-600">
+            {t('messageHint')} · {timeAgo(item.createdAt, locale)}
+          </span>
+        </button>
+      </li>
+    );
+  }
   return (
     <li className={`space-y-1.5 px-3 py-2.5 ${item.readAt ? '' : 'bg-brand-50'}`}>
       <p className="text-sm text-slate-900">
@@ -229,21 +261,24 @@ export function NotificationBell() {
         const pool = KEY_POOL[item.kind];
         toast(headline(item), {
           tone: 'info',
-          action: pool
-            ? {
-                label: t('show'),
-                onClick: () => {
-                  router.push(pool.link);
-                },
-              }
-            : first
-              ? {
-                  label: t('show'),
-                  onClick: () => {
-                    router.push(jobLink(first.id));
-                  },
-                }
-              : undefined,
+          action:
+            item.kind === 'MESSAGE_REPLY'
+              ? { label: t('show'), onClick: openMessageWindow }
+              : pool
+                ? {
+                    label: t('show'),
+                    onClick: () => {
+                      router.push(pool.link);
+                    },
+                  }
+                : first
+                  ? {
+                      label: t('show'),
+                      onClick: () => {
+                        router.push(jobLink(first.id));
+                      },
+                    }
+                  : undefined,
         });
       }
     }

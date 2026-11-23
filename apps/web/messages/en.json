@@ -38,7 +38,8 @@
     "language": "Language",
     "install": "Install app",
     "installIos": "To install: tap Share, then \"Add to Home Screen\".",
-    "adminPage": "Admin"
+    "adminPage": "Admin",
+    "questions": "Questions?"
   },
   "Auth": {
     "logInTitle": "Log in",
@@ -2294,7 +2295,10 @@
     "POOL_KEY_NOT_FOUND": "That key is no longer in the pool.",
     "POOL_LIMIT_REACHED": "You used all credits of your token from the admin. Ask for more or add your own token in Settings.",
     "KEY_REQUEST_NOT_FOUND": "That request no longer exists.",
-    "KEY_REQUEST_DONE": "Someone already answered this request."
+    "KEY_REQUEST_DONE": "Someone already answered this request.",
+    "MESSAGE_LENGTH": "A message is 1 to {max} characters.",
+    "MESSAGE_LIMIT": "You can send {max} messages an hour. Please try again later.",
+    "CONVERSATION_NOT_FOUND": "This conversation is not there any more."
   },
   "Notifications": {
     "bell": "Notifications",
@@ -2323,7 +2327,9 @@
     "openKeyPool": "Open Key pool",
     "approve": "Approve: give the next free key",
     "deny": "Deny",
-    "answered": "Answered"
+    "answered": "Answered",
+    "messageReply": "{name} replied to your message",
+    "messageHint": "Open to read it"
   },
   "Welcome": {
     "title": "Welcome, {name}!",
@@ -2424,7 +2430,9 @@
       "users": "Users",
       "access": "Sign-up & access",
       "limits": "Limits",
-      "keys": "Key pool"
+      "keys": "Key pool",
+      "messages": "Messages",
+      "waiting": ", {count} waiting"
     },
     "access": {
       "modeHeading": "Who can make an account?",
@@ -2585,6 +2593,21 @@
       "statusFREE": "Free",
       "statusASSIGNED": "Assigned",
       "statusEMPTY": "Empty"
+    },
+    "messages": {
+      "loading": "Loading messages…",
+      "empty": "No messages yet. When someone writes from the app, it shows here.",
+      "list": "Conversations",
+      "pick": "Pick a conversation to read and answer it.",
+      "new": "{count} new",
+      "you": "You",
+      "back": "All messages",
+      "conversation": "Conversation with {name}",
+      "replyLabel": "Your answer to {name}",
+      "replyPlaceholder": "Write your answer",
+      "send": "Send",
+      "sending": "Sending…",
+      "bellNote": "They get a note in their bell. Other admins see your answer too."
     }
   },
   "Site": {
@@ -2736,7 +2759,27 @@
       "tests": "Tests on every change",
       "phoneApp": "Expo phone app",
       "contactTitle": "Queries and suggestions welcome",
-      "contactText": "Found something unclear or have an idea? I'd like to hear it."
+      "contactText": "Found something unclear or have an idea? I'd like to hear it.",
+      "messageButton": "Message {name}"
     }
+  },
+  "Messages": {
+    "title": "Message {name}",
+    "sub": "Queries and suggestions welcome",
+    "close": "Close",
+    "hello": "Hi! I built Job Search Hunter for my own job search. If something is unclear, broken, or you have an idea, write to me here.",
+    "loading": "Loading your messages…",
+    "conversation": "Your messages",
+    "topic": "What is it about?",
+    "topics": {
+      "QUESTION": "Question",
+      "SUGGESTION": "Suggestion",
+      "BROKEN": "Something is broken"
+    },
+    "label": "Your message",
+    "placeholder": "Write your message",
+    "send": "Send",
+    "sending": "Sending…",
+    "answeredBy": "{name} replied"
   }
 }

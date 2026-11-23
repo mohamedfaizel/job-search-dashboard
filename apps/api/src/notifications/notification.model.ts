@@ -25,11 +25,14 @@ export class NotificationModel {
 
   @Field({
     description:
-      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK',
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message',
   })
   kind!: string;
 
-  @Field({ description: 'The saved search that found them. Empty when not about a search' })
+  @Field({
+    description:
+      'The saved search that found them; for MESSAGE_REPLY, who answered. Empty otherwise',
+  })
   searchName!: string;
 
   @Field(() => Int, { description: 'How many jobs it is about' })

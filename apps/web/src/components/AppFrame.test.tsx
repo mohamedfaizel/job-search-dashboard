@@ -59,16 +59,31 @@ describe('AppFrame', () => {
     ).toHaveAttribute('href', '/admin');
   });
 
-  it('ends every page with the maker line and a link for questions', async () => {
+  it('ends every page with the maker line, which opens the message window', async () => {
     session.user = ADMIN;
     location.pathname = '/jobs';
+    server.use(
+      api.query('MyMessages', () =>
+        HttpResponse.json({ data: { myMessages: { items: [], unread: 0 } } }),
+      ),
+    );
+    const user = userEvent.setup();
     renderFrame();
 
     const footer = await screen.findByRole('contentinfo');
     expect(within(footer).getByText('Made by Mohamed Faizel')).toBeInTheDocument();
-    expect(
-      within(footer).getByRole('link', { name: /Queries and suggestions welcome/ }),
-    ).toHaveAttribute('href', '/about#contact');
+    await user.click(
+      within(footer).getByRole('button', { name: /Queries and suggestions welcome/ }),
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Message Mohamed Faizel' });
+    await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+
+    // The account menu opens it too.
+    await user.click(screen.getByRole('button', { name: /account menu/ }));
+    await user.click(screen.getByRole('button', { name: 'Questions?' }));
+    expect(screen.getByRole('dialog', { name: 'Message Mohamed Faizel' })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Account' })).toBeNull();
+    await user.keyboard('{Escape}');
   });
 
   it('opens the avatar menu with My profile, Settings and Log out', async () => {

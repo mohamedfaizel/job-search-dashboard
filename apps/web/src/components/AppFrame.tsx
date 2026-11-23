@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { isLocale, writeLocaleCookie } from '@/i18n/config';
 import { AiNameIntl } from '@/lib/ai-chat';
 import { APP_NAME } from '@/lib/app-name';
+import { MessageWindowHost } from '../features/messages/MessageOpener';
 import { isNetworkError, useErrorText } from '../i18n/useErrorText';
 import { AccountMenu } from './AccountMenu';
 import { FlagStripe } from './FlagStripe';
@@ -218,8 +219,9 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
       </main>
       {/* Under every page: who made the app and where to send questions. */}
       <footer className="border-t border-slate-200 px-4 pt-4 pb-[calc(1rem+var(--tabbar))] sm:px-6">
-        <MakerLine />
+        <MakerLine loggedIn />
       </footer>
+      <MessageWindowHost />
       <PhoneTabs current={current} />
     </div>
   );

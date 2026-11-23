@@ -20,6 +20,11 @@ describe('AboutPage', () => {
       'href',
       'https://github.com/mohamedfaizel',
     );
+    // A visitor logs in first, then comes back with the message window open.
+    expect(within(contact).getByRole('link', { name: 'Message Mohamed Faizel' })).toHaveAttribute(
+      'href',
+      '/login?next=%2Fabout%3Fmessage%3D1',
+    );
     // About us is the page you are on.
     expect(screen.getByRole('link', { name: 'About us', current: 'page' })).toBeInTheDocument();
   });
@@ -37,5 +42,10 @@ describe('AboutPage', () => {
       'href',
       '/jobs',
     );
+    // Logged in, the button and the footer line open the message window here.
+    expect(screen.getByRole('button', { name: 'Nachricht an Mohamed Faizel' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Fragen und Vorschläge willkommen/ }),
+    ).toBeInTheDocument();
   });
 });

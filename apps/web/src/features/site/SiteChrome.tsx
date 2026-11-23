@@ -5,6 +5,7 @@ import { FlagStripe } from '@/components/FlagStripe';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { Logo } from '@/components/Logo';
 import { MakerLine } from '@/components/MakerLine';
+import { MessageOpener, MessageWindowHost } from '@/features/messages/MessageOpener';
 import { APP_NAME } from '@/lib/app-name';
 import { MAKER } from '@/lib/maker';
 
@@ -19,6 +20,9 @@ const GOLD =
 export const GOLD_BUTTON = `${GOLD} px-5 py-3`;
 /** The smaller gold button in the header. */
 const GOLD_SMALL = `${GOLD} px-2.5 py-1.5 text-sm sm:px-3`;
+/** On the gold contact band: black with gold text. */
+const BLACK_BUTTON =
+  'inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-bold whitespace-nowrap text-brand-400 hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black';
 const LINE_BUTTON =
   'inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-50';
 
@@ -89,14 +93,17 @@ export function SiteHeader({ loggedIn, current }: { loggedIn: boolean; current?:
   );
 }
 
-/** The bottom of the public pages: the maker line, About us and GitHub. */
-export function SiteFooter() {
+/**
+ * The bottom of the public pages: the maker line, About us and GitHub. Logged in, the maker
+ * line opens the message window.
+ */
+export function SiteFooter({ loggedIn = false }: { loggedIn?: boolean }) {
   const t = useTranslations('Site.nav');
   return (
     <footer className="border-t border-slate-200 bg-white py-6">
       <div className={`${WRAP} flex flex-wrap items-center gap-x-6 gap-y-3`}>
         <span className="text-sm text-slate-600">© 2026 {APP_NAME}</span>
-        <MakerLine />
+        <MakerLine loggedIn={loggedIn} />
         <span className="flex-1" />
         <Link href="/about" className="text-sm text-slate-600 hover:text-black">
           {t('about')}
@@ -110,6 +117,7 @@ export function SiteFooter() {
           GitHub
         </a>
       </div>
+      {loggedIn && <MessageWindowHost />}
     </footer>
   );
 }
@@ -173,10 +181,19 @@ export function Tag({ children }: { children: ReactNode }) {
   );
 }
 
-/** LinkedIn and GitHub buttons. LinkedIn only shows when its address is set. */
-export function MakerLinks() {
+/**
+ * Message Mohamed (when `loggedIn` is given; a visitor logs in first), then LinkedIn and GitHub.
+ * LinkedIn only shows when its address is set.
+ */
+export function MakerLinks({ loggedIn }: { loggedIn?: boolean }) {
+  const t = useTranslations('Site.about');
   return (
     <div className="mt-5 flex flex-wrap gap-2">
+      {loggedIn !== undefined && (
+        <MessageOpener loggedIn={loggedIn} className={BLACK_BUTTON}>
+          {t('messageButton', { name: MAKER.name })}
+        </MessageOpener>
+      )}
       {MAKER.linkedin && (
         <a href={MAKER.linkedin} target="_blank" rel="noreferrer" className={LINE_BUTTON}>
           LinkedIn

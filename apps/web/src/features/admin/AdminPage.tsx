@@ -1,6 +1,6 @@
 'use client';
 
-import { useKeyPool, useMe } from '@jobsearch/data';
+import { useAdminConversations, useKeyPool, useMe } from '@jobsearch/data';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { KeyboardEvent } from 'react';
@@ -8,10 +8,11 @@ import { useState } from 'react';
 import { AccessPanel } from './components/AccessPanel';
 import { KeyPoolPanel } from './components/KeyPoolPanel';
 import { LimitsPanel } from './components/LimitsPanel';
+import { MessagesPanel } from './components/MessagesPanel';
 import { OverviewPanel } from './components/OverviewPanel';
 import { UsersPanel } from './components/UsersPanel';
 
-const TABS = ['overview', 'users', 'access', 'limits', 'keys'] as const;
+const TABS = ['overview', 'users', 'messages', 'access', 'limits', 'keys'] as const;
 type Tab = (typeof TABS)[number];
 
 /**
@@ -30,6 +31,9 @@ export function AdminPage() {
   });
   const pool = useKeyPool(me?.role === 'ADMIN');
   const waiting = pool.data?.requests.length ?? 0;
+  // The Messages tab shows how many messages wait for an answer.
+  const conversations = useAdminConversations(me?.role === 'ADMIN');
+  const unanswered = conversations.data?.reduce((sum, c) => sum + c.unread, 0) ?? 0;
   if (!me) return null;
 
   // Arrow keys move between tabs, like any tab list.
@@ -72,6 +76,17 @@ export function AdminPage() {
                 className="min-h-11 border-b-2 border-transparent px-3 text-sm whitespace-nowrap text-slate-600 hover:text-slate-900 aria-selected:border-slate-900 aria-selected:font-semibold aria-selected:text-slate-900 sm:px-4"
               >
                 {t(`tabs.${id}`)}
+                {id === 'messages' && unanswered > 0 && (
+                  <>
+                    <span
+                      aria-hidden
+                      className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[11px] leading-4 font-semibold text-white"
+                    >
+                      {unanswered}
+                    </span>
+                    <span className="sr-only">{t('tabs.waiting', { count: unanswered })}</span>
+                  </>
+                )}
                 {id === 'keys' && waiting > 0 && (
                   <span className="ml-1.5 rounded-full bg-brand-400 px-1.5 text-xs font-bold text-slate-900">
                     {waiting}
@@ -83,6 +98,7 @@ export function AdminPage() {
           <div id={`admin-panel-${tab}`} role="tabpanel" aria-labelledby={`admin-tab-${tab}`}>
             {tab === 'overview' && <OverviewPanel />}
             {tab === 'users' && <UsersPanel meId={me.id} />}
+            {tab === 'messages' && <MessagesPanel />}
             {tab === 'access' && <AccessPanel />}
             {tab === 'limits' && <LimitsPanel />}
             {tab === 'keys' && <KeyPoolPanel />}

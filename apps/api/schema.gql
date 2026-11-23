@@ -18,6 +18,23 @@ type AddPoolKeysResult {
   invalid: Int!
 }
 
+"""One user’s conversation on Admin › Messages: who and the latest line"""
+type AdminConversation {
+  email: String!
+  lastAt: DateTime!
+
+  """The latest message or answer"""
+  lastBody: String!
+
+  """True when the latest line is an admin’s answer"""
+  lastFromAdmin: Boolean!
+  name: String!
+
+  """Messages from the user no admin has opened yet"""
+  unread: Int!
+  userId: Int!
+}
+
 type AdminOverviewModel {
   """Accounts that used the app in the last 7 days"""
   activeThisWeek: Int!
@@ -1170,6 +1187,32 @@ enum MatcherResumeState {
   READY
 }
 
+"""
+One line in your conversation with the app’s makers: yours or an admin’s answer
+"""
+type Message {
+  """Who wrote an answer. Empty on your own messages"""
+  authorName: String!
+  body: String!
+  createdAt: DateTime!
+
+  """True for an admin’s answer"""
+  fromAdmin: Boolean!
+  id: Int!
+
+  """Only on your own messages"""
+  topic: MessageTopic
+}
+
+"""
+What a message is about: a question, a suggestion, or something that is broken
+"""
+enum MessageTopic {
+  BROKEN
+  QUESTION
+  SUGGESTION
+}
+
 type Mutation {
   """Adds one or many pasted tokens"""
   addPoolKeys(input: AddPoolKeysInput!): AddPoolKeysResult!
@@ -1272,6 +1315,9 @@ type Mutation {
   """
   markFollowedUp(jobId: ID!): [Application!]!
 
+  """Marks the answers you saw read. Returns how many"""
+  markMyMessagesRead: Int!
+
   """Mark all your notifications read. Returns how many"""
   markNotificationsRead: Int!
 
@@ -1308,6 +1354,9 @@ type Mutation {
   Takes the skills the fact check flagged out of the Skills section of the resume you wrote for this job, then scores it again
   """
   removeUnsupportedSkills(jobId: ID!): JobInsights!
+
+  """Answers a user. Rings their bell (admins only)"""
+  replyMessage(input: ReplyMessageInput!): Message!
 
   """Asks the admins for a token from the Key pool"""
   requestPoolKey: MyPoolKey!
@@ -1388,6 +1437,9 @@ type Mutation {
   Saves your Job posts filters and sort (JSON text), replacing the ones before
   """
   saveTableSettings(settings: String!): Boolean!
+
+  """Sends a question, suggestion or bug to the admins"""
+  sendMessage(input: SendMessageInput!): Message!
 
   """
   Picks your AI: Claude or OpenAI, for the AI score and the copy-and-open buttons.
@@ -1527,6 +1579,14 @@ type MyDesign {
   twoColumns: Boolean!
 }
 
+"""Your conversation, oldest first, and unread answers"""
+type MyMessages {
+  items: [Message!]!
+
+  """Answers you have not seen yet"""
+  unread: Int!
+}
+
 type MyPoolKey {
   """DENIED: when you can ask again"""
   askAgainAt: DateTime
@@ -1567,7 +1627,7 @@ type Notification {
   jobs: [NotificationJob!]!
 
   """
-  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK
+  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message
   """
   kind: String!
 
@@ -1579,7 +1639,9 @@ type Notification {
   """
   refId: Int
 
-  """The saved search that found them. Empty when not about a search"""
+  """
+  The saved search that found them; for MESSAGE_REPLY, who answered. Empty otherwise
+  """
   searchName: String!
 }
 
@@ -1843,6 +1905,12 @@ input ProfileInput {
 }
 
 type Query {
+  """One user’s conversation, oldest first. Marks it read (admins only)"""
+  adminConversation(userId: Int!): [Message!]!
+
+  """Every conversation, unanswered first (admins only)"""
+  adminConversations: [AdminConversation!]!
+
   """Counts, imports this week and server health (admins only)"""
   adminOverview: AdminOverviewModel!
 
@@ -1935,6 +2003,9 @@ type Query {
   """
   myMatcherResume: MatcherResume!
 
+  """Your messages and the answers, oldest first"""
+  myMessages: MyMessages!
+
   """Where your token request stands. Never any part of a key"""
   myPoolKey: MyPoolKey!
   myProfile: Profile!
@@ -2007,6 +2078,11 @@ type RemovedTerm {
   """True when it is removed from every job, not just this one"""
   everywhere: Boolean!
   term: String!
+}
+
+input ReplyMessageInput {
+  body: String!
+  userId: Int!
 }
 
 """Your master resume in one language, as the Resume builder edits it"""
@@ -2308,6 +2384,11 @@ type SectionSuggestion {
   """The improved section as JSON text, ready to put into the resume"""
   section: String!
   sectionId: String!
+}
+
+input SendMessageInput {
+  body: String!
+  topic: MessageTopic!
 }
 
 input SetUserDisabledInput {

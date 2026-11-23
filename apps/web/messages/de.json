@@ -38,7 +38,8 @@
     "language": "Sprache",
     "install": "App installieren",
     "installIos": "Zum Installieren: Teilen antippen, dann „Zum Home-Bildschirm“.",
-    "adminPage": "Admin"
+    "adminPage": "Admin",
+    "questions": "Fragen?"
   },
   "Auth": {
     "logInTitle": "Anmelden",
@@ -2294,7 +2295,10 @@
     "POOL_KEY_NOT_FOUND": "Dieser Schlüssel ist nicht mehr im Pool.",
     "POOL_LIMIT_REACHED": "Du hast alle Credits deines Tokens vom Admin genutzt. Frag nach mehr oder trag in den Einstellungen deinen eigenen Token ein.",
     "KEY_REQUEST_NOT_FOUND": "Diese Anfrage gibt es nicht mehr.",
-    "KEY_REQUEST_DONE": "Diese Anfrage wurde schon beantwortet."
+    "KEY_REQUEST_DONE": "Diese Anfrage wurde schon beantwortet.",
+    "MESSAGE_LENGTH": "Eine Nachricht hat 1 bis {max} Zeichen.",
+    "MESSAGE_LIMIT": "Du kannst {max} Nachrichten pro Stunde senden. Bitte versuch es später noch einmal.",
+    "CONVERSATION_NOT_FOUND": "Diese Unterhaltung gibt es nicht mehr."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",
@@ -2323,7 +2327,9 @@
     "openKeyPool": "Schlüssel-Pool öffnen",
     "approve": "Freigeben: nächsten freien Schlüssel geben",
     "deny": "Ablehnen",
-    "answered": "Beantwortet"
+    "answered": "Beantwortet",
+    "messageReply": "{name} hat auf deine Nachricht geantwortet",
+    "messageHint": "Zum Lesen öffnen"
   },
   "Welcome": {
     "title": "Willkommen, {name}!",
@@ -2424,7 +2430,9 @@
       "users": "Nutzer",
       "access": "Registrierung & Zugang",
       "limits": "Grenzen",
-      "keys": "Schlüssel-Pool"
+      "keys": "Schlüssel-Pool",
+      "messages": "Nachrichten",
+      "waiting": ", {count} warten"
     },
     "access": {
       "modeHeading": "Wer kann ein Konto erstellen?",
@@ -2585,6 +2593,21 @@
       "statusFREE": "Frei",
       "statusASSIGNED": "Vergeben",
       "statusEMPTY": "Leer"
+    },
+    "messages": {
+      "loading": "Nachrichten werden geladen…",
+      "empty": "Noch keine Nachrichten. Wenn jemand aus der App schreibt, erscheint es hier.",
+      "list": "Unterhaltungen",
+      "pick": "Wähle eine Unterhaltung, um sie zu lesen und zu beantworten.",
+      "new": "{count} neu",
+      "you": "Du",
+      "back": "Alle Nachrichten",
+      "conversation": "Unterhaltung mit {name}",
+      "replyLabel": "Deine Antwort an {name}",
+      "replyPlaceholder": "Schreib deine Antwort",
+      "send": "Senden",
+      "sending": "Wird gesendet…",
+      "bellNote": "Die Person bekommt einen Hinweis in der Glocke. Andere Admins sehen deine Antwort auch."
     }
   },
   "Site": {
@@ -2736,7 +2759,27 @@
       "tests": "Tests bei jeder Änderung",
       "phoneApp": "Expo-Handy-App",
       "contactTitle": "Fragen und Vorschläge willkommen",
-      "contactText": "Etwas ist unklar oder Sie haben eine Idee? Ich freue mich darauf."
+      "contactText": "Etwas ist unklar oder Sie haben eine Idee? Ich freue mich darauf.",
+      "messageButton": "Nachricht an {name}"
     }
+  },
+  "Messages": {
+    "title": "Nachricht an {name}",
+    "sub": "Fragen und Vorschläge willkommen",
+    "close": "Schließen",
+    "hello": "Hallo! Ich habe Job Search Hunter für meine eigene Jobsuche gebaut. Wenn etwas unklar ist, nicht funktioniert oder du eine Idee hast, schreib mir hier.",
+    "loading": "Deine Nachrichten werden geladen…",
+    "conversation": "Deine Nachrichten",
+    "topic": "Worum geht es?",
+    "topics": {
+      "QUESTION": "Frage",
+      "SUGGESTION": "Vorschlag",
+      "BROKEN": "Etwas funktioniert nicht"
+    },
+    "label": "Deine Nachricht",
+    "placeholder": "Schreib deine Nachricht",
+    "send": "Senden",
+    "sending": "Wird gesendet…",
+    "answeredBy": "{name} hat geantwortet"
   }
 }
