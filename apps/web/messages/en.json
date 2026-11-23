@@ -2720,10 +2720,6 @@
       "title": "Start your job search today",
       "text": "Create an account, upload your resume and import your first jobs."
     },
-    "footer": {
-      "madeBy": "Made by Mohamed Faizel",
-      "queries": "Queries and suggestions welcome"
-    },
     "about": {
       "metaTitle": "About us",
       "eyebrow": "About us",
@@ -2749,8 +2745,6 @@
       "builtSub": "For anyone who is curious about the technology.",
       "tests": "Tests on every change",
       "phoneApp": "Expo phone app",
-      "contactTitle": "Queries and suggestions welcome",
-      "contactText": "Found something unclear or have an idea? I'd like to hear it.",
       "messageButton": "Message {name}"
     }
   },

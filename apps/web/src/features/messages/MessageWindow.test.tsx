@@ -3,7 +3,6 @@ import { createQueryClient, DataProvider, makeStore } from '@jobsearch/data';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
-import { MakerLine } from '@/components/MakerLine';
 import type { Locale } from '@/i18n/config';
 import { closeMessageWindow, openMessageWindow } from '@/lib/message-window';
 import { Intl } from '@/test/intl';
@@ -85,7 +84,7 @@ function renderWindow(locale: Locale = 'en') {
   render(
     <Intl locale={locale}>
       <DataProvider store={makeStore()} queryClient={createQueryClient()}>
-        <MakerLine loggedIn />
+        <MessageOpener loggedIn>Queries and suggestions welcome ›</MessageOpener>
         <MessageWindowHost />
       </DataProvider>
     </Intl>,
@@ -93,7 +92,7 @@ function renderWindow(locale: Locale = 'en') {
 }
 
 describe('MessageWindow', () => {
-  it('opens from the footer line, shows the conversation and marks answers read', async () => {
+  it('opens from a button, shows the conversation and marks answers read', async () => {
     items = [MINE, ANSWER];
     unread = 1;
     const user = userEvent.setup();

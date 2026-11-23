@@ -4,13 +4,12 @@ import type { ReactNode } from 'react';
 import { FlagStripe } from '@/components/FlagStripe';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { Logo } from '@/components/Logo';
-import { MakerLine } from '@/components/MakerLine';
-import { MessageOpener, MessageWindowHost } from '@/features/messages/MessageOpener';
+import { MessageOpener } from '@/features/messages/MessageOpener';
 import { APP_NAME } from '@/lib/app-name';
 import { MAKER } from '@/lib/maker';
 
 /*
- * The pieces the public pages share: the black header, the footer, and the small parts the
+ * The pieces the public pages share: the black header, and the small parts the
  * intro and About us pages repeat (a screenshot in a browser frame, a gold-ticked list).
  */
 
@@ -90,35 +89,6 @@ export function SiteHeader({ loggedIn, current }: { loggedIn: boolean; current?:
       </header>
       <FlagStripe afterBlack />
     </>
-  );
-}
-
-/**
- * The bottom of the public pages: the maker line, About us and GitHub. Logged in, the maker
- * line opens the message window.
- */
-export function SiteFooter({ loggedIn = false }: { loggedIn?: boolean }) {
-  const t = useTranslations('Site.nav');
-  return (
-    <footer className="border-t border-slate-200 bg-white py-6">
-      <div className={`${WRAP} flex flex-wrap items-center gap-x-6 gap-y-3`}>
-        <span className="text-sm text-slate-600">© 2026 {APP_NAME}</span>
-        <MakerLine loggedIn={loggedIn} />
-        <span className="flex-1" />
-        <Link href="/about" className="text-sm text-slate-600 hover:text-black">
-          {t('about')}
-        </Link>
-        <a
-          href={MAKER.github}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm text-slate-600 hover:text-black"
-        >
-          GitHub
-        </a>
-      </div>
-      {loggedIn && <MessageWindowHost />}
-    </footer>
   );
 }
 

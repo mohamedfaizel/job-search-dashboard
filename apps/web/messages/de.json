@@ -2720,10 +2720,6 @@
       "title": "Starten Sie Ihre Jobsuche heute",
       "text": "Konto erstellen, Lebenslauf hochladen und die ersten Jobs importieren."
     },
-    "footer": {
-      "madeBy": "Entwickelt von Mohamed Faizel",
-      "queries": "Fragen und Vorschläge willkommen"
-    },
     "about": {
       "metaTitle": "Über uns",
       "eyebrow": "Über uns",
@@ -2749,8 +2745,6 @@
       "builtSub": "Für alle, die die Technik interessiert.",
       "tests": "Tests bei jeder Änderung",
       "phoneApp": "Expo-Handy-App",
-      "contactTitle": "Fragen und Vorschläge willkommen",
-      "contactText": "Etwas ist unklar oder Sie haben eine Idee? Ich freue mich darauf.",
       "messageButton": "Nachricht an {name}"
     }
   },

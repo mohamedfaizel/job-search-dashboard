@@ -53,6 +53,7 @@ const ALL_HREFS = [
   '/settings',
   '/admin',
   '/messages',
+  '/about',
 ];
 
 /** The first-login steps' page. */

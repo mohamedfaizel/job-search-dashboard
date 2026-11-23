@@ -2,16 +2,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { DEMO_VIDEO_URL, MAKER } from '@/lib/maker';
 import { DifferentSlider } from './DifferentSlider';
-import {
-  GOLD_BUTTON,
-  MakerLinks,
-  Shot,
-  SiteFooter,
-  SiteHeader,
-  Tag,
-  TickList,
-  WRAP,
-} from './SiteChrome';
+import { GOLD_BUTTON, MakerLinks, Shot, SiteHeader, Tag, TickList, WRAP } from './SiteChrome';
 import { JOB_HUNTER_SOURCES } from './sources';
 
 const H2 = 'text-3xl font-bold tracking-tight text-balance sm:text-4xl';
@@ -37,7 +28,6 @@ export function IntroPage({ loggedIn }: { loggedIn: boolean }) {
         <Trust />
         <FinalCall />
       </main>
-      <SiteFooter loggedIn={loggedIn} />
     </div>
   );
 }

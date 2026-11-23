@@ -99,6 +99,16 @@ describe('AppFrame', () => {
     expect(screen.getByRole('link', { name: 'Über uns' })).toHaveAttribute('href', '/about');
   });
 
+  it('lights up the i on About us', async () => {
+    session.user = ADMIN;
+    location.pathname = '/about';
+    renderFrame();
+    expect(await screen.findByRole('link', { name: 'About us' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
+
   it('opens the avatar menu with My profile, Settings and Log out', async () => {
     session.user = { ...ADMIN, role: 'USER', name: 'Mohamed Faizel' };
     location.pathname = '/settings';

@@ -114,13 +114,9 @@ describe('IntroPage', () => {
     expect(screen.queryByRole('link', { name: /Watch the demo/ })).not.toBeInTheDocument();
   });
 
-  it('ends with the maker line that leads to questions and ideas', () => {
+  it('has no footer', () => {
     renderIntro();
-    const footer = screen.getByRole('contentinfo');
-    expect(within(footer).getByText('Made by Mohamed Faizel')).toBeInTheDocument();
-    expect(
-      within(footer).getByRole('link', { name: /Queries and suggestions welcome/ }),
-    ).toHaveAttribute('href', '/about#contact');
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument();
   });
 
   it('speaks German', () => {
