@@ -3,7 +3,7 @@ import { Intl } from '../../test/intl';
 import { AboutContent, AboutPage } from './AboutPage';
 
 describe('AboutPage', () => {
-  it('fits the story, the values and how to get in touch on one compact page', () => {
+  it('opens with the maker welcome, then the story, the values and the technology', () => {
     render(
       <Intl>
         <AboutPage />
@@ -16,7 +16,10 @@ describe('AboutPage', () => {
       expect(screen.getByRole('region', { name })).toBeInTheDocument();
     }
     const hero = screen.getByRole('region', { name: /One person's job search/ });
-    expect(within(hero).getByRole('img', { name: 'Mohamed Faizel' })).toBeInTheDocument();
+    expect(
+      within(hero).getByRole('img', { name: 'Mohamed Faizel at his desk with a laptop' }),
+    ).toBeInTheDocument();
+    expect(within(hero).getByText(/Good luck with your search/)).toBeInTheDocument();
     expect(within(hero).getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
       'https://github.com/mohamedfaizel',

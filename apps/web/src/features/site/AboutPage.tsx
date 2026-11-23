@@ -1,7 +1,6 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { MAKER } from '@/lib/maker';
-import { MakerLinks, SiteHeader } from './SiteChrome';
+import { MakerWelcome, SiteHeader, WRAP } from './SiteChrome';
 
 const STACK = ['Next.js', 'NestJS', 'PostgreSQL', 'Prisma', 'TypeScript'] as const;
 const CARD = 'rounded-2xl border border-slate-200 bg-white p-5';
@@ -17,9 +16,9 @@ function CardTitle({ id, children }: { id: string; children: ReactNode }) {
 }
 
 /**
- * About us, compact: one card with the round photo, who built the app and why, and the
- * Message / LinkedIn / GitHub buttons; then the story, the values and the technology side by
- * side. It fits on one screen. Logged in, the page sits inside the app's own header (see
+ * About us: the maker's welcome on top (the big desk photo, who built the app and why, and the
+ * Message / LinkedIn / GitHub buttons, as on the intro page), then the story, the values and
+ * the technology side by side in three cards. Logged in, the page sits inside the app's own header (see
  * app/about/page.tsx); a visitor sees the public header.
  */
 export function AboutContent({ loggedIn }: { loggedIn: boolean }) {
@@ -27,83 +26,59 @@ export function AboutContent({ loggedIn }: { loggedIn: boolean }) {
   const steps = [1, 2, 3] as const;
   const values = [1, 2, 3, 4] as const;
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
-      <section
-        id="contact"
-        aria-labelledby="about-title"
-        className={`${CARD} flex scroll-mt-4 flex-col gap-5 sm:flex-row sm:items-center sm:p-6`}
-      >
-        <img
-          src={MAKER.face}
-          alt={MAKER.name}
-          width={120}
-          height={120}
-          className="h-20 w-20 shrink-0 rounded-full border-4 border-brand-400 sm:h-24 sm:w-24"
-        />
-        <div>
-          <p className="text-xs font-extrabold tracking-wide text-slate-500 uppercase">
-            {t('eyebrow')}
-          </p>
-          <h1
-            id="about-title"
-            className="mt-1 text-2xl leading-tight font-bold tracking-tight text-balance sm:text-3xl"
-          >
-            {t('title')}
-          </h1>
-          <p className="mt-2 max-w-[62ch] text-slate-700">{t('lead')}</p>
-          <MakerLinks loggedIn={loggedIn} />
+    <>
+      <MakerWelcome title={t('title')} page loggedIn={loggedIn} />
+      <div className={`${WRAP} py-8`}>
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_1.3fr_0.9fr]">
+          <section aria-labelledby="story-title" className={CARD}>
+            <CardTitle id="story-title">{t('storyTitle')}</CardTitle>
+            <ol className="mt-3 space-y-3 text-sm text-slate-700">
+              {steps.map((n) => (
+                <li key={n} className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-brand-400">
+                    {n}
+                  </span>
+                  <span>
+                    <strong className="text-slate-900">{t(`s${n}Title`)}</strong> · {t(`s${n}`)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section aria-labelledby="values-title" className={CARD}>
+            <CardTitle id="values-title">{t('valuesTitle')}</CardTitle>
+            <ul className="mt-3 space-y-2.5 text-sm text-slate-700">
+              {values.map((n) => (
+                <li key={n} className="flex gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded bg-brand-400 text-[11px] font-black text-black"
+                  >
+                    ✓
+                  </span>
+                  <span>
+                    <strong className="text-slate-900">{t(`v${n}Title`)}</strong> · {t(`v${n}`)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section aria-labelledby="built-title" className={CARD}>
+            <CardTitle id="built-title">{t('builtTitle')}</CardTitle>
+            <p className="mt-2 text-sm text-slate-600">{t('builtSub')}</p>
+            <ul className="mt-3 flex flex-wrap gap-1.5 text-xs font-semibold text-white">
+              {[...STACK, t('phoneApp'), t('tests')].map((item) => (
+                <li key={item} className="rounded-md bg-black px-2.5 py-1">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </section>
         </div>
-      </section>
-
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_1.3fr_0.9fr]">
-        <section aria-labelledby="story-title" className={CARD}>
-          <CardTitle id="story-title">{t('storyTitle')}</CardTitle>
-          <ol className="mt-3 space-y-3 text-sm text-slate-700">
-            {steps.map((n) => (
-              <li key={n} className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-brand-400">
-                  {n}
-                </span>
-                <span>
-                  <strong className="text-slate-900">{t(`s${n}Title`)}</strong> · {t(`s${n}`)}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section aria-labelledby="values-title" className={CARD}>
-          <CardTitle id="values-title">{t('valuesTitle')}</CardTitle>
-          <ul className="mt-3 space-y-2.5 text-sm text-slate-700">
-            {values.map((n) => (
-              <li key={n} className="flex gap-3">
-                <span
-                  aria-hidden="true"
-                  className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded bg-brand-400 text-[11px] font-black text-black"
-                >
-                  ✓
-                </span>
-                <span>
-                  <strong className="text-slate-900">{t(`v${n}Title`)}</strong> · {t(`v${n}`)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section aria-labelledby="built-title" className={CARD}>
-          <CardTitle id="built-title">{t('builtTitle')}</CardTitle>
-          <p className="mt-2 text-sm text-slate-600">{t('builtSub')}</p>
-          <ul className="mt-3 flex flex-wrap gap-1.5 text-xs font-semibold text-white">
-            {[...STACK, t('phoneApp'), t('tests')].map((item) => (
-              <li key={item} className="rounded-md bg-black px-2.5 py-1">
-                {item}
-              </li>
-            ))}
-          </ul>
-        </section>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -112,7 +87,7 @@ export function AboutPage() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <SiteHeader loggedIn={false} current="about" />
-      <main id="main" className="px-4 py-6 sm:px-6">
+      <main id="main">
         <AboutContent loggedIn={false} />
       </main>
     </div>

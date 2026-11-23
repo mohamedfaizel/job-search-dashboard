@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { DEMO_VIDEO_URL, MAKER } from '@/lib/maker';
+import { DEMO_VIDEO_URL } from '@/lib/maker';
 import { DifferentSlider } from './DifferentSlider';
-import { GOLD_BUTTON, MakerLinks, Shot, SiteHeader, Tag, TickList, WRAP } from './SiteChrome';
+import { GOLD_BUTTON, MakerWelcome, Shot, SiteHeader, Tag, TickList, WRAP } from './SiteChrome';
 import { JOB_HUNTER_SOURCES } from './sources';
 
 const H2 = 'text-3xl font-bold tracking-tight text-balance sm:text-4xl';
@@ -34,29 +34,7 @@ export function IntroPage({ loggedIn }: { loggedIn: boolean }) {
 
 function MakerMessage() {
   const t = useTranslations('Site.message');
-  return (
-    <section aria-labelledby="maker-title" className="border-b border-slate-200 bg-slate-100 py-12">
-      <div className={`${WRAP} grid items-center gap-8 md:grid-cols-[5fr_6fr] md:gap-12`}>
-        <img
-          src={MAKER.photo}
-          alt={t('photoAlt')}
-          width={1000}
-          height={839}
-          className="h-auto w-full rounded-2xl border-b-[6px] border-brand-400 shadow-xl"
-        />
-        <div>
-          <Tag>{t('eyebrow')}</Tag>
-          <h2 id="maker-title" className={`${H2} mt-3`}>
-            {t('title')}
-          </h2>
-          <p className="mt-3 max-w-prose text-slate-700">{t('p1')}</p>
-          <p className="mt-3 max-w-prose text-slate-700">{t('p2')}</p>
-          <p className="mt-3 font-bold italic">{t('sign')}</p>
-          <MakerLinks />
-        </div>
-      </div>
-    </section>
-  );
+  return <MakerWelcome eyebrow={t('eyebrow')} title={t('title')} />;
 }
 
 function Hero() {

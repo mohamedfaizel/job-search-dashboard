@@ -155,7 +155,7 @@ export function Tag({ children }: { children: ReactNode }) {
  * Message Mohamed (when `loggedIn` is given; a visitor logs in first), then LinkedIn and GitHub.
  * LinkedIn only shows when its address is set.
  */
-export function MakerLinks({ loggedIn }: { loggedIn?: boolean }) {
+export function MakerLinks({ loggedIn }: { loggedIn?: boolean | undefined }) {
   const t = useTranslations('Site.about');
   return (
     <div className="mt-5 flex flex-wrap gap-2">
@@ -173,5 +173,57 @@ export function MakerLinks({ loggedIn }: { loggedIn?: boolean }) {
         GitHub
       </a>
     </div>
+  );
+}
+
+/**
+ * The maker's welcome: the big desk photo on the left, then a title, two short paragraphs,
+ * the sign-off and the buttons. The intro page opens with it, and so does About us.
+ */
+export function MakerWelcome({
+  title,
+  eyebrow,
+  page = false,
+  loggedIn,
+}: {
+  title: string;
+  /** A small black label above the title (the intro page). */
+  eyebrow?: string;
+  /** On About us the title is the page's h1. */
+  page?: boolean;
+  /** Given: show the Message button (a visitor logs in first). */
+  loggedIn?: boolean | undefined;
+}) {
+  const t = useTranslations('Site.message');
+  const Heading = page ? 'h1' : 'h2';
+  return (
+    <section
+      id="contact"
+      aria-labelledby="maker-title"
+      className="scroll-mt-4 border-b border-slate-200 bg-slate-100 py-12"
+    >
+      <div className={`${WRAP} grid items-center gap-8 md:grid-cols-[5fr_6fr] md:gap-12`}>
+        <img
+          src={MAKER.photo}
+          alt={t('photoAlt')}
+          width={1000}
+          height={839}
+          className="h-auto w-full rounded-2xl border-b-[6px] border-brand-400 shadow-xl"
+        />
+        <div>
+          {eyebrow && <Tag>{eyebrow}</Tag>}
+          <Heading
+            id="maker-title"
+            className={`${eyebrow ? 'mt-3 ' : ''}text-3xl font-bold tracking-tight text-balance sm:text-4xl`}
+          >
+            {title}
+          </Heading>
+          <p className="mt-3 max-w-prose text-slate-700">{t('p1')}</p>
+          <p className="mt-3 max-w-prose text-slate-700">{t('p2')}</p>
+          <p className="mt-3 font-bold italic">{t('sign')}</p>
+          <MakerLinks loggedIn={loggedIn} />
+        </div>
+      </div>
+    </section>
   );
 }
