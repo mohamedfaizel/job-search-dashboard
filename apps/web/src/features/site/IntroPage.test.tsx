@@ -1,6 +1,7 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { Locale } from '@/i18n/config';
 import { Intl } from '../../test/intl';
+import { SLIDE_MS } from './DifferentSlider';
 import { IntroPage } from './IntroPage';
 import { JOB_HUNTER_SOURCES, SOURCE_COUNT } from './sources';
 
@@ -49,19 +50,63 @@ describe('IntroPage', () => {
     expect(within(header).queryByRole('link', { name: 'Log in' })).not.toBeInTheDocument();
   });
 
-  it('lists the four things that make the app different and all 40 live sources', () => {
+  it('shows the four things that make the app different as tabs, titles only', () => {
     renderIntro();
-    for (const title of [
-      'It remembers your missing skills',
-      'Every job detail, highlighted',
-      'Scheduled searches and alerts',
-      'Know what to ask for',
-    ]) {
-      expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      '1It remembers your missing skills',
+      '2Every job detail, highlighted',
+      '3Scheduled searches and alerts',
+      '4Know what to ask for',
+    ]);
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+    expect(
+      within(screen.getByRole('tabpanel')).getByRole('img', { name: /missing skills/ }),
+    ).toBeInTheDocument();
+    // The long descriptions are gone.
+    expect(screen.queryByText(/Tick the ones you really have/)).not.toBeInTheDocument();
+  });
+
+  it('moves the slider on by itself, and stops once you pick a picture', () => {
+    vi.useFakeTimers();
+    try {
+      renderIntro();
+      act(() => {
+        vi.advanceTimersByTime(SLIDE_MS);
+      });
+      expect(screen.getAllByRole('tab')[1]).toHaveAttribute('aria-selected', 'true');
+      fireEvent.click(screen.getByRole('tab', { name: /Know what to ask for/ }));
+      expect(screen.getByRole('img', { name: /Salary tab/ })).toBeInTheDocument();
+      act(() => {
+        vi.advanceTimersByTime(SLIDE_MS * 2);
+      });
+      expect(screen.getAllByRole('tab')[3]).toHaveAttribute('aria-selected', 'true');
+      // Arrows wrap around; ← and → move between tabs.
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      expect(screen.getAllByRole('tab')[0]).toHaveAttribute('aria-selected', 'true');
+      fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+      expect(screen.getAllByRole('tab')[3]).toHaveAttribute('aria-selected', 'true');
+      fireEvent.keyDown(screen.getAllByRole('tab')[3] as HTMLElement, { key: 'ArrowRight' });
+      expect(screen.getAllByRole('tab')[0]).toHaveFocus();
+      fireEvent.keyDown(screen.getAllByRole('tab')[0] as HTMLElement, { key: 'Home' });
+      fireEvent.keyDown(screen.getAllByRole('tab')[0] as HTMLElement, { key: 'ArrowLeft' });
+      expect(screen.getAllByRole('tab')[3]).toHaveAttribute('aria-selected', 'true');
+    } finally {
+      vi.useRealTimers();
     }
+  });
+
+  it('shows the Job Market next to all 40 live sources', () => {
+    renderIntro();
+    const market = screen.getByRole('region', { name: 'Live jobs from 40+ sources' });
+    expect(within(market).getByText('Job Market')).toBeInTheDocument();
+    expect(
+      within(market).getByRole('img', { name: 'Job Market form with three sources' }),
+    ).toBeInTheDocument();
     expect(SOURCE_COUNT).toBe(40);
-    expect(screen.getByText(JOB_HUNTER_SOURCES.boards.join(' · '))).toBeInTheDocument();
-    expect(screen.getByText(JOB_HUNTER_SOURCES.ats.join(' · '))).toBeInTheDocument();
+    expect(within(market).getByText(JOB_HUNTER_SOURCES.boards.join(' · '))).toBeInTheDocument();
+    expect(within(market).getByText(JOB_HUNTER_SOURCES.ats.join(' · '))).toBeInTheDocument();
+    expect(screen.queryByText('One search, many job boards')).not.toBeInTheDocument();
   });
 
   it('hides the demo button until there is a video', () => {
@@ -84,5 +129,6 @@ describe('IntroPage', () => {
       'Passende Jobs finden. Schneller bewerben. Den Überblick behalten.',
     );
     expect(screen.getAllByRole('link', { name: 'Konto erstellen' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument();
   });
 });

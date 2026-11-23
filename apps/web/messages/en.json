@@ -2662,25 +2662,15 @@
       "title": "What makes it different",
       "sub": "Most job sites stop at a list of ads. Job Search Hunter keeps working for you after that.",
       "u1Title": "It remembers your missing skills",
-      "u1": "Each job shows the skills and keywords your resume is missing. Tick the ones you really have and they are saved to your profile, so they count for every job after that.",
       "u1Alt": "Fit tab with missing skills and keywords",
       "u2Title": "Every job detail, highlighted",
-      "u2": "The job popup marks seniority, remote or on-site, salary, visa support and the ad's language. It also warns you about scams and reposted ads.",
       "u2Alt": "Job popup warning that an ad may be a scam",
-      "tags": {
-        "seniority": "Seniority",
-        "remote": "Remote",
-        "salary": "Salary",
-        "visa": "Visa",
-        "language": "Language",
-        "scam": "Scam check"
-      },
       "u3Title": "Scheduled searches and alerts",
-      "u3": "Save a search and let it run on a schedule. The bell tells you when new jobs that fit you arrive, on the web and on your phone.",
       "u3Alt": "Notification: new jobs that fit you from a saved search",
       "u4Title": "Know what to ask for",
-      "u4": "The Salary tab compares the pay with similar jobs in the same country and gives you ready lines for the salary talk.",
-      "u4Alt": "Salary tab comparing the pay with similar jobs"
+      "u4Alt": "Salary tab comparing the pay with similar jobs",
+      "previous": "Previous",
+      "next": "Next"
     },
     "sourceList": {
       "title": "Live jobs from 40+ sources",
@@ -2691,7 +2681,6 @@
     },
     "features": {
       "marketTag": "Job Market",
-      "marketTitle": "One search, many job boards",
       "market1": "Search the Arbeitsagentur, company career pages and JobHunter from one form.",
       "market2": "Save a search and run it again on a schedule.",
       "market3": "Skip titles you don't want, like Werkstudent or Praktikum.",

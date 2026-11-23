@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { DEMO_VIDEO_URL, MAKER } from '@/lib/maker';
+import { DifferentSlider } from './DifferentSlider';
 import {
   GOLD_BUTTON,
   MakerLinks,
@@ -17,8 +18,9 @@ const H2 = 'text-3xl font-bold tracking-tight text-balance sm:text-4xl';
 
 /**
  * The page people see before they log in (/). Top to bottom: a message from the maker, what
- * the app does with a big screenshot, the job sources, how it works, what makes it different,
- * the 40+ live sources, four features, privacy, and a last Sign up button.
+ * the app does with a big screenshot, the job sources, how it works, what makes it different
+ * (a slider), the Job Market with its 40+ live sources, three features, privacy, and a last
+ * Sign up button.
  */
 export function IntroPage({ loggedIn }: { loggedIn: boolean }) {
   return (
@@ -166,14 +168,6 @@ function HowItWorks() {
   );
 }
 
-const UNIQUE = [
-  { n: 1, img: '/site/missing-skills.jpg', w: 760, h: 263 },
-  { n: 2, img: '/site/scam-check.jpg', w: 760, h: 297 },
-  { n: 3, img: '/site/alerts.jpg', w: 760, h: 560 },
-  { n: 4, img: '/site/salary.jpg', w: 760, h: 396 },
-] as const;
-const DETAIL_TAGS = ['seniority', 'remote', 'salary', 'visa', 'language'] as const;
-
 function WhatIsDifferent() {
   const t = useTranslations('Site.unique');
   return (
@@ -183,54 +177,19 @@ function WhatIsDifferent() {
           {t('title')}
         </h2>
         <p className="mt-2 mb-8 max-w-prose text-slate-600">{t('sub')}</p>
-        <div className="grid gap-6 md:grid-cols-2">
-          {UNIQUE.map(({ n, img, w, h }) => (
-            <article
-              key={n}
-              className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white"
-            >
-              <div className="h-44 overflow-hidden border-b border-slate-200 bg-slate-50 sm:h-52">
-                <img
-                  src={img}
-                  alt={t(`u${n}Alt`)}
-                  width={w}
-                  height={h}
-                  loading="lazy"
-                  className="h-full w-full object-cover object-left-top"
-                />
-              </div>
-              <div className="grid gap-2 p-5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-xs font-black text-brand-400">
-                  {n}
-                </span>
-                <h3 className="text-lg font-bold">{t(`u${n}Title`)}</h3>
-                <p className="text-slate-700">{t(`u${n}`)}</p>
-                {n === 2 && (
-                  <ul className="mt-1 flex flex-wrap gap-1.5 text-xs font-bold">
-                    {DETAIL_TAGS.map((tag) => (
-                      <li
-                        key={tag}
-                        className="rounded border border-brand-300 bg-brand-50 px-2 py-0.5"
-                      >
-                        {t(`tags.${tag}`)}
-                      </li>
-                    ))}
-                    <li className="rounded border border-red-300 bg-red-50 px-2 py-0.5 text-red-800">
-                      {t('tags.scam')}
-                    </li>
-                  </ul>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
+        <DifferentSlider />
       </div>
     </section>
   );
 }
 
+/**
+ * The Job Market and the 40+ live sources, in one section: the text and the form side by side,
+ * then the three lists of sources under both.
+ */
 function LiveSources() {
   const t = useTranslations('Site.sourceList');
+  const tf = useTranslations('Site.features');
   const groups = [
     { key: 'boards', names: JOB_HUNTER_SOURCES.boards },
     { key: 'public', names: JOB_HUNTER_SOURCES.public },
@@ -239,11 +198,20 @@ function LiveSources() {
   return (
     <section aria-labelledby="sources-title" className="py-16">
       <div className={WRAP}>
-        <h2 id="sources-title" className={H2}>
-          {t('title')}
-        </h2>
-        <p className="mt-2 mb-8 max-w-prose text-slate-600">{t('sub')}</p>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid items-center gap-8 md:grid-cols-12 md:gap-12">
+          <div className="md:col-span-5">
+            <Tag>{tf('marketTag')}</Tag>
+            <h2 id="sources-title" className={`mt-3 ${H2}`}>
+              {t('title')}
+            </h2>
+            <p className="mt-2 max-w-prose text-slate-600">{t('sub')}</p>
+            <TickList items={[tf('market1'), tf('market2'), tf('market3')]} />
+          </div>
+          <div className="md:col-span-7">
+            <Shot src="/site/job-market.jpg" alt={tf('marketAlt')} width={1100} height={548} />
+          </div>
+        </div>
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
           {groups.map(({ key, names }) => (
             <div key={key} className="border-t-[3px] border-brand-400 pt-3">
               <h3 className="flex items-baseline gap-2 font-bold">
@@ -262,7 +230,6 @@ function LiveSources() {
 }
 
 const FEATURES = [
-  { key: 'market', img: '/site/job-market.jpg', h: 773 },
   { key: 'apply', img: '/site/apply.jpg', h: 773 },
   { key: 'resume', img: '/site/resume-designs.jpg', h: 247 },
   { key: 'tracker', img: '/site/tracker.jpg', h: 773 },

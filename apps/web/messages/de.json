@@ -2662,25 +2662,15 @@
       "title": "Was die App anders macht",
       "sub": "Die meisten Jobseiten zeigen nur eine Liste. Job Search Hunter arbeitet danach weiter für Sie.",
       "u1Title": "Fehlende Skills werden gemerkt",
-      "u1": "Jeder Job zeigt, welche Skills und Begriffe in Ihrem Lebenslauf fehlen. Haken Sie an, was Sie wirklich können: Es wird in Ihrem Profil gespeichert und zählt ab dann für jeden Job.",
       "u1Alt": "Fit-Tab mit fehlenden Skills und Begriffen",
       "u2Title": "Jedes Job-Detail hervorgehoben",
-      "u2": "Das Job-Fenster markiert Level, Remote oder vor Ort, Gehalt, Visum und die Sprache der Anzeige. Es warnt auch vor Betrug und neu eingestellten Anzeigen.",
       "u2Alt": "Job-Fenster mit Warnung vor möglichem Betrug",
-      "tags": {
-        "seniority": "Level",
-        "remote": "Remote",
-        "salary": "Gehalt",
-        "visa": "Visum",
-        "language": "Sprache",
-        "scam": "Betrugs-Check"
-      },
       "u3Title": "Geplante Suchen und Hinweise",
-      "u3": "Suche speichern und automatisch laufen lassen. Die Glocke meldet neue passende Jobs, im Web und auf dem Handy.",
       "u3Alt": "Hinweis: neue passende Jobs aus einer gespeicherten Suche",
       "u4Title": "Wissen, was Sie verlangen können",
-      "u4": "Der Gehalt-Tab vergleicht das Gehalt mit ähnlichen Jobs im selben Land und gibt Ihnen fertige Sätze für das Gehaltsgespräch.",
-      "u4Alt": "Gehalt-Tab mit Vergleich zu ähnlichen Jobs"
+      "u4Alt": "Gehalt-Tab mit Vergleich zu ähnlichen Jobs",
+      "previous": "Zurück",
+      "next": "Weiter"
     },
     "sourceList": {
       "title": "Live-Jobs aus über 40 Quellen",
@@ -2691,7 +2681,6 @@
     },
     "features": {
       "marketTag": "Jobmarkt",
-      "marketTitle": "Eine Suche, viele Jobbörsen",
       "market1": "Arbeitsagentur, Karriereseiten und JobHunter in einem Formular durchsuchen.",
       "market2": "Suche speichern und automatisch wiederholen lassen.",
       "market3": "Unerwünschte Titel ausblenden, z. B. Werkstudent oder Praktikum.",
