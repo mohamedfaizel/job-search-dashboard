@@ -35,7 +35,7 @@ export function IntroPage({ loggedIn }: { loggedIn: boolean }) {
         <Trust />
         <FinalCall />
       </main>
-      <SiteFooter />
+      <SiteFooter loggedIn={loggedIn} />
     </div>
   );
 }

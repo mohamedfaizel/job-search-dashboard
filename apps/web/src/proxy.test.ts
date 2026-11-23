@@ -20,9 +20,10 @@ describe('proxy', () => {
     );
   });
 
-  it('shows visitors the intro page and sends logged-in people to My Jobs', () => {
+  it('shows the intro page to everyone, logged in or not', () => {
     expect(redirectedTo('/', false)).toBeNull();
-    expect(redirectedTo('/', true)).toBe('/jobs');
+    // Logged in, the intro page still opens; its header has an Open My Jobs button.
+    expect(redirectedTo('/', true)).toBeNull();
   });
 
   it('opens About us for everyone', () => {

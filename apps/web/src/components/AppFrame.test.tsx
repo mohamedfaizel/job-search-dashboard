@@ -72,6 +72,11 @@ describe('AppFrame', () => {
 
     const footer = await screen.findByRole('contentinfo');
     expect(within(footer).getByText('Made by Mohamed Faizel')).toBeInTheDocument();
+    // The intro's How it works and Features, and About us, are one click away.
+    const site = within(within(footer).getByRole('navigation', { name: 'Site' }));
+    expect(site.getByRole('link', { name: 'How it works' })).toHaveAttribute('href', '/#how');
+    expect(site.getByRole('link', { name: 'Features' })).toHaveAttribute('href', '/#features');
+    expect(site.getByRole('link', { name: 'About us' })).toHaveAttribute('href', '/about');
     await user.click(
       within(footer).getByRole('button', { name: /Queries and suggestions welcome/ }),
     );
