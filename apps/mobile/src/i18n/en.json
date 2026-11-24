@@ -67,7 +67,8 @@
     "keyLimit": "You used all {count} credits of your token from the admin.",
     "keyTakenBack": "The admin took your token back. Imports now need your own token.",
     "messageReply": "{name} replied to your message",
-    "messageHint": "Open to read it"
+    "messageHint": "Open to read it",
+    "autopilot": "Autopilot for “{search}”: {count, plural, =0 {nothing queued} one {# job queued} other {# jobs queued}}"
   },
   "Maker": {
     "help": "Queries and suggestions"

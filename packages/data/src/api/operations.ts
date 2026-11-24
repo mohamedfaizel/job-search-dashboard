@@ -222,6 +222,11 @@ const SAVED_SEARCH_FIELDS = /* GraphQL */ `
   runAt
   nextRunAt
   scheduleNote
+  autopilot
+  autoQueueFitMin
+  autoQueueNeedsVisa
+  autoHideFitBelow
+  autoQueueMaxPerDay
   createdAt
   lastRun {
     ${SYNC_RUN_FIELDS}
@@ -287,6 +292,20 @@ export const SET_SAVED_SEARCH_SCHEDULE = /* GraphQL */ `
     setSavedSearchSchedule(id: $id, input: $input) {
       ${SAVED_SEARCH_FIELDS}
     }
+  }
+`;
+
+export const SET_SAVED_SEARCH_AUTOPILOT = /* GraphQL */ `
+  mutation SetSavedSearchAutopilot($id: Int!, $input: AutopilotInput!) {
+    setSavedSearchAutopilot(id: $id, input: $input) {
+      ${SAVED_SEARCH_FIELDS}
+    }
+  }
+`;
+
+export const UNDO_AUTOPILOT = /* GraphQL */ `
+  mutation UndoAutopilot($notificationId: Int!) {
+    undoAutopilot(notificationId: $notificationId)
   }
 `;
 
@@ -1016,6 +1035,9 @@ export const NOTIFICATIONS = /* GraphQL */ `
         fitMin
         at
         refId
+        hidden
+        kept
+        undone
         readAt
         createdAt
         jobs {

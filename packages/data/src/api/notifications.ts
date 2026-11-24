@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
-import { MARK_NOTIFICATIONS_READ, NOTIFICATIONS } from './operations';
+import { MARK_NOTIFICATIONS_READ, NOTIFICATIONS, UNDO_AUTOPILOT } from './operations';
 import type { Notifications } from './types';
 
 export const notificationsKey = ['notifications'] as const;
@@ -46,6 +46,25 @@ export function useMarkNotificationsRead() {
       if (before) {
         queryClient.setQueryData(notificationsKey, allRead(before, new Date().toISOString()));
       }
+    },
+  });
+}
+
+/** Undo in the bell: an Autopilot run's jobs leave the queue and show on Job posts again. */
+export function useUndoAutopilot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (notificationId: number) => {
+      const data = await graphqlClient.request<{ undoAutopilot: boolean }>(UNDO_AUTOPILOT, {
+        notificationId,
+      });
+      return data.undoAutopilot;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: notificationsKey }),
+        queryClient.invalidateQueries({ queryKey: ['jobs'] }),
+      ]);
     },
   });
 }

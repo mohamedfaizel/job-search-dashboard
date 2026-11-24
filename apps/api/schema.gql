@@ -194,6 +194,21 @@ type ApplyQueuePrompt {
   waiting: Int!
 }
 
+input AutopilotInput {
+  """Hide a new job under this Fit %. 0 = never hide for its Fit"""
+  autoHideFitBelow: Int!
+
+  """Queue a new job with at least this Fit %"""
+  autoQueueFitMin: Int!
+
+  """The most jobs it queues in one day, all searches together"""
+  autoQueueMaxPerDay: Int!
+
+  """Don't queue a job whose ad says no visa sponsorship"""
+  autoQueueNeedsVisa: Boolean!
+  autopilot: Boolean!
+}
+
 type Company {
   domain: String
   id: Int!
@@ -1471,6 +1486,9 @@ type Mutation {
   """
   setLocale(locale: String!): User!
 
+  """Save a saved search's Autopilot rules"""
+  setSavedSearchAutopilot(id: Int!, input: AutopilotInput!): SavedSearch!
+
   """Turn scheduled runs of a saved search on or off"""
   setSavedSearchSchedule(id: Int!, input: ScheduleInput!): SavedSearch!
 
@@ -1516,6 +1534,9 @@ type Mutation {
   Tries a saved key: JobHunter with a one-job search (at most 1 credit), Claude and OpenAI by listing their models (free).
   """
   testApiKey(kind: ApiKeyKind!): ApiKeyTest!
+
+  """Undo one Autopilot run (bell): its jobs leave the queue and show again"""
+  undoAutopilot(notificationId: Int!): Boolean!
 
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
@@ -1621,13 +1642,19 @@ type Notification {
 
   """The Fit % a job needed to count"""
   fitMin: Int!
+
+  """AUTOPILOT: how many new jobs it hid"""
+  hidden: Int!
   id: Int!
 
   """The best few jobs, best fit first"""
   jobs: [NotificationJob!]!
 
+  """AUTOPILOT: how many new jobs it left on Job posts for you"""
+  kept: Int!
+
   """
-  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message
+  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`
   """
   kind: String!
 
@@ -1643,6 +1670,9 @@ type Notification {
   The saved search that found them; for MESSAGE_REPLY, who answered. Empty otherwise
   """
   searchName: String!
+
+  """AUTOPILOT: you pressed Undo"""
+  undone: Boolean!
 }
 
 """A job a notification points to"""
@@ -2240,6 +2270,21 @@ type SavedAnswer {
 }
 
 type SavedSearch {
+  """Autopilot hides a new job under this Fit %. 0 = never"""
+  autoHideFitBelow: Int!
+
+  """Autopilot queues a new job with at least this Fit %"""
+  autoQueueFitMin: Int!
+
+  """The most jobs Autopilot queues in one day"""
+  autoQueueMaxPerDay: Int!
+
+  """Autopilot doesn't queue a job whose ad says no visa sponsorship"""
+  autoQueueNeedsVisa: Boolean!
+
+  """Autopilot: after each run, queue good fits and hide poor ones"""
+  autopilot: Boolean!
+
   """Company career pages, for the COMPANY_BOARDS source"""
   boards: [String!]!
   countryCodes: [String!]!

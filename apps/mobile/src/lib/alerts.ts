@@ -54,6 +54,9 @@ export function useHeadline() {
       }
       const key = KEY_POOL_TEXT[item.kind];
       if (key) return t(key, { name: item.searchName, count: item.count });
+      if (item.kind === 'AUTOPILOT') {
+        return t('autopilot', { search: item.searchName, count: item.count });
+      }
       return item.kind === 'INTERVIEW_SOON' && item.at
         ? t('interviewSoon', {
             when: new Intl.DateTimeFormat(locale, {

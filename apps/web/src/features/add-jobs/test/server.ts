@@ -51,6 +51,11 @@ export const SAVED: SavedSearch = {
   runAt: '07:00',
   nextRunAt: '2026-10-27T07:00:00.000Z',
   scheduleNote: 'Ran at 26 Oct, 07:00: 20 new, 5 already saved.',
+  autopilot: false,
+  autoQueueFitMin: 75,
+  autoQueueNeedsVisa: true,
+  autoHideFitBelow: 40,
+  autoQueueMaxPerDay: 10,
   createdAt: '2026-10-25T08:00:00.000Z',
   lastRun: LAST_RUN,
 };
@@ -220,6 +225,11 @@ export const server = setupServer(
     requests.push({ operation: 'SetSavedSearchSchedule', variables });
     const input = variables['input'] as Pick<SavedSearch, 'schedule' | 'runAt'>;
     return HttpResponse.json({ data: { setSavedSearchSchedule: { ...SAVED, ...input } } });
+  }),
+  api.mutation('SetSavedSearchAutopilot', ({ variables }) => {
+    requests.push({ operation: 'SetSavedSearchAutopilot', variables });
+    const input = variables['input'] as Partial<SavedSearch>;
+    return HttpResponse.json({ data: { setSavedSearchAutopilot: { ...SAVED, ...input } } });
   }),
   api.mutation('ContinueImport', ({ variables }) => {
     requests.push({ operation: 'ContinueImport', variables });
