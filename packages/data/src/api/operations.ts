@@ -321,6 +321,24 @@ export const WRITE_KITS_NOW = /* GraphQL */ `
   }
 `;
 
+export const SET_BRIEFING = /* GraphQL */ `
+  mutation SetBriefing($input: BriefingInput!) {
+    setBriefing(input: $input)
+  }
+`;
+
+export const REGISTER_PUSH_TOKEN = /* GraphQL */ `
+  mutation RegisterPushToken($token: String!) {
+    registerPushToken(token: $token)
+  }
+`;
+
+export const UNREGISTER_PUSH_TOKEN = /* GraphQL */ `
+  mutation UnregisterPushToken($token: String!) {
+    unregisterPushToken(token: $token)
+  }
+`;
+
 export const IMPORT_BUDGET = /* GraphQL */ `
   query ImportBudget {
     importBudget {
@@ -430,6 +448,8 @@ const PROFILE_FIELDS = /* GraphQL */ `
   matchFitMin
   nightlyKits
   nightlyKitsMax
+  briefingOn
+  briefingAt
   resumeSuggestions {
     code
     detail
@@ -1054,6 +1074,13 @@ export const NOTIFICATIONS = /* GraphQL */ `
         undone
         failed
         reason
+        briefing {
+          newJobs
+          kits
+          followUps
+          interviews
+          replies
+        }
         readAt
         createdAt
         jobs {

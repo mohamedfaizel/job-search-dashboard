@@ -186,6 +186,12 @@ export class ProfileModel {
   @Field(() => Int, { description: 'The most kits written in one night' })
   nightlyKitsMax!: number;
 
+  @Field({ description: 'Send the morning briefing (bell and phone push)' })
+  briefingOn!: boolean;
+
+  @Field({ description: 'Morning briefing time, "HH:mm" in the server’s local time' })
+  briefingAt!: string;
+
   @Field(() => [ResumeSuggestionModel], {
     description: 'Suggestions for your master resume, worked out without AI',
   })

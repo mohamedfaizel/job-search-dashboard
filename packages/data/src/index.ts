@@ -53,6 +53,8 @@ export {
   NOTIFICATIONS_POLL_MS,
   useMarkNotificationsRead,
   useNotifications,
+  registerPushToken,
+  unregisterPushToken,
   useUndoAutopilot,
 } from './api/notifications';
 export {
@@ -73,6 +75,7 @@ export {
   useSetApiKeyModel,
   useTestApiKey,
   useUpdateNotificationSettings,
+  useSetBriefing,
   useSetNightlyKits,
   useWriteKitsNow,
 } from './api/settings';

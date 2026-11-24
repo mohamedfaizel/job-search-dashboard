@@ -40,6 +40,7 @@ const NEW_MATCHES = {
   undone: false,
   failed: 0,
   reason: null,
+  briefing: null,
   readAt: null,
   createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
   jobs: [
@@ -223,6 +224,28 @@ describe('NotificationBell', () => {
     });
     expect(await within(list).findByText('Undone')).toBeInTheDocument();
     expect(within(list).queryByRole('link', { name: /React Developer/ })).toBeNull();
+  });
+
+  it('shows the morning briefing', async () => {
+    bell.items = [
+      {
+        ...NEW_MATCHES,
+        id: 14,
+        kind: 'BRIEFING',
+        count: 2,
+        briefing: { newJobs: 2, kits: 3, followUps: 0, interviews: 1, replies: 0 },
+      },
+    ];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    const list = screen.getByRole('dialog', { name: 'Notifications' });
+    expect(
+      within(list).getByText('Good morning: 2 new jobs, 3 kits ready, 1 interview today'),
+    ).toBeInTheDocument();
+    expect(within(list).getByText(/Your morning briefing/)).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: /React Developer/ })).toBeInTheDocument();
   });
 
   it('says apply kits are ready, or why none were written', async () => {

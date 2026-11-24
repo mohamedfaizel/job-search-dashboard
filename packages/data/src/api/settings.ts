@@ -8,6 +8,7 @@ import {
   SET_AI_PROVIDER,
   SET_API_KEY_MODEL,
   TEST_API_KEY,
+  SET_BRIEFING,
   SET_NIGHTLY_KITS,
   UPDATE_NOTIFICATION_SETTINGS,
   WRITE_KITS_NOW,
@@ -131,5 +132,15 @@ export function useWriteKitsNow() {
   return useMutation({
     mutationFn: async () =>
       (await graphqlClient.request<{ writeKitsNow: number }>(WRITE_KITS_NOW)).writeKitsNow,
+  });
+}
+
+/** Settings > Notifications > Morning briefing: on or off, and its time. */
+export function useSetBriefing() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { on: boolean; at: string }) =>
+      (await graphqlClient.request<{ setBriefing: boolean }>(SET_BRIEFING, { input })).setBriefing,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),
   });
 }

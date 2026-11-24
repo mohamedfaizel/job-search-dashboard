@@ -70,7 +70,14 @@
     "messageHint": "Open to read it",
     "autopilot": "Autopilot for “{search}”: {count, plural, =0 {nothing queued} one {# job queued} other {# jobs queued}}",
     "kitsReady": "{count, plural, one {# apply kit is ready} other {# apply kits are ready}} to check",
-    "kitsFailed": "Apply kits were not written"
+    "kitsFailed": "Apply kits were not written",
+    "briefing": "Good morning: {parts}",
+    "briefingNothing": "Good morning",
+    "bNewJobs": "{count, plural, one {# new job} other {# new jobs}}",
+    "bKits": "{count, plural, one {# kit ready} other {# kits ready}}",
+    "bInterviews": "{count, plural, one {# interview today} other {# interviews today}}",
+    "bFollowUps": "{count, plural, one {# follow-up due} other {# follow-ups due}}",
+    "bReplies": "{count, plural, one {# employer reply} other {# employer replies}}"
   },
   "Maker": {
     "help": "Queries and suggestions"

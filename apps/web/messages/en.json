@@ -479,6 +479,15 @@
       "saved": "Saved.",
       "writeNow": "Write now",
       "started": "{count, plural, one {Writing # kit now.} other {Writing # kits now.}} The 🔔 tells you when they are ready."
+    },
+    "briefing": {
+      "heading": "Morning briefing",
+      "on": "Send me one summary every morning",
+      "onHint": "New good jobs, apply kits ready, interviews today, follow-ups due and employer replies. Nothing new means no message.",
+      "at": "At",
+      "save": "Save briefing",
+      "saved": "Saved.",
+      "phoneHint": "It shows in the 🔔, and as a push on your phone when you are logged in to the phone app."
     }
   },
   "Resume": {
@@ -2326,7 +2335,8 @@
     "CONVERSATION_NOT_FOUND": "This conversation is not there any more.",
     "NOTIFICATION_NOT_FOUND": "That notification is not there any more.",
     "AUTOPILOT_LIMITS": "The Fit % for hiding must be lower than the Fit % for the queue.",
-    "KITS_NOTHING_TO_WRITE": "Every job in your Apply queue already has a kit."
+    "KITS_NOTHING_TO_WRITE": "Every job in your Apply queue already has a kit.",
+    "PUSH_TOKEN_INVALID": "The phone sent a push token the app does not know. Update the phone app."
   },
   "Notifications": {
     "bell": "Notifications",
@@ -2373,7 +2383,15 @@
       "NONE_WRITTEN": "The AI provider did not answer. It tries again tonight."
     },
     "openSettingsKits": "Open Settings",
-    "kitsHint": "Open a job’s Apply tab to check its kit"
+    "kitsHint": "Open a job’s Apply tab to check its kit",
+    "briefing": "Good morning: {parts}",
+    "briefingNothing": "Good morning",
+    "bNewJobs": "{count, plural, one {# new job} other {# new jobs}}",
+    "bKits": "{count, plural, one {# kit ready} other {# kits ready}}",
+    "bInterviews": "{count, plural, one {# interview today} other {# interviews today}}",
+    "bFollowUps": "{count, plural, one {# follow-up due} other {# follow-ups due}}",
+    "bReplies": "{count, plural, one {# employer reply} other {# employer replies}}",
+    "briefingHint": "Your morning briefing"
   },
   "Welcome": {
     "title": "Welcome, {name}!",

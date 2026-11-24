@@ -100,6 +100,8 @@ const PROFILE: Profile = {
   matchFitMin: 60,
   nightlyKits: false,
   nightlyKitsMax: 5,
+  briefingOn: true,
+  briefingAt: '07:30',
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: null,

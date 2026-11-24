@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { closestFitOption, MATCH_FIT_OPTIONS } from '../../profile/schema';
+import { BriefingSettings } from './BriefingSettings';
 
 /** Settings > Notifications: when the 🔔 tells you about new jobs. */
 export function NotificationSettings() {
@@ -26,7 +27,10 @@ export function NotificationSettings() {
           {errorText(profile.error)}
         </p>
       ) : (
-        <NotificationForm profile={profile.data} />
+        <>
+          <NotificationForm profile={profile.data} />
+          <BriefingSettings profile={profile.data} />
+        </>
       )}
     </section>
   );

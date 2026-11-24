@@ -70,7 +70,14 @@
     "messageHint": "Zum Lesen öffnen",
     "autopilot": "Autopilot für „{search}“: {count, plural, =0 {nichts auf die Liste gesetzt} one {# Job auf die Liste gesetzt} other {# Jobs auf die Liste gesetzt}}",
     "kitsReady": "{count, plural, one {# Bewerbungskit ist fertig} other {# Bewerbungskits sind fertig}} zum Prüfen",
-    "kitsFailed": "Bewerbungskits wurden nicht geschrieben"
+    "kitsFailed": "Bewerbungskits wurden nicht geschrieben",
+    "briefing": "Guten Morgen: {parts}",
+    "briefingNothing": "Guten Morgen",
+    "bNewJobs": "{count, plural, one {# neuer Job} other {# neue Jobs}}",
+    "bKits": "{count, plural, one {# Kit fertig} other {# Kits fertig}}",
+    "bInterviews": "{count, plural, one {# Interview heute} other {# Interviews heute}}",
+    "bFollowUps": "{count}× nachfassen",
+    "bReplies": "{count, plural, one {# Antwort von Arbeitgebern} other {# Antworten von Arbeitgebern}}"
   },
   "Maker": {
     "help": "Fragen und Vorschläge"

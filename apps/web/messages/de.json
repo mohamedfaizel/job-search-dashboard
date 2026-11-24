@@ -479,6 +479,15 @@
       "saved": "Gespeichert.",
       "writeNow": "Jetzt schreiben",
       "started": "{count, plural, one {# Kit wird jetzt geschrieben.} other {# Kits werden jetzt geschrieben.}} Die 🔔 sagt dir, wenn sie fertig sind."
+    },
+    "briefing": {
+      "heading": "Morgen-Überblick",
+      "on": "Schick mir jeden Morgen eine Zusammenfassung",
+      "onHint": "Neue passende Jobs, fertige Bewerbungskits, Interviews heute, fälliges Nachfassen und Antworten von Arbeitgebern. Ohne Neuigkeiten keine Nachricht.",
+      "at": "Um",
+      "save": "Überblick speichern",
+      "saved": "Gespeichert.",
+      "phoneHint": "Er erscheint in der 🔔 und als Push auf deinem Handy, wenn du in der Handy-App angemeldet bist."
     }
   },
   "Resume": {
@@ -2326,7 +2335,8 @@
     "CONVERSATION_NOT_FOUND": "Diese Unterhaltung gibt es nicht mehr.",
     "NOTIFICATION_NOT_FOUND": "Diese Benachrichtigung gibt es nicht mehr.",
     "AUTOPILOT_LIMITS": "Der Fit-Wert zum Ausblenden muss unter dem Fit-Wert für die Bewerbungsliste liegen.",
-    "KITS_NOTHING_TO_WRITE": "Jeder Job auf deiner Bewerbungsliste hat schon ein Kit."
+    "KITS_NOTHING_TO_WRITE": "Jeder Job auf deiner Bewerbungsliste hat schon ein Kit.",
+    "PUSH_TOKEN_INVALID": "Das Handy hat einen unbekannten Push-Token gesendet. Aktualisiere die Handy-App."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",
@@ -2373,7 +2383,15 @@
       "NONE_WRITTEN": "Der KI-Anbieter hat nicht geantwortet. Heute Nacht versucht die App es noch einmal."
     },
     "openSettingsKits": "Einstellungen öffnen",
-    "kitsHint": "Öffne den Tab Bewerben eines Jobs, um sein Kit zu prüfen"
+    "kitsHint": "Öffne den Tab Bewerben eines Jobs, um sein Kit zu prüfen",
+    "briefing": "Guten Morgen: {parts}",
+    "briefingNothing": "Guten Morgen",
+    "bNewJobs": "{count, plural, one {# neuer Job} other {# neue Jobs}}",
+    "bKits": "{count, plural, one {# Kit fertig} other {# Kits fertig}}",
+    "bInterviews": "{count, plural, one {# Interview heute} other {# Interviews heute}}",
+    "bFollowUps": "{count}× nachfassen",
+    "bReplies": "{count, plural, one {# Antwort von Arbeitgebern} other {# Antworten von Arbeitgebern}}",
+    "briefingHint": "Dein Morgen-Überblick"
   },
   "Welcome": {
     "title": "Willkommen, {name}!",

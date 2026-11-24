@@ -52,6 +52,8 @@ const KEY_POOL: Partial<
 const AUTOPILOT = 'AUTOPILOT';
 /** Nightly apply kits: some were written with your AI key, or none could be. */
 const KITS_READY = 'KITS_READY';
+/** The morning briefing: what needs you today. */
+const BRIEFING = 'BRIEFING';
 const KITS_FAILED = 'KITS_FAILED';
 const KIT_REASONS = ['NO_KEY', 'KEY_REFUSED', 'NO_RESUME', 'NONE_WRITTEN'] as const;
 type KitReason = (typeof KIT_REASONS)[number];
@@ -88,6 +90,17 @@ function useHeadline() {
         return t('autopilot', { search: item.searchName, count: item.count });
       }
       if (item.kind === KITS_READY) return t('kitsReady', { count: item.count });
+      if (item.kind === BRIEFING && item.briefing) {
+        const b = item.briefing;
+        const parts = [
+          b.newJobs ? t('bNewJobs', { count: b.newJobs }) : '',
+          b.kits ? t('bKits', { count: b.kits }) : '',
+          b.interviews ? t('bInterviews', { count: b.interviews }) : '',
+          b.followUps ? t('bFollowUps', { count: b.followUps }) : '',
+          b.replies ? t('bReplies', { count: b.replies }) : '',
+        ].filter(Boolean);
+        return parts.length ? t('briefing', { parts: parts.join(', ') }) : t('briefingNothing');
+      }
       if (item.kind === KITS_FAILED) return t('kitsFailed');
       return item.kind === 'INTERVIEW_SOON' && item.at
         ? t('interviewSoon', {
@@ -308,6 +321,7 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
   const headline = useHeadline();
   const interview = item.kind === 'INTERVIEW_SOON';
   const kits = item.kind === KITS_READY;
+  const briefing = item.kind === BRIEFING;
   if (item.kind === 'MESSAGE_REPLY') {
     return (
       <li className={item.readAt ? '' : 'bg-brand-50'}>
@@ -351,7 +365,9 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
           ? t('interviewHint')
           : kits
             ? t('kitsHint')
-            : t('fitAtLeast', { fit: item.fitMin })}{' '}
+            : briefing
+              ? t('briefingHint')
+              : t('fitAtLeast', { fit: item.fitMin })}{' '}
         · {timeAgo(item.createdAt, locale)}
       </p>
       {kits && item.failed > 0 && (

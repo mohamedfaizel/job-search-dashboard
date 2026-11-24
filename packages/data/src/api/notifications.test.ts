@@ -17,6 +17,7 @@ const notice = (id: number, readAt: string | null): AppNotification => ({
   undone: false,
   failed: 0,
   reason: null,
+  briefing: null,
   readAt,
   createdAt: '2026-11-05T10:00:00.000Z',
 });

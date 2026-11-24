@@ -416,6 +416,10 @@ export interface Profile {
   nightlyKits: boolean;
   /** The most kits written in one night. */
   nightlyKitsMax: number;
+  /** Morning briefing: once a day in the bell and as a phone push. */
+  briefingOn: boolean;
+  /** "HH:mm" in the API server's local time. */
+  briefingAt: string;
   /** Suggestions for your master resume, worked out without AI. */
   resumeSuggestions: ResumeSuggestion[];
   /** A prompt to paste into Claude for a recruiter review of your resume. Empty without one. */
@@ -450,6 +454,9 @@ export type ProfileInput = Omit<
   // Saved on their own, from Settings > API keys > Nightly apply kits.
   | 'nightlyKits'
   | 'nightlyKitsMax'
+  // Saved on their own, from Settings > Notifications > Morning briefing.
+  | 'briefingOn'
+  | 'briefingAt'
 >;
 
 /** Settings > Notifications. */
@@ -886,9 +893,20 @@ export interface AppNotification {
   failed: number;
   /** KITS_FAILED, or a kits run that stopped early: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
   reason: string | null;
+  /** BRIEFING: what the morning briefing counted. */
+  briefing: BriefingCounts | null;
   /** ISO time you read it; null = unread. */
   readAt: string | null;
   createdAt: string;
+}
+
+/** What a morning briefing counted. */
+export interface BriefingCounts {
+  newJobs: number;
+  kits: number;
+  followUps: number;
+  interviews: number;
+  replies: number;
 }
 
 export interface Notifications {

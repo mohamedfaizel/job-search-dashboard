@@ -209,6 +209,32 @@ input AutopilotInput {
   autopilot: Boolean!
 }
 
+"""What a morning briefing counted"""
+type BriefingCounts {
+  """Applications to follow up on"""
+  followUps: Int!
+
+  """Interviews later today"""
+  interviews: Int!
+
+  """Queued jobs whose Apply kit is written"""
+  kits: Int!
+
+  """New jobs since the last briefing with your match Fit %"""
+  newJobs: Int!
+
+  """Employer emails waiting for your OK"""
+  replies: Int!
+}
+
+input BriefingInput {
+  """"HH:mm", 24-hour, server local time"""
+  at: String!
+
+  """Send the morning briefing"""
+  on: Boolean!
+}
+
 type Company {
   domain: String
   id: Int!
@@ -1354,6 +1380,9 @@ type Mutation {
   """
   recalculateFit: Int!
 
+  """The phone app: send push messages to this phone"""
+  registerPushToken(token: String!): Boolean!
+
   """Takes jobs out of your Apply queue"""
   removeFromApplyQueue(jobIds: [ID!]!): [ApplyQueueItem!]!
 
@@ -1466,6 +1495,9 @@ type Mutation {
   """
   setApiKeyModel(kind: ApiKeyKind!, model: String): ApiKey!
 
+  """Turn the morning briefing on or off, and set its time"""
+  setBriefing(input: BriefingInput!): Boolean!
+
   """
   "I have this": adds a missing skill to the Skills list of My profile, or a keyword (keyword: true) to its Keywords list (have: true), or takes it off (have: false). It then counts as covered for every job
   """
@@ -1543,6 +1575,9 @@ type Mutation {
 
   """Show a hidden job in your table again"""
   unhideJob(id: ID!): Boolean!
+
+  """The phone app on log out: no more pushes here"""
+  unregisterPushToken(token: String!): Boolean!
 
   """Changes them; works at once"""
   updateAppSettings(input: UpdateAppSettingsInput!): AppSettings!
@@ -1652,6 +1687,9 @@ type Notification {
   """INTERVIEW_SOON: when the interview is. Null for other kinds"""
   at: DateTime
 
+  """BRIEFING: what the morning briefing counted. Null for other kinds"""
+  briefing: BriefingCounts
+
   """How many jobs it is about"""
   count: Int!
   createdAt: DateTime!
@@ -1673,7 +1711,7 @@ type Notification {
   kept: Int!
 
   """
-  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`)
+  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`)
   """
   kind: String!
 
@@ -1788,6 +1826,12 @@ type Profile {
 
   """Short answers you reuse on applications, as free text"""
   applicationNotes: String!
+
+  """Morning briefing time, "HH:mm" in the server’s local time"""
+  briefingAt: String!
+
+  """Send the morning briefing (bell and phone push)"""
+  briefingOn: Boolean!
 
   """Your own fields, in your order"""
   customFields: [ProfileField!]!

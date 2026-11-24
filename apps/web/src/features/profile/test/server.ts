@@ -107,6 +107,8 @@ export const PROFILE: Profile = {
   matchFitMin: 60,
   nightlyKits: false,
   nightlyKitsMax: 5,
+  briefingOn: true,
+  briefingAt: '07:30',
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
@@ -252,6 +254,10 @@ export const server = setupServer(
   api.mutation('SetNightlyKits', ({ variables }) => {
     requests.push({ operation: 'SetNightlyKits', variables });
     return HttpResponse.json({ data: { setNightlyKits: true } });
+  }),
+  api.mutation('SetBriefing', ({ variables }) => {
+    requests.push({ operation: 'SetBriefing', variables });
+    return HttpResponse.json({ data: { setBriefing: true } });
   }),
   api.mutation('WriteKitsNow', () => {
     requests.push({ operation: 'WriteKitsNow', variables: {} });

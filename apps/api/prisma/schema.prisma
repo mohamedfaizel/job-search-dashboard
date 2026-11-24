@@ -157,6 +157,7 @@ model User {
   syncRuns          SyncRun[]
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
+  pushTokens        PushToken[]
 }
 
 /// The Job posts filters and sort a user saved, as JSON text, so the table opens the way they left
@@ -240,6 +241,12 @@ model Profile {
   nightlyKits         Boolean   @default(false)
   /// The most kits written in one night (each one costs a few cents on your key).
   nightlyKitsMax      Int       @default(5)
+  /// Morning briefing: one summary a day in the bell and on your phone.
+  briefingOn          Boolean   @default(true)
+  /// Time of day for the briefing, "HH:mm" in the API server's local time.
+  briefingAt          String    @default("07:30")
+  /// When the last briefing went out, so it goes once a day.
+  briefingSentAt      DateTime?
   /// Your own fields for anything else forms ask: [{ "label": "Xing", "value": "…" }].
   customFields        Json      @default("[]")
   updatedAt           DateTime  @updatedAt
@@ -974,4 +981,17 @@ model KeyRequest {
 
   @@index([status, createdAt])
   @@index([userId, createdAt])
+}
+
+/// A phone that gets push messages (Expo push token), e.g. the morning briefing.
+model PushToken {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  /// "ExponentPushToken[…]". One phone belongs to one user at a time.
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
