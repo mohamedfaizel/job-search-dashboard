@@ -8,6 +8,7 @@ import {
   useSetBriefing,
   useSetMailAutoStatus,
   useSetNightlyKits,
+  useSetWeeklyReport,
   useWriteKitsNow,
 } from './settings';
 
@@ -55,6 +56,15 @@ describe('automation settings hooks', () => {
     expect(request).toHaveBeenCalledWith(expect.stringContaining('setBriefing'), {
       input: { on: false, at: '08:00' },
     });
+    expect(invalidate).toHaveBeenCalled();
+  });
+
+  it('turns the weekly report off and reloads the profile', async () => {
+    const request = vi.spyOn(graphqlClient, 'request').mockResolvedValue({ setWeeklyReport: true });
+    const { invalidate, wrapper } = setup();
+    const { result } = renderHook(() => useSetWeeklyReport(), { wrapper });
+    await expect(act(() => result.current.mutateAsync(false))).resolves.toBe(true);
+    expect(request).toHaveBeenCalledWith(expect.stringContaining('setWeeklyReport'), { on: false });
     expect(invalidate).toHaveBeenCalled();
   });
 

@@ -1558,6 +1558,9 @@ type Mutation {
   """Makes an account admin or a normal user"""
   setUserRole(input: SetUserRoleInput!): AdminUserModel!
 
+  """Turn the Sunday weekly report on or off"""
+  setWeeklyReport(on: Boolean!): Boolean!
+
   """Create an account and log in"""
   signUp(input: SignUpInput!): User!
 
@@ -1741,7 +1744,7 @@ type Notification {
   kept: Int!
 
   """
-  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`). MAIL_AUTO: clear employer emails moved `count` jobs (each with its new `status` in `jobs`); Undo with undoMailAuto
+  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`). MAIL_AUTO: clear employer emails moved `count` jobs (each with its new `status` in `jobs`); Undo with undoMailAuto. WEEKLY_REPORT: the Sunday summary (`weekly`, best good jobs of the week in `jobs`)
   """
   kind: String!
 
@@ -1765,6 +1768,9 @@ type Notification {
 
   """AUTOPILOT / MAIL_AUTO: you pressed Undo"""
   undone: Boolean!
+
+  """WEEKLY_REPORT: what the weekly report counted. Null for other kinds"""
+  weekly: WeeklyReport
 }
 
 """A job a notification points to"""
@@ -1980,6 +1986,9 @@ type Profile {
   """Null until the profile is first saved"""
   updatedAt: DateTime
   websiteUrl: String
+
+  """Send the weekly report on Sunday evening (bell and phone push)"""
+  weeklyReport: Boolean!
 
   """
   Work permit or visa status, e.g. "EU Blue Card holder"
@@ -2849,6 +2858,44 @@ enum VisaSponsorship {
   NO
   NOT_STATED
   OFFERS
+}
+
+"""What a weekly report counted"""
+type WeeklyReport {
+  """Jobs you marked Applied this week"""
+  applied: Int!
+
+  """The saved search that found the most good jobs"""
+  best: WeeklySearch
+
+  """Of those, the ones with your match Fit %"""
+  goodJobs: Int!
+
+  """Of the replies, the interviews"""
+  interviews: Int!
+
+  """New jobs on your list this week"""
+  newJobs: Int!
+
+  """A scheduled search to pause: many new jobs, none good"""
+  pause: WeeklySearch
+
+  """Employer replies: Interviewing, Offer or Rejected"""
+  replies: Int!
+}
+
+"""A saved search in the weekly report"""
+type WeeklySearch {
+  """Of those, the ones with your match Fit %"""
+  good: Int!
+  id: Int!
+
+  """New jobs its runs brought this week"""
+  jobs: Int!
+  name: String!
+
+  """Its run time, so Pause can keep it. Set on the search to pause only"""
+  runAt: String
 }
 
 """

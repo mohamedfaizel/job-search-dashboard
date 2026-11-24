@@ -420,6 +420,8 @@ export interface Profile {
   briefingOn: boolean;
   /** "HH:mm" in the API server's local time. */
   briefingAt: string;
+  /** Weekly report: on Sunday evening, your week in the bell and as a phone push. */
+  weeklyReport: boolean;
   /** Gmail moves a job by itself when an email is clearly a rejection or an interview invitation. */
   mailAutoStatus: boolean;
   /** Suggestions for your master resume, worked out without AI. */
@@ -459,6 +461,7 @@ export type ProfileInput = Omit<
   // Saved on their own, from Settings > Notifications > Morning briefing.
   | 'briefingOn'
   | 'briefingAt'
+  | 'weeklyReport'
   | 'mailAutoStatus'
 >;
 
@@ -914,6 +917,8 @@ export interface AppNotification {
   reason: string | null;
   /** BRIEFING: what the morning briefing counted. */
   briefing: BriefingCounts | null;
+  /** WEEKLY_REPORT: what the weekly report counted. */
+  weekly: WeeklyReport | null;
   /** ISO time you read it; null = unread. */
   readAt: string | null;
   createdAt: string;
@@ -926,6 +931,32 @@ export interface BriefingCounts {
   followUps: number;
   interviews: number;
   replies: number;
+}
+
+/** A saved search in the weekly report. */
+export interface WeeklySearch {
+  id: number;
+  name: string;
+  /** New jobs its runs brought this week. */
+  jobs: number;
+  /** Of those, the ones with your match Fit %. */
+  good: number;
+  /** The search to pause only: its run time, so Pause keeps it. */
+  runAt?: string | null;
+}
+
+/** What a weekly report counted. */
+export interface WeeklyReport {
+  applied: number;
+  /** Employer replies: Interviewing, Offer or Rejected. */
+  replies: number;
+  interviews: number;
+  newJobs: number;
+  goodJobs: number;
+  /** The saved search that found the most good jobs. */
+  best: WeeklySearch | null;
+  /** A scheduled search to pause: many new jobs, none good. */
+  pause: WeeklySearch | null;
 }
 
 export interface Notifications {

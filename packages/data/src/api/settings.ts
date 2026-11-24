@@ -9,6 +9,7 @@ import {
   SET_API_KEY_MODEL,
   TEST_API_KEY,
   SET_BRIEFING,
+  SET_WEEKLY_REPORT,
   SET_MAIL_AUTO_STATUS,
   SET_NIGHTLY_KITS,
   UPDATE_NOTIFICATION_SETTINGS,
@@ -142,6 +143,17 @@ export function useSetBriefing() {
   return useMutation({
     mutationFn: async (input: { on: boolean; at: string }) =>
       (await graphqlClient.request<{ setBriefing: boolean }>(SET_BRIEFING, { input })).setBriefing,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),
+  });
+}
+
+/** Settings > Notifications > Weekly report: on or off. */
+export function useSetWeeklyReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (on: boolean) =>
+      (await graphqlClient.request<{ setWeeklyReport: boolean }>(SET_WEEKLY_REPORT, { on }))
+        .setWeeklyReport,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),
   });
 }

@@ -4,10 +4,11 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { BriefingResolver } from './briefing.resolver';
 import { BriefingService } from './briefing.service';
 import { PushService } from './push.service';
+import { WeeklyService } from './weekly.service';
 
-/** The morning briefing, and push messages to the phone app. */
+/** The morning briefing, the weekly report, and push messages to the phone app. */
 @Module({
   imports: [InsightsModule, NotificationsModule],
-  providers: [BriefingService, PushService, BriefingResolver],
+  providers: [BriefingService, WeeklyService, PushService, BriefingResolver],
 })
 export class BriefingModule {}

@@ -41,6 +41,7 @@ const NEW_MATCHES = {
   failed: 0,
   reason: null,
   briefing: null,
+  weekly: null,
   readAt: null,
   createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
   jobs: [
@@ -278,6 +279,84 @@ describe('NotificationBell', () => {
     ).toBeInTheDocument();
     expect(within(list).getByText(/Your morning briefing/)).toBeInTheDocument();
     expect(within(list).getByRole('link', { name: /React Developer/ })).toBeInTheDocument();
+  });
+
+  it('shows the weekly report and pauses the search that brings only low Fit', async () => {
+    bell.items = [
+      {
+        ...NEW_MATCHES,
+        id: 15,
+        kind: 'WEEKLY_REPORT',
+        count: 2,
+        fitMin: 70,
+        weekly: {
+          applied: 3,
+          replies: 1,
+          interviews: 1,
+          newJobs: 20,
+          goodJobs: 2,
+          best: { id: 4, name: 'Frontend Berlin', jobs: 8, good: 2 },
+          pause: { id: 7, name: 'Sales', jobs: 12, good: 0, runAt: '06:15' },
+        },
+      },
+    ];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    const list = screen.getByRole('dialog', { name: 'Notifications' });
+    expect(
+      within(list).getByText('Your week: 3 applied, 1 reply, 2 good jobs'),
+    ).toBeInTheDocument();
+    expect(
+      within(list).getByText('Best search: Frontend Berlin (2 good jobs)'),
+    ).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: /React Developer/ })).toBeInTheDocument();
+    expect(
+      within(list).getByText('“Sales” brought 12 jobs, none with 70% or more. Pause it?'),
+    ).toBeInTheDocument();
+
+    await user.click(within(list).getByRole('button', { name: 'Pause' }));
+    expect(keyPool.sent).toContainEqual({
+      operation: 'SetSavedSearchSchedule',
+      variables: { id: 7, input: { schedule: 'OFF', runAt: '06:15' } },
+    });
+    expect(await within(list).findByText(/Paused\. You can turn it back on/)).toBeInTheDocument();
+    expect(within(list).queryByRole('button', { name: 'Pause' })).toBeNull();
+  });
+
+  it('shows a weekly report with no search to name, in German', async () => {
+    bell.items = [
+      {
+        ...NEW_MATCHES,
+        id: 16,
+        kind: 'WEEKLY_REPORT',
+        count: 0,
+        jobs: [],
+        weekly: {
+          applied: 1,
+          replies: 0,
+          interviews: 0,
+          newJobs: 4,
+          goodJobs: 0,
+          best: null,
+          pause: { id: 7, name: 'Sales', jobs: 5, good: 0, runAt: null },
+        },
+      },
+    ];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell('de');
+    await user.click(await screen.findByRole('button', { name: /Benachrichtigungen/ }));
+    expect(
+      screen.getByText('Deine Woche: 1 beworben, 0 Antworten, 0 gute Jobs'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Beste Suche/)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Pausieren' }));
+    expect(keyPool.sent).toContainEqual({
+      operation: 'SetSavedSearchSchedule',
+      variables: { id: 7, input: { schedule: 'OFF', runAt: '07:00' } },
+    });
   });
 
   it('says apply kits are ready, or why none were written', async () => {

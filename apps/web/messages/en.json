@@ -492,6 +492,12 @@
       "saved": "Saved.",
       "phoneHint": "It shows in the 🔔, and as a push on your phone when you are logged in to the phone app."
     },
+    "weekly": {
+      "heading": "Weekly report",
+      "on": "Send me a summary every Sunday evening",
+      "onHint": "What you applied to, employer replies, good jobs, the saved search that finds the best jobs, and one to pause because it only brings low Fit. A quiet week sends nothing.",
+      "saved": "Saved."
+    },
     "calendar": {
       "title": "Google Calendar",
       "intro": "Connect your calendar and each interview date you set becomes an event there, with the job link and your interview prep. It moves when you change the date and goes away when you remove it.",
@@ -2416,6 +2422,12 @@
     "bFollowUps": "{count, plural, one {# follow-up due} other {# follow-ups due}}",
     "bReplies": "{count, plural, one {# employer reply} other {# employer replies}}",
     "briefingHint": "Your morning briefing",
+    "weekly": "Your week: {applied} applied, {replies, plural, one {# reply} other {# replies}}, {good, plural, one {# good job} other {# good jobs}}",
+    "weeklyHint": "Your weekly report",
+    "weeklyBest": "Best search: {name} ({count, plural, one {# good job} other {# good jobs}})",
+    "weeklyPause": "“{name}” brought {count, plural, one {# job} other {# jobs}}, none with {fit}% or more. Pause it?",
+    "weeklyPauseButton": "Pause",
+    "weeklyPaused": "Paused. You can turn it back on in Add jobs.",
     "mailAuto": "Gmail moved {count, plural, one {# job} other {# jobs}} in your tracker",
     "mailAutoHint": "The emails were clear"
   },

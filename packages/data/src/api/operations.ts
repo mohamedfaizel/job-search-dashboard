@@ -339,6 +339,12 @@ export const SET_BRIEFING = /* GraphQL */ `
   }
 `;
 
+export const SET_WEEKLY_REPORT = /* GraphQL */ `
+  mutation SetWeeklyReport($on: Boolean!) {
+    setWeeklyReport(on: $on)
+  }
+`;
+
 export const REGISTER_PUSH_TOKEN = /* GraphQL */ `
   mutation RegisterPushToken($token: String!) {
     registerPushToken(token: $token)
@@ -462,6 +468,7 @@ const PROFILE_FIELDS = /* GraphQL */ `
   nightlyKitsMax
   briefingOn
   briefingAt
+  weeklyReport
   mailAutoStatus
   resumeSuggestions {
     code
@@ -1111,6 +1118,26 @@ export const NOTIFICATIONS = /* GraphQL */ `
           followUps
           interviews
           replies
+        }
+        weekly {
+          applied
+          replies
+          interviews
+          newJobs
+          goodJobs
+          best {
+            id
+            name
+            jobs
+            good
+          }
+          pause {
+            id
+            name
+            jobs
+            good
+            runAt
+          }
         }
         readAt
         createdAt

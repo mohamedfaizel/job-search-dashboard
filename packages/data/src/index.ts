@@ -80,6 +80,7 @@ export {
   useTestApiKey,
   useUpdateNotificationSettings,
   useSetBriefing,
+  useSetWeeklyReport,
   useSetMailAutoStatus,
   useSetNightlyKits,
   useWriteKitsNow,

@@ -95,6 +95,7 @@ export function notification(over: Partial<AppNotification> & Pick<AppNotificati
     failed: 0,
     reason: null,
     briefing: null,
+    weekly: null,
     readAt: null,
     createdAt: '2026-11-09T08:00:00.000Z',
     ...over,

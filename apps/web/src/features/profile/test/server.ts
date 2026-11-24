@@ -109,6 +109,7 @@ export const PROFILE: Profile = {
   nightlyKitsMax: 5,
   briefingOn: true,
   briefingAt: '07:30',
+  weeklyReport: true,
   mailAutoStatus: true,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
@@ -270,6 +271,10 @@ export const server = setupServer(
   api.mutation('SetBriefing', ({ variables }) => {
     requests.push({ operation: 'SetBriefing', variables });
     return HttpResponse.json({ data: { setBriefing: true } });
+  }),
+  api.mutation('SetWeeklyReport', ({ variables }) => {
+    requests.push({ operation: 'SetWeeklyReport', variables });
+    return HttpResponse.json({ data: { setWeeklyReport: true } });
   }),
   api.mutation('WriteKitsNow', () => {
     requests.push({ operation: 'WriteKitsNow', variables: {} });

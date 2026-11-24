@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { closestFitOption, MATCH_FIT_OPTIONS } from '../../profile/schema';
 import { BriefingSettings } from './BriefingSettings';
+import { WeeklySettings } from './WeeklySettings';
 
 /** Settings > Notifications: when the 🔔 tells you about new jobs. */
 export function NotificationSettings() {
@@ -30,6 +31,7 @@ export function NotificationSettings() {
         <>
           <NotificationForm profile={profile.data} />
           <BriefingSettings profile={profile.data} />
+          <WeeklySettings profile={profile.data} />
         </>
       )}
     </section>
