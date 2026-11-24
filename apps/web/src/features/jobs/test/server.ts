@@ -317,6 +317,7 @@ export const PROFILE: Profile = {
   nightlyKitsMax: 5,
   briefingOn: true,
   briefingAt: '07:30',
+  weeklyReport: true,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',

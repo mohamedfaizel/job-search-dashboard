@@ -9,6 +9,7 @@ import type {
   NotificationJobModel,
   NotificationModel,
   NotificationsModel,
+  WeeklyReportModel,
 } from './notification.model';
 
 /** How many notifications the bell list shows. Older ones are deleted. */
@@ -39,6 +40,8 @@ export interface NotificationData {
   reason?: string;
   /** BRIEFING: what the morning briefing counted. */
   briefing?: BriefingCountsModel;
+  /** WEEKLY_REPORT: what the weekly report counted. */
+  weekly?: WeeklyReportModel;
 }
 
 /** How long before an interview the bell reminds you. */
@@ -65,6 +68,7 @@ function toModel(row: {
     kept: data.kept ?? 0,
     undone: data.undone ?? false,
     briefing: data.briefing ?? null,
+    weekly: data.weekly ?? null,
     failed: data.failed ?? 0,
     reason: data.reason ?? null,
     readAt: row.readAt,

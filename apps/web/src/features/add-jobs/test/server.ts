@@ -102,6 +102,7 @@ const PROFILE: Profile = {
   nightlyKitsMax: 5,
   briefingOn: true,
   briefingAt: '07:30',
+  weeklyReport: true,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: null,

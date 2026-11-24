@@ -66,6 +66,13 @@ export function useHeadline() {
         ].filter(Boolean);
         return parts.length ? t('briefing', { parts: parts.join(', ') }) : t('briefingNothing');
       }
+      if (item.kind === 'WEEKLY_REPORT' && item.weekly) {
+        return t('weekly', {
+          applied: item.weekly.applied,
+          replies: item.weekly.replies,
+          good: item.weekly.goodJobs,
+        });
+      }
       if (item.kind === 'KITS_FAILED') return t('kitsFailed');
       if (item.kind === 'AUTOPILOT') {
         return t('autopilot', { search: item.searchName, count: item.count });

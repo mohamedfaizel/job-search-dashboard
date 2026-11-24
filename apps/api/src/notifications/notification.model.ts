@@ -33,6 +33,57 @@ export class BriefingCountsModel {
   replies!: number;
 }
 
+@ObjectType('WeeklySearch', { description: 'A saved search in the weekly report' })
+export class WeeklySearchModel {
+  @Field(() => Int)
+  id!: number;
+
+  @Field()
+  name!: string;
+
+  @Field(() => Int, { description: 'New jobs its runs brought this week' })
+  jobs!: number;
+
+  @Field(() => Int, { description: 'Of those, the ones with your match Fit %' })
+  good!: number;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'Its run time, so Pause can keep it. Set on the search to pause only',
+  })
+  runAt?: string | null;
+}
+
+@ObjectType('WeeklyReport', { description: 'What a weekly report counted' })
+export class WeeklyReportModel {
+  @Field(() => Int, { description: 'Jobs you marked Applied this week' })
+  applied!: number;
+
+  @Field(() => Int, { description: 'Employer replies: Interviewing, Offer or Rejected' })
+  replies!: number;
+
+  @Field(() => Int, { description: 'Of the replies, the interviews' })
+  interviews!: number;
+
+  @Field(() => Int, { description: 'New jobs on your list this week' })
+  newJobs!: number;
+
+  @Field(() => Int, { description: 'Of those, the ones with your match Fit %' })
+  goodJobs!: number;
+
+  @Field(() => WeeklySearchModel, {
+    nullable: true,
+    description: 'The saved search that found the most good jobs',
+  })
+  best!: WeeklySearchModel | null;
+
+  @Field(() => WeeklySearchModel, {
+    nullable: true,
+    description: 'A scheduled search to pause: many new jobs, none good',
+  })
+  pause!: WeeklySearchModel | null;
+}
+
 @ObjectType('Notification', {
   description:
     'Something the app tells you in the bell list. The web app writes the words from `kind` and the numbers, in your language',
@@ -43,7 +94,7 @@ export class NotificationModel {
 
   @Field({
     description:
-      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`)',
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`). WEEKLY_REPORT: the Sunday summary (`weekly`, best good jobs of the week in `jobs`)',
   })
   kind!: string;
 
@@ -88,6 +139,12 @@ export class NotificationModel {
     description: 'BRIEFING: what the morning briefing counted. Null for other kinds',
   })
   briefing!: BriefingCountsModel | null;
+
+  @Field(() => WeeklyReportModel, {
+    nullable: true,
+    description: 'WEEKLY_REPORT: what the weekly report counted. Null for other kinds',
+  })
+  weekly!: WeeklyReportModel | null;
 
   @Field(() => Int, { description: 'KITS_READY / KITS_FAILED: kits that could not be written' })
   failed!: number;

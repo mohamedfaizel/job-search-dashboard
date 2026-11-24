@@ -192,6 +192,9 @@ export class ProfileModel {
   @Field({ description: 'Morning briefing time, "HH:mm" in the server’s local time' })
   briefingAt!: string;
 
+  @Field({ description: 'Send the weekly report on Sunday evening (bell and phone push)' })
+  weeklyReport!: boolean;
+
   @Field(() => [ResumeSuggestionModel], {
     description: 'Suggestions for your master resume, worked out without AI',
   })

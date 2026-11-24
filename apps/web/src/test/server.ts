@@ -119,6 +119,10 @@ export const server = setupServer(
     );
     return HttpResponse.json({ data: { undoAutopilot: true } });
   }),
+  api.mutation('SetSavedSearchSchedule', ({ variables }) => {
+    keyPool.sent.push({ operation: 'SetSavedSearchSchedule', variables });
+    return HttpResponse.json({ data: { setSavedSearchSchedule: { id: variables['id'] } } });
+  }),
   api.mutation('MarkNotificationsRead', () => {
     const count = bell.unread;
     bell.items = bell.items.map((item) => ({ ...item, readAt: item.readAt ?? 'now' }));

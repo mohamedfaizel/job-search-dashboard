@@ -248,6 +248,8 @@ model Profile {
   briefingAt          String    @default("07:30")
   /// When the last briefing went out, so it goes once a day.
   briefingSentAt      DateTime?
+  /// Weekly report: on Sunday evening, your week in one summary (bell and phone push).
+  weeklyReport        Boolean   @default(true)
   /// Your own fields for anything else forms ask: [{ "label": "Xing", "value": "…" }].
   customFields        Json      @default("[]")
   updatedAt           DateTime  @updatedAt

@@ -77,7 +77,8 @@
     "bKits": "{count, plural, one {# Kit fertig} other {# Kits fertig}}",
     "bInterviews": "{count, plural, one {# Interview heute} other {# Interviews heute}}",
     "bFollowUps": "{count}× nachfassen",
-    "bReplies": "{count, plural, one {# Antwort von Arbeitgebern} other {# Antworten von Arbeitgebern}}"
+    "bReplies": "{count, plural, one {# Antwort von Arbeitgebern} other {# Antworten von Arbeitgebern}}",
+    "weekly": "Deine Woche: {applied} beworben, {replies, plural, one {# Antwort} other {# Antworten}}, {good, plural, one {# guter Job} other {# gute Jobs}}"
   },
   "Maker": {
     "help": "Fragen und Vorschläge"

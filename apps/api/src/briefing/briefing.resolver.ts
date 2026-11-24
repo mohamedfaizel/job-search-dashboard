@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/auth.decorators';
 import { apiError } from '../common/api-error';
 import { BriefingService } from './briefing.service';
 import { isPushToken, PushService } from './push.service';
+import { WeeklyService } from './weekly.service';
 
 @InputType()
 export class BriefingInput {
@@ -23,6 +24,7 @@ export class BriefingResolver {
   constructor(
     private readonly briefing: BriefingService,
     private readonly push: PushService,
+    private readonly weekly: WeeklyService,
   ) {}
 
   @Mutation(() => Boolean, { description: 'Turn the morning briefing on or off, and set its time' })
@@ -31,6 +33,15 @@ export class BriefingResolver {
     @Args('input') input: BriefingInput,
   ): Promise<boolean> {
     await this.briefing.setSettings(user.id, input.on, input.at);
+    return true;
+  }
+
+  @Mutation(() => Boolean, { description: 'Turn the Sunday weekly report on or off' })
+  async setWeeklyReport(
+    @CurrentUser() user: SessionUser,
+    @Args('on') on: boolean,
+  ): Promise<boolean> {
+    await this.weekly.setOn(user.id, on);
     return true;
   }
 

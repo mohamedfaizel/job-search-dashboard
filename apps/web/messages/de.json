@@ -489,6 +489,12 @@
       "saved": "Gespeichert.",
       "phoneHint": "Er erscheint in der 🔔 und als Push auf deinem Handy, wenn du in der Handy-App angemeldet bist."
     },
+    "weekly": {
+      "heading": "Wochenbericht",
+      "on": "Schick mir jeden Sonntagabend eine Zusammenfassung",
+      "onHint": "Deine Bewerbungen, Antworten von Arbeitgebern, gute Jobs, die gespeicherte Suche mit den besten Jobs und eine zum Pausieren, weil sie nur niedrigen Fit bringt. Eine ruhige Woche schickt nichts.",
+      "saved": "Gespeichert."
+    },
     "calendar": {
       "title": "Google Kalender",
       "intro": "Verbinde deinen Kalender, und jeder Interviewtermin, den du einträgst, wird dort ein Termin mit Link zur Stelle und deiner Interviewvorbereitung. Er wandert mit, wenn du das Datum änderst, und verschwindet, wenn du es entfernst.",
@@ -2411,7 +2417,13 @@
     "bInterviews": "{count, plural, one {# Interview heute} other {# Interviews heute}}",
     "bFollowUps": "{count}× nachfassen",
     "bReplies": "{count, plural, one {# Antwort von Arbeitgebern} other {# Antworten von Arbeitgebern}}",
-    "briefingHint": "Dein Morgen-Überblick"
+    "briefingHint": "Dein Morgen-Überblick",
+    "weekly": "Deine Woche: {applied} beworben, {replies, plural, one {# Antwort} other {# Antworten}}, {good, plural, one {# guter Job} other {# gute Jobs}}",
+    "weeklyHint": "Dein Wochenbericht",
+    "weeklyBest": "Beste Suche: {name} ({count, plural, one {# guter Job} other {# gute Jobs}})",
+    "weeklyPause": "„{name}“ brachte {count, plural, one {# Job} other {# Jobs}}, keiner mit {fit} % oder mehr. Pausieren?",
+    "weeklyPauseButton": "Pausieren",
+    "weeklyPaused": "Pausiert. Unter Jobs hinzufügen kannst du sie wieder einschalten."
   },
   "Welcome": {
     "title": "Willkommen, {name}!",

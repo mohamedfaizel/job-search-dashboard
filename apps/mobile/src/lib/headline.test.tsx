@@ -34,6 +34,22 @@ describe('useHeadline', () => {
     expect(say(notification({ id: 1, kind: 'BRIEFING', briefing: none }))).toBe('Good morning');
   });
 
+  it('sums up the weekly report', async () => {
+    const say = await headline();
+    const weekly = {
+      applied: 3,
+      replies: 1,
+      interviews: 1,
+      newJobs: 9,
+      goodJobs: 2,
+      best: null,
+      pause: null,
+    };
+    expect(say(notification({ id: 1, kind: 'WEEKLY_REPORT', weekly }))).toBe(
+      'Your week: 3 applied, 1 reply, 2 good jobs',
+    );
+  });
+
   it('names the apply kits and autopilot', async () => {
     const say = await headline();
     expect(say(notification({ id: 1, kind: 'KITS_READY', count: 2 }))).toBe(

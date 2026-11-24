@@ -6,6 +6,7 @@ import {
   useDenyKeyRequest,
   useMarkNotificationsRead,
   useNotifications,
+  useSetSchedule,
   useUndoAutopilot,
 } from '@jobsearch/data';
 import Link from 'next/link';
@@ -55,6 +56,8 @@ const KITS_READY = 'KITS_READY';
 /** The morning briefing: what needs you today. */
 const BRIEFING = 'BRIEFING';
 const KITS_FAILED = 'KITS_FAILED';
+/** The Sunday weekly report: your week, the best saved search and one to pause. */
+const WEEKLY_REPORT = 'WEEKLY_REPORT';
 const KIT_REASONS = ['NO_KEY', 'KEY_REFUSED', 'NO_RESUME', 'NONE_WRITTEN'] as const;
 type KitReason = (typeof KIT_REASONS)[number];
 const kitReason = (reason: string | null): KitReason =>
@@ -100,6 +103,13 @@ function useHeadline() {
           b.replies ? t('bReplies', { count: b.replies }) : '',
         ].filter(Boolean);
         return parts.length ? t('briefing', { parts: parts.join(', ') }) : t('briefingNothing');
+      }
+      if (item.kind === WEEKLY_REPORT && item.weekly) {
+        return t('weekly', {
+          applied: item.weekly.applied,
+          replies: item.weekly.replies,
+          good: item.weekly.goodJobs,
+        });
       }
       if (item.kind === KITS_FAILED) return t('kitsFailed');
       return item.kind === 'INTERVIEW_SOON' && item.at
@@ -273,6 +283,75 @@ function AutopilotItem({ item, onOpen }: { item: AppNotification; onOpen: () => 
         <Link href="/jobs" onClick={onOpen} className="text-xs text-brand-700 hover:underline">
           {t('openQueue')}
         </Link>
+      )}
+    </li>
+  );
+}
+
+/** The weekly report: your week, its best jobs, the best saved search, and Pause for a noisy one. */
+function WeeklyItem({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
+  const t = useTranslations('Notifications');
+  const locale = useLocale();
+  const headline = useHeadline();
+  const errorText = useErrorText();
+  const setSchedule = useSetSchedule();
+  const best = item.weekly?.best;
+  const pause = item.weekly?.pause;
+  return (
+    <li className={`space-y-1.5 px-3 py-2.5 ${item.readAt ? '' : 'bg-brand-50'}`}>
+      <p className="text-sm text-slate-900">
+        {!item.readAt && (
+          <span
+            aria-label={t('unread')}
+            className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-600"
+          />
+        )}
+        {headline(item)}
+      </p>
+      <p className="text-xs text-slate-600">
+        {t('weeklyHint')} · {timeAgo(item.createdAt, locale)}
+      </p>
+      {best && (
+        <p className="text-xs text-emerald-800">
+          {t('weeklyBest', { name: best.name, count: best.good })}
+        </p>
+      )}
+      {item.jobs.length > 0 && (
+        <ul className="space-y-1">
+          {item.jobs.map((job) => (
+            <JobRow key={job.id} job={job} onOpen={onOpen} showFit />
+          ))}
+        </ul>
+      )}
+      {pause && (
+        <div className="flex items-start gap-2 rounded-md bg-amber-50 px-2 py-1.5 ring-1 ring-amber-200 ring-inset">
+          <p className="flex-1 text-xs text-amber-900">
+            {setSchedule.isSuccess
+              ? t('weeklyPaused')
+              : t('weeklyPause', { name: pause.name, count: pause.jobs, fit: item.fitMin })}
+          </p>
+          {!setSchedule.isSuccess && (
+            <button
+              type="button"
+              disabled={setSchedule.isPending}
+              onClick={() => {
+                setSchedule.mutate({
+                  id: pause.id,
+                  schedule: 'OFF',
+                  runAt: pause.runAt ?? '07:00',
+                });
+              }}
+              className="shrink-0 rounded-md border border-amber-300 bg-white px-2 py-0.5 text-xs text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+            >
+              {t('weeklyPauseButton')}
+            </button>
+          )}
+        </div>
+      )}
+      {setSchedule.error && (
+        <p role="alert" className="text-xs text-red-700">
+          {errorText(setSchedule.error)}
+        </p>
       )}
     </li>
   );
@@ -478,6 +557,14 @@ export function NotificationBell() {
               {data.items.map((item) =>
                 item.kind === KITS_FAILED ? (
                   <KitsFailedItem
+                    key={item.id}
+                    item={item}
+                    onOpen={() => {
+                      setOpen(false);
+                    }}
+                  />
+                ) : item.kind === WEEKLY_REPORT ? (
+                  <WeeklyItem
                     key={item.id}
                     item={item}
                     onOpen={() => {

@@ -79,6 +79,7 @@ export {
   useTestApiKey,
   useUpdateNotificationSettings,
   useSetBriefing,
+  useSetWeeklyReport,
   useSetNightlyKits,
   useWriteKitsNow,
 } from './api/settings';
