@@ -1173,6 +1173,26 @@ type KeyRequest {
   name: String!
 }
 
+"""Your latest apply-kits run, while it writes and after"""
+type KitRun {
+  """Jobs finished so far (written or failed)"""
+  done: Int!
+  failed: Int!
+
+  """
+  Why it stopped early or wrote none: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN
+  """
+  reason: String
+
+  """Still writing"""
+  running: Boolean!
+  startedAt: DateTime!
+
+  """Kits this run tries to write"""
+  total: Int!
+  written: Int!
+}
+
 type LanguageResume {
   """The uploaded file, null when pasted"""
   fileName: String
@@ -2138,6 +2158,11 @@ type Query {
 
   """Counts, keys by number and waiting requests"""
   keyPool: KeyPool!
+
+  """
+  Your latest apply-kits run, so Settings can show its progress and result
+  """
+  kitRun: KitRun
 
   """Tracker changes suggested by employer emails, waiting for your answer."""
   mailSuggestions: [MailSuggestion!]!

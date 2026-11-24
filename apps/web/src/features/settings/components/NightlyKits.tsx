@@ -1,10 +1,14 @@
-import type { Profile } from '@jobsearch/data';
-import { useMyProfile, useSetNightlyKits, useWriteKitsNow } from '@jobsearch/data';
+import type { KitRun, Profile } from '@jobsearch/data';
+import { useKitRun, useMyProfile, useSetNightlyKits, useWriteKitsNow } from '@jobsearch/data';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 
 const PER_NIGHT = [1, 3, 5, 10, 20] as const;
+const REASONS = ['NO_KEY', 'KEY_REFUSED', 'NO_RESUME', 'NONE_WRITTEN'] as const;
+const reasonOf = (reason: string | null) =>
+  REASONS.find((known) => known === reason) ?? 'NONE_WRITTEN';
 
 /**
  * Settings › API keys › Nightly apply kits: at night the app writes the resume, cover letter and
@@ -42,6 +46,8 @@ function KitsForm({ profile }: { profile: Profile }) {
   const errorText = useErrorText();
   const save = useSetNightlyKits();
   const now = useWriteKitsNow();
+  const run = useKitRun();
+  const running = now.isPending || (run.data?.running ?? false);
   const [on, setOn] = useState(profile.nightlyKits);
   const [perNight, setPerNight] = useState(profile.nightlyKitsMax);
   const changed = on !== profile.nightlyKits || perNight !== profile.nightlyKitsMax;
@@ -101,13 +107,13 @@ function KitsForm({ profile }: { profile: Profile }) {
         )}
         <button
           type="button"
-          disabled={now.isPending}
+          disabled={running}
           onClick={() => {
             now.mutate();
           }}
           className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-60"
         >
-          {t('writeNow')}
+          {running ? t('writing') : t('writeNow')}
         </button>
         {save.isSuccess && (
           <p role="status" className="text-sm text-emerald-700">
@@ -115,16 +121,46 @@ function KitsForm({ profile }: { profile: Profile }) {
           </p>
         )}
       </div>
-      {now.isSuccess && (
-        <p role="status" className="text-sm text-emerald-700">
-          {t('started', { count: now.data })}
-        </p>
-      )}
+      {!now.isError && run.data && <RunResult run={run.data} />}
       {(save.error ?? now.error) && (
         <p role="alert" className="text-sm text-red-700">
           {errorText(save.error ?? now.error)}
         </p>
       )}
     </div>
+  );
+}
+
+/** What the latest run is doing, or what it did: always a line, never silence. */
+function RunResult({ run }: { run: KitRun }) {
+  const t = useTranslations('Settings.kits');
+  if (run.running) {
+    return (
+      <p role="status" className="flex items-center gap-2 text-sm text-slate-700">
+        <span
+          aria-hidden
+          className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700"
+        />
+        {t('progress', { done: Math.min(run.done + 1, run.total), total: run.total })}
+      </p>
+    );
+  }
+  if (run.written === 0) {
+    return (
+      <p role="alert" className="text-sm text-red-700">
+        {t(`reason.${reasonOf(run.reason)}`)}
+      </p>
+    );
+  }
+  return (
+    <p role="status" className="text-sm text-emerald-700">
+      {t('doneWritten', { count: run.written })}{' '}
+      {run.failed > 0 && (
+        <span className="text-amber-800">{t('doneFailed', { count: run.failed })} </span>
+      )}
+      <Link href="/jobs" className="font-medium text-brand-700 underline">
+        {t('openQueue')}
+      </Link>
+    </p>
   );
 }

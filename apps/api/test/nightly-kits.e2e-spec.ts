@@ -177,10 +177,60 @@ describe('nightly apply kits', () => {
     const noKey = await t.gql(`mutation { writeKitsNow }`);
     expect(noKey.errors?.[0]?.extensions).toMatchObject({ apiCode: 'AI_KEY_MISSING' });
     await saveAiKey(t.gql);
-    const nothing = await t.gql(`mutation { writeKitsNow }`);
-    expect(nothing.errors?.[0]?.extensions).toMatchObject({ apiCode: 'KITS_NOTHING_TO_WRITE' });
+    const empty = await t.gql(`mutation { writeKitsNow }`);
+    expect(empty.errors?.[0]?.extensions).toMatchObject({ apiCode: 'KITS_QUEUE_EMPTY' });
 
     const tooMany = await t.gql(`mutation { setNightlyKits(input: { on: true, perNight: 99 }) }`);
     expect(tooMany.errors?.[0]?.message).toMatch(/1 to 20/);
+  });
+
+  const KIT_RUN = `query { kitRun { running total done written failed reason } }`;
+  type Run = { kitRun: Record<string, unknown> | null };
+
+  it('shows Write now progress, then the result, in Settings', async () => {
+    await setUp();
+    await saveAiKey(t.gql);
+
+    const started = await t.gql<{ writeKitsNow: number }>(`mutation { writeKitsNow }`);
+    expect(started.data).toEqual({ writeKitsNow: 2 });
+    expect((await t.gql<Run>(KIT_RUN)).data!.kitRun).toMatchObject({ running: true, total: 2 });
+
+    await vi.waitFor(async () => {
+      expect((await t.gql<Run>(KIT_RUN)).data!.kitRun).toEqual({
+        running: false,
+        total: 2,
+        done: 2,
+        written: 2,
+        failed: 0,
+        reason: null,
+      });
+    });
+    const again = await t.gql(`mutation { writeKitsNow }`);
+    expect(again.errors?.[0]?.extensions).toMatchObject({ apiCode: 'KITS_NOTHING_TO_WRITE' });
+  });
+
+  it('says why a run wrote nothing, and never fails silently', async () => {
+    await setUp();
+    await saveAiKey(t.gql);
+    status = 401;
+    await kits.run(1, 5);
+    expect((await t.gql<Run>(KIT_RUN)).data!.kitRun).toMatchObject({
+      running: false,
+      written: 0,
+      reason: 'KEY_REFUSED',
+    });
+
+    status = 200;
+    vi.spyOn(t.prisma.jobFit, 'findMany').mockRejectedValueOnce(new Error('db down'));
+    expect(await kits.run(1, 5)).toBeNull();
+    expect((await t.gql<Run>(KIT_RUN)).data!.kitRun).toMatchObject({
+      running: false,
+      reason: 'NONE_WRITTEN',
+    });
+    const bell = await t.gql<Bell>(BELL);
+    expect(bell.data!.notifications.items[0]).toMatchObject({
+      kind: 'KITS_FAILED',
+      reason: 'NONE_WRITTEN',
+    });
   });
 });

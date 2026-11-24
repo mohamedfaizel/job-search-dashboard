@@ -29,6 +29,20 @@ export interface KitRunResult {
 /** Why a run stopped before the end, in words the bell can show. Null when it did not stop. */
 type StopReason = 'NO_KEY' | 'KEY_REFUSED' | 'NO_RESUME' | null;
 
+/** Where a user's latest run is, so Settings can show it while it writes and when it is done. */
+export interface KitRunStatus {
+  running: boolean;
+  /** Kits this run tries to write. */
+  total: number;
+  /** Jobs it has finished (written or failed). */
+  done: number;
+  written: number;
+  failed: number;
+  /** Why it stopped early or wrote none: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
+  reason: string | null;
+  startedAt: Date;
+}
+
 /**
  * Nightly apply kits: at night, for each user who turned it on in Settings, write the Apply kit
  * (resume, cover letter, form answers) of each queued job that has none yet, with the user's own
@@ -40,6 +54,8 @@ export class NightlyKitsService {
   private readonly logger = new Logger(NightlyKitsService.name);
   /** Users whose kits are being written now, so two runs never overlap. */
   private readonly running = new Set<number>();
+  /** Each user's latest run since the server started. */
+  private readonly runs = new Map<number, KitRunStatus>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -80,7 +96,11 @@ export class NightlyKitsService {
     if (!(await this.keyFor(userId))) {
       throw apiError(BadRequestException, 'AI_KEY_MISSING', 'Save your AI key in Settings first');
     }
-    const waiting = await this.waitingJobs(userId);
+    const queue = await this.insights.applyQueue(userId);
+    if (queue.length === 0) {
+      throw apiError(BadRequestException, 'KITS_QUEUE_EMPTY', 'Your Apply queue is empty');
+    }
+    const waiting = queue.filter((item) => !item.ready);
     if (waiting.length === 0) {
       throw apiError(BadRequestException, 'KITS_NOTHING_TO_WRITE', 'Every queued job has a kit');
     }
@@ -89,29 +109,62 @@ export class NightlyKitsService {
       where: { userId },
       select: { nightlyKitsMax: true },
     });
+    const total = Math.min(waiting.length, profile?.nightlyKitsMax ?? 5);
+    // Shown at once, before the run has read the queue again.
+    this.runs.set(userId, { ...this.fresh(), total });
     void this.run(userId, profile?.nightlyKitsMax ?? 5);
-    return Math.min(waiting.length, profile?.nightlyKitsMax ?? 5);
+    return total;
+  }
+
+  /** Your latest run (this one or the last finished), or null when there was none. */
+  status(userId: number): KitRunStatus | null {
+    return this.runs.get(userId) ?? null;
+  }
+
+  private fresh(): KitRunStatus {
+    return {
+      running: true,
+      total: 0,
+      done: 0,
+      written: 0,
+      failed: 0,
+      reason: null,
+      startedAt: new Date(),
+    };
+  }
+
+  private track(userId: number, change: Partial<KitRunStatus>): void {
+    const now = this.runs.get(userId) ?? this.fresh();
+    this.runs.set(userId, { ...now, ...change });
   }
 
   /** Writes up to `max` kits for one user and tells them in the bell. Never throws. */
   async run(userId: number, max: number): Promise<KitRunResult | null> {
     if (this.running.has(userId)) return null;
     this.running.add(userId);
+    this.runs.set(userId, { ...this.fresh(), total: this.runs.get(userId)?.total ?? 0 });
     try {
       return await this.write(userId, max);
     } catch (error) {
       this.logger.warn(`Nightly kits for user ${String(userId)} failed: ${getErrorMessage(error)}`);
+      // Never silent: the bell and Settings say it did not work.
+      this.track(userId, { reason: 'NONE_WRITTEN' });
+      await this.failed(userId, 'NONE_WRITTEN').catch(() => undefined);
       return null;
     } finally {
       this.running.delete(userId);
+      this.track(userId, { running: false });
     }
   }
 
   private async write(userId: number, max: number): Promise<KitRunResult | null> {
     const waiting = await this.waitingJobs(userId);
+    const total = Math.min(waiting.length, Math.max(0, max));
+    this.track(userId, { total });
     if (waiting.length === 0) return null;
     const key = await this.keyFor(userId);
     if (!key) {
+      this.track(userId, { reason: 'NO_KEY' });
       await this.failed(userId, 'NO_KEY');
       return null;
     }
@@ -132,18 +185,23 @@ export class NightlyKitsService {
         });
         await this.insights.saveJobResume(userId, job.jobId, reply);
         written.push(job);
+        this.track(userId, { done: written.length + failed, written: written.length });
       } catch (error) {
         if (error instanceof AiCallError && error.cause === 'KEY_REFUSED') {
           stop = 'KEY_REFUSED';
           break;
         }
         failed += 1;
+        this.track(userId, { done: written.length + failed, failed });
         this.logger.warn(
           `Kit for ${String(userId)}:${job.jobId} failed: ${getErrorMessage(error)}`,
         );
       }
     }
 
+    this.track(userId, {
+      reason: written.length === 0 ? (stop ?? 'NONE_WRITTEN') : stop,
+    });
     if (written.length === 0) {
       await this.failed(userId, stop ?? 'NONE_WRITTEN', failed);
     } else {

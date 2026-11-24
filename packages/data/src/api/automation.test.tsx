@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { graphqlClient } from './client';
 import { useUndoMailAuto } from './notifications';
 import {
+  useKitRun,
   useSetBriefing,
   useSetMailAutoStatus,
   useSetNightlyKits,
@@ -85,5 +86,16 @@ describe('automation settings hooks', () => {
       notificationId: 7,
     });
     expect(invalidate).toHaveBeenCalled();
+  });
+
+  it('reads the latest kits run', async () => {
+    const run = { running: false, total: 2, done: 2, written: 2, failed: 0, reason: null };
+    const request = vi.spyOn(graphqlClient, 'request').mockResolvedValue({ kitRun: run });
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useKitRun(), { wrapper });
+    await waitFor(() => {
+      expect(result.current.data).toEqual(run);
+    });
+    expect(request).toHaveBeenCalledWith(expect.stringContaining('kitRun'));
   });
 });

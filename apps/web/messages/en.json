@@ -481,7 +481,17 @@
       "save": "Save",
       "saved": "Saved.",
       "writeNow": "Write now",
-      "started": "{count, plural, one {Writing # kit now.} other {Writing # kits now.}} The 🔔 tells you when they are ready."
+      "progress": "Writing kit {done} of {total}… About a minute each. You can leave this page: the 🔔 tells you when they are ready.",
+      "doneWritten": "{count, plural, one {Wrote # kit.} other {Wrote # kits.}}",
+      "doneFailed": "{count, plural, one {# could not be written.} other {# could not be written.}}",
+      "openQueue": "Open Apply queue",
+      "writing": "Writing…",
+      "reason": {
+        "NO_KEY": "No kit written: add your Claude or OpenAI key above.",
+        "KEY_REFUSED": "No kit written: your AI key was refused. Check it above.",
+        "NO_RESUME": "No kit written: add your resume in My profile first.",
+        "NONE_WRITTEN": "No kit written: the AI provider did not answer. Try again in a few minutes."
+      }
     },
     "briefing": {
       "heading": "Morning briefing",
@@ -2366,6 +2376,7 @@
     "NOTIFICATION_NOT_FOUND": "That notification is not there any more.",
     "AUTOPILOT_LIMITS": "The Fit % for hiding must be lower than the Fit % for the queue.",
     "KITS_NOTHING_TO_WRITE": "Every job in your Apply queue already has a kit.",
+    "KITS_QUEUE_EMPTY": "Nothing to write: your Apply queue is empty. Add jobs to it on My Jobs first.",
     "PUSH_TOKEN_INVALID": "The phone sent a push token the app does not know. Update the phone app."
   },
   "Notifications": {

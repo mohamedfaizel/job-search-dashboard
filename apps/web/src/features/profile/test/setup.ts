@@ -3,6 +3,7 @@ import {
   apiKeys,
   poolKey,
   gmail,
+  kitRun,
   me,
   myDesign,
   otherResumes,
@@ -24,6 +25,8 @@ afterEach(() => {
   server.resetHandlers();
   requests.length = 0;
   apiKeys.length = 0;
+  kitRun.current = null;
+  kitRun.steps = [];
   Object.assign(poolKey, {
     state: 'NONE',
     used: 0,
