@@ -73,6 +73,8 @@ export {
   useSetApiKeyModel,
   useTestApiKey,
   useUpdateNotificationSettings,
+  useSetNightlyKits,
+  useWriteKitsNow,
 } from './api/settings';
 export {
   APPLY_QUEUE_URL,

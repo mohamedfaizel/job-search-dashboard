@@ -25,7 +25,7 @@ export class NotificationModel {
 
   @Field({
     description:
-      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`',
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`)',
   })
   kind!: string;
 
@@ -64,6 +64,16 @@ export class NotificationModel {
 
   @Field({ description: 'AUTOPILOT: you pressed Undo' })
   undone!: boolean;
+
+  @Field(() => Int, { description: 'KITS_READY / KITS_FAILED: kits that could not be written' })
+  failed!: number;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'KITS_FAILED, or a kits run that stopped early: NO_KEY, KEY_REFUSED, NO_RESUME or NONE_WRITTEN',
+  })
+  reason!: string | null;
 
   @Field(() => Date, { nullable: true, description: 'When you read it. Null = unread' })
   readAt!: Date | null;

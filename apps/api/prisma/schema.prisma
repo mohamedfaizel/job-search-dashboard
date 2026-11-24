@@ -235,6 +235,11 @@ model Profile {
   /// Show the Stretches (lines that may be hard to explain) of Claude's reply for a decision.
   showStretches       Boolean   @default(true)
   matchFitMin         Int       @default(60)
+  /// Nightly apply kits: at night, write the resume, cover letter and form answers for queued
+  /// jobs with your own AI key (Settings), so they are ready in the morning.
+  nightlyKits         Boolean   @default(false)
+  /// The most kits written in one night (each one costs a few cents on your key).
+  nightlyKitsMax      Int       @default(5)
   /// Your own fields for anything else forms ask: [{ "label": "Xing", "value": "…" }].
   customFields        Json      @default("[]")
   updatedAt           DateTime  @updatedAt

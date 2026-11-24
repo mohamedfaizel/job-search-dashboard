@@ -467,6 +467,18 @@
         },
         "detail": "Details: {error}"
       }
+    },
+    "kits": {
+      "heading": "Nightly apply kits",
+      "intro": "At 03:00 the app writes the resume, cover letter and form answers for each job in your Apply queue that has none yet, with your own Claude or OpenAI key above. In the morning you only check them and apply.",
+      "on": "Write my apply kits at night",
+      "onHint": "Off by default. It never applies or sends anything for you.",
+      "perNight": "At most per night",
+      "cost": "About 1 to 5 cents each on your key, depending on the model.",
+      "save": "Save",
+      "saved": "Saved.",
+      "writeNow": "Write now",
+      "started": "{count, plural, one {Writing # kit now.} other {Writing # kits now.}} The 🔔 tells you when they are ready."
     }
   },
   "Resume": {
@@ -2313,7 +2325,8 @@
     "MESSAGE_LIMIT": "You can send {max} messages an hour. Please try again later.",
     "CONVERSATION_NOT_FOUND": "This conversation is not there any more.",
     "NOTIFICATION_NOT_FOUND": "That notification is not there any more.",
-    "AUTOPILOT_LIMITS": "The Fit % for hiding must be lower than the Fit % for the queue."
+    "AUTOPILOT_LIMITS": "The Fit % for hiding must be lower than the Fit % for the queue.",
+    "KITS_NOTHING_TO_WRITE": "Every job in your Apply queue already has a kit."
   },
   "Notifications": {
     "bell": "Notifications",
@@ -2349,7 +2362,18 @@
     "autopilotHint": "{hidden, plural, =0 {nothing hidden} one {# hidden} other {# hidden}} · {kept, plural, one {# left for you} other {# left for you}}",
     "undo": "Undo",
     "undone": "Undone",
-    "openQueue": "Open Apply queue"
+    "openQueue": "Open Apply queue",
+    "kitsReady": "{count, plural, one {# apply kit is ready} other {# apply kits are ready}} to check",
+    "kitsFailed": "Apply kits were not written",
+    "kitsFailedSome": "{count, plural, one {# kit} other {# kits}} could not be written. They stay in the queue for tonight.",
+    "kitsReason": {
+      "NO_KEY": "Add your Claude or OpenAI key in Settings › API keys.",
+      "KEY_REFUSED": "Your AI key was refused. Check it in Settings › API keys.",
+      "NO_RESUME": "Add your resume in My profile first.",
+      "NONE_WRITTEN": "The AI provider did not answer. It tries again tonight."
+    },
+    "openSettingsKits": "Open Settings",
+    "kitsHint": "Open a job’s Apply tab to check its kit"
   },
   "Welcome": {
     "title": "Welcome, {name}!",

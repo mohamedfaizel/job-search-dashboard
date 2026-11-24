@@ -16,6 +16,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { KeyPoolModule } from './key-pool/key-pool.module';
 import { LivenessModule } from './liveness/liveness.module';
 import { MessagesModule } from './messages/messages.module';
+import { NightlyKitsModule } from './nightly-kits/nightly-kits.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
@@ -53,6 +54,7 @@ import { SyncModule } from './sync/sync.module';
     JobsModule,
     SyncModule,
     SavedSearchesModule,
+    NightlyKitsModule,
     ProfileModule,
     ResumeMatcherModule,
     ResumeBuilderModule,

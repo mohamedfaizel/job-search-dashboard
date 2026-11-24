@@ -178,6 +178,14 @@ export class ProfileModel {
   @Field(() => Int, { description: 'The Fit % a new job needs to count as a match (1-100)' })
   matchFitMin!: number;
 
+  @Field({
+    description: 'Nightly apply kits: write queued jobs’ kits at night with your own AI key',
+  })
+  nightlyKits!: boolean;
+
+  @Field(() => Int, { description: 'The most kits written in one night' })
+  nightlyKitsMax!: number;
+
   @Field(() => [ResumeSuggestionModel], {
     description: 'Suggestions for your master resume, worked out without AI',
   })

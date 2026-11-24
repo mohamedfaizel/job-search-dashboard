@@ -98,6 +98,8 @@ const PROFILE: Profile = {
   fillSavedAnswers: true,
   showStretches: true,
   matchFitMin: 60,
+  nightlyKits: false,
+  nightlyKitsMax: 5,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: null,

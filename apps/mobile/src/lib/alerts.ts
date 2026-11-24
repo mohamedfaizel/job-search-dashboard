@@ -54,6 +54,8 @@ export function useHeadline() {
       }
       const key = KEY_POOL_TEXT[item.kind];
       if (key) return t(key, { name: item.searchName, count: item.count });
+      if (item.kind === 'KITS_READY') return t('kitsReady', { count: item.count });
+      if (item.kind === 'KITS_FAILED') return t('kitsFailed');
       if (item.kind === 'AUTOPILOT') {
         return t('autopilot', { search: item.searchName, count: item.count });
       }

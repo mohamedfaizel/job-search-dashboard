@@ -1486,6 +1486,9 @@ type Mutation {
   """
   setLocale(locale: String!): User!
 
+  """Turn nightly apply kits on or off"""
+  setNightlyKits(input: NightlyKitsInput!): Boolean!
+
   """Save a saved search's Autopilot rules"""
   setSavedSearchAutopilot(id: Int!, input: AutopilotInput!): SavedSearch!
 
@@ -1554,6 +1557,11 @@ type Mutation {
   updateNotificationSettings(input: NotificationSettingsInput!): Profile!
   updateProfile(input: ProfileInput!): Profile!
   updateSavedSearch(id: Int!, input: SavedSearchInput!): SavedSearch!
+
+  """
+  Write the queued jobs’ kits now instead of tonight. Returns how many it will write; the bell says when they are done
+  """
+  writeKitsNow: Int!
 }
 
 """
@@ -1629,6 +1637,14 @@ type MyPoolKey {
   used: Int!
 }
 
+input NightlyKitsInput {
+  """Write queued jobs’ kits at night with your own AI key"""
+  on: Boolean!
+
+  """The most kits in one night (1-20)"""
+  perNight: Int!
+}
+
 """
 Something the app tells you in the bell list. The web app writes the words from `kind` and the numbers, in your language
 """
@@ -1639,6 +1655,9 @@ type Notification {
   """How many jobs it is about"""
   count: Int!
   createdAt: DateTime!
+
+  """KITS_READY / KITS_FAILED: kits that could not be written"""
+  failed: Int!
 
   """The Fit % a job needed to count"""
   fitMin: Int!
@@ -1654,12 +1673,17 @@ type Notification {
   kept: Int!
 
   """
-  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`
+  NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`)
   """
   kind: String!
 
   """When you read it. Null = unread"""
   readAt: DateTime
+
+  """
+  KITS_FAILED, or a kits run that stopped early: NO_KEY, KEY_REFUSED, NO_RESUME or NONE_WRITTEN
+  """
+  reason: String
 
   """
   KEY_REQUEST: the token request it is about, so admins can answer from the bell
@@ -1813,6 +1837,14 @@ type Profile {
   """The Fit % a new job needs to count as a match (1-100)"""
   matchFitMin: Int!
   nationality: String!
+
+  """
+  Nightly apply kits: write queued jobs’ kits at night with your own AI key
+  """
+  nightlyKits: Boolean!
+
+  """The most kits written in one night"""
+  nightlyKitsMax: Int!
 
   """
   Notice period or earliest start, e.g. "1 month"
