@@ -406,7 +406,7 @@
     },
     "mail": {
       "title": "Email",
-      "intro": "Connect your Gmail accounts and the app reads employer replies, then suggests moves on your tracker (a rejection, an interview invitation, an offer). You approve each one.",
+      "intro": "Connect your Gmail accounts and the app reads employer replies. A clear rejection or interview invitation moves the job on your tracker by itself (Undo in the bell); anything else, like an offer, waits as a suggestion for your OK.",
       "loading": "Loading your email accounts…",
       "loadFailed": "Could not load your email accounts: {error}",
       "none": "No Gmail account connected yet.",
@@ -424,7 +424,10 @@
         "denied": "You did not allow access, so nothing was connected.",
         "error": "Connecting Gmail did not work. Please try again.",
         "not-configured": "Gmail is not set up on this server yet."
-      }
+      },
+      "auto": "Move jobs by themselves when an email is clear",
+      "autoHint": "A clear rejection marks the job Rejected, a clear interview invitation marks it Interviewing. The bell tells you, with Undo. Anything unclear waits for your answer.",
+      "autoSaved": "Saved."
     },
     "matcher": {
       "intro": "Scores each job against your resume (ATS score) and writes a tailored version.",
@@ -1935,7 +1938,8 @@
       "checking": "Checking…",
       "checkFailed": "Could not check your email: {error}",
       "checked": "{count, plural, =0 {No new suggestions.} one {1 new suggestion.} other {# new suggestions.}}",
-      "connect": "Connect Gmail in Settings"
+      "connect": "Connect Gmail in Settings",
+      "moved": "{count, plural, one {# job was moved by itself} other {# jobs were moved by themselves}} (Undo in the bell)."
     },
     "funnel": {
       "title": "Your funnel",
@@ -2411,7 +2415,9 @@
     "bInterviews": "{count, plural, one {# interview today} other {# interviews today}}",
     "bFollowUps": "{count, plural, one {# follow-up due} other {# follow-ups due}}",
     "bReplies": "{count, plural, one {# employer reply} other {# employer replies}}",
-    "briefingHint": "Your morning briefing"
+    "briefingHint": "Your morning briefing",
+    "mailAuto": "Gmail moved {count, plural, one {# job} other {# jobs}} in your tracker",
+    "mailAutoHint": "The emails were clear"
   },
   "Welcome": {
     "title": "Welcome, {name}!",

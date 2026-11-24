@@ -109,6 +109,7 @@ export const PROFILE: Profile = {
   nightlyKitsMax: 5,
   briefingOn: true,
   briefingAt: '07:30',
+  mailAutoStatus: true,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
@@ -262,6 +263,10 @@ export const server = setupServer(
     requests.push({ operation: 'SetNightlyKits', variables });
     return HttpResponse.json({ data: { setNightlyKits: true } });
   }),
+  api.mutation('SetMailAutoStatus', ({ variables }) => {
+    requests.push({ operation: 'SetMailAutoStatus', variables });
+    return HttpResponse.json({ data: { setMailAutoStatus: variables['on'] } });
+  }),
   api.mutation('SetBriefing', ({ variables }) => {
     requests.push({ operation: 'SetBriefing', variables });
     return HttpResponse.json({ data: { setBriefing: true } });
@@ -295,7 +300,12 @@ export const server = setupServer(
     for (const account of gmail.accounts) account.lastSyncAt = '2026-11-03T12:00:00.000Z';
     return HttpResponse.json({
       data: {
-        syncGmail: { accounts: gmail.accounts.length, suggestions: gmail.found, warnings: [] },
+        syncGmail: {
+          accounts: gmail.accounts.length,
+          suggestions: gmail.found,
+          moved: 0,
+          warnings: [],
+        },
       },
     });
   }),

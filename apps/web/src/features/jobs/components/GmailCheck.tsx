@@ -41,6 +41,7 @@ export function GmailCheck() {
       {sync.data && (
         <span role="status" className="text-slate-600">
           {t('checked', { count: sync.data.suggestions })}
+          {sync.data.moved > 0 && ` ${t('moved', { count: sync.data.moved })}`}
           {sync.data.warnings.map((warning) => (
             <span key={warning} className="block text-red-700">
               {warning}

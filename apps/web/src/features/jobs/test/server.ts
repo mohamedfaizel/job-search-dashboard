@@ -317,6 +317,7 @@ export const PROFILE: Profile = {
   nightlyKitsMax: 5,
   briefingOn: true,
   briefingAt: '07:30',
+  mailAutoStatus: true,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
@@ -714,6 +715,7 @@ const handlers = [
     return HttpResponse.json({
       data: {
         syncGmail: {
+          moved: 0,
           accounts: gmailAccounts.count,
           suggestions: gmailAccounts.found,
           warnings: [],

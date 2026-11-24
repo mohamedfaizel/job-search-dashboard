@@ -192,6 +192,12 @@ export class ProfileModel {
   @Field({ description: 'Morning briefing time, "HH:mm" in the server’s local time' })
   briefingAt!: string;
 
+  @Field({
+    description:
+      'Gmail moves a job by itself when an email is clearly a rejection or an interview invitation',
+  })
+  mailAutoStatus!: boolean;
+
   @Field(() => [ResumeSuggestionModel], {
     description: 'Suggestions for your master resume, worked out without AI',
   })

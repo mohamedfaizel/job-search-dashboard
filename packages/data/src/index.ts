@@ -56,6 +56,7 @@ export {
   registerPushToken,
   unregisterPushToken,
   useUndoAutopilot,
+  useUndoMailAuto,
 } from './api/notifications';
 export {
   CALENDAR_CONNECT_URL,
@@ -79,6 +80,7 @@ export {
   useTestApiKey,
   useUpdateNotificationSettings,
   useSetBriefing,
+  useSetMailAutoStatus,
   useSetNightlyKits,
   useWriteKitsNow,
 } from './api/settings';

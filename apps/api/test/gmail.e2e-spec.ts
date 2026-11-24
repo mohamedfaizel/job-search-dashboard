@@ -45,6 +45,10 @@ describe('Gmail suggestions', () => {
   beforeEach(async () => {
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
+    // These tests are about suggestions; moving by itself has its own file (gmail-auto).
+    for (const userId of [1, 2]) {
+      await t.prisma.profile.create({ data: { userId, mailAutoStatus: false } });
+    }
     const job = await t.prisma.job.create({
       data: {
         title: 'Frontend developer',

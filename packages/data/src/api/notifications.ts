@@ -5,6 +5,7 @@ import {
   NOTIFICATIONS,
   REGISTER_PUSH_TOKEN,
   UNDO_AUTOPILOT,
+  UNDO_MAIL_AUTO,
   UNREGISTER_PUSH_TOKEN,
 } from './operations';
 import type { Notifications } from './types';
@@ -90,4 +91,20 @@ export async function unregisterPushToken(token: string): Promise<boolean> {
     { token },
   );
   return data.unregisterPushToken;
+}
+
+/** Undo in the bell: the jobs clear emails moved go back to where they were. */
+export function useUndoMailAuto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (notificationId: number) =>
+      (await graphqlClient.request<{ undoMailAuto: boolean }>(UNDO_MAIL_AUTO, { notificationId }))
+        .undoMailAuto,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: notificationsKey }),
+        queryClient.invalidateQueries({ queryKey: ['jobs'] }),
+      ]);
+    },
+  });
 }

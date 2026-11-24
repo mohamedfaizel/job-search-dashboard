@@ -226,6 +226,38 @@ describe('NotificationBell', () => {
     expect(within(list).queryByRole('link', { name: /React Developer/ })).toBeNull();
   });
 
+  it('says which jobs Gmail moved by itself and undoes it', async () => {
+    bell.items = [
+      {
+        ...NEW_MATCHES,
+        id: 15,
+        kind: 'MAIL_AUTO',
+        count: 1,
+        jobs: [
+          { id: 'job-1', title: 'React Developer', company: 'Acme', fit: 0, status: 'REJECTED' },
+        ],
+      },
+    ];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    const list = screen.getByRole('dialog', { name: 'Notifications' });
+    expect(within(list).getByText('Gmail moved 1 job in your tracker')).toBeInTheDocument();
+    expect(within(list).getByText(/The emails were clear/)).toBeInTheDocument();
+    expect(
+      within(list).getByRole('link', { name: /React Developer.*→ Rejected/ }),
+    ).toBeInTheDocument();
+    expect(within(list).queryByRole('link', { name: 'Open Apply queue' })).toBeNull();
+
+    await user.click(within(list).getByRole('button', { name: 'Undo' }));
+    expect(keyPool.sent).toContainEqual({
+      operation: 'UndoMailAuto',
+      variables: { notificationId: 15 },
+    });
+    expect(await within(list).findByText('Undone')).toBeInTheDocument();
+  });
+
   it('shows the morning briefing', async () => {
     bell.items = [
       {

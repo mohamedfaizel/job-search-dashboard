@@ -420,6 +420,8 @@ export interface Profile {
   briefingOn: boolean;
   /** "HH:mm" in the API server's local time. */
   briefingAt: string;
+  /** Gmail moves a job by itself when an email is clearly a rejection or an interview invitation. */
+  mailAutoStatus: boolean;
   /** Suggestions for your master resume, worked out without AI. */
   resumeSuggestions: ResumeSuggestion[];
   /** A prompt to paste into Claude for a recruiter review of your resume. Empty without one. */
@@ -457,6 +459,7 @@ export type ProfileInput = Omit<
   // Saved on their own, from Settings > Notifications > Morning briefing.
   | 'briefingOn'
   | 'briefingAt'
+  | 'mailAutoStatus'
 >;
 
 /** Settings > Notifications. */
@@ -871,6 +874,8 @@ export interface MailSuggestion {
 export interface GmailSyncResult {
   accounts: number;
   suggestions: number;
+  /** Jobs that clear emails moved by themselves (Undo in the bell). */
+  moved: number;
   warnings: string[];
 }
 
@@ -881,6 +886,8 @@ export interface NotificationJob {
   company: string;
   /** Your Fit % for it when the notification was made. */
   fit: number;
+  /** MAIL_AUTO: the status the email moved the job to. */
+  status?: ApplicationStatus | null;
 }
 
 /** Something the app tells you in the bell list. The words come from `kind`, in your language. */

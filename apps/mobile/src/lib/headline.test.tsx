@@ -40,6 +40,9 @@ describe('useHeadline', () => {
       '2 apply kits are ready to check',
     );
     expect(say(notification({ id: 1, kind: 'KITS_FAILED' }))).toBe('Apply kits were not written');
+    expect(say(notification({ id: 1, kind: 'MAIL_AUTO', count: 2 }))).toBe(
+      'Gmail moved 2 jobs in your tracker',
+    );
     expect(say(notification({ id: 1, kind: 'AUTOPILOT', searchName: 'Data', count: 1 }))).toBe(
       'Autopilot for “Data”: 1 job queued',
     );
