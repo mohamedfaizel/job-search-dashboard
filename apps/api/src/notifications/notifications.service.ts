@@ -37,6 +37,8 @@ export interface NotificationData {
   failed?: number;
   /** KITS_FAILED (or a run that stopped early): NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
   reason?: string;
+  /** MAIL_AUTO: the emails (MailSuggestion ids) whose moves Undo takes back. */
+  mailIds?: number[];
   /** BRIEFING: what the morning briefing counted. */
   briefing?: BriefingCountsModel;
 }

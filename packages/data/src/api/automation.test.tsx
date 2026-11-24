@@ -3,7 +3,13 @@ import { act, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { graphqlClient } from './client';
-import { useSetBriefing, useSetNightlyKits, useWriteKitsNow } from './settings';
+import { useUndoMailAuto } from './notifications';
+import {
+  useSetBriefing,
+  useSetMailAutoStatus,
+  useSetNightlyKits,
+  useWriteKitsNow,
+} from './settings';
 
 function setup() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -48,6 +54,25 @@ describe('automation settings hooks', () => {
     );
     expect(request).toHaveBeenCalledWith(expect.stringContaining('setBriefing'), {
       input: { on: false, at: '08:00' },
+    });
+    expect(invalidate).toHaveBeenCalled();
+  });
+
+  it('turns Gmail moving jobs by itself on or off, and undoes a move', async () => {
+    const request = vi
+      .spyOn(graphqlClient, 'request')
+      .mockResolvedValueOnce({ setMailAutoStatus: false })
+      .mockResolvedValueOnce({ undoMailAuto: true });
+    const { invalidate, wrapper } = setup();
+    const toggle = renderHook(() => useSetMailAutoStatus(), { wrapper });
+    await expect(act(() => toggle.result.current.mutateAsync(false))).resolves.toBe(false);
+    const undo = renderHook(() => useUndoMailAuto(), { wrapper });
+    await expect(act(() => undo.result.current.mutateAsync(7))).resolves.toBe(true);
+    expect(request).toHaveBeenNthCalledWith(1, expect.stringContaining('setMailAutoStatus'), {
+      on: false,
+    });
+    expect(request).toHaveBeenNthCalledWith(2, expect.stringContaining('undoMailAuto'), {
+      notificationId: 7,
     });
     expect(invalidate).toHaveBeenCalled();
   });

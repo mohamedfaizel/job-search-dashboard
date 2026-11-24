@@ -67,6 +67,7 @@ export function useHeadline() {
         return parts.length ? t('briefing', { parts: parts.join(', ') }) : t('briefingNothing');
       }
       if (item.kind === 'KITS_FAILED') return t('kitsFailed');
+      if (item.kind === 'MAIL_AUTO') return t('mailAuto', { count: item.count });
       if (item.kind === 'AUTOPILOT') {
         return t('autopilot', { search: item.searchName, count: item.count });
       }

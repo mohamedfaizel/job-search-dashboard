@@ -1,4 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { ApplicationStatus } from '../jobs/models/enums';
 
 @ObjectType('NotificationJob', { description: 'A job a notification points to' })
 export class NotificationJobModel {
@@ -13,6 +14,12 @@ export class NotificationJobModel {
 
   @Field(() => Int, { description: 'Your Fit % for it when the notification was made' })
   fit!: number;
+
+  @Field(() => ApplicationStatus, {
+    nullable: true,
+    description: 'MAIL_AUTO: the status the email moved the job to',
+  })
+  status?: ApplicationStatus | null;
 }
 
 @ObjectType('BriefingCounts', { description: 'What a morning briefing counted' })
@@ -43,7 +50,7 @@ export class NotificationModel {
 
   @Field({
     description:
-      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`)',
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`). MAIL_AUTO: clear employer emails moved `count` jobs (each with its new `status` in `jobs`); Undo with undoMailAuto',
   })
   kind!: string;
 
@@ -80,7 +87,7 @@ export class NotificationModel {
   @Field(() => Int, { description: 'AUTOPILOT: how many new jobs it left on Job posts for you' })
   kept!: number;
 
-  @Field({ description: 'AUTOPILOT: you pressed Undo' })
+  @Field({ description: 'AUTOPILOT / MAIL_AUTO: you pressed Undo' })
   undone!: boolean;
 
   @Field(() => BriefingCountsModel, {

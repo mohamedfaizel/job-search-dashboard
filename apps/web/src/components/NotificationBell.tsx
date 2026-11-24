@@ -7,6 +7,7 @@ import {
   useMarkNotificationsRead,
   useNotifications,
   useUndoAutopilot,
+  useUndoMailAuto,
 } from '@jobsearch/data';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -50,6 +51,8 @@ const KEY_POOL: Partial<
 
 /** A saved search's Autopilot sorted new jobs: queued, hidden, left for you. */
 const AUTOPILOT = 'AUTOPILOT';
+/** Clear employer emails moved jobs in the tracker by themselves. */
+const MAIL_AUTO = 'MAIL_AUTO';
 /** Nightly apply kits: some were written with your AI key, or none could be. */
 const KITS_READY = 'KITS_READY';
 /** The morning briefing: what needs you today. */
@@ -90,6 +93,7 @@ function useHeadline() {
         return t('autopilot', { search: item.searchName, count: item.count });
       }
       if (item.kind === KITS_READY) return t('kitsReady', { count: item.count });
+      if (item.kind === MAIL_AUTO) return t('mailAuto', { count: item.count });
       if (item.kind === BRIEFING && item.briefing) {
         const b = item.briefing;
         const parts = [
@@ -197,6 +201,7 @@ function JobRow({
   showFit: boolean;
 }) {
   const t = useTranslations('Notifications');
+  const statusText = useTranslations('Jobs.status');
   return (
     <li>
       <Link
@@ -208,6 +213,11 @@ function JobRow({
           <b className="font-medium text-slate-900">{job.title}</b>{' '}
           <span className="text-slate-600">· {job.company}</span>
         </span>
+        {job.status && (
+          <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-800 ring-1 ring-slate-200 ring-inset">
+            → {statusText(job.status)}
+          </span>
+        )}
         {showFit && (
           <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800 ring-1 ring-emerald-200 ring-inset">
             {t('fit', { fit: job.fit })}
@@ -218,13 +228,19 @@ function JobRow({
   );
 }
 
-/** What Autopilot did after a run, the best queued jobs, and Undo. */
+/**
+ * Something the app did by itself, with Undo: Autopilot's run (the best queued jobs), or clear
+ * employer emails that moved jobs in the tracker.
+ */
 function AutopilotItem({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
   const t = useTranslations('Notifications');
   const locale = useLocale();
   const headline = useHeadline();
   const errorText = useErrorText();
-  const undo = useUndoAutopilot();
+  const undoAutopilot = useUndoAutopilot();
+  const undoMail = useUndoMailAuto();
+  const mail = item.kind === MAIL_AUTO;
+  const undo = mail ? undoMail : undoAutopilot;
   const undone = item.undone || undo.isSuccess;
   return (
     <li className={`space-y-1.5 px-3 py-2.5 ${item.readAt ? '' : 'bg-brand-50'}`}>
@@ -254,13 +270,13 @@ function AutopilotItem({ item, onOpen }: { item: AppNotification; onOpen: () => 
         )}
       </div>
       <p className="text-xs text-slate-600">
-        {t('autopilotHint', { hidden: item.hidden, kept: item.kept })} ·{' '}
+        {mail ? t('mailAutoHint') : t('autopilotHint', { hidden: item.hidden, kept: item.kept })} ·{' '}
         {timeAgo(item.createdAt, locale)}
       </p>
       {!undone && item.jobs.length > 0 && (
         <ul className="space-y-1">
           {item.jobs.map((job) => (
-            <JobRow key={job.id} job={job} onOpen={onOpen} showFit />
+            <JobRow key={job.id} job={job} onOpen={onOpen} showFit={!mail} />
           ))}
         </ul>
       )}
@@ -269,7 +285,7 @@ function AutopilotItem({ item, onOpen }: { item: AppNotification; onOpen: () => 
           {errorText(undo.error)}
         </p>
       )}
-      {!undone && item.count > 0 && (
+      {!mail && !undone && item.count > 0 && (
         <Link href="/jobs" onClick={onOpen} className="text-xs text-brand-700 hover:underline">
           {t('openQueue')}
         </Link>
@@ -484,7 +500,7 @@ export function NotificationBell() {
                       setOpen(false);
                     }}
                   />
-                ) : item.kind === AUTOPILOT ? (
+                ) : item.kind === AUTOPILOT || item.kind === MAIL_AUTO ? (
                   <AutopilotItem
                     key={item.id}
                     item={item}

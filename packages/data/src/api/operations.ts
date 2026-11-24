@@ -309,6 +309,18 @@ export const UNDO_AUTOPILOT = /* GraphQL */ `
   }
 `;
 
+export const UNDO_MAIL_AUTO = /* GraphQL */ `
+  mutation UndoMailAuto($notificationId: Int!) {
+    undoMailAuto(notificationId: $notificationId)
+  }
+`;
+
+export const SET_MAIL_AUTO_STATUS = /* GraphQL */ `
+  mutation SetMailAutoStatus($on: Boolean!) {
+    setMailAutoStatus(on: $on)
+  }
+`;
+
 export const SET_NIGHTLY_KITS = /* GraphQL */ `
   mutation SetNightlyKits($input: NightlyKitsInput!) {
     setNightlyKits(input: $input)
@@ -450,6 +462,7 @@ const PROFILE_FIELDS = /* GraphQL */ `
   nightlyKitsMax
   briefingOn
   briefingAt
+  mailAutoStatus
   resumeSuggestions {
     code
     detail
@@ -1037,6 +1050,7 @@ export const SYNC_GMAIL = /* GraphQL */ `
     syncGmail {
       accounts
       suggestions
+      moved
       warnings
     }
   }
@@ -1105,6 +1119,7 @@ export const NOTIFICATIONS = /* GraphQL */ `
           title
           company
           fit
+          status
         }
       }
     }

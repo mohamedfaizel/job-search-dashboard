@@ -9,6 +9,7 @@ import {
   SET_API_KEY_MODEL,
   TEST_API_KEY,
   SET_BRIEFING,
+  SET_MAIL_AUTO_STATUS,
   SET_NIGHTLY_KITS,
   UPDATE_NOTIFICATION_SETTINGS,
   WRITE_KITS_NOW,
@@ -141,6 +142,17 @@ export function useSetBriefing() {
   return useMutation({
     mutationFn: async (input: { on: boolean; at: string }) =>
       (await graphqlClient.request<{ setBriefing: boolean }>(SET_BRIEFING, { input })).setBriefing,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),
+  });
+}
+
+/** Settings > Gmail: clear emails move jobs by themselves (on) or only suggest (off). */
+export function useSetMailAutoStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (on: boolean) =>
+      (await graphqlClient.request<{ setMailAutoStatus: boolean }>(SET_MAIL_AUTO_STATUS, { on }))
+        .setMailAutoStatus,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),
   });
 }

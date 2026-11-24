@@ -1,4 +1,11 @@
-import { GMAIL_CONNECT_URL, useDisconnectGmail, useGmailStatus, useMe } from '@jobsearch/data';
+import {
+  GMAIL_CONNECT_URL,
+  useDisconnectGmail,
+  useGmailStatus,
+  useMe,
+  useMyProfile,
+  useSetMailAutoStatus,
+} from '@jobsearch/data';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -130,7 +137,47 @@ export function GmailAccounts() {
           </div>
         </>
       )}
+      {accounts.length > 0 && <AutoStatus />}
       <p className="text-xs text-slate-600">{t('privacy')}</p>
     </section>
+  );
+}
+
+/** Clear emails move jobs by themselves (on by default), or only suggest. Saves on click. */
+function AutoStatus() {
+  const t = useTranslations('Settings.mail');
+  const errorText = useErrorText();
+  const profile = useMyProfile();
+  const save = useSetMailAutoStatus();
+  if (!profile.data) return null;
+  const on = (save.isPending ? save.variables : undefined) ?? profile.data.mailAutoStatus;
+  return (
+    <div className="space-y-1">
+      <label className="flex items-start gap-2 text-sm text-slate-800">
+        <input
+          type="checkbox"
+          checked={on}
+          disabled={save.isPending}
+          onChange={(event) => {
+            save.mutate(event.target.checked);
+          }}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300"
+        />
+        <span>
+          {t('auto')}
+          <span className="block text-xs text-slate-600">{t('autoHint')}</span>
+        </span>
+      </label>
+      {save.isSuccess && (
+        <p role="status" className="text-xs text-emerald-700">
+          {t('autoSaved')}
+        </p>
+      )}
+      {save.error && (
+        <p role="alert" className="text-xs text-red-700">
+          {errorText(save.error)}
+        </p>
+      )}
+    </div>
   );
 }

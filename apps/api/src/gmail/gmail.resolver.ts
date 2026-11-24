@@ -28,6 +28,23 @@ export class GmailResolver {
     return this.gmail.syncUser(user.id);
   }
 
+  @Mutation(() => Boolean, {
+    description: 'Settings > Gmail: let clear emails move jobs by themselves (true) or not',
+  })
+  setMailAutoStatus(@CurrentUser() user: SessionUser, @Args('on') on: boolean): Promise<boolean> {
+    return this.gmail.setAutoStatus(user.id, on);
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Undo in the bell: the jobs clear emails moved go back to where they were',
+  })
+  undoMailAuto(
+    @CurrentUser() user: SessionUser,
+    @Args('notificationId', { type: () => Int }) notificationId: number,
+  ): Promise<boolean> {
+    return this.gmail.undoAuto(user.id, notificationId);
+  }
+
   @Mutation(() => Boolean, { description: 'Removes a Gmail account and its pending suggestions.' })
   disconnectGmail(
     @CurrentUser() user: SessionUser,

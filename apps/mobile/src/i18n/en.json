@@ -77,7 +77,8 @@
     "bKits": "{count, plural, one {# kit ready} other {# kits ready}}",
     "bInterviews": "{count, plural, one {# interview today} other {# interviews today}}",
     "bFollowUps": "{count, plural, one {# follow-up due} other {# follow-ups due}}",
-    "bReplies": "{count, plural, one {# employer reply} other {# employer replies}}"
+    "bReplies": "{count, plural, one {# employer reply} other {# employer replies}}",
+    "mailAuto": "Gmail moved {count, plural, one {# job} other {# jobs}} in your tracker"
   },
   "Maker": {
     "help": "Queries and suggestions"

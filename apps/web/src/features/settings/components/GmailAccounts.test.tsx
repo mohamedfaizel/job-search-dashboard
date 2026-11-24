@@ -30,6 +30,18 @@ describe('Gmail accounts in Settings', () => {
     expect(GMAIL_CONNECT_URL).toBe(`${API_URL.replace(/\/graphql\/?$/, '')}/gmail/connect`);
   });
 
+  it('moves jobs by itself on clear emails until you turn it off', async () => {
+    gmail.accounts = [ACCOUNT];
+    const { user, section } = await openGmailTab();
+    const box = await within(section).findByRole('checkbox', {
+      name: /Move jobs by themselves when an email is clear/,
+    });
+    expect(box).toBeChecked();
+    await user.click(box);
+    expect(await within(section).findByText('Saved.')).toBeVisible();
+    expect(requests).toContainEqual({ operation: 'SetMailAutoStatus', variables: { on: false } });
+  });
+
   it('lists several accounts and offers another one, without a Check now (that is on the Tracker)', async () => {
     gmail.accounts = [ACCOUNT, { ...ACCOUNT, id: 2, email: 'work@gmail.com' }];
     const { section } = await openGmailTab();

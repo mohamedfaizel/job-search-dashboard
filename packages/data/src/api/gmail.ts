@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_URL, graphqlClient } from './client';
 import { queryKeys } from './hooks';
 import { jobInsightsPrefix } from './insights';
+import { notificationsKey } from './notifications';
 import {
   APPROVE_MAIL_SUGGESTION,
   DISCONNECT_GMAIL,
@@ -76,6 +77,9 @@ export function useSyncGmail() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: gmailStatusKey }),
         queryClient.invalidateQueries({ queryKey: mailSuggestionsKey }),
+        // Clear emails may have moved jobs: the tracker and the bell change too.
+        queryClient.invalidateQueries({ queryKey: notificationsKey }),
+        queryClient.invalidateQueries({ queryKey: ['jobs'] }),
       ]);
     },
   });

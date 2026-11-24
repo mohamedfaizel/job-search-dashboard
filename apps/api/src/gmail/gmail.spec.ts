@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyMail, suggestedStatus } from './classify';
+import { classifyMail, clearMailKind, suggestedStatus } from './classify';
 import type { Candidate } from './match-job';
 import { companyKey, matchJob } from './match-job';
 import { makeState, readState } from './oauth-state';
@@ -140,5 +140,15 @@ describe('matchJob', () => {
     expect(matchJob(mail({ subject: 'Globex', receivedAt: day(10) }), candidates)).toBeNull();
     expect(matchJob(mail({ subject: 'Globexity news' }), candidates)).toBeNull();
     expect(matchJob(mail({ subject: 'Ab' }), candidates)).toBeNull();
+  });
+});
+
+describe('clearMailKind', () => {
+  it('is clear only for a plain rejection or a plain invitation', () => {
+    expect(clearMailKind('Unfortunately we will not move forward')).toBe('REJECTED');
+    expect(clearMailKind('Einladung zum Vorstellungsgespräch')).toBe('INTERVIEWING');
+    expect(clearMailKind('Unfortunately the next round is full')).toBeNull();
+    expect(clearMailKind('We are pleased to offer you the job')).toBeNull();
+    expect(clearMailKind('Thank you for your application')).toBeNull();
   });
 });
