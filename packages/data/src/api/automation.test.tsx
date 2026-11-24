@@ -1,0 +1,54 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, renderHook } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { graphqlClient } from './client';
+import { useSetBriefing, useSetNightlyKits, useWriteKitsNow } from './settings';
+
+function setup() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  return { invalidate, wrapper };
+}
+
+describe('automation settings hooks', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('saves nightly kits and reloads the profile', async () => {
+    const request = vi.spyOn(graphqlClient, 'request').mockResolvedValue({ setNightlyKits: true });
+    const { invalidate, wrapper } = setup();
+    const { result } = renderHook(() => useSetNightlyKits(), { wrapper });
+    await expect(act(() => result.current.mutateAsync({ on: true, perNight: 3 }))).resolves.toBe(
+      true,
+    );
+    expect(request).toHaveBeenCalledWith(expect.stringContaining('setNightlyKits'), {
+      input: { on: true, perNight: 3 },
+    });
+    expect(invalidate).toHaveBeenCalled();
+  });
+
+  it('starts writing kits now and says how many', async () => {
+    vi.spyOn(graphqlClient, 'request').mockResolvedValue({ writeKitsNow: 2 });
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useWriteKitsNow(), { wrapper });
+    await expect(act(() => result.current.mutateAsync())).resolves.toBe(2);
+  });
+
+  it('saves the morning briefing and reloads the profile', async () => {
+    const request = vi.spyOn(graphqlClient, 'request').mockResolvedValue({ setBriefing: true });
+    const { invalidate, wrapper } = setup();
+    const { result } = renderHook(() => useSetBriefing(), { wrapper });
+    await expect(act(() => result.current.mutateAsync({ on: false, at: '08:00' }))).resolves.toBe(
+      true,
+    );
+    expect(request).toHaveBeenCalledWith(expect.stringContaining('setBriefing'), {
+      input: { on: false, at: '08:00' },
+    });
+    expect(invalidate).toHaveBeenCalled();
+  });
+});

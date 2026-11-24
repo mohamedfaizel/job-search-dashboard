@@ -40,3 +40,30 @@ describe('isBriefingDue', () => {
     expect(isBriefingDue('bad', null, at(9, 0))).toBe(false);
   });
 });
+
+describe('briefingText in every form', () => {
+  const all = { newJobs: 2, kits: 2, followUps: 2, interviews: 2, replies: 2 };
+  const one = { newJobs: 1, kits: 1, followUps: 1, interviews: 1, replies: 1 };
+  const best = { title: 'Data Engineer', company: 'Acme', fit: 90 };
+
+  it('writes every count in German, with the best job', () => {
+    const text = briefingText(all, 'de', best);
+    expect(text.title).toBe('Guten Morgen: 2 neue Jobs, 2 Kits fertig');
+    expect(text.body).toBe(
+      '2 Interviews heute · 2× nachfassen · 2 Antworten von Arbeitgebern\nTop: Data Engineer · Acme · 90 %',
+    );
+    expect(briefingText(one, 'de').body).toBe(
+      '1 Interview heute · 1× nachfassen · 1 Antwort von Arbeitgebern',
+    );
+    expect(briefingText(one, 'de').title).toBe('Guten Morgen: 1 neuer Job, 1 Kit fertig');
+  });
+
+  it('writes every count in English, one of each', () => {
+    const text = briefingText(one, 'en');
+    expect(text.title).toBe('Good morning: 1 new job, 1 kit ready');
+    expect(text.body).toBe('1 interview today · 1 follow-up due · 1 employer reply');
+    expect(briefingText(all, 'en').body).toBe(
+      '2 interviews today · 2 follow-ups due · 2 employer replies',
+    );
+  });
+});
