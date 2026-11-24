@@ -370,7 +370,7 @@ function JobDetails({
             />
           </TabPanel>
           <TabPanel id="interview" active={tab}>
-            <InterviewPanel jobId={job.id} />
+            <InterviewPanel jobId={job.id} title={`${job.title} · ${job.company.name}`} />
           </TabPanel>
           <TabPanel id="salary" active={tab}>
             <SalaryPanel job={job} active={tab === 'salary'} />

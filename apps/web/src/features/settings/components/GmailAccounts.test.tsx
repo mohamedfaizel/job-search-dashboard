@@ -17,7 +17,7 @@ const ACCOUNT = {
 async function openGmailTab() {
   const user = userEvent.setup();
   renderWithData(<SettingsPage />);
-  await user.click(screen.getByRole('tab', { name: 'Gmail' }));
+  await user.click(screen.getByRole('tab', { name: 'Gmail & Calendar' }));
   return { user, section: await screen.findByRole('region', { name: 'Email' }) };
 }
 
@@ -82,7 +82,9 @@ describe('Gmail accounts in Settings', () => {
   it("opens the Gmail tab with the result after Google's sign-in", async () => {
     window.history.replaceState(null, '', '/settings?gmail=connected');
     renderWithData(<SettingsPage />);
-    expect(await screen.findByRole('tab', { name: 'Gmail', selected: true })).toBeVisible();
+    expect(
+      await screen.findByRole('tab', { name: 'Gmail & Calendar', selected: true }),
+    ).toBeVisible();
     expect(await screen.findByRole('status')).toHaveTextContent('Gmail account connected.');
   });
 
@@ -95,7 +97,7 @@ describe('Gmail accounts in Settings', () => {
   it('shows the section in German', async () => {
     const user = userEvent.setup();
     renderWithData(<SettingsPage />, 'de');
-    await user.click(screen.getByRole('tab', { name: 'Gmail' }));
+    await user.click(screen.getByRole('tab', { name: 'Gmail & Kalender' }));
     const section = await screen.findByRole('region', { name: 'E-Mail' });
     expect(await within(section).findByText('Noch kein Gmail-Konto verbunden.')).toBeVisible();
   });

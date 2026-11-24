@@ -640,6 +640,8 @@ export interface JobInsights {
   /** What Claude answered to it, if you pasted it back. */
   /** ISO time of your interview for this job, if you set it. */
   interviewAt: string | null;
+  /** True when that interview is in your connected Google Calendar. */
+  interviewInCalendar: boolean;
   interviewPrep: InterviewPrep | null;
 }
 
@@ -832,6 +834,16 @@ export interface GmailAccount {
   connectedAt: string;
   lastSyncAt: string | null;
   /** Why the last check failed, or null when it worked. */
+  lastError: string | null;
+}
+
+/** Your Google Calendar for interviews (Settings > Gmail). */
+export interface GoogleCalendarStatus {
+  /** False until the server has a Google client set up. */
+  configured: boolean;
+  /** The connected Google account, or null when none is. */
+  email: string | null;
+  /** Why the last calendar change failed, if it did. */
   lastError: string | null;
 }
 

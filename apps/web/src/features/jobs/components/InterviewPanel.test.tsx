@@ -245,6 +245,12 @@ describe('InterviewPanel', () => {
 
     expect(await screen.findByText(/Interview: Thu, Nov 12, 10:00/)).toBeInTheDocument();
     expect(screen.getByText('Reminder in the bell 1 day before')).toBeInTheDocument();
+    // No calendar connected: a link opens Google Calendar with the event filled in.
+    const add = screen.getByRole('link', { name: 'Add to Google Calendar' });
+    const url = new URL(add.getAttribute('href') ?? '');
+    expect(url.host).toBe('calendar.google.com');
+    expect(url.searchParams.get('text')).toBe('Interview');
+    expect(url.searchParams.get('dates')).toMatch(/^\d{8}T\d{6}Z\/\d{8}T\d{6}Z$/);
     const sent = requests.find((r) => r.operation === 'SetInterviewDate');
     expect(sent?.variables).toEqual({
       jobId: 'job-1',
@@ -255,6 +261,25 @@ describe('InterviewPanel', () => {
     expect(
       await screen.findByRole('button', { name: '📅 Add the interview date' }),
     ).toBeInTheDocument();
+  });
+
+  it('says when the interview is in your Google Calendar', async () => {
+    server.use(
+      api.query('JobInsights', () =>
+        HttpResponse.json({
+          data: {
+            jobInsights: {
+              ...INSIGHTS,
+              interviewAt: '2026-11-12T09:00:00.000Z',
+              interviewInCalendar: true,
+            },
+          },
+        }),
+      ),
+    );
+    renderPanel();
+    expect(await screen.findByText(/In your Google Calendar/)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Add to Google Calendar' })).not.toBeInTheDocument();
   });
 
   it('says why saving failed', async () => {

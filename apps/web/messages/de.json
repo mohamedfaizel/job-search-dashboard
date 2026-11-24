@@ -309,7 +309,7 @@
     "loading": "Wird geladen…",
     "tabs": {
       "keys": "API-Schlüssel",
-      "gmail": "Gmail",
+      "gmail": "Gmail & Kalender",
       "notifications": "Benachrichtigungen"
     },
     "keys": {
@@ -488,6 +488,23 @@
       "save": "Überblick speichern",
       "saved": "Gespeichert.",
       "phoneHint": "Er erscheint in der 🔔 und als Push auf deinem Handy, wenn du in der Handy-App angemeldet bist."
+    },
+    "calendar": {
+      "title": "Google Kalender",
+      "intro": "Verbinde deinen Kalender, und jeder Interviewtermin, den du einträgst, wird dort ein Termin mit Link zur Stelle und deiner Interviewvorbereitung. Er wandert mit, wenn du das Datum änderst, und verschwindet, wenn du es entfernst.",
+      "loading": "Wird geladen…",
+      "connect": "Google Kalender verbinden",
+      "connectedAs": "Verbunden: {email}",
+      "disconnect": "Trennen",
+      "notConfigured": "Google ist auf diesem Server noch nicht eingerichtet. Trage GOOGLE_CLIENT_ID und GOOGLE_CLIENT_SECRET in deine .env-Datei ein und aktiviere die Google Calendar API (siehe README).",
+      "notAvailable": "Google Kalender ist auf diesem Server noch nicht verfügbar.",
+      "privacy": "Die App legt nur die Interviewtermine an, die sie selbst erstellt, und verschiebt oder löscht nur diese. Deine anderen Termine liest sie nicht. Wenn du trennst, bleiben die erstellten Termine in deinem Kalender.",
+      "result": {
+        "connected": "Google Kalender verbunden. Deine kommenden Interviews stehen jetzt darin.",
+        "denied": "Du hast den Zugriff nicht erlaubt, daher wurde nichts verbunden.",
+        "error": "Das Verbinden mit Google Kalender hat nicht geklappt. Bitte versuche es noch einmal.",
+        "not-configured": "Google ist auf diesem Server noch nicht eingerichtet."
+      }
     }
   },
   "Resume": {
@@ -1362,7 +1379,10 @@
         "save": "Speichern",
         "cancel": "Abbrechen",
         "hint": "Beim Speichern wandert der Job zu „Im Gespräch“. Die Glocke erinnert dich einen Tag vorher.",
-        "error": "Der Termin konnte nicht gespeichert werden: {error}"
+        "error": "Der Termin konnte nicht gespeichert werden: {error}",
+        "inCalendar": "In deinem Google Kalender",
+        "addToCalendar": "Zu Google Kalender hinzufügen",
+        "addToCalendarHint": "Öffnet Google Kalender mit dem fertigen Termin. Verbinde deinen Kalender unter Einstellungen › Gmail & Kalender, dann passiert das automatisch."
       }
     },
     "fit": {

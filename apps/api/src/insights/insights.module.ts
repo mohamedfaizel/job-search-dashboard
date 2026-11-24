@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CalendarModule } from '../calendar/calendar.module';
 import { DocumentsModule } from '../documents/documents.module';
 import { ResumeMatcherModule } from '../resume-matcher/resume-matcher.module';
 import { ApplyKitController, ApplyQueueController } from './apply-kit.controller';
@@ -11,7 +12,7 @@ import { ReplyMatchService } from './reply-match.service';
 
 /** Job insights without AI: skill tags, TF-IDF keywords, language detection and Fit %. */
 @Module({
-  imports: [DocumentsModule, ResumeMatcherModule],
+  imports: [DocumentsModule, ResumeMatcherModule, CalendarModule],
   controllers: [JobResumeController, ApplyKitController, ApplyQueueController],
   providers: [InsightsService, InsightsResolver, CorpusService, FitService, ReplyMatchService],
   exports: [FitService, InsightsService],

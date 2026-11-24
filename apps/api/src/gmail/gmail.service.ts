@@ -11,7 +11,7 @@ import { AccessRevokedError, GmailClient } from './gmail.client';
 import type { GmailStatusModel, GmailSyncResultModel, MailSuggestionModel } from './gmail.model';
 import type { Candidate } from './match-job';
 import { matchJob } from './match-job';
-import { decryptToken, encryptToken, keyFrom } from './token-crypto';
+import { decryptToken, encryptToken, tokenKey } from './token-crypto';
 
 /** How far back each check looks, and the most mails it reads per account. */
 const LOOK_BACK_DAYS = 14;
@@ -42,11 +42,7 @@ export class GmailService {
 
   /** The key that scrambles stored refresh tokens: GMAIL_TOKEN_KEY, else the login secret. */
   private get key(): Buffer {
-    return keyFrom(
-      this.config.get<string>('GMAIL_TOKEN_KEY') ||
-        this.config.get<string>('JWT_SECRET') ||
-        'dev-only-secret-change-me',
-    );
+    return tokenKey(this.config);
   }
 
   async status(userId: number): Promise<GmailStatusModel> {

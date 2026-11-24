@@ -291,6 +291,9 @@ export class JobInsightsModel {
   })
   interviewAt!: Date | null;
 
+  @Field({ description: 'True when that interview is in your connected Google Calendar' })
+  interviewInCalendar!: boolean;
+
   @Field(() => InterviewPrepModel, {
     nullable: true,
     description: 'Claude’s interview prep for this job, if you pasted it back',

@@ -7,6 +7,12 @@ const USERINFO_URL = 'https://openidconnect.googleapis.com/v1/userinfo';
 const GMAIL_URL = 'https://gmail.googleapis.com/gmail/v1/users/me';
 /** Read-only: the app can never send, change or delete mail. */
 const SCOPES = ['openid', 'email', 'https://www.googleapis.com/auth/gmail.readonly'];
+/** Google Calendar: add, move and remove the interview events the app made. Nothing else. */
+export const CALENDAR_SCOPES = [
+  'openid',
+  'email',
+  'https://www.googleapis.com/auth/calendar.events',
+];
 
 export interface MailMessage {
   id: string;
@@ -54,12 +60,12 @@ export class GmailClient {
     return this.config.get<string>('GMAIL_REDIRECT_URI') || 'http://localhost:3000/gmail/callback';
   }
 
-  authUrl(state: string): string {
+  authUrl(state: string, scopes = SCOPES): string {
     const query = new URLSearchParams({
       client_id: this.clientId,
       redirect_uri: this.redirectUri,
       response_type: 'code',
-      scope: SCOPES.join(' '),
+      scope: scopes.join(' '),
       // offline + consent: Google must hand out a refresh token so we can check mail later.
       access_type: 'offline',
       prompt: 'consent select_account',

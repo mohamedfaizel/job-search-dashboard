@@ -9,6 +9,30 @@ export function keyFrom(secret: string): Buffer {
   return createHash('sha256').update(`gmail-token:${secret}`).digest();
 }
 
+/** Nest's ConfigService, or anything that reads settings by name. */
+interface ConfigReader {
+  get(name: string): unknown;
+}
+
+const setting = (config: ConfigReader, name: string) => {
+  const value = config.get(name);
+  return typeof value === 'string' ? value : '';
+};
+
+/** The key for stored Google tokens: GMAIL_TOKEN_KEY, else the login secret. */
+export function tokenKey(config: ConfigReader): Buffer {
+  return keyFrom(tokenSecret(config));
+}
+
+/** The secret behind {@link tokenKey}; it also signs the sign-in "state". */
+export function tokenSecret(config: ConfigReader): string {
+  return (
+    setting(config, 'GMAIL_TOKEN_KEY') ||
+    setting(config, 'JWT_SECRET') ||
+    'dev-only-secret-change-me'
+  );
+}
+
 export function encryptToken(plain: string, key: Buffer): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key, iv);

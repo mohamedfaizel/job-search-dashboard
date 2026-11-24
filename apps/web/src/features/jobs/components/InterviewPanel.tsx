@@ -23,7 +23,7 @@ const LINK = 'text-brand-700 hover:underline';
  * skills the ad asks for and your resume doesn't show, which are the likely hard questions. That
  * part needs no AI.
  */
-export function InterviewPanel({ jobId }: { jobId: string }) {
+export function InterviewPanel({ jobId, title }: { jobId: string; title?: string }) {
   const insights = useJobInsights(jobId);
   const save = useSaveInterviewPrep();
   const remove = useDeleteInterviewPrep();
@@ -92,7 +92,12 @@ export function InterviewPanel({ jobId }: { jobId: string }) {
         {t('intro')}
       </p>
 
-      <InterviewDate jobId={jobId} at={data.interviewAt} />
+      <InterviewDate
+        jobId={jobId}
+        at={data.interviewAt}
+        inCalendar={data.interviewInCalendar}
+        title={title}
+      />
 
       <section aria-label={t('gapsTitle')} className="space-y-2">
         <h3 className="text-sm font-semibold text-slate-900">{t('gapsTitle')}</h3>
@@ -297,7 +302,35 @@ function toLocalInput(iso: string): string {
  * When the interview is. Saving it moves the job to Interviewing, and the bell reminds you a day
  * before.
  */
-function InterviewDate({ jobId, at }: { jobId: string; at: string | null }) {
+/** Google's "add event" page, filled in: works without connecting your calendar. */
+export function addToCalendarUrl(at: string, title: string | undefined, jobLink: string): string {
+  const stamp = (d: Date) =>
+    d
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}/, '');
+  const start = new Date(at);
+  const end = new Date(start.getTime() + 60 * 60_000);
+  const query = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title ? `Interview: ${title}` : 'Interview',
+    dates: `${stamp(start)}/${stamp(end)}`,
+    details: jobLink,
+  });
+  return `https://calendar.google.com/calendar/render?${query.toString()}`;
+}
+
+function InterviewDate({
+  jobId,
+  at,
+  inCalendar,
+  title,
+}: {
+  jobId: string;
+  at: string | null;
+  inCalendar: boolean;
+  title: string | undefined;
+}) {
   const t = useTranslations('Jobs.interview.date');
   const errorText = useErrorText();
   const f = useJobFormat();
@@ -324,6 +357,23 @@ function InterviewDate({ jobId, at }: { jobId: string; at: string | null }) {
             📅 {t('on', { when: f.dateTime(at) })}
           </span>
           <span className="text-xs text-slate-600">{t('reminder')}</span>
+          {inCalendar ? (
+            <span className="text-xs text-emerald-700">✓ {t('inCalendar')}</span>
+          ) : (
+            <a
+              className={LINK + ' text-xs'}
+              href={addToCalendarUrl(
+                at,
+                title,
+                `${window.location.origin}/jobs?job=${encodeURIComponent(jobId)}`,
+              )}
+              target="_blank"
+              rel="noreferrer"
+              title={t('addToCalendarHint')}
+            >
+              {t('addToCalendar')}
+            </a>
+          )}
           <button
             type="button"
             className={LINK + ' text-xs'}

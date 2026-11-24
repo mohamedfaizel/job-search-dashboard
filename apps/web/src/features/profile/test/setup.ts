@@ -37,7 +37,7 @@ afterEach(() => {
   otherResumes.length = 0;
   savedAnswers.length = 0;
   stories.length = 0;
-  Object.assign(gmail, { configured: true, accounts: [], found: 0 });
+  Object.assign(gmail, { configured: true, accounts: [], found: 0, calendar: null });
   window.history.replaceState(null, '', '/');
   wordTemplate.current = null;
   myDesign.current = null;

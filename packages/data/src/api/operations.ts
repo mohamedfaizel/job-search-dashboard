@@ -677,6 +677,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
     mockInterviewPrompt
     mockInterviewPromptDe
     interviewAt
+    interviewInCalendar
     interviewPrep {
       text
       updatedAt
@@ -994,6 +995,22 @@ export const GMAIL_STATUS = /* GraphQL */ `
         lastError
       }
     }
+  }
+`;
+
+export const GOOGLE_CALENDAR = /* GraphQL */ `
+  query GoogleCalendar {
+    googleCalendar {
+      configured
+      email
+      lastError
+    }
+  }
+`;
+
+export const DISCONNECT_GOOGLE_CALENDAR = /* GraphQL */ `
+  mutation DisconnectGoogleCalendar {
+    disconnectGoogleCalendar
   }
 `;
 
