@@ -144,6 +144,19 @@ describe('nightly apply kits', () => {
     });
   });
 
+  it('counts a job whose reply failed and goes on with the next', async () => {
+    await setUp();
+    await saveAiKey(t.gql);
+    status = 500;
+    expect(await kits.run(1, 5)).toEqual({ written: 0, failed: 2, waiting: 2 });
+    const bell = await t.gql<Bell>(BELL);
+    expect(bell.data!.notifications.items[0]).toMatchObject({
+      kind: 'KITS_FAILED',
+      failed: 2,
+      reason: 'NONE_WRITTEN',
+    });
+  });
+
   it('stops when there is no resume to tailor', async () => {
     await setUp('');
     await saveAiKey(t.gql);
