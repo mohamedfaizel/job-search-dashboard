@@ -10,6 +10,7 @@ import {
   TEST_API_KEY,
   SET_BRIEFING,
   SET_WEEKLY_REPORT,
+  SET_MAIL_AUTO_STATUS,
   SET_NIGHTLY_KITS,
   UPDATE_NOTIFICATION_SETTINGS,
   WRITE_KITS_NOW,
@@ -153,6 +154,17 @@ export function useSetWeeklyReport() {
     mutationFn: async (on: boolean) =>
       (await graphqlClient.request<{ setWeeklyReport: boolean }>(SET_WEEKLY_REPORT, { on }))
         .setWeeklyReport,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),
+  });
+}
+
+/** Settings > Gmail: clear emails move jobs by themselves (on) or only suggest (off). */
+export function useSetMailAutoStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (on: boolean) =>
+      (await graphqlClient.request<{ setMailAutoStatus: boolean }>(SET_MAIL_AUTO_STATUS, { on }))
+        .setMailAutoStatus,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),
   });
 }

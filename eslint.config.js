@@ -90,6 +90,9 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
     rules: {
       '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
+      // GraphQL code-first models are data-only classes (the schema reads their decorators);
+      // resolvers return plain objects of that shape, as Nest intends, so this rule doesn't fit.
+      '@typescript-eslint/no-unsafe-class-instance-assignment': 'off',
     },
   },
 

@@ -38,6 +38,20 @@ export function classifyMail(text: string): MailKind | null {
   return null;
 }
 
+/**
+ * A mail clear enough for the app to move the job by itself: it is a rejection or an interview
+ * invitation and nothing else (a rejection that also talks about a next round, or an offer, is
+ * not clear, so it stays a suggestion for you to answer).
+ */
+export function clearMailKind(text: string): 'REJECTED' | 'INTERVIEWING' | null {
+  const kinds = RULES.filter((rule) => rule.kind !== 'RECEIVED' && rule.phrases.test(text)).map(
+    (rule) => rule.kind,
+  );
+  if (kinds.length !== 1) return null;
+  const [kind] = kinds;
+  return kind === 'REJECTED' || kind === 'INTERVIEWING' ? kind : null;
+}
+
 const ORDER: ApplicationStatus[] = ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED'];
 
 /**

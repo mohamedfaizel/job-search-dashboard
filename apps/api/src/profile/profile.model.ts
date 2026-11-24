@@ -194,6 +194,11 @@ export class ProfileModel {
 
   @Field({ description: 'Send the weekly report on Sunday evening (bell and phone push)' })
   weeklyReport!: boolean;
+  @Field({
+    description:
+      'Gmail moves a job by itself when an email is clearly a rejection or an interview invitation',
+  })
+  mailAutoStatus!: boolean;
 
   @Field(() => [ResumeSuggestionModel], {
     description: 'Suggestions for your master resume, worked out without AI',

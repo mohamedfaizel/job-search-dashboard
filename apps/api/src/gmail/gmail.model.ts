@@ -72,6 +72,11 @@ export class GmailSyncResultModel {
   @Field(() => Int, { description: 'New suggestions waiting for you.' })
   suggestions!: number;
 
+  @Field(() => Int, {
+    description: 'Jobs that clear emails moved by themselves (Undo in the bell).',
+  })
+  moved!: number;
+
   @Field(() => [String], { description: 'Accounts that could not be read, with the reason.' })
   warnings!: string[];
 }

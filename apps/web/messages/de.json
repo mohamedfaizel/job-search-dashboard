@@ -406,7 +406,7 @@
     },
     "mail": {
       "title": "E-Mail",
-      "intro": "Verbinde deine Gmail-Konten, dann liest die App Antworten von Arbeitgebern und schlägt Änderungen in deinen Bewerbungen vor (eine Absage, eine Einladung zum Gespräch, ein Angebot). Du bestätigst jeden Vorschlag.",
+      "intro": "Verbinde deine Gmail-Konten, dann liest die App Antworten von Arbeitgebern. Eine eindeutige Absage oder Einladung zum Gespräch verschiebt die Stelle in deinen Bewerbungen selbst (Rückgängig in der Glocke); alles andere, etwa ein Angebot, wartet als Vorschlag auf dein OK.",
       "loading": "Deine E-Mail-Konten werden geladen…",
       "loadFailed": "Deine E-Mail-Konten konnten nicht geladen werden: {error}",
       "none": "Noch kein Gmail-Konto verbunden.",
@@ -424,7 +424,10 @@
         "denied": "Du hast den Zugriff nicht erlaubt, deshalb wurde nichts verbunden.",
         "error": "Das Verbinden von Gmail hat nicht geklappt. Bitte versuche es erneut.",
         "not-configured": "Gmail ist auf diesem Server noch nicht eingerichtet."
-      }
+      },
+      "auto": "Stellen selbst verschieben, wenn eine E-Mail eindeutig ist",
+      "autoHint": "Eine eindeutige Absage setzt die Stelle auf Abgesagt, eine eindeutige Einladung auf Im Gespräch. Die Glocke sagt es dir, mit Rückgängig. Alles Unklare wartet auf deine Antwort.",
+      "autoSaved": "Gespeichert."
     },
     "matcher": {
       "intro": "Bewertet jede Stelle anhand deines Lebenslaufs (ATS-Wert) und schreibt eine angepasste Version.",
@@ -1941,7 +1944,8 @@
       "checking": "Wird geprüft…",
       "checkFailed": "Deine E-Mails konnten nicht geprüft werden: {error}",
       "checked": "{count, plural, =0 {Keine neuen Vorschläge.} one {1 neuer Vorschlag.} other {# neue Vorschläge.}}",
-      "connect": "Gmail in den Einstellungen verbinden"
+      "connect": "Gmail in den Einstellungen verbinden",
+      "moved": "{count, plural, one {# Stelle wurde automatisch verschoben} other {# Stellen wurden automatisch verschoben}} (Rückgängig in der Glocke)."
     },
     "funnel": {
       "title": "Dein Trichter",
@@ -2423,7 +2427,9 @@
     "weeklyBest": "Beste Suche: {name} ({count, plural, one {# guter Job} other {# gute Jobs}})",
     "weeklyPause": "„{name}“ brachte {count, plural, one {# Job} other {# Jobs}}, keiner mit {fit} % oder mehr. Pausieren?",
     "weeklyPauseButton": "Pausieren",
-    "weeklyPaused": "Pausiert. Unter Jobs hinzufügen kannst du sie wieder einschalten."
+    "weeklyPaused": "Pausiert. Unter Jobs hinzufügen kannst du sie wieder einschalten.",
+    "mailAuto": "Gmail hat {count, plural, one {# Stelle} other {# Stellen}} in deinem Tracker verschoben",
+    "mailAutoHint": "Die E-Mails waren eindeutig"
   },
   "Welcome": {
     "title": "Willkommen, {name}!",

@@ -78,7 +78,8 @@
     "bInterviews": "{count, plural, one {# Interview heute} other {# Interviews heute}}",
     "bFollowUps": "{count}× nachfassen",
     "bReplies": "{count, plural, one {# Antwort von Arbeitgebern} other {# Antworten von Arbeitgebern}}",
-    "weekly": "Deine Woche: {applied} beworben, {replies, plural, one {# Antwort} other {# Antworten}}, {good, plural, one {# guter Job} other {# gute Jobs}}"
+    "weekly": "Deine Woche: {applied} beworben, {replies, plural, one {# Antwort} other {# Antworten}}, {good, plural, one {# guter Job} other {# gute Jobs}}",
+    "mailAuto": "Gmail hat {count, plural, one {# Stelle} other {# Stellen}} in deinem Tracker verschoben"
   },
   "Maker": {
     "help": "Fragen und Vorschläge"

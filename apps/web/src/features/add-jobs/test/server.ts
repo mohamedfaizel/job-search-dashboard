@@ -103,6 +103,7 @@ const PROFILE: Profile = {
   briefingOn: true,
   briefingAt: '07:30',
   weeklyReport: true,
+  mailAutoStatus: true,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: null,
