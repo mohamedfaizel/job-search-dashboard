@@ -83,6 +83,7 @@ export {
   useSetWeeklyReport,
   useSetMailAutoStatus,
   useSetNightlyKits,
+  useKitRun,
   useWriteKitsNow,
 } from './api/settings';
 export {

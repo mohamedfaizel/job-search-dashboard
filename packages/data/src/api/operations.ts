@@ -333,6 +333,20 @@ export const WRITE_KITS_NOW = /* GraphQL */ `
   }
 `;
 
+export const KIT_RUN = /* GraphQL */ `
+  query KitRun {
+    kitRun {
+      running
+      total
+      done
+      written
+      failed
+      reason
+      startedAt
+    }
+  }
+`;
+
 export const SET_BRIEFING = /* GraphQL */ `
   mutation SetBriefing($input: BriefingInput!) {
     setBriefing(input: $input)

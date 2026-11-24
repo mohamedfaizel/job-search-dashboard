@@ -13,6 +13,7 @@ import {
   SET_MAIL_AUTO_STATUS,
   SET_NIGHTLY_KITS,
   UPDATE_NOTIFICATION_SETTINGS,
+  KIT_RUN,
   WRITE_KITS_NOW,
 } from './operations';
 import { profileKey } from './profile';
@@ -21,6 +22,7 @@ import type {
   ApiKey,
   ApiKeyKind,
   ApiKeyTest,
+  KitRun,
   NotificationSettingsInput,
   Profile,
   User,
@@ -129,11 +131,26 @@ export function useSetNightlyKits() {
   });
 }
 
+export const kitRunKey = ['kitRun'] as const;
+/** How often Settings asks for progress while kits are being written. */
+export const KIT_RUN_POLL_MS = 3000;
+
 /** "Write now": starts writing the queued jobs' kits. Returns how many; the bell says when done. */
 export function useWriteKitsNow() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () =>
       (await graphqlClient.request<{ writeKitsNow: number }>(WRITE_KITS_NOW)).writeKitsNow,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: kitRunKey }),
+  });
+}
+
+/** Your latest kits run; asks again every few seconds while it is still writing. */
+export function useKitRun() {
+  return useQuery({
+    queryKey: kitRunKey,
+    queryFn: async () => (await graphqlClient.request<{ kitRun: KitRun | null }>(KIT_RUN)).kitRun,
+    refetchInterval: (query) => (query.state.data?.running ? KIT_RUN_POLL_MS : false),
   });
 }
 

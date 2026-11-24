@@ -959,6 +959,20 @@ export interface WeeklyReport {
   pause: WeeklySearch | null;
 }
 
+/** Your latest apply-kits run (Write now or the night), while it writes and after. */
+export interface KitRun {
+  running: boolean;
+  /** Kits this run tries to write. */
+  total: number;
+  /** Jobs finished so far (written or failed). */
+  done: number;
+  written: number;
+  failed: number;
+  /** Why it stopped early or wrote none: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
+  reason: string | null;
+  startedAt: string;
+}
+
 export interface Notifications {
   items: AppNotification[];
   unread: number;

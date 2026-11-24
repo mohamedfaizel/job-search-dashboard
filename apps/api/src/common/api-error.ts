@@ -99,6 +99,7 @@ export const API_ERROR_CODES = [
   'AUTOPILOT_LIMITS',
   'PUSH_TOKEN_INVALID',
   'KITS_NOTHING_TO_WRITE',
+  'KITS_QUEUE_EMPTY',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

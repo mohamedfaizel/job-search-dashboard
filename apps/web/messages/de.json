@@ -481,7 +481,17 @@
       "save": "Speichern",
       "saved": "Gespeichert.",
       "writeNow": "Jetzt schreiben",
-      "started": "{count, plural, one {# Kit wird jetzt geschrieben.} other {# Kits werden jetzt geschrieben.}} Die 🔔 sagt dir, wenn sie fertig sind."
+      "progress": "Schreibe Kit {done} von {total}… Etwa eine Minute pro Kit. Du kannst die Seite verlassen: die 🔔 sagt dir, wenn sie fertig sind.",
+      "doneWritten": "{count, plural, one {# Kit geschrieben.} other {# Kits geschrieben.}}",
+      "doneFailed": "{count, plural, one {# konnte nicht geschrieben werden.} other {# konnten nicht geschrieben werden.}}",
+      "openQueue": "Bewerbungsliste öffnen",
+      "writing": "Schreibe…",
+      "reason": {
+        "NO_KEY": "Kein Kit geschrieben: Füge oben deinen Claude- oder OpenAI-Schlüssel hinzu.",
+        "KEY_REFUSED": "Kein Kit geschrieben: Dein KI-Schlüssel wurde abgelehnt. Prüfe ihn oben.",
+        "NO_RESUME": "Kein Kit geschrieben: Füge zuerst deinen Lebenslauf unter Mein Profil hinzu.",
+        "NONE_WRITTEN": "Kein Kit geschrieben: Der KI-Anbieter hat nicht geantwortet. Versuch es in ein paar Minuten noch einmal."
+      }
     },
     "briefing": {
       "heading": "Morgen-Überblick",
@@ -2366,6 +2376,7 @@
     "NOTIFICATION_NOT_FOUND": "Diese Benachrichtigung gibt es nicht mehr.",
     "AUTOPILOT_LIMITS": "Der Fit-Wert zum Ausblenden muss unter dem Fit-Wert für die Bewerbungsliste liegen.",
     "KITS_NOTHING_TO_WRITE": "Jeder Job auf deiner Bewerbungsliste hat schon ein Kit.",
+    "KITS_QUEUE_EMPTY": "Nichts zu schreiben: Deine Bewerbungsliste ist leer. Setze zuerst unter Meine Jobs Jobs darauf.",
     "PUSH_TOKEN_INVALID": "Das Handy hat einen unbekannten Push-Token gesendet. Aktualisiere die Handy-App."
   },
   "Notifications": {

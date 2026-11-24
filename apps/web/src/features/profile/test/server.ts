@@ -3,6 +3,7 @@ import type {
   ApiKey,
   MyDesign,
   GmailAccount,
+  KitRun,
   LanguageResume,
   MatcherResume,
   Profile,
@@ -174,6 +175,9 @@ export const gmail: {
 /** Keys saved in Settings during the current test. */
 export const apiKeys: ApiKey[] = [];
 
+/** The latest apply-kits run the fake API reports; each ask moves it on by one kit. */
+export const kitRun: { current: KitRun | null; steps: KitRun[] } = { current: null, steps: [] };
+
 /** Where the fake user's Key pool request stands. */
 export const poolKey: MyPoolKey = {
   state: 'NONE',
@@ -279,6 +283,10 @@ export const server = setupServer(
   api.mutation('WriteKitsNow', () => {
     requests.push({ operation: 'WriteKitsNow', variables: {} });
     return HttpResponse.json({ data: { writeKitsNow: 3 } });
+  }),
+  api.query('KitRun', () => {
+    kitRun.current = kitRun.steps.shift() ?? kitRun.current;
+    return HttpResponse.json({ data: { kitRun: kitRun.current } });
   }),
   api.query('GoogleCalendar', () =>
     HttpResponse.json({
