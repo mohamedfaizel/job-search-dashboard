@@ -8,6 +8,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AdminModule } from './admin/admin.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthModule } from './auth/auth.module';
+import { BriefingModule } from './briefing/briefing.module';
 import { withApiError } from './common/api-error';
 import { GmailModule } from './gmail/gmail.module';
 import { HealthModule } from './health/health.module';
@@ -16,6 +17,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { KeyPoolModule } from './key-pool/key-pool.module';
 import { LivenessModule } from './liveness/liveness.module';
 import { MessagesModule } from './messages/messages.module';
+import { NightlyKitsModule } from './nightly-kits/nightly-kits.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
@@ -53,6 +55,8 @@ import { SyncModule } from './sync/sync.module';
     JobsModule,
     SyncModule,
     SavedSearchesModule,
+    BriefingModule,
+    NightlyKitsModule,
     ProfileModule,
     ResumeMatcherModule,
     ResumeBuilderModule,

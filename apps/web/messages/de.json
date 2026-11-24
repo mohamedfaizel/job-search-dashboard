@@ -467,6 +467,27 @@
         },
         "detail": "Details: {error}"
       }
+    },
+    "kits": {
+      "heading": "Bewerbungskits über Nacht",
+      "intro": "Um 03:00 schreibt die App Lebenslauf, Anschreiben und Formularantworten für jeden Job auf deiner Bewerbungsliste, der noch keine hat, mit deinem eigenen Claude- oder OpenAI-Schlüssel oben. Morgens prüfst du sie nur noch und bewirbst dich.",
+      "on": "Meine Bewerbungskits nachts schreiben",
+      "onHint": "Standardmäßig aus. Die App bewirbt sich nie und sendet nichts für dich.",
+      "perNight": "Höchstens pro Nacht",
+      "cost": "Etwa 1 bis 5 Cent pro Kit auf deinem Schlüssel, je nach Modell.",
+      "save": "Speichern",
+      "saved": "Gespeichert.",
+      "writeNow": "Jetzt schreiben",
+      "started": "{count, plural, one {# Kit wird jetzt geschrieben.} other {# Kits werden jetzt geschrieben.}} Die 🔔 sagt dir, wenn sie fertig sind."
+    },
+    "briefing": {
+      "heading": "Morgen-Überblick",
+      "on": "Schick mir jeden Morgen eine Zusammenfassung",
+      "onHint": "Neue passende Jobs, fertige Bewerbungskits, Interviews heute, fälliges Nachfassen und Antworten von Arbeitgebern. Ohne Neuigkeiten keine Nachricht.",
+      "at": "Um",
+      "save": "Überblick speichern",
+      "saved": "Gespeichert.",
+      "phoneHint": "Er erscheint in der 🔔 und als Push auf deinem Handy, wenn du in der Handy-App angemeldet bist."
     }
   },
   "Resume": {
@@ -2313,7 +2334,9 @@
     "MESSAGE_LIMIT": "Du kannst {max} Nachrichten pro Stunde senden. Bitte versuch es später noch einmal.",
     "CONVERSATION_NOT_FOUND": "Diese Unterhaltung gibt es nicht mehr.",
     "NOTIFICATION_NOT_FOUND": "Diese Benachrichtigung gibt es nicht mehr.",
-    "AUTOPILOT_LIMITS": "Der Fit-Wert zum Ausblenden muss unter dem Fit-Wert für die Bewerbungsliste liegen."
+    "AUTOPILOT_LIMITS": "Der Fit-Wert zum Ausblenden muss unter dem Fit-Wert für die Bewerbungsliste liegen.",
+    "KITS_NOTHING_TO_WRITE": "Jeder Job auf deiner Bewerbungsliste hat schon ein Kit.",
+    "PUSH_TOKEN_INVALID": "Das Handy hat einen unbekannten Push-Token gesendet. Aktualisiere die Handy-App."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",
@@ -2349,7 +2372,26 @@
     "autopilotHint": "{hidden, plural, =0 {nichts ausgeblendet} one {# ausgeblendet} other {# ausgeblendet}} · {kept, plural, one {# für dich übrig} other {# für dich übrig}}",
     "undo": "Rückgängig",
     "undone": "Rückgängig gemacht",
-    "openQueue": "Bewerbungsliste öffnen"
+    "openQueue": "Bewerbungsliste öffnen",
+    "kitsReady": "{count, plural, one {# Bewerbungskit ist fertig} other {# Bewerbungskits sind fertig}} zum Prüfen",
+    "kitsFailed": "Bewerbungskits wurden nicht geschrieben",
+    "kitsFailedSome": "{count, plural, one {# Kit konnte} other {# Kits konnten}} nicht geschrieben werden. Sie bleiben für heute Nacht auf der Liste.",
+    "kitsReason": {
+      "NO_KEY": "Trag deinen Claude- oder OpenAI-Schlüssel unter Einstellungen › API-Schlüssel ein.",
+      "KEY_REFUSED": "Dein KI-Schlüssel wurde abgelehnt. Prüf ihn unter Einstellungen › API-Schlüssel.",
+      "NO_RESUME": "Füge zuerst deinen Lebenslauf in Mein Profil hinzu.",
+      "NONE_WRITTEN": "Der KI-Anbieter hat nicht geantwortet. Heute Nacht versucht die App es noch einmal."
+    },
+    "openSettingsKits": "Einstellungen öffnen",
+    "kitsHint": "Öffne den Tab Bewerben eines Jobs, um sein Kit zu prüfen",
+    "briefing": "Guten Morgen: {parts}",
+    "briefingNothing": "Guten Morgen",
+    "bNewJobs": "{count, plural, one {# neuer Job} other {# neue Jobs}}",
+    "bKits": "{count, plural, one {# Kit fertig} other {# Kits fertig}}",
+    "bInterviews": "{count, plural, one {# Interview heute} other {# Interviews heute}}",
+    "bFollowUps": "{count}× nachfassen",
+    "bReplies": "{count, plural, one {# Antwort von Arbeitgebern} other {# Antworten von Arbeitgebern}}",
+    "briefingHint": "Dein Morgen-Überblick"
   },
   "Welcome": {
     "title": "Willkommen, {name}!",

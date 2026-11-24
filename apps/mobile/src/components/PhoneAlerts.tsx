@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { useTranslations } from 'use-intl';
 import { alertLink, freshAlerts, useHeadline } from '../lib/alerts';
+import { registerThisPhone } from '../lib/push';
 
 /** Android shows alerts through a channel you can turn off in the phone's settings. */
 const CHANNEL = 'alerts';
@@ -61,7 +62,9 @@ function NativeAlerts() {
         });
       }
       const { granted } = await Notifications.getPermissionsAsync();
-      if (!granted) await Notifications.requestPermissionsAsync();
+      const allowed = granted || (await Notifications.requestPermissionsAsync()).granted;
+      // Real pushes (the morning briefing) also reach the phone when the app is closed.
+      if (allowed) await registerThisPhone();
     })().catch(() => undefined);
   }, [t]);
 

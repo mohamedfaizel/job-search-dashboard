@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { graphqlClient } from './client';
-import { allRead, fetchNotifications, markNotificationsRead } from './notifications';
+import {
+  allRead,
+  fetchNotifications,
+  markNotificationsRead,
+  registerPushToken,
+  unregisterPushToken,
+} from './notifications';
 import type { AppNotification } from './types';
 
 const notice = (id: number, readAt: string | null): AppNotification => ({
@@ -15,6 +21,9 @@ const notice = (id: number, readAt: string | null): AppNotification => ({
   hidden: 0,
   kept: 0,
   undone: false,
+  failed: 0,
+  reason: null,
+  briefing: null,
   readAt,
   createdAt: '2026-11-05T10:00:00.000Z',
 });
@@ -46,6 +55,21 @@ describe('notifications', () => {
         { ...notice(1, null), readAt: '2026-11-05T12:00:00.000Z' },
         notice(2, '2026-11-04T09:00:00.000Z'),
       ],
+    });
+  });
+
+  it('registers and forgets this phone for pushes', async () => {
+    const request = vi
+      .spyOn(graphqlClient, 'request')
+      .mockResolvedValueOnce({ registerPushToken: true })
+      .mockResolvedValueOnce({ unregisterPushToken: true });
+    await expect(registerPushToken('ExponentPushToken[a]')).resolves.toBe(true);
+    await expect(unregisterPushToken('ExponentPushToken[a]')).resolves.toBe(true);
+    expect(request).toHaveBeenNthCalledWith(1, expect.stringContaining('registerPushToken'), {
+      token: 'ExponentPushToken[a]',
+    });
+    expect(request).toHaveBeenNthCalledWith(2, expect.stringContaining('unregisterPushToken'), {
+      token: 'ExponentPushToken[a]',
     });
   });
 });

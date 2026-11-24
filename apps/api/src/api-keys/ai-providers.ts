@@ -79,7 +79,9 @@ export async function completeWithKey(
   key: string,
   model: string,
   prompt: string,
+  options: { maxTokens?: number; timeoutMs?: number } = {},
 ): Promise<string> {
+  const maxTokens = options.maxTokens ?? 4096;
   const anthropic = provider === AiProvider.ANTHROPIC;
   let res: Response;
   try {
@@ -97,17 +99,19 @@ export async function completeWithKey(
         },
         body: JSON.stringify(
           anthropic
-            ? { model, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }
+            ? { model, max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] }
             : { model, messages: [{ role: 'user', content: prompt }] },
         ),
-        signal: AbortSignal.timeout(COMPLETE_TIMEOUT_MS),
+        signal: AbortSignal.timeout(options.timeoutMs ?? COMPLETE_TIMEOUT_MS),
       },
     );
   } catch {
     throw new AiCallError('The AI provider is not reachable. Try again in a minute.');
   }
   if (res.status === 401 || res.status === 403) {
-    throw new AiCallError('The key was refused (401): it is wrong, revoked or has no access.');
+    throw new AiCallError('The key was refused (401): it is wrong, revoked or has no access.', {
+      cause: 'KEY_REFUSED',
+    });
   }
   if (!res.ok) throw new AiCallError(`The AI provider answered ${String(res.status)}.`);
   const body = (await res.json().catch(() => null)) as {

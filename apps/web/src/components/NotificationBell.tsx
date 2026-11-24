@@ -50,6 +50,15 @@ const KEY_POOL: Partial<
 
 /** A saved search's Autopilot sorted new jobs: queued, hidden, left for you. */
 const AUTOPILOT = 'AUTOPILOT';
+/** Nightly apply kits: some were written with your AI key, or none could be. */
+const KITS_READY = 'KITS_READY';
+/** The morning briefing: what needs you today. */
+const BRIEFING = 'BRIEFING';
+const KITS_FAILED = 'KITS_FAILED';
+const KIT_REASONS = ['NO_KEY', 'KEY_REFUSED', 'NO_RESUME', 'NONE_WRITTEN'] as const;
+type KitReason = (typeof KIT_REASONS)[number];
+const kitReason = (reason: string | null): KitReason =>
+  KIT_REASONS.find((known) => known === reason) ?? 'NONE_WRITTEN';
 
 /** "5 minutes ago", in the app's language. */
 export function timeAgo(iso: string, locale: string, now = Date.now()): string {
@@ -80,6 +89,19 @@ function useHeadline() {
       if (item.kind === AUTOPILOT) {
         return t('autopilot', { search: item.searchName, count: item.count });
       }
+      if (item.kind === KITS_READY) return t('kitsReady', { count: item.count });
+      if (item.kind === BRIEFING && item.briefing) {
+        const b = item.briefing;
+        const parts = [
+          b.newJobs ? t('bNewJobs', { count: b.newJobs }) : '',
+          b.kits ? t('bKits', { count: b.kits }) : '',
+          b.interviews ? t('bInterviews', { count: b.interviews }) : '',
+          b.followUps ? t('bFollowUps', { count: b.followUps }) : '',
+          b.replies ? t('bReplies', { count: b.replies }) : '',
+        ].filter(Boolean);
+        return parts.length ? t('briefing', { parts: parts.join(', ') }) : t('briefingNothing');
+      }
+      if (item.kind === KITS_FAILED) return t('kitsFailed');
       return item.kind === 'INTERVIEW_SOON' && item.at
         ? t('interviewSoon', {
             when: new Intl.DateTimeFormat(locale, {
@@ -256,11 +278,50 @@ function AutopilotItem({ item, onOpen }: { item: AppNotification; onOpen: () => 
   );
 }
 
+/** Nightly apply kits could not be written: why, and where to fix it. */
+function KitsFailedItem({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
+  const t = useTranslations('Notifications');
+  const locale = useLocale();
+  const headline = useHeadline();
+  const reason = kitReason(item.reason);
+  return (
+    <li className={`space-y-1 px-3 py-2.5 ${item.readAt ? '' : 'bg-brand-50'}`}>
+      <p className="text-sm text-slate-900">
+        {!item.readAt && (
+          <span
+            aria-label={t('unread')}
+            className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-600"
+          />
+        )}
+        {headline(item)}
+      </p>
+      <p className="text-xs text-slate-700">{t(`kitsReason.${reason}`)}</p>
+      <p className="text-xs text-slate-600">
+        {timeAgo(item.createdAt, locale)}
+        {reason !== 'NONE_WRITTEN' && (
+          <>
+            {' · '}
+            <Link
+              href={reason === 'NO_RESUME' ? '/profile' : '/settings'}
+              onClick={onOpen}
+              className="text-brand-700 hover:underline"
+            >
+              {t('openSettingsKits')}
+            </Link>
+          </>
+        )}
+      </p>
+    </li>
+  );
+}
+
 function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
   const t = useTranslations('Notifications');
   const locale = useLocale();
   const headline = useHeadline();
   const interview = item.kind === 'INTERVIEW_SOON';
+  const kits = item.kind === KITS_READY;
+  const briefing = item.kind === BRIEFING;
   if (item.kind === 'MESSAGE_REPLY') {
     return (
       <li className={item.readAt ? '' : 'bg-brand-50'}>
@@ -300,9 +361,18 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
         {headline(item)}
       </p>
       <p className="text-xs text-slate-600">
-        {interview ? t('interviewHint') : t('fitAtLeast', { fit: item.fitMin })} ·{' '}
-        {timeAgo(item.createdAt, locale)}
+        {interview
+          ? t('interviewHint')
+          : kits
+            ? t('kitsHint')
+            : briefing
+              ? t('briefingHint')
+              : t('fitAtLeast', { fit: item.fitMin })}{' '}
+        · {timeAgo(item.createdAt, locale)}
       </p>
+      {kits && item.failed > 0 && (
+        <p className="text-xs text-amber-800">{t('kitsFailedSome', { count: item.failed })}</p>
+      )}
       <ul className="space-y-1">
         {item.jobs.map((job) => (
           <JobRow key={job.id} job={job} onOpen={onOpen} showFit={!interview} />
@@ -406,7 +476,15 @@ export function NotificationBell() {
           {data?.items.length ? (
             <ul className="max-h-[70vh] divide-y divide-slate-100 overflow-y-auto">
               {data.items.map((item) =>
-                item.kind === AUTOPILOT ? (
+                item.kind === KITS_FAILED ? (
+                  <KitsFailedItem
+                    key={item.id}
+                    item={item}
+                    onOpen={() => {
+                      setOpen(false);
+                    }}
+                  />
+                ) : item.kind === AUTOPILOT ? (
                   <AutopilotItem
                     key={item.id}
                     item={item}

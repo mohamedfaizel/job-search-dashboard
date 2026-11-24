@@ -97,6 +97,8 @@ export const API_ERROR_CODES = [
   'CONVERSATION_NOT_FOUND',
   'NOTIFICATION_NOT_FOUND',
   'AUTOPILOT_LIMITS',
+  'PUSH_TOKEN_INVALID',
+  'KITS_NOTHING_TO_WRITE',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

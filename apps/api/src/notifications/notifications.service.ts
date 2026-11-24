@@ -5,6 +5,7 @@ import type { Prisma } from '../generated/prisma/client';
 import { FitService } from '../insights/fit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
+  BriefingCountsModel,
   NotificationJobModel,
   NotificationModel,
   NotificationsModel,
@@ -32,6 +33,12 @@ export interface NotificationData {
   hiddenIds?: string[];
   /** AUTOPILOT: you pressed Undo. */
   undone?: boolean;
+  /** KITS_READY / KITS_FAILED: kits that could not be written. */
+  failed?: number;
+  /** KITS_FAILED (or a run that stopped early): NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
+  reason?: string;
+  /** BRIEFING: what the morning briefing counted. */
+  briefing?: BriefingCountsModel;
 }
 
 /** How long before an interview the bell reminds you. */
@@ -57,6 +64,9 @@ function toModel(row: {
     hidden: data.hidden ?? 0,
     kept: data.kept ?? 0,
     undone: data.undone ?? false,
+    briefing: data.briefing ?? null,
+    failed: data.failed ?? 0,
+    reason: data.reason ?? null,
     readAt: row.readAt,
     createdAt: row.createdAt,
   };

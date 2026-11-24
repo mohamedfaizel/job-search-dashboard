@@ -15,6 +15,24 @@ export class NotificationJobModel {
   fit!: number;
 }
 
+@ObjectType('BriefingCounts', { description: 'What a morning briefing counted' })
+export class BriefingCountsModel {
+  @Field(() => Int, { description: 'New jobs since the last briefing with your match Fit %' })
+  newJobs!: number;
+
+  @Field(() => Int, { description: 'Queued jobs whose Apply kit is written' })
+  kits!: number;
+
+  @Field(() => Int, { description: 'Applications to follow up on' })
+  followUps!: number;
+
+  @Field(() => Int, { description: 'Interviews later today' })
+  interviews!: number;
+
+  @Field(() => Int, { description: 'Employer emails waiting for your OK' })
+  replies!: number;
+}
+
 @ObjectType('Notification', {
   description:
     'Something the app tells you in the bell list. The web app writes the words from `kind` and the numbers, in your language',
@@ -25,7 +43,7 @@ export class NotificationModel {
 
   @Field({
     description:
-      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`',
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`)',
   })
   kind!: string;
 
@@ -64,6 +82,22 @@ export class NotificationModel {
 
   @Field({ description: 'AUTOPILOT: you pressed Undo' })
   undone!: boolean;
+
+  @Field(() => BriefingCountsModel, {
+    nullable: true,
+    description: 'BRIEFING: what the morning briefing counted. Null for other kinds',
+  })
+  briefing!: BriefingCountsModel | null;
+
+  @Field(() => Int, { description: 'KITS_READY / KITS_FAILED: kits that could not be written' })
+  failed!: number;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'KITS_FAILED, or a kits run that stopped early: NO_KEY, KEY_REFUSED, NO_RESUME or NONE_WRITTEN',
+  })
+  reason!: string | null;
 
   @Field(() => Date, { nullable: true, description: 'When you read it. Null = unread' })
   readAt!: Date | null;

@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
-import { MARK_NOTIFICATIONS_READ, NOTIFICATIONS, UNDO_AUTOPILOT } from './operations';
+import {
+  MARK_NOTIFICATIONS_READ,
+  NOTIFICATIONS,
+  REGISTER_PUSH_TOKEN,
+  UNDO_AUTOPILOT,
+  UNREGISTER_PUSH_TOKEN,
+} from './operations';
 import type { Notifications } from './types';
 
 export const notificationsKey = ['notifications'] as const;
@@ -67,4 +73,21 @@ export function useUndoAutopilot() {
       ]);
     },
   });
+}
+
+/** The phone app: this phone gets push messages (the morning briefing) for you. */
+export async function registerPushToken(token: string): Promise<boolean> {
+  const data = await graphqlClient.request<{ registerPushToken: boolean }>(REGISTER_PUSH_TOKEN, {
+    token,
+  });
+  return data.registerPushToken;
+}
+
+/** The phone app on log out: no more pushes to this phone. */
+export async function unregisterPushToken(token: string): Promise<boolean> {
+  const data = await graphqlClient.request<{ unregisterPushToken: boolean }>(
+    UNREGISTER_PUSH_TOKEN,
+    { token },
+  );
+  return data.unregisterPushToken;
 }

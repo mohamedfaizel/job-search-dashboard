@@ -309,6 +309,36 @@ export const UNDO_AUTOPILOT = /* GraphQL */ `
   }
 `;
 
+export const SET_NIGHTLY_KITS = /* GraphQL */ `
+  mutation SetNightlyKits($input: NightlyKitsInput!) {
+    setNightlyKits(input: $input)
+  }
+`;
+
+export const WRITE_KITS_NOW = /* GraphQL */ `
+  mutation WriteKitsNow {
+    writeKitsNow
+  }
+`;
+
+export const SET_BRIEFING = /* GraphQL */ `
+  mutation SetBriefing($input: BriefingInput!) {
+    setBriefing(input: $input)
+  }
+`;
+
+export const REGISTER_PUSH_TOKEN = /* GraphQL */ `
+  mutation RegisterPushToken($token: String!) {
+    registerPushToken(token: $token)
+  }
+`;
+
+export const UNREGISTER_PUSH_TOKEN = /* GraphQL */ `
+  mutation UnregisterPushToken($token: String!) {
+    unregisterPushToken(token: $token)
+  }
+`;
+
 export const IMPORT_BUDGET = /* GraphQL */ `
   query ImportBudget {
     importBudget {
@@ -416,6 +446,10 @@ const PROFILE_FIELDS = /* GraphQL */ `
   fillSavedAnswers
   showStretches
   matchFitMin
+  nightlyKits
+  nightlyKitsMax
+  briefingOn
+  briefingAt
   resumeSuggestions {
     code
     detail
@@ -1038,6 +1072,15 @@ export const NOTIFICATIONS = /* GraphQL */ `
         hidden
         kept
         undone
+        failed
+        reason
+        briefing {
+          newJobs
+          kits
+          followUps
+          interviews
+          replies
+        }
         readAt
         createdAt
         jobs {
