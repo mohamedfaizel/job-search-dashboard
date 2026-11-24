@@ -35,6 +35,9 @@ const NEW_MATCHES = {
   fitMin: 60,
   at: null,
   refId: null,
+  hidden: 0,
+  kept: 0,
+  undone: false,
   readAt: null,
   createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
   jobs: [
@@ -192,6 +195,32 @@ describe('NotificationBell', () => {
     await user.click(button);
     await user.click(document.body);
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('says what Autopilot did and undoes it', async () => {
+    bell.items = [{ ...NEW_MATCHES, id: 11, kind: 'AUTOPILOT', count: 2, hidden: 4, kept: 3 }];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    const list = screen.getByRole('dialog', { name: 'Notifications' });
+    expect(
+      within(list).getByText('Autopilot for “Frontend Berlin”: 2 jobs queued'),
+    ).toBeInTheDocument();
+    expect(within(list).getByText(/4 hidden · 3 left for you/)).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: /React Developer/ })).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: 'Open Apply queue' })).toHaveAttribute(
+      'href',
+      '/jobs',
+    );
+
+    await user.click(within(list).getByRole('button', { name: 'Undo' }));
+    expect(keyPool.sent).toContainEqual({
+      operation: 'UndoAutopilot',
+      variables: { notificationId: 11 },
+    });
+    expect(await within(list).findByText('Undone')).toBeInTheDocument();
+    expect(within(list).queryByRole('link', { name: /React Developer/ })).toBeNull();
   });
 
   it('lets an admin approve a token request from the bell', async () => {

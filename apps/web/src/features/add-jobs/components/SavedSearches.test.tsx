@@ -162,6 +162,36 @@ describe('SavedSearches', () => {
     });
   });
 
+  it('turns Autopilot on with its rules', async () => {
+    const card = await renderCard();
+    await openMore();
+    expect(card.queryByLabelText('Queue when Fit is at least')).not.toBeInTheDocument();
+
+    await userEvent.click(card.getByRole('switch', { name: 'Autopilot' }));
+    const queueAt = card.getByLabelText('Queue when Fit is at least');
+    expect(queueAt).toHaveValue(75);
+    await userEvent.clear(queueAt);
+    await userEvent.type(queueAt, '80');
+    await userEvent.click(card.getByLabelText('Skip jobs whose ad says no visa sponsorship'));
+    await userEvent.click(card.getByRole('button', { name: 'Save Autopilot' }));
+
+    await vi.waitFor(() => {
+      expect(requests).toContainEqual({
+        operation: 'SetSavedSearchAutopilot',
+        variables: {
+          id: 1,
+          input: {
+            autopilot: true,
+            autoQueueFitMin: 80,
+            autoQueueNeedsVisa: false,
+            autoHideFitBelow: 40,
+            autoQueueMaxPerDay: 10,
+          },
+        },
+      });
+    });
+  });
+
   it('hides the time when the schedule is off', async () => {
     const card = await renderCard();
     await openMore();

@@ -2157,7 +2157,18 @@
       "show": "Anzeigen",
       "more": "Mehr zu {name}",
       "editNamed": "{name} bearbeiten",
-      "loadedNote": "Im Formular"
+      "loadedNote": "Im Formular",
+      "autopilotBadge": "Autopilot",
+      "autopilotFor": "Autopilot für {name}",
+      "autopilot": "Autopilot",
+      "autopilotHint": "Nach jedem Lauf kommen gute Jobs auf deine Bewerbungsliste und schwache werden ausgeblendet. Er bewirbt sich nie für dich.",
+      "queueAt": "Auf die Liste ab Fit",
+      "needsVisa": "Jobs überspringen, deren Anzeige kein Visum anbietet",
+      "hideBelow": "Ausblenden unter Fit",
+      "hideBelowHint": "0 = nie wegen Fit ausblenden. Geschlossene Jobs und Duplikate werden immer ausgeblendet.",
+      "maxPerDay": "Höchstens Jobs pro Tag auf die Liste",
+      "saveAutopilot": "Autopilot speichern",
+      "autopilotError": "Autopilot konnte nicht gespeichert werden: {error}"
     },
     "history": {
       "heading": "Import-Verlauf",
@@ -2300,7 +2311,9 @@
     "KEY_REQUEST_DONE": "Diese Anfrage wurde schon beantwortet.",
     "MESSAGE_LENGTH": "Eine Nachricht hat 1 bis {max} Zeichen.",
     "MESSAGE_LIMIT": "Du kannst {max} Nachrichten pro Stunde senden. Bitte versuch es später noch einmal.",
-    "CONVERSATION_NOT_FOUND": "Diese Unterhaltung gibt es nicht mehr."
+    "CONVERSATION_NOT_FOUND": "Diese Unterhaltung gibt es nicht mehr.",
+    "NOTIFICATION_NOT_FOUND": "Diese Benachrichtigung gibt es nicht mehr.",
+    "AUTOPILOT_LIMITS": "Der Fit-Wert zum Ausblenden muss unter dem Fit-Wert für die Bewerbungsliste liegen."
   },
   "Notifications": {
     "bell": "Benachrichtigungen",
@@ -2331,7 +2344,12 @@
     "deny": "Ablehnen",
     "answered": "Beantwortet",
     "messageReply": "{name} hat auf deine Nachricht geantwortet",
-    "messageHint": "Zum Lesen öffnen"
+    "messageHint": "Zum Lesen öffnen",
+    "autopilot": "Autopilot für „{search}“: {count, plural, =0 {nichts auf die Liste gesetzt} one {# Job auf die Liste gesetzt} other {# Jobs auf die Liste gesetzt}}",
+    "autopilotHint": "{hidden, plural, =0 {nichts ausgeblendet} one {# ausgeblendet} other {# ausgeblendet}} · {kept, plural, one {# für dich übrig} other {# für dich übrig}}",
+    "undo": "Rückgängig",
+    "undone": "Rückgängig gemacht",
+    "openQueue": "Bewerbungsliste öffnen"
   },
   "Welcome": {
     "title": "Willkommen, {name}!",

@@ -24,6 +24,14 @@ export interface NotificationData {
   at?: string;
   /** KEY_REQUEST: the token request's id, so admins can answer it from the bell. */
   refId?: number;
+  /** AUTOPILOT: how many jobs it hid, and how many it left on Job posts. */
+  hidden?: number;
+  kept?: number;
+  /** AUTOPILOT: what it did, so Undo can take it back. */
+  queuedIds?: string[];
+  hiddenIds?: string[];
+  /** AUTOPILOT: you pressed Undo. */
+  undone?: boolean;
 }
 
 /** How long before an interview the bell reminds you. */
@@ -46,6 +54,9 @@ function toModel(row: {
     jobs: Array.isArray(data.jobs) ? data.jobs : [],
     at: data.at ? new Date(data.at) : null,
     refId: data.refId ?? null,
+    hidden: data.hidden ?? 0,
+    kept: data.kept ?? 0,
+    undone: data.undone ?? false,
     readAt: row.readAt,
     createdAt: row.createdAt,
   };

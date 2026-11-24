@@ -14,6 +14,7 @@ import { useJobFormat } from '../../jobs/useJobFormat';
 import { countryName } from '../countries';
 import { useDateTime } from '../format';
 import { useWarningText } from '../useWarningText';
+import { AutopilotControls } from './AutopilotControls';
 
 interface Props {
   /** Put a saved search into the import form to edit it. */
@@ -157,6 +158,11 @@ function SavedSearchRow({
           {search.name}
         </h3>
         {loaded && <span className="text-xs text-brand-800">{t('saved.loadedNote')}</span>}
+        {search.autopilot && (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+            {t('saved.autopilotBadge')}
+          </span>
+        )}
         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
           {t(`saved.frequency.${search.schedule}`)}
         </span>
@@ -261,6 +267,7 @@ function SavedSearchRow({
           {search.onlyNew ? t('saved.onlyNew') : ''}
         </p>
         <ScheduleControls search={search} />
+        <AutopilotControls search={search} />
         {remove.isError && (
           <p role="alert" className="text-xs text-red-700">
             {t('saved.deleteError', { error: errorText(remove.error) })}

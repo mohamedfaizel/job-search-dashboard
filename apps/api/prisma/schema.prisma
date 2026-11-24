@@ -599,41 +599,51 @@ enum ScheduleFrequency {
 
 /// A JobHunter search you gave a name, so it can be run again in one click (and on a schedule later).
 model SavedSearch {
-  id               Int               @id @default(autoincrement())
+  id                 Int               @id @default(autoincrement())
   /// Whose search it is. Its imports use this user's JobHunter token.
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId           Int
-  name             String
-  source           ImportSource      @default(JOBHUNTER)
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             Int
+  name               String
+  source             ImportSource      @default(JOBHUNTER)
   /// Company career pages to read when the source is COMPANY_BOARDS, e.g. "greenhouse:stripe".
-  boards           String[]          @default([])
-  titles           String[]
-  skills           String[]
-  countryCodes     String[]
-  locations        String[]
+  boards             String[]          @default([])
+  titles             String[]
+  skills             String[]
+  countryCodes       String[]
+  locations          String[]
   /// ISO 639-1 codes of the posting's language, e.g. ["en", "de"].
-  languages        String[]          @default([])
-  skipFluentGerman Boolean           @default(false)
-  remoteOnly       Boolean           @default(false)
-  excludeTitles    String[]          @default([])
-  employmentTypes  String[]          @default([])
+  languages          String[]          @default([])
+  skipFluentGerman   Boolean           @default(false)
+  remoteOnly         Boolean           @default(false)
+  excludeTitles      String[]          @default([])
+  employmentTypes    String[]          @default([])
   /// Euros a year; the import converts it to the US dollars JobHunter filters in.
-  minSalaryEur     Int?
-  maxAgeDays       Int               @default(7)
-  pageSize         Int               @default(25)
-  maxPages         Int               @default(1)
-  onlyNew          Boolean           @default(true)
+  minSalaryEur       Int?
+  maxAgeDays         Int               @default(7)
+  pageSize           Int               @default(25)
+  maxPages           Int               @default(1)
+  onlyNew            Boolean           @default(true)
   /// How often the scheduler runs this search by itself.
-  schedule         ScheduleFrequency @default(OFF)
+  schedule           ScheduleFrequency @default(OFF)
   /// Time of day for scheduled runs, "HH:mm" in the API server's local time.
-  runAt            String            @default("07:00")
+  runAt              String            @default("07:00")
   /// When the scheduler will run it next. Null when the schedule is off.
-  nextRunAt        DateTime?
+  nextRunAt          DateTime?
   /// What happened at the last scheduled time, e.g. a skip because of the credit cap.
-  scheduleNote     String?
-  runs             SyncRun[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  scheduleNote       String?
+  /// Autopilot: after each run, jobs that fit well go to the Apply queue and poor ones are hidden.
+  autopilot          Boolean           @default(false)
+  /// Autopilot queues a new job when its Fit % is at least this.
+  autoQueueFitMin    Int               @default(75)
+  /// Autopilot doesn't queue a job whose ad says there is no visa sponsorship.
+  autoQueueNeedsVisa Boolean           @default(true)
+  /// Autopilot hides a new job when its Fit % is under this. 0 hides nothing for its Fit.
+  autoHideFitBelow   Int               @default(40)
+  /// The most jobs Autopilot adds to your Apply queue in one day (all your searches together).
+  autoQueueMaxPerDay Int               @default(10)
+  runs               SyncRun[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   @@unique([userId, name])
 }
@@ -717,6 +727,8 @@ model ApplyQueueItem {
   addedAt  DateTime @default(now())
   /// Your order for the queue (1 first). Gaps are fine: the list is numbered 1, 2, 3 when read.
   position Int      @default(0)
+  /// True when Autopilot added it, not you (counts against its daily limit).
+  auto     Boolean  @default(false)
 
   @@id([userId, jobId])
 }

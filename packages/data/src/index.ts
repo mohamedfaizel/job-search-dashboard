@@ -53,6 +53,7 @@ export {
   NOTIFICATIONS_POLL_MS,
   useMarkNotificationsRead,
   useNotifications,
+  useUndoAutopilot,
 } from './api/notifications';
 export {
   GMAIL_CONNECT_URL,
@@ -157,6 +158,7 @@ export {
   useContinueImport,
   useSavedSearches,
   useSaveSearch,
+  useSetAutopilot,
   useSetSchedule,
   useSyncJobs,
   useSyncRuns,

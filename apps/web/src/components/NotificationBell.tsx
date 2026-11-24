@@ -6,6 +6,7 @@ import {
   useDenyKeyRequest,
   useMarkNotificationsRead,
   useNotifications,
+  useUndoAutopilot,
 } from '@jobsearch/data';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -47,6 +48,9 @@ const KEY_POOL: Partial<
   KEY_TAKEN_BACK: { text: 'keyTakenBack', link: '/settings' },
 };
 
+/** A saved search's Autopilot sorted new jobs: queued, hidden, left for you. */
+const AUTOPILOT = 'AUTOPILOT';
+
 /** "5 minutes ago", in the app's language. */
 export function timeAgo(iso: string, locale: string, now = Date.now()): string {
   const seconds = Math.round((new Date(iso).getTime() - now) / 1000);
@@ -73,6 +77,9 @@ function useHeadline() {
       }
       const pool = KEY_POOL[item.kind];
       if (pool) return t(pool.text, { name: item.searchName, count: item.count });
+      if (item.kind === AUTOPILOT) {
+        return t('autopilot', { search: item.searchName, count: item.count });
+      }
       return item.kind === 'INTERVIEW_SOON' && item.at
         ? t('interviewSoon', {
             when: new Intl.DateTimeFormat(locale, {
@@ -157,6 +164,98 @@ function KeyItem({ item, onOpen }: { item: AppNotification; onOpen: () => void }
   );
 }
 
+/** One job of a notification, with its Fit % when it has one. */
+function JobRow({
+  job,
+  onOpen,
+  showFit,
+}: {
+  job: AppNotification['jobs'][number];
+  onOpen: () => void;
+  showFit: boolean;
+}) {
+  const t = useTranslations('Notifications');
+  return (
+    <li>
+      <Link
+        href={jobLink(job.id)}
+        onClick={onOpen}
+        className="flex items-baseline justify-between gap-2 rounded-md px-1.5 py-1 text-sm hover:bg-slate-100"
+      >
+        <span className="min-w-0 truncate">
+          <b className="font-medium text-slate-900">{job.title}</b>{' '}
+          <span className="text-slate-600">· {job.company}</span>
+        </span>
+        {showFit && (
+          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800 ring-1 ring-emerald-200 ring-inset">
+            {t('fit', { fit: job.fit })}
+          </span>
+        )}
+      </Link>
+    </li>
+  );
+}
+
+/** What Autopilot did after a run, the best queued jobs, and Undo. */
+function AutopilotItem({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
+  const t = useTranslations('Notifications');
+  const locale = useLocale();
+  const headline = useHeadline();
+  const errorText = useErrorText();
+  const undo = useUndoAutopilot();
+  const undone = item.undone || undo.isSuccess;
+  return (
+    <li className={`space-y-1.5 px-3 py-2.5 ${item.readAt ? '' : 'bg-brand-50'}`}>
+      <div className="flex items-start gap-2">
+        <p className="flex-1 text-sm text-slate-900">
+          {!item.readAt && (
+            <span
+              aria-label={t('unread')}
+              className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-600"
+            />
+          )}
+          {headline(item)}
+        </p>
+        {undone ? (
+          <span className="shrink-0 text-xs text-slate-600">{t('undone')}</span>
+        ) : (
+          <button
+            type="button"
+            disabled={undo.isPending}
+            onClick={() => {
+              undo.mutate(item.id);
+            }}
+            className="shrink-0 rounded-md border border-slate-300 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {t('undo')}
+          </button>
+        )}
+      </div>
+      <p className="text-xs text-slate-600">
+        {t('autopilotHint', { hidden: item.hidden, kept: item.kept })} ·{' '}
+        {timeAgo(item.createdAt, locale)}
+      </p>
+      {!undone && item.jobs.length > 0 && (
+        <ul className="space-y-1">
+          {item.jobs.map((job) => (
+            <JobRow key={job.id} job={job} onOpen={onOpen} showFit />
+          ))}
+        </ul>
+      )}
+      {undo.error && (
+        <p role="alert" className="text-xs text-red-700">
+          {errorText(undo.error)}
+        </p>
+      )}
+      {!undone && item.count > 0 && (
+        <Link href="/jobs" onClick={onOpen} className="text-xs text-brand-700 hover:underline">
+          {t('openQueue')}
+        </Link>
+      )}
+    </li>
+  );
+}
+
 function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
   const t = useTranslations('Notifications');
   const locale = useLocale();
@@ -206,23 +305,7 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
       </p>
       <ul className="space-y-1">
         {item.jobs.map((job) => (
-          <li key={job.id}>
-            <Link
-              href={jobLink(job.id)}
-              onClick={onOpen}
-              className="flex items-baseline justify-between gap-2 rounded-md px-1.5 py-1 text-sm hover:bg-slate-100"
-            >
-              <span className="min-w-0 truncate">
-                <b className="font-medium text-slate-900">{job.title}</b>{' '}
-                <span className="text-slate-600">· {job.company}</span>
-              </span>
-              {!interview && (
-                <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800 ring-1 ring-emerald-200 ring-inset">
-                  {t('fit', { fit: job.fit })}
-                </span>
-              )}
-            </Link>
-          </li>
+          <JobRow key={job.id} job={job} onOpen={onOpen} showFit={!interview} />
         ))}
       </ul>
       {item.count > item.jobs.length && (
@@ -323,7 +406,15 @@ export function NotificationBell() {
           {data?.items.length ? (
             <ul className="max-h-[70vh] divide-y divide-slate-100 overflow-y-auto">
               {data.items.map((item) =>
-                KEY_POOL[item.kind] ? (
+                item.kind === AUTOPILOT ? (
+                  <AutopilotItem
+                    key={item.id}
+                    item={item}
+                    onOpen={() => {
+                      setOpen(false);
+                    }}
+                  />
+                ) : KEY_POOL[item.kind] ? (
                   <KeyItem
                     key={item.id}
                     item={item}

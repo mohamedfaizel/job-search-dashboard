@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
+import { notificationsKey } from './notifications';
 import {
   CHECK_JOB_STILL_OPEN,
   CREATE_JOB,
@@ -19,6 +20,7 @@ import {
   RUN_SAVED_SEARCH,
   CONTINUE_IMPORT,
   SAVED_SEARCHES,
+  SET_SAVED_SEARCH_AUTOPILOT,
   SET_SAVED_SEARCH_SCHEDULE,
   START_JOBS_VISIT,
   MY_TABLE_SETTINGS,
@@ -30,6 +32,7 @@ import {
   UPDATE_SAVED_SEARCH,
 } from './operations';
 import type {
+  AutopilotRules,
   Funnel,
   JobTrust,
   SalaryResearch,
@@ -299,6 +302,21 @@ export function useSetSchedule() {
   });
 }
 
+/** Saves a saved search's Autopilot rules. */
+export function useSetAutopilot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: AutopilotRules & { id: number }) => {
+      const data = await graphqlClient.request<{ setSavedSearchAutopilot: SavedSearch }>(
+        SET_SAVED_SEARCH_AUTOPILOT,
+        { id, input },
+      );
+      return data.setSavedSearchAutopilot;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.savedSearches }),
+  });
+}
+
 export function useSavedSearches() {
   return useQuery({
     queryKey: queryKeys.savedSearches,
@@ -368,7 +386,11 @@ export function useRunSavedSearch() {
       );
       return data.runSavedSearch;
     },
-    onSuccess: () => refreshAfterImport(queryClient),
+    onSuccess: () => {
+      // Autopilot may have queued jobs and said so in the bell.
+      void queryClient.invalidateQueries({ queryKey: notificationsKey });
+      return refreshAfterImport(queryClient);
+    },
   });
 }
 

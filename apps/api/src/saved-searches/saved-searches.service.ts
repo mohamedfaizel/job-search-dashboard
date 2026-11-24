@@ -6,7 +6,12 @@ import { SettingsService } from '../settings/settings.service';
 import { ImportSource } from '../sync/import-source';
 import type { SyncJobsInput, SyncJobsResult } from '../sync/sync.input';
 import { SyncService } from '../sync/sync.service';
-import type { SavedSearch, SavedSearchInput, SyncRunModel } from './saved-search.model';
+import type {
+  AutopilotInput,
+  SavedSearch,
+  SavedSearchInput,
+  SyncRunModel,
+} from './saved-search.model';
 import type { ScheduleFrequency } from './schedule';
 import { nextRunAfter } from './schedule';
 
@@ -209,6 +214,35 @@ export class SavedSearchesService {
         runAt,
         nextRunAt: nextRunAfter(schedule, runAt, new Date()),
         scheduleNote: null,
+      },
+    });
+    const updated = (await this.list(userId)).find((s) => s.id === id);
+    if (!updated)
+      throw apiError(NotFoundException, 'SAVED_SEARCH_NOT_FOUND', `Saved search ${id} not found`, {
+        id,
+      });
+    return updated;
+  }
+
+  /** Saves a search's Autopilot rules. Hiding must stay below the queue limit. */
+  async setAutopilot(userId: number, id: number, input: AutopilotInput): Promise<SavedSearch> {
+    await this.findRow(userId, id);
+    if (input.autoHideFitBelow >= input.autoQueueFitMin) {
+      throw apiError(
+        BadRequestException,
+        'AUTOPILOT_LIMITS',
+        'The hide limit must be lower than the queue limit',
+        { hide: input.autoHideFitBelow, queue: input.autoQueueFitMin },
+      );
+    }
+    await this.prisma.savedSearch.update({
+      where: { id },
+      data: {
+        autopilot: input.autopilot,
+        autoQueueFitMin: input.autoQueueFitMin,
+        autoQueueNeedsVisa: input.autoQueueNeedsVisa,
+        autoHideFitBelow: input.autoHideFitBelow,
+        autoQueueMaxPerDay: input.autoQueueMaxPerDay,
       },
     });
     const updated = (await this.list(userId)).find((s) => s.id === id);

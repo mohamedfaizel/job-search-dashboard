@@ -112,6 +112,13 @@ export const server = setupServer(
     return HttpResponse.json({ data: { addPoolKeys: { added: 2, duplicates: 1, invalid: 0 } } });
   }),
   api.query('Notifications', () => HttpResponse.json({ data: { notifications: bell } })),
+  api.mutation('UndoAutopilot', ({ variables }) => {
+    keyPool.sent.push({ operation: 'UndoAutopilot', variables });
+    bell.items = bell.items.map((item) =>
+      item.id === variables['notificationId'] ? { ...item, undone: true } : item,
+    );
+    return HttpResponse.json({ data: { undoAutopilot: true } });
+  }),
   api.mutation('MarkNotificationsRead', () => {
     const count = bell.unread;
     bell.items = bell.items.map((item) => ({ ...item, readAt: item.readAt ?? 'now' }));

@@ -4,6 +4,7 @@ import { getErrorMessage } from '../common/errors';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
+import { AutopilotService } from './autopilot.service';
 import { SavedSearchesService } from './saved-searches.service';
 import { nextRunAfter, startOfDay } from './schedule';
 
@@ -33,6 +34,7 @@ export class SchedulerService {
     private readonly savedSearches: SavedSearchesService,
     private readonly settings: SettingsService,
     private readonly notifications: NotificationsService,
+    private readonly autopilot: AutopilotService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -93,7 +95,11 @@ export class SchedulerService {
           `Ran at ${formatTime(now)}: ${result.created} new, ${result.updated} already saved.`,
         );
         ran += 1;
-        if (result.created > 0) await this.tellOwner(search.userId, search.name, startedAt);
+        if (result.created > 0) {
+          // Autopilot's own bell note says what it did, so it replaces "new matches".
+          const sorted = await this.autopilot.afterRun(search.userId, search.id, startedAt, now);
+          if (!sorted) await this.tellOwner(search.userId, search.name, startedAt);
+        }
       } catch (error) {
         this.logger.warn(`Scheduled run of "${search.name}" failed: ${getErrorMessage(error)}`);
         await this.note(search.id, `Failed at ${formatTime(now)}: ${getErrorMessage(error)}`);

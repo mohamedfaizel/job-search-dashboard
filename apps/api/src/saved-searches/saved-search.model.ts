@@ -1,5 +1,5 @@
 import { Field, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
-import { IsEnum, IsString, Length, Matches } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsString, Length, Matches, Max, Min } from 'class-validator';
 import { ImportSource } from '../sync/import-source';
 import { SyncJobsInput } from '../sync/sync.input';
 import { ScheduleFrequency } from './schedule';
@@ -141,6 +141,21 @@ export class SavedSearch {
   })
   scheduleNote!: string | null;
 
+  @Field({ description: 'Autopilot: after each run, queue good fits and hide poor ones' })
+  autopilot!: boolean;
+
+  @Field(() => Int, { description: 'Autopilot queues a new job with at least this Fit %' })
+  autoQueueFitMin!: number;
+
+  @Field({ description: "Autopilot doesn't queue a job whose ad says no visa sponsorship" })
+  autoQueueNeedsVisa!: boolean;
+
+  @Field(() => Int, { description: 'Autopilot hides a new job under this Fit %. 0 = never' })
+  autoHideFitBelow!: number;
+
+  @Field(() => Int, { description: 'The most jobs Autopilot queues in one day' })
+  autoQueueMaxPerDay!: number;
+
   @Field()
   createdAt!: Date;
 
@@ -163,6 +178,36 @@ export class ScheduleInput {
   })
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'runAt must be a time like 07:30' })
   runAt: string = '07:00';
+}
+
+/** A saved search's Autopilot rules. */
+@InputType()
+export class AutopilotInput {
+  @Field()
+  @IsBoolean()
+  autopilot!: boolean;
+
+  @Field(() => Int, { description: 'Queue a new job with at least this Fit %' })
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  autoQueueFitMin!: number;
+
+  @Field({ description: "Don't queue a job whose ad says no visa sponsorship" })
+  @IsBoolean()
+  autoQueueNeedsVisa!: boolean;
+
+  @Field(() => Int, { description: 'Hide a new job under this Fit %. 0 = never hide for its Fit' })
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  autoHideFitBelow!: number;
+
+  @Field(() => Int, { description: 'The most jobs it queues in one day, all searches together' })
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  autoQueueMaxPerDay!: number;
 }
 
 @ObjectType()

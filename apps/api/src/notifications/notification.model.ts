@@ -25,7 +25,7 @@ export class NotificationModel {
 
   @Field({
     description:
-      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message',
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`',
   })
   kind!: string;
 
@@ -55,6 +55,15 @@ export class NotificationModel {
     description: 'KEY_REQUEST: the token request it is about, so admins can answer from the bell',
   })
   refId!: number | null;
+
+  @Field(() => Int, { description: 'AUTOPILOT: how many new jobs it hid' })
+  hidden!: number;
+
+  @Field(() => Int, { description: 'AUTOPILOT: how many new jobs it left on Job posts for you' })
+  kept!: number;
+
+  @Field({ description: 'AUTOPILOT: you pressed Undo' })
+  undone!: boolean;
 
   @Field(() => Date, { nullable: true, description: 'When you read it. Null = unread' })
   readAt!: Date | null;

@@ -67,7 +67,8 @@
     "keyLimit": "Du hast alle {count} Credits deines Tokens vom Admin genutzt.",
     "keyTakenBack": "Der Admin hat deinen Token zurückgeholt. Imports brauchen jetzt deinen eigenen Token.",
     "messageReply": "{name} hat auf deine Nachricht geantwortet",
-    "messageHint": "Zum Lesen öffnen"
+    "messageHint": "Zum Lesen öffnen",
+    "autopilot": "Autopilot für „{search}“: {count, plural, =0 {nichts auf die Liste gesetzt} one {# Job auf die Liste gesetzt} other {# Jobs auf die Liste gesetzt}}"
   },
   "Maker": {
     "help": "Fragen und Vorschläge"

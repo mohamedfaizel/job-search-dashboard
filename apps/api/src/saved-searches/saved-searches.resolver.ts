@@ -2,7 +2,9 @@ import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
 import { SyncJobsResult } from '../sync/sync.input';
+import { AutopilotService } from './autopilot.service';
 import {
+  AutopilotInput,
   ImportBudget,
   SavedSearch,
   SavedSearchInput,
@@ -18,7 +20,27 @@ export class SavedSearchesResolver {
   constructor(
     private readonly service: SavedSearchesService,
     private readonly scheduler: SchedulerService,
+    private readonly autopilot: AutopilotService,
   ) {}
+
+  @Mutation(() => SavedSearch, { description: "Save a saved search's Autopilot rules" })
+  setSavedSearchAutopilot(
+    @CurrentUser() user: SessionUser,
+    @Args('id', { type: () => Int }) id: number,
+    @Args('input') input: AutopilotInput,
+  ): Promise<SavedSearch> {
+    return this.service.setAutopilot(user.id, id, input);
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Undo one Autopilot run (bell): its jobs leave the queue and show again',
+  })
+  undoAutopilot(
+    @CurrentUser() user: SessionUser,
+    @Args('notificationId', { type: () => Int }) notificationId: number,
+  ): Promise<boolean> {
+    return this.autopilot.undo(user.id, notificationId);
+  }
 
   @Query(() => ImportBudget, {
     description: "Today's credits you used against the daily limit (Admin › Limits)",
@@ -92,12 +114,15 @@ export class SavedSearchesResolver {
   }
 
   @Mutation(() => SyncJobsResult, { description: 'Import from JobHunter with a saved search' })
-  runSavedSearch(
+  async runSavedSearch(
     @CurrentUser() user: SessionUser,
     @Args('id', { type: () => Int }) id: number,
     @Args('resume', { defaultValue: false, description: 'Continue its last import instead' })
     resume: boolean,
   ): Promise<SyncJobsResult> {
-    return this.service.run(user.id, id, resume);
+    const startedAt = new Date();
+    const result = await this.service.run(user.id, id, resume);
+    if (result.created > 0) await this.autopilot.afterRun(user.id, id, startedAt);
+    return result;
   }
 }

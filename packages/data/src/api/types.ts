@@ -284,9 +284,23 @@ export interface SavedSearch {
   nextRunAt: string | null;
   /** What happened at the last scheduled time (ran, skipped for credits, failed). */
   scheduleNote: string | null;
+  /** Autopilot: after each run, good fits go to the Apply queue and poor ones are hidden. */
+  autopilot: boolean;
+  autoQueueFitMin: number;
+  /** Don't queue a job whose ad says no visa sponsorship. */
+  autoQueueNeedsVisa: boolean;
+  /** 0 = never hide for its Fit. */
+  autoHideFitBelow: number;
+  autoQueueMaxPerDay: number;
   createdAt: string;
   lastRun: SyncRun | null;
 }
+
+/** A saved search's Autopilot rules, as Saved searches › more › Autopilot saves them. */
+export type AutopilotRules = Pick<
+  SavedSearch,
+  'autopilot' | 'autoQueueFitMin' | 'autoQueueNeedsVisa' | 'autoHideFitBelow' | 'autoQueueMaxPerDay'
+>;
 
 export const SCHEDULE_FREQUENCIES = ['OFF', 'HOURLY', 'DAILY', 'WEEKDAYS'] as const;
 export type ScheduleFrequency = (typeof SCHEDULE_FREQUENCIES)[number];
@@ -846,7 +860,7 @@ export interface NotificationJob {
 /** Something the app tells you in the bell list. The words come from `kind`, in your language. */
 export interface AppNotification {
   id: number;
-  /** NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: jobs[0]'s interview is within a day. */
+  /** NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: jobs[0]'s interview is within a day. AUTOPILOT: a search's Autopilot sorted new jobs. */
   kind: string;
   searchName: string;
   count: number;
@@ -856,6 +870,11 @@ export interface AppNotification {
   at: string | null;
   /** KEY_REQUEST: the token request's id, so admins can answer it from the bell. */
   refId: number | null;
+  /** AUTOPILOT: `count` jobs queued, `hidden` hidden, `kept` left on Job posts. */
+  hidden: number;
+  kept: number;
+  /** AUTOPILOT: you pressed Undo. */
+  undone: boolean;
   /** ISO time you read it; null = unread. */
   readAt: string | null;
   createdAt: string;

@@ -95,6 +95,8 @@ export const API_ERROR_CODES = [
   'MESSAGE_LENGTH',
   'MESSAGE_LIMIT',
   'CONVERSATION_NOT_FOUND',
+  'NOTIFICATION_NOT_FOUND',
+  'AUTOPILOT_LIMITS',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
