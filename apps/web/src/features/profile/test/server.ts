@@ -105,6 +105,8 @@ export const PROFILE: Profile = {
   fillSavedAnswers: true,
   showStretches: true,
   matchFitMin: 60,
+  nightlyKits: false,
+  nightlyKitsMax: 5,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',
@@ -246,6 +248,14 @@ export const server = setupServer(
     requests.push({ operation: 'UpdateNotificationSettings', variables });
     const input = variables['input'] as Partial<Profile>;
     return HttpResponse.json({ data: { updateNotificationSettings: { ...PROFILE, ...input } } });
+  }),
+  api.mutation('SetNightlyKits', ({ variables }) => {
+    requests.push({ operation: 'SetNightlyKits', variables });
+    return HttpResponse.json({ data: { setNightlyKits: true } });
+  }),
+  api.mutation('WriteKitsNow', () => {
+    requests.push({ operation: 'WriteKitsNow', variables: {} });
+    return HttpResponse.json({ data: { writeKitsNow: 3 } });
   }),
   api.query('GmailStatus', () =>
     HttpResponse.json({

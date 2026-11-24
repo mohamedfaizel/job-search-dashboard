@@ -8,7 +8,9 @@ import {
   SET_AI_PROVIDER,
   SET_API_KEY_MODEL,
   TEST_API_KEY,
+  SET_NIGHTLY_KITS,
   UPDATE_NOTIFICATION_SETTINGS,
+  WRITE_KITS_NOW,
 } from './operations';
 import { profileKey } from './profile';
 import type {
@@ -110,5 +112,24 @@ export function useUpdateNotificationSettings() {
     onSuccess: (profile) => {
       queryClient.setQueryData(profileKey, profile);
     },
+  });
+}
+
+/** Settings > API keys > Nightly apply kits: on or off, and how many a night. */
+export function useSetNightlyKits() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { on: boolean; perNight: number }) =>
+      (await graphqlClient.request<{ setNightlyKits: boolean }>(SET_NIGHTLY_KITS, { input }))
+        .setNightlyKits,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),
+  });
+}
+
+/** "Write now": starts writing the queued jobs' kits. Returns how many; the bell says when done. */
+export function useWriteKitsNow() {
+  return useMutation({
+    mutationFn: async () =>
+      (await graphqlClient.request<{ writeKitsNow: number }>(WRITE_KITS_NOW)).writeKitsNow,
   });
 }

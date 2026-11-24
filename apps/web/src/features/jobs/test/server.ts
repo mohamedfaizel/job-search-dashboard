@@ -312,6 +312,8 @@ export const PROFILE: Profile = {
   fillSavedAnswers: true,
   showStretches: true,
   matchFitMin: 60,
+  nightlyKits: false,
+  nightlyKitsMax: 5,
   resumeSuggestions: [],
   resumeReviewPrompt: '',
   updatedAt: '2026-10-27T08:00:00.000Z',

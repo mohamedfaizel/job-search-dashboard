@@ -412,6 +412,10 @@ export interface Profile {
   showStretches: boolean;
   /** The Fit % a new job needs to count as a match. */
   matchFitMin: number;
+  /** Nightly apply kits: queued jobs' kits written at night with your own AI key. */
+  nightlyKits: boolean;
+  /** The most kits written in one night. */
+  nightlyKitsMax: number;
   /** Suggestions for your master resume, worked out without AI. */
   resumeSuggestions: ResumeSuggestion[];
   /** A prompt to paste into Claude for a recruiter review of your resume. Empty without one. */
@@ -443,6 +447,9 @@ export type ProfileInput = Omit<
   // Saved on their own, from Settings > Notifications.
   | 'notifyNewMatches'
   | 'matchFitMin'
+  // Saved on their own, from Settings > API keys > Nightly apply kits.
+  | 'nightlyKits'
+  | 'nightlyKitsMax'
 >;
 
 /** Settings > Notifications. */
@@ -875,6 +882,10 @@ export interface AppNotification {
   kept: number;
   /** AUTOPILOT: you pressed Undo. */
   undone: boolean;
+  /** KITS_READY / KITS_FAILED: kits that could not be written. */
+  failed: number;
+  /** KITS_FAILED, or a kits run that stopped early: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
+  reason: string | null;
   /** ISO time you read it; null = unread. */
   readAt: string | null;
   createdAt: string;

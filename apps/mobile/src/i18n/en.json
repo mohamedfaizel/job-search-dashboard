@@ -68,7 +68,9 @@
     "keyTakenBack": "The admin took your token back. Imports now need your own token.",
     "messageReply": "{name} replied to your message",
     "messageHint": "Open to read it",
-    "autopilot": "Autopilot for “{search}”: {count, plural, =0 {nothing queued} one {# job queued} other {# jobs queued}}"
+    "autopilot": "Autopilot for “{search}”: {count, plural, =0 {nothing queued} one {# job queued} other {# jobs queued}}",
+    "kitsReady": "{count, plural, one {# apply kit is ready} other {# apply kits are ready}} to check",
+    "kitsFailed": "Apply kits were not written"
   },
   "Maker": {
     "help": "Queries and suggestions"
