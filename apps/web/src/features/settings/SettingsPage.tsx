@@ -6,6 +6,7 @@ import type { TabItem } from '../profile/components/TabList';
 import { TabList } from '../profile/components/TabList';
 import { ApiKeys } from './components/ApiKeys';
 import { GmailAccounts } from './components/GmailAccounts';
+import { GoogleCalendarCard } from './components/GoogleCalendarCard';
 import { NightlyKits } from './components/NightlyKits';
 import { NotificationSettings } from './components/NotificationSettings';
 
@@ -24,7 +25,7 @@ export function SettingsPage() {
   const [tab, setTab] = useState<SettingsTab>(() => {
     if (typeof window === 'undefined') return 'keys';
     const params = new URLSearchParams(window.location.search);
-    if (params.has('gmail')) return 'gmail';
+    if (params.has('gmail') || params.has('calendar')) return 'gmail';
     return TAB_IDS.find((id) => id === params.get('tab')) ?? 'keys';
   });
 
@@ -53,7 +54,12 @@ export function SettingsPage() {
           </div>
         )}
         {/* Only while open: it asks the server about Gmail, which other tabs don't need. */}
-        {tab === 'gmail' && <GmailAccounts />}
+        {tab === 'gmail' && (
+          <div className="space-y-4">
+            <GmailAccounts />
+            <GoogleCalendarCard />
+          </div>
+        )}
         {tab === 'notifications' && <NotificationSettings />}
       </div>
     </section>

@@ -510,6 +510,17 @@ type GmailSyncResult {
   warnings: [String!]!
 }
 
+type GoogleCalendarStatus {
+  """False until GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set."""
+  configured: Boolean!
+
+  """The connected Google account, or null."""
+  email: String
+
+  """Why the last calendar change failed."""
+  lastError: String
+}
+
 type HealthCheckModel {
   """Scheduler: when the next saved search is due"""
   nextRunAt: DateTime
@@ -804,6 +815,9 @@ type JobInsights {
   When your interview for this job is, if you set it on the Interview tab
   """
   interviewAt: DateTime
+
+  """True when that interview is in your connected Google Calendar"""
+  interviewInCalendar: Boolean!
 
   """Claude’s interview prep for this job, if you pasted it back"""
   interviewPrep: InterviewPrep
@@ -1321,6 +1335,9 @@ type Mutation {
 
   """Removes a Gmail account and its pending suggestions."""
   disconnectGmail(id: Int!): Boolean!
+
+  """Forgets your Google Calendar. The events already made stay there."""
+  disconnectGoogleCalendar: Boolean!
 
   """Ignores a suggestion. It will not come back."""
   dismissMailSuggestion(id: Int!): Boolean!
@@ -2041,6 +2058,9 @@ type Query {
 
   """Your connected Gmail accounts."""
   gmailStatus: GmailStatus!
+
+  """Is your Google Calendar connected (interviews become events there)?"""
+  googleCalendar: GoogleCalendarStatus!
 
   """How many jobs you have hidden"""
   hiddenJobCount: Int!

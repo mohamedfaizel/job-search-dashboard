@@ -148,6 +148,7 @@ export const INSIGHTS: JobInsights = {
   mockInterviewPrompt: "Let's do a mock interview.",
   mockInterviewPromptDe: "Let's do a mock interview. Run the whole interview in German.",
   interviewAt: null,
+  interviewInCalendar: false,
   interviewPrep: null,
 };
 

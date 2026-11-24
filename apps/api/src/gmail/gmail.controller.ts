@@ -3,9 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser, Public } from '../auth/auth.decorators';
-import { GmailClient } from './gmail.client';
+import { CalendarService } from '../calendar/calendar.service';
+import { CALENDAR_SCOPES, GmailClient } from './gmail.client';
 import { GmailService } from './gmail.service';
 import { makeState, readState } from './oauth-state';
+import { tokenSecret } from './token-crypto';
+
+/** Marks a sign-in that connects Google Calendar, so both share the one Google callback. */
+const CALENDAR = 'cal.';
 
 /**
  * The two browser steps of "Connect Gmail": /gmail/connect sends you to Google, Google sends you
@@ -17,21 +22,18 @@ export class GmailController {
 
   constructor(
     private readonly gmail: GmailService,
+    private readonly calendar: CalendarService,
     private readonly client: GmailClient,
     private readonly config: ConfigService,
   ) {}
 
   private get secret(): string {
-    return (
-      this.config.get<string>('GMAIL_TOKEN_KEY') ||
-      this.config.get<string>('JWT_SECRET') ||
-      'dev-only-secret-change-me'
-    );
+    return tokenSecret(this.config);
   }
 
-  private back(result: string): string {
+  private back(result: string, what: 'gmail' | 'calendar' = 'gmail'): string {
     const web = this.config.get<string>('WEB_URL') || 'http://localhost:3001';
-    return `${web}/settings?gmail=${result}`;
+    return `${web}/settings?${what}=${result}`;
   }
 
   @Get('connect')
@@ -40,6 +42,16 @@ export class GmailController {
       this.client.configured
         ? this.client.authUrl(makeState(user.id, this.secret))
         : this.back('not-configured'),
+    );
+  }
+
+  /** Same as Connect Gmail, but asks Google for calendar events instead of mail. */
+  @Get('calendar/connect')
+  connectCalendar(@CurrentUser() user: SessionUser, @Res() res: Response): void {
+    res.redirect(
+      this.client.configured
+        ? this.client.authUrl(CALENDAR + makeState(user.id, this.secret), CALENDAR_SCOPES)
+        : this.back('not-configured', 'calendar'),
     );
   }
 
@@ -61,16 +73,19 @@ export class GmailController {
     state: string | undefined,
     error: string | undefined,
   ): Promise<string> {
-    const userId = state ? readState(state, this.secret) : null;
-    if (userId === null) return this.back('error');
-    if (error || !code) return this.back('denied');
+    const what = state?.startsWith(CALENDAR) ? 'calendar' : 'gmail';
+    const signed = what === 'calendar' ? state?.slice(CALENDAR.length) : state;
+    const userId = signed ? readState(signed, this.secret) : null;
+    if (userId === null) return this.back('error', what);
+    if (error || !code) return this.back('denied', what);
     try {
       const { email, refreshToken } = await this.client.exchangeCode(code);
-      await this.gmail.connect(userId, email, refreshToken);
-      return this.back('connected');
+      if (what === 'calendar') await this.calendar.connect(userId, email, refreshToken);
+      else await this.gmail.connect(userId, email, refreshToken);
+      return this.back('connected', what);
     } catch (failure) {
-      this.logger.warn(`Connecting Gmail failed: ${String(failure)}`);
-      return this.back('error');
+      this.logger.warn(`Connecting ${what} failed: ${String(failure)}`);
+      return this.back('error', what);
     }
   }
 }

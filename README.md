@@ -154,8 +154,9 @@ import is saved once and listed for both.
   `.env` is copied once into the first account's Settings, then `.env` is not read for it again.
   Below it, pick your AI (**Claude** or **OpenAI**) and paste its key and model, for the AI score
   (see Resume-Matcher below) and the copy-and-open buttons. Resume-Matcher's status sits there too.
-- _Gmail_: connect or remove the Gmail accounts the app reads replies from. _Check now_ is on the
-  **Tracker**, next to the suggestions it finds.
+- _Gmail & Calendar_: connect or remove the Gmail accounts the app reads replies from. _Check now_
+  is on the **Tracker**, next to the suggestions it finds. Below, connect Google Calendar so your
+  interview dates become calendar events.
 - _Notifications_: the 🔔 for new jobs that fit you, and from which Fit %.
 
 **Fill the table:** either open **Add jobs** and use _Import from JobHunter_ (needs your token
@@ -319,6 +320,10 @@ One-time setup (free):
 4. Copy the client ID and secret into `.env` as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, set `GMAIL_TOKEN_KEY` to a long random string, and restart the API.
 
 Refresh tokens are stored encrypted (AES-256-GCM). Opening this to the public later needs Google's verification for the Gmail read-only scope.
+
+### Interviews into Google Calendar (optional)
+
+Uses the same Google client as Gmail. In the Google Cloud project also enable the **Google Calendar API** and add the scope `.../auth/calendar.events` on the consent screen; no new redirect URI is needed. Then each user presses **Connect Google Calendar** on **Settings > Gmail & Calendar**. Every interview date set on a job's _Interview_ tab becomes a one-hour event (job link, ad link and your interview prep), moves with the date and is removed when you clear it. Without a connected calendar the _Interview_ tab offers an _Add to Google Calendar_ link instead.
 
 ### Resume and cover letter templates (optional)
 

@@ -156,10 +156,17 @@ export const MATCHER_RESUME: MatcherResume = {
 };
 
 /** The Gmail accounts connected in the current test, and whether the server has Google set up. */
-export const gmail: { configured: boolean; accounts: GmailAccount[]; found: number } = {
+export const gmail: {
+  configured: boolean;
+  accounts: GmailAccount[];
+  found: number;
+  /** The connected Google Calendar account, or null. */
+  calendar: string | null;
+} = {
   configured: true,
   accounts: [],
   found: 0,
+  calendar: null,
 };
 
 /** Keys saved in Settings during the current test. */
@@ -262,6 +269,22 @@ export const server = setupServer(
   api.mutation('WriteKitsNow', () => {
     requests.push({ operation: 'WriteKitsNow', variables: {} });
     return HttpResponse.json({ data: { writeKitsNow: 3 } });
+  }),
+  api.query('GoogleCalendar', () =>
+    HttpResponse.json({
+      data: {
+        googleCalendar: {
+          configured: gmail.configured,
+          email: gmail.calendar,
+          lastError: null,
+        },
+      },
+    }),
+  ),
+  api.mutation('DisconnectGoogleCalendar', () => {
+    requests.push({ operation: 'DisconnectGoogleCalendar', variables: {} });
+    gmail.calendar = null;
+    return HttpResponse.json({ data: { disconnectGoogleCalendar: true } });
   }),
   api.query('GmailStatus', () =>
     HttpResponse.json({

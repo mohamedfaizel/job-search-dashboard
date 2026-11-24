@@ -9,6 +9,7 @@ import { AdminModule } from './admin/admin.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthModule } from './auth/auth.module';
 import { BriefingModule } from './briefing/briefing.module';
+import { CalendarModule } from './calendar/calendar.module';
 import { withApiError } from './common/api-error';
 import { GmailModule } from './gmail/gmail.module';
 import { HealthModule } from './health/health.module';
@@ -69,6 +70,7 @@ import { SyncModule } from './sync/sync.module';
     KeyPoolModule,
     SalaryModule,
     GmailModule,
+    CalendarModule,
     MessagesModule,
   ],
 })

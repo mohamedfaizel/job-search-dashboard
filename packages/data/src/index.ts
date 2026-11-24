@@ -58,11 +58,14 @@ export {
   useUndoAutopilot,
 } from './api/notifications';
 export {
+  CALENDAR_CONNECT_URL,
   GMAIL_CONNECT_URL,
   useApproveMailSuggestion,
   useDisconnectGmail,
+  useDisconnectGoogleCalendar,
   useDismissMailSuggestion,
   useGmailStatus,
+  useGoogleCalendar,
   useMailSuggestions,
   useSyncGmail,
 } from './api/gmail';

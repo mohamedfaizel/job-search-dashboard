@@ -5,6 +5,7 @@ import {
   NotFoundException,
   OnApplicationBootstrap,
 } from '@nestjs/common';
+import { CalendarService } from '../calendar/calendar.service';
 import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
 import { parseResume } from '../documents/resume-doc';
@@ -81,6 +82,7 @@ export class InsightsService implements OnApplicationBootstrap {
     private readonly prisma: PrismaService,
     private readonly corpora: CorpusService,
     private readonly documents: DocumentsService,
+    private readonly calendar: CalendarService,
   ) {}
 
   /**
@@ -205,7 +207,7 @@ export class InsightsService implements OnApplicationBootstrap {
       this.savedAnswerBank(userId),
       this.prisma.application.findUnique({
         where: { userId_jobId: { userId, jobId } },
-        select: { interviewAt: true },
+        select: { interviewAt: true, calendarEventId: true },
       }),
       this.prisma.story.findMany({ where: { userId }, orderBy: { updatedAt: 'desc' } }),
     ]);
@@ -335,6 +337,7 @@ export class InsightsService implements OnApplicationBootstrap {
           })
         : null,
       interviewAt: application?.interviewAt ?? null,
+      interviewInCalendar: Boolean(application?.interviewAt && application.calendarEventId),
       interviewPrompt: buildInterviewPrompt(promptInput),
       mockInterviewPrompt: buildMockInterviewPrompt(promptInput, 'en'),
       mockInterviewPromptDe: buildMockInterviewPrompt(promptInput, 'de'),
@@ -642,6 +645,8 @@ export class InsightsService implements OnApplicationBootstrap {
       create: { userId, jobId, text: clean },
       update: { text: clean },
     });
+    // The calendar event carries your prep notes: keep them current.
+    await this.calendar.syncInterview(userId, jobId);
     return this.forJob(userId, jobId);
   }
 
@@ -687,6 +692,7 @@ export class InsightsService implements OnApplicationBootstrap {
         });
       }
     }
+    await this.calendar.syncInterview(userId, jobId);
     return this.forJob(userId, jobId);
   }
 

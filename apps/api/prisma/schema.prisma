@@ -158,6 +158,7 @@ model User {
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
   pushTokens        PushToken[]
+  googleCalendar    GoogleCalendar?
 }
 
 /// The Job posts filters and sort a user saved, as JSON text, so the table opens the way they left
@@ -520,6 +521,8 @@ model Application {
   interviewAt         DateTime?
   /// When the bell reminded you of that interview. Cleared when the date changes.
   interviewRemindedAt DateTime?
+  /// The Google Calendar event made for that interview, when your calendar is connected.
+  calendarEventId     String?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
@@ -994,4 +997,16 @@ model PushToken {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+/// Your Google Calendar, connected in Settings > Gmail: interview dates become events there.
+model GoogleCalendar {
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Int      @id
+  email        String
+  /// Encrypted like a Gmail token (gmail/token-crypto.ts). Never returned by the API.
+  refreshToken String
+  connectedAt  DateTime @default(now())
+  /// Why the last change to the calendar failed, or null when it worked.
+  lastError    String?
 }
