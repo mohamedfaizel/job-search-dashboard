@@ -468,6 +468,11 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
       {kits && item.failed > 0 && (
         <p className="text-xs text-amber-800">{t('kitsFailedSome', { count: item.failed })}</p>
       )}
+      {kits && item.belowTarget > 0 && item.target !== null && (
+        <p className="text-xs text-amber-800">
+          {t('kitsBelowTarget', { count: item.belowTarget, target: item.target })}
+        </p>
+      )}
       <ul className="space-y-1">
         {item.jobs.map((job) => (
           <JobRow key={job.id} job={job} onOpen={onOpen} showFit={!interview} />

@@ -102,6 +102,7 @@ const PROFILE: Profile = {
   nightlyKitsMax: 5,
   nightlyKitsAt: '03:00',
   nightlyKitsFitMin: null,
+  kitScoreTarget: 90,
   briefingOn: true,
   briefingAt: '07:30',
   weeklyReport: true,

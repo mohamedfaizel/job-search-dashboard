@@ -247,6 +247,9 @@ model Profile {
   /// Also write kits for new jobs (last 14 days) with at least this Fit %, not only queued ones.
   /// Null: the Apply queue only.
   nightlyKitsFitMin   Int?
+  /// Target score for a kit's resume (our free Kit score). Below it, one or two more AI rounds
+  /// work in the job's terms you really have; it never makes skills up.
+  kitScoreTarget      Int       @default(90)
   /// When the kits last ran by themselves, so a night missed while the PC was off runs as
   /// soon as the app starts again, and only once a day.
   nightlyKitsRanAt    DateTime?

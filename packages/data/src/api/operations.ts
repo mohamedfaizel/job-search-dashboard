@@ -483,6 +483,7 @@ const PROFILE_FIELDS = /* GraphQL */ `
   nightlyKitsMax
   nightlyKitsAt
   nightlyKitsFitMin
+  kitScoreTarget
   briefingOn
   briefingAt
   weeklyReport
@@ -1128,6 +1129,8 @@ export const NOTIFICATIONS = /* GraphQL */ `
         kept
         undone
         failed
+        belowTarget
+        target
         reason
         briefing {
           newJobs

@@ -196,6 +196,12 @@ export class ProfileModel {
   })
   nightlyKitsFitMin!: number | null;
 
+  @Field(() => Int, {
+    description:
+      'Target score for each kit’s resume. Below it, more AI rounds add terms you really have',
+  })
+  kitScoreTarget!: number;
+
   @Field({ description: 'Send the morning briefing (bell and phone push)' })
   briefingOn!: boolean;
 

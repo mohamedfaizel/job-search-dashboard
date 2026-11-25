@@ -6,10 +6,12 @@ import { ApiKeysService } from '../api-keys/api-keys.service';
 import { isBriefingDue as isDailyDue } from '../briefing/briefing';
 import { apiError } from '../common/api-error';
 import { getErrorMessage } from '../common/errors';
+import type { AiProvider } from '../generated/prisma/enums';
 import { FitService } from '../insights/fit.service';
 import { InsightsService } from '../insights/insights.service';
 import { NotificationsService, TOP_JOBS } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { buildImprovePrompt, honestMissing, MAX_IMPROVE_ROUNDS } from './improve';
 
 export const KITS_READY = 'KITS_READY';
 export const KITS_FAILED = 'KITS_FAILED';
@@ -21,12 +23,30 @@ const KIT_TIMEOUT_MS = 5 * 60 * 1000;
 /** Good new jobs get a kit when they reached your list within this many days. */
 export const GOOD_JOB_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** An improve round replies with the resume only. */
+const IMPROVE_MAX_TOKENS = 6_000;
 /** The prompt says this when there is no resume to tailor. */
 const NO_RESUME = 'I have not added my resume here yet';
+
+/** Your AI provider, its saved key and model. */
+interface AiKey {
+  provider: AiProvider;
+  key: string;
+  model: string;
+}
+
+/** Your target score, and the facts an improve round may use. */
+interface Goal {
+  target: number;
+  master: string;
+  languages: string[];
+}
 
 export interface KitRunResult {
   written: number;
   failed: number;
+  /** Kits written whose resume stayed below your target score (it would need skills you lack). */
+  belowTarget: number;
   /** Queued jobs still without a kit after this run. */
   waiting: number;
 }
@@ -115,13 +135,21 @@ export class NightlyKitsService {
    */
   async setSettings(
     userId: number,
-    settings: { on: boolean; perNight: number; at: string; fitMin: number | null },
+    settings: {
+      on: boolean;
+      perNight: number;
+      at: string;
+      fitMin: number | null;
+      /** Null: the target stays as it is. */
+      target: number | null;
+    },
   ): Promise<void> {
     const data = {
       nightlyKits: settings.on,
       nightlyKitsMax: settings.perNight,
       nightlyKitsAt: settings.at,
       nightlyKitsFitMin: settings.fitMin,
+      ...(settings.target === null ? {} : { kitScoreTarget: settings.target }),
     };
     await this.prisma.profile.upsert({
       where: { userId },
@@ -215,21 +243,19 @@ export class NightlyKitsService {
       return null;
     }
 
+    const goal = await this.goalFor(userId);
     const written: { jobId: string; title: string; company: string }[] = [];
     let failed = 0;
+    let belowTarget = 0;
     let stop: StopReason = null;
     for (const job of waiting.slice(0, Math.max(0, max))) {
       try {
-        const { prompt } = await this.insights.forJob(userId, job.jobId);
-        if (prompt.includes(NO_RESUME)) {
+        const score = await this.writeOne(userId, job, key, goal);
+        if (score === NO_RESUME) {
           stop = 'NO_RESUME';
           break;
         }
-        const reply = await completeWithKey(key.provider, key.key, key.model, prompt, {
-          maxTokens: KIT_MAX_TOKENS,
-          timeoutMs: KIT_TIMEOUT_MS,
-        });
-        await this.insights.saveJobResume(userId, job.jobId, reply);
+        if (score !== null && score < goal.target) belowTarget += 1;
         written.push(job);
         this.track(userId, { done: written.length + failed, written: written.length });
       } catch (error) {
@@ -267,12 +293,15 @@ export class NightlyKitsService {
           fit: fitOf.get(job.jobId) ?? 0,
         })),
         failed,
+        belowTarget,
+        target: goal.target,
         ...(stop ? { reason: stop } : {}),
       });
     }
     return {
       written: written.length,
       failed,
+      belowTarget,
       waiting: waiting.length - written.length,
     };
   }
@@ -320,8 +349,79 @@ export class NightlyKitsService {
     ];
   }
 
+  /** Your target score, and the facts an improve round may use. */
+  private async goalFor(userId: number): Promise<Goal> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { kitScoreTarget: true, resumeText: true, languages: true },
+    });
+    return {
+      target: profile?.kitScoreTarget ?? 90,
+      master: profile?.resumeText ?? '',
+      languages: profile?.languages ?? [],
+    };
+  }
+
+  /**
+   * Writes one job's kit, then improves its resume while it scores below your target: at most
+   * MAX_IMPROVE_ROUNDS more calls, each only adding terms you really have. A round that scores
+   * lower is undone. Returns the kit's final score, or NO_RESUME when there is nothing to tailor.
+   */
+  private async writeOne(
+    userId: number,
+    job: { jobId: string; title: string; company: string },
+    key: AiKey,
+    goal: Goal,
+  ): Promise<number | null | typeof NO_RESUME> {
+    const { prompt } = await this.insights.forJob(userId, job.jobId);
+    if (prompt.includes(NO_RESUME)) return NO_RESUME;
+    const reply = await completeWithKey(key.provider, key.key, key.model, prompt, {
+      maxTokens: KIT_MAX_TOKENS,
+      timeoutMs: KIT_TIMEOUT_MS,
+    });
+    let insights = await this.insights.saveJobResume(userId, job.jobId, reply);
+    try {
+      for (let round = 0; round < MAX_IMPROVE_ROUNDS; round += 1) {
+        const kit = insights.jobResume;
+        if (!kit || kit.score === null || kit.score >= goal.target) break;
+        const terms = honestMissing([...insights.skills, ...insights.keywords], kit.stillMissing);
+        // Nothing left that you really have: this is the best honest score.
+        if (terms.length === 0) break;
+        const better = await completeWithKey(
+          key.provider,
+          key.key,
+          key.model,
+          buildImprovePrompt({
+            title: job.title,
+            company: job.company,
+            resume: kit.text,
+            score: kit.score,
+            target: goal.target,
+            terms,
+            master: goal.master,
+            languages: goal.languages,
+          }),
+          { maxTokens: IMPROVE_MAX_TOKENS, timeoutMs: KIT_TIMEOUT_MS },
+        );
+        const next = await this.insights.saveJobResume(userId, job.jobId, better);
+        if ((next.jobResume?.score ?? 0) < kit.score) {
+          // Worse than before: keep the earlier resume and stop.
+          insights = await this.insights.saveJobResume(userId, job.jobId, kit.text);
+          break;
+        }
+        insights = next;
+      }
+    } catch (error) {
+      // The kit is written; only the extra round failed. Its score is what it is.
+      this.logger.warn(
+        `Improving the kit for ${String(userId)}:${job.jobId} failed: ${getErrorMessage(error)}`,
+      );
+    }
+    return insights.jobResume?.score ?? null;
+  }
+
   /** The user's chosen AI provider with its saved key and model, or null without a key. */
-  private async keyFor(userId: number) {
+  private async keyFor(userId: number): Promise<AiKey | null> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: { aiProvider: true },

@@ -156,6 +156,15 @@ export class NotificationModel {
   @Field(() => Int, { description: 'KITS_READY / KITS_FAILED: kits that could not be written' })
   failed!: number;
 
+  @Field(() => Int, {
+    description:
+      'KITS_READY: kits whose resume stayed below `target`, because the job needs skills you do not have',
+  })
+  belowTarget!: number;
+
+  @Field(() => Int, { nullable: true, description: 'KITS_READY: your target score for kits' })
+  target!: number | null;
+
   @Field(() => String, {
     nullable: true,
     description:

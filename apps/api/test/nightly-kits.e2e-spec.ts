@@ -46,6 +46,8 @@ describe('nightly apply kits', () => {
   let kits: NightlyKitsService;
   let status = 200;
   const asked: string[] = [];
+  /** Replies the fake AI gives, in order; REPLY when it runs out. */
+  const replies: string[] = [];
   const real = globalThis.fetch;
 
   beforeAll(async () => {
@@ -58,6 +60,7 @@ describe('nightly apply kits', () => {
   beforeEach(async () => {
     status = 200;
     asked.length = 0;
+    replies.length = 0;
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
     vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
@@ -69,7 +72,7 @@ describe('nightly apply kits', () => {
       asked.push(typeof init?.body === 'string' ? init.body : '');
       return Promise.resolve(
         status === 200
-          ? Response.json({ content: [{ type: 'text', text: REPLY }] })
+          ? Response.json({ content: [{ type: 'text', text: replies.shift() ?? REPLY }] })
           : new Response(null, { status }),
       );
     });
@@ -80,7 +83,7 @@ describe('nightly apply kits', () => {
 
   /** Two queued jobs for user 1, and a resume to tailor. */
   async function setUp(resume = 'Data Engineer. Python, SQL. German: A2.') {
-    await t.prisma.profile.create({ data: { userId: 1, resumeText: resume } });
+    await t.prisma.profile.create({ data: { userId: 1, resumeText: resume, kitScoreTarget: 70 } });
     const company = await t.prisma.company.create({ data: { name: 'Acme' } });
     for (const [i, id] of ['a', 'b'].entries()) {
       await t.prisma.job.create({
@@ -102,7 +105,7 @@ describe('nightly apply kits', () => {
     await setUp();
     await saveAiKey(t.gql);
 
-    expect(await kits.run(1, 1)).toEqual({ written: 1, failed: 0, waiting: 1 });
+    expect(await kits.run(1, 1)).toEqual({ written: 1, failed: 0, belowTarget: 0, waiting: 1 });
     expect(asked).toHaveLength(1);
     expect(asked[0]).toContain('max_tokens');
     const kit = await t.prisma.jobResume.findUniqueOrThrow({
@@ -120,7 +123,7 @@ describe('nightly apply kits', () => {
     });
 
     // Job a has its kit now: the next run writes b only.
-    expect(await kits.run(1, 5)).toEqual({ written: 1, failed: 0, waiting: 0 });
+    expect(await kits.run(1, 5)).toEqual({ written: 1, failed: 0, belowTarget: 0, waiting: 0 });
     expect(await kits.run(1, 5)).toBeNull();
   });
 
@@ -175,7 +178,7 @@ describe('nightly apply kits', () => {
     expect(saved.errors).toBeUndefined();
     expect((await kits.waitingJobs(1)).map((j) => j.jobId)).toEqual(['a', 'b', 'good']);
 
-    expect(await kits.run(1, 5)).toEqual({ written: 3, failed: 0, waiting: 0 });
+    expect(await kits.run(1, 5)).toEqual({ written: 3, failed: 0, belowTarget: 0, waiting: 0 });
     // It has a kit now, so it is not written twice.
     expect((await kits.waitingJobs(1)).map((j) => j.jobId)).toEqual([]);
 
@@ -183,6 +186,74 @@ describe('nightly apply kits', () => {
       `mutation { setNightlyKits(input: { on: true, perNight: 5, at: "03:00", fitMin: 20 }) }`,
     );
     expect(tooLow.errors?.[0]?.message).toMatch(/50 to 95/);
+  });
+
+  describe('target score', () => {
+    const FIRST = REPLY.replace('Python, SQL, Airflow. German: A2.', 'Python, SQL. German: A2.');
+    const BETTER = '=== RESUME ===\nData Engineer\nPython, SQL and Airflow pipelines. German: A2.';
+
+    async function goal(master: string, target = 85) {
+      await setUp(master);
+      await saveAiKey(t.gql);
+      await t.prisma.profile.update({ where: { userId: 1 }, data: { kitScoreTarget: target } });
+    }
+    const kitOf = (jobId: string) =>
+      t.prisma.jobResume.findUniqueOrThrow({ where: { userId_jobId: { userId: 1, jobId } } });
+
+    it('improves a kit below your target with terms you really have, keeping the cover letter', async () => {
+      await goal('Data Engineer. Python, SQL, Airflow. German: A2.');
+      replies.push(FIRST, BETTER);
+
+      expect(await kits.run(1, 1)).toMatchObject({ written: 1, belowTarget: 0 });
+      expect(asked).toHaveLength(2);
+      expect(asked[1]).toContain('- airflow');
+      expect(asked[1]).toContain('Never raise a level');
+      const kit = await kitOf('a');
+      expect(kit.text).toContain('Airflow');
+      expect(kit.coverLetter).toContain('Dear team');
+      expect(kit.score).toBeGreaterThanOrEqual(85);
+    });
+
+    it('never adds what you do not have: it stops at the best honest score and says so', async () => {
+      await goal('Data Engineer. Python, SQL. German: A2.', 90);
+      replies.push(FIRST);
+
+      expect(await kits.run(1, 1)).toMatchObject({ written: 1, belowTarget: 1 });
+      expect(asked).toHaveLength(1);
+      const { data } = await t.gql<{
+        notifications: { items: { kind: string; belowTarget: number; target: number | null }[] };
+      }>(`query { notifications { items { kind belowTarget target } } }`);
+      expect(data!.notifications.items[0]).toEqual({
+        kind: 'KITS_READY',
+        belowTarget: 1,
+        target: 90,
+      });
+    });
+
+    it('keeps the earlier resume when a round scores lower', async () => {
+      await goal('Data Engineer. Python, SQL, Airflow. German: A2.');
+      replies.push(FIRST, '=== RESUME ===\nData Engineer\nAirflow.', '=== RESUME ===\nNothing.');
+
+      await kits.run(1, 1);
+      const kit = await kitOf('a');
+      expect(kit.text).toContain('Python, SQL');
+      expect(asked).toHaveLength(2);
+    });
+
+    it('saves the target from Settings, 70 to 95', async () => {
+      const ok = await t.gql(
+        `mutation { setNightlyKits(input: { on: true, perNight: 5, at: "03:00", target: 85 }) }`,
+      );
+      expect(ok.errors).toBeUndefined();
+      const profile = await t.gql<{ myProfile: { kitScoreTarget: number } }>(
+        `query { myProfile { kitScoreTarget } }`,
+      );
+      expect(profile.data!.myProfile.kitScoreTarget).toBe(85);
+      const bad = await t.gql(
+        `mutation { setNightlyKits(input: { on: true, perNight: 5, at: "03:00", target: 99 }) }`,
+      );
+      expect(bad.errors?.[0]?.message).toMatch(/70 to 95/);
+    });
   });
 
   it('tells you when there is no key, or the key is refused', async () => {
@@ -196,7 +267,7 @@ describe('nightly apply kits', () => {
 
     await saveAiKey(t.gql);
     status = 401;
-    expect(await kits.run(1, 5)).toEqual({ written: 0, failed: 0, waiting: 2 });
+    expect(await kits.run(1, 5)).toEqual({ written: 0, failed: 0, belowTarget: 0, waiting: 2 });
     expect(asked).toHaveLength(1);
     bell = await t.gql<Bell>(BELL);
     expect(bell.data!.notifications.items[0]).toMatchObject({
@@ -209,7 +280,7 @@ describe('nightly apply kits', () => {
     await setUp();
     await saveAiKey(t.gql);
     status = 500;
-    expect(await kits.run(1, 5)).toEqual({ written: 0, failed: 2, waiting: 2 });
+    expect(await kits.run(1, 5)).toEqual({ written: 0, failed: 2, belowTarget: 0, waiting: 2 });
     const bell = await t.gql<Bell>(BELL);
     expect(bell.data!.notifications.items[0]).toMatchObject({
       kind: 'KITS_FAILED',
@@ -221,7 +292,7 @@ describe('nightly apply kits', () => {
   it('stops when there is no resume to tailor', async () => {
     await setUp('');
     await saveAiKey(t.gql);
-    expect(await kits.run(1, 5)).toEqual({ written: 0, failed: 0, waiting: 2 });
+    expect(await kits.run(1, 5)).toEqual({ written: 0, failed: 0, belowTarget: 0, waiting: 2 });
     expect(asked).toHaveLength(0);
     const bell = await t.gql<Bell>(BELL);
     expect(bell.data!.notifications.items[0]).toMatchObject({ reason: 'NO_RESUME' });

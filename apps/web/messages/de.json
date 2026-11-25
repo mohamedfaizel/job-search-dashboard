@@ -478,6 +478,8 @@
       "onHint": "Standardmäßig aus. Die App bewirbt sich nie und sendet nichts für dich.",
       "perNight": "Höchstens pro Nacht",
       "cost": "Etwa 1 bis 5 Cent pro Kit auf deinem Schlüssel, je nach Modell.",
+      "target": "Ziel-Score",
+      "targetHint": "Darunter bekommt die KI ein oder zwei weitere Versuche und ergänzt nur Kenntnisse, die du wirklich hast (je etwa 2 Cent). Sie erfindet nie etwas, darum bleiben manche Kits darunter.",
       "for": "Kits schreiben für",
       "forQueue": "Nur meine Bewerbungsliste",
       "forGood": "Bewerbungsliste + neue Jobs mit Fit ab {fit} %",
@@ -2426,6 +2428,7 @@
     "openQueue": "Bewerbungsliste öffnen",
     "kitsReady": "{count, plural, one {# Bewerbungskit ist fertig} other {# Bewerbungskits sind fertig}} zum Prüfen",
     "kitsFailed": "Bewerbungskits wurden nicht geschrieben",
+    "kitsBelowTarget": "{count, plural, one {# Kit blieb} other {# Kits blieben}} unter deinem Ziel von {target} %: Der Job verlangt Kenntnisse, die du nicht hast.",
     "kitsFailedSome": "{count, plural, one {# Kit konnte} other {# Kits konnten}} nicht geschrieben werden. Sie bleiben für heute Nacht auf der Liste.",
     "kitsReason": {
       "NO_KEY": "Trag deinen Claude- oder OpenAI-Schlüssel unter Einstellungen › API-Schlüssel ein.",

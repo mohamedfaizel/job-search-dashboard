@@ -129,6 +129,7 @@ export function useSetNightlyKits() {
       perNight: number;
       at: string;
       fitMin: number | null;
+      target: number;
     }) =>
       (await graphqlClient.request<{ setNightlyKits: boolean }>(SET_NIGHTLY_KITS, { input }))
         .setNightlyKits,
