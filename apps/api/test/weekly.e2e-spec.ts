@@ -250,14 +250,24 @@ describe('weekly report', () => {
     expect(pushed).toEqual([]);
   });
 
+  it('sends a missed Sunday once, when the app runs again', async () => {
+    // Last sent 8 days ago: at least one Sunday 18:00 has passed since.
+    const before = new Date(now.getTime() - 8 * 24 * HOUR);
+    await t.prisma.profile.create({ data: { userId: 1, weeklySentAt: before } });
+    await searchWithRun('Frontend', 'DAILY', 24, [90]);
+
+    expect(await weekly.sendDue(now)).toBe(1);
+    expect(await weekly.sendDue(now)).toBe(0);
+  });
+
   it('skips the Sunday run when the scheduler is off, and keeps going when a user fails', async () => {
     const prev = process.env['SCHEDULER_ENABLED'];
     process.env['SCHEDULER_ENABLED'] = 'false';
-    const spy = vi.spyOn(weekly, 'sendAll');
-    await weekly.sunday();
+    const spy = vi.spyOn(weekly, 'sendDue');
+    await weekly.tick();
     expect(spy).not.toHaveBeenCalled();
     process.env['SCHEDULER_ENABLED'] = 'true';
-    await weekly.sunday();
+    await weekly.tick();
     expect(spy).toHaveBeenCalledTimes(1);
     spy.mockRestore();
     process.env['SCHEDULER_ENABLED'] = prev;

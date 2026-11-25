@@ -242,6 +242,11 @@ model Profile {
   nightlyKits         Boolean   @default(false)
   /// The most kits written in one night (each one costs a few cents on your key).
   nightlyKitsMax      Int       @default(5)
+  /// Time of night for the kits, "HH:mm" in the API server's local time.
+  nightlyKitsAt       String    @default("03:00")
+  /// When the kits last ran by themselves, so a night missed while the PC was off runs as
+  /// soon as the app starts again, and only once a day.
+  nightlyKitsRanAt    DateTime?
   /// Morning briefing: one summary a day in the bell and on your phone.
   briefingOn          Boolean   @default(true)
   /// Time of day for the briefing, "HH:mm" in the API server's local time.
@@ -250,6 +255,8 @@ model Profile {
   briefingSentAt      DateTime?
   /// Weekly report: on Sunday evening, your week in one summary (bell and phone push).
   weeklyReport        Boolean   @default(true)
+  /// When the last weekly report went out, so a missed Sunday is sent when the app starts again.
+  weeklySentAt        DateTime?
   /// Gmail moves a job by itself when an email is clearly a rejection or an interview invitation.
   mailAutoStatus      Boolean   @default(true)
   /// Your own fields for anything else forms ask: [{ "label": "Xing", "value": "…" }].

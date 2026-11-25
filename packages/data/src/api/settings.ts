@@ -120,11 +120,11 @@ export function useUpdateNotificationSettings() {
   });
 }
 
-/** Settings > API keys > Nightly apply kits: on or off, and how many a night. */
+/** Settings > API keys > Nightly apply kits: on or off, how many a night, and at what time. */
 export function useSetNightlyKits() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { on: boolean; perNight: number }) =>
+    mutationFn: async (input: { on: boolean; perNight: number; at: string }) =>
       (await graphqlClient.request<{ setNightlyKits: boolean }>(SET_NIGHTLY_KITS, { input }))
         .setNightlyKits,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),

@@ -416,6 +416,8 @@ export interface Profile {
   nightlyKits: boolean;
   /** The most kits written in one night. */
   nightlyKitsMax: number;
+  /** Time of night for the kits, "HH:mm" in the API server's local time. */
+  nightlyKitsAt: string;
   /** Morning briefing: once a day in the bell and as a phone push. */
   briefingOn: boolean;
   /** "HH:mm" in the API server's local time. */
@@ -458,6 +460,7 @@ export type ProfileInput = Omit<
   // Saved on their own, from Settings > API keys > Nightly apply kits.
   | 'nightlyKits'
   | 'nightlyKitsMax'
+  | 'nightlyKitsAt'
   // Saved on their own, from Settings > Notifications > Morning briefing.
   | 'briefingOn'
   | 'briefingAt'
