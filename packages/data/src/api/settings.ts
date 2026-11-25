@@ -124,7 +124,12 @@ export function useUpdateNotificationSettings() {
 export function useSetNightlyKits() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { on: boolean; perNight: number; at: string }) =>
+    mutationFn: async (input: {
+      on: boolean;
+      perNight: number;
+      at: string;
+      fitMin: number | null;
+    }) =>
       (await graphqlClient.request<{ setNightlyKits: boolean }>(SET_NIGHTLY_KITS, { input }))
         .setNightlyKits,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey }),

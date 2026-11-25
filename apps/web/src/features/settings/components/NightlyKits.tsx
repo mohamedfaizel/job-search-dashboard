@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 
 const PER_NIGHT = [1, 3, 5, 10, 20] as const;
+/** "Write kits for": the Apply queue only (empty), or also new jobs with at least this Fit %. */
+const FIT_MINS = [60, 70, 75, 80, 90] as const;
 const REASONS = ['NO_KEY', 'KEY_REFUSED', 'NO_RESUME', 'NONE_WRITTEN'] as const;
 const reasonOf = (reason: string | null) =>
   REASONS.find((known) => known === reason) ?? 'NONE_WRITTEN';
@@ -51,10 +53,12 @@ function KitsForm({ profile }: { profile: Profile }) {
   const [on, setOn] = useState(profile.nightlyKits);
   const [perNight, setPerNight] = useState(profile.nightlyKitsMax);
   const [at, setAt] = useState(profile.nightlyKitsAt);
+  const [fitMin, setFitMin] = useState(profile.nightlyKitsFitMin);
   const changed =
     on !== profile.nightlyKits ||
     perNight !== profile.nightlyKitsMax ||
-    at !== profile.nightlyKitsAt;
+    at !== profile.nightlyKitsAt ||
+    fitMin !== profile.nightlyKitsFitMin;
 
   return (
     <div className="space-y-3">
@@ -74,6 +78,29 @@ function KitsForm({ profile }: { profile: Profile }) {
           <span className="block text-xs text-slate-600">{t('onHint')}</span>
         </span>
       </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor="kits-for" className="text-sm text-slate-800">
+          {t('for')}
+        </label>
+        <select
+          id="kits-for"
+          value={fitMin ?? ''}
+          disabled={!on}
+          onChange={(event) => {
+            setFitMin(event.target.value === '' ? null : Number(event.target.value));
+            save.reset();
+          }}
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm disabled:opacity-60"
+        >
+          <option value="">{t('forQueue')}</option>
+          {FIT_MINS.map((n) => (
+            <option key={n} value={n}>
+              {t('forGood', { fit: n })}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-slate-600">{t('forHint')}</span>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <label htmlFor="kits-per-night" className="text-sm text-slate-800">
           {t('perNight')}
@@ -120,7 +147,7 @@ function KitsForm({ profile }: { profile: Profile }) {
             type="button"
             disabled={save.isPending || at === ''}
             onClick={() => {
-              save.mutate({ on, perNight, at });
+              save.mutate({ on, perNight, at, fitMin });
             }}
             className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
           >

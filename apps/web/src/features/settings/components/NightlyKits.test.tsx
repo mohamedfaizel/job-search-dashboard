@@ -21,6 +21,7 @@ describe('Settings > Nightly apply kits', () => {
 
     await user.click(kits.getByLabelText(/Write my apply kits at night/));
     await user.selectOptions(perNight, '3');
+    await user.selectOptions(kits.getByLabelText('Write kits for'), '75');
     const at = kits.getByLabelText('At');
     await user.clear(at);
     await user.type(at, '22:30');
@@ -28,7 +29,7 @@ describe('Settings > Nightly apply kits', () => {
 
     expect(requests).toContainEqual({
       operation: 'SetNightlyKits',
-      variables: { input: { on: true, perNight: 3, at: '22:30' } },
+      variables: { input: { on: true, perNight: 3, at: '22:30', fitMin: 75 } },
     });
   });
 
