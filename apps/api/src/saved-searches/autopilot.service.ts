@@ -105,7 +105,8 @@ export class AutopilotService {
         visa: true,
         postingStatus: true,
         company: { select: { name: true } },
-        fits: { where: { userId }, select: { score: true } },
+        // A guess from the title alone never queues or hides a job by itself.
+        fits: { where: { userId, estimate: false }, select: { score: true } },
         applications: { where: { userId }, select: { status: true } },
         applyQueue: { where: { userId }, select: { jobId: true } },
         hiddenBy: { where: { userId }, select: { jobId: true } },

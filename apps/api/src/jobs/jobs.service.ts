@@ -31,7 +31,7 @@ function forUser(userId: number) {
     company: true,
     applications: { where: { userId }, select: { status: true } },
     matches: { where: { userId }, select: { status: true, score: true } },
-    fits: { where: { userId }, select: { score: true } },
+    fits: { where: { userId }, select: { score: true, estimate: true } },
     jobResumes: { where: { userId }, select: { score: true } },
   } satisfies Prisma.JobInclude;
 }
@@ -46,6 +46,7 @@ function withStatus({ applications, matches, fits, jobResumes, ...job }: JobForU
     matchStatus: match?.status ?? null,
     matchScore: match?.score ?? null,
     fitScore: fits[0]?.score ?? null,
+    fitEstimate: fits[0]?.estimate ?? false,
     applyScore: jobResumes[0]?.score ?? null,
   };
 }

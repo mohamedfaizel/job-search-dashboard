@@ -258,6 +258,32 @@ describe('JobsDashboard', () => {
     expect(screen.getByRole('dialog', { name: 'Senior Frontend Engineer' })).toBeInTheDocument();
   });
 
+  it('shows a guessed Fit as "~54%" for an ad with no text', async () => {
+    server.use(
+      api.query('JobsPage', () =>
+        HttpResponse.json({
+          data: {
+            jobsPage: {
+              items: [makeJob({ fitScore: 54, fitEstimate: true })],
+              total: 1,
+              page: 1,
+              pageSize: 25,
+            },
+          },
+        }),
+      ),
+    );
+    renderDashboard();
+
+    const guess = await screen.findByRole('button', {
+      name: 'Fit about 54% (a guess from the title): Senior Frontend Engineer',
+    });
+    expect(guess).toHaveTextContent('~54%');
+    await userEvent.click(guess);
+    const dialog = screen.getByRole('dialog', { name: 'Senior Frontend Engineer' });
+    expect(within(dialog).getByText('~54% fit')).toBeVisible();
+  });
+
   it('shows the Apply kit score next to Fit, for jobs with a saved Claude reply', async () => {
     server.use(
       api.query('JobsPage', () =>

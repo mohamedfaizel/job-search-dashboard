@@ -807,6 +807,9 @@ model JobFit {
   job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobId  String
   score  Int
+  /// A guess from the job title only, because the ad has no text. Shown as "~61%" and never
+  /// used by automations (alerts, Autopilot, briefing, kits).
+  estimate Boolean @default(false)
 
   @@id([userId, jobId])
   @@index([userId, score])

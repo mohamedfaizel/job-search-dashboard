@@ -132,6 +132,7 @@ export class NotificationsService {
             userId,
             jobId: { in: jobIds },
             score: { gte: matchFitMin },
+            estimate: false,
             job: { hiddenBy: { none: { userId } } },
           },
           orderBy: { score: 'desc' },

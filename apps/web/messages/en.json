@@ -1179,6 +1179,8 @@
       "fitEmpty": "Add your resume on the Resume page to see how well you fit each job",
       "fitLabel": "Fit {score}%: {title}",
       "fitHint": "How much of the job’s skills, keywords and title your resume covers. Click for details",
+      "fitGuessLabel": "Fit about {score}% (a guess from the title): {title}",
+      "fitGuessHint": "A guess from the job title only, because the ad has no text. Automations do not use it.",
       "applyEmpty": "Save a reply from {ai} in the Apply kit to see its score",
       "applyLabel": "Kit {score}%: apply kit score for {title}",
       "applyHint": "The Fit % of the resume {ai} wrote for this job. Click for details",
@@ -1312,6 +1314,8 @@
       "addQueueHint": "Apply to several jobs later in one go",
       "pdfProblem": "The resume PDF has something to fix",
       "fitPillHint": "Free: our own keyword check of your master resume against this ad. No AI.",
+      "fitGuessHint": "A guess from the job title only, because the ad has no text. Automations do not use it.",
+      "fitGuessPill": "~{score}% fit",
       "fitTabHint": "Free: our own keyword check. No AI, no cost.",
       "matchTabHint": "Resume-Matcher scores your master resume with your own AI key. Costs a few cents."
     },

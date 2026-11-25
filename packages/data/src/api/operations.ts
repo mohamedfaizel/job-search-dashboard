@@ -35,6 +35,7 @@ const JOB_FIELDS = /* GraphQL */ `
     matchStatus
     matchScore
     fitScore
+    fitEstimate
     applyScore
     createdAt
   }

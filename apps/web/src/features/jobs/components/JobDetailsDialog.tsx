@@ -190,7 +190,15 @@ function JobDetails({
               >
                 {job.title}
               </h2>
-              {job.fitScore !== null && (
+              {job.fitScore !== null && job.fitEstimate && (
+                <span
+                  title={t('fitGuessHint')}
+                  className="inline-flex h-6 shrink-0 items-center rounded-full border border-dashed border-slate-400 px-2 text-xs font-medium whitespace-nowrap text-slate-600"
+                >
+                  {t('fitGuessPill', { score: job.fitScore })}
+                </span>
+              )}
+              {job.fitScore !== null && !job.fitEstimate && (
                 <span
                   title={t('fitPillHint')}
                   className={`inline-flex h-6 shrink-0 items-center rounded-full px-2 text-xs font-medium whitespace-nowrap ring-1 ring-inset ${FIT_PILL[scoreTone(job.fitScore) as keyof typeof FIT_PILL]}`}

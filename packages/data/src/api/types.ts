@@ -73,6 +73,8 @@ export interface Job {
    * the same score as in the popup. No AI. Null until you add a resume.
    */
   fitScore: number | null;
+  /** Fit % is only a guess from the title (the ad has no text): shown as "~61%". */
+  fitEstimate: boolean;
   /** Apply kit score (0-100): the Fit % of the resume Claude wrote for this job. Null until a reply is saved. */
   applyScore: number | null;
   /** When the job was imported or added: after your last visit, it is New. */
