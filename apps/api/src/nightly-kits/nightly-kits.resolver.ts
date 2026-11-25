@@ -8,7 +8,7 @@ import {
   Query,
   Resolver,
 } from '@nestjs/graphql';
-import { IsBoolean, IsInt, Matches, Max, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, Matches, Max, Min } from 'class-validator';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
 import { NightlyKitsService } from './nightly-kits.service';
@@ -25,6 +25,17 @@ export class NightlyKitsInput {
   @Min(1, { message: 'Pick 1 to 20 kits a night' })
   @Max(20, { message: 'Pick 1 to 20 kits a night' })
   perNight!: number;
+
+  @Field(() => Int, {
+    nullable: true,
+    description:
+      'Also write kits for new jobs with at least this Fit % (50-95). Null: the Apply queue only',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(50, { message: 'Pick a Fit of 50 to 95%' })
+  @Max(95, { message: 'Pick a Fit of 50 to 95%' })
+  fitMin?: number | null;
 
   @Field({ description: 'Time of night, "HH:mm", 24-hour, server local time' })
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'at must be a time like 03:00' })
@@ -67,7 +78,12 @@ export class NightlyKitsResolver {
     @CurrentUser() user: SessionUser,
     @Args('input') input: NightlyKitsInput,
   ): Promise<boolean> {
-    await this.service.setSettings(user.id, input.on, input.perNight, input.at);
+    await this.service.setSettings(user.id, {
+      on: input.on,
+      perNight: input.perNight,
+      at: input.at,
+      fitMin: input.fitMin ?? null,
+    });
     return true;
   }
 

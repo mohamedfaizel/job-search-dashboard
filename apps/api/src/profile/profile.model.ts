@@ -189,6 +189,13 @@ export class ProfileModel {
   @Field({ description: 'Time of night for the kits, "HH:mm" in the API server\'s local time' })
   nightlyKitsAt!: string;
 
+  @Field(() => Int, {
+    nullable: true,
+    description:
+      'Also write kits for new jobs with at least this Fit %. Null: the Apply queue only',
+  })
+  nightlyKitsFitMin!: number | null;
+
   @Field({ description: 'Send the morning briefing (bell and phone push)' })
   briefingOn!: boolean;
 

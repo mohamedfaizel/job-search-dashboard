@@ -6,6 +6,7 @@ import { ApiKeysService } from '../api-keys/api-keys.service';
 import { isBriefingDue as isDailyDue } from '../briefing/briefing';
 import { apiError } from '../common/api-error';
 import { getErrorMessage } from '../common/errors';
+import { FitService } from '../insights/fit.service';
 import { InsightsService } from '../insights/insights.service';
 import { NotificationsService, TOP_JOBS } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,6 +18,9 @@ export const KITS_FAILED = 'KITS_FAILED';
 const KIT_MAX_TOKENS = 12_000;
 /** Writing that much takes a while; one job may take up to this long. */
 const KIT_TIMEOUT_MS = 5 * 60 * 1000;
+/** Good new jobs get a kit when they reached your list within this many days. */
+export const GOOD_JOB_DAYS = 14;
+const DAY_MS = 24 * 60 * 60 * 1000;
 /** The prompt says this when there is no resume to tailor. */
 const NO_RESUME = 'I have not added my resume here yet';
 
@@ -61,6 +65,7 @@ export class NightlyKitsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly insights: InsightsService,
+    private readonly fits: FitService,
     private readonly apiKeys: ApiKeysService,
     private readonly notifications: NotificationsService,
     private readonly config: ConfigService,
@@ -104,9 +109,20 @@ export class NightlyKitsService {
     return ran;
   }
 
-  /** Settings: turn nightly kits on or off, how many per night, and at what time. */
-  async setSettings(userId: number, on: boolean, perNight: number, at: string): Promise<void> {
-    const data = { nightlyKits: on, nightlyKitsMax: perNight, nightlyKitsAt: at };
+  /**
+   * Settings: turn nightly kits on or off, how many per night, at what time, and whether good
+   * new jobs (Fit at least `fitMin`) get kits too (null: the Apply queue only).
+   */
+  async setSettings(
+    userId: number,
+    settings: { on: boolean; perNight: number; at: string; fitMin: number | null },
+  ): Promise<void> {
+    const data = {
+      nightlyKits: settings.on,
+      nightlyKitsMax: settings.perNight,
+      nightlyKitsAt: settings.at,
+      nightlyKitsFitMin: settings.fitMin,
+    };
     await this.prisma.profile.upsert({
       where: { userId },
       create: { userId, ...data },
@@ -122,13 +138,17 @@ export class NightlyKitsService {
     if (!(await this.keyFor(userId))) {
       throw apiError(BadRequestException, 'AI_KEY_MISSING', 'Save your AI key in Settings first');
     }
-    const queue = await this.insights.applyQueue(userId);
-    if (queue.length === 0) {
-      throw apiError(BadRequestException, 'KITS_QUEUE_EMPTY', 'Your Apply queue is empty');
-    }
-    const waiting = queue.filter((item) => !item.ready);
+    const waiting = await this.waitingJobs(userId);
     if (waiting.length === 0) {
-      throw apiError(BadRequestException, 'KITS_NOTHING_TO_WRITE', 'Every queued job has a kit');
+      const profile = await this.prisma.profile.findUnique({
+        where: { userId },
+        select: { nightlyKitsFitMin: true },
+      });
+      const queued = await this.prisma.applyQueueItem.count({ where: { userId } });
+      if (queued === 0 && profile?.nightlyKitsFitMin == null) {
+        throw apiError(BadRequestException, 'KITS_QUEUE_EMPTY', 'Your Apply queue is empty');
+      }
+      throw apiError(BadRequestException, 'KITS_NOTHING_TO_WRITE', 'Every job has a kit');
     }
     if (this.running.has(userId)) return waiting.length;
     const profile = await this.prisma.profile.findUnique({
@@ -257,9 +277,47 @@ export class NightlyKitsService {
     };
   }
 
-  /** Queued jobs with no kit yet, in queue order. */
-  private async waitingJobs(userId: number) {
-    return (await this.insights.applyQueue(userId)).filter((item) => !item.ready);
+  /**
+   * Jobs with no kit yet: queued ones first, in queue order, then (when you turned it on) good
+   * new jobs, best Fit first. A good job needs a real Fit (not a guess from the title), an open
+   * ad, and no queue place, application, kit or Hide from you.
+   */
+  async waitingJobs(
+    userId: number,
+    now = new Date(),
+  ): Promise<{ jobId: string; title: string; company: string }[]> {
+    const queued = (await this.insights.applyQueue(userId)).filter((item) => !item.ready);
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { nightlyKitsFitMin: true },
+    });
+    const fitMin = profile?.nightlyKitsFitMin;
+    if (fitMin == null) return queued;
+
+    await this.fits.ensureFresh(userId);
+    const good = await this.prisma.jobFit.findMany({
+      where: {
+        userId,
+        estimate: false,
+        score: { gte: fitMin },
+        job: {
+          postingStatus: 'active',
+          listedFor: {
+            some: { userId, addedAt: { gte: new Date(now.getTime() - GOOD_JOB_DAYS * DAY_MS) } },
+          },
+          applyQueue: { none: { userId } },
+          applications: { none: { userId } },
+          jobResumes: { none: { userId } },
+          hiddenBy: { none: { userId } },
+        },
+      },
+      orderBy: { score: 'desc' },
+      select: { job: { select: { id: true, title: true, company: { select: { name: true } } } } },
+    });
+    return [
+      ...queued,
+      ...good.map(({ job }) => ({ jobId: job.id, title: job.title, company: job.company.name })),
+    ];
   }
 
   /** The user's chosen AI provider with its saved key and model, or null without a key. */

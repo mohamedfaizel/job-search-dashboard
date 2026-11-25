@@ -244,6 +244,9 @@ model Profile {
   nightlyKitsMax      Int       @default(5)
   /// Time of night for the kits, "HH:mm" in the API server's local time.
   nightlyKitsAt       String    @default("03:00")
+  /// Also write kits for new jobs (last 14 days) with at least this Fit %, not only queued ones.
+  /// Null: the Apply queue only.
+  nightlyKitsFitMin   Int?
   /// When the kits last ran by themselves, so a night missed while the PC was off runs as
   /// soon as the app starts again, and only once a day.
   nightlyKitsRanAt    DateTime?
