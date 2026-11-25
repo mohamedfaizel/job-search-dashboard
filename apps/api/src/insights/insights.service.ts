@@ -23,7 +23,7 @@ import type { ApplyQueueItemModel, ApplyQueuePromptModel } from './apply-queue';
 import { buildQueuePage } from './apply-queue';
 import { CorpusService } from './corpus.service';
 import type { FactCheckInput } from './fact-check';
-import { factCheck, removeSkillItems } from './fact-check';
+import { addedSkills, factCheck, removeSkillItems } from './fact-check';
 import { germanRequirement } from './german';
 import type {
   JobInsightsModel,
@@ -327,7 +327,7 @@ export class InsightsService implements OnApplicationBootstrap {
       keywordsCoverage: before.keywords,
       titleMatch: before.title,
       score: before.score,
-      jobResume: jobResume && this.afterScore(jobResume, terms, before, factSources),
+      jobResume: jobResume && this.afterScore(jobResume, terms, before, factSources, haveList),
       prompt: buildResumePrompt(promptInput),
       reviewPrompt: jobResume?.text.trim()
         ? buildReviewPrompt(promptInput, {
@@ -547,15 +547,28 @@ export class InsightsService implements OnApplicationBootstrap {
    */
   async removeUnsupportedSkills(userId: number, jobId: string) {
     const { insights } = await this.analyse(userId, jobId);
+    const flagged = (insights.jobResume?.factCheck ?? [])
+      .filter((f) => f.kind === 'SKILL' && f.where === 'RESUME')
+      .map((f) => f.text);
+    return this.removeSkills(userId, jobId, flagged);
+  }
+
+  /**
+   * Apply step 3 ✕: takes one skill out of the Skills section of the resume you saved for this
+   * job and scores it again. A skill named inside a sentence stays: edit that line yourself.
+   */
+  async removeResumeSkill(userId: number, jobId: string, skill: string) {
+    await this.assertJob(userId, jobId);
+    return this.removeSkills(userId, jobId, [skill]);
+  }
+
+  private async removeSkills(userId: number, jobId: string, skills: string[]) {
     const row = await this.prisma.jobResume.findUnique({
       where: { userId_jobId: { userId, jobId } },
       select: { text: true },
     });
-    if (!row) return insights;
-    const flagged = (insights.jobResume?.factCheck ?? [])
-      .filter((f) => f.kind === 'SKILL' && f.where === 'RESUME')
-      .map((f) => f.text);
-    const { text, removed } = removeSkillItems(row.text, flagged);
+    if (!row) return this.forJob(userId, jobId);
+    const { text, removed } = removeSkillItems(row.text, skills);
     if (removed.length > 0) {
       await this.prisma.jobResume.update({
         where: { userId_jobId: { userId, jobId } },
@@ -984,6 +997,7 @@ export class InsightsService implements OnApplicationBootstrap {
     terms: Parameters<typeof checkResume>[1],
     before: ResumeCheck,
     facts: Pick<FactCheckInput, 'sources' | 'jobSkills'> | null,
+    mySkills: string[],
   ): JobResumeModel {
     const after = checkResume(jobResume.text, terms);
     const beforeChecks = [...before.skillChecks, ...before.keywordChecks];
@@ -1016,6 +1030,7 @@ export class InsightsService implements OnApplicationBootstrap {
           coverLetter: jobResume.coverLetter,
           ...facts,
         }),
+      addedSkills: addedSkills(jobResume.text, mySkills, terms.skills),
     };
   }
 }

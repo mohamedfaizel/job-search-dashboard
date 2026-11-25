@@ -15,6 +15,7 @@ import {
   MOVE_IN_APPLY_QUEUE,
   REMOVE_FROM_APPLY_QUEUE,
   REMOVE_INSIGHT_TERM,
+  REMOVE_RESUME_SKILL,
   RESUME_PDF_CHECK,
   RESTORE_INSIGHT_TERM,
   SAVE_APPLY_QUEUE_REPLY,
@@ -337,6 +338,19 @@ export function useEditJobResume() {
       );
       return data.editJobResume;
     },
+    onSuccess: (insights) => {
+      savedReply(queryClient, insights);
+    },
+  });
+}
+
+/** Apply step 3 ✕: takes one added skill out of the Skills section of the job's saved resume. */
+export function useRemoveResumeSkill() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { jobId: string; skill: string }) =>
+      (await graphqlClient.request<{ removeResumeSkill: JobInsights }>(REMOVE_RESUME_SKILL, vars))
+        .removeResumeSkill,
     onSuccess: (insights) => {
       savedReply(queryClient, insights);
     },

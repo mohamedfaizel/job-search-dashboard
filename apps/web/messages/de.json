@@ -1661,7 +1661,19 @@
       "aiTitleHint": "Resume-Matcher bewertet diesen Lebenslauf mit deinem eigenen KI-Schlüssel. Eine zweite Meinung: der kostenlose Fit-Wert oben ist unserer.",
       "beforeAfterHint": "Kostenlos: unsere eigene Stichwort-Prüfung dieses Lebenslaufs (keine KI). „vorher“ ist der Wert deines Master-Lebenslaufs."
     },
+    "added": {
+      "label": "Neue Fähigkeiten prüfen",
+      "title": "{count, plural, one {# neue Fähigkeit prüfen} other {# neue Fähigkeiten prüfen}}",
+      "intro": "Gold markiert eine Fähigkeit im neuen Lebenslauf, die nicht unter Meine Fähigkeiten steht. Behalte sie nur, wenn du sie wirklich hast.",
+      "notMine": "Nicht unter Meine Fähigkeiten",
+      "inSentence": "Aus den Fähigkeiten entfernt, aber ein Satz nennt sie noch: Klick auf die Zeile, um sie zu ändern.",
+      "keep": "{skill} behalten",
+      "keepHint": "Behalten: Ich kann das wirklich. Fügt es zu Meine Fähigkeiten hinzu.",
+      "remove": "{skill} entfernen",
+      "removeHint": "Aus diesem Lebenslauf entfernen und neu bewerten"
+    },
     "preview": {
+      "addedMark": "Nicht unter Meine Fähigkeiten: oben bei „neue Fähigkeiten“ prüfen",
       "title": "Vorschau und Bearbeiten",
       "unsaved": "Nicht gespeichert",
       "editText": "Als Text bearbeiten",

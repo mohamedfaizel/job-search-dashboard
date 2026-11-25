@@ -19,6 +19,11 @@ import {
   withKeyword,
 } from '../replyEdit';
 import { MissingKeywords, missingTerms } from './MissingKeywords';
+
+/** True when a marked piece of a line is one of the added skills (not a job keyword). */
+function isAdded(text: string, added: string[]): boolean {
+  return added.length > 0 && markTerms(text, added).some((part) => part.mark && part.text === text);
+}
 import { usePopupLayout } from './popupLayout';
 
 const BUTTON =
@@ -155,6 +160,7 @@ function PageView({
   onChange,
   label,
   highlight = [],
+  added = [],
   pointed = null,
   tall = false,
 }: {
@@ -163,6 +169,8 @@ function PageView({
   label: string;
   /** Terms to mark green where they appear: the job's keywords the text now covers. */
   highlight?: string[];
+  /** Skills to mark gold: in the resume, but not on your My skills list. */
+  added?: string[];
   /** A line to point at, e.g. where a missing keyword fits best. */
   pointed?: PointedLine | null;
   /** Taller, for the maximized popup. */
@@ -260,8 +268,16 @@ function PageView({
                 •
               </span>
             )}
-            {markTerms(line.text, highlight).map((part, k) =>
-              part.mark ? (
+            {markTerms(line.text, [...added, ...highlight]).map((part, k) =>
+              part.mark && isAdded(part.text, added) ? (
+                <mark
+                  key={k}
+                  title={t('addedMark')}
+                  className="rounded-sm border-b-2 border-flag-gold bg-amber-100 px-0.5 text-slate-900"
+                >
+                  {part.text}
+                </mark>
+              ) : part.mark ? (
                 <mark key={k} className="rounded bg-emerald-100 px-0.5 text-emerald-900">
                   {part.text}
                 </mark>
@@ -437,6 +453,7 @@ export function SavedReplyPreview({
       jobId={insights.jobId}
       state={state}
       highlight={terms}
+      added={saved.addedSkills}
       part={part}
       onPart={setPart}
       pointed={onResume ? pointed : null}
@@ -489,6 +506,7 @@ export function ReplyPreview({
   jobId,
   state,
   highlight = [],
+  added = [],
   part: controlledPart,
   onPart,
   tools,
@@ -501,6 +519,8 @@ export function ReplyPreview({
   jobId: string;
   state: ReplyDraftState;
   highlight?: string[];
+  /** Skills to mark gold in the resume: not on your My skills list. */
+  added?: string[];
   part?: ReplyPart;
   onPart?: (part: ReplyPart) => void;
   pointed?: PointedLine | null;
@@ -600,6 +620,7 @@ export function ReplyPreview({
             label={t(`parts.${shown}`)}
             text={draft[shown]}
             highlight={shown === 'resume' ? highlight : []}
+            added={shown === 'resume' ? added : []}
             pointed={shown === 'resume' ? pointed : null}
             tall={tall}
             onChange={(text) => {

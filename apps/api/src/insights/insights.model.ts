@@ -140,6 +140,12 @@ export class JobResumeModel {
       'Numbers, skills and language levels that are not in your resume or profile. Null when there is no resume of yours to compare with',
   })
   factCheck!: FactFindingModel[] | null;
+
+  @Field(() => [String], {
+    description:
+      'Skills this resume names that are not on your My skills list. Apply step 3 marks them in gold to keep (adds to My skills) or remove',
+  })
+  addedSkills!: string[];
 }
 
 @ObjectType('InterviewPrep', {

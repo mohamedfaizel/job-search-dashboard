@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { factCheck, numberKey, removeSkillItems, skillItems } from './fact-check';
+import { addedSkills, factCheck, numberKey, removeSkillItems, skillItems } from './fact-check';
 
 const MASTER = `# Mohamed Faizel
 Frontend Engineer
@@ -203,5 +203,16 @@ Built apps with Kubernetes and React.
     const out = removeSkillItems(resume, ['figma']);
     expect(out.text).toBe(resume);
     expect(out.removed).toEqual([]);
+  });
+});
+
+describe('addedSkills', () => {
+  const resume =
+    '# Ada\n## Skills\n- **Frontend:** React, Storybook, REST APIs\n## Experience\n- Ran Kafka';
+  it('lists skills the resume names that are not on My skills, once each', () => {
+    expect(addedSkills(resume, ['React', 'REST API'], ['kafka'])).toEqual(['Storybook', 'kafka']);
+    expect(addedSkills(resume, ['react', 'storybook', 'rest apis', 'Kafka'], ['kafka'])).toEqual(
+      [],
+    );
   });
 });

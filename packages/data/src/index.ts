@@ -110,6 +110,7 @@ export {
   useSetInterviewDate,
   useSaveJobResumeText,
   useEditJobResume,
+  useRemoveResumeSkill,
   useUploadJobResume,
 } from './api/insights';
 export {

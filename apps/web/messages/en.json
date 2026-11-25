@@ -1661,7 +1661,19 @@
       "aiTitleHint": "Resume-Matcher scores this resume with your own AI key. A second opinion: the free Fit score above is ours.",
       "beforeAfterHint": "Free: our own keyword check of this resume (no AI). \"was\" is the score of your master resume."
     },
+    "added": {
+      "label": "Added skills to check",
+      "title": "{count, plural, one {# added skill to check} other {# added skills to check}}",
+      "intro": "Gold marks a skill the new resume names that is not on My skills. Keep it only if you really have it.",
+      "notMine": "Not on My skills",
+      "inSentence": "Taken out of Skills, but a sentence still names it: click that line to edit it.",
+      "keep": "Keep {skill}",
+      "keepHint": "Keep: I really know it. Adds it to My skills.",
+      "remove": "Remove {skill}",
+      "removeHint": "Remove it from this resume and score it again"
+    },
     "preview": {
+      "addedMark": "Not on My skills: check it in “added skills” above",
       "title": "Preview and edit",
       "unsaved": "Unsaved changes",
       "editText": "Edit as text",

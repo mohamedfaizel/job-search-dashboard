@@ -17,6 +17,7 @@ import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiState } from '../../../lib/ai-status';
 import { replyParts } from '../reply';
 import { useJobFormat } from '../useJobFormat';
+import { AddedSkills } from './AddedSkills';
 import { AiOffNote, AiStateTag } from './AiLabels';
 import { useNoteAiRun } from './AiRunSection';
 import { Badge } from './Badge';
@@ -716,6 +717,8 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
           {t('deleteError', { error: errorText(remove.error) })}
         </p>
       )}
+
+      <AddedSkills jobId={jobId} skills={jobResume.addedSkills} />
 
       <SavedReplyPreview
         key={`preview-${jobResume.updatedAt}`}

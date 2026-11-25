@@ -120,6 +120,28 @@ export function skillItems(resume: string): string[] {
   return items;
 }
 
+/** The skills a resume names: its Skills section items, and the job's skills it mentions. */
+function namedSkills(resume: string, jobSkills: string[]): string[] {
+  return [...skillItems(resume), ...jobSkills.filter((skill) => mentions(resume, skill))];
+}
+
+/**
+ * Skills the tailored resume names that are not on your My skills list (Skills and ticked
+ * keywords), so Apply step 3 can mark them for you to keep or remove. One entry per skill.
+ */
+export function addedSkills(resume: string, mySkills: string[], jobSkills: string[]): string[] {
+  const mine = mySkills.join('\n');
+  const seen = new Set<string>();
+  const added: string[] = [];
+  for (const skill of namedSkills(resume, jobSkills)) {
+    const key = canonicalSkill(skill).toLowerCase();
+    if (seen.has(key) || supported(mine, skill)) continue;
+    seen.add(key);
+    added.push(skill);
+  }
+  return added;
+}
+
 /** "REST APIs" is "REST API": plural s is ignored. */
 function supported(source: string, skill: string): boolean {
   if (mentions(source, skill) || mentions(source, canonicalSkill(skill))) return true;
@@ -168,8 +190,7 @@ export function factCheck({
   scan(resume, 'RESUME');
   scan(coverLetter, 'COVER_LETTER');
 
-  const named = [...skillItems(resume), ...jobSkills.filter((skill) => mentions(resume, skill))];
-  for (const skill of named) {
+  for (const skill of namedSkills(resume, jobSkills)) {
     if (supported(source, skill)) continue;
     const line = resume.split(/\r?\n/).find((l) => mentions(l, skill)) ?? skill;
     add({ kind: 'SKILL', text: skill, where: 'RESUME', context: shorten(line) });
