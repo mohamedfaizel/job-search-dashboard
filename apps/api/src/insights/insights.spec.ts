@@ -13,7 +13,7 @@ import {
   answersForJob,
   savedAnswersText,
 } from './prompt';
-import { checkResume, coverage, matchScore, titleMatch } from './score';
+import { checkResume, coverage, estimateFromTitle, matchScore, titleMatch } from './score';
 import { compact, KNOWN_SKILLS, mentions, relatedTo, spellings } from './skills';
 import { buildCorpus, jobTerms } from './terms';
 import { detectLanguage, keywordTokens, stopwordsFor, tokenize } from './text';
@@ -797,5 +797,15 @@ describe('savedAnswersText', () => {
     const text = savedAnswersText('', bank, 'You deploy services to Kubernetes on AWS.');
     expect(text).toContain('Kubernetes clusters');
     expect(text).not.toContain('drones');
+  });
+});
+
+describe('estimateFromTitle', () => {
+  it('scales the title match down to a modest guess', () => {
+    expect(estimateFromTitle('Senior React Developer', 'Senior React Developer', 'en')).toBe(80);
+    expect(estimateFromTitle('React Developer', 'Senior React Developer (m/w/d)', 'en')).toBe(54);
+    expect(estimateFromTitle('Python', 'Senior React Developer', 'en')).toBe(0);
+    expect(estimateFromTitle('', 'Senior React Developer', 'en')).toBeNull();
+    expect(estimateFromTitle('React', '(m/w/d)', 'en')).toBeNull();
   });
 });

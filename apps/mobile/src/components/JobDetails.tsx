@@ -70,7 +70,7 @@ export function JobDetails({ id }: { id: string }) {
         <Text style={styles.company}>{data.company.name}</Text>
         {place !== '' && <Text style={styles.muted}>{place}</Text>}
         <View style={styles.facts}>
-          <FitPill score={data.fitScore} />
+          <FitPill score={data.fitScore} estimate={data.fitEstimate} />
           <Text style={styles.muted}>
             {t('posted', {
               date: format.dateTime(new Date(data.postedAt), { dateStyle: 'medium' }),

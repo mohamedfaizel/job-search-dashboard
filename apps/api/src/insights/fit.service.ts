@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { resumeFor } from '../profile/resumes';
 import { CorpusService } from './corpus.service';
-import { checkResume } from './score';
+import { checkResume, estimateFromTitle } from './score';
 import { jobTerms } from './terms';
 
 /**
@@ -147,12 +147,19 @@ export class FitService {
       }),
     ]);
 
-    const rows: { userId: number; jobId: string; score: number }[] = [];
+    const rows: { userId: number; jobId: string; score: number; estimate: boolean }[] = [];
     for (const job of jobs) {
       const removed = new Set([...everywhere, ...(perJob.get(job.id) ?? [])]);
       const terms = jobTerms(job, removed, corpus);
-      const { score } = checkResume(resumeFor(resumes, terms.language).text, terms, skills);
-      if (score !== null) rows.push({ userId, jobId: job.id, score });
+      const text = resumeFor(resumes, terms.language).text;
+      const { score } = checkResume(text, terms, skills);
+      if (score !== null) {
+        rows.push({ userId, jobId: job.id, score, estimate: false });
+        continue;
+      }
+      // No ad text: a modest guess from the title, so no row is empty.
+      const guess = estimateFromTitle(text, job.title, terms.language);
+      if (guess !== null) rows.push({ userId, jobId: job.id, score: guess, estimate: true });
     }
     await this.prisma.$transaction([
       this.prisma.jobFit.deleteMany({ where: { userId } }),

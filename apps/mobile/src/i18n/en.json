@@ -19,6 +19,7 @@
     "count": "{count, plural, =0 {No jobs yet} one {# job} other {# jobs}}",
     "empty": "No jobs yet. Add jobs on the website, then pull down to refresh.",
     "fit": "Fit {score}%",
+    "fitGuess": "Fit ~{score}%",
     "noFit": "Fit –",
     "new": "New",
     "remote": "Remote",

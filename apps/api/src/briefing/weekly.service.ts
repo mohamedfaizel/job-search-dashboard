@@ -111,7 +111,7 @@ export class WeeklyService {
             id: true,
             title: true,
             company: { select: { name: true } },
-            fits: { where: { userId }, select: { score: true } },
+            fits: { where: { userId, estimate: false }, select: { score: true } },
             hiddenBy: { where: { userId }, select: { userId: true } },
           },
         },

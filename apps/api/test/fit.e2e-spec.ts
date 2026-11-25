@@ -17,6 +17,7 @@ const JOBS = /* GraphQL */ `
       items {
         title
         fitScore
+        fitEstimate
       }
     }
   }
@@ -46,7 +47,7 @@ const RECALCULATE = /* GraphQL */ `
 
 interface Page {
   total: number;
-  items: { title: string; fitScore: number | null }[];
+  items: { title: string; fitScore: number | null; fitEstimate: boolean }[];
 }
 
 describe('Fit % for every job', () => {
@@ -134,6 +135,22 @@ describe('Fit % for every job', () => {
     // Other users get their own scores: the admin has no resume.
     const admin = await t.gql<{ jobsPage: Page }>(JOBS, { page: 1, pageSize: 25, ...byFit });
     expect(admin.data!.jobsPage.items.every((job) => job.fitScore === null)).toBe(true);
+  });
+
+  it('guesses Fit from the title when the ad has no text, and marks it as a guess', async () => {
+    await addJob('Senior React Developer', [], '');
+    await addJob('Backend Engineer', ['node.js'], 'Build Node.js services.');
+    await t.prisma.profile.create({
+      data: { userId: 2, resumeText: 'React Developer. React, TypeScript. Node.js.' },
+    });
+
+    const page = await jobs(byFit);
+    const guess = page.items.find((job) => job.title === 'Senior React Developer');
+    expect(guess?.fitEstimate).toBe(true);
+    // 2 of 3 title words, scaled to at most 80%.
+    expect(guess?.fitScore).toBe(54);
+    const real = page.items.find((job) => job.title === 'Backend Engineer');
+    expect(real?.fitEstimate).toBe(false);
   });
 
   it('filters by a minimum Fit and pages through the sorted jobs', async () => {
