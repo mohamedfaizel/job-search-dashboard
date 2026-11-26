@@ -67,6 +67,24 @@ export function matchScore(parts: ScoreParts): number | null {
   return Math.round(all.reduce((sum, [value, w]) => sum + value * w, 0) / weight);
 }
 
+/** A guess from the title can never look better than this: it knows too little about the job. */
+export const ESTIMATE_MAX = 80;
+
+/**
+ * Fit for a job whose ad has no text, from its title alone: how much of the title your resume
+ * names, scaled down so it stays a modest guess (at most ESTIMATE_MAX). Null without a title.
+ */
+export function estimateFromTitle(
+  resume: string,
+  title: string,
+  language: string | null,
+): number | null {
+  if (!resume.trim()) return null;
+  const match = titleMatch(title, resume, language);
+  if (match === null) return null;
+  return Math.round((match * ESTIMATE_MAX) / 100);
+}
+
 export interface ResumeCheck extends ScoreParts {
   skillChecks: TermCheckModel[];
   keywordChecks: TermCheckModel[];

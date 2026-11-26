@@ -19,6 +19,7 @@
     "count": "{count, plural, =0 {Noch keine Stellen} one {# Stelle} other {# Stellen}}",
     "empty": "Noch keine Stellen. Füge Stellen auf der Website hinzu und zieh dann nach unten zum Aktualisieren.",
     "fit": "Fit {score} %",
+    "fitGuess": "Fit ~{score} %",
     "noFit": "Fit –",
     "new": "Neu",
     "remote": "Remote",

@@ -73,6 +73,7 @@ export function job(over: Partial<Job> & Pick<Job, 'id' | 'title'>): Job {
     matchStatus: null,
     matchScore: null,
     fitScore: null,
+    fitEstimate: false,
     applyScore: null,
     createdAt: '2026-11-01T10:00:00.000Z',
     ...over,

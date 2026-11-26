@@ -146,6 +146,12 @@ export class Job {
   })
   fitScore!: number | null;
 
+  @Field({
+    description:
+      'True when Fit % is only a guess from the title, because the ad has no text. Shown as "~61%"',
+  })
+  fitEstimate!: boolean;
+
   @Field(() => Int, {
     nullable: true,
     description:

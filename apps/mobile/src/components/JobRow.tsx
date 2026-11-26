@@ -15,10 +15,14 @@ export function placeOf(
   return [job.city, job.workplace ? t(WORKPLACE[job.workplace]) : null].filter(Boolean).join(' · ');
 }
 
-/** Fit % in the website's colours, or a grey dash before there is one. */
-export function FitPill({ score }: { score: number | null }) {
+/**
+ * Fit % in the website's colours, or a grey dash before there is one. A guess from the title
+ * (the ad has no text) is grey with a "~".
+ */
+export function FitPill({ score, estimate = false }: { score: number | null; estimate?: boolean }) {
   const t = useTranslations('Jobs');
   if (score === null) return <Text style={styles.noFit}>{t('noFit')}</Text>;
+  if (estimate) return <Text style={styles.noFit}>{t('fitGuess', { score })}</Text>;
   const fit = fitColors(score);
   return (
     <Text style={[styles.fit, { color: fit.fg, backgroundColor: fit.bg }]}>
@@ -60,7 +64,7 @@ export const JobRow = memo(function JobRow({ job, isNew }: { job: Job; isNew: bo
           <Text style={styles.status}>{tStatus(job.applicationStatus)}</Text>
         )}
       </View>
-      <FitPill score={job.fitScore} />
+      <FitPill score={job.fitScore} estimate={job.fitEstimate} />
     </Pressable>
   );
 });

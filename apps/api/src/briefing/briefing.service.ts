@@ -88,6 +88,7 @@ export class BriefingService {
       where: {
         userId,
         score: { gte: fitMin },
+        estimate: false,
         job: {
           listedFor: { some: { userId, addedAt: { gte: since } } },
           hiddenBy: { none: { userId } },

@@ -287,6 +287,23 @@ export function FitCell({ job, labelled = false }: { job: Job; labelled?: boolea
   if (job.fitScore === null) {
     return <span title={t('fitEmpty')}>{dash}</span>;
   }
+  if (job.fitEstimate) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          openJob(job);
+        }}
+        aria-label={t('fitGuessLabel', { title: job.title, score: job.fitScore })}
+        title={t('fitGuessHint')}
+        className="rounded"
+      >
+        <span className="inline-flex items-center rounded border border-dashed border-slate-400 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-slate-600">
+          <ScoreLabel text={labelled ? t('fitShort') : undefined} />~{job.fitScore}%
+        </span>
+      </button>
+    );
+  }
   return (
     <button
       type="button"
