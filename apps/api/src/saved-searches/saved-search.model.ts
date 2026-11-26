@@ -156,6 +156,12 @@ export class SavedSearch {
   @Field(() => Int, { description: 'The most jobs Autopilot queues in one day' })
   autoQueueMaxPerDay!: number;
 
+  @Field({ description: 'Autopilot writes the apply kit of each job it queues, with your AI key' })
+  autoKits!: boolean;
+
+  @Field(() => Int, { description: 'Target score for those kits’ resumes (70-95)' })
+  kitScoreTarget!: number;
+
   @Field()
   createdAt!: Date;
 
@@ -208,6 +214,19 @@ export class AutopilotInput {
   @Min(1)
   @Max(50)
   autoQueueMaxPerDay!: number;
+
+  @Field({
+    defaultValue: false,
+    description: 'Write the apply kit of each job it queues, right after the run, with your AI key',
+  })
+  @IsBoolean()
+  autoKits: boolean = false;
+
+  @Field(() => Int, { defaultValue: 90, description: 'Target score for those kits (70-95)' })
+  @IsInt()
+  @Min(70, { message: 'Pick a target of 70 to 95%' })
+  @Max(95, { message: 'Pick a target of 70 to 95%' })
+  kitScoreTarget: number = 90;
 }
 
 @ObjectType()

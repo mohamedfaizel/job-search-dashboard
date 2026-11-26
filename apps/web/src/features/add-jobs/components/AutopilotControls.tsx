@@ -1,5 +1,6 @@
 import type { AutopilotRules, SavedSearch } from '@jobsearch/data';
-import { useSetAutopilot } from '@jobsearch/data';
+import { useKitRun, useMyApiKeys, useSetAutopilot } from '@jobsearch/data';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -10,6 +11,8 @@ const rulesOf = (search: SavedSearch): AutopilotRules => ({
   autoQueueNeedsVisa: search.autoQueueNeedsVisa,
   autoHideFitBelow: search.autoHideFitBelow,
   autoQueueMaxPerDay: search.autoQueueMaxPerDay,
+  autoKits: search.autoKits,
+  kitScoreTarget: search.kitScoreTarget,
 });
 
 const same = (a: AutopilotRules, b: AutopilotRules) =>
@@ -66,7 +69,8 @@ function NumberBox({
 
 /**
  * Autopilot rules for one saved search: after each run, jobs that fit well go to your Apply queue
- * and poor, closed or duplicate ones are hidden. The 🔔 says what it did, with Undo.
+ * and poor, closed or duplicate ones are hidden. The 🔔 says what it did, with Undo. With "Write
+ * apply kits" on, the queued jobs' kits are written next with your own AI key.
  */
 export function AutopilotControls({ search }: { search: SavedSearch }) {
   const t = useTranslations('AddJobs.saved');
@@ -154,19 +158,36 @@ export function AutopilotControls({ search }: { search: SavedSearch }) {
               set({ autoQueueMaxPerDay });
             }}
           />
+          <KitsControls id={id} rules={rules} set={set} />
         </div>
       )}
       {changed && (
-        <button
-          type="button"
-          disabled={save.isPending}
-          onClick={() => {
-            save.mutate({ id: search.id, ...rules });
-          }}
-          className="rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-50"
-        >
-          {t('saveAutopilot')}
-        </button>
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            type="button"
+            aria-label={t('saveAutopilot')}
+            title={t('saveAutopilot')}
+            disabled={save.isPending}
+            onClick={() => {
+              save.mutate({ id: search.id, ...rules });
+            }}
+            className="grid h-8 w-8 place-items-center rounded-full bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50"
+          >
+            <span aria-hidden>✓</span>
+          </button>
+          <button
+            type="button"
+            aria-label={t('cancelAutopilot')}
+            title={t('cancelAutopilot')}
+            onClick={() => {
+              setRules(rulesOf(search));
+              save.reset();
+            }}
+            className="grid h-8 w-8 place-items-center rounded-full border border-slate-300 bg-white text-red-700 hover:bg-slate-50"
+          >
+            <span aria-hidden>✕</span>
+          </button>
+        </div>
       )}
       {save.isError && (
         <p role="alert" className="text-sm text-red-700">
@@ -174,5 +195,88 @@ export function AutopilotControls({ search }: { search: SavedSearch }) {
         </p>
       )}
     </fieldset>
+  );
+}
+
+/**
+ * "Write apply kits" inside Autopilot: the jobs it queues get their kit (resume, cover letter, form
+ * answers) right after the run, written with your own AI key, aiming at the target score. Its
+ * Fit % and daily limit are Autopilot's own, so there is nothing else to set.
+ */
+function KitsControls({
+  id,
+  rules,
+  set,
+}: {
+  id: string;
+  rules: AutopilotRules;
+  set: (patch: Partial<AutopilotRules>) => void;
+}) {
+  const t = useTranslations('AddJobs.saved');
+  const keys = useMyApiKeys();
+  const run = useKitRun();
+  const hasKey = (keys.data ?? []).some((k) => k.kind === 'ANTHROPIC' || k.kind === 'OPENAI');
+  // Until the keys are loaded, don't grey it out.
+  const noKey = keys.isSuccess && !hasKey;
+  const writing = run.data?.running ? run.data : null;
+
+  return (
+    <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-2.5">
+      <label className="flex items-center gap-2 text-sm font-medium text-slate-900">
+        <input
+          id={`${id}-kits`}
+          type="checkbox"
+          checked={rules.autoKits && !noKey}
+          disabled={noKey}
+          onChange={(event) => {
+            set({ autoKits: event.target.checked });
+          }}
+        />
+        <span className={noKey ? 'text-slate-500' : undefined}>{t('kitsOn')}</span>
+      </label>
+      {noKey ? (
+        <p role="alert" className="text-xs text-red-700">
+          {t('kitsNoKey')}{' '}
+          <Link href="/settings?tab=keys" className="font-medium underline">
+            {t('kitsAddKey')}
+          </Link>
+        </p>
+      ) : (
+        <p className="text-xs text-slate-600">{t('kitsHint', { max: rules.autoQueueMaxPerDay })}</p>
+      )}
+      {rules.autoKits && !noKey && (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor={`${id}-target`} className="text-xs text-slate-700">
+              {t('kitsTarget')}
+            </label>
+            <input
+              id={`${id}-target`}
+              type="range"
+              min={70}
+              max={95}
+              step={5}
+              value={rules.kitScoreTarget}
+              onChange={(event) => {
+                set({ kitScoreTarget: Number(event.target.value) });
+              }}
+              className="w-32 accent-slate-900"
+            />
+            <span aria-hidden className="text-sm font-semibold text-slate-900 tabular-nums">
+              {rules.kitScoreTarget}%
+            </span>
+          </div>
+          <p className="text-xs text-slate-600">{t('kitsTargetHint')}</p>
+        </>
+      )}
+      {writing && (
+        <p role="status" className="text-xs text-emerald-800">
+          {t('kitsWriting', {
+            done: Math.min(writing.done + 1, writing.total),
+            total: writing.total,
+          })}
+        </p>
+      )}
+    </div>
   );
 }

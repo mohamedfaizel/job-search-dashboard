@@ -82,10 +82,8 @@ export {
   useSetBriefing,
   useSetWeeklyReport,
   useSetMailAutoStatus,
-  useSetNightlyKits,
-  useKitRun,
-  useWriteKitsNow,
 } from './api/settings';
+export { useKitRun } from './api/kits';
 export {
   APPLY_QUEUE_URL,
   applyKitUrl,

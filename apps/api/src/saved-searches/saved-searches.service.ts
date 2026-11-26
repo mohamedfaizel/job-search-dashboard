@@ -243,6 +243,8 @@ export class SavedSearchesService {
         autoQueueNeedsVisa: input.autoQueueNeedsVisa,
         autoHideFitBelow: input.autoHideFitBelow,
         autoQueueMaxPerDay: input.autoQueueMaxPerDay,
+        autoKits: input.autoKits,
+        kitScoreTarget: input.kitScoreTarget,
       },
     });
     const updated = (await this.list(userId)).find((s) => s.id === id);

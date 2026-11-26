@@ -1,4 +1,4 @@
-import type { Profile, SavedSearch, SyncRun, User } from '@jobsearch/data';
+import type { ApiKey, KitRun, Profile, SavedSearch, SyncRun, User } from '@jobsearch/data';
 import { API_URL } from '@jobsearch/data';
 import { HttpResponse } from 'msw';
 import { graphql } from 'msw/graphql';
@@ -56,6 +56,8 @@ export const SAVED: SavedSearch = {
   autoQueueNeedsVisa: true,
   autoHideFitBelow: 40,
   autoQueueMaxPerDay: 10,
+  autoKits: false,
+  kitScoreTarget: 90,
   createdAt: '2026-10-25T08:00:00.000Z',
   lastRun: LAST_RUN,
 };
@@ -98,11 +100,6 @@ const PROFILE: Profile = {
   fillSavedAnswers: true,
   showStretches: true,
   matchFitMin: 60,
-  nightlyKits: false,
-  nightlyKitsMax: 5,
-  nightlyKitsAt: '03:00',
-  nightlyKitsFitMin: null,
-  kitScoreTarget: 90,
   briefingOn: true,
   briefingAt: '07:30',
   weeklyReport: true,
@@ -125,25 +122,28 @@ export const session: { user: User } = {
   },
 };
 
+/** The keys the fake user saved: a JobHunter token unless a test says otherwise. */
+export const apiKeys: ApiKey[] = [];
+const JOBHUNTER_KEY: ApiKey = {
+  kind: 'JOBHUNTER',
+  last4: 'abcd',
+  model: null,
+  credits: null,
+  updatedAt: '2026-11-08T12:00:00.000Z',
+};
+export function resetApiKeys(): void {
+  apiKeys.splice(0, apiKeys.length, JOBHUNTER_KEY);
+}
+resetApiKeys();
+
+/** The latest apply-kits run the fake API reports. */
+export const kitRun: { current: KitRun | null } = { current: null };
+
 export const server = setupServer(
   api.query('Me', () => HttpResponse.json({ data: { me: session.user } })),
   api.query('MyProfile', () => HttpResponse.json({ data: { myProfile: PROFILE } })),
-  // You have a JobHunter token unless a test says otherwise.
-  api.query('MyApiKeys', () =>
-    HttpResponse.json({
-      data: {
-        myApiKeys: [
-          {
-            kind: 'JOBHUNTER',
-            last4: 'abcd',
-            model: null,
-            credits: null,
-            updatedAt: '2026-11-08T12:00:00.000Z',
-          },
-        ],
-      },
-    }),
-  ),
+  api.query('MyApiKeys', () => HttpResponse.json({ data: { myApiKeys: apiKeys } })),
+  api.query('KitRun', () => HttpResponse.json({ data: { kitRun: kitRun.current } })),
   api.mutation('CreateJob', ({ variables }) => {
     requests.push({ operation: 'CreateJob', variables });
     const input = variables['input'] as { title: string; companyName: string };

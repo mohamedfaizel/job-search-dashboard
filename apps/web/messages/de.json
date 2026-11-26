@@ -471,36 +471,6 @@
         "detail": "Details: {error}"
       }
     },
-    "kits": {
-      "heading": "Bewerbungskits über Nacht",
-      "intro": "Zu deiner Uhrzeit (standardmäßig 03:00) schreibt die App Lebenslauf, Anschreiben und Formularantworten für jeden Job auf deiner Bewerbungsliste, der noch keine hat (und auf Wunsch für gute neue Jobs), mit deinem eigenen Claude- oder OpenAI-Schlüssel oben. Morgens prüfst du sie nur noch und bewirbst dich.",
-      "on": "Meine Bewerbungskits nachts schreiben",
-      "onHint": "Standardmäßig aus. Die App bewirbt sich nie und sendet nichts für dich.",
-      "perNight": "Höchstens pro Nacht",
-      "cost": "Etwa 1 bis 5 Cent pro Kit auf deinem Schlüssel, je nach Modell.",
-      "target": "Ziel-Score",
-      "targetHint": "Darunter bekommt die KI ein oder zwei weitere Versuche und ergänzt nur Kenntnisse, die du wirklich hast (je etwa 2 Cent). Sie erfindet nie etwas, darum bleiben manche Kits darunter.",
-      "for": "Kits schreiben für",
-      "forQueue": "Nur meine Bewerbungsliste",
-      "forGood": "Bewerbungsliste + neue Jobs mit Fit ab {fit} %",
-      "forHint": "Neu heißt: in den letzten 14 Tagen hinzugefügt. Ausgeblendete, beworbene und geschlossene Jobs werden übersprungen.",
-      "at": "Um",
-      "atHint": "Ist dein Computer dann aus, werden sie geschrieben, sobald die App wieder läuft.",
-      "save": "Speichern",
-      "saved": "Gespeichert.",
-      "writeNow": "Jetzt schreiben",
-      "progress": "Schreibe Kit {done} von {total}… Etwa eine Minute pro Kit. Du kannst die Seite verlassen: die 🔔 sagt dir, wenn sie fertig sind.",
-      "doneWritten": "{count, plural, one {# Kit geschrieben.} other {# Kits geschrieben.}}",
-      "doneFailed": "{count, plural, one {# konnte nicht geschrieben werden.} other {# konnten nicht geschrieben werden.}}",
-      "openQueue": "Bewerbungsliste öffnen",
-      "writing": "Schreibe…",
-      "reason": {
-        "NO_KEY": "Kein Kit geschrieben: Füge oben deinen Claude- oder OpenAI-Schlüssel hinzu.",
-        "KEY_REFUSED": "Kein Kit geschrieben: Dein KI-Schlüssel wurde abgelehnt. Prüfe ihn oben.",
-        "NO_RESUME": "Kein Kit geschrieben: Füge zuerst deinen Lebenslauf unter Mein Profil hinzu.",
-        "NONE_WRITTEN": "Kein Kit geschrieben: Der KI-Anbieter hat nicht geantwortet. Versuch es in ein paar Minuten noch einmal."
-      }
-    },
     "briefing": {
       "heading": "Morgen-Überblick",
       "on": "Schick mir jeden Morgen eine Zusammenfassung",
@@ -2253,7 +2223,16 @@
       "hideBelowHint": "0 = nie wegen Fit ausblenden. Geschlossene Jobs und Duplikate werden immer ausgeblendet.",
       "maxPerDay": "Höchstens Jobs pro Tag auf die Liste",
       "saveAutopilot": "Autopilot speichern",
-      "autopilotError": "Autopilot konnte nicht gespeichert werden: {error}"
+      "autopilotError": "Autopilot konnte nicht gespeichert werden: {error}",
+      "kitsOn": "Bewerbungs-Kits für die Jobs schreiben, die er auf die Liste setzt",
+      "kitsHint": "Direkt nach jedem Lauf: Lebenslauf, Anschreiben und Formularantworten, mit deinem eigenen KI-Schlüssel. Etwa 1 bis 5 Cent pro Kit, höchstens {max} pro Tag (die Zahl oben).",
+      "kitsTarget": "Ziel-Score",
+      "kitsTargetHint": "Darunter bekommt die KI ein oder zwei weitere Versuche und ergänzt nur Kenntnisse, die du wirklich hast. Sie erfindet nie etwas, darum bleiben manche Kits darunter.",
+      "kitsNoKey": "Braucht deinen Claude- oder OpenAI-Schlüssel.",
+      "kitsAddKey": "Schlüssel eintragen",
+      "kitsBadge": "Kits",
+      "kitsWriting": "Schreibe Kit {done} von {total}… Etwa eine Minute pro Kit. Die 🔔 sagt dir, wenn sie fertig sind.",
+      "cancelAutopilot": "Abbrechen"
     },
     "history": {
       "heading": "Import-Verlauf",
@@ -2441,12 +2420,12 @@
     "kitsReady": "{count, plural, one {# Bewerbungskit ist fertig} other {# Bewerbungskits sind fertig}} zum Prüfen",
     "kitsFailed": "Bewerbungskits wurden nicht geschrieben",
     "kitsBelowTarget": "{count, plural, one {# Kit blieb} other {# Kits blieben}} unter deinem Ziel von {target} %: Der Job verlangt Kenntnisse, die du nicht hast.",
-    "kitsFailedSome": "{count, plural, one {# Kit konnte} other {# Kits konnten}} nicht geschrieben werden. Sie bleiben für heute Nacht auf der Liste.",
+    "kitsFailedSome": "{count, plural, one {# Kit konnte} other {# Kits konnten}} nicht geschrieben werden. Sie bleiben auf deiner Bewerbungsliste, dort schreibt ein Prompt sie.",
     "kitsReason": {
       "NO_KEY": "Trag deinen Claude- oder OpenAI-Schlüssel unter Einstellungen › API-Schlüssel ein.",
       "KEY_REFUSED": "Dein KI-Schlüssel wurde abgelehnt. Prüf ihn unter Einstellungen › API-Schlüssel.",
       "NO_RESUME": "Füge zuerst deinen Lebenslauf in Mein Profil hinzu.",
-      "NONE_WRITTEN": "Der KI-Anbieter hat nicht geantwortet. Heute Nacht versucht die App es noch einmal."
+      "NONE_WRITTEN": "Der KI-Anbieter hat nicht geantwortet. Die Jobs bleiben auf deiner Bewerbungsliste, dort schreibt ein Prompt sie."
     },
     "openSettingsKits": "Einstellungen öffnen",
     "kitsHint": "Öffne den Tab Bewerben eines Jobs, um sein Kit zu prüfen",

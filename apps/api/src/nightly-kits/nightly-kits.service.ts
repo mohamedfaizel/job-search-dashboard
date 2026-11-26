@@ -1,13 +1,8 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable, Logger } from '@nestjs/common';
 import { AI_PROVIDERS, AiCallError, completeWithKey } from '../api-keys/ai-providers';
 import { ApiKeysService } from '../api-keys/api-keys.service';
-import { isBriefingDue as isDailyDue } from '../briefing/briefing';
-import { apiError } from '../common/api-error';
 import { getErrorMessage } from '../common/errors';
 import type { AiProvider } from '../generated/prisma/enums';
-import { FitService } from '../insights/fit.service';
 import { InsightsService } from '../insights/insights.service';
 import { NotificationsService, TOP_JOBS } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -20,9 +15,6 @@ export const KITS_FAILED = 'KITS_FAILED';
 const KIT_MAX_TOKENS = 12_000;
 /** Writing that much takes a while; one job may take up to this long. */
 const KIT_TIMEOUT_MS = 5 * 60 * 1000;
-/** Good new jobs get a kit when they reached your list within this many days. */
-export const GOOD_JOB_DAYS = 14;
-const DAY_MS = 24 * 60 * 60 * 1000;
 /** An improve round replies with the resume only. */
 const IMPROVE_MAX_TOKENS = 6_000;
 /** The prompt says this when there is no resume to tailor. */
@@ -42,19 +34,25 @@ interface Goal {
   languages: string[];
 }
 
+/** One job to write a kit for, with the target score of the saved search that queued it. */
+export interface KitJob {
+  jobId: string;
+  title: string;
+  company: string;
+  target: number;
+}
+
 export interface KitRunResult {
   written: number;
   failed: number;
   /** Kits written whose resume stayed below your target score (it would need skills you lack). */
   belowTarget: number;
-  /** Queued jobs still without a kit after this run. */
-  waiting: number;
 }
 
 /** Why a run stopped before the end, in words the bell can show. Null when it did not stop. */
 type StopReason = 'NO_KEY' | 'KEY_REFUSED' | 'NO_RESUME' | null;
 
-/** Where a user's latest run is, so Settings can show it while it writes and when it is done. */
+/** Where a user's latest run is, so the saved search can show it while it writes and when it is done. */
 export interface KitRunStatus {
   running: boolean;
   /** Kits this run tries to write. */
@@ -69,125 +67,75 @@ export interface KitRunStatus {
 }
 
 /**
- * Nightly apply kits: at the time each user picked (03:00 by default), for each user who turned it on in Settings, write the Apply kit
- * (resume, cover letter, form answers) of each queued job that has none yet, with the user's own
- * Claude or OpenAI key. It saves each reply as if pasted in the job's Apply tab, so the German
- * level cap and the usual checks apply. It never applies anywhere.
+ * Apply kits: right after a saved search runs, its Autopilot (when "Write apply kits" is on)
+ * hands over the jobs it queued, and this writes each one's kit (resume, cover letter, form
+ * answers) with the user's own Claude or OpenAI key. It saves each reply as if pasted in the
+ * job's Apply tab, so the German level cap and the usual checks apply. It never applies anywhere.
  */
 @Injectable()
 export class NightlyKitsService {
   private readonly logger = new Logger(NightlyKitsService.name);
   /** Users whose kits are being written now, so two runs never overlap. */
   private readonly running = new Set<number>();
+  /** Jobs handed over while a run was going: that run writes them next. */
+  private readonly pending = new Map<number, KitJob[]>();
   /** Each user's latest run since the server started. */
   private readonly runs = new Map<number, KitRunStatus>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly insights: InsightsService,
-    private readonly fits: FitService,
     private readonly apiKeys: ApiKeysService,
     private readonly notifications: NotificationsService,
-    private readonly config: ConfigService,
   ) {}
 
-  /** True while a tick is going, so a long night of kits never starts twice. */
-  private ticking = false;
-
   /**
-   * At each user's kits time (server time), checked every minute. A night missed while the PC
-   * was off runs as soon as the app starts again, once a day.
+   * Writes the kits of these jobs (the ones without a kit yet) and tells the user in the bell.
+   * When a run is already going for this user, the jobs join it and this returns null at once.
+   * Never throws.
    */
-  @Cron(CronExpression.EVERY_MINUTE)
-  async tick(): Promise<void> {
-    if (this.ticking || this.config.get<string>('SCHEDULER_ENABLED') === 'false') return;
-    this.ticking = true;
+  async writeFor(userId: number, jobs: KitJob[]): Promise<KitRunResult | null> {
+    const waiting = this.pending.get(userId) ?? [];
+    for (const job of jobs) {
+      if (!waiting.some((w) => w.jobId === job.jobId)) waiting.push(job);
+    }
+    this.pending.set(userId, waiting);
+    if (this.running.has(userId)) {
+      this.track(userId, { total: (this.runs.get(userId)?.total ?? 0) + jobs.length });
+      return null;
+    }
+    this.running.add(userId);
+    this.runs.set(userId, { ...this.fresh(), total: waiting.length });
+    const sum: KitRunResult = { written: 0, failed: 0, belowTarget: 0 };
+    let wrote = false;
     try {
-      await this.runDue(new Date());
-    } finally {
-      this.ticking = false;
-    }
-  }
-
-  /** Runs the kits of everyone due at `now`, one user after another. Returns how many ran. */
-  async runDue(now: Date): Promise<number> {
-    const users = await this.prisma.profile.findMany({
-      where: { nightlyKits: true },
-      select: { userId: true, nightlyKitsMax: true, nightlyKitsAt: true, nightlyKitsRanAt: true },
-    });
-    let ran = 0;
-    for (const p of users) {
-      if (!isDailyDue(p.nightlyKitsAt, p.nightlyKitsRanAt, now)) continue;
-      // Booked first, so a failure can't run (and charge your key) twice.
-      await this.prisma.profile.update({
-        where: { userId: p.userId },
-        data: { nightlyKitsRanAt: now },
-      });
-      await this.run(p.userId, p.nightlyKitsMax);
-      ran += 1;
-    }
-    return ran;
-  }
-
-  /**
-   * Settings: turn nightly kits on or off, how many per night, at what time, and whether good
-   * new jobs (Fit at least `fitMin`) get kits too (null: the Apply queue only).
-   */
-  async setSettings(
-    userId: number,
-    settings: {
-      on: boolean;
-      perNight: number;
-      at: string;
-      fitMin: number | null;
-      /** Null: the target stays as it is. */
-      target: number | null;
-    },
-  ): Promise<void> {
-    const data = {
-      nightlyKits: settings.on,
-      nightlyKitsMax: settings.perNight,
-      nightlyKitsAt: settings.at,
-      nightlyKitsFitMin: settings.fitMin,
-      ...(settings.target === null ? {} : { kitScoreTarget: settings.target }),
-    };
-    await this.prisma.profile.upsert({
-      where: { userId },
-      create: { userId, ...data },
-      update: data,
-    });
-  }
-
-  /**
-   * "Write now": starts a run for this user and returns at once (it can take minutes); the bell
-   * says when it is done. Refuses at once when there is no key or nothing to write.
-   */
-  async startNow(userId: number): Promise<number> {
-    if (!(await this.keyFor(userId))) {
-      throw apiError(BadRequestException, 'AI_KEY_MISSING', 'Save your AI key in Settings first');
-    }
-    const waiting = await this.waitingJobs(userId);
-    if (waiting.length === 0) {
-      const profile = await this.prisma.profile.findUnique({
-        where: { userId },
-        select: { nightlyKitsFitMin: true },
-      });
-      const queued = await this.prisma.applyQueueItem.count({ where: { userId } });
-      if (queued === 0 && profile?.nightlyKitsFitMin == null) {
-        throw apiError(BadRequestException, 'KITS_QUEUE_EMPTY', 'Your Apply queue is empty');
+      // Jobs handed over while writing are written in the same run.
+      for (let next = this.take(userId); next.length > 0; next = this.take(userId)) {
+        const result = await this.write(userId, next);
+        if (!result) continue;
+        wrote = true;
+        sum.written += result.written;
+        sum.failed += result.failed;
+        sum.belowTarget += result.belowTarget;
       }
-      throw apiError(BadRequestException, 'KITS_NOTHING_TO_WRITE', 'Every job has a kit');
+      return wrote ? sum : null;
+    } catch (error) {
+      this.logger.warn(`Apply kits for user ${String(userId)} failed: ${getErrorMessage(error)}`);
+      this.pending.delete(userId);
+      // Never silent: the bell and the saved search say it did not work.
+      this.track(userId, { reason: 'NONE_WRITTEN' });
+      await this.failed(userId, 'NONE_WRITTEN').catch(() => undefined);
+      return null;
+    } finally {
+      this.running.delete(userId);
+      this.track(userId, { running: false });
     }
-    if (this.running.has(userId)) return waiting.length;
-    const profile = await this.prisma.profile.findUnique({
-      where: { userId },
-      select: { nightlyKitsMax: true },
-    });
-    const total = Math.min(waiting.length, profile?.nightlyKitsMax ?? 5);
-    // Shown at once, before the run has read the queue again.
-    this.runs.set(userId, { ...this.fresh(), total });
-    void this.run(userId, profile?.nightlyKitsMax ?? 5);
-    return total;
+  }
+
+  private take(userId: number): KitJob[] {
+    const jobs = this.pending.get(userId) ?? [];
+    this.pending.delete(userId);
+    return jobs;
   }
 
   /** Your latest run (this one or the last finished), or null when there was none. */
@@ -212,29 +160,17 @@ export class NightlyKitsService {
     this.runs.set(userId, { ...now, ...change });
   }
 
-  /** Writes up to `max` kits for one user and tells them in the bell. Never throws. */
-  async run(userId: number, max: number): Promise<KitRunResult | null> {
-    if (this.running.has(userId)) return null;
-    this.running.add(userId);
-    this.runs.set(userId, { ...this.fresh(), total: this.runs.get(userId)?.total ?? 0 });
-    try {
-      return await this.write(userId, max);
-    } catch (error) {
-      this.logger.warn(`Nightly kits for user ${String(userId)} failed: ${getErrorMessage(error)}`);
-      // Never silent: the bell and Settings say it did not work.
-      this.track(userId, { reason: 'NONE_WRITTEN' });
-      await this.failed(userId, 'NONE_WRITTEN').catch(() => undefined);
-      return null;
-    } finally {
-      this.running.delete(userId);
-      this.track(userId, { running: false });
-    }
-  }
-
-  private async write(userId: number, max: number): Promise<KitRunResult | null> {
-    const waiting = await this.waitingJobs(userId);
-    const total = Math.min(waiting.length, Math.max(0, max));
-    this.track(userId, { total });
+  /** Writes one batch of kits and tells the user in the bell. Null when there was nothing to do. */
+  private async write(userId: number, jobs: KitJob[]): Promise<KitRunResult | null> {
+    const done = await this.prisma.jobResume.findMany({
+      where: { userId, jobId: { in: jobs.map((job) => job.jobId) } },
+      select: { jobId: true },
+    });
+    const hasKit = new Set(done.map((row) => row.jobId));
+    const waiting = jobs.filter((job) => !hasKit.has(job.jobId));
+    // Jobs that already have a kit don't count towards "kit N of M".
+    const run = this.runs.get(userId);
+    if (run) this.track(userId, { total: Math.max(run.done, run.total - hasKit.size) });
     if (waiting.length === 0) return null;
     const key = await this.keyFor(userId);
     if (!key) {
@@ -243,12 +179,15 @@ export class NightlyKitsService {
       return null;
     }
 
-    const goal = await this.goalFor(userId);
-    const written: { jobId: string; title: string; company: string }[] = [];
+    const facts = await this.factsFor(userId);
+    const written: KitJob[] = [];
     let failed = 0;
     let belowTarget = 0;
     let stop: StopReason = null;
-    for (const job of waiting.slice(0, Math.max(0, max))) {
+    const before = this.runs.get(userId);
+    const doneBefore = before?.done ?? 0;
+    for (const job of waiting) {
+      const goal: Goal = { ...facts, target: job.target };
       try {
         const score = await this.writeOne(userId, job, key, goal);
         if (score === NO_RESUME) {
@@ -257,14 +196,20 @@ export class NightlyKitsService {
         }
         if (score !== null && score < goal.target) belowTarget += 1;
         written.push(job);
-        this.track(userId, { done: written.length + failed, written: written.length });
+        this.track(userId, {
+          done: doneBefore + written.length + failed,
+          written: (before?.written ?? 0) + written.length,
+        });
       } catch (error) {
         if (error instanceof AiCallError && error.cause === 'KEY_REFUSED') {
           stop = 'KEY_REFUSED';
           break;
         }
         failed += 1;
-        this.track(userId, { done: written.length + failed, failed });
+        this.track(userId, {
+          done: doneBefore + written.length + failed,
+          failed: (before?.failed ?? 0) + failed,
+        });
         this.logger.warn(
           `Kit for ${String(userId)}:${job.jobId} failed: ${getErrorMessage(error)}`,
         );
@@ -294,72 +239,20 @@ export class NightlyKitsService {
         })),
         failed,
         belowTarget,
-        target: goal.target,
+        target: Math.max(...written.map((job) => job.target)),
         ...(stop ? { reason: stop } : {}),
       });
     }
-    return {
-      written: written.length,
-      failed,
-      belowTarget,
-      waiting: waiting.length - written.length,
-    };
+    return { written: written.length, failed, belowTarget };
   }
 
-  /**
-   * Jobs with no kit yet: queued ones first, in queue order, then (when you turned it on) good
-   * new jobs, best Fit first. A good job needs a real Fit (not a guess from the title), an open
-   * ad, and no queue place, application, kit or Hide from you.
-   */
-  async waitingJobs(
-    userId: number,
-    now = new Date(),
-  ): Promise<{ jobId: string; title: string; company: string }[]> {
-    const queued = (await this.insights.applyQueue(userId)).filter((item) => !item.ready);
+  /** The facts an improve round may use: your master resume and languages. */
+  private async factsFor(userId: number): Promise<Omit<Goal, 'target'>> {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
-      select: { nightlyKitsFitMin: true },
+      select: { resumeText: true, languages: true },
     });
-    const fitMin = profile?.nightlyKitsFitMin;
-    if (fitMin == null) return queued;
-
-    await this.fits.ensureFresh(userId);
-    const good = await this.prisma.jobFit.findMany({
-      where: {
-        userId,
-        estimate: false,
-        score: { gte: fitMin },
-        job: {
-          postingStatus: 'active',
-          listedFor: {
-            some: { userId, addedAt: { gte: new Date(now.getTime() - GOOD_JOB_DAYS * DAY_MS) } },
-          },
-          applyQueue: { none: { userId } },
-          applications: { none: { userId } },
-          jobResumes: { none: { userId } },
-          hiddenBy: { none: { userId } },
-        },
-      },
-      orderBy: { score: 'desc' },
-      select: { job: { select: { id: true, title: true, company: { select: { name: true } } } } },
-    });
-    return [
-      ...queued,
-      ...good.map(({ job }) => ({ jobId: job.id, title: job.title, company: job.company.name })),
-    ];
-  }
-
-  /** Your target score, and the facts an improve round may use. */
-  private async goalFor(userId: number): Promise<Goal> {
-    const profile = await this.prisma.profile.findUnique({
-      where: { userId },
-      select: { kitScoreTarget: true, resumeText: true, languages: true },
-    });
-    return {
-      target: profile?.kitScoreTarget ?? 90,
-      master: profile?.resumeText ?? '',
-      languages: profile?.languages ?? [],
-    };
+    return { master: profile?.resumeText ?? '', languages: profile?.languages ?? [] };
   }
 
   /**
@@ -369,7 +262,7 @@ export class NightlyKitsService {
    */
   private async writeOne(
     userId: number,
-    job: { jobId: string; title: string; company: string },
+    job: KitJob,
     key: AiKey,
     goal: Goal,
   ): Promise<number | null | typeof NO_RESUME> {

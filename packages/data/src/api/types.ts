@@ -294,6 +294,10 @@ export interface SavedSearch {
   /** 0 = never hide for its Fit. */
   autoHideFitBelow: number;
   autoQueueMaxPerDay: number;
+  /** Autopilot writes the apply kit of each job it queues, right after the run (your AI key). */
+  autoKits: boolean;
+  /** Target score for those kits' resumes (70-95). */
+  kitScoreTarget: number;
   createdAt: string;
   lastRun: SyncRun | null;
 }
@@ -301,7 +305,13 @@ export interface SavedSearch {
 /** A saved search's Autopilot rules, as Saved searches › more › Autopilot saves them. */
 export type AutopilotRules = Pick<
   SavedSearch,
-  'autopilot' | 'autoQueueFitMin' | 'autoQueueNeedsVisa' | 'autoHideFitBelow' | 'autoQueueMaxPerDay'
+  | 'autopilot'
+  | 'autoQueueFitMin'
+  | 'autoQueueNeedsVisa'
+  | 'autoHideFitBelow'
+  | 'autoQueueMaxPerDay'
+  | 'autoKits'
+  | 'kitScoreTarget'
 >;
 
 export const SCHEDULE_FREQUENCIES = ['OFF', 'HOURLY', 'DAILY', 'WEEKDAYS'] as const;
@@ -414,16 +424,6 @@ export interface Profile {
   showStretches: boolean;
   /** The Fit % a new job needs to count as a match. */
   matchFitMin: number;
-  /** Nightly apply kits: queued jobs' kits written at night with your own AI key. */
-  nightlyKits: boolean;
-  /** The most kits written in one night. */
-  nightlyKitsMax: number;
-  /** Time of night for the kits, "HH:mm" in the API server's local time. */
-  nightlyKitsAt: string;
-  /** Also write kits for new jobs with at least this Fit %. Null: the Apply queue only. */
-  nightlyKitsFitMin: number | null;
-  /** Target score for each kit's resume: below it, more AI rounds add terms you really have. */
-  kitScoreTarget: number;
   /** Morning briefing: once a day in the bell and as a phone push. */
   briefingOn: boolean;
   /** "HH:mm" in the API server's local time. */
@@ -463,12 +463,6 @@ export type ProfileInput = Omit<
   // Saved on their own, from Settings > Notifications.
   | 'notifyNewMatches'
   | 'matchFitMin'
-  // Saved on their own, from Settings > API keys > Nightly apply kits.
-  | 'nightlyKits'
-  | 'nightlyKitsMax'
-  | 'nightlyKitsAt'
-  | 'nightlyKitsFitMin'
-  | 'kitScoreTarget'
   // Saved on their own, from Settings > Notifications > Morning briefing.
   | 'briefingOn'
   | 'briefingAt'

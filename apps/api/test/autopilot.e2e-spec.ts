@@ -1,5 +1,7 @@
+import type { MockInstance } from 'vitest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FitService } from '../src/insights/fit.service';
+import { NightlyKitsService } from '../src/nightly-kits/nightly-kits.service';
 import { AutopilotService } from '../src/saved-searches/autopilot.service';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
@@ -12,6 +14,8 @@ const SET_AUTOPILOT = /* GraphQL */ `
       autoQueueNeedsVisa
       autoHideFitBelow
       autoQueueMaxPerDay
+      autoKits
+      kitScoreTarget
     }
   }
 `;
@@ -60,17 +64,21 @@ interface Bell {
 describe('Autopilot', () => {
   let t: TestApp;
   let autopilot: AutopilotService;
+  let writeFor: MockInstance<NightlyKitsService['writeFor']>;
 
   beforeAll(async () => {
     t = await createTestApp();
     autopilot = t.app.get(AutopilotService);
     // The test sets the Fit scores itself.
     vi.spyOn(t.app.get(FitService), 'ensureFresh').mockResolvedValue();
+    // The kits themselves are tested in nightly-kits.e2e-spec.ts.
+    writeFor = vi.spyOn(t.app.get(NightlyKitsService), 'writeFor').mockResolvedValue(null);
   });
   afterAll(async () => {
     await t.app.close();
   });
   beforeEach(async () => {
+    writeFor.mockClear();
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
   });
@@ -116,12 +124,19 @@ describe('Autopilot', () => {
       autoQueueNeedsVisa: false,
       autoHideFitBelow: 30,
       autoQueueMaxPerDay: 5,
+      autoKits: true,
+      kitScoreTarget: 85,
     };
     const ok = await t.gql(SET_AUTOPILOT, { id: s.id, input });
     expect(ok.data).toEqual({ setSavedSearchAutopilot: input });
 
     const bad = await t.gql(SET_AUTOPILOT, { id: s.id, input: { ...input, autoHideFitBelow: 80 } });
     expect(bad.errors?.[0]?.extensions).toMatchObject({ apiCode: 'AUTOPILOT_LIMITS' });
+    const badTarget = await t.gql(SET_AUTOPILOT, {
+      id: s.id,
+      input: { ...input, kitScoreTarget: 99 },
+    });
+    expect(badTarget.errors?.[0]?.message).toMatch(/70 to 95/);
   });
 
   it('queues good fits, hides poor, closed and duplicate jobs, and undoes it', async () => {
@@ -139,7 +154,8 @@ describe('Autopilot', () => {
     await t.prisma.application.create({ data: { userId: 1, jobId: 'tracked', status: 'SAVED' } });
 
     const outcome = await autopilot.afterRun(1, s.id, before);
-    expect(outcome).toEqual({ queued: 2, hidden: 3, kept: 3 });
+    expect(outcome).toEqual({ queued: 2, hidden: 3, kept: 3, kits: 0 });
+    expect(writeFor).not.toHaveBeenCalled();
 
     const queue = await t.prisma.applyQueueItem.findMany({ orderBy: { position: 'asc' } });
     expect(queue.map((q) => [q.jobId, q.auto])).toEqual([
@@ -196,5 +212,21 @@ describe('Autopilot', () => {
 
     const other = await t.gql(UNDO, { id: 12345 });
     expect(other.errors?.[0]?.extensions).toMatchObject({ apiCode: 'NOTIFICATION_NOT_FOUND' });
+  });
+
+  it('hands the queued jobs to the kit writer when "Write apply kits" is on', async () => {
+    const s = await search();
+    await t.prisma.savedSearch.update({
+      where: { id: s.id },
+      data: { autoKits: true, kitScoreTarget: 85 },
+    });
+    const before = new Date(Date.now() - 60_000);
+    await job('good', 90);
+    await job('poor', 20);
+
+    expect(await autopilot.afterRun(1, s.id, before)).toMatchObject({ queued: 1, kits: 1 });
+    expect(writeFor).toHaveBeenCalledWith(1, [
+      { jobId: 'good', title: 'Job good', company: 'Acme', target: 85 },
+    ]);
   });
 });

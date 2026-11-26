@@ -54,7 +54,7 @@ const KEY_POOL: Partial<
 const AUTOPILOT = 'AUTOPILOT';
 /** Clear employer emails moved jobs in the tracker by themselves. */
 const MAIL_AUTO = 'MAIL_AUTO';
-/** Nightly apply kits: some were written with your AI key, or none could be. */
+/** Apply kits (Autopilot): some were written with your AI key, or none could be. */
 const KITS_READY = 'KITS_READY';
 /** The morning briefing: what needs you today. */
 const BRIEFING = 'BRIEFING';
@@ -373,7 +373,7 @@ function WeeklyItem({ item, onOpen }: { item: AppNotification; onOpen: () => voi
   );
 }
 
-/** Nightly apply kits could not be written: why, and where to fix it. */
+/** Apply kits could not be written: why, and where to fix it. */
 function KitsFailedItem({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
   const t = useTranslations('Notifications');
   const locale = useLocale();
