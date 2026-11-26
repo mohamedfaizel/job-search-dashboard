@@ -3,7 +3,8 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { graphqlClient } from './client';
-import { useKitRun } from './kits';
+import { useQueueKitRun } from './insights';
+import { useKitRun, useWriteApplyQueueKits } from './kits';
 import { useUndoMailAuto } from './notifications';
 import { useSetBriefing, useSetMailAutoStatus, useSetWeeklyReport } from './settings';
 
@@ -71,5 +72,30 @@ describe('automation settings hooks', () => {
       expect(result.current.data).toEqual(run);
     });
     expect(request).toHaveBeenCalledWith(expect.stringContaining('kitRun'));
+  });
+
+  it('starts Write with my key and refreshes the queue as kits land', async () => {
+    const run = { running: true, total: 2, done: 0, written: 0, failed: 0, reason: null };
+    const request = vi
+      .spyOn(graphqlClient, 'request')
+      .mockImplementation((query: unknown) =>
+        Promise.resolve(
+          String(query).includes('writeApplyQueueKits')
+            ? { writeApplyQueueKits: run }
+            : { kitRun: { ...run, running: false, done: 2, written: 2 } },
+        ),
+      );
+    const { invalidate, wrapper } = setup();
+    const input = { resume: true, cover: true, answers: false, masterMin: 90 };
+    const write = renderHook(() => useWriteApplyQueueKits(), { wrapper });
+    await expect(act(() => write.result.current.mutateAsync(input))).resolves.toEqual(run);
+    expect(request).toHaveBeenCalledWith(expect.stringContaining('writeApplyQueueKits'), { input });
+
+    const watch = renderHook(() => useQueueKitRun(), { wrapper });
+    await waitFor(() => {
+      expect(watch.result.current?.written).toBe(2);
+    });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['jobs', 'applyQueue'] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['insights'] });
   });
 });

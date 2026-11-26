@@ -83,7 +83,7 @@ export {
   useSetWeeklyReport,
   useSetMailAutoStatus,
 } from './api/settings';
-export { useKitRun } from './api/kits';
+export { useKitRun, useWriteApplyQueueKits } from './api/kits';
 export {
   APPLY_QUEUE_URL,
   applyKitUrl,
@@ -93,6 +93,7 @@ export {
   useLastPdfCheck,
   useChangeApplyQueue,
   useMoveInApplyQueue,
+  useQueueKitRun,
   useSaveApplyQueueReply,
   jobResumeUrl,
   useDeleteInterviewPrep,

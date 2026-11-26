@@ -10,6 +10,8 @@ import {
   api,
   applications,
   applyQueue,
+  kitRunChange,
+  me,
   OFF_PAGE_JOB_ID,
   requests,
   server,
@@ -1039,6 +1041,110 @@ describe('JobsDashboard', () => {
       });
     });
     expect(screen.queryByRole('list', { name: 'Did you apply?' })).not.toBeInTheDocument();
+  });
+
+  it('writes the queued kits with your own key, and shows what it cost', async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    await user.click(screen.getByRole('checkbox', { name: 'Select all jobs on this page' }));
+    const bar = screen.getByRole('region', { name: 'Selected jobs' });
+    await user.click(within(bar).getByRole('button', { name: 'Add to Apply queue' }));
+    const queue = await openQueue(user, 2);
+
+    // The tooltip says it costs API money, and copy-and-paste is free.
+    expect(within(queue).getByRole('tooltip')).toHaveTextContent('costs API money');
+    await user.click(within(queue).getByRole('button', { name: 'Kit settings' }));
+    await user.click(within(queue).getByRole('button', { name: 'Resume' }));
+    await user.click(await within(queue).findByRole('button', { name: 'Write with my key' }));
+
+    expect(requests).toContainEqual({
+      operation: 'WriteApplyQueueKits',
+      variables: { input: { resume: false, cover: true, answers: true, masterMin: 90 } },
+    });
+    await vi.waitFor(() => {
+      expect(within(queue).getByRole('status')).toHaveTextContent('2 kits written');
+    });
+    expect(within(queue).getByRole('status')).toHaveTextContent('Cost €0.04');
+    expect(within(queue).getByRole('status')).toHaveTextContent('Cache saved 20%');
+    expect(await within(queue).findAllByText('Ready')).toHaveLength(2);
+    // The settings stay for next time, in this browser.
+    expect(localStorage.getItem('jobsearch.queueKits')).toContain('"resume":false');
+  });
+
+  /** Two queued jobs with no reply, and the queue window open. */
+  async function queueTwo(user: ReturnType<typeof userEvent.setup>) {
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    await user.click(screen.getByRole('checkbox', { name: 'Select all jobs on this page' }));
+    const bar = screen.getByRole('region', { name: 'Selected jobs' });
+    await user.click(within(bar).getByRole('button', { name: 'Add to Apply queue' }));
+    return openQueue(user, 2);
+  }
+
+  it('shows which kit it is writing, and never uses the master resume when unticked', async () => {
+    kitRunChange.current = { running: true, done: 0, written: 0, jobId: 'job-2' };
+    const user = userEvent.setup();
+    const queue = await queueTwo(user);
+    await user.click(within(queue).getByRole('button', { name: 'Kit settings' }));
+    await user.click(
+      within(queue).getByRole('checkbox', {
+        name: /Use my master resume when it already scores 90%/,
+      }),
+    );
+    await user.click(within(queue).getByRole('button', { name: 'Write with my key' }));
+    expect(requests).toContainEqual({
+      operation: 'WriteApplyQueueKits',
+      variables: { input: { resume: true, cover: true, answers: true, masterMin: null } },
+    });
+    expect(await within(queue).findByText(/Writing kit 1 of 2/)).toBeInTheDocument();
+    expect(within(queue).getByRole('button', { name: 'Writing…' })).toBeDisabled();
+    expect(within(queue).getAllByText('Writing…')).toHaveLength(2);
+  });
+
+  it.each([
+    ['KEY_REFUSED', 'Your AI key was refused'],
+    ['NO_RESUME', 'Add your resume first'],
+    ['NONE_WRITTEN', 'The AI provider did not answer'],
+  ])('says why no kit was written (%s)', async (reason, text) => {
+    kitRunChange.current = { written: 0, failed: 0, reason, costCents: null };
+    const user = userEvent.setup();
+    const queue = await queueTwo(user);
+    await user.click(within(queue).getByRole('button', { name: 'Write with my key' }));
+    expect(await within(queue).findByRole('alert')).toHaveTextContent(text);
+  });
+
+  it('says how many kits failed, and when the cost is unknown', async () => {
+    kitRunChange.current = {
+      written: 1,
+      failed: 1,
+      belowTarget: 1,
+      costCents: null,
+      savedPercent: 0,
+    };
+    const user = userEvent.setup();
+    const queue = await queueTwo(user);
+    await user.click(within(queue).getByRole('button', { name: 'Write with my key' }));
+    const status = await within(queue).findByRole('status');
+    expect(status).toHaveTextContent('1 kit written');
+    expect(status).toHaveTextContent('1 kit could not be written');
+    expect(status).toHaveTextContent('1 resume stayed below 90%');
+    expect(status).toHaveTextContent('Cost unknown for this model');
+  });
+
+  it('greys out Write with my key without a Claude or OpenAI key', async () => {
+    me.keys = [];
+    const user = userEvent.setup();
+    renderDashboard();
+    await screen.findByRole('button', { name: 'Senior Frontend Engineer' });
+    await user.click(screen.getByRole('checkbox', { name: 'Select all jobs on this page' }));
+    const bar = screen.getByRole('region', { name: 'Selected jobs' });
+    await user.click(within(bar).getByRole('button', { name: 'Add to Apply queue' }));
+    const queue = await openQueue(user, 2);
+    expect(await within(queue).findByRole('alert')).toHaveTextContent(
+      'No Claude or OpenAI key saved yet.',
+    );
+    expect(within(queue).getByRole('button', { name: 'Write with my key' })).toBeDisabled();
   });
 
   it('adds ticked jobs to the Apply queue and marks them all Applied', async () => {

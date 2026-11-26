@@ -1,6 +1,7 @@
 import type {
   Funnel,
   JobTrust,
+  KitRun,
   SalaryResearch,
   Application,
   ApplicationStatus,
@@ -206,6 +207,11 @@ export const me: { aiProvider: 'ANTHROPIC' | 'OPENAI'; keys: ('ANTHROPIC' | 'OPE
 
 export const jobLanguages: { current: string | null } = { current: null };
 
+/** The user's latest kits run; null = none yet. */
+export const kitRun: { current: KitRun | null } = { current: null };
+/** What "Write with my key" answers instead (a run still going, or one that stopped). */
+export const kitRunChange: { current: Partial<KitRun> } = { current: {} };
+
 /** INSIGHTS minus the removed terms, like the real API (score fixed at 80 once any is gone). */
 function insightsNow(): JobInsights {
   const kept = (t: { term: string }) => !removedTerms.some((r) => r.term === t.term);
@@ -385,6 +391,31 @@ const handlers = [
     const text = variables['text'] as string;
     for (const q of applyQueue) if (text.includes(`JOB`) && text.includes(q.jobId)) q.ready = true;
     return HttpResponse.json({ data: { saveApplyQueueReply: numbered() } });
+  }),
+  // No kits run yet, until "Write with my key" writes them all at once (2 cents each, 20% saved).
+  api.query('KitRun', () => HttpResponse.json({ data: { kitRun: kitRun.current } })),
+  api.mutation('WriteApplyQueueKits', ({ variables }) => {
+    requests.push({ operation: 'WriteApplyQueueKits', variables });
+    const waiting = applyQueue.filter((q) => !q.ready);
+    // A run still going has written none yet.
+    if (!kitRunChange.current.running) for (const q of waiting) q.ready = true;
+    kitRun.current = {
+      running: false,
+      total: waiting.length,
+      done: waiting.length,
+      written: waiting.length,
+      failed: 0,
+      reason: me.keys.length === 0 ? 'NO_KEY' : null,
+      startedAt: '2026-11-26T13:00:00.000Z',
+      jobId: null,
+      usedMaster: 1,
+      belowTarget: 0,
+      costCents: 2 * waiting.length,
+      currency: 'EUR',
+      savedPercent: 20,
+      ...kitRunChange.current,
+    };
+    return HttpResponse.json({ data: { writeApplyQueueKits: kitRun.current } });
   }),
   // Every job's link answers "still open" unless a test says otherwise.
   api.mutation('CheckJobStillOpen', ({ variables }) => {

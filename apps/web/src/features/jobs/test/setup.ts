@@ -8,6 +8,8 @@ import {
   salary,
   downloads,
   applyQueue,
+  kitRun,
+  kitRunChange,
   hiddenIds,
   interviewPrep,
   interviewAt,
@@ -46,6 +48,8 @@ afterEach(() => {
   mailSuggestions.length = 0;
   Object.assign(gmailAccounts, { configured: false, count: 0, found: 0 });
   applyQueue.length = 0;
+  kitRun.current = null;
+  kitRunChange.current = {};
   removedTerms.length = 0;
   haveTerms.length = 0;
   jobLanguages.current = null;
