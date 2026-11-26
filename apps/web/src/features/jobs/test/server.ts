@@ -209,6 +209,8 @@ export const jobLanguages: { current: string | null } = { current: null };
 
 /** The user's latest kits run; null = none yet. */
 export const kitRun: { current: KitRun | null } = { current: null };
+/** What "Write with my key" answers instead (a run still going, or one that stopped). */
+export const kitRunChange: { current: Partial<KitRun> } = { current: {} };
 
 /** INSIGHTS minus the removed terms, like the real API (score fixed at 80 once any is gone). */
 function insightsNow(): JobInsights {
@@ -395,7 +397,8 @@ const handlers = [
   api.mutation('WriteApplyQueueKits', ({ variables }) => {
     requests.push({ operation: 'WriteApplyQueueKits', variables });
     const waiting = applyQueue.filter((q) => !q.ready);
-    for (const q of waiting) q.ready = true;
+    // A run still going has written none yet.
+    if (!kitRunChange.current.running) for (const q of waiting) q.ready = true;
     kitRun.current = {
       running: false,
       total: waiting.length,
@@ -410,6 +413,7 @@ const handlers = [
       costCents: 2 * waiting.length,
       currency: 'EUR',
       savedPercent: 20,
+      ...kitRunChange.current,
     };
     return HttpResponse.json({ data: { writeApplyQueueKits: kitRun.current } });
   }),

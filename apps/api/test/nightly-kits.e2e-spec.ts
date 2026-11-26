@@ -456,6 +456,15 @@ describe('apply kits', () => {
       expect(asked).toHaveLength(2);
     });
 
+    it('starts nothing when no queued job needs a kit', async () => {
+      const { data } = await t.gql<{ writeApplyQueueKits: { running: boolean; total: number } }>(
+        WRITE,
+        { input: { resume: false, cover: false, answers: false, masterMin: 90 } },
+      );
+      expect(data!.writeApplyQueueKits.running).toBe(false);
+      expect(asked).toHaveLength(0);
+    });
+
     it('says there is no key, and asks the AI nothing', async () => {
       await setUp();
       await t.gql(WRITE, { input: all });
