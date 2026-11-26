@@ -7,7 +7,7 @@ export const SESSION_COOKIE = 'session';
 
 const AUTH_PAGES = new Set(['/login', '/signup']);
 /** Pages anyone can open, logged in or not. */
-const PUBLIC_PAGES = new Set(['/', '/about']);
+const PUBLIC_PAGES = new Set(['/', '/about', '/impressum', '/privacy']);
 
 /**
  * Runs on the server before a page renders. It only checks that the session cookie is there:

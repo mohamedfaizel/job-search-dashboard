@@ -2870,6 +2870,105 @@
       "metaTitle": "About us",
       "title": "One person's job search, now shared with everyone",
       "messageButton": "Message {name}"
+    },
+    "legal": {
+      "linksLabel": "Legal",
+      "impressum": "Impressum",
+      "privacy": "Privacy policy",
+      "addressMissing": "Postal address missing: add it before the site goes live.",
+      "updated": "Last updated: {date}",
+      "impressumPage": {
+        "metaTitle": "Impressum",
+        "title": "Impressum",
+        "intro": "Information under § 5 DDG (German Digital Services Act).",
+        "providerLabel": "Provided by",
+        "contactLabel": "Contact",
+        "emailLabel": "Email",
+        "responsibleLabel": "Responsible for the content",
+        "about": "Job Search Hunter is a personal project, free to use. It is not run by a company.",
+        "linksTitle": "Links to other websites",
+        "links": "The app links to job ads and other websites. Their owners are responsible for what they show. When we learn that a linked page breaks the law, we remove the link."
+      },
+      "privacyPage": {
+        "metaTitle": "Privacy policy",
+        "title": "Privacy policy",
+        "intro": "What Job Search Hunter stores about you, why, and who else sees it. In short: your data is yours, it is never sold, and deleting your account deletes all of it.",
+        "controllerTitle": "Who is responsible",
+        "controller": "The person responsible for your data under the GDPR:",
+        "sections": {
+          "1": {
+            "title": "What we store",
+            "items": {
+              "1": "Your account: your email address, your name and your password. The password is only kept as a scrambled hash (Argon2), so nobody can read it.",
+              "2": "What you add: your resume and profile, the jobs you import or save, your tracker and applications, saved searches, saved answers, stories, interview notes and the messages you send to the maker.",
+              "3": "Your keys: your own Claude or OpenAI key and your JobHunter token. They are stored encrypted (AES-256-GCM) and only used for your own requests.",
+              "4": "Every account is separate. Other users never see your data."
+            }
+          },
+          "2": {
+            "title": "Cookies and browser storage",
+            "items": {
+              "1": "Two cookies, both needed for the app to work: \"session\" keeps you logged in for 7 days, and the language cookie remembers English or German for a year.",
+              "2": "Your browser also keeps a few screen settings, for example which table columns you show. They stay on your device.",
+              "3": "No ads, no tracking and no analytics tools. That is why there is no cookie banner."
+            }
+          },
+          "3": {
+            "title": "Services your data goes to",
+            "intro": "Only when you use the feature that needs them:",
+            "items": {
+              "1": "Claude (Anthropic) or OpenAI: when you use an AI feature, the job ad and the parts of your resume it needs are sent with your own key. Their own privacy rules apply.",
+              "2": "JobHunter, the job data provider: your search words and filters, sent with your token or with a token an admin lent you from the key pool.",
+              "3": "Bundesagentur für Arbeit and company career pages (for example Greenhouse or Lever): your search words, to find jobs. No personal data.",
+              "4": "Google Gmail, only if you connect it: read-only access to find replies to your applications. The app never sends, changes or deletes mail. It keeps only the sender, subject and a short preview of mails that match a job. Google's access key is stored encrypted.",
+              "5": "Google Calendar, only if you connect it: the app adds, moves and removes the interview events it made. Nothing else in your calendar.",
+              "6": "Phone alerts, only if you allow them: your phone's push token goes to Expo's push service, which hands the alert to Apple or Google.",
+              "7": "The company that hosts our server stores the data for us and may not use it for anything else."
+            }
+          },
+          "4": {
+            "title": "We never share or sell your data",
+            "items": {
+              "1": "Your data is not sold, not used for ads and not passed to anyone except the services above, and only when you use them."
+            }
+          },
+          "5": {
+            "title": "What admins can see",
+            "items": {
+              "1": "Admins only see counts, for example how many users and jobs there are. They never see your jobs, resume, applications or keys.",
+              "2": "They do read the messages you send with \"Message Mohamed Faizel\", so they can answer you."
+            }
+          },
+          "6": {
+            "title": "How long we keep it",
+            "items": {
+              "1": "As long as your account exists. You can disconnect Gmail or Calendar at any time in Settings or in your Google account.",
+              "2": "When your account is deleted, all of its data is deleted with it: jobs, resume, tracker, keys, messages and Google connections. To delete your account, write to {email} or use \"Message Mohamed Faizel\"."
+            }
+          },
+          "7": {
+            "title": "Legal basis",
+            "items": {
+              "1": "Art. 6(1)(b) GDPR: to run the app you signed up for.",
+              "2": "Art. 6(1)(a) GDPR: your consent for Gmail, Calendar and phone alerts. You can take it back at any time.",
+              "3": "Art. 6(1)(f) GDPR: to keep the app safe, for example limits against misuse."
+            }
+          },
+          "8": {
+            "title": "Your rights",
+            "items": {
+              "1": "You can ask what we store about you (Art. 15), have it corrected (Art. 16) or deleted (Art. 17), limit its use (Art. 18), get a copy (Art. 20) and object (Art. 21). Write to {email}.",
+              "2": "You can also complain to a data protection authority (Art. 77), for example the one in your federal state."
+            }
+          },
+          "9": {
+            "title": "Changes",
+            "items": {
+              "1": "If the app starts using your data in a new way, this page is updated first."
+            }
+          }
+        }
+      }
     }
   },
   "Messages": {

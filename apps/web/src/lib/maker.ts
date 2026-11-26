@@ -9,5 +9,6 @@ export const MAKER = {
   face: '/site/maker-face.jpg',
   photo: '/site/maker.jpg',
   github: process.env.NEXT_PUBLIC_MAKER_GITHUB_URL ?? 'https://github.com/mohamedfaizel',
-  linkedin: process.env.NEXT_PUBLIC_MAKER_LINKEDIN_URL ?? '',
+  linkedin:
+    process.env.NEXT_PUBLIC_MAKER_LINKEDIN_URL ?? 'https://www.linkedin.com/in/mohamedfaizel',
 } as const;

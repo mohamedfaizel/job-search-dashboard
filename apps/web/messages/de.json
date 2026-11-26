@@ -2870,6 +2870,105 @@
       "metaTitle": "Über uns",
       "title": "Die Jobsuche einer Person, jetzt für alle",
       "messageButton": "Nachricht an {name}"
+    },
+    "legal": {
+      "linksLabel": "Rechtliches",
+      "impressum": "Impressum",
+      "privacy": "Datenschutz",
+      "addressMissing": "Postanschrift fehlt: vor dem Livegang eintragen.",
+      "updated": "Stand: {date}",
+      "impressumPage": {
+        "metaTitle": "Impressum",
+        "title": "Impressum",
+        "intro": "Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz).",
+        "providerLabel": "Anbieter",
+        "contactLabel": "Kontakt",
+        "emailLabel": "E-Mail",
+        "responsibleLabel": "Verantwortlich für den Inhalt",
+        "about": "Job Search Hunter ist ein privates Projekt und kostenlos nutzbar. Dahinter steht kein Unternehmen.",
+        "linksTitle": "Links zu anderen Websites",
+        "links": "Die App verlinkt Stellenanzeigen und andere Websites. Für deren Inhalte sind die jeweiligen Betreiber verantwortlich. Erfahren wir, dass eine verlinkte Seite gegen das Gesetz verstößt, entfernen wir den Link."
+      },
+      "privacyPage": {
+        "metaTitle": "Datenschutzerklärung",
+        "title": "Datenschutzerklärung",
+        "intro": "Was Job Search Hunter über dich speichert, warum, und wer es noch sieht. Kurz gesagt: Deine Daten gehören dir, sie werden nie verkauft, und wenn dein Konto gelöscht wird, sind alle Daten weg.",
+        "controllerTitle": "Verantwortlicher",
+        "controller": "Verantwortlich für deine Daten im Sinne der DSGVO:",
+        "sections": {
+          "1": {
+            "title": "Was wir speichern",
+            "items": {
+              "1": "Dein Konto: deine E-Mail-Adresse, dein Name und dein Passwort. Das Passwort wird nur als Hash (Argon2) gespeichert, niemand kann es lesen.",
+              "2": "Was du hinzufügst: Lebenslauf und Profil, importierte oder gespeicherte Jobs, Tracker und Bewerbungen, gespeicherte Suchen, gespeicherte Antworten, Storys, Notizen zu Vorstellungsgesprächen und deine Nachrichten an den Entwickler.",
+              "3": "Deine Schlüssel: dein eigener Claude- oder OpenAI-Schlüssel und dein JobHunter-Token. Sie werden verschlüsselt gespeichert (AES-256-GCM) und nur für deine eigenen Anfragen genutzt.",
+              "4": "Jedes Konto ist getrennt. Andere Nutzer sehen deine Daten nie."
+            }
+          },
+          "2": {
+            "title": "Cookies und Browser-Speicher",
+            "items": {
+              "1": "Zwei Cookies, beide für die App nötig: \"session\" hält dich 7 Tage angemeldet, und das Sprach-Cookie merkt sich Deutsch oder Englisch für ein Jahr.",
+              "2": "Dein Browser speichert außerdem ein paar Ansichtseinstellungen, zum Beispiel welche Tabellenspalten du siehst. Sie bleiben auf deinem Gerät.",
+              "3": "Keine Werbung, kein Tracking und keine Analyse-Tools. Deshalb gibt es keinen Cookie-Banner."
+            }
+          },
+          "3": {
+            "title": "An wen deine Daten gehen",
+            "intro": "Nur wenn du die Funktion nutzt, die sie braucht:",
+            "items": {
+              "1": "Claude (Anthropic) oder OpenAI: Wenn du eine KI-Funktion nutzt, werden die Stellenanzeige und die nötigen Teile deines Lebenslaufs mit deinem eigenen Schlüssel gesendet. Es gelten deren Datenschutzregeln.",
+              "2": "JobHunter, der Anbieter der Jobdaten: deine Suchbegriffe und Filter, gesendet mit deinem Token oder einem Token, das dir ein Admin aus dem Schlüssel-Pool geliehen hat.",
+              "3": "Bundesagentur für Arbeit und Karriereseiten von Firmen (zum Beispiel Greenhouse oder Lever): deine Suchbegriffe, um Jobs zu finden. Keine persönlichen Daten.",
+              "4": "Google Gmail, nur wenn du es verbindest: Lesezugriff, um Antworten auf deine Bewerbungen zu finden. Die App sendet, ändert und löscht nie E-Mails. Sie speichert nur Absender, Betreff und eine kurze Vorschau von Mails, die zu einem Job passen. Der Zugriffsschlüssel von Google wird verschlüsselt gespeichert.",
+              "5": "Google Kalender, nur wenn du ihn verbindest: Die App legt die Termine für Vorstellungsgespräche an, verschiebt und entfernt sie. Sonst nichts in deinem Kalender.",
+              "6": "Handy-Benachrichtigungen, nur wenn du sie erlaubst: Das Push-Token deines Handys geht an den Push-Dienst von Expo, der die Nachricht an Apple oder Google weitergibt.",
+              "7": "Die Firma, die unseren Server betreibt, speichert die Daten für uns und darf sie für nichts anderes nutzen."
+            }
+          },
+          "4": {
+            "title": "Wir geben deine Daten nicht weiter und verkaufen sie nicht",
+            "items": {
+              "1": "Deine Daten werden nicht verkauft, nicht für Werbung genutzt und an niemanden außer den Diensten oben weitergegeben, und auch das nur, wenn du sie nutzt."
+            }
+          },
+          "5": {
+            "title": "Was Admins sehen",
+            "items": {
+              "1": "Admins sehen nur Zahlen, zum Beispiel wie viele Nutzer und Jobs es gibt. Deine Jobs, deinen Lebenslauf, deine Bewerbungen und Schlüssel sehen sie nie.",
+              "2": "Die Nachrichten, die du über \"Nachricht an Mohamed Faizel\" sendest, lesen sie, damit sie dir antworten können."
+            }
+          },
+          "6": {
+            "title": "Wie lange wir speichern",
+            "items": {
+              "1": "Solange dein Konto besteht. Gmail und Kalender kannst du jederzeit in den Einstellungen oder in deinem Google-Konto trennen.",
+              "2": "Wird dein Konto gelöscht, werden alle seine Daten mitgelöscht: Jobs, Lebenslauf, Tracker, Schlüssel, Nachrichten und Google-Verbindungen. Um dein Konto zu löschen, schreib an {email} oder nutze \"Nachricht an Mohamed Faizel\"."
+            }
+          },
+          "7": {
+            "title": "Rechtsgrundlage",
+            "items": {
+              "1": "Art. 6 Abs. 1 lit. b DSGVO: um die App bereitzustellen, für die du dich angemeldet hast.",
+              "2": "Art. 6 Abs. 1 lit. a DSGVO: deine Einwilligung für Gmail, Kalender und Handy-Benachrichtigungen. Du kannst sie jederzeit widerrufen.",
+              "3": "Art. 6 Abs. 1 lit. f DSGVO: um die App sicher zu halten, zum Beispiel mit Limits gegen Missbrauch."
+            }
+          },
+          "8": {
+            "title": "Deine Rechte",
+            "items": {
+              "1": "Du kannst Auskunft verlangen, was wir über dich speichern (Art. 15), es berichtigen (Art. 16) oder löschen lassen (Art. 17), die Nutzung einschränken (Art. 18), eine Kopie bekommen (Art. 20) und widersprechen (Art. 21). Schreib an {email}.",
+              "2": "Du kannst dich auch bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77), zum Beispiel in deinem Bundesland."
+            }
+          },
+          "9": {
+            "title": "Änderungen",
+            "items": {
+              "1": "Wenn die App deine Daten auf neue Weise nutzt, wird diese Seite vorher aktualisiert."
+            }
+          }
+        }
+      }
     }
   },
   "Messages": {
