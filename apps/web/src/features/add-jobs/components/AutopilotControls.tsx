@@ -29,8 +29,8 @@ export interface KitCostRules {
 }
 interface KitCostRun {
   kits: number;
-  /** In minor units of `currency` (cents, pence). */
-  costCents: number;
+  /** In minor units of `currency` (cents, pence). Null when the model has no known price. */
+  costCents: number | null;
   savedPercent: number;
   currency: string;
 }
@@ -499,13 +499,15 @@ function KitsBox({
           {lastKitRun && (
             <p className="flex justify-between gap-2 border-t border-dashed border-amber-800/30 pt-1 text-[11px]">
               <span>
-                {t('lastKits', {
-                  kits: lastKitRun.kits,
-                  cost: format.number(lastKitRun.costCents / 100, {
-                    style: 'currency',
-                    currency: lastKitRun.currency,
-                  }),
-                })}
+                {lastKitRun.costCents === null
+                  ? t('lastKitsNoCost', { kits: lastKitRun.kits })
+                  : t('lastKits', {
+                      kits: lastKitRun.kits,
+                      cost: format.number(lastKitRun.costCents / 100, {
+                        style: 'currency',
+                        currency: lastKitRun.currency,
+                      }),
+                    })}
               </span>
               {lastKitRun.savedPercent > 0 && (
                 <b>{t('savedPercent', { percent: lastKitRun.savedPercent })}</b>

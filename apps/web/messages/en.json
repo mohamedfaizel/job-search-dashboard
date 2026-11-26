@@ -2284,7 +2284,8 @@
       "tipMax": "The most jobs Autopilot puts in your Apply queue per day.",
       "tipTarget": "The Kit score each tailored resume aims for.",
       "tipNext": "When this search runs next by itself.",
-      "tipLastNew": "New jobs the last run found."
+      "tipLastNew": "New jobs the last run found.",
+      "lastKitsNoCost": "Last run: {kits} kits"
     },
     "history": {
       "heading": "Import history",
