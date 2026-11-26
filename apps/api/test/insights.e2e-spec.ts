@@ -34,6 +34,7 @@ const JOB_RESUME = `jobResume {
     where
     context
   }
+  addedSkills
 }`;
 
 const INSIGHTS = /* GraphQL */ `
@@ -197,6 +198,7 @@ interface JobResume {
   nowCovered: string[];
   stillMissing: string[];
   factCheck: { kind: string; text: string; where: string; context: string }[] | null;
+  addedSkills: string[];
 }
 
 interface Insights {
@@ -677,6 +679,43 @@ describe('job insights without AI', () => {
       expect(found.find((f) => f.text === '40%')?.context).toBe('Cut costs by 40% with Kafka');
       // Node.js is in your resume as NodeJS.
       expect(found.map((f) => f.text)).not.toContain('Node.js');
+    });
+
+    it('lists skills not on My skills, keeps one with ✓ and removes one with ✕', async () => {
+      const job = await backendJob();
+      await t.prisma.profile.update({ where: { userId: 2 }, data: { skills: ['Node.js'] } });
+      await t.asUser(SAVE_TEXT, {
+        jobId: job.id,
+        text: [
+          '=== RESUME ===',
+          '# Ada',
+          '## Skills',
+          '- **Backend:** Node.js, Kafka, Rust',
+          '## Experience',
+          '- Built services with Kafka',
+        ].join('\n'),
+      });
+      const added = async () => (await insights(job.id)).jobResume!.addedSkills;
+      expect(await added()).toEqual(['Kafka', 'Rust']);
+
+      // ✓ Keep: it goes on My skills and is no longer marked.
+      const keep = await t.asUser(
+        `mutation { setHaveTerm(jobId: "${job.id}", term: "Kafka", have: true) { jobId } }`,
+      );
+      expect(keep.errors).toBeUndefined();
+      expect(await added()).toEqual(['Rust']);
+
+      // ✕ Remove: out of the Skills section, scored again.
+      const res = await t.asUser<{ removeResumeSkill: Insights }>(
+        `mutation Remove($jobId: ID!, $skill: String!) {
+          removeResumeSkill(jobId: $jobId, skill: $skill) { ${JOB_RESUME} }
+        }`,
+        { jobId: job.id, skill: 'Rust' },
+      );
+      expect(res.errors).toBeUndefined();
+      expect(res.data!.removeResumeSkill.jobResume!.addedSkills).toEqual([]);
+      expect(res.data!.removeResumeSkill.jobResume!.text).toContain('Node.js, Kafka');
+      expect(res.data!.removeResumeSkill.jobResume!.text).not.toContain('Rust');
     });
 
     it('removes the flagged skills from the Skills section and leaves the rest', async () => {

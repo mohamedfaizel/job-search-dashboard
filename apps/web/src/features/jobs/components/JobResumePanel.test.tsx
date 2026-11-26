@@ -77,6 +77,41 @@ describe('JobResumePanel', () => {
     expect(downloads).toEqual([]);
   });
 
+  it('marks skills not on My skills in gold, to keep with ✓ or remove with ✕', async () => {
+    const user = userEvent.setup();
+    jobResume.current = {
+      ...SAVED_RESUME,
+      text: SAVED_RESUME.text.replace(
+        '- React, TypeScript',
+        '- React, TypeScript, Storybook, Kubernetes',
+      ),
+      addedSkills: ['Storybook', 'Kubernetes'],
+    };
+    renderPanel();
+
+    const box = await screen.findByRole('region', { name: 'Added skills to check' });
+    expect(within(box).getByText('2 added skills to check')).toBeVisible();
+    const preview = within(screen.getByRole('region', { name: 'Preview and edit' }));
+    const gold = preview
+      .getAllByTitle('Not on My skills: check it in “added skills” above')
+      .map((mark) => mark.textContent);
+    expect(gold).toEqual(['Storybook', 'Kubernetes']);
+
+    await user.click(within(box).getByRole('button', { name: 'Keep Storybook' }));
+    expect(requests).toContainEqual({
+      operation: 'SetHaveTerm',
+      variables: { jobId: 'job-1', term: 'Storybook', have: true },
+    });
+    await user.click(await within(box).findByRole('button', { name: 'Remove Kubernetes' }));
+    expect(requests).toContainEqual({
+      operation: 'RemoveResumeSkill',
+      variables: { jobId: 'job-1', skill: 'Kubernetes' },
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('region', { name: 'Added skills to check' })).toBeNull();
+    });
+  });
+
   it('works a missing keyword into the preview: suggestion, rewrite, insert, replace, skip', async () => {
     const user = userEvent.setup();
     jobResume.current = {

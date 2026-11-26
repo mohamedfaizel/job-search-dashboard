@@ -708,6 +708,8 @@ export interface JobResume {
   stillMissing: string[];
   /** Numbers, skills and levels that are in the resume but in nothing you told us. */
   factCheck?: FactFinding[] | null;
+  /** Skills this resume names that are not on your My skills list: marked gold in Apply step 3. */
+  addedSkills: string[];
 }
 
 /** One check of the finished resume PDF, read the way an ATS reads it. */

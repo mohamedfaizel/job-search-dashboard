@@ -709,6 +709,7 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
         where
         context
       }
+      addedSkills
     }
     prompt
     interviewPrompt
@@ -772,6 +773,15 @@ export const RESTORE_INSIGHT_TERM = /* GraphQL */ `
   ${JOB_INSIGHTS_FIELDS}
   mutation RestoreInsightTerm($jobId: ID!, $term: String!) {
     restoreInsightTerm(jobId: $jobId, term: $term) {
+      ...JobInsightsFields
+    }
+  }
+`;
+
+export const REMOVE_RESUME_SKILL = /* GraphQL */ `
+  ${JOB_INSIGHTS_FIELDS}
+  mutation RemoveResumeSkill($jobId: ID!, $skill: String!) {
+    removeResumeSkill(jobId: $jobId, skill: $skill) {
       ...JobInsightsFields
     }
   }

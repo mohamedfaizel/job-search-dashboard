@@ -173,6 +173,7 @@ export const SAVED_RESUME: JobResume = {
   aiTips: [],
   nowCovered: ['graphql'],
   stillMissing: ['microfrontends'],
+  addedSkills: [],
 };
 
 /** Claude's interview prep the test user saved for job-1. Tests start with nothing. */
@@ -543,7 +544,24 @@ const handlers = [
     const term = variables['term'] as string;
     const others = haveTerms.filter((t) => t !== term);
     haveTerms.splice(0, haveTerms.length, ...others, ...(variables['have'] ? [term] : []));
+    if (jobResume.current && variables['have']) {
+      const addedSkills = jobResume.current.addedSkills.filter((s) => s !== term);
+      jobResume.current = { ...jobResume.current, addedSkills };
+    }
     return HttpResponse.json({ data: { setHaveTerm: insightsNow() } });
+  }),
+  api.mutation('RemoveResumeSkill', ({ variables }) => {
+    requests.push({ operation: 'RemoveResumeSkill', variables });
+    const skill = variables['skill'] as string;
+    if (jobResume.current) {
+      jobResume.current = {
+        ...jobResume.current,
+        text: jobResume.current.text.replace(`, ${skill}`, ''),
+        addedSkills: jobResume.current.addedSkills.filter((s) => s !== skill),
+        updatedAt: '2026-11-26T12:00:00.000Z',
+      };
+    }
+    return HttpResponse.json({ data: { removeResumeSkill: insightsNow() } });
   }),
   api.query('SavedAnswers', () => HttpResponse.json({ data: { savedAnswers: [...savedAnswers] } })),
   api.mutation('SaveAnswer', ({ variables }) => {
