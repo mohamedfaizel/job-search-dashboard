@@ -141,6 +141,50 @@ describe('nightly apply kits', () => {
     expect(asked).toHaveLength(2);
   });
 
+  it('also writes kits for good new jobs when you turn it on, never for hidden, old or guessed ones', async () => {
+    await setUp('Data Engineer. Python, SQL, Airflow. German: A2.');
+    await saveAiKey(t.gql);
+    const company = await t.prisma.company.findFirstOrThrow();
+    const old = new Date(Date.now() - 30 * 24 * 3_600_000);
+    const listed = (id: string, extra: Record<string, unknown> = {}, addedAt = new Date()) =>
+      t.prisma.job.create({
+        data: {
+          id,
+          source: 'MANUAL',
+          title: `Data Engineer ${id}`,
+          companyId: company.id,
+          postedAt: new Date(),
+          description: 'We need Python, SQL and Airflow.',
+          listedFor: { create: { userId: 1, addedAt } },
+          ...extra,
+        },
+      });
+    await listed('good');
+    await listed('hidden', { hiddenBy: { create: { userId: 1 } } });
+    await listed('old', {}, old);
+    await listed('closed', { postingStatus: 'expired' });
+    await listed('weak', { description: 'We need Java, Kotlin and Spring.' });
+    await listed('guess', { description: '' });
+
+    // Off by default: the Apply queue only.
+    expect((await kits.waitingJobs(1)).map((j) => j.jobId)).toEqual(['a', 'b']);
+
+    const saved = await t.gql(
+      `mutation { setNightlyKits(input: { on: true, perNight: 5, at: "03:00", fitMin: 70 }) }`,
+    );
+    expect(saved.errors).toBeUndefined();
+    expect((await kits.waitingJobs(1)).map((j) => j.jobId)).toEqual(['a', 'b', 'good']);
+
+    expect(await kits.run(1, 5)).toEqual({ written: 3, failed: 0, waiting: 0 });
+    // It has a kit now, so it is not written twice.
+    expect((await kits.waitingJobs(1)).map((j) => j.jobId)).toEqual([]);
+
+    const tooLow = await t.gql(
+      `mutation { setNightlyKits(input: { on: true, perNight: 5, at: "03:00", fitMin: 20 }) }`,
+    );
+    expect(tooLow.errors?.[0]?.message).toMatch(/50 to 95/);
+  });
+
   it('tells you when there is no key, or the key is refused', async () => {
     await setUp();
     expect(await kits.run(1, 5)).toBeNull();

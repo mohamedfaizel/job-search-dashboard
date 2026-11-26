@@ -420,6 +420,8 @@ export interface Profile {
   nightlyKitsMax: number;
   /** Time of night for the kits, "HH:mm" in the API server's local time. */
   nightlyKitsAt: string;
+  /** Also write kits for new jobs with at least this Fit %. Null: the Apply queue only. */
+  nightlyKitsFitMin: number | null;
   /** Morning briefing: once a day in the bell and as a phone push. */
   briefingOn: boolean;
   /** "HH:mm" in the API server's local time. */
@@ -463,6 +465,7 @@ export type ProfileInput = Omit<
   | 'nightlyKits'
   | 'nightlyKitsMax'
   | 'nightlyKitsAt'
+  | 'nightlyKitsFitMin'
   // Saved on their own, from Settings > Notifications > Morning briefing.
   | 'briefingOn'
   | 'briefingAt'

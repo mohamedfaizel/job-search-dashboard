@@ -316,6 +316,7 @@ export const PROFILE: Profile = {
   nightlyKits: false,
   nightlyKitsMax: 5,
   nightlyKitsAt: '03:00',
+  nightlyKitsFitMin: null,
   briefingOn: true,
   briefingAt: '07:30',
   weeklyReport: true,
