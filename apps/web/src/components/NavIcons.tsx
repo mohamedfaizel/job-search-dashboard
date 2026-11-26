@@ -91,13 +91,6 @@ export const InstallIcon = (props: IconProps) => (
   </Icon>
 );
 
-/** A speech bubble: Questions? (the message window). */
-export const MessageIcon = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />
-  </Icon>
-);
-
 /** A ? in a circle: Queries and suggestions. */
 export const HelpIcon = (props: IconProps) => (
   <Icon {...props}>

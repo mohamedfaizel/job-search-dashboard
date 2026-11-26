@@ -104,19 +104,15 @@ export function MakerHeader({
   titleId,
   title,
   sub,
-  page = false,
   children,
 }: {
   titleId: string;
   title: string;
   /** The small line under the title; "Queries and suggestions welcome" when left out. */
   sub?: string;
-  /** On its own page the title is the page's h1. */
-  page?: boolean;
   children?: ReactNode;
 }) {
   const t = useTranslations('Messages');
-  const Heading = page ? 'h1' : 'h2';
   return (
     <header className="flex items-center gap-3 border-b-[3px] border-brand-400 bg-black px-4 py-3 text-white">
       <img
@@ -127,9 +123,9 @@ export function MakerHeader({
         className="h-11 w-11 shrink-0 rounded-full border-2 border-brand-400"
       />
       <div className="min-w-0">
-        <Heading id={titleId} className="truncate font-bold">
+        <h2 id={titleId} className="truncate font-bold">
           {title}
-        </Heading>
+        </h2>
         <p className="text-xs text-neutral-300">{sub ?? t('sub')}</p>
       </div>
       {children}
@@ -138,8 +134,7 @@ export function MakerHeader({
 }
 
 /**
- * Your conversation with the maker and the box to write in. The message window and the
- * Queries and suggestions page both show it.
+ * Your conversation with the maker and the box to write in, inside the message window.
  */
 export function Conversation({ focusBox = false }: { focusBox?: boolean }) {
   const t = useTranslations('Messages');

@@ -12,6 +12,7 @@ import { AiNameIntl } from '@/lib/ai-chat';
 import { APP_NAME } from '@/lib/app-name';
 import { MessageWindowHost } from '../features/messages/MessageOpener';
 import { isNetworkError, useErrorText } from '../i18n/useErrorText';
+import { openMessageWindow } from '../lib/message-window';
 import { AccountMenu } from './AccountMenu';
 import { FlagStripe } from './FlagStripe';
 import { Logo } from './Logo';
@@ -52,7 +53,6 @@ const ALL_HREFS = [
   '/profile',
   '/settings',
   '/admin',
-  '/messages',
   '/about',
 ];
 
@@ -185,7 +185,7 @@ const PILL =
 /**
  * The header: a black bar with a red and gold stripe under it, the German flag. Left: the logo
  * and the main pages (the one you are on is a gold pill). Right: a gold "+ Job Market", the 🔔,
- * the Settings gear, ? (Queries and suggestions), i (About us) and your avatar, which opens My
+ * the Settings gear, ? (opens the small message window), i (About us) and your avatar, which opens My
  * profile, Settings, the language and Log out. There is no footer.
  *
  * On phones (under 768 px) the main pages move to a tab bar at the bottom, like a phone app.
@@ -249,9 +249,15 @@ function TopBar({ user, pathname, loggingOut, onLogOut, children }: TopBarProps)
             >
               <SettingsIcon className="h-5 w-5" />
             </Link>
-            <HeaderIcon href="/messages" label={t('help')} current={current}>
+            <button
+              type="button"
+              onClick={openMessageWindow}
+              aria-label={t('help')}
+              title={t('help')}
+              className={GEAR}
+            >
               <HelpIcon className="h-5 w-5" />
-            </HeaderIcon>
+            </button>
             <HeaderIcon href="/about" label={t('about')} current={current}>
               <InfoIcon className="h-5 w-5" />
             </HeaderIcon>

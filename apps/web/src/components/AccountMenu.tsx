@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useInstallApp } from '@/lib/install-app';
-import { openMessageWindow } from '@/lib/message-window';
 import { useDismiss } from '@/lib/use-dismiss';
 import { LanguageSwitch } from './LanguageSwitch';
 import {
@@ -14,7 +13,6 @@ import {
   InstallIcon,
   LanguageIcon,
   LogOutIcon,
-  MessageIcon,
   ProfileIcon,
   SettingsIcon,
 } from './NavIcons';
@@ -159,17 +157,6 @@ export function AccountMenu({
                 {t('adminPage')}
               </Link>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                close();
-                openMessageWindow();
-              }}
-              className={ITEM}
-            >
-              <MessageIcon className="h-4 w-4 text-slate-600" />
-              {t('questions')}
-            </button>
             {app.state === 'prompt' && (
               <button
                 type="button"
