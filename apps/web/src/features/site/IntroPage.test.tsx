@@ -132,12 +132,13 @@ describe('IntroPage', () => {
     }
   });
 
-  it('puts the Job Market and Apply right after the welcome, before the slider', () => {
+  it('puts the Job Market, Apply and Autopilot right after the welcome, before the slider', () => {
     renderIntro();
     const h2s = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-    expect(h2s.slice(0, 3)).toEqual([
+    expect(h2s.slice(0, 4)).toEqual([
       'Live jobs from 40+ sources',
       'Apply in three short steps',
+      'It works while you sleep',
       'What makes it different',
     ]);
     // The sources strip and How it works are gone, also from the header.
@@ -170,5 +171,52 @@ describe('IntroPage', () => {
     );
     expect(screen.getAllByRole('link', { name: 'Konto erstellen' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument();
+  });
+});
+
+describe('IntroPage Autopilot and demo', () => {
+  it('shows the four Autopilot cards and the promise it never applies for you', () => {
+    render(
+      <Intl>
+        <IntroContent loggedIn={false} />
+      </Intl>,
+    );
+    const section = screen.getByRole('region', { name: 'It works while you sleep' });
+    for (const title of [
+      'Ready kits by morning',
+      'Gmail updates your Tracker',
+      'Interviews in your calendar',
+      'Briefing and Sunday report',
+    ]) {
+      expect(within(section).getByRole('heading', { name: title })).toBeInTheDocument();
+    }
+    expect(
+      within(section).getByRole('img', {
+        name: 'Interview: Data Engineer, HelloFresh · 10:00 – 11:00',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(section).getByText('It never applies or sends anything for you.'),
+    ).toBeInTheDocument();
+  });
+
+  it('hides the demo button while no video link is set', () => {
+    render(
+      <Intl>
+        <IntroContent loggedIn={false} />
+      </Intl>,
+    );
+    expect(screen.queryByRole('button', { name: /Watch the 2-min demo/ })).not.toBeInTheDocument();
+  });
+
+  it('uses the German Autopilot texts', () => {
+    render(
+      <Intl locale="de">
+        <IntroContent loggedIn={false} />
+      </Intl>,
+    );
+    expect(
+      screen.getByRole('heading', { name: 'Arbeitet, während Sie schlafen' }),
+    ).toBeInTheDocument();
   });
 });
