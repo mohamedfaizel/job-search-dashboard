@@ -58,6 +58,11 @@ export interface KitJob {
   parts?: KitParts;
   /** Use your master resume as it is when it already scores at least this. Null = never. */
   masterMin?: number | null;
+  /**
+   * Write it even when the job already has a saved kit (the Apply queue: a tailored resume alone
+   * isn't a reply yet). Without it, a job with a kit is skipped.
+   */
+  overwrite?: boolean;
 }
 
 /** A job's kit prompt, worked out before the run so jobs that share its first part go together. */
@@ -93,6 +98,17 @@ export interface KitRunStatus {
   /** Why it stopped early or wrote none: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
   reason: string | null;
   startedAt: Date;
+  /** The job whose kit is being written now. */
+  jobId: string | null;
+  /** Kits that used your master resume as it is. */
+  usedMaster: number;
+  /** Kits whose resume stayed below your target score. */
+  belowTarget: number;
+  /** What the run cost so far, in cents of `currency`. Null when the model's price is unknown. */
+  costCents: number | null;
+  currency: string;
+  /** How much the cache saved, in percent of what it would have cost. */
+  savedPercent: number;
 }
 
 /**
@@ -181,6 +197,12 @@ export class NightlyKitsService {
       failed: 0,
       reason: null,
       startedAt: new Date(),
+      jobId: null,
+      usedMaster: 0,
+      belowTarget: 0,
+      costCents: null,
+      currency: 'EUR',
+      savedPercent: 0,
     };
   }
 
@@ -195,7 +217,9 @@ export class NightlyKitsService {
       where: { userId, jobId: { in: jobs.map((job) => job.jobId) } },
       select: { jobId: true },
     });
-    const hasKit = new Set(done.map((row) => row.jobId));
+    const hasKit = new Set(
+      done.map((row) => row.jobId).filter((id) => !jobs.find((j) => j.jobId === id)?.overwrite),
+    );
     const waiting = jobs.filter((job) => !hasKit.has(job.jobId));
     // Jobs that already have a kit don't count towards "kit N of M".
     const run = this.runs.get(userId);
@@ -233,6 +257,7 @@ export class NightlyKitsService {
     for (const item of prepared) {
       const { job } = item;
       const goal: Goal = { ...facts, target: job.target };
+      this.track(userId, { jobId: job.jobId });
       try {
         const cache = key.provider === AiProvider.ANTHROPIC && (shared.get(item.fixed) ?? 0) > 1;
         const { score, cost } = await this.writeOne(userId, item, key, goal, cache);
@@ -240,9 +265,19 @@ export class NightlyKitsService {
         if (item.master) usedMaster += 1;
         spent.push({ searchId: job.searchId, cost });
         written.push(job);
+        const sofar = summedCost(spent.map((s) => s.cost));
         this.track(userId, {
           done: doneBefore + written.length + failed,
           written: (before?.written ?? 0) + written.length,
+          usedMaster: (before?.usedMaster ?? 0) + usedMaster,
+          belowTarget: (before?.belowTarget ?? 0) + belowTarget,
+          currency: facts.currency,
+          ...(sofar
+            ? {
+                costCents: (before?.costCents ?? 0) + centsIn(sofar.costMicroUsd, facts.currency),
+                savedPercent: savedPercent(sofar),
+              }
+            : {}),
         });
       } catch (error) {
         if (error instanceof AiCallError && error.cause === 'KEY_REFUSED') {
@@ -261,6 +296,7 @@ export class NightlyKitsService {
     }
 
     this.track(userId, {
+      jobId: null,
       reason: written.length === 0 ? (stop ?? 'NONE_WRITTEN') : stop,
     });
     await this.saveLastRuns(spent);

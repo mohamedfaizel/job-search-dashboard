@@ -1221,9 +1221,23 @@ type KeyRequest {
 
 """Your latest apply-kits run, while it writes and after"""
 type KitRun {
+  """Kits whose resume stayed below your target score"""
+  belowTarget: Int!
+
+  """
+  What the run cost, in cents of currency. Null when the price is unknown
+  """
+  costCents: Int
+
+  """EUR, GBP or USD, from your profile address"""
+  currency: String!
+
   """Jobs finished so far (written or failed)"""
   done: Int!
   failed: Int!
+
+  """The job whose kit is being written now"""
+  jobId: ID
 
   """
   Why it stopped early or wrote none: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN
@@ -1232,10 +1246,16 @@ type KitRun {
 
   """Still writing"""
   running: Boolean!
+
+  """How much the cache saved, in percent"""
+  savedPercent: Int!
   startedAt: DateTime!
 
   """Kits this run tries to write"""
   total: Int!
+
+  """Kits that used your master resume as it is"""
+  usedMaster: Int!
   written: Int!
 }
 
@@ -1710,6 +1730,11 @@ type Mutation {
   updateNotificationSettings(input: NotificationSettingsInput!): Profile!
   updateProfile(input: ProfileInput!): Profile!
   updateSavedSearch(id: Int!, input: SavedSearchInput!): SavedSearch!
+
+  """
+  Writes the kits of your queued jobs that have no reply yet, with your own AI key. It runs on the server; ask kitRun for its progress. Joins a run that is already going.
+  """
+  writeApplyQueueKits(input: QueueKitsInput!): KitRun!
 }
 
 """
@@ -2321,6 +2346,16 @@ UP moves a job one place earlier in the Apply queue, DOWN one place later
 enum QueueDirection {
   DOWN
   UP
+}
+
+"""How "Write with my key" writes the queued kits"""
+input QueueKitsInput {
+  answers: Boolean! = true
+  cover: Boolean! = true
+
+  """Use your master resume as it is when it already scores at least this"""
+  masterMin: Int
+  resume: Boolean! = true
 }
 
 type RemovedTerm {

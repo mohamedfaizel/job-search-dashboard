@@ -56,7 +56,7 @@ export const rulesOf = (search: Search): Rules => {
     kitScoreTarget: search.kitScoreTarget,
   };
   for (const key of COST_KEYS) {
-    if (search[key] !== undefined) Object.assign(rules, { [key]: search[key] });
+    Object.assign(rules, { [key]: search[key] });
   }
   return rules;
 };

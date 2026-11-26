@@ -1,7 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { API_URL, apiErrorFrom, graphqlClient } from './client';
 import { queryKeys } from './hooks';
+import { useKitRun } from './kits';
 import {
   ADD_TO_APPLY_QUEUE,
   APPLY_QUEUE,
@@ -461,4 +463,20 @@ export function useCheckResumePdf() {
       return data.resumePdfCheck;
     },
   });
+}
+
+/**
+ * Your latest kits run, for the Apply queue: each kit saved refreshes the queue (the job turns
+ * Ready), and the end of the run refreshes the jobs' Apply tabs too.
+ */
+export function useQueueKitRun() {
+  const run = useKitRun();
+  const queryClient = useQueryClient();
+  const done = run.data?.done ?? 0;
+  const running = run.data?.running ?? false;
+  useEffect(() => {
+    void queryClient.invalidateQueries({ queryKey: applyQueueKey });
+    if (!running) void queryClient.invalidateQueries({ queryKey: jobInsightsPrefix });
+  }, [done, running, queryClient]);
+  return run.data ?? null;
 }

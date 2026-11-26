@@ -4,6 +4,7 @@ import {
   applyKitUrl,
   useApplyQueue,
   useApplyQueuePrompt,
+  useKitRun,
   useChangeApplyQueue,
   useMoveInApplyQueue,
   useSaveApplyQueueReply,
@@ -14,6 +15,7 @@ import { useState } from 'react';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiChat } from '../../../lib/ai-chat';
 import { CopyText } from './CopyText';
+import { WriteWithKey } from './WriteWithKey';
 
 /**
  * The one prompt for Claude in Chrome that works through the whole queue, never submitting. It
@@ -84,7 +86,7 @@ function WriteAll({ waiting, onSaved }: { waiting: number; onSaved: (note: strin
   };
 
   return (
-    <div className="space-y-2 rounded-md bg-amber-50 px-3 py-2.5 text-amber-900">
+    <div className="space-y-2">
       <p>
         {waiting > count && count > 0
           ? t('waitingMore', { count: waiting, now: count })
@@ -196,7 +198,11 @@ export function ApplyQueuePanel({
   const change = useChangeApplyQueue();
   const move = useMoveInApplyQueue();
   const updateStatus = useUpdateJobStatus();
+  const kitRun = useKitRun();
+  const writingId = kitRun.data?.running ? kitRun.data.jobId : null;
   const [savedNote, setSavedNote] = useState<string | null>(null);
+  // Set once you click "Write with my key", so its result stays after every job is ready.
+  const [keyStarted, setKeyStarted] = useState(false);
   const [open, setOpen] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const items = queue.data ?? [];
@@ -311,7 +317,18 @@ export function ApplyQueuePanel({
             </button>
           )}
         </div>
-        {notReady > 0 && <WriteAll waiting={notReady} onSaved={setSavedNote} />}
+        {(notReady > 0 || keyStarted) && (
+          <div className="space-y-2 rounded-md bg-amber-50 px-3 py-2.5 text-amber-900">
+            {notReady > 0 && <WriteAll waiting={notReady} onSaved={setSavedNote} />}
+            <WriteWithKey
+              waiting={notReady}
+              started={keyStarted}
+              onStart={() => {
+                setKeyStarted(true);
+              }}
+            />
+          </div>
+        )}
         {savedNote && (
           <p role="status" className="text-emerald-700">
             ✓ {savedNote}
@@ -370,10 +387,16 @@ export function ApplyQueuePanel({
                   className={
                     item.ready
                       ? 'rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700'
-                      : 'rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800'
+                      : writingId === item.jobId
+                        ? 'rounded-full bg-neutral-900 px-2 py-0.5 text-xs text-amber-300'
+                        : 'rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800'
                   }
                 >
-                  {item.ready ? t('ready') : t('needsReply')}
+                  {item.ready
+                    ? t('ready')
+                    : writingId === item.jobId
+                      ? t('rowWriting')
+                      : t('needsReply')}
                 </span>
               </div>
               <div className="mt-1 flex items-center gap-3 pl-9">

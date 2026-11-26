@@ -409,4 +409,63 @@ describe('apply kits', () => {
       reason: 'NONE_WRITTEN',
     });
   });
+
+  describe('Write with my key, in the Apply queue', () => {
+    const WRITE = `mutation($input: QueueKitsInput!) {
+      writeApplyQueueKits(input: $input) { running total }
+    }`;
+    const RUN = `query { kitRun { running total done written failed reason jobId costCents currency usedMaster } }`;
+    const all = { resume: true, cover: true, answers: true };
+
+    it('writes the kits of the queued jobs with no reply, with the cost, and they turn ready', async () => {
+      await setUp();
+      await saveAiKey(t.gql);
+      // A tailored resume alone is not a reply: job b is written again, with a cover letter.
+      await t.prisma.jobResume.create({
+        data: { userId: 1, jobId: 'b', text: 'Old resume', coverLetter: '', formAnswers: '' },
+      });
+
+      const started = await t.gql<{ writeApplyQueueKits: { running: boolean; total: number } }>(
+        WRITE,
+        { input: all },
+      );
+      expect(started.data!.writeApplyQueueKits).toEqual({ running: true, total: 2 });
+
+      await vi.waitFor(async () => {
+        expect((await t.gql<Run>(RUN)).data!.kitRun).toMatchObject({
+          running: false,
+          done: 2,
+          written: 2,
+          failed: 0,
+          reason: null,
+          jobId: null,
+          currency: 'EUR',
+          usedMaster: 0,
+        });
+      });
+      const run = (await t.gql<Run>(RUN)).data!.kitRun!;
+      expect(run.costCents).toBeGreaterThan(0);
+      expect(asked).toHaveLength(2);
+      const queue = await t.gql<{ myApplyQueue: { ready: boolean }[] }>(
+        `query { myApplyQueue { ready } }`,
+      );
+      expect(queue.data!.myApplyQueue).toEqual([{ ready: true }, { ready: true }]);
+
+      // Nothing left to write: no run, no AI call.
+      await t.gql(WRITE, { input: all });
+      expect(asked).toHaveLength(2);
+    });
+
+    it('says there is no key, and asks the AI nothing', async () => {
+      await setUp();
+      await t.gql(WRITE, { input: all });
+      await vi.waitFor(async () => {
+        expect((await t.gql<Run>(RUN)).data!.kitRun).toMatchObject({
+          running: false,
+          reason: 'NO_KEY',
+        });
+      });
+      expect(asked).toHaveLength(0);
+    });
+  });
 });

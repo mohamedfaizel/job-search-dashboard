@@ -345,6 +345,32 @@ export const KIT_RUN = /* GraphQL */ `
       failed
       reason
       startedAt
+      jobId
+      usedMaster
+      belowTarget
+      costCents
+      currency
+      savedPercent
+    }
+  }
+`;
+
+export const WRITE_APPLY_QUEUE_KITS = /* GraphQL */ `
+  mutation WriteApplyQueueKits($input: QueueKitsInput!) {
+    writeApplyQueueKits(input: $input) {
+      running
+      total
+      done
+      written
+      failed
+      reason
+      startedAt
+      jobId
+      usedMaster
+      belowTarget
+      costCents
+      currency
+      savedPercent
     }
   }
 `;

@@ -1020,6 +1020,26 @@ export interface KitRun {
   /** Why it stopped early or wrote none: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
   reason: string | null;
   startedAt: string;
+  /** The job whose kit is being written now. */
+  jobId?: string | null;
+  /** Kits that used your master resume as it is. */
+  usedMaster?: number;
+  /** Kits whose resume stayed below your target score. */
+  belowTarget?: number;
+  /** What the run cost, in cents of `currency`. Null when the price is unknown. */
+  costCents?: number | null;
+  currency?: string;
+  /** What the cache saved, in %. */
+  savedPercent?: number;
+}
+
+/** How "Write with my key" writes the queued kits. */
+export interface QueueKitsInput {
+  resume: boolean;
+  cover: boolean;
+  answers: boolean;
+  /** Use your master resume as it is when it already scores at least this. Null = never. */
+  masterMin: number | null;
 }
 
 export interface Notifications {
