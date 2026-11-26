@@ -61,7 +61,7 @@ describe('AppFrame', () => {
 
   it('has ? and i in the header instead of a footer', async () => {
     session.user = ADMIN;
-    location.pathname = '/messages';
+    location.pathname = '/jobs';
     server.use(
       api.query('MyMessages', () =>
         HttpResponse.json({ data: { myMessages: { items: [], unread: 0 } } }),
@@ -70,32 +70,32 @@ describe('AppFrame', () => {
     const user = userEvent.setup();
     renderFrame();
 
-    const help = await screen.findByRole('link', { name: 'Queries and suggestions' });
-    expect(help).toHaveAttribute('href', '/messages');
+    // The ? is no page of its own: it opens the small message window.
+    const help = await screen.findByRole('button', { name: 'Queries and suggestions' });
     expect(help).toHaveAttribute('title', 'Queries and suggestions');
-    expect(help).toHaveAttribute('aria-current', 'page');
     const about = screen.getByRole('link', { name: 'About us' });
     expect(about).toHaveAttribute('href', '/about');
     expect(about).toHaveAttribute('title', 'About us');
     expect(screen.queryByRole('contentinfo')).toBeNull();
     expect(screen.queryByText('Made by Mohamed Faizel')).toBeNull();
 
-    // The account menu still opens the message window.
-    await user.click(screen.getByRole('button', { name: /account menu/ }));
-    await user.click(screen.getByRole('button', { name: 'Questions?' }));
+    await user.click(help);
     expect(screen.getByRole('dialog', { name: 'Message Mohamed Faizel' })).toBeInTheDocument();
-    expect(screen.queryByRole('navigation', { name: 'Account' })).toBeNull();
     await user.keyboard('{Escape}');
+
+    // The account menu no longer has a Questions? item.
+    await user.click(screen.getByRole('button', { name: /account menu/ }));
+    const menu = screen.getByRole('navigation', { name: 'Account' });
+    expect(within(menu).queryByRole('button', { name: 'Questions?' })).toBeNull();
   });
 
   it('names the ? and i in German', async () => {
     session.user = { ...ADMIN, locale: 'de' };
     location.pathname = '/jobs';
     renderFrame('de');
-    expect(await screen.findByRole('link', { name: 'Fragen und Vorschläge' })).toHaveAttribute(
-      'href',
-      '/messages',
-    );
+    expect(
+      await screen.findByRole('button', { name: 'Fragen und Vorschläge' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Über uns' })).toHaveAttribute('href', '/about');
   });
 
