@@ -422,6 +422,8 @@ export interface Profile {
   nightlyKitsAt: string;
   /** Also write kits for new jobs with at least this Fit %. Null: the Apply queue only. */
   nightlyKitsFitMin: number | null;
+  /** Target score for each kit's resume: below it, more AI rounds add terms you really have. */
+  kitScoreTarget: number;
   /** Morning briefing: once a day in the bell and as a phone push. */
   briefingOn: boolean;
   /** "HH:mm" in the API server's local time. */
@@ -466,6 +468,7 @@ export type ProfileInput = Omit<
   | 'nightlyKitsMax'
   | 'nightlyKitsAt'
   | 'nightlyKitsFitMin'
+  | 'kitScoreTarget'
   // Saved on their own, from Settings > Notifications > Morning briefing.
   | 'briefingOn'
   | 'briefingAt'
@@ -921,6 +924,9 @@ export interface AppNotification {
   undone: boolean;
   /** KITS_READY / KITS_FAILED: kits that could not be written. */
   failed: number;
+  /** KITS_READY: kits whose resume stayed below `target` (the job needs skills you don't have). */
+  belowTarget: number;
+  target: number | null;
   /** KITS_FAILED, or a kits run that stopped early: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
   reason: string | null;
   /** BRIEFING: what the morning briefing counted. */

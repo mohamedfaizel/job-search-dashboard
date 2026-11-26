@@ -37,6 +37,16 @@ export class NightlyKitsInput {
   @Max(95, { message: 'Pick a Fit of 50 to 95%' })
   fitMin?: number | null;
 
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Target score for each kit’s resume (70-95). Left out: it stays as it is',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(70, { message: 'Pick a target of 70 to 95%' })
+  @Max(95, { message: 'Pick a target of 70 to 95%' })
+  target?: number | null;
+
   @Field({ description: 'Time of night, "HH:mm", 24-hour, server local time' })
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'at must be a time like 03:00' })
   at!: string;
@@ -83,6 +93,7 @@ export class NightlyKitsResolver {
       perNight: input.perNight,
       at: input.at,
       fitMin: input.fitMin ?? null,
+      target: input.target ?? null,
     });
     return true;
   }

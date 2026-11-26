@@ -31,7 +31,7 @@ describe('automation settings hooks', () => {
     const request = vi.spyOn(graphqlClient, 'request').mockResolvedValue({ setNightlyKits: true });
     const { invalidate, wrapper } = setup();
     const { result } = renderHook(() => useSetNightlyKits(), { wrapper });
-    const input = { on: true, perNight: 3, at: '22:30', fitMin: 75 };
+    const input = { on: true, perNight: 3, at: '22:30', fitMin: 75, target: 90 };
     await expect(act(() => result.current.mutateAsync(input))).resolves.toBe(true);
     expect(request).toHaveBeenCalledWith(expect.stringContaining('setNightlyKits'), { input });
     expect(invalidate).toHaveBeenCalled();

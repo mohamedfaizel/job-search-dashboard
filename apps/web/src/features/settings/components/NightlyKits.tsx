@@ -54,11 +54,13 @@ function KitsForm({ profile }: { profile: Profile }) {
   const [perNight, setPerNight] = useState(profile.nightlyKitsMax);
   const [at, setAt] = useState(profile.nightlyKitsAt);
   const [fitMin, setFitMin] = useState(profile.nightlyKitsFitMin);
+  const [target, setTarget] = useState(profile.kitScoreTarget);
   const changed =
     on !== profile.nightlyKits ||
     perNight !== profile.nightlyKitsMax ||
     at !== profile.nightlyKitsAt ||
-    fitMin !== profile.nightlyKitsFitMin;
+    fitMin !== profile.nightlyKitsFitMin ||
+    target !== profile.kitScoreTarget;
 
   return (
     <div className="space-y-3">
@@ -124,6 +126,29 @@ function KitsForm({ profile }: { profile: Profile }) {
         <span className="text-xs text-slate-600">{t('cost')}</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor="kits-target" className="text-sm text-slate-800">
+          {t('target')}
+        </label>
+        <input
+          id="kits-target"
+          type="range"
+          min={70}
+          max={95}
+          step={5}
+          value={target}
+          disabled={!on}
+          onChange={(event) => {
+            setTarget(Number(event.target.value));
+            save.reset();
+          }}
+          className="w-36 accent-slate-900 disabled:opacity-60"
+        />
+        <span aria-hidden className="w-10 text-sm font-semibold text-slate-900">
+          {target}%
+        </span>
+        <span className="text-xs text-slate-600">{t('targetHint')}</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
         <label htmlFor="kits-at" className="text-sm text-slate-800">
           {t('at')}
         </label>
@@ -147,7 +172,7 @@ function KitsForm({ profile }: { profile: Profile }) {
             type="button"
             disabled={save.isPending || at === ''}
             onClick={() => {
-              save.mutate({ on, perNight, at, fitMin });
+              save.mutate({ on, perNight, at, fitMin, target });
             }}
             className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
           >

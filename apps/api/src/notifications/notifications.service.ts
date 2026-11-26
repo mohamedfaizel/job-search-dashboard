@@ -36,6 +36,9 @@ export interface NotificationData {
   undone?: boolean;
   /** KITS_READY / KITS_FAILED: kits that could not be written. */
   failed?: number;
+  /** KITS_READY: kits whose resume stayed below your `target` score (skills you don't have). */
+  belowTarget?: number;
+  target?: number;
   /** KITS_FAILED (or a run that stopped early): NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
   reason?: string;
   /** MAIL_AUTO: the emails (MailSuggestion ids) whose moves Undo takes back. */
@@ -72,6 +75,8 @@ function toModel(row: {
     briefing: data.briefing ?? null,
     weekly: data.weekly ?? null,
     failed: data.failed ?? 0,
+    belowTarget: data.belowTarget ?? 0,
+    target: data.target ?? null,
     reason: data.reason ?? null,
     readAt: row.readAt,
     createdAt: row.createdAt,

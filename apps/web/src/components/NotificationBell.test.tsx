@@ -39,6 +39,8 @@ const NEW_MATCHES = {
   kept: 0,
   undone: false,
   failed: 0,
+  belowTarget: 0,
+  target: null,
   reason: null,
   briefing: null,
   weekly: null,
@@ -361,7 +363,15 @@ describe('NotificationBell', () => {
 
   it('says apply kits are ready, or why none were written', async () => {
     bell.items = [
-      { ...NEW_MATCHES, id: 12, kind: 'KITS_READY', count: 2, failed: 1 },
+      {
+        ...NEW_MATCHES,
+        id: 12,
+        kind: 'KITS_READY',
+        count: 2,
+        failed: 1,
+        belowTarget: 1,
+        target: 90,
+      },
       { ...NEW_MATCHES, id: 13, kind: 'KITS_FAILED', count: 0, jobs: [], reason: 'NO_KEY' },
     ];
     bell.unread = 2;
@@ -371,6 +381,11 @@ describe('NotificationBell', () => {
     const list = screen.getByRole('dialog', { name: 'Notifications' });
     expect(within(list).getByText('2 apply kits are ready to check')).toBeInTheDocument();
     expect(within(list).getByText(/1 kit could not be written/)).toBeInTheDocument();
+    expect(
+      within(list).getByText(
+        '1 kit stayed below your 90% target: the job asks for skills you don’t have.',
+      ),
+    ).toBeInTheDocument();
     expect(within(list).getByRole('link', { name: /React Developer/ })).toBeInTheDocument();
     expect(within(list).getByText('Apply kits were not written')).toBeInTheDocument();
     expect(within(list).getByText(/Add your Claude or OpenAI key/)).toBeInTheDocument();

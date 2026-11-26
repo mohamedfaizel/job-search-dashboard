@@ -22,6 +22,8 @@ const notice = (id: number, readAt: string | null): AppNotification => ({
   kept: 0,
   undone: false,
   failed: 0,
+  belowTarget: 0,
+  target: null,
   reason: null,
   briefing: null,
   weekly: null,

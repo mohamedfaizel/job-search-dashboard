@@ -478,6 +478,8 @@
       "onHint": "Off by default. It never applies or sends anything for you.",
       "perNight": "At most per night",
       "cost": "About 1 to 5 cents each on your key, depending on the model.",
+      "target": "Target score",
+      "targetHint": "Below it, the AI gets one or two more tries, adding only skills you really have (about 2 cents each). It never makes skills up, so some kits stay lower.",
       "for": "Write kits for",
       "forQueue": "My Apply queue only",
       "forGood": "Apply queue + new jobs with Fit {fit}% or more",
@@ -2426,6 +2428,7 @@
     "openQueue": "Open Apply queue",
     "kitsReady": "{count, plural, one {# apply kit is ready} other {# apply kits are ready}} to check",
     "kitsFailed": "Apply kits were not written",
+    "kitsBelowTarget": "{count, plural, one {# kit stayed} other {# kits stayed}} below your {target}% target: the job asks for skills you don’t have.",
     "kitsFailedSome": "{count, plural, one {# kit} other {# kits}} could not be written. They stay in the queue for tonight.",
     "kitsReason": {
       "NO_KEY": "Add your Claude or OpenAI key in Settings › API keys.",
