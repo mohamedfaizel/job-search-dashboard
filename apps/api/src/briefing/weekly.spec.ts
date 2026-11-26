@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SearchWeek, WeeklyCounts } from './weekly';
-import { bestSearch, hasWeek, pauseSearch, weeklyText } from './weekly';
+import { bestSearch, hasWeek, isWeeklyDue, pauseSearch, weeklyText } from './weekly';
 
 const week = (over: Partial<SearchWeek>): SearchWeek => ({
   id: 1,
@@ -52,5 +52,20 @@ describe('weekly report', () => {
     expect(weeklyText(counts, 'de', null, null).title).toBe(
       'Deine Woche: 3 beworben, 1 Antwort, 1 guter Job',
     );
+  });
+});
+
+describe('isWeeklyDue', () => {
+  // 2026-11-29 is a Sunday.
+  const at = (day: number, h: number) => new Date(2026, 10, day, h, 0);
+  it('is due from Sunday 18:00 on, once, and catches up later in the week', () => {
+    expect(isWeeklyDue(at(29, 17), at(29, 17))).toBe(false);
+    expect(isWeeklyDue(at(29, 17), at(29, 18))).toBe(true);
+    expect(isWeeklyDue(at(29, 18), at(29, 19))).toBe(false);
+    // PC off on Sunday: sent on Wednesday.
+    expect(isWeeklyDue(at(28, 12), new Date(2026, 11, 2, 9))).toBe(true);
+    // Sunday morning: last week's was already sent.
+    expect(isWeeklyDue(at(23, 18), at(29, 10))).toBe(false);
+    expect(isWeeklyDue(null, at(26, 10))).toBe(true);
   });
 });

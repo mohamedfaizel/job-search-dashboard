@@ -480,6 +480,7 @@ const PROFILE_FIELDS = /* GraphQL */ `
   matchFitMin
   nightlyKits
   nightlyKitsMax
+  nightlyKitsAt
   briefingOn
   briefingAt
   weeklyReport

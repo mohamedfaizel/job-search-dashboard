@@ -97,3 +97,20 @@ export function weeklyText(
   const lines = [best ? w.best(best.name, best.good) : '', pause ? w.pause(pause.name) : ''];
   return { title: `${w.title}: ${parts.join(', ')}`, body: lines.filter(Boolean).join('\n') };
 }
+
+/** Sunday 18:00, server time: when the weekly report is due. */
+const REPORT_DAY = 0;
+const REPORT_HOUR = 18;
+
+/**
+ * True when the latest Sunday 18:00 has passed and no report went out since. So a Sunday missed
+ * while the PC was off is sent as soon as the app runs again, and only once.
+ */
+export function isWeeklyDue(sentAt: Date | null, now: Date): boolean {
+  const due = new Date(now);
+  due.setDate(now.getDate() - ((now.getDay() - REPORT_DAY + 7) % 7));
+  due.setHours(REPORT_HOUR, 0, 0, 0);
+  // Sunday before 18:00: the one due is last week's.
+  if (due > now) due.setDate(due.getDate() - 7);
+  return !sentAt || sentAt < due;
+}

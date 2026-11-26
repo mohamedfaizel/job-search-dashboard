@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { getErrorMessage } from '../common/errors';
 import { ApplicationStatus, ScheduleFrequency } from '../generated/prisma/enums';
 import { FitService } from '../insights/fit.service';
@@ -8,7 +8,7 @@ import { NotificationsService, TOP_JOBS } from '../notifications/notifications.s
 import { PrismaService } from '../prisma/prisma.service';
 import { PushService } from './push.service';
 import type { SearchWeek, WeeklyCounts } from './weekly';
-import { bestSearch, hasWeek, pauseSearch, weeklyText } from './weekly';
+import { bestSearch, hasWeek, isWeeklyDue, pauseSearch, weeklyText } from './weekly';
 
 export const WEEKLY_REPORT = 'WEEKLY_REPORT';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -35,21 +35,46 @@ export class WeeklyService {
     private readonly config: ConfigService,
   ) {}
 
-  /** Sundays at 18:00, server time. */
-  @Cron('0 18 * * 0')
-  async sunday(): Promise<void> {
-    if (this.config.get<string>('SCHEDULER_ENABLED') === 'false') return;
-    await this.sendAll(new Date());
+  private running = false;
+
+  /**
+   * Sundays at 18:00, server time. Checked every 10 minutes, so a Sunday missed while the PC was
+   * off goes out as soon as the app runs again.
+   */
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async tick(): Promise<void> {
+    if (this.running || this.config.get<string>('SCHEDULER_ENABLED') === 'false') return;
+    this.running = true;
+    try {
+      await this.sendDue(new Date());
+    } finally {
+      this.running = false;
+    }
   }
 
-  /** Sends the report to everyone who has it on. Returns how many went out. */
-  async sendAll(now: Date): Promise<number> {
+  /** Sends every report due at `now` (see isWeeklyDue). Returns how many went out. */
+  sendDue(now: Date): Promise<number> {
+    return this.sendTo(now, true);
+  }
+
+  /** Sends the report to everyone who has it on, due or not. Returns how many went out. */
+  sendAll(now: Date): Promise<number> {
+    return this.sendTo(now, false);
+  }
+
+  private async sendTo(now: Date, onlyDue: boolean): Promise<number> {
     const profiles = await this.prisma.profile.findMany({
       where: { weeklyReport: true },
-      select: { userId: true, matchFitMin: true },
+      select: { userId: true, matchFitMin: true, weeklySentAt: true },
     });
     let sent = 0;
     for (const p of profiles) {
+      if (onlyDue && !isWeeklyDue(p.weeklySentAt, now)) continue;
+      // Booked first, so a failure can't send it twice.
+      await this.prisma.profile.update({
+        where: { userId: p.userId },
+        data: { weeklySentAt: now },
+      });
       try {
         if (await this.send(p.userId, p.matchFitMin, now)) sent += 1;
       } catch (error) {

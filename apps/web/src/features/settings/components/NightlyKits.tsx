@@ -11,7 +11,7 @@ const reasonOf = (reason: string | null) =>
   REASONS.find((known) => known === reason) ?? 'NONE_WRITTEN';
 
 /**
- * Settings › API keys › Nightly apply kits: at night the app writes the resume, cover letter and
+ * Settings › API keys › Nightly apply kits: at your time (03:00 by default) the app writes the resume, cover letter and
  * form answers of each queued job with your own AI key, so they are ready in the morning.
  */
 export function NightlyKits() {
@@ -50,7 +50,11 @@ function KitsForm({ profile }: { profile: Profile }) {
   const running = now.isPending || (run.data?.running ?? false);
   const [on, setOn] = useState(profile.nightlyKits);
   const [perNight, setPerNight] = useState(profile.nightlyKitsMax);
-  const changed = on !== profile.nightlyKits || perNight !== profile.nightlyKitsMax;
+  const [at, setAt] = useState(profile.nightlyKitsAt);
+  const changed =
+    on !== profile.nightlyKits ||
+    perNight !== profile.nightlyKitsMax ||
+    at !== profile.nightlyKitsAt;
 
   return (
     <div className="space-y-3">
@@ -92,13 +96,31 @@ function KitsForm({ profile }: { profile: Profile }) {
         </select>
         <span className="text-xs text-slate-600">{t('cost')}</span>
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor="kits-at" className="text-sm text-slate-800">
+          {t('at')}
+        </label>
+        <input
+          id="kits-at"
+          type="time"
+          required
+          disabled={!on}
+          value={at}
+          onChange={(event) => {
+            setAt(event.target.value);
+            save.reset();
+          }}
+          className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm disabled:opacity-60"
+        />
+        <span className="text-xs text-slate-600">{t('atHint')}</span>
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         {changed && (
           <button
             type="button"
-            disabled={save.isPending}
+            disabled={save.isPending || at === ''}
             onClick={() => {
-              save.mutate({ on, perNight });
+              save.mutate({ on, perNight, at });
             }}
             className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
           >

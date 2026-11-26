@@ -124,6 +124,23 @@ describe('nightly apply kits', () => {
     expect(await kits.run(1, 5)).toBeNull();
   });
 
+  it('runs at your kits time, catches up a missed night once, and skips users who are off', async () => {
+    await setUp();
+    await saveAiKey(t.gql);
+    const yesterday = new Date(Date.now() - 24 * 3_600_000);
+    await t.prisma.profile.update({
+      where: { userId: 1 },
+      data: { nightlyKits: true, nightlyKitsAt: '00:00', nightlyKitsRanAt: yesterday },
+    });
+    await t.prisma.profile.create({ data: { userId: 2, nightlyKits: false } });
+
+    // The PC was off at 00:00 today: it runs now, and only once.
+    expect(await kits.runDue(new Date())).toBe(1);
+    expect(asked).toHaveLength(2);
+    expect(await kits.runDue(new Date())).toBe(0);
+    expect(asked).toHaveLength(2);
+  });
+
   it('tells you when there is no key, or the key is refused', async () => {
     await setUp();
     expect(await kits.run(1, 5)).toBeNull();
@@ -167,12 +184,18 @@ describe('nightly apply kits', () => {
   });
 
   it('saves the settings and refuses Write now without a key or work', async () => {
-    const saved = await t.gql(`mutation { setNightlyKits(input: { on: true, perNight: 3 }) }`);
-    expect(saved.data).toEqual({ setNightlyKits: true });
-    const profile = await t.gql<{ myProfile: { nightlyKits: boolean; nightlyKitsMax: number } }>(
-      `query { myProfile { nightlyKits nightlyKitsMax } }`,
+    const saved = await t.gql(
+      `mutation { setNightlyKits(input: { on: true, perNight: 3, at: "22:15" }) }`,
     );
-    expect(profile.data!.myProfile).toEqual({ nightlyKits: true, nightlyKitsMax: 3 });
+    expect(saved.data).toEqual({ setNightlyKits: true });
+    const profile = await t.gql<{
+      myProfile: { nightlyKits: boolean; nightlyKitsMax: number; nightlyKitsAt: string };
+    }>(`query { myProfile { nightlyKits nightlyKitsMax nightlyKitsAt } }`);
+    expect(profile.data!.myProfile).toEqual({
+      nightlyKits: true,
+      nightlyKitsMax: 3,
+      nightlyKitsAt: '22:15',
+    });
 
     const noKey = await t.gql(`mutation { writeKitsNow }`);
     expect(noKey.errors?.[0]?.extensions).toMatchObject({ apiCode: 'AI_KEY_MISSING' });
@@ -180,8 +203,14 @@ describe('nightly apply kits', () => {
     const empty = await t.gql(`mutation { writeKitsNow }`);
     expect(empty.errors?.[0]?.extensions).toMatchObject({ apiCode: 'KITS_QUEUE_EMPTY' });
 
-    const tooMany = await t.gql(`mutation { setNightlyKits(input: { on: true, perNight: 99 }) }`);
+    const tooMany = await t.gql(
+      `mutation { setNightlyKits(input: { on: true, perNight: 99, at: "03:00" }) }`,
+    );
     expect(tooMany.errors?.[0]?.message).toMatch(/1 to 20/);
+    const badTime = await t.gql(
+      `mutation { setNightlyKits(input: { on: true, perNight: 3, at: "25:00" }) }`,
+    );
+    expect(badTime.errors?.[0]?.message).toMatch(/like 03:00/);
   });
 
   const KIT_RUN = `query { kitRun { running total done written failed reason } }`;

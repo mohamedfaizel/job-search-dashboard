@@ -8,7 +8,7 @@ import {
   Query,
   Resolver,
 } from '@nestjs/graphql';
-import { IsBoolean, IsInt, Max, Min } from 'class-validator';
+import { IsBoolean, IsInt, Matches, Max, Min } from 'class-validator';
 import type { SessionUser } from '../auth/auth.decorators';
 import { CurrentUser } from '../auth/auth.decorators';
 import { NightlyKitsService } from './nightly-kits.service';
@@ -25,6 +25,10 @@ export class NightlyKitsInput {
   @Min(1, { message: 'Pick 1 to 20 kits a night' })
   @Max(20, { message: 'Pick 1 to 20 kits a night' })
   perNight!: number;
+
+  @Field({ description: 'Time of night, "HH:mm", 24-hour, server local time' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'at must be a time like 03:00' })
+  at!: string;
 }
 
 @ObjectType('KitRun', { description: 'Your latest apply-kits run, while it writes and after' })
@@ -63,13 +67,13 @@ export class NightlyKitsResolver {
     @CurrentUser() user: SessionUser,
     @Args('input') input: NightlyKitsInput,
   ): Promise<boolean> {
-    await this.service.setSettings(user.id, input.on, input.perNight);
+    await this.service.setSettings(user.id, input.on, input.perNight, input.at);
     return true;
   }
 
   @Mutation(() => Int, {
     description:
-      'Write the queued jobs’ kits now instead of tonight. Returns how many it will write; the bell says when they are done',
+      'Write the queued jobs’ kits now instead of at the kits time. Returns how many it will write; the bell says when they are done',
   })
   writeKitsNow(@CurrentUser() user: SessionUser): Promise<number> {
     return this.service.startNow(user.id);

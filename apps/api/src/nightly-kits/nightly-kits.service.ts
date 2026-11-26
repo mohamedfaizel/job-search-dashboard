@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { AI_PROVIDERS, AiCallError, completeWithKey } from '../api-keys/ai-providers';
 import { ApiKeysService } from '../api-keys/api-keys.service';
+import { isBriefingDue as isDailyDue } from '../briefing/briefing';
 import { apiError } from '../common/api-error';
 import { getErrorMessage } from '../common/errors';
 import { InsightsService } from '../insights/insights.service';
@@ -44,7 +45,7 @@ export interface KitRunStatus {
 }
 
 /**
- * Nightly apply kits: at night, for each user who turned it on in Settings, write the Apply kit
+ * Nightly apply kits: at the time each user picked (03:00 by default), for each user who turned it on in Settings, write the Apply kit
  * (resume, cover letter, form answers) of each queued job that has none yet, with the user's own
  * Claude or OpenAI key. It saves each reply as if pasted in the job's Apply tab, so the German
  * level cap and the usual checks apply. It never applies anywhere.
@@ -65,22 +66,47 @@ export class NightlyKitsService {
     private readonly config: ConfigService,
   ) {}
 
-  /** 03:00 server time: everyone who turned nightly kits on, one user after another. */
-  @Cron('0 3 * * *')
-  async nightly(): Promise<void> {
-    if (this.config.get<string>('SCHEDULER_ENABLED') === 'false') return;
-    const users = await this.prisma.profile.findMany({
-      where: { nightlyKits: true },
-      select: { userId: true, nightlyKitsMax: true },
-    });
-    for (const { userId, nightlyKitsMax } of users) {
-      await this.run(userId, nightlyKitsMax);
+  /** True while a tick is going, so a long night of kits never starts twice. */
+  private ticking = false;
+
+  /**
+   * At each user's kits time (server time), checked every minute. A night missed while the PC
+   * was off runs as soon as the app starts again, once a day.
+   */
+  @Cron(CronExpression.EVERY_MINUTE)
+  async tick(): Promise<void> {
+    if (this.ticking || this.config.get<string>('SCHEDULER_ENABLED') === 'false') return;
+    this.ticking = true;
+    try {
+      await this.runDue(new Date());
+    } finally {
+      this.ticking = false;
     }
   }
 
-  /** Settings: turn nightly kits on or off, and how many per night. */
-  async setSettings(userId: number, on: boolean, perNight: number): Promise<void> {
-    const data = { nightlyKits: on, nightlyKitsMax: perNight };
+  /** Runs the kits of everyone due at `now`, one user after another. Returns how many ran. */
+  async runDue(now: Date): Promise<number> {
+    const users = await this.prisma.profile.findMany({
+      where: { nightlyKits: true },
+      select: { userId: true, nightlyKitsMax: true, nightlyKitsAt: true, nightlyKitsRanAt: true },
+    });
+    let ran = 0;
+    for (const p of users) {
+      if (!isDailyDue(p.nightlyKitsAt, p.nightlyKitsRanAt, now)) continue;
+      // Booked first, so a failure can't run (and charge your key) twice.
+      await this.prisma.profile.update({
+        where: { userId: p.userId },
+        data: { nightlyKitsRanAt: now },
+      });
+      await this.run(p.userId, p.nightlyKitsMax);
+      ran += 1;
+    }
+    return ran;
+  }
+
+  /** Settings: turn nightly kits on or off, how many per night, and at what time. */
+  async setSettings(userId: number, on: boolean, perNight: number, at: string): Promise<void> {
+    const data = { nightlyKits: on, nightlyKitsMax: perNight, nightlyKitsAt: at };
     await this.prisma.profile.upsert({
       where: { userId },
       create: { userId, ...data },

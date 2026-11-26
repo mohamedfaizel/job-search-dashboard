@@ -186,6 +186,9 @@ export class ProfileModel {
   @Field(() => Int, { description: 'The most kits written in one night' })
   nightlyKitsMax!: number;
 
+  @Field({ description: 'Time of night for the kits, "HH:mm" in the API server\'s local time' })
+  nightlyKitsAt!: string;
+
   @Field({ description: 'Send the morning briefing (bell and phone push)' })
   briefingOn!: boolean;
 

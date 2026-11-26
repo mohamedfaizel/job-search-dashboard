@@ -12,7 +12,7 @@ describe('Settings > Nightly apply kits', () => {
     return within(heading.closest('section') as HTMLElement);
   }
 
-  it('turns nightly kits on with a limit per night', async () => {
+  it('turns nightly kits on with a limit per night and a time', async () => {
     const user = userEvent.setup();
     const kits = await card();
     const perNight = await kits.findByLabelText('At most per night');
@@ -21,11 +21,14 @@ describe('Settings > Nightly apply kits', () => {
 
     await user.click(kits.getByLabelText(/Write my apply kits at night/));
     await user.selectOptions(perNight, '3');
+    const at = kits.getByLabelText('At');
+    await user.clear(at);
+    await user.type(at, '22:30');
     await user.click(kits.getByRole('button', { name: 'Save' }));
 
     expect(requests).toContainEqual({
       operation: 'SetNightlyKits',
-      variables: { input: { on: true, perNight: 3 } },
+      variables: { input: { on: true, perNight: 3, at: '22:30' } },
     });
   });
 
