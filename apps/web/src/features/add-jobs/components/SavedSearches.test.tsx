@@ -408,6 +408,9 @@ describe('SavedSearches', () => {
     expect(card.getByText(/Last run: 6 kits · €0\.31/)).toBeVisible();
     expect(card.getByText('saved 23%')).toBeVisible();
     await userEvent.click(card.getByRole('button', { name: 'Form answers' }));
+    await userEvent.click(card.getByRole('button', { name: 'Resume' }));
+    // The last part can't be turned off: untick "Write apply kits" for that.
+    expect(card.getByRole('button', { name: 'Cover letter' })).toBeDisabled();
     await userEvent.click(card.getByRole('button', { name: 'Save' }));
 
     await vi.waitFor(() => {
@@ -415,7 +418,11 @@ describe('SavedSearches', () => {
         operation: 'SetSavedSearchAutopilot',
         variables: {
           id: 1,
-          input: expect.objectContaining({ kitUseMaster: true, kitWriteAnswers: false }),
+          input: expect.objectContaining({
+            kitUseMaster: true,
+            kitWriteResume: false,
+            kitWriteAnswers: false,
+          }),
         },
       });
     });

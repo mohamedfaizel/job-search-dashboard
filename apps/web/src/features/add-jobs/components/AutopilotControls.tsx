@@ -478,10 +478,12 @@ function KitsBox({
                   key={key}
                   type="button"
                   aria-pressed={rules[key] === true}
+                  // At least one part stays on; to write nothing, untick "Write apply kits".
+                  disabled={rules[key] === true && parts.filter(([k]) => rules[k]).length === 1}
                   onClick={() => {
                     set({ [key]: !rules[key] });
                   }}
-                  className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                  className={`rounded-full border px-2 py-0.5 text-[11px] disabled:cursor-not-allowed ${
                     rules[key]
                       ? 'border-neutral-900 bg-neutral-900 text-amber-300'
                       : 'border-amber-800/50 text-amber-900'
