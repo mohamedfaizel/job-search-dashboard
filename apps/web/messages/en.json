@@ -471,36 +471,6 @@
         "detail": "Details: {error}"
       }
     },
-    "kits": {
-      "heading": "Nightly apply kits",
-      "intro": "At your time (03:00 by default) the app writes the resume, cover letter and form answers for each job in your Apply queue that has none yet (and, if you choose, for good new jobs), with your own Claude or OpenAI key above. In the morning you only check them and apply.",
-      "on": "Write my apply kits at night",
-      "onHint": "Off by default. It never applies or sends anything for you.",
-      "perNight": "At most per night",
-      "cost": "About 1 to 5 cents each on your key, depending on the model.",
-      "target": "Target score",
-      "targetHint": "Below it, the AI gets one or two more tries, adding only skills you really have (about 2 cents each). It never makes skills up, so some kits stay lower.",
-      "for": "Write kits for",
-      "forQueue": "My Apply queue only",
-      "forGood": "Apply queue + new jobs with Fit {fit}% or more",
-      "forHint": "New means added in the last 14 days. Hidden, applied and closed jobs are skipped.",
-      "at": "At",
-      "atHint": "If your computer is off then, they are written as soon as the app runs again.",
-      "save": "Save",
-      "saved": "Saved.",
-      "writeNow": "Write now",
-      "progress": "Writing kit {done} of {total}… About a minute each. You can leave this page: the 🔔 tells you when they are ready.",
-      "doneWritten": "{count, plural, one {Wrote # kit.} other {Wrote # kits.}}",
-      "doneFailed": "{count, plural, one {# could not be written.} other {# could not be written.}}",
-      "openQueue": "Open Apply queue",
-      "writing": "Writing…",
-      "reason": {
-        "NO_KEY": "No kit written: add your Claude or OpenAI key above.",
-        "KEY_REFUSED": "No kit written: your AI key was refused. Check it above.",
-        "NO_RESUME": "No kit written: add your resume in My profile first.",
-        "NONE_WRITTEN": "No kit written: the AI provider did not answer. Try again in a few minutes."
-      }
-    },
     "briefing": {
       "heading": "Morning briefing",
       "on": "Send me one summary every morning",
@@ -2253,7 +2223,16 @@
       "hideBelowHint": "0 = never hide for Fit. Closed jobs and duplicates are always hidden.",
       "maxPerDay": "Most jobs queued per day",
       "saveAutopilot": "Save Autopilot",
-      "autopilotError": "Could not save Autopilot: {error}"
+      "autopilotError": "Could not save Autopilot: {error}",
+      "kitsOn": "Write apply kits for the jobs it queues",
+      "kitsHint": "Right after each run: resume, cover letter and form answers, with your own AI key. About 1 to 5 cents each, at most {max} a day (the number above).",
+      "kitsTarget": "Target score",
+      "kitsTargetHint": "Below it, the AI gets one or two more tries, adding only skills you really have. It never makes skills up, so some kits stay lower.",
+      "kitsNoKey": "Needs your Claude or OpenAI key.",
+      "kitsAddKey": "Add your key",
+      "kitsBadge": "Kits",
+      "kitsWriting": "Writing kit {done} of {total}… About a minute each. The 🔔 tells you when they are ready.",
+      "cancelAutopilot": "Cancel"
     },
     "history": {
       "heading": "Import history",
@@ -2441,12 +2420,12 @@
     "kitsReady": "{count, plural, one {# apply kit is ready} other {# apply kits are ready}} to check",
     "kitsFailed": "Apply kits were not written",
     "kitsBelowTarget": "{count, plural, one {# kit stayed} other {# kits stayed}} below your {target}% target: the job asks for skills you don’t have.",
-    "kitsFailedSome": "{count, plural, one {# kit} other {# kits}} could not be written. They stay in the queue for tonight.",
+    "kitsFailedSome": "{count, plural, one {# kit} other {# kits}} could not be written. They stay in your Apply queue, where one prompt writes them.",
     "kitsReason": {
       "NO_KEY": "Add your Claude or OpenAI key in Settings › API keys.",
       "KEY_REFUSED": "Your AI key was refused. Check it in Settings › API keys.",
       "NO_RESUME": "Add your resume in My profile first.",
-      "NONE_WRITTEN": "The AI provider did not answer. It tries again tonight."
+      "NONE_WRITTEN": "The AI provider did not answer. The jobs stay in your Apply queue, where one prompt writes them."
     },
     "openSettingsKits": "Open Settings",
     "kitsHint": "Open a job’s Apply tab to check its kit",

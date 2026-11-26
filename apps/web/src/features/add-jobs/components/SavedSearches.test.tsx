@@ -1,9 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { vi } from 'vitest';
 import { renderWithData } from '../test/render';
-import { api, requests, SAVED, server } from '../test/server';
+import { api, apiKeys, kitRun, requests, SAVED, server } from '../test/server';
 import { SavedSearches } from './SavedSearches';
 
 describe('SavedSearches', () => {
@@ -186,10 +186,83 @@ describe('SavedSearches', () => {
             autoQueueNeedsVisa: false,
             autoHideFitBelow: 40,
             autoQueueMaxPerDay: 10,
+            autoKits: false,
+            kitScoreTarget: 90,
           },
         },
       });
     });
+  });
+
+  it('writes apply kits for the jobs Autopilot queues, at your target score', async () => {
+    apiKeys.push({
+      kind: 'ANTHROPIC',
+      last4: 'wxyz',
+      model: null,
+      credits: null,
+      updatedAt: '2026-11-08T12:00:00.000Z',
+    });
+    const card = await renderCard();
+    await openMore();
+    await userEvent.click(card.getByRole('switch', { name: 'Autopilot' }));
+    expect(card.getByText(/at most 10 a day/)).toBeInTheDocument();
+    expect(card.queryByLabelText('Target score')).not.toBeInTheDocument();
+
+    await userEvent.click(card.getByLabelText('Write apply kits for the jobs it queues'));
+    const target = card.getByLabelText('Target score');
+    expect(target).toHaveValue('90');
+    fireEvent.change(target, { target: { value: '85' } });
+    await userEvent.click(card.getByRole('button', { name: 'Save Autopilot' }));
+
+    await vi.waitFor(() => {
+      expect(requests).toContainEqual({
+        operation: 'SetSavedSearchAutopilot',
+        variables: {
+          id: 1,
+          input: expect.objectContaining({ autopilot: true, autoKits: true, kitScoreTarget: 85 }),
+        },
+      });
+    });
+  });
+
+  it('asks for an AI key before it can write kits, and Cancel undoes changes', async () => {
+    const card = await renderCard();
+    await openMore();
+    await userEvent.click(card.getByRole('switch', { name: 'Autopilot' }));
+
+    expect(await card.findByText('Needs your Claude or OpenAI key.')).toBeInTheDocument();
+    expect(card.getByLabelText('Write apply kits for the jobs it queues')).toBeDisabled();
+    expect(card.getByRole('link', { name: 'Add your key' })).toHaveAttribute(
+      'href',
+      '/settings?tab=keys',
+    );
+
+    await userEvent.click(card.getByRole('button', { name: 'Cancel' }));
+    expect(card.queryByRole('button', { name: 'Save Autopilot' })).not.toBeInTheDocument();
+    expect(card.queryByLabelText('Queue when Fit is at least')).not.toBeInTheDocument();
+  });
+
+  it('shows the kits being written, and a Kits badge', async () => {
+    kitRun.current = {
+      running: true,
+      total: 3,
+      done: 1,
+      written: 1,
+      failed: 0,
+      reason: null,
+      startedAt: '2026-11-26T07:00:00.000Z',
+    };
+    server.use(
+      api.query('SavedSearches', () =>
+        HttpResponse.json({
+          data: { savedSearches: [{ ...SAVED, autopilot: true, autoKits: true }] },
+        }),
+      ),
+    );
+    const card = await renderCard();
+    expect(card.getByText('Kits')).toBeInTheDocument();
+    await openMore();
+    expect(await card.findByText(/Writing kit 2 of 3/)).toBeInTheDocument();
   });
 
   it('hides the time when the schedule is off', async () => {

@@ -237,22 +237,6 @@ model Profile {
   /// Show the Stretches (lines that may be hard to explain) of Claude's reply for a decision.
   showStretches       Boolean   @default(true)
   matchFitMin         Int       @default(60)
-  /// Nightly apply kits: at night, write the resume, cover letter and form answers for queued
-  /// jobs with your own AI key (Settings), so they are ready in the morning.
-  nightlyKits         Boolean   @default(false)
-  /// The most kits written in one night (each one costs a few cents on your key).
-  nightlyKitsMax      Int       @default(5)
-  /// Time of night for the kits, "HH:mm" in the API server's local time.
-  nightlyKitsAt       String    @default("03:00")
-  /// Also write kits for new jobs (last 14 days) with at least this Fit %, not only queued ones.
-  /// Null: the Apply queue only.
-  nightlyKitsFitMin   Int?
-  /// Target score for a kit's resume (our free Kit score). Below it, one or two more AI rounds
-  /// work in the job's terms you really have; it never makes skills up.
-  kitScoreTarget      Int       @default(90)
-  /// When the kits last ran by themselves, so a night missed while the PC was off runs as
-  /// soon as the app starts again, and only once a day.
-  nightlyKitsRanAt    DateTime?
   /// Morning briefing: one summary a day in the bell and on your phone.
   briefingOn          Boolean   @default(true)
   /// Time of day for the briefing, "HH:mm" in the API server's local time.
@@ -673,6 +657,12 @@ model SavedSearch {
   autoHideFitBelow   Int               @default(40)
   /// The most jobs Autopilot adds to your Apply queue in one day (all your searches together).
   autoQueueMaxPerDay Int               @default(10)
+  /// Autopilot writes the apply kit (resume, cover letter, form answers) of each job it queues,
+  /// right after the run, with the user's own AI key. At most autoQueueMaxPerDay a day.
+  autoKits           Boolean           @default(false)
+  /// Target score for those kits' resumes (our free Kit score, 70-95). Below it, one or two more
+  /// AI rounds work in the job's terms you really have; it never makes skills up.
+  kitScoreTarget     Int               @default(90)
   runs               SyncRun[]
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt

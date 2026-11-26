@@ -3,7 +3,6 @@ import type {
   ApiKey,
   MyDesign,
   GmailAccount,
-  KitRun,
   LanguageResume,
   MatcherResume,
   Profile,
@@ -106,11 +105,6 @@ export const PROFILE: Profile = {
   fillSavedAnswers: true,
   showStretches: true,
   matchFitMin: 60,
-  nightlyKits: false,
-  nightlyKitsMax: 5,
-  nightlyKitsAt: '03:00',
-  nightlyKitsFitMin: null,
-  kitScoreTarget: 90,
   briefingOn: true,
   briefingAt: '07:30',
   weeklyReport: true,
@@ -177,9 +171,6 @@ export const gmail: {
 
 /** Keys saved in Settings during the current test. */
 export const apiKeys: ApiKey[] = [];
-
-/** The latest apply-kits run the fake API reports; each ask moves it on by one kit. */
-export const kitRun: { current: KitRun | null; steps: KitRun[] } = { current: null, steps: [] };
 
 /** Where the fake user's Key pool request stands. */
 export const poolKey: MyPoolKey = {
@@ -267,10 +258,6 @@ export const server = setupServer(
     const input = variables['input'] as Partial<Profile>;
     return HttpResponse.json({ data: { updateNotificationSettings: { ...PROFILE, ...input } } });
   }),
-  api.mutation('SetNightlyKits', ({ variables }) => {
-    requests.push({ operation: 'SetNightlyKits', variables });
-    return HttpResponse.json({ data: { setNightlyKits: true } });
-  }),
   api.mutation('SetMailAutoStatus', ({ variables }) => {
     requests.push({ operation: 'SetMailAutoStatus', variables });
     return HttpResponse.json({ data: { setMailAutoStatus: variables['on'] } });
@@ -282,14 +269,6 @@ export const server = setupServer(
   api.mutation('SetWeeklyReport', ({ variables }) => {
     requests.push({ operation: 'SetWeeklyReport', variables });
     return HttpResponse.json({ data: { setWeeklyReport: true } });
-  }),
-  api.mutation('WriteKitsNow', () => {
-    requests.push({ operation: 'WriteKitsNow', variables: {} });
-    return HttpResponse.json({ data: { writeKitsNow: 3 } });
-  }),
-  api.query('KitRun', () => {
-    kitRun.current = kitRun.steps.shift() ?? kitRun.current;
-    return HttpResponse.json({ data: { kitRun: kitRun.current } });
   }),
   api.query('GoogleCalendar', () =>
     HttpResponse.json({

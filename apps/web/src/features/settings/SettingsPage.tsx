@@ -7,7 +7,6 @@ import { TabList } from '../profile/components/TabList';
 import { ApiKeys } from './components/ApiKeys';
 import { GmailAccounts } from './components/GmailAccounts';
 import { GoogleCalendarCard } from './components/GoogleCalendarCard';
-import { NightlyKits } from './components/NightlyKits';
 import { NotificationSettings } from './components/NotificationSettings';
 
 export type SettingsTab = 'keys' | 'gmail' | 'notifications';
@@ -47,12 +46,7 @@ export function SettingsPage() {
         />
       </div>
       <div id="settings-panel" role="tabpanel" aria-labelledby={`settings-tab-${tab}`}>
-        {tab === 'keys' && (
-          <div className="space-y-4">
-            <ApiKeys />
-            <NightlyKits />
-          </div>
-        )}
+        {tab === 'keys' && <ApiKeys />}
         {/* Only while open: it asks the server about Gmail, which other tabs don't need. */}
         {tab === 'gmail' && (
           <div className="space-y-4">

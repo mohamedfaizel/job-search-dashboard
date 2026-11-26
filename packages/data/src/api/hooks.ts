@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlClient } from './client';
+import { kitRunKey } from './kits';
 import { notificationsKey } from './notifications';
 import {
   CHECK_JOB_STILL_OPEN,
@@ -387,8 +388,9 @@ export function useRunSavedSearch() {
       return data.runSavedSearch;
     },
     onSuccess: () => {
-      // Autopilot may have queued jobs and said so in the bell.
+      // Autopilot may have queued jobs and said so in the bell, and started writing their kits.
       void queryClient.invalidateQueries({ queryKey: notificationsKey });
+      void queryClient.invalidateQueries({ queryKey: kitRunKey });
       return refreshAfterImport(queryClient);
     },
   });

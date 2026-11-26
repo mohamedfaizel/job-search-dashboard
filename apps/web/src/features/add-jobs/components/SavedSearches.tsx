@@ -163,6 +163,11 @@ function SavedSearchRow({
             {t('saved.autopilotBadge')}
           </span>
         )}
+        {search.autopilot && search.autoKits && (
+          <span className="rounded-full bg-neutral-900 px-2 py-0.5 text-xs font-medium text-amber-300">
+            {t('saved.kitsBadge')}
+          </span>
+        )}
         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
           {t(`saved.frequency.${search.schedule}`)}
         </span>

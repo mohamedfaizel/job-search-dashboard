@@ -228,6 +228,8 @@ const SAVED_SEARCH_FIELDS = /* GraphQL */ `
   autoQueueNeedsVisa
   autoHideFitBelow
   autoQueueMaxPerDay
+  autoKits
+  kitScoreTarget
   createdAt
   lastRun {
     ${SYNC_RUN_FIELDS}
@@ -319,18 +321,6 @@ export const UNDO_MAIL_AUTO = /* GraphQL */ `
 export const SET_MAIL_AUTO_STATUS = /* GraphQL */ `
   mutation SetMailAutoStatus($on: Boolean!) {
     setMailAutoStatus(on: $on)
-  }
-`;
-
-export const SET_NIGHTLY_KITS = /* GraphQL */ `
-  mutation SetNightlyKits($input: NightlyKitsInput!) {
-    setNightlyKits(input: $input)
-  }
-`;
-
-export const WRITE_KITS_NOW = /* GraphQL */ `
-  mutation WriteKitsNow {
-    writeKitsNow
   }
 `;
 
@@ -479,11 +469,6 @@ const PROFILE_FIELDS = /* GraphQL */ `
   fillSavedAnswers
   showStretches
   matchFitMin
-  nightlyKits
-  nightlyKitsMax
-  nightlyKitsAt
-  nightlyKitsFitMin
-  kitScoreTarget
   briefingOn
   briefingAt
   weeklyReport

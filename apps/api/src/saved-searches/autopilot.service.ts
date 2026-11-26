@@ -3,6 +3,7 @@ import { apiError } from '../common/api-error';
 import { getErrorMessage } from '../common/errors';
 import type { Prisma } from '../generated/prisma/client';
 import { FitService } from '../insights/fit.service';
+import { NightlyKitsService } from '../nightly-kits/nightly-kits.service';
 import type { NotificationData } from '../notifications/notifications.service';
 import { NotificationsService, TOP_JOBS } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,12 +17,15 @@ export interface AutopilotOutcome {
   queued: number;
   hidden: number;
   kept: number;
+  /** Jobs whose apply kits are being written now (0 when "Write apply kits" is off). */
+  kits: number;
 }
 
 /**
  * Autopilot: after a saved search runs, it sorts the jobs that run put on your list. Good fits go
  * to your Apply queue, closed jobs, duplicates and poor fits are hidden, and the rest stay on Job
- * posts. The bell says what it did, with Undo. It never applies anywhere for you.
+ * posts. The bell says what it did, with Undo. With "Write apply kits" on, the queued jobs' kits
+ * are written next, with the user's own AI key. It never applies anywhere for you.
  */
 @Injectable()
 export class AutopilotService {
@@ -31,6 +35,7 @@ export class AutopilotService {
     private readonly prisma: PrismaService,
     private readonly fits: FitService,
     private readonly notifications: NotificationsService,
+    private readonly kits: NightlyKitsService,
   ) {}
 
   /**
@@ -162,7 +167,26 @@ export class AutopilotService {
       queuedIds: result.queue,
       hiddenIds: result.hide,
     });
-    return { queued: result.queue.length, hidden: result.hide.length, kept: result.keep.length };
+    // The kits take about a minute each: they are written after this returns, and the bell says
+    // when they are ready.
+    const kits = search.autoKits ? result.queue : [];
+    if (kits.length > 0) {
+      void this.kits.writeFor(
+        userId,
+        kits.map((jobId) => ({
+          jobId,
+          title: byId.get(jobId)?.title ?? '',
+          company: byId.get(jobId)?.company.name ?? '',
+          target: search.kitScoreTarget,
+        })),
+      );
+    }
+    return {
+      queued: result.queue.length,
+      hidden: result.hide.length,
+      kept: result.keep.length,
+      kits: kits.length,
+    };
   }
 
   /** New jobs whose title, at the same company, was already on your list before this run. */
