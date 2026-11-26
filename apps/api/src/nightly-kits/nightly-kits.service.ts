@@ -1,9 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AI_PROVIDERS, AiCallError, completeWithKey } from '../api-keys/ai-providers';
+import {
+  type CallCost as KitCost,
+  centsIn,
+  costOf,
+  currencyFor,
+  savedPercent,
+  summedCost,
+} from '../api-keys/ai-cost';
+import type { AiUsage } from '../api-keys/ai-providers';
+import { AI_PROVIDERS, AiCallError, completeWithUsage } from '../api-keys/ai-providers';
 import { ApiKeysService } from '../api-keys/api-keys.service';
 import { getErrorMessage } from '../common/errors';
-import type { AiProvider } from '../generated/prisma/enums';
+import { AiProvider } from '../generated/prisma/enums';
 import { InsightsService } from '../insights/insights.service';
+import { ALL_KIT_PARTS, type KitParts } from '../insights/prompt';
 import { NotificationsService, TOP_JOBS } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { buildImprovePrompt, honestMissing, MAX_IMPROVE_ROUNDS } from './improve';
@@ -32,14 +42,33 @@ interface Goal {
   target: number;
   master: string;
   languages: string[];
+  /** Your currency, for the cost the bell shows. */
+  currency: ReturnType<typeof currencyFor>;
 }
 
-/** One job to write a kit for, with the target score of the saved search that queued it. */
+/** One job to write a kit for, with the kit settings of the saved search that queued it. */
 export interface KitJob {
   jobId: string;
   title: string;
   company: string;
   target: number;
+  /** The saved search that queued it, so it can show what its last run cost. */
+  searchId?: number;
+  /** Which parts Claude writes. All of them when not given. */
+  parts?: KitParts;
+  /** Use your master resume as it is when it already scores at least this. Null = never. */
+  masterMin?: number | null;
+}
+
+/** A job's kit prompt, worked out before the run so jobs that share its first part go together. */
+interface Prepared {
+  job: KitJob;
+  fixed: string;
+  text: string;
+  /** Your master resume is used as it is; Claude writes only the other parts. */
+  master: string | null;
+  /** Claude writes nothing (only the master resume was wanted). */
+  nothing: boolean;
 }
 
 export interface KitRunResult {
@@ -180,21 +209,36 @@ export class NightlyKitsService {
     }
 
     const facts = await this.factsFor(userId);
+    const prepared = await this.prepare(userId, waiting);
+    if (prepared.some((p) => p.text.includes(NO_RESUME) || p.fixed.includes(NO_RESUME))) {
+      this.track(userId, { reason: 'NO_RESUME' });
+      await this.failed(userId, 'NO_RESUME');
+      return { written: 0, failed: 0, belowTarget: 0 };
+    }
+    // Kits whose first part is the same go one after the other, so Claude's cache (kept about 5
+    // minutes) is still there for the next one. A first part used by one kit only isn't cached:
+    // keeping it costs a quarter more and nothing reads it again.
+    const shared = new Map<string, number>();
+    for (const p of prepared) shared.set(p.fixed, (shared.get(p.fixed) ?? 0) + 1);
+    prepared.sort((a, b) => (a.fixed < b.fixed ? -1 : a.fixed > b.fixed ? 1 : 0));
+
     const written: KitJob[] = [];
     let failed = 0;
     let belowTarget = 0;
+    let usedMaster = 0;
     let stop: StopReason = null;
+    const spent: { searchId: number | undefined; cost: KitCost | null }[] = [];
     const before = this.runs.get(userId);
     const doneBefore = before?.done ?? 0;
-    for (const job of waiting) {
+    for (const item of prepared) {
+      const { job } = item;
       const goal: Goal = { ...facts, target: job.target };
       try {
-        const score = await this.writeOne(userId, job, key, goal);
-        if (score === NO_RESUME) {
-          stop = 'NO_RESUME';
-          break;
-        }
-        if (score !== null && score < goal.target) belowTarget += 1;
+        const cache = key.provider === AiProvider.ANTHROPIC && (shared.get(item.fixed) ?? 0) > 1;
+        const { score, cost } = await this.writeOne(userId, item, key, goal, cache);
+        if (score !== null && score < goal.target && !item.master) belowTarget += 1;
+        if (item.master) usedMaster += 1;
+        spent.push({ searchId: job.searchId, cost });
         written.push(job);
         this.track(userId, {
           done: doneBefore + written.length + failed,
@@ -219,6 +263,7 @@ export class NightlyKitsService {
     this.track(userId, {
       reason: written.length === 0 ? (stop ?? 'NONE_WRITTEN') : stop,
     });
+    await this.saveLastRuns(spent);
     if (written.length === 0) {
       await this.failed(userId, stop ?? 'NONE_WRITTEN', failed);
     } else {
@@ -227,6 +272,7 @@ export class NightlyKitsService {
         select: { jobId: true, score: true },
       });
       const fitOf = new Map(fits.map((row) => [row.jobId, row.score]));
+      const money = summedCost(spent.map((s) => s.cost));
       await this.notifications.push(userId, KITS_READY, {
         searchName: '',
         count: written.length,
@@ -240,47 +286,124 @@ export class NightlyKitsService {
         failed,
         belowTarget,
         target: Math.max(...written.map((job) => job.target)),
+        usedMaster,
+        ...(money
+          ? {
+              costCents: centsIn(money.costMicroUsd, facts.currency),
+              savedPercent: savedPercent(money),
+              currency: facts.currency,
+            }
+          : {}),
         ...(stop ? { reason: stop } : {}),
       });
     }
     return { written: written.length, failed, belowTarget };
   }
 
+  /**
+   * Works out each job's kit prompt, and whether your master resume can be used as it is: when
+   * the search says so and it already scores at least the search's "use master resume" score, or
+   * when the search doesn't write resumes at all.
+   */
+  private async prepare(userId: number, jobs: KitJob[]): Promise<Prepared[]> {
+    const out: Prepared[] = [];
+    for (const job of jobs) {
+      const wanted = job.parts ?? ALL_KIT_PARTS;
+      const first = await this.insights.kitPrompt(userId, job.jobId, wanted);
+      const fits =
+        job.masterMin != null && first.masterScore !== null && first.masterScore >= job.masterMin;
+      const useMaster = wanted.resume ? fits : true;
+      const parts: KitParts = { ...wanted, resume: !useMaster };
+      const prompt = useMaster ? await this.insights.kitPrompt(userId, job.jobId, parts) : first;
+      out.push({
+        job,
+        fixed: prompt.fixed,
+        text: prompt.job,
+        master: useMaster ? first.master : null,
+        nothing: useMaster && !parts.cover && !parts.answers,
+      });
+    }
+    return out;
+  }
+
+  /** Each saved search shows what its latest kits run cost. */
+  private async saveLastRuns(
+    spent: { searchId: number | undefined; cost: KitCost | null }[],
+  ): Promise<void> {
+    const bySearch = new Map<number, (KitCost | null)[]>();
+    for (const { searchId, cost } of spent) {
+      if (searchId === undefined) continue;
+      bySearch.set(searchId, [...(bySearch.get(searchId) ?? []), cost]);
+    }
+    for (const [id, costs] of bySearch) {
+      const money = summedCost(costs);
+      await this.prisma.savedSearch
+        .update({
+          where: { id },
+          data: {
+            lastKitRun: {
+              at: new Date().toISOString(),
+              kits: costs.length,
+              costMicroUsd: money?.costMicroUsd ?? null,
+              savedMicroUsd: money?.savedMicroUsd ?? null,
+            },
+          },
+        })
+        .catch(() => undefined);
+    }
+  }
+
   /** The facts an improve round may use: your master resume and languages. */
   private async factsFor(userId: number): Promise<Omit<Goal, 'target'>> {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
-      select: { resumeText: true, languages: true },
+      select: { resumeText: true, languages: true, address: true },
     });
-    return { master: profile?.resumeText ?? '', languages: profile?.languages ?? [] };
+    return {
+      master: profile?.resumeText ?? '',
+      languages: profile?.languages ?? [],
+      currency: currencyFor(profile?.address ?? ''),
+    };
   }
 
   /**
    * Writes one job's kit, then improves its resume while it scores below your target: at most
    * MAX_IMPROVE_ROUNDS more calls, each only adding terms you really have. A round that scores
-   * lower is undone. Returns the kit's final score, or NO_RESUME when there is nothing to tailor.
+   * lower is undone. With your master resume used as it is, Claude writes only the other parts and
+   * there is no improve round. Returns the kit's final score and what it cost.
    */
   private async writeOne(
     userId: number,
-    job: KitJob,
+    item: Prepared,
     key: AiKey,
     goal: Goal,
-  ): Promise<number | null | typeof NO_RESUME> {
-    const { prompt } = await this.insights.forJob(userId, job.jobId);
-    if (prompt.includes(NO_RESUME)) return NO_RESUME;
-    const reply = await completeWithKey(key.provider, key.key, key.model, prompt, {
-      maxTokens: KIT_MAX_TOKENS,
-      timeoutMs: KIT_TIMEOUT_MS,
-    });
+    cache: boolean,
+  ): Promise<{ score: number | null; cost: KitCost | null }> {
+    const { job } = item;
+    const calls: AiUsage[] = [];
+    let reply = '';
+    if (!item.nothing) {
+      const answer = await completeWithUsage(
+        key.provider,
+        key.key,
+        key.model,
+        { start: item.fixed, job: item.text, cache },
+        { maxTokens: KIT_MAX_TOKENS, timeoutMs: KIT_TIMEOUT_MS },
+      );
+      calls.push(answer.usage);
+      reply = answer.text;
+    }
+    // Your master resume goes in as the kit's resume, so the kit is complete and scored.
+    if (item.master !== null) reply = `=== RESUME ===\n${item.master}\n${reply}`;
     let insights = await this.insights.saveJobResume(userId, job.jobId, reply);
     try {
-      for (let round = 0; round < MAX_IMPROVE_ROUNDS; round += 1) {
+      for (let round = 0; item.master === null && round < MAX_IMPROVE_ROUNDS; round += 1) {
         const kit = insights.jobResume;
         if (!kit || kit.score === null || kit.score >= goal.target) break;
         const terms = honestMissing([...insights.skills, ...insights.keywords], kit.stillMissing);
         // Nothing left that you really have: this is the best honest score.
         if (terms.length === 0) break;
-        const better = await completeWithKey(
+        const better = await completeWithUsage(
           key.provider,
           key.key,
           key.model,
@@ -296,7 +419,8 @@ export class NightlyKitsService {
           }),
           { maxTokens: IMPROVE_MAX_TOKENS, timeoutMs: KIT_TIMEOUT_MS },
         );
-        const next = await this.insights.saveJobResume(userId, job.jobId, better);
+        calls.push(better.usage);
+        const next = await this.insights.saveJobResume(userId, job.jobId, better.text);
         if ((next.jobResume?.score ?? 0) < kit.score) {
           // Worse than before: keep the earlier resume and stop.
           insights = await this.insights.saveJobResume(userId, job.jobId, kit.text);
@@ -310,7 +434,16 @@ export class NightlyKitsService {
         `Improving the kit for ${String(userId)}:${job.jobId} failed: ${getErrorMessage(error)}`,
       );
     }
-    return insights.jobResume?.score ?? null;
+    const cost = costOf(key.model, calls);
+    await this.prisma.jobResume.updateMany({
+      where: { userId, jobId: job.jobId },
+      data: {
+        usedMaster: item.master !== null,
+        costMicroUsd: cost?.costMicroUsd ?? null,
+        savedMicroUsd: cost?.savedMicroUsd ?? null,
+      },
+    });
+    return { score: insights.jobResume?.score ?? null, cost };
   }
 
   /** The user's chosen AI provider with its saved key and model, or null without a key. */

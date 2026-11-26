@@ -58,6 +58,12 @@ export const SAVED: SavedSearch = {
   autoQueueMaxPerDay: 10,
   autoKits: false,
   kitScoreTarget: 90,
+  kitUseMaster: true,
+  kitMasterMin: 90,
+  kitWriteResume: true,
+  kitWriteCover: true,
+  kitWriteAnswers: true,
+  lastKitRun: null,
   createdAt: '2026-10-25T08:00:00.000Z',
   lastRun: LAST_RUN,
 };

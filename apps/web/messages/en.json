@@ -1640,7 +1640,10 @@
       "copiedToast": "Copied",
       "copyBlocked": "Your browser blocked copying. Use Edit as text and copy it by hand.",
       "aiTitleHint": "Resume-Matcher scores this resume with your own AI key. A second opinion: the free Fit score above is ours.",
-      "beforeAfterHint": "Free: our own keyword check of this resume (no AI). \"was\" is the score of your master resume."
+      "beforeAfterHint": "Free: our own keyword check of this resume (no AI). \"was\" is the score of your master resume.",
+      "cost": "This kit {cost}",
+      "costHint": "What this kit cost with your AI key. About: Claude bills in US dollars.",
+      "usedMaster": "Your master resume is used as it is: it already scores {score}% for this job, so Claude wrote only the other parts. To tailor it anyway, copy the prompt in step 1 and replace this reply."
     },
     "added": {
       "label": "Added skills to check",
@@ -2432,6 +2435,7 @@
     "AUTOPILOT_LIMITS": "The Fit % for hiding must be lower than the Fit % for the queue.",
     "KITS_NOTHING_TO_WRITE": "Every job in your Apply queue already has a kit.",
     "KITS_QUEUE_EMPTY": "Nothing to write: your Apply queue is empty. Add jobs to it on My Jobs first.",
+    "KIT_PARTS_EMPTY": "Pick at least one part for Claude to write: resume, cover letter or form answers.",
     "PUSH_TOKEN_INVALID": "The phone sent a push token the app does not know. Update the phone app."
   },
   "Notifications": {
@@ -2496,7 +2500,12 @@
     "weeklyPauseButton": "Pause",
     "weeklyPaused": "Paused. You can turn it back on in Add jobs.",
     "mailAuto": "Gmail moved {count, plural, one {# job} other {# jobs}} in your tracker",
-    "mailAutoHint": "The emails were clear"
+    "mailAutoHint": "The emails were clear",
+    "kitsCost": "Cost {cost}",
+    "kitsCostHint": "What these kits cost with your AI key. About: Claude bills in US dollars.",
+    "kitsSaved": "Cache saved {percent}%",
+    "kitsSavedHint": "Claude kept the part that is the same for every job, so later kits read it for a tenth of the price.",
+    "kitsUsedMaster": "{count, plural, one {# used} other {# used}} your master resume as it is (it already fit)."
   },
   "Welcome": {
     "title": "Welcome, {name}!",

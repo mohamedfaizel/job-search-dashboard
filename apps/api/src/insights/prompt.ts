@@ -233,36 +233,106 @@ function writeInLine(input: PromptInput): string {
   return `Write the resume in English: the job doesn't ask for German.${translate}`;
 }
 
+/** Which parts of a kit Claude writes. Without the resume, your master resume is used as it is. */
+export interface KitParts {
+  resume: boolean;
+  cover: boolean;
+  answers: boolean;
+}
+
+export const ALL_KIT_PARTS: KitParts = { resume: true, cover: true, answers: true };
+
+/** The check part when no resume is written: only what is left to ask. */
+const CHECK_NO_RESUME = `- Stretches: each line I might struggle to explain in an interview, with why, and ask me: keep, soften or drop?
+- Ask me: details you left out because you did not know them. Never ask what my application facts or saved answers already answer: use those answers.
+Write "none" for Stretches or Ask me when there is nothing to ask.`;
+
+/** The cover letter and form answers lines, for the parts that are asked for. */
+function coverAndAnswersFor(company: string, parts: KitParts): string {
+  const [cover, answers] = coverAndAnswers(company).split('\n');
+  return [parts.cover ? cover : '', parts.answers ? answers : ''].filter(Boolean).join('\n');
+}
+
 /**
- * The Apply kit prompt: paste it into Claude (desktop or web) and one reply brings the resume
- * tailored to the job, a cover letter and answers to the usual form questions. Writing it there
- * uses your Claude subscription instead of API credits. Claude may add a term that is closely
- * related to your real experience (Apollo next to GraphQL), but never invents employers, titles,
- * dates or numbers, and lists what it added as related so you can check it. The reply comes back
- * between marker lines, so pasting it into the job splits it into its parts.
+ * The Apply kit prompt in two parts. `fixed` is the same for every job written in one language
+ * (the rules, your skills, achievements, facts and master resume), so with your Claude key a run
+ * of several kits can keep it in Claude's prompt cache and pay about a tenth for it from the
+ * second kit on. `job` is what changes: the job, what it misses, the ad and its answers.
  */
-export function buildResumePrompt(input: PromptInput): string {
+export function kitPromptParts(
+  input: PromptInput,
+  parts: KitParts = ALL_KIT_PARTS,
+): { fixed: string; job: string } {
   const writeIn = writeInLine(input);
   const where = input.city ? ` in ${input.city}` : '';
   const resume = input.resume.trim()
     ? input.resume.trim()
     : '(I have not added my resume here yet. Ask me for it before you start.)';
-
   const sameLanguage = input.resumeLanguage === 'de' ? 'in German' : 'in English';
   const savedAnswers = input.savedAnswers.trim()
     ? `\n\nMy saved answers (reuse their wording where they fit):\n"""\n${input.savedAnswers.trim()}\n"""`
     : '';
+  const others = coverAndAnswersFor(input.company, parts);
+  const replyParts = (
+    [
+      ['RESUME', '(the resume)', parts.resume],
+      ['COVER LETTER', '(the cover letter)', parts.cover],
+      ['FORM ANSWERS', '(one "Question: answer" per line)', parts.answers],
+    ] as const
+  ).filter(([, , wanted]) => wanted);
+  const format = `Reply in exactly this format, with these ${String(replyParts.length + 1)} marker lines in English as written, so my job tracker can split your reply:
+${replyParts.map(([part, what]) => `${marker(part)}\n${what}`).join('\n')}
+${marker('CHECK')}
+${parts.resume ? CHECK_PART : CHECK_NO_RESUME}`;
 
-  return `Please tailor my resume for this job, then write a cover letter and the answers for the application form. Goal: a resume a hiring manager believes and an ATS reads correctly. Cover the job's must-have skills first, then use the ad's own words wherever they truly describe my work.
+  if (!parts.resume) {
+    const what = [
+      parts.cover ? 'a cover letter' : '',
+      parts.answers ? 'the answers for the application form' : '',
+    ]
+      .filter(Boolean)
+      .join(' and ');
+    return {
+      fixed: `Please write ${what} for the job at the end of this message. My resume below already fits it well: use it as it is and do not rewrite it.
 
+Never invent employers, job titles, dates, degrees, certificates or numbers. Every claim must be supported by my resume, my other skills or my achievements.
+
+Other skills I have (not all of them are in my resume):
+${list(input.otherSkills)}${achievementsPart(input.achievements)}
+
+${languagesRule(input.languages)}
+
+My application facts:
+${list(input.facts)}
+
+My resume:
+"""
+${resume}
+"""
+
+${format}`,
+      job: `=== THE JOB ===
 Job: ${input.title} at ${input.company}${where}
-${writeIn}
 
-Skills the job asks for that my resume does not show yet:
-${list(input.missingSkills)}
+The job ad:
+"""
+${input.description?.trim() || '(No description saved.)'}
+"""${savedAnswers}
 
-Keywords from the job ad that my resume does not use yet (use the ones that truly fit, as natural words, see rule 3):
-${list(input.missingKeywords)}${mustAddPart(input.mustAdd)}
+Write, ${sameLanguage}:
+${others}`,
+    };
+  }
+
+  const then = others ? `\n\nThen write, ${sameLanguage}:\n${others}` : '';
+  const tasks = [
+    parts.cover ? 'a cover letter' : '',
+    parts.answers ? 'the answers for the application form' : '',
+  ]
+    .filter(Boolean)
+    .join(' and ');
+  return {
+    fixed: `Please tailor my resume for the job at the end of this message${tasks ? `, then write ${tasks}` : ''}. Goal: a resume a hiring manager believes and an ATS reads correctly. Cover the job's must-have skills first, then use the ad's own words wherever they truly describe my work.
 
 Other skills I have (not all of them are in my resume):
 ${list(input.otherSkills)}${achievementsPart(input.achievements)}
@@ -275,34 +345,47 @@ ${languagesRule(input.languages)}
 
 ${layout(input.settings)}
 
+My application facts:
+${list(input.facts)}
+
 My current resume:
 """
 ${resume}
 """
 
-The job ad:
-"""
-${input.description?.trim() || '(No description saved.)'}
-"""
-
-Then write, ${sameLanguage}:
-${coverAndAnswers(input.company)}
-
 Before you reply, review your own draft as the hiring manager for this job would, and fix what you find. Reply only with the fixed version:
 ${SELF_REVIEW}
 
-My application facts:
-${list(input.facts)}${savedAnswers}
+${format}`,
+    job: `=== THE JOB ===
+Job: ${input.title} at ${input.company}${where}
+${writeIn}
 
-Reply in exactly this format, with these four marker lines in English as written, so my job tracker can split your reply:
-${marker('RESUME')}
-(the resume)
-${marker('COVER LETTER')}
-(the cover letter)
-${marker('FORM ANSWERS')}
-(one "Question: answer" per line)
-${marker('CHECK')}
-${CHECK_PART}`;
+Skills the job asks for that my resume does not show yet:
+${list(input.missingSkills)}
+
+Keywords from the job ad that my resume does not use yet (use the ones that truly fit, as natural words, see rule 3):
+${list(input.missingKeywords)}${mustAddPart(input.mustAdd)}
+
+The job ad:
+"""
+${input.description?.trim() || '(No description saved.)'}
+"""${savedAnswers}${then}`,
+  };
+}
+
+/**
+ * The Apply kit prompt: paste it into Claude (desktop or web) and one reply brings the resume
+ * tailored to the job, a cover letter and answers to the usual form questions. Writing it there
+ * uses your Claude subscription instead of API credits. Claude may add a term that is closely
+ * related to your real experience (Apollo next to GraphQL), but never invents employers, titles,
+ * dates or numbers, and lists what it added as related so you can check it. The reply comes back
+ * between marker lines, so pasting it into the job splits it into its parts. The part that is the
+ * same for every job comes first (see kitPromptParts).
+ */
+export function buildResumePrompt(input: PromptInput): string {
+  const { fixed, job } = kitPromptParts(input);
+  return `${fixed}\n\n${job}`;
 }
 
 /** What Claude wrote for a job, as saved: the draft the review prompt checks. */

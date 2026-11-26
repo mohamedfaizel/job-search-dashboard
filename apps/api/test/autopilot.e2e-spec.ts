@@ -16,6 +16,14 @@ const SET_AUTOPILOT = /* GraphQL */ `
       autoQueueMaxPerDay
       autoKits
       kitScoreTarget
+      kitUseMaster
+      kitMasterMin
+      kitWriteResume
+      kitWriteCover
+      kitWriteAnswers
+      lastKitRun {
+        kits
+      }
     }
   }
 `;
@@ -126,9 +134,25 @@ describe('Autopilot', () => {
       autoQueueMaxPerDay: 5,
       autoKits: true,
       kitScoreTarget: 85,
+      kitUseMaster: false,
+      kitMasterMin: 95,
+      kitWriteResume: true,
+      kitWriteCover: false,
+      kitWriteAnswers: true,
     };
     const ok = await t.gql(SET_AUTOPILOT, { id: s.id, input });
-    expect(ok.data).toEqual({ setSavedSearchAutopilot: input });
+    expect(ok.data).toEqual({ setSavedSearchAutopilot: { ...input, lastKitRun: null } });
+
+    const none = await t.gql(SET_AUTOPILOT, {
+      id: s.id,
+      input: { ...input, kitWriteResume: false, kitWriteAnswers: false },
+    });
+    expect(none.errors?.[0]?.extensions).toMatchObject({ apiCode: 'KIT_PARTS_EMPTY' });
+    const lowMaster = await t.gql(SET_AUTOPILOT, {
+      id: s.id,
+      input: { ...input, kitMasterMin: 70 },
+    });
+    expect(lowMaster.errors?.[0]?.message).toMatch(/80 to 100/);
 
     const bad = await t.gql(SET_AUTOPILOT, { id: s.id, input: { ...input, autoHideFitBelow: 80 } });
     expect(bad.errors?.[0]?.extensions).toMatchObject({ apiCode: 'AUTOPILOT_LIMITS' });
@@ -218,7 +242,7 @@ describe('Autopilot', () => {
     const s = await search();
     await t.prisma.savedSearch.update({
       where: { id: s.id },
-      data: { autoKits: true, kitScoreTarget: 85 },
+      data: { autoKits: true, kitScoreTarget: 85, kitMasterMin: 92, kitWriteCover: false },
     });
     const before = new Date(Date.now() - 60_000);
     await job('good', 90);
@@ -226,7 +250,15 @@ describe('Autopilot', () => {
 
     expect(await autopilot.afterRun(1, s.id, before)).toMatchObject({ queued: 1, kits: 1 });
     expect(writeFor).toHaveBeenCalledWith(1, [
-      { jobId: 'good', title: 'Job good', company: 'Acme', target: 85 },
+      {
+        jobId: 'good',
+        title: 'Job good',
+        company: 'Acme',
+        target: 85,
+        searchId: s.id,
+        parts: { resume: true, cover: false, answers: true },
+        masterMin: 92,
+      },
     ]);
   });
 });

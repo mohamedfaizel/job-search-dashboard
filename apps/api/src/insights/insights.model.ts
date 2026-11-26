@@ -134,6 +134,22 @@ export class JobResumeModel {
   @Field(() => [String], { description: 'Skills and keywords still missing from this resume' })
   stillMissing!: string[];
 
+  @Field({
+    description:
+      'Written with your AI key from your master resume as it is: it already fit the job, so only the cover letter and form answers were written',
+  })
+  usedMaster!: boolean;
+
+  @Field(() => Int, {
+    nullable: true,
+    description:
+      'What writing this kit with your AI key cost, in cents (or pence) of `currency`. Null when pasted in',
+  })
+  costCents!: number | null;
+
+  @Field({ description: 'Your currency, from the address on My profile: EUR, GBP or USD' })
+  currency!: string;
+
   @Field(() => [FactFindingModel], {
     nullable: true,
     description:

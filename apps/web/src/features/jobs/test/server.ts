@@ -174,6 +174,9 @@ export const SAVED_RESUME: JobResume = {
   nowCovered: ['graphql'],
   stillMissing: ['microfrontends'],
   addedSkills: [],
+  usedMaster: false,
+  costCents: null,
+  currency: 'EUR',
 };
 
 /** Claude's interview prep the test user saved for job-1. Tests start with nothing. */

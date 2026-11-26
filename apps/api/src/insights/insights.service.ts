@@ -5,6 +5,7 @@ import {
   NotFoundException,
   OnApplicationBootstrap,
 } from '@nestjs/common';
+import { centsIn, currencyFor, type Currency } from '../api-keys/ai-cost';
 import { CalendarService } from '../calendar/calendar.service';
 import { apiError } from '../common/api-error';
 import { DocumentsService } from '../documents/documents.service';
@@ -34,7 +35,7 @@ import type {
 } from './insights.model';
 import { buildInterviewPrompt, buildMockInterviewPrompt } from './interview-prompt';
 import { checkPdf, readPdf } from './pdf-check';
-import type { PromptInput } from './prompt';
+import type { KitParts, PromptInput } from './prompt';
 import {
   achievementLines,
   DEFAULT_RESUME_SETTINGS,
@@ -43,6 +44,7 @@ import {
   savedAnswersText,
   buildQueuePrompt,
   buildResumePrompt,
+  kitPromptParts,
   buildReviewPrompt,
   QUEUE_PROMPT_MAX,
   splitQueueReply,
@@ -120,6 +122,29 @@ export class InsightsService implements OnApplicationBootstrap {
     return insights;
   }
 
+  /**
+   * What Apply kits written with your AI key send: the kit prompt in its two parts (see
+   * kitPromptParts), and how well your master resume already fits the job. `masterScore` is null
+   * when the master resume can't be used as it is: there is none, or it is in another language
+   * than the one the job needs.
+   */
+  async kitPrompt(
+    userId: number,
+    jobId: string,
+    parts: KitParts,
+  ): Promise<{ fixed: string; job: string; masterScore: number | null; master: string }> {
+    const { insights, promptInput } = await this.analyse(userId, jobId);
+    const usable =
+      insights.hasResume &&
+      promptInput.resumeIn === promptInput.resumeLanguage &&
+      insights.checkedAgainst === promptInput.resumeIn;
+    return {
+      ...kitPromptParts(promptInput, parts),
+      masterScore: usable ? insights.score : null,
+      master: promptInput.resume,
+    };
+  }
+
   /** The job's insights, and what its Apply kit prompt is built from. */
   private async analyse(
     userId: number,
@@ -190,6 +215,8 @@ export class InsightsService implements OnApplicationBootstrap {
           aiError: true,
           aiMissing: true,
           aiTips: true,
+          usedMaster: true,
+          costMicroUsd: true,
         },
       }),
       this.prisma.languageResume.findMany({
@@ -327,7 +354,11 @@ export class InsightsService implements OnApplicationBootstrap {
       keywordsCoverage: before.keywords,
       titleMatch: before.title,
       score: before.score,
-      jobResume: jobResume && this.afterScore(jobResume, terms, before, factSources, haveList),
+      jobResume:
+        jobResume &&
+        this.afterScore(jobResume, terms, before, factSources, haveList, {
+          currency: currencyFor(profile?.address ?? ''),
+        }),
       prompt: buildResumePrompt(promptInput),
       reviewPrompt: jobResume?.text.trim()
         ? buildReviewPrompt(promptInput, {
@@ -470,6 +501,10 @@ export class InsightsService implements OnApplicationBootstrap {
       aiMissing: [],
       aiTips: [],
       aiStartedAt: null,
+      // A pasted or uploaded reply was not written with your key: no cost to show.
+      usedMaster: false,
+      costMicroUsd: null,
+      savedMicroUsd: null,
     };
     await this.prisma.jobResume.upsert({
       where: { userId_jobId: { userId, jobId } },
@@ -993,11 +1028,14 @@ export class InsightsService implements OnApplicationBootstrap {
       aiError: string | null;
       aiMissing: string[];
       aiTips: string[];
+      usedMaster?: boolean;
+      costMicroUsd?: number | null;
     },
     terms: Parameters<typeof checkResume>[1],
     before: ResumeCheck,
     facts: Pick<FactCheckInput, 'sources' | 'jobSkills'> | null,
     mySkills: string[],
+    money: { currency: Currency },
   ): JobResumeModel {
     const after = checkResume(jobResume.text, terms);
     const beforeChecks = [...before.skillChecks, ...before.keywordChecks];
@@ -1019,6 +1057,10 @@ export class InsightsService implements OnApplicationBootstrap {
       aiError: jobResume.aiError,
       aiMissing: jobResume.aiMissing,
       aiTips: jobResume.aiTips,
+      usedMaster: jobResume.usedMaster ?? false,
+      costCents:
+        jobResume.costMicroUsd == null ? null : centsIn(jobResume.costMicroUsd, money.currency),
+      currency: money.currency,
       nowCovered: afterChecks
         .filter((t, i) => t.inResume && !beforeChecks[i]?.inResume)
         .map((t) => t.term),

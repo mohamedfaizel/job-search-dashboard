@@ -70,6 +70,25 @@ const COMPLETE_TIMEOUT_MS = 90_000;
 /** Why an AI call did not give an answer, in one sentence the screen can show. */
 export class AiCallError extends Error {}
 
+/** The tokens one AI call used, as the provider reports them. */
+export interface AiUsage {
+  /** Prompt tokens read at the full price. */
+  input: number;
+  output: number;
+  /** Prompt tokens written to Claude's cache (about 1.25x the input price). */
+  cacheWrite: number;
+  /** Prompt tokens read from the cache (a tenth of the input price or less). */
+  cacheRead: number;
+}
+
+/** A prompt in two parts: `start` comes first and, with `cache`, is kept in Claude's cache. */
+export interface SplitPrompt {
+  start: string;
+  job: string;
+  /** Mark `start` for Claude's prompt cache. Only worth it when another call reuses it soon. */
+  cache: boolean;
+}
+
 /**
  * Asks the provider one question with the user's own key and returns the answer as text. This is
  * what "Improve with my key" uses; it costs the user's credits, so it runs only on a click.
@@ -81,6 +100,37 @@ export async function completeWithKey(
   prompt: string,
   options: { maxTokens?: number; timeoutMs?: number } = {},
 ): Promise<string> {
+  return (await completeWithUsage(provider, key, model, prompt, options)).text;
+}
+
+/** One user message: plain text, or the two parts with the cache mark on the first. */
+function anthropicContent(prompt: string | SplitPrompt) {
+  if (typeof prompt === 'string') return prompt;
+  return [
+    {
+      type: 'text',
+      text: prompt.start,
+      ...(prompt.cache ? { cache_control: { type: 'ephemeral' } } : {}),
+    },
+    { type: 'text', text: prompt.job },
+  ];
+}
+
+const joined = (prompt: string | SplitPrompt) =>
+  typeof prompt === 'string' ? prompt : `${prompt.start}\n\n${prompt.job}`;
+
+/**
+ * Like completeWithKey, and also says how many tokens the call used, so the app can show what a
+ * kit really cost. A split prompt sends its same-for-every-job part first: Claude can cache it,
+ * and OpenAI caches a long same start by itself.
+ */
+export async function completeWithUsage(
+  provider: AiProvider,
+  key: string,
+  model: string,
+  prompt: string | SplitPrompt,
+  options: { maxTokens?: number; timeoutMs?: number } = {},
+): Promise<{ text: string; usage: AiUsage }> {
   const maxTokens = options.maxTokens ?? 4096;
   const anthropic = provider === AiProvider.ANTHROPIC;
   let res: Response;
@@ -99,8 +149,12 @@ export async function completeWithKey(
         },
         body: JSON.stringify(
           anthropic
-            ? { model, max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] }
-            : { model, messages: [{ role: 'user', content: prompt }] },
+            ? {
+                model,
+                max_tokens: maxTokens,
+                messages: [{ role: 'user', content: anthropicContent(prompt) }],
+              }
+            : { model, messages: [{ role: 'user', content: joined(prompt) }] },
         ),
         signal: AbortSignal.timeout(options.timeoutMs ?? COMPLETE_TIMEOUT_MS),
       },
@@ -117,6 +171,7 @@ export async function completeWithKey(
   const body = (await res.json().catch(() => null)) as {
     content?: { type?: string; text?: string }[];
     choices?: { message?: { content?: string } }[];
+    usage?: RawUsage;
   } | null;
   const text = anthropic
     ? (body?.content ?? [])
@@ -125,5 +180,35 @@ export async function completeWithKey(
         .join('')
     : (body?.choices?.[0]?.message?.content ?? '');
   if (!text.trim()) throw new AiCallError('The AI provider sent an empty answer.');
-  return text;
+  return { text, usage: usageOf(anthropic, body?.usage) };
+}
+
+/** Token counts as Claude (input_tokens…) or OpenAI (prompt_tokens…) send them. */
+interface RawUsage {
+  input_tokens?: number;
+  output_tokens?: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  prompt_tokens_details?: { cached_tokens?: number };
+}
+
+function usageOf(anthropic: boolean, usage: RawUsage | undefined): AiUsage {
+  if (anthropic) {
+    return {
+      input: usage?.input_tokens ?? 0,
+      output: usage?.output_tokens ?? 0,
+      cacheWrite: usage?.cache_creation_input_tokens ?? 0,
+      cacheRead: usage?.cache_read_input_tokens ?? 0,
+    };
+  }
+  // OpenAI counts cached tokens inside prompt_tokens.
+  const cached = usage?.prompt_tokens_details?.cached_tokens ?? 0;
+  return {
+    input: Math.max(0, (usage?.prompt_tokens ?? 0) - cached),
+    output: usage?.completion_tokens ?? 0,
+    cacheWrite: 0,
+    cacheRead: cached,
+  };
 }

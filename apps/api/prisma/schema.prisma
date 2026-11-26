@@ -663,6 +663,16 @@ model SavedSearch {
   /// Target score for those kits' resumes (our free Kit score, 70-95). Below it, one or two more
   /// AI rounds work in the job's terms you really have; it never makes skills up.
   kitScoreTarget     Int               @default(90)
+  /// Use your master resume as it is when it already scores at least kitMasterMin for the job:
+  /// then Claude writes only the cover letter and form answers, which costs about half.
+  kitUseMaster       Boolean           @default(true)
+  kitMasterMin       Int               @default(90)
+  /// Which parts of each kit Claude writes. Without the resume, your master resume is used.
+  kitWriteResume     Boolean           @default(true)
+  kitWriteCover      Boolean           @default(true)
+  kitWriteAnswers    Boolean           @default(true)
+  /// The latest kits run of this search: { at, kits, costMicroUsd, savedMicroUsd }.
+  lastKitRun         Json?
   runs               SyncRun[]
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
@@ -721,6 +731,13 @@ model JobResume {
   aiMissing     String[]        @default([])
   aiTips        String[]        @default([])
   aiStartedAt   DateTime?
+  /// Written with your AI key and your master resume was used as it is: it already scored at
+  /// least the saved search's "use master resume" score, so only the other parts were written.
+  usedMaster    Boolean         @default(false)
+  /// What writing this kit with your AI key cost, and what Claude's prompt cache saved, in
+  /// millionths of a US dollar. Null when it was pasted in or the model has no known price.
+  costMicroUsd  Int?
+  savedMicroUsd Int?
   updatedAt     DateTime        @updatedAt
 
   @@id([userId, jobId])

@@ -6,6 +6,7 @@ import { parseLine, pdfFileName, textToPdf, toWinAnsi } from './pdf';
 import {
   applicationFacts,
   buildResumePrompt,
+  kitPromptParts,
   buildReviewPrompt,
   splitReply,
   buildQueuePrompt,
@@ -341,6 +342,38 @@ describe('buildResumePrompt', () => {
     expect(prompt).toContain('Only the job ad’s own skills may be added');
     expect(prompt).toContain('Leave out skills from my resume that the ad does not need');
     expect(prompt).toContain('- Changes: what your own review changed');
+  });
+
+  it('puts the part that is the same for every job first, so a run of kits can cache it', () => {
+    const one = kitPromptParts(input);
+    const other = kitPromptParts({
+      ...input,
+      title: 'Web Developer',
+      company: 'Beta',
+      missingSkills: ['vue'],
+      description: 'We need Vue.',
+      savedAnswers: 'Other answers.',
+    });
+    expect(one.fixed).toBe(other.fixed);
+    expect(one.fixed).toContain('React developer since 2019.');
+    expect(one.fixed).not.toContain('Frontend Entwickler');
+    expect(one.job).toContain('Job: Frontend Entwickler at Acme in Berlin');
+    expect(one.job).toContain('Wir suchen');
+    expect(buildResumePrompt(input)).toBe(`${one.fixed}\n\n${one.job}`);
+  });
+
+  it('asks only for the parts you want, and keeps your master resume when it already fits', () => {
+    const noResume = kitPromptParts(input, { resume: false, cover: true, answers: false });
+    expect(noResume.fixed).toContain('use it as it is and do not rewrite it');
+    expect(noResume.fixed).toContain('=== COVER LETTER ===');
+    expect(noResume.fixed).not.toContain('=== RESUME ===');
+    expect(noResume.fixed).not.toContain('=== FORM ANSWERS ===');
+    expect(noResume.job).toContain('A cover letter for this job');
+    expect(noResume.job).not.toContain('Answers to the questions');
+    const resumeOnly = kitPromptParts(input, { resume: true, cover: false, answers: false });
+    expect(resumeOnly.fixed).toContain('=== RESUME ===');
+    expect(resumeOnly.fixed).not.toContain('=== COVER LETTER ===');
+    expect(resumeOnly.job).not.toContain('Then write');
   });
 
   it('asks for ATS-safe dates and bans clichés and em dashes', () => {

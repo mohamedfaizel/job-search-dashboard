@@ -9,12 +9,13 @@ import {
   useMatchJobResume,
   useUploadJobResume,
 } from '@jobsearch/data';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { DragEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '../../../components/Toasts';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useAiState } from '../../../lib/ai-status';
+import { formatCost } from '../../../lib/money';
 import { replyParts } from '../reply';
 import { useJobFormat } from '../useJobFormat';
 import { AddedSkills } from './AddedSkills';
@@ -541,6 +542,7 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
   const [replacing, setReplacing] = useState(false);
   const [template, setTemplate] = useState<string | null>(null);
   const t = useTranslations('Jobs.reply');
+  const locale = useLocale();
   const f = useJobFormat();
   const chosen = template ?? style.data?.resumeTemplate ?? 'classic';
   const pdf = usePdfCheck(jobId, chosen, jobResume?.updatedAt ?? '');
@@ -623,6 +625,14 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
 
   const tabsEnd = (
     <>
+      {jobResume.costCents !== null && (
+        <span
+          title={t('costHint')}
+          className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-white tabular-nums"
+        >
+          {t('cost', { cost: formatCost(jobResume.costCents, jobResume.currency, locale) })}
+        </span>
+      )}
       <span className="text-xs text-slate-600" title={jobResume.fileName ?? t('pastedText')}>
         {t('saved', { date: f.date(jobResume.updatedAt) })}
       </span>
@@ -662,6 +672,12 @@ export function SavedReply({ insights }: { insights: JobInsights }) {
         resume={jobResume.text}
         answers={jobResume.claudeAnswers}
       />
+
+      {jobResume.usedMaster && (
+        <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          {t('usedMaster', { score: jobResume.score ?? before ?? 0 })}
+        </p>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         {jobResume.score !== null && (

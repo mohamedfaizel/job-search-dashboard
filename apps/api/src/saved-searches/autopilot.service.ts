@@ -178,6 +178,13 @@ export class AutopilotService {
           title: byId.get(jobId)?.title ?? '',
           company: byId.get(jobId)?.company.name ?? '',
           target: search.kitScoreTarget,
+          searchId: search.id,
+          parts: {
+            resume: search.kitWriteResume,
+            cover: search.kitWriteCover,
+            answers: search.kitWriteAnswers,
+          },
+          masterMin: search.kitUseMaster ? search.kitMasterMin : null,
         })),
       );
     }

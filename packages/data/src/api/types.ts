@@ -298,8 +298,28 @@ export interface SavedSearch {
   autoKits: boolean;
   /** Target score for those kits' resumes (70-95). */
   kitScoreTarget: number;
+  /** Use your master resume as it is when it already scores at least kitMasterMin (80-100). */
+  kitUseMaster: boolean;
+  kitMasterMin: number;
+  /** Which parts Claude writes. Without the resume, your master resume is used. */
+  kitWriteResume: boolean;
+  kitWriteCover: boolean;
+  kitWriteAnswers: boolean;
+  /** What the latest kits run of this search cost. Null before its first run. */
+  lastKitRun: KitRunCost | null;
   createdAt: string;
   lastRun: SyncRun | null;
+}
+
+/** What a saved search's latest kits run cost, in your currency. */
+export interface KitRunCost {
+  kits: number;
+  /** Cents (or pence) of `currency`. Null when the AI model has no known price. */
+  costCents: number | null;
+  /** What Claude's prompt cache saved, in %. 0 = none. */
+  savedPercent: number;
+  /** EUR, GBP or USD, from the address on My profile. */
+  currency: string;
 }
 
 /** A saved search's Autopilot rules, as Saved searches › more › Autopilot saves them. */
@@ -312,7 +332,14 @@ export type AutopilotRules = Pick<
   | 'autoQueueMaxPerDay'
   | 'autoKits'
   | 'kitScoreTarget'
->;
+> &
+  // The kit cost-saving settings: left out, the saved search keeps what it has.
+  Partial<
+    Pick<
+      SavedSearch,
+      'kitUseMaster' | 'kitMasterMin' | 'kitWriteResume' | 'kitWriteCover' | 'kitWriteAnswers'
+    >
+  >;
 
 export const SCHEDULE_FREQUENCIES = ['OFF', 'HOURLY', 'DAILY', 'WEEKDAYS'] as const;
 export type ScheduleFrequency = (typeof SCHEDULE_FREQUENCIES)[number];
@@ -700,6 +727,11 @@ export interface JobResume {
   nowCovered: string[];
   /** Skills and keywords still missing. */
   stillMissing: string[];
+  /** Written with your AI key from your master resume as it is (it already fit the job). */
+  usedMaster: boolean;
+  /** What writing it with your AI key cost, in cents of `currency`. Null when pasted in. */
+  costCents: number | null;
+  currency: string;
   /** Numbers, skills and levels that are in the resume but in nothing you told us. */
   factCheck?: FactFinding[] | null;
   /** Skills this resume names that are not on your My skills list: marked gold in Apply step 3. */
@@ -923,6 +955,13 @@ export interface AppNotification {
   /** KITS_READY: kits whose resume stayed below `target` (the job needs skills you don't have). */
   belowTarget: number;
   target: number | null;
+  /** KITS_READY: kits that used your master resume as it is (it already fit). */
+  usedMaster: number;
+  /** KITS_READY: what the run cost, in cents of `currency`; null when unknown. */
+  costCents: number | null;
+  /** KITS_READY: what Claude's prompt cache saved, in %. */
+  savedPercent: number;
+  currency: string | null;
   /** KITS_FAILED, or a kits run that stopped early: NO_KEY, KEY_REFUSED, NO_RESUME, NONE_WRITTEN. */
   reason: string | null;
   /** BRIEFING: what the morning briefing counted. */

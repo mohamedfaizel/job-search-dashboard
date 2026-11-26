@@ -198,6 +198,11 @@ input AutopilotInput {
   """Hide a new job under this Fit %. 0 = never hide for its Fit"""
   autoHideFitBelow: Int!
 
+  """
+  Write the apply kit of each job it queues, right after the run, with your AI key
+  """
+  autoKits: Boolean! = false
+
   """Queue a new job with at least this Fit %"""
   autoQueueFitMin: Int!
 
@@ -207,6 +212,24 @@ input AutopilotInput {
   """Don't queue a job whose ad says no visa sponsorship"""
   autoQueueNeedsVisa: Boolean!
   autopilot: Boolean!
+
+  """The score at which it is used (80-100)"""
+  kitMasterMin: Int
+
+  """Target score for those kits (70-95)"""
+  kitScoreTarget: Int! = 90
+
+  """Use your master resume as it is when it scores enough"""
+  kitUseMaster: Boolean
+
+  """Claude writes the form answers"""
+  kitWriteAnswers: Boolean
+
+  """Claude writes the cover letter"""
+  kitWriteCover: Boolean
+
+  """Claude writes the tailored resume"""
+  kitWriteResume: Boolean
 }
 
 """What a morning briefing counted"""
@@ -658,6 +681,11 @@ type Job {
   externalId: String
 
   """
+  True when Fit % is only a guess from the title, because the ad has no text. Shown as "~61%"
+  """
+  fitEstimate: Boolean!
+
+  """
   Fit %: how well your profile resume covers the skills, keywords and title (0-100). No AI. Null without a resume
   """
   fitScore: Int
@@ -978,6 +1006,11 @@ type JobPage {
 The resume you wrote for this job, uploaded or pasted, scored the same way as your profile resume
 """
 type JobResume {
+  """
+  Skills this resume names that are not on your My skills list. Apply step 3 marks them in gold to keep (adds to My skills) or remove
+  """
+  addedSkills: [String!]!
+
   """What went wrong. Null unless FAILED"""
   aiError: String
 
@@ -1007,8 +1040,16 @@ type JobResume {
   """
   claudeCheck: String!
 
+  """
+  What writing this kit with your AI key cost, in cents (or pence) of `currency`. Null when pasted in
+  """
+  costCents: Int
+
   """The cover letter from the Apply kit reply. Empty when there was none"""
   coverLetter: String!
+
+  """Your currency, from the address on My profile: EUR, GBP or USD"""
+  currency: String!
 
   """
   Numbers, skills and language levels that are not in your resume or profile. Null when there is no resume of yours to compare with
@@ -1042,6 +1083,11 @@ type JobResume {
   text: String!
   titleMatch: Int
   updatedAt: DateTime!
+
+  """
+  Written with your AI key from your master resume as it is: it already fit the job, so only the cover letter and form answers were written
+  """
+  usedMaster: Boolean!
 }
 
 """The copy of your resume for one job, as the Resume builder edits it"""
@@ -1191,6 +1237,23 @@ type KitRun {
   """Kits this run tries to write"""
   total: Int!
   written: Int!
+}
+
+"""What a saved search's latest kits run cost"""
+type KitRunCost {
+  """
+  What they cost, in cents (or pence) of `currency`. Null = the model has no price
+  """
+  costCents: Int
+
+  """EUR, GBP or USD, from the address on My profile"""
+  currency: String!
+
+  """Kits written"""
+  kits: Int!
+
+  """What Claude's prompt cache saved, in % (0 = none)"""
+  savedPercent: Int!
 }
 
 type LanguageResume {
@@ -1435,6 +1498,11 @@ type Mutation {
   removePoolKey(id: Int!): KeyPool!
 
   """
+  Takes one skill out of the Skills section of the resume you wrote for this job (Apply step 3 ✕), then scores it again
+  """
+  removeResumeSkill(jobId: ID!, skill: String!): JobInsights!
+
+  """
   Takes the skills the fact check flagged out of the Skills section of the resume you wrote for this job, then scores it again
   """
   removeUnsupportedSkills(jobId: ID!): JobInsights!
@@ -1563,9 +1631,6 @@ type Mutation {
   """
   setMailAutoStatus(on: Boolean!): Boolean!
 
-  """Turn nightly apply kits on or off"""
-  setNightlyKits(input: NightlyKitsInput!): Boolean!
-
   """Save a saved search's Autopilot rules"""
   setSavedSearchAutopilot(id: Int!, input: AutopilotInput!): SavedSearch!
 
@@ -1645,11 +1710,6 @@ type Mutation {
   updateNotificationSettings(input: NotificationSettingsInput!): Profile!
   updateProfile(input: ProfileInput!): Profile!
   updateSavedSearch(id: Int!, input: SavedSearchInput!): SavedSearch!
-
-  """
-  Write the queued jobs’ kits now instead of tonight. Returns how many it will write; the bell says when they are done
-  """
-  writeKitsNow: Int!
 }
 
 """
@@ -1725,14 +1785,6 @@ type MyPoolKey {
   used: Int!
 }
 
-input NightlyKitsInput {
-  """Write queued jobs’ kits at night with your own AI key"""
-  on: Boolean!
-
-  """The most kits in one night (1-20)"""
-  perNight: Int!
-}
-
 """
 Something the app tells you in the bell list. The web app writes the words from `kind` and the numbers, in your language
 """
@@ -1740,12 +1792,25 @@ type Notification {
   """INTERVIEW_SOON: when the interview is. Null for other kinds"""
   at: DateTime
 
+  """
+  KITS_READY: kits whose resume stayed below `target`, because the job needs skills you do not have
+  """
+  belowTarget: Int!
+
   """BRIEFING: what the morning briefing counted. Null for other kinds"""
   briefing: BriefingCounts
+
+  """
+  KITS_READY: what the run cost, in cents (or pence) of `currency`. Null = unknown
+  """
+  costCents: Int
 
   """How many jobs it is about"""
   count: Int!
   createdAt: DateTime!
+
+  """KITS_READY: EUR, GBP or USD"""
+  currency: String
 
   """KITS_READY / KITS_FAILED: kits that could not be written"""
   failed: Int!
@@ -1781,13 +1846,24 @@ type Notification {
   """
   refId: Int
 
+  """KITS_READY: what Claude's prompt cache saved, in % of the run"""
+  savedPercent: Int!
+
   """
   The saved search that found them; for MESSAGE_REPLY, who answered. Empty otherwise
   """
   searchName: String!
 
+  """KITS_READY: your target score for kits"""
+  target: Int
+
   """AUTOPILOT / MAIL_AUTO: you pressed Undo"""
   undone: Boolean!
+
+  """
+  KITS_READY: kits that used your master resume as it is (it already fit)
+  """
+  usedMaster: Int!
 
   """WEEKLY_REPORT: what the weekly report counted. Null for other kinds"""
   weekly: WeeklyReport
@@ -1945,14 +2021,6 @@ type Profile {
   """The Fit % a new job needs to count as a match (1-100)"""
   matchFitMin: Int!
   nationality: String!
-
-  """
-  Nightly apply kits: write queued jobs’ kits at night with your own AI key
-  """
-  nightlyKits: Boolean!
-
-  """The most kits written in one night"""
-  nightlyKitsMax: Int!
 
   """
   Notice period or earliest start, e.g. "1 month"
@@ -2160,7 +2228,7 @@ type Query {
   keyPool: KeyPool!
 
   """
-  Your latest apply-kits run, so Settings can show its progress and result
+  Your latest apply-kits run, so your saved searches can show its progress and result
   """
   kitRun: KitRun
 
@@ -2424,6 +2492,9 @@ type SavedSearch {
   """Autopilot hides a new job under this Fit %. 0 = never"""
   autoHideFitBelow: Int!
 
+  """Autopilot writes the apply kit of each job it queues, with your AI key"""
+  autoKits: Boolean!
+
   """Autopilot queues a new job with at least this Fit %"""
   autoQueueFitMin: Int!
 
@@ -2443,7 +2514,32 @@ type SavedSearch {
   employmentTypes: [String!]!
   excludeTitles: [String!]!
   id: Int!
+
+  """The score at which your master resume is used (80-100)"""
+  kitMasterMin: Int!
+
+  """Target score for those kits’ resumes (70-95)"""
+  kitScoreTarget: Int!
+
+  """
+  Use your master resume as it is when it already scores at least kitMasterMin for the job
+  """
+  kitUseMaster: Boolean!
+
+  """Claude writes the form answers"""
+  kitWriteAnswers: Boolean!
+
+  """Claude writes the cover letter"""
+  kitWriteCover: Boolean!
+
+  """Claude writes the tailored resume"""
+  kitWriteResume: Boolean!
   languages: [String!]!
+
+  """
+  What the latest kits run of this search cost. Null before its first run
+  """
+  lastKitRun: KitRunCost
 
   """The most recent import of this search"""
   lastRun: SyncRunModel

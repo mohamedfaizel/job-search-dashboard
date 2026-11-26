@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useErrorText } from '../i18n/useErrorText';
 import { MAKER } from '../lib/maker';
 import { openMessageWindow } from '../lib/message-window';
+import { formatCost } from '../lib/money';
 import { useDismiss } from '../lib/use-dismiss';
 import { TipButton } from './TipButton';
 import { useToast } from './Toasts';
@@ -471,6 +472,27 @@ function Item({ item, onOpen }: { item: AppNotification; onOpen: () => void }) {
       {kits && item.belowTarget > 0 && item.target !== null && (
         <p className="text-xs text-amber-800">
           {t('kitsBelowTarget', { count: item.belowTarget, target: item.target })}
+        </p>
+      )}
+      {kits && item.usedMaster > 0 && (
+        <p className="text-xs text-slate-600">{t('kitsUsedMaster', { count: item.usedMaster })}</p>
+      )}
+      {kits && item.costCents !== null && item.currency && (
+        <p className="flex flex-wrap gap-1.5">
+          <span
+            title={t('kitsCostHint')}
+            className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white tabular-nums"
+          >
+            {t('kitsCost', { cost: formatCost(item.costCents, item.currency, locale) })}
+          </span>
+          {item.savedPercent > 0 && (
+            <span
+              title={t('kitsSavedHint')}
+              className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200 ring-inset"
+            >
+              {t('kitsSaved', { percent: item.savedPercent })}
+            </span>
+          )}
         </p>
       )}
       <ul className="space-y-1">
