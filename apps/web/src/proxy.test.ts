@@ -31,6 +31,13 @@ describe('proxy', () => {
     expect(redirectedTo('/about', true)).toBeNull();
   });
 
+  it('opens the Impressum and the privacy policy for everyone', () => {
+    for (const path of ['/impressum', '/privacy']) {
+      expect(redirectedTo(path, false)).toBeNull();
+      expect(redirectedTo(path, true)).toBeNull();
+    }
+  });
+
   it('lets a logged-out visitor open the login and sign-up pages', () => {
     expect(redirectedTo('/login', false)).toBeNull();
     expect(redirectedTo('/signup', false)).toBeNull();
