@@ -55,8 +55,10 @@ export const rulesOf = (search: Search): Rules => {
     autoKits: search.autoKits,
     kitScoreTarget: search.kitScoreTarget,
   };
+  // Older API answers (and test data) may leave these out, so copy only the ones that are there.
+  const cost: KitCostRules = search;
   for (const key of COST_KEYS) {
-    Object.assign(rules, { [key]: search[key] });
+    if (cost[key] !== undefined) Object.assign(rules, { [key]: cost[key] });
   }
   return rules;
 };

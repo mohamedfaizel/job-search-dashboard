@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import type { SubmitEvent } from 'react';
 import { useId, useRef } from 'react';
+import { LegalLinks } from '@/features/site/LegalLinks';
 import { APP_NAME } from '@/lib/app-name';
 import { AFTER_LOGIN, safeNextPath } from '@/lib/safe-next';
 import { useErrorText } from '../i18n/useErrorText';
@@ -177,6 +178,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             {mode === 'log-in' ? t('createAnAccount') : t('logIn')}
           </Link>
         </p>
+        <LegalLinks className="mt-8 text-center" />
       </main>
     </div>
   );

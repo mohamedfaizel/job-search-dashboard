@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { DifferentSlider } from './DifferentSlider';
+import { LegalLinks } from './LegalLinks';
 import { MakerWelcome, Shot, SiteHeader, Tag, TickList, WRAP } from './SiteChrome';
 import { JOB_HUNTER_SOURCES } from './sources';
 
@@ -10,7 +11,7 @@ const H2 = 'text-3xl font-bold tracking-tight text-balance sm:text-4xl';
  * The intro page, open to everyone at / and at /about (the i in the app's header). Top to
  * bottom: the maker's welcome (big desk photo, who built the app and why, Message / LinkedIn /
  * GitHub), the Job Market with its 40+ live sources and Apply, what makes it different (a
- * slider), Resume and Tracker, privacy, and a last call to action.
+ * slider), Resume and Tracker, privacy, a last call to action, then Impressum · Privacy policy.
  */
 export function IntroPage({ loggedIn, current }: { loggedIn: boolean; current?: 'about' }) {
   return (
@@ -37,6 +38,7 @@ export function IntroContent({ loggedIn }: { loggedIn: boolean }) {
       <Features keys={['resume', 'tracker']} />
       <Trust />
       <FinalCall loggedIn={loggedIn} />
+      <LegalLinks className={`${WRAP} py-6 text-center`} />
     </>
   );
 }
