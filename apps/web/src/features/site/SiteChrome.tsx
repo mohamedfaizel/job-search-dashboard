@@ -7,6 +7,7 @@ import { Logo } from '@/components/Logo';
 import { MessageOpener } from '@/features/messages/MessageOpener';
 import { APP_NAME } from '@/lib/app-name';
 import { MAKER } from '@/lib/maker';
+import { DemoButton } from './DemoButton';
 
 /*
  * The pieces the public pages share: the black header, and the small parts the
@@ -153,6 +154,7 @@ export function MakerLinks({ loggedIn }: { loggedIn?: boolean | undefined }) {
   const t = useTranslations('Site.about');
   return (
     <div className="mt-5 flex flex-wrap gap-2">
+      <DemoButton url={MAKER.demoVideo} />
       {loggedIn !== undefined && (
         <MessageOpener loggedIn={loggedIn} className={BLACK_BUTTON}>
           {t('messageButton', { name: MAKER.name })}

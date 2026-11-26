@@ -9,8 +9,8 @@ const H2 = 'text-3xl font-bold tracking-tight text-balance sm:text-4xl';
 /**
  * The intro page, open to everyone at / and at /about (the i in the app's header). Top to
  * bottom: the maker's welcome (big desk photo, who built the app and why, Message / LinkedIn /
- * GitHub), the Job Market with its 40+ live sources and Apply, what makes it different (a
- * slider), Resume and Tracker, privacy, and a last call to action.
+ * GitHub), the Job Market with its 40+ live sources and Apply, Autopilot, what makes it
+ * different (a slider), Resume and Tracker, privacy, and a last call to action.
  */
 export function IntroPage({ loggedIn, current }: { loggedIn: boolean; current?: 'about' }) {
   return (
@@ -33,11 +33,92 @@ export function IntroContent({ loggedIn }: { loggedIn: boolean }) {
         <LiveSources />
         <Features keys={['apply']} />
       </div>
+      <Autopilot />
       <WhatIsDifferent />
       <Features keys={['resume', 'tracker']} />
       <Trust />
       <FinalCall loggedIn={loggedIn} />
     </>
+  );
+}
+
+const AUTOPILOT = [
+  { key: 'kits', img: '/site/autopilot-kits.jpg', w: 704, h: 820 },
+  { key: 'mail', img: '/site/autopilot-mail.jpg', w: 700, h: 262 },
+  { key: 'calendar', img: null, w: 0, h: 0 },
+  { key: 'weekly', img: '/site/autopilot-weekly.jpg', w: 700, h: 466 },
+] as const;
+
+/**
+ * Autopilot, on black: four picture cards for what happens by itself once a saved search has
+ * Autopilot on (ready kits, Gmail moving jobs, interviews in the calendar, briefing and weekly
+ * report), and the promise that it never applies or sends anything.
+ */
+function Autopilot() {
+  const t = useTranslations('Site.autopilot');
+  return (
+    <section aria-labelledby="autopilot-title" className="bg-black py-16 text-neutral-200">
+      <div className={WRAP}>
+        <span className="inline-block rounded bg-brand-400 px-2 py-0.5 text-xs font-bold tracking-wide text-black uppercase">
+          {t('tag')}
+        </span>
+        <h2 id="autopilot-title" className={`mt-3 ${H2} text-white`}>
+          {t('title')}
+        </h2>
+        <p className="mt-2 mb-8 max-w-prose text-neutral-300">{t('sub')}</p>
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {AUTOPILOT.map(({ key, img, w, h }) => (
+            <li
+              key={key}
+              className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
+            >
+              <div className="h-40 overflow-hidden bg-white text-slate-900">
+                {img ? (
+                  <img
+                    src={img}
+                    alt={t(`${key}Alt`)}
+                    width={w}
+                    height={h}
+                    loading="lazy"
+                    className="h-auto w-full"
+                  />
+                ) : (
+                  <CalendarPicture />
+                )}
+              </div>
+              <div className="p-3">
+                <h3 className="font-bold text-brand-400">{t(`${key}Title`)}</h3>
+                <p className="mt-1 text-sm text-neutral-300">{t(key)}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-6 border-l-4 border-brand-400 pl-3 font-semibold text-white">
+          {t('never')}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/** A small drawn calendar day with the interview on it. */
+function CalendarPicture() {
+  const t = useTranslations('Site.autopilot');
+  return (
+    <div
+      className="p-3 text-xs"
+      role="img"
+      aria-label={`${t('calendarEvent')}, ${t('calendarWhen')}`}
+    >
+      <p className="mb-2 font-bold">{t('calendarDay')}</p>
+      <p className="border-t border-slate-200 py-1.5 text-slate-500">09:00</p>
+      <p className="rounded border-l-4 border-brand-400 bg-amber-50 px-2 py-1.5">
+        <b>{t('calendarEvent')}</b>
+        <br />
+        {t('calendarWhen')}
+      </p>
+      <p className="mt-1.5 border-t border-slate-200 py-1.5 text-slate-500">12:00</p>
+    </div>
   );
 }
 

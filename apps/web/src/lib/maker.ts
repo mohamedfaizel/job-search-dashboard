@@ -10,4 +10,6 @@ export const MAKER = {
   photo: '/site/maker.jpg',
   github: process.env.NEXT_PUBLIC_MAKER_GITHUB_URL ?? 'https://github.com/mohamedfaizel',
   linkedin: process.env.NEXT_PUBLIC_MAKER_LINKEDIN_URL ?? '',
+  /** The 2-minute demo video (YouTube or a video file). Empty: the demo button is hidden. */
+  demoVideo: process.env.NEXT_PUBLIC_DEMO_VIDEO_URL ?? '',
 } as const;
