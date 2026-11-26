@@ -189,7 +189,8 @@ describe('SavedSearches', () => {
         operation: 'SetSavedSearchAutopilot',
         variables: {
           id: 1,
-          input: {
+          // objectContaining: the kit cost-saving fields ride along once the API sends them.
+          input: expect.objectContaining({
             autopilot: true,
             autoQueueFitMin: 80,
             autoQueueNeedsVisa: false,
@@ -197,7 +198,7 @@ describe('SavedSearches', () => {
             autoQueueMaxPerDay: 10,
             autoKits: false,
             kitScoreTarget: 90,
-          },
+          }),
         },
       });
     });
