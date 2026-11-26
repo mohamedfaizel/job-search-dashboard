@@ -14,6 +14,9 @@ Notice period: 1 month
 === CHECK ===
 - Changes: none`;
 
+/** 1,000 tokens in and 3,000 out on Sonnet 5.5: $0.002 + $0.03. */
+const USAGE = { input_tokens: 1000, output_tokens: 3000 };
+
 const BELL = /* GraphQL */ `
   query {
     notifications {
@@ -49,6 +52,8 @@ describe('apply kits', () => {
   const asked: string[] = [];
   /** Replies the fake AI gives, in order; REPLY when it runs out. */
   const replies: string[] = [];
+  /** Token counts it reports, in order; USAGE when it runs out. */
+  const usage: Record<string, number>[] = [];
   const real = globalThis.fetch;
 
   beforeAll(async () => {
@@ -62,6 +67,7 @@ describe('apply kits', () => {
     status = 200;
     asked.length = 0;
     replies.length = 0;
+    usage.length = 0;
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
     vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
@@ -73,7 +79,10 @@ describe('apply kits', () => {
       asked.push(typeof init?.body === 'string' ? init.body : '');
       return Promise.resolve(
         status === 200
-          ? Response.json({ content: [{ type: 'text', text: replies.shift() ?? REPLY }] })
+          ? Response.json({
+              content: [{ type: 'text', text: replies.shift() ?? REPLY }],
+              usage: usage.shift() ?? USAGE,
+            })
           : new Response(null, { status }),
       );
     });
@@ -144,6 +153,119 @@ describe('apply kits', () => {
     expect(await kits.writeFor(1, jobs().slice(1))).toBeNull();
     expect(await first).toEqual({ written: 2, failed: 0, belowTarget: 0 });
     expect(asked).toHaveLength(2);
+  });
+
+  describe('cost saving', () => {
+    const bodyOf = (i: number) =>
+      JSON.parse(asked[i] ?? '{}') as {
+        messages: { content: { text: string; cache_control?: unknown }[] }[];
+      };
+
+    it('caches the part that is the same for every job when two or more kits run together', async () => {
+      await setUp();
+      await saveAiKey(t.gql);
+      usage.push(
+        { input_tokens: 1000, output_tokens: 3000, cache_creation_input_tokens: 6000 },
+        { input_tokens: 1000, output_tokens: 3000, cache_read_input_tokens: 6000 },
+      );
+
+      await kits.writeFor(1, jobs());
+      expect(asked).toHaveLength(2);
+      const [first, second] = [bodyOf(0), bodyOf(1)];
+      const fixed = first.messages[0]!.content[0]!;
+      expect(fixed.cache_control).toEqual({ type: 'ephemeral' });
+      expect(second.messages[0]!.content[0]!.text).toBe(fixed.text);
+      expect(first.messages[0]!.content[1]!.text).toContain('=== THE JOB ===');
+
+      // $0.0796 in all, $0.0084 saved: about 7 cents in euros, 10% saved.
+      const { data } = await t.gql<{
+        notifications: {
+          items: { costCents: number | null; savedPercent: number; currency: string | null }[];
+        };
+      }>(`query { notifications { items { costCents savedPercent currency } } }`);
+      expect(data!.notifications.items[0]).toEqual({
+        costCents: 7,
+        savedPercent: 10,
+        currency: 'EUR',
+      });
+      const kit = await t.prisma.jobResume.findUniqueOrThrow({
+        where: { userId_jobId: { userId: 1, jobId: 'b' } },
+      });
+      expect(kit.costMicroUsd).toBe(32_600);
+    });
+
+    it('shows the cost of its latest run on the saved search', async () => {
+      await setUp();
+      await saveAiKey(t.gql);
+      const search = await t.prisma.savedSearch.create({
+        data: {
+          userId: 1,
+          name: 'Data',
+          titles: ['Data Engineer'],
+          skills: [],
+          countryCodes: [],
+          locations: [],
+        },
+      });
+      await kits.writeFor(
+        1,
+        jobs().map((job) => ({ ...job, searchId: search.id })),
+      );
+      const { data } = await t.gql<{
+        savedSearches: {
+          lastKitRun: { kits: number; costCents: number | null; currency: string } | null;
+        }[];
+      }>(`query { savedSearches { lastKitRun { kits costCents currency } } }`);
+      // Two kits of $0.032 each, about 6 cents in euros.
+      expect(data!.savedSearches[0]!.lastKitRun).toEqual({
+        kits: 2,
+        costCents: 6,
+        currency: 'EUR',
+      });
+    });
+
+    it('does not cache a kit that runs alone', async () => {
+      await setUp();
+      await saveAiKey(t.gql);
+      await kits.writeFor(1, one());
+      expect(bodyOf(0).messages[0]!.content[0]!.cache_control).toBeUndefined();
+    });
+
+    it('keeps your master resume when it already fits, and writes only the other parts', async () => {
+      const master = 'Data Engineer. Python, SQL, Airflow. German: A2.';
+      await setUp(master);
+      await saveAiKey(t.gql);
+      replies.push(
+        '=== COVER LETTER ===\nDear team.\n=== FORM ANSWERS ===\nQ: A\n=== CHECK ===\nnone',
+      );
+
+      const result = await kits.writeFor(1, [{ ...one()[0]!, masterMin: 50, target: 95 }]);
+      expect(result).toMatchObject({ written: 1, belowTarget: 0 });
+      // No improve round: the master resume is used as it is.
+      expect(asked).toHaveLength(1);
+      expect(bodyOf(0).messages[0]!.content[0]!.text).not.toContain('=== RESUME ===');
+      const kit = await t.prisma.jobResume.findUniqueOrThrow({
+        where: { userId_jobId: { userId: 1, jobId: 'a' } },
+      });
+      expect(kit.usedMaster).toBe(true);
+      expect(kit.text).toContain('Python, SQL, Airflow');
+      expect(kit.coverLetter).toBe('Dear team.');
+      const { data } = await t.gql<{ notifications: { items: { usedMaster: number }[] } }>(
+        `query { notifications { items { usedMaster } } }`,
+      );
+      expect(data!.notifications.items[0]!.usedMaster).toBe(1);
+    });
+
+    it('writes the resume when the master resume scores below the search’s level', async () => {
+      await setUp('Data Engineer. Java.');
+      await saveAiKey(t.gql);
+      await kits.writeFor(1, [{ ...one()[0]!, masterMin: 95 }]);
+      expect(bodyOf(0).messages[0]!.content[0]!.text).toContain('=== RESUME ===');
+      const kit = await t.prisma.jobResume.findUniqueOrThrow({
+        where: { userId_jobId: { userId: 1, jobId: 'a' } },
+      });
+      expect(kit.usedMaster).toBe(false);
+    });
   });
 
   describe('target score', () => {

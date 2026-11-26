@@ -165,6 +165,25 @@ export class NotificationModel {
   @Field(() => Int, { nullable: true, description: 'KITS_READY: your target score for kits' })
   target!: number | null;
 
+  @Field(() => Int, {
+    description: 'KITS_READY: kits that used your master resume as it is (it already fit)',
+  })
+  usedMaster!: number;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'KITS_READY: what the run cost, in cents (or pence) of `currency`. Null = unknown',
+  })
+  costCents!: number | null;
+
+  @Field(() => Int, {
+    description: "KITS_READY: what Claude's prompt cache saved, in % of the run",
+  })
+  savedPercent!: number;
+
+  @Field(() => String, { nullable: true, description: 'KITS_READY: EUR, GBP or USD' })
+  currency!: string | null;
+
   @Field(() => String, {
     nullable: true,
     description:

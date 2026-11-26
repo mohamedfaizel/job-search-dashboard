@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { centsIn, currencyFor, savedPercent, type Currency } from '../api-keys/ai-cost';
 import { apiError } from '../common/api-error';
 import type { Prisma, SavedSearch as SavedSearchRow } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,6 +8,7 @@ import { ImportSource } from '../sync/import-source';
 import type { SyncJobsInput, SyncJobsResult } from '../sync/sync.input';
 import { SyncService } from '../sync/sync.service';
 import type {
+  KitRunCostModel,
   AutopilotInput,
   SavedSearch,
   SavedSearchInput,
@@ -120,17 +122,30 @@ export class SavedSearchesService {
   ) {}
 
   async list(userId: number): Promise<SavedSearch[]> {
-    const rows = await this.prisma.savedSearch.findMany({
-      where: { userId },
-      orderBy: { name: 'asc' },
-      include: { runs: { orderBy: { id: 'desc' }, take: 1, include: withSearchName } },
-    });
+    const [rows, currency] = await Promise.all([
+      this.prisma.savedSearch.findMany({
+        where: { userId },
+        orderBy: { name: 'asc' },
+        include: { runs: { orderBy: { id: 'desc' }, take: 1, include: withSearchName } },
+      }),
+      this.currencyOf(userId),
+    ]);
     return rows.map(({ runs, ...row }) => ({
       ...row,
+      lastKitRun: kitRunOf(row.lastKitRun, currency),
       lastRun: runs[0]
         ? toRunModel(runs[0], !runs[0].complete && runs[0].nextCursor !== null)
         : null,
     }));
+  }
+
+  /** Your currency, from the address on My profile. */
+  private async currencyOf(userId: number): Promise<Currency> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { address: true },
+    });
+    return currencyFor(profile?.address ?? '');
   }
 
   async history(userId: number, limit: number, savedSearchId?: number): Promise<SyncRunModel[]> {
@@ -184,7 +199,7 @@ export class SavedSearchesService {
     const row = await this.withUniqueName(input.name, () =>
       this.prisma.savedSearch.create({ data: { ...toData(input), userId } }),
     );
-    return { ...row, lastRun: null };
+    return { ...row, lastRun: null, lastKitRun: null };
   }
 
   async update(userId: number, id: number, input: SavedSearchInput): Promise<SavedSearch> {
@@ -226,7 +241,19 @@ export class SavedSearchesService {
 
   /** Saves a search's Autopilot rules. Hiding must stay below the queue limit. */
   async setAutopilot(userId: number, id: number, input: AutopilotInput): Promise<SavedSearch> {
-    await this.findRow(userId, id);
+    const row = await this.findRow(userId, id);
+    const writes = [
+      input.kitWriteResume ?? row.kitWriteResume,
+      input.kitWriteCover ?? row.kitWriteCover,
+      input.kitWriteAnswers ?? row.kitWriteAnswers,
+    ];
+    if (input.autoKits && !writes.some(Boolean)) {
+      throw apiError(
+        BadRequestException,
+        'KIT_PARTS_EMPTY',
+        'Pick at least one part for Claude to write: resume, cover letter or form answers',
+      );
+    }
     if (input.autoHideFitBelow >= input.autoQueueFitMin) {
       throw apiError(
         BadRequestException,
@@ -245,6 +272,11 @@ export class SavedSearchesService {
         autoQueueMaxPerDay: input.autoQueueMaxPerDay,
         autoKits: input.autoKits,
         kitScoreTarget: input.kitScoreTarget,
+        ...(input.kitUseMaster === undefined ? {} : { kitUseMaster: input.kitUseMaster }),
+        ...(input.kitMasterMin === undefined ? {} : { kitMasterMin: input.kitMasterMin }),
+        ...(input.kitWriteResume === undefined ? {} : { kitWriteResume: input.kitWriteResume }),
+        ...(input.kitWriteCover === undefined ? {} : { kitWriteCover: input.kitWriteCover }),
+        ...(input.kitWriteAnswers === undefined ? {} : { kitWriteAnswers: input.kitWriteAnswers }),
       },
     });
     const updated = (await this.list(userId)).find((s) => s.id === id);
@@ -343,5 +375,23 @@ function toData(input: SavedSearchInput) {
     pageSize: input.pageSize,
     maxPages: input.maxPages,
     onlyNew: input.onlyNew,
+  };
+}
+
+/** The saved search's latest kits run, in your currency. Null before its first run. */
+export function kitRunOf(
+  value: Prisma.JsonValue | null,
+  currency: Currency,
+): KitRunCostModel | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const run = value as { kits?: unknown; costMicroUsd?: unknown; savedMicroUsd?: unknown };
+  const kits = typeof run.kits === 'number' ? run.kits : 0;
+  const cost = typeof run.costMicroUsd === 'number' ? run.costMicroUsd : null;
+  const saved = typeof run.savedMicroUsd === 'number' ? run.savedMicroUsd : 0;
+  return {
+    kits,
+    costCents: cost === null ? null : centsIn(cost, currency),
+    savedPercent: cost === null ? 0 : savedPercent({ costMicroUsd: cost, savedMicroUsd: saved }),
+    currency,
   };
 }

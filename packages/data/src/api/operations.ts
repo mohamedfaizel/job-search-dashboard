@@ -230,6 +230,17 @@ const SAVED_SEARCH_FIELDS = /* GraphQL */ `
   autoQueueMaxPerDay
   autoKits
   kitScoreTarget
+  kitUseMaster
+  kitMasterMin
+  kitWriteResume
+  kitWriteCover
+  kitWriteAnswers
+  lastKitRun {
+    kits
+    costCents
+    savedPercent
+    currency
+  }
   createdAt
   lastRun {
     ${SYNC_RUN_FIELDS}
@@ -688,6 +699,9 @@ const JOB_INSIGHTS_FIELDS = /* GraphQL */ `
       aiTips
       nowCovered
       stillMissing
+      usedMaster
+      costCents
+      currency
       factCheck {
         kind
         text
@@ -1126,6 +1140,10 @@ export const NOTIFICATIONS = /* GraphQL */ `
         failed
         belowTarget
         target
+        usedMaster
+        costCents
+        savedPercent
+        currency
         reason
         briefing {
           newJobs

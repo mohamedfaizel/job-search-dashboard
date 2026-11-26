@@ -41,6 +41,10 @@ const NEW_MATCHES = {
   failed: 0,
   belowTarget: 0,
   target: null,
+  usedMaster: 0,
+  costCents: null,
+  savedPercent: 0,
+  currency: null,
   reason: null,
   briefing: null,
   weekly: null,
@@ -371,6 +375,10 @@ describe('NotificationBell', () => {
         failed: 1,
         belowTarget: 1,
         target: 90,
+        usedMaster: 1,
+        costCents: 31,
+        savedPercent: 23,
+        currency: 'EUR',
       },
       { ...NEW_MATCHES, id: 13, kind: 'KITS_FAILED', count: 0, jobs: [], reason: 'NO_KEY' },
     ];
@@ -386,6 +394,9 @@ describe('NotificationBell', () => {
         '1 kit stayed below your 90% target: the job asks for skills you don’t have.',
       ),
     ).toBeInTheDocument();
+    expect(within(list).getByText('Cost €0.31')).toBeInTheDocument();
+    expect(within(list).getByText('Cache saved 23%')).toBeInTheDocument();
+    expect(within(list).getByText(/1 used your master resume as it is/)).toBeInTheDocument();
     expect(within(list).getByRole('link', { name: /React Developer/ })).toBeInTheDocument();
     expect(within(list).getByText('Apply kits were not written')).toBeInTheDocument();
     expect(within(list).getByText(/Add your Claude or OpenAI key/)).toBeInTheDocument();

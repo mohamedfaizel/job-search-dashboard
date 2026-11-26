@@ -1,5 +1,15 @@
 import { Field, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
-import { IsBoolean, IsEnum, IsInt, IsString, Length, Matches, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  Max,
+  Min,
+} from 'class-validator';
 import { ImportSource } from '../sync/import-source';
 import { SyncJobsInput } from '../sync/sync.input';
 import { ScheduleFrequency } from './schedule';
@@ -68,6 +78,24 @@ export class SyncRunModel {
       'True when this import stopped with pages left and is the newest import of its search, so "Continue" can fetch the rest',
   })
   canContinue!: boolean;
+}
+
+@ObjectType('KitRunCost', { description: "What a saved search's latest kits run cost" })
+export class KitRunCostModel {
+  @Field(() => Int, { description: 'Kits written' })
+  kits!: number;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'What they cost, in cents (or pence) of `currency`. Null = the model has no price',
+  })
+  costCents!: number | null;
+
+  @Field(() => Int, { description: "What Claude's prompt cache saved, in % (0 = none)" })
+  savedPercent!: number;
+
+  @Field({ description: 'EUR, GBP or USD, from the address on My profile' })
+  currency!: string;
 }
 
 @ObjectType()
@@ -162,6 +190,30 @@ export class SavedSearch {
   @Field(() => Int, { description: 'Target score for those kits’ resumes (70-95)' })
   kitScoreTarget!: number;
 
+  @Field({
+    description:
+      'Use your master resume as it is when it already scores at least kitMasterMin for the job',
+  })
+  kitUseMaster!: boolean;
+
+  @Field(() => Int, { description: 'The score at which your master resume is used (80-100)' })
+  kitMasterMin!: number;
+
+  @Field({ description: 'Claude writes the tailored resume' })
+  kitWriteResume!: boolean;
+
+  @Field({ description: 'Claude writes the cover letter' })
+  kitWriteCover!: boolean;
+
+  @Field({ description: 'Claude writes the form answers' })
+  kitWriteAnswers!: boolean;
+
+  @Field(() => KitRunCostModel, {
+    nullable: true,
+    description: 'What the latest kits run of this search cost. Null before its first run',
+  })
+  lastKitRun!: KitRunCostModel | null;
+
   @Field()
   createdAt!: Date;
 
@@ -227,6 +279,33 @@ export class AutopilotInput {
   @Min(70, { message: 'Pick a target of 70 to 95%' })
   @Max(95, { message: 'Pick a target of 70 to 95%' })
   kitScoreTarget: number = 90;
+
+  @Field({ nullable: true, description: 'Use your master resume as it is when it scores enough' })
+  @IsOptional()
+  @IsBoolean()
+  kitUseMaster?: boolean;
+
+  @Field(() => Int, { nullable: true, description: 'The score at which it is used (80-100)' })
+  @IsOptional()
+  @IsInt()
+  @Min(80, { message: 'Pick 80 to 100%' })
+  @Max(100, { message: 'Pick 80 to 100%' })
+  kitMasterMin?: number;
+
+  @Field({ nullable: true, description: 'Claude writes the tailored resume' })
+  @IsOptional()
+  @IsBoolean()
+  kitWriteResume?: boolean;
+
+  @Field({ nullable: true, description: 'Claude writes the cover letter' })
+  @IsOptional()
+  @IsBoolean()
+  kitWriteCover?: boolean;
+
+  @Field({ nullable: true, description: 'Claude writes the form answers' })
+  @IsOptional()
+  @IsBoolean()
+  kitWriteAnswers?: boolean;
 }
 
 @ObjectType()

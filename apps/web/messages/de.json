@@ -1641,7 +1641,10 @@
       "copiedToast": "Kopiert",
       "copyBlocked": "Dein Browser hat das Kopieren blockiert. Nutze „Als Text bearbeiten“ und kopiere es selbst.",
       "aiTitleHint": "Resume-Matcher bewertet diesen Lebenslauf mit deinem eigenen KI-Schlüssel. Eine zweite Meinung: der kostenlose Fit-Wert oben ist unserer.",
-      "beforeAfterHint": "Kostenlos: unsere eigene Stichwort-Prüfung dieses Lebenslaufs (keine KI). „vorher“ ist der Wert deines Master-Lebenslaufs."
+      "beforeAfterHint": "Kostenlos: unsere eigene Stichwort-Prüfung dieses Lebenslaufs (keine KI). „vorher“ ist der Wert deines Master-Lebenslaufs.",
+      "cost": "Dieses Kit {cost}",
+      "costHint": "Was dieses Kit mit deinem KI-Schlüssel gekostet hat. Ungefähr: Claude rechnet in US-Dollar ab.",
+      "usedMaster": "Dein Master-Lebenslauf wird unverändert genutzt: Er erreicht für diesen Job schon {score} %, darum hat Claude nur die anderen Teile geschrieben. Um ihn trotzdem anzupassen, kopiere den Prompt aus Schritt 1 und ersetze diese Antwort."
     },
     "added": {
       "label": "Neue Fähigkeiten prüfen",
@@ -2380,6 +2383,7 @@
     "AUTOPILOT_LIMITS": "Der Fit-Wert zum Ausblenden muss unter dem Fit-Wert für die Bewerbungsliste liegen.",
     "KITS_NOTHING_TO_WRITE": "Jeder Job auf deiner Bewerbungsliste hat schon ein Kit.",
     "KITS_QUEUE_EMPTY": "Nichts zu schreiben: Deine Bewerbungsliste ist leer. Setze zuerst unter Meine Jobs Jobs darauf.",
+    "KIT_PARTS_EMPTY": "Wähle mindestens einen Teil, den Claude schreibt: Lebenslauf, Anschreiben oder Formularantworten.",
     "PUSH_TOKEN_INVALID": "Das Handy hat einen unbekannten Push-Token gesendet. Aktualisiere die Handy-App."
   },
   "Notifications": {
@@ -2444,7 +2448,12 @@
     "weeklyPauseButton": "Pausieren",
     "weeklyPaused": "Pausiert. Unter Jobs hinzufügen kannst du sie wieder einschalten.",
     "mailAuto": "Gmail hat {count, plural, one {# Stelle} other {# Stellen}} in deinem Tracker verschoben",
-    "mailAutoHint": "Die E-Mails waren eindeutig"
+    "mailAutoHint": "Die E-Mails waren eindeutig",
+    "kitsCost": "Kosten {cost}",
+    "kitsCostHint": "Was diese Kits mit deinem KI-Schlüssel gekostet haben. Ungefähr: Claude rechnet in US-Dollar ab.",
+    "kitsSaved": "Cache sparte {percent} %",
+    "kitsSavedHint": "Claude hat den Teil behalten, der für jeden Job gleich ist. Spätere Kits lesen ihn für ein Zehntel des Preises.",
+    "kitsUsedMaster": "{count, plural, one {# nutzte} other {# nutzten}} deinen Master-Lebenslauf unverändert (er passte schon)."
   },
   "Welcome": {
     "title": "Willkommen, {name}!",
