@@ -2273,7 +2273,18 @@
       "rename": "Umbenennen",
       "newName": "Neuer Name",
       "saveName": "Name speichern",
-      "menuError": "Das hat nicht geklappt: {error}"
+      "menuError": "Das hat nicht geklappt: {error}",
+      "tipManual": "Läuft nur, wenn du ▶ drückst. Öffne ▸ für einen Zeitplan.",
+      "tipSchedule": "Wann die Suche selbst läuft. Öffne ▸, um es zu ändern.",
+      "tipAuto": "Autopilot ist an: Jobs mit Fit ab {fit}% kommen auf deine Bewerbungsliste.",
+      "tipKits": "Für die Jobs, die der Autopilot auf die Liste setzt, werden Bewerbungs-Kits geschrieben, Ziel {target}% Kit-Score.",
+      "tipRunSelf": "Diese Suche läuft selbst zur gewählten Zeit. Aus = nur, wenn du ▶ drückst.",
+      "tipQueue": "Jobs mit diesem Fit % oder mehr kommen auf deine Bewerbungsliste.",
+      "tipHide": "Jobs mit einem Fit % darunter werden ausgeblendet.",
+      "tipMax": "Höchstens so viele Jobs setzt der Autopilot pro Tag auf deine Liste.",
+      "tipTarget": "Der Kit-Score, den jeder angepasste Lebenslauf anstrebt.",
+      "tipNext": "Wann diese Suche das nächste Mal selbst läuft.",
+      "tipLastNew": "Neue Jobs aus dem letzten Lauf."
     },
     "history": {
       "heading": "Import-Verlauf",

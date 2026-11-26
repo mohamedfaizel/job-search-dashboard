@@ -9,6 +9,7 @@ import {
 } from '@jobsearch/data';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
+import { Hint } from '../../../components/Hint';
 import { TipButton } from '../../../components/TipButton';
 import { useErrorText } from '../../../i18n/useErrorText';
 import { useJobFormat } from '../../jobs/useJobFormat';
@@ -53,34 +54,36 @@ export function SavedSearches({ onLoad, loadedId = null }: Props) {
           {searches?.length ? t('saved.count', { count: searches.length }) : t('saved.heading')}
         </h2>
         {budget && !empty && (
-          <span
-            className="flex items-center gap-1.5 text-[11px] whitespace-nowrap text-slate-600"
-            title={t('saved.budget', {
+          <Hint
+            align="right"
+            tip={t('saved.budget', {
               used: budget.used,
               credits: t('credits', { count: budget.cap }),
             })}
           >
-            <span className="sr-only">
-              {t('saved.budget', {
-                used: budget.used,
-                credits: t('credits', { count: budget.cap }),
-              })}
-            </span>
-            <span aria-hidden>
-              {budget.used}/{budget.cap}
-            </span>
-            <span
-              aria-hidden
-              className="h-1.5 w-12 overflow-hidden rounded-full border border-slate-200 bg-slate-100"
-            >
+            <span className="flex items-center gap-1.5 text-[11px] whitespace-nowrap text-slate-600">
+              <span className="sr-only">
+                {t('saved.budget', {
+                  used: budget.used,
+                  credits: t('credits', { count: budget.cap }),
+                })}
+              </span>
+              <span aria-hidden>
+                {budget.used}/{budget.cap}
+              </span>
               <span
-                className="block h-full bg-amber-400"
-                style={{
-                  width: `${Math.min(100, (budget.used / Math.max(1, budget.cap)) * 100)}%`,
-                }}
-              />
+                aria-hidden
+                className="h-1.5 w-12 overflow-hidden rounded-full border border-slate-200 bg-slate-100"
+              >
+                <span
+                  className="block h-full bg-amber-400"
+                  style={{
+                    width: `${Math.min(100, (budget.used / Math.max(1, budget.cap)) * 100)}%`,
+                  }}
+                />
+              </span>
             </span>
-          </span>
+          </Hint>
         )}
         {!empty && (
           <button
@@ -266,7 +269,7 @@ function SavedSearchRow({
       </p>
       <SearchChips search={search} />
       <p className="flex justify-between gap-2 text-[11px] text-slate-600">
-        <span className="truncate">
+        <span className="min-w-0 truncate" title={t('saved.tipNext')}>
           {search.schedule !== 'OFF' && search.nextRunAt
             ? t('saved.nextShort', { date: dateTime(search.nextRunAt) })
             : last
@@ -327,23 +330,29 @@ function SearchChips({ search }: { search: SavedSearch }) {
   const chip = 'rounded-full px-2 py-px text-[11px] whitespace-nowrap';
   return (
     <div className="flex flex-wrap gap-1">
-      <span className={`${chip} border border-slate-200 bg-slate-50 text-slate-700`}>
-        {search.schedule === 'OFF'
-          ? t('manualOnly')
-          : t('chipSchedule', {
-              when: t(`frequencyShort.${search.schedule}`),
-              time: search.schedule === 'HOURLY' ? '' : search.runAt,
-            }).trim()}
-      </span>
-      {search.autopilot && (
-        <span className={`${chip} bg-amber-100 text-amber-900`}>
-          {t('chipAuto', { fit: search.autoQueueFitMin })}
+      <Hint tip={search.schedule === 'OFF' ? t('tipManual') : t('tipSchedule')}>
+        <span className={`${chip} border border-slate-200 bg-slate-50 text-slate-700`}>
+          {search.schedule === 'OFF'
+            ? t('manualOnly')
+            : t('chipSchedule', {
+                when: t(`frequencyShort.${search.schedule}`),
+                time: search.schedule === 'HOURLY' ? '' : search.runAt,
+              }).trim()}
         </span>
+      </Hint>
+      {search.autopilot && (
+        <Hint tip={t('tipAuto', { fit: search.autoQueueFitMin })}>
+          <span className={`${chip} bg-amber-100 text-amber-900`}>
+            {t('chipAuto', { fit: search.autoQueueFitMin })}
+          </span>
+        </Hint>
       )}
       {search.autopilot && search.autoKits && (
-        <span className={`${chip} bg-neutral-900 text-amber-300`}>
-          {t('chipKits', { target: search.kitScoreTarget })}
-        </span>
+        <Hint tip={t('tipKits', { target: search.kitScoreTarget })}>
+          <span className={`${chip} bg-neutral-900 text-amber-300`}>
+            {t('chipKits', { target: search.kitScoreTarget })}
+          </span>
+        </Hint>
       )}
     </div>
   );

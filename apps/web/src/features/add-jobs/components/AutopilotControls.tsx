@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { Hint } from '../../../components/Hint';
 import { InfoTip } from '../../../components/InfoTip';
 import { TipButton } from '../../../components/TipButton';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -74,6 +75,7 @@ function NumberBox({
   id,
   label,
   short,
+  hint,
   value,
   min,
   max,
@@ -86,6 +88,8 @@ function NumberBox({
   label: string;
   /** What you see, e.g. "Queue ≥". */
   short: string;
+  /** Hover text for the short label. */
+  hint: string;
   value: number;
   min: number;
   max: number;
@@ -96,7 +100,9 @@ function NumberBox({
   const [text, setText] = useState(String(value));
   return (
     <div className="flex min-w-0 items-center gap-1 text-xs whitespace-nowrap text-slate-700">
-      <span aria-hidden>{short}</span>
+      <Hint tip={hint}>
+        <span aria-hidden>{short}</span>
+      </Hint>
       <input
         id={id}
         type="number"
@@ -175,8 +181,12 @@ export function SearchSettings({ search }: { search: Search }) {
         <legend className="sr-only">{t('scheduleFor', { name: search.name })}</legend>
         <div className="flex items-center justify-between gap-2">
           <span id={`${id}-run-label`} className="text-xs font-semibold text-slate-900">
-            <span aria-hidden>⏰ </span>
-            {t('runSelf')}
+            <Hint tip={t('tipRunSelf')}>
+              <span>
+                <span aria-hidden>⏰ </span>
+                {t('runSelf')}
+              </span>
+            </Hint>
           </span>
           <Switch
             on={runs}
@@ -246,6 +256,7 @@ export function SearchSettings({ search }: { search: Search }) {
                 id={`${id}-queue`}
                 label={t('queueAt')}
                 short={t('queueShort')}
+                hint={t('tipQueue')}
                 value={rules.autoQueueFitMin}
                 min={1}
                 max={100}
@@ -258,6 +269,7 @@ export function SearchSettings({ search }: { search: Search }) {
                 id={`${id}-hide`}
                 label={t('hideBelow')}
                 short={t('hideShort')}
+                hint={t('tipHide')}
                 value={rules.autoHideFitBelow}
                 min={0}
                 max={99}
@@ -271,6 +283,7 @@ export function SearchSettings({ search }: { search: Search }) {
                 id={`${id}-max`}
                 label={t('maxPerDay')}
                 short={t('maxShort')}
+                hint={t('tipMax')}
                 value={rules.autoQueueMaxPerDay}
                 min={1}
                 max={50}
@@ -289,7 +302,9 @@ export function SearchSettings({ search }: { search: Search }) {
                   }}
                   className="accent-neutral-900"
                 />
-                <span aria-hidden>{t('visaShort')}</span>
+                <Hint tip={t('needsVisa')} align="right">
+                  <span aria-hidden>{t('visaShort')}</span>
+                </Hint>
               </label>
             </div>
             <KitsBox id={id} rules={rules} set={set} lastKitRun={search.lastKitRun} />
@@ -413,6 +428,7 @@ function KitsBox({
             id={`${id}-target`}
             label={t('kitsTarget')}
             short={t('targetShort')}
+            hint={t('tipTarget')}
             min={70}
             max={95}
             value={rules.kitScoreTarget}
@@ -512,6 +528,7 @@ function Slider({
   id,
   label,
   short,
+  hint,
   min,
   max,
   value,
@@ -520,6 +537,7 @@ function Slider({
   id: string;
   label: string;
   short?: string;
+  hint?: string;
   min: number;
   max: number;
   value: number;
@@ -527,7 +545,11 @@ function Slider({
 }) {
   return (
     <div className="flex items-center gap-2 text-xs">
-      {short && <span aria-hidden>{short}</span>}
+      {short && (
+        <Hint tip={hint ?? label}>
+          <span aria-hidden>{short}</span>
+        </Hint>
+      )}
       <input
         id={id}
         type="range"

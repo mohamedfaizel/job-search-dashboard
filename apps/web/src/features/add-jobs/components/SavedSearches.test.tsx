@@ -140,7 +140,7 @@ describe('SavedSearches', () => {
   it("shows today's credit budget and the schedule", async () => {
     const card = await renderCard();
 
-    expect(await screen.findByText(/Today: 35 of 100 credits used/)).toBeInTheDocument();
+    expect((await screen.findAllByText(/Today: 35 of 100 credits used/))[0]).toBeInTheDocument();
     expect(screen.getByText('35/100')).toBeVisible();
     // The folded card shows how often it runs; the controls are behind ▸.
     expect(card.getByText('⏰ Daily 07:00')).toBeVisible();

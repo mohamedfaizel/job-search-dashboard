@@ -2273,7 +2273,18 @@
       "rename": "Rename",
       "newName": "New name",
       "saveName": "Save name",
-      "menuError": "That did not work: {error}"
+      "menuError": "That did not work: {error}",
+      "tipManual": "Runs only when you press ▶. Open ▸ to give it a schedule.",
+      "tipSchedule": "When it runs by itself. Open ▸ to change it.",
+      "tipAuto": "Autopilot is on: jobs with Fit {fit}% or more go to your Apply queue.",
+      "tipKits": "Apply kits are written for the jobs Autopilot queues, aiming at a {target}% Kit score.",
+      "tipRunSelf": "Run this search by itself at the time you pick. Off = only when you press ▶.",
+      "tipQueue": "Jobs with this Fit % or more go to your Apply queue.",
+      "tipHide": "Jobs with a Fit % under this are hidden.",
+      "tipMax": "The most jobs Autopilot puts in your Apply queue per day.",
+      "tipTarget": "The Kit score each tailored resume aims for.",
+      "tipNext": "When this search runs next by itself.",
+      "tipLastNew": "New jobs the last run found."
     },
     "history": {
       "heading": "Import history",
