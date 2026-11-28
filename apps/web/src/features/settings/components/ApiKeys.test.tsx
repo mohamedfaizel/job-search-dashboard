@@ -205,6 +205,35 @@ describe('Settings > Notifications', () => {
     expect(await screen.findByRole('button', { name: 'Request a token' })).toBeVisible();
   });
 
+  it('says to come back in about 24 hours, with the time and what is left', async () => {
+    const hour = 60 * 60 * 1000;
+    Object.assign(poolKey, {
+      state: 'PENDING',
+      requestedAt: new Date(Date.now() - 8 * hour).toISOString(),
+      readyAt: new Date(Date.now() + 16 * hour - 60_000).toISOString(),
+    });
+    renderWithData(<SettingsPage />);
+    expect(
+      await screen.findByText('Request received. Please come back in about 24 hours.'),
+    ).toBeVisible();
+    expect(screen.getByText(/Your key is ready after/)).toBeVisible();
+    expect(screen.getByRole('progressbar', { name: 'About 16 hours left' })).toHaveAttribute(
+      'aria-valuenow',
+      '33',
+    );
+    expect(screen.getByRole('button', { name: 'Cancel request' })).toBeVisible();
+  });
+
+  it('says no key is free yet when the wait is over', async () => {
+    Object.assign(poolKey, {
+      state: 'PENDING',
+      requestedAt: '2026-11-01T10:00:00.000Z',
+      readyAt: '2026-11-02T10:00:00.000Z',
+    });
+    renderWithData(<SettingsPage />);
+    expect(await screen.findByText('No key is free yet.')).toBeVisible();
+  });
+
   it('shows a no with its note and the date to ask again', async () => {
     Object.assign(poolKey, {
       state: 'DENIED',

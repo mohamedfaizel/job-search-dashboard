@@ -30,6 +30,7 @@ export const keyPool: { pool: KeyPool; sent: { operation: string; variables: unk
     empty: 0,
     limit: 500,
     autoApprove: true,
+    waitHours: 24,
     keys: [],
     requests: [],
   },

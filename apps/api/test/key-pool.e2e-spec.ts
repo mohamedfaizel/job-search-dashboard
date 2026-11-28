@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { KeyPoolService } from '../src/key-pool/key-pool.service';
 import { loadSearchResponse } from './fixtures/load';
 import type { TestApp } from './helpers';
 import { createTestApp, resetDatabase, seedTestUsers } from './helpers';
@@ -15,6 +16,7 @@ const POOL = /* GraphQL */ `
       empty
       limit
       autoApprove
+      waitHours
       keys {
         id
         status
@@ -93,6 +95,7 @@ type Pool = {
     free: number;
     assigned: number;
     empty: number;
+    waitHours: number;
     keys: { id: number; status: string; holder: string | null; used: number }[];
     requests: { id: number; name: string }[];
   };
@@ -114,8 +117,17 @@ describe('Key pool', () => {
     creditsLeft = 766;
     await resetDatabase(t.prisma);
     await seedTestUsers(t.prisma);
+    // Most tests check handing out at once; 'with a wait' below covers the 24-hour default.
+    await setWait(0);
   });
 
+  const setWait = (hours: number) =>
+    t.gql(
+      'mutation ($h: Int!) { updateAppSettings(input: { poolWaitHours: $h }) { poolWaitHours } }',
+      {
+        h: hours,
+      },
+    );
   const addKeys = (keys: string) => t.gql(ADD, { input: { keys, note: 'Seeker plan' } });
 
   it('adds pasted keys once, encrypted, and never sends them back', async () => {
@@ -364,6 +376,86 @@ describe('Key pool', () => {
       const off = await signUp('off@example.com');
       expect(await lentTo(off)).toBe(0);
       expect((await t.gql<Pool>(POOL)).data?.keyPool.free).toBe(1);
+    });
+  });
+
+  describe('with a wait', () => {
+    const HOUR = 60 * 60 * 1000;
+    const WAIT_MINE = 'query { myPoolKey { state readyAt } }';
+    const pool = () => t.app.get(KeyPoolService);
+
+    it('waits 24 hours by default, then gives the key by itself', async () => {
+      await setWait(24);
+      expect((await t.gql<Pool>(POOL)).data?.keyPool).toMatchObject({ waitHours: 24 });
+      await addKeys('jp_pool_one_1111');
+      const before = Date.now();
+      const asked = await t.asUser<{ requestPoolKey: { state: string } }>(REQUEST);
+      expect(asked.data?.requestPoolKey.state).toBe('PENDING');
+      const mine = await t.asUser<{ myPoolKey: { state: string; readyAt: string } }>(WAIT_MINE);
+      const readyAt = new Date(mine.data?.myPoolKey.readyAt ?? 0).getTime();
+      expect(readyAt - before).toBeGreaterThanOrEqual(24 * HOUR - 1000);
+      expect(readyAt - before).toBeLessThan(24 * HOUR + 60_000);
+      expect((await t.asUser(BELL)).data).toMatchObject({
+        notifications: { items: [{ kind: 'KEY_WAIT', count: 24 }] },
+      });
+      // Still waiting halfway; the admins can see the request and approve it early.
+      expect(await pool().lendDue(new Date(before + 12 * HOUR))).toBe(0);
+      expect((await t.gql<Pool>(POOL)).data?.keyPool.requests).toHaveLength(1);
+
+      // The timed run after the wait gives the key and tells the user.
+      expect(await pool().lendDue(new Date(readyAt + 1))).toBe(1);
+      expect((await t.asUser(WAIT_MINE)).data).toEqual({
+        myPoolKey: { state: 'APPROVED', readyAt: null },
+      });
+      expect(await t.prisma.keyRequest.findFirst()).toMatchObject({
+        status: 'APPROVED',
+        auto: true,
+      });
+      await pool().lendDueTick();
+    });
+
+    it('keeps waiting with no free key, gives the next one, and skips own-token users', async () => {
+      await setWait(24);
+      await t.asUser(REQUEST);
+      const later = new Date(Date.now() + 25 * HOUR);
+      expect(await pool().lendDue(later)).toBe(0);
+      expect(await t.prisma.keyRequest.findFirst()).toMatchObject({ status: 'PENDING' });
+      await addKeys('jp_pool_one_1111');
+      expect(await pool().lendDue(later, 2)).toBe(1);
+
+      await t.prisma.poolKey.updateMany({ data: { userId: null } });
+      await t.prisma.keyRequest.updateMany({ data: { status: 'PENDING' } });
+      await t.asUser(
+        'mutation { saveApiKey(input: { kind: JOBHUNTER, value: "jp_own_token_9999" }) { kind } }',
+      );
+      expect(await pool().lendDue(later)).toBe(0);
+    });
+
+    it('lets a later request wait for an admin, with no ready time', async () => {
+      await setWait(24);
+      await t.prisma.keyRequest.create({ data: { userId: 2, status: 'CANCELED' } });
+      await t.asUser(REQUEST);
+      expect((await t.asUser(WAIT_MINE)).data).toEqual({
+        myPoolKey: { state: 'PENDING', readyAt: null },
+      });
+    });
+
+    it('makes a new account wait too, instead of a key at once', async () => {
+      await setWait(48);
+      await addKeys('jp_pool_one_1111');
+      await t.anonymous('mutation ($input: SignUpInput!) { signUp(input: $input) { id } }', {
+        input: { name: 'New', email: 'wait@example.com', password: 'a-long-password' },
+      });
+      const user = await t.prisma.user.findUniqueOrThrow({ where: { email: 'wait@example.com' } });
+      expect(await t.prisma.poolKey.count({ where: { userId: user.id } })).toBe(0);
+      const request = await t.prisma.keyRequest.findFirstOrThrow({ where: { userId: user.id } });
+      expect(request.status).toBe('PENDING');
+      expect((request.autoAt?.getTime() ?? 0) - request.createdAt.getTime()).toBeGreaterThan(
+        47 * HOUR,
+      );
+      expect(await t.prisma.notification.findMany({ where: { userId: user.id } })).toMatchObject([
+        { kind: 'KEY_WAIT', data: expect.objectContaining({ count: 48 }) },
+      ]);
     });
   });
 });

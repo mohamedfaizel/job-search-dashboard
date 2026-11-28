@@ -1631,6 +1631,7 @@ const APP_SETTINGS_FIELDS = `
   stillOpenOn
   poolAutoApprove
   poolKeyLimit
+  poolWaitHours
   schedulerOffInEnv
   stillOpenOffInEnv
 `;
@@ -1714,6 +1715,7 @@ const MY_POOL_KEY_FIELDS = `
   limit
   used
   poolEmpty
+  readyAt
 `;
 
 export const MY_POOL_KEY = /* GraphQL */ `
@@ -1754,6 +1756,7 @@ const KEY_POOL_FIELDS = `
   empty
   limit
   autoApprove
+  waitHours
   keys {
     id
     status

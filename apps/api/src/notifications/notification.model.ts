@@ -101,7 +101,7 @@ export class NotificationModel {
 
   @Field({
     description:
-      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`). MAIL_AUTO: clear employer emails moved `count` jobs (each with its new `status` in `jobs`); Undo with undoMailAuto. WEEKLY_REPORT: the Sunday summary (`weekly`, best good jobs of the week in `jobs`)',
+      'NEW_MATCHES: a scheduled search found new jobs that fit you. INTERVIEW_SOON: your interview for jobs[0] is within a day. Key pool: KEY_REQUEST and POOL_LOW (admins), KEY_WAIT (asked; the key comes after `count` hours), KEY_APPROVED, KEY_DENIED, KEY_EMPTY, KEY_LIMIT, KEY_TAKEN_BACK. MESSAGE_REPLY: an admin (searchName) answered your message. AUTOPILOT: a saved search with Autopilot queued `count` jobs (best in `jobs`), hid `hidden` and left `kept`. KITS_READY: `count` apply kits written with your AI key (first in `jobs`). KITS_FAILED: none written (`reason`). BRIEFING: the morning briefing (`briefing`, best new jobs in `jobs`). MAIL_AUTO: clear employer emails moved `count` jobs (each with its new `status` in `jobs`); Undo with undoMailAuto. WEEKLY_REPORT: the Sunday summary (`weekly`, best good jobs of the week in `jobs`)',
   })
   kind!: string;
 

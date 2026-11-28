@@ -473,4 +473,17 @@ describe('NotificationBell', () => {
       '/settings',
     );
   });
+
+  it('tells a user to come back after the wait', async () => {
+    bell.items = [{ ...NEW_MATCHES, id: 11, kind: 'KEY_WAIT', count: 24, jobs: [] }];
+    bell.unread = 1;
+    const user = userEvent.setup();
+    renderBell();
+    await user.click(await screen.findByRole('button', { name: /Notifications/ }));
+    expect(screen.getByText(/Please come back in about 24 hours/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open Settings' })).toHaveAttribute(
+      'href',
+      '/settings',
+    );
+  });
 });

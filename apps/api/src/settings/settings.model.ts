@@ -35,6 +35,11 @@ export class AppSettingsModel {
   @Field(() => Int, { description: 'Key pool: credits each user may spend with a lent key' })
   poolKeyLimit!: number;
 
+  @Field(() => Int, {
+    description: 'Key pool: hours a user waits before the key is given (0 = at once)',
+  })
+  poolWaitHours!: number;
+
   @Field({ description: 'SCHEDULER_ENABLED=false in .env keeps the scheduler off anyway' })
   schedulerOffInEnv!: boolean;
 
@@ -85,6 +90,13 @@ export class UpdateAppSettingsInput {
   @Min(0)
   @Max(1_000_000)
   poolKeyLimit?: number;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(168)
+  poolWaitHours?: number;
 }
 
 @ObjectType('Invite')

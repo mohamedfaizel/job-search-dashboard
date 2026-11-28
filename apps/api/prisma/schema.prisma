@@ -954,6 +954,8 @@ model AppSetting {
   poolAutoApprove  Boolean    @default(true)
   /// Key pool: how many credits each user may spend with a lent key.
   poolKeyLimit     Int        @default(500)
+  /// Key pool: hours a user waits after asking before the server gives the key (0 = at once).
+  poolWaitHours    Int        @default(24)
   updatedAt        DateTime   @updatedAt
 }
 
@@ -1010,11 +1012,15 @@ model KeyRequest {
   note      String?
   /// Approved by the server (a first request with auto-approve on), not by an admin.
   auto      Boolean          @default(false)
+  /// When the server gives this request a key by itself (a first request with auto-approve on,
+  /// after the wait). Null: an admin decides.
+  autoAt    DateTime?
   createdAt DateTime         @default(now())
   decidedAt DateTime?
 
   @@index([status, createdAt])
   @@index([userId, createdAt])
+  @@index([status, autoAt])
 }
 
 /// A phone that gets push messages (Expo push token), e.g. the morning briefing.

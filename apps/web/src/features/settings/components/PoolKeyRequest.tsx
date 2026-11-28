@@ -7,6 +7,7 @@ import {
 } from '@jobsearch/data';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { timeAgo } from '../../../components/NotificationBell';
 import { TipButton } from '../../../components/TipButton';
 import { useErrorText } from '../../../i18n/useErrorText';
@@ -73,12 +74,16 @@ function Ask({ state }: { state: MyPoolKey }) {
         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
           {t('sent')}
         </span>
-        <p>
-          <b>{t('waitingTitle')}</b>{' '}
-          {t('waitingText', {
-            when: state.requestedAt ? timeAgo(state.requestedAt, locale) : '',
-          })}
-        </p>
+        {state.readyAt ? (
+          <WaitTime readyAt={state.readyAt} requestedAt={state.requestedAt} />
+        ) : (
+          <p>
+            <b>{t('waitingTitle')}</b>{' '}
+            {t('waitingText', {
+              when: state.requestedAt ? timeAgo(state.requestedAt, locale) : '',
+            })}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           <TipButton
             tip={t('cancel')}
@@ -141,6 +146,61 @@ function Ask({ state }: { state: MyPoolKey }) {
         </p>
       )}
     </div>
+  );
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+
+/**
+ * A first request with a wait: "come back in about 24 hours", the time the key comes by itself
+ * and a bar. Once the time is up and the request still waits, no key was free yet.
+ */
+function WaitTime({ readyAt, requestedAt }: { readyAt: string; requestedAt: string | null }) {
+  const t = useTranslations('Settings.keys.pool');
+  const format = useFormatter();
+  const ready = new Date(readyAt).getTime();
+  const start = requestedAt ? new Date(requestedAt).getTime() : ready;
+  // The time on opening the page; the request itself is checked again by the server.
+  const [now] = useState(() => Date.now());
+  if (now >= ready) {
+    return (
+      <p>
+        <b>{t('noneFreeTitle')}</b> {t('noneFreeText')}
+      </p>
+    );
+  }
+  const hours = Math.max(1, Math.round((ready - start) / HOUR_MS));
+  const left = Math.max(1, Math.ceil((ready - now) / HOUR_MS));
+  const done =
+    ready > start ? Math.min(100, Math.round(((now - start) / (ready - start)) * 100)) : 0;
+  return (
+    <>
+      <p>
+        <b>{t('waitTitle', { hours })}</b>{' '}
+        {t('waitText', {
+          date: format.dateTime(new Date(readyAt), {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        })}
+      </p>
+      <div
+        role="progressbar"
+        aria-label={t('waitLeft', { hours: left })}
+        aria-valuenow={done}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="h-2 overflow-hidden rounded bg-slate-200"
+      >
+        <div className="h-full bg-brand-400" style={{ width: `${String(done)}%` }} />
+      </div>
+      <p className="text-xs text-slate-600">
+        {t('waitLeft', { hours: left })} · {t('freeSources')}
+      </p>
+    </>
   );
 }
 

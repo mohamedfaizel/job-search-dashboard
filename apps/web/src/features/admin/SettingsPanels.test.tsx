@@ -45,6 +45,7 @@ beforeEach(() => {
     stillOpenOffInEnv: true,
     poolAutoApprove: true,
     poolKeyLimit: 500,
+    poolWaitHours: 24,
   };
   invites = [
     {
