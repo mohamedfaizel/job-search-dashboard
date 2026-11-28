@@ -49,20 +49,7 @@ export function ApiKeys() {
         </p>
       ) : (
         <>
-          <JobHunterKey
-            own={keys.data.find((key) => key.kind === 'JOBHUNTER') ?? null}
-            ownCard={
-              <KeyCard
-                kind="JOBHUNTER"
-                name={t('jobhunter.name')}
-                hint={t('jobhunter.hint')}
-                testHint={t('jobhunter.testHint')}
-                paste={t('paste')}
-                confirmDelete={t('confirmDelete')}
-                saved={keys.data.find((key) => key.kind === 'JOBHUNTER') ?? null}
-              />
-            }
-          />
+          <JobHunterKeys saved={keys.data.find((key) => key.kind === 'JOBHUNTER') ?? null} />
           <AiKeys keys={keys.data} />
         </>
       )}
@@ -70,12 +57,33 @@ export function ApiKeys() {
   );
 }
 
+/** Your JobHunter token, or one lent from the Key pool. Also step 1 of the first-login setup. */
+export function JobHunterKeys({ saved }: { saved: ApiKey | null }) {
+  const t = useTranslations('Settings.keys');
+  return (
+    <JobHunterKey
+      own={saved}
+      ownCard={
+        <KeyCard
+          kind="JOBHUNTER"
+          name={t('jobhunter.name')}
+          hint={t('jobhunter.hint')}
+          testHint={t('jobhunter.testHint')}
+          paste={t('paste')}
+          confirmDelete={t('confirmDelete')}
+          saved={saved}
+        />
+      }
+    />
+  );
+}
+
 /**
  * Your AI: Claude or OpenAI, with its key and model. The AI score runs on it, and the
  * copy-and-open buttons everywhere open its chat. Resume-Matcher's status sits below, since it
- * is what uses the key.
+ * is what uses the key (`matcher` false leaves it out, as in the first-login setup).
  */
-function AiKeys({ keys }: { keys: ApiKey[] }) {
+export function AiKeys({ keys, matcher = true }: { keys: ApiKey[]; matcher?: boolean }) {
   const t = useTranslations('Settings.keys.ai');
   const { data: me } = useMe();
   const pick = useSetAiProvider();
@@ -124,7 +132,7 @@ function AiKeys({ keys }: { keys: ApiKey[] }) {
         saved={keys.find((key) => key.kind === provider) ?? null}
         models={MODELS[provider]}
       />
-      <ResumeMatcherStatus />
+      {matcher && <ResumeMatcherStatus />}
     </div>
   );
 }

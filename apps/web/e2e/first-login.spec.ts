@@ -37,13 +37,19 @@ test.describe('desktop', () => {
     await expect(page.getByText('jp_browser_test_1234abcd')).toHaveCount(0);
     await page.getByRole('button', { name: 'Next ›' }).click();
 
-    // Step 2: the resume fills My profile.
+    // Step 2: the AI key, skipped here.
+    await expect(page.getByRole('heading', { name: '2. Your AI key (optional)' })).toBeVisible();
+    await page.getByRole('button', { name: 'Skip for now ›' }).click();
+
+    // Step 3: the resume fills My profile.
     await page.locator('input[type=file]').setInputFiles(RESUME);
     await expect(page.getByText('Added to My profile › Personal:')).toBeVisible();
     await page.getByRole('button', { name: 'Next ›' }).click();
 
-    // Step 3: both done, on to the import.
+    // Step 4: done, with what to try next, on to the import.
     await expect(page.getByText('Job data key saved')).toBeVisible();
+    await expect(page.getByText(/No AI key yet/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: "What's next" })).toBeVisible();
     await expect(page.getByText('Resume uploaded')).toBeVisible();
     await page.getByRole('button', { name: 'Find my first jobs ›' }).click();
     await expect(page).toHaveURL(/\/jobs\/add$/);
@@ -88,7 +94,7 @@ test.describe('phone', () => {
   test('the first-login steps and every page fit a phone screen', async ({ page }) => {
     await page.goto('/signup');
     await signUp(page, EN);
-    await expect(page.getByText('Step 1 of 3 · Job data key')).toBeVisible();
+    await expect(page.getByText('Step 1 of 4 · Job data key')).toBeVisible();
     await page.getByRole('button', { name: 'Skip setup' }).click();
     await expect(page).toHaveURL(/\/jobs$/);
 

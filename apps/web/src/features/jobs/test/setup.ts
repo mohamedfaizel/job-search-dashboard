@@ -61,6 +61,8 @@ afterEach(() => {
   tableSettings.current = null;
   downloads.length = 0;
   localStorage.clear();
+  // What's new is seen, so it doesn't sit on top of every My Jobs test.
+  localStorage.setItem('jsh.whatsNew.2026-11', '1');
   resetAiStatus();
 });
 afterAll(() => {

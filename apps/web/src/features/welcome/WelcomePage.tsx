@@ -1,7 +1,13 @@
 'use client';
 
 import type { Profile } from '@jobsearch/data';
-import { useFinishOnboarding, useMe, useMyApiKeys, useMyProfile } from '@jobsearch/data';
+import {
+  useFinishOnboarding,
+  useMe,
+  useMyApiKeys,
+  useMyPoolKey,
+  useMyProfile,
+} from '@jobsearch/data';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -9,10 +15,12 @@ import { useErrorText } from '../../i18n/useErrorText';
 import { ResumeUpload } from '../resume/components/ResumeUpload';
 import type { Step } from '../resume/components/Steps';
 import { StepBar } from '../resume/components/Steps';
-import { KeyCard } from '../settings/components/ApiKeys';
+import { AiKeys, JobHunterKeys } from '../settings/components/ApiKeys';
+import { markWhatsNewSeen } from './whats-new-seen';
+import { WhatsNext } from './WhatsNext';
 
-type WelcomeStep = 'key' | 'resume' | 'done';
-const STEPS: WelcomeStep[] = ['key', 'resume', 'done'];
+type WelcomeStep = 'key' | 'ai' | 'resume' | 'done';
+const STEPS: WelcomeStep[] = ['key', 'ai', 'resume', 'done'];
 
 const NEXT =
   'rounded-md bg-brand-400 px-4 py-2 text-sm font-semibold text-black hover:bg-brand-300 disabled:opacity-50';
@@ -30,28 +38,35 @@ const FILLED_FIELDS = [
 ] as const;
 
 /**
- * The first time you log in: 1. your job data (JobHunter) key, so imports work; 2. your resume,
- * which also fills My profile > Personal where it is empty; 3. done. You can skip any step, and
- * finishing or skipping means it never shows again.
+ * The first time you log in: 1. your job data (JobHunter) key, so imports work (a new account
+ * often has one lent from the Key pool already); 2. your AI key, for the AI score and ready
+ * kits; 3. your resume, which also fills My profile > Personal where it is empty; 4. done, with
+ * what to try next. You can skip any step, and finishing or skipping means it never shows again.
  */
 export function WelcomePage() {
   const t = useTranslations('Welcome');
-  const tKeys = useTranslations('Settings.keys');
   const errorText = useErrorText();
   const router = useRouter();
   const { data: me } = useMe();
   const keys = useMyApiKeys();
+  const pool = useMyPoolKey();
   const profile = useMyProfile();
   const finish = useFinishOnboarding();
   const [step, setStep] = useState<WelcomeStep>('key');
   const [uploaded, setUploaded] = useState<Profile | null>(null);
 
   const steps: Step<WelcomeStep>[] = STEPS.map((id) => ({ id, label: t(`steps.${id}`) }));
-  const key = keys.data?.find((k) => k.kind === 'JOBHUNTER') ?? null;
+  const ownKey = keys.data?.find((k) => k.kind === 'JOBHUNTER') ?? null;
+  // A key lent from the Key pool counts too: since sign-up most new accounts have one.
+  const lent = !ownKey && pool.data?.state === 'APPROVED';
+  const key = !!ownKey || lent;
+  const aiKey = !!keys.data?.some((k) => k.kind === (me?.aiProvider ?? 'ANTHROPIC'));
   const resume = uploaded ?? profile.data ?? null;
   const done = (href: string) => {
     finish.mutate(undefined, {
       onSuccess: () => {
+        // The last step showed the same tiles as What's new on My Jobs.
+        markWhatsNewSeen();
         router.replace(href);
       },
     });
@@ -82,7 +97,9 @@ export function WelcomePage() {
         current={step}
         onSelect={setStep}
         // A skipped step gets no ✓.
-        isDone={(id) => (id === 'key' ? !!key : id === 'resume' && !!resume?.resumeFileName)}
+        isDone={(id) =>
+          id === 'key' ? key : id === 'ai' ? aiKey : id === 'resume' && !!resume?.resumeFileName
+        }
       />
 
       {step === 'key' && (
@@ -109,25 +126,48 @@ export function WelcomePage() {
               {errorText(keys.error)}
             </p>
           ) : (
-            <KeyCard
-              kind="JOBHUNTER"
-              name={tKeys('jobhunter.name')}
-              hint={tKeys('jobhunter.hint')}
-              testHint={tKeys('jobhunter.testHint')}
-              paste={tKeys('paste')}
-              confirmDelete={tKeys('confirmDelete')}
-              saved={key}
-            />
+            <JobHunterKeys saved={ownKey} />
           )}
           <div className="flex justify-end gap-2">
             <button
               type="button"
               className={key ? NEXT : PLAIN}
               onClick={() => {
-                setStep('resume');
+                setStep('ai');
               }}
             >
               {key ? t('next') : t('skip')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 'ai' && (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-slate-900">{t('ai.title')}</h2>
+            <p className="text-sm text-slate-600">{t('ai.intro')}</p>
+          </div>
+          {keys.data && <AiKeys keys={keys.data} matcher={false} />}
+          <p className="text-sm text-slate-600">{t('ai.noKey')}</p>
+          <div className="flex justify-between gap-2">
+            <button
+              type="button"
+              className={PLAIN}
+              onClick={() => {
+                setStep('key');
+              }}
+            >
+              ‹ {t('back')}
+            </button>
+            <button
+              type="button"
+              className={aiKey ? NEXT : PLAIN}
+              onClick={() => {
+                setStep('resume');
+              }}
+            >
+              {aiKey ? t('next') : t('skip')}
             </button>
           </div>
         </div>
@@ -146,7 +186,7 @@ export function WelcomePage() {
               type="button"
               className={PLAIN}
               onClick={() => {
-                setStep('key');
+                setStep('ai');
               }}
             >
               ‹ {t('back')}
@@ -168,13 +208,25 @@ export function WelcomePage() {
         <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
           <h2 className="text-lg font-semibold text-slate-900">{t('done.title')}</h2>
           <ul className="space-y-1.5 text-sm">
-            <Check ok={!!key} text={key ? t('done.key') : t('done.noKey')} />
+            <Check
+              ok={key}
+              text={
+                lent
+                  ? t('done.poolKey', { limit: pool.data?.limit ?? 0 })
+                  : key
+                    ? t('done.key')
+                    : t('done.noKey')
+              }
+            />
+            <Check ok={aiKey} text={aiKey ? t('done.aiKey') : t('done.noAiKey')} />
             <Check
               ok={!!resume?.resumeFileName}
               text={resume?.resumeFileName ? t('done.resume') : t('done.noResume')}
             />
           </ul>
           <p className="text-sm text-slate-600">{t('done.later')}</p>
+          <h3 className="pt-1 font-semibold text-slate-900">{t('whatsNext.title')}</h3>
+          <WhatsNext onGo={done} />
           {finish.isError && (
             <p role="alert" className="text-sm text-red-700">
               {errorText(finish.error)}

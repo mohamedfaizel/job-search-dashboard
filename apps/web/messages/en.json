@@ -2544,11 +2544,12 @@
   },
   "Welcome": {
     "title": "Welcome, {name}!",
-    "intro": "Two quick steps and the app is ready. You can skip both and do them later.",
+    "intro": "Three quick steps and the app is ready. You can skip them all and do them later.",
     "skipAll": "Skip setup",
     "loading": "Loading…",
     "steps": {
       "key": "Job data key",
+      "ai": "AI key",
       "resume": "Your resume",
       "done": "Done"
     },
@@ -2557,12 +2558,17 @@
     "back": "Back",
     "key": {
       "title": "1. Your job data key",
-      "intro": "Job Search Hunter finds jobs with a JobHunter token. Paste yours to import jobs and run saved searches. It stays private to your account.",
+      "intro": "Job Search Hunter finds jobs with a JobHunter token. New accounts often get one from the shared pool right away. If not, ask for one or paste your own. It stays private to your account.",
       "where": "No token yet? Sign up with your own email, then copy your API key (it starts with jp_).",
       "whereLink": "Get your token here"
     },
+    "ai": {
+      "title": "2. Your AI key (optional)",
+      "intro": "Pick Claude or OpenAI and paste its key. It is used for the AI score, the ready apply kits from Autopilot and \"Write with my key\". You pay your own AI costs, and the bell shows the cost.",
+      "noKey": "No key? The copy-and-open buttons still work in the AI chat, at no cost."
+    },
     "resume": {
-      "title": "2. Your resume",
+      "title": "3. Your resume",
       "intro": "Upload your resume as a PDF or Word file. It becomes your resume on the Resume page, and your name, phone and links go to My profile › Personal.",
       "filled": "Added to My profile › Personal:",
       "fields": {
@@ -2583,7 +2589,27 @@
       "later": "You can change all of this later in Settings and My profile.",
       "profile": "Check My profile",
       "addJobs": "Find my first jobs ›",
-      "jobs": "Go to My Jobs ›"
+      "jobs": "Go to My Jobs ›",
+      "poolKey": "Job data key set (from the pool, {limit} credits)",
+      "aiKey": "AI key saved",
+      "noAiKey": "No AI key yet: add it in Settings › API keys"
+    },
+    "whatsNext": {
+      "title": "What's next",
+      "autopilotTitle": "Autopilot",
+      "autopilot": "In Job Market, save a search and turn on Autopilot. It runs the search and writes ready kits for good jobs.",
+      "bellTitle": "The bell",
+      "bell": "New jobs, ready kits and what they cost show up here.",
+      "mailTitle": "Gmail and weekly report",
+      "mail": "In Settings, Gmail can move jobs in your Tracker, and you can get a report every Sunday.",
+      "helpTitle": "Questions",
+      "help": "The ? at the top opens a chat box for questions and ideas.",
+      "never": "It never applies or sends anything for you."
+    },
+    "whatsNew": {
+      "title": "What's new",
+      "intro": "Four things the app can now do for you.",
+      "close": "Close What's new"
     }
   },
   "Admin": {
