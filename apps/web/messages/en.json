@@ -386,7 +386,12 @@
         "deniedNote": "Note: “{note}”",
         "askAgain": "You can ask again on {date}.",
         "useOwn": "use your own key",
-        "freeSources": "Arbeitsagentur and company boards need no token."
+        "freeSources": "Arbeitsagentur and company boards need no token.",
+        "waitTitle": "Request received. Please come back in about {hours} hours.",
+        "waitText": "Your key is ready after {date}. You get a bell when it is set.",
+        "waitLeft": "{hours, plural, one {About # hour left} other {About # hours left}}",
+        "noneFreeTitle": "No key is free yet.",
+        "noneFreeText": "You stay on the waiting list and get the next free key. You get a bell when it is set."
       }
     },
     "notify": {
@@ -2534,7 +2539,8 @@
     "kitsCostHint": "What these kits cost with your AI key. About: Claude bills in US dollars.",
     "kitsSaved": "Cache saved {percent}%",
     "kitsSavedHint": "Claude kept the part that is the same for every job, so later kits read it for a tenth of the price.",
-    "kitsUsedMaster": "{count, plural, one {# used} other {# used}} your master resume as it is (it already fit)."
+    "kitsUsedMaster": "{count, plural, one {# used} other {# used}} your master resume as it is (it already fit).",
+    "keyWait": "Token request received. Please come back in about {count} hours: then your key is set by itself."
   },
   "Welcome": {
     "title": "Welcome, {name}!",
@@ -2757,8 +2763,8 @@
       "requests": "Requests",
       "waitingChip": "{count} waiting",
       "requestsHint": "A user can hold only one key. Approve gives them the next free key.",
-      "autoApprove": "Auto-approve a user’s first request",
-      "autoApproveHint": "A first-time user gets a key right away (while free keys are left). Later requests you approve yourself.",
+      "autoApprove": "Give keys out by themselves to a user’s first request",
+      "autoApproveHint": "After the wait below, a first-time user gets a key by itself (while free keys are left). Later requests you approve yourself.",
       "limit": "Limit per user",
       "limitHint": "credits. Set automatically on a user’s first key. When it is used up, imports stop until you raise it.",
       "noRequests": "No requests waiting.",
@@ -2797,7 +2803,11 @@
       "footer": "When a key is “Empty”, its user gets a bell and can ask for a new one. Names are shown only so you can take a key back. You never see a user’s jobs or searches.",
       "statusFREE": "Free",
       "statusASSIGNED": "Assigned",
-      "statusEMPTY": "Empty"
+      "statusEMPTY": "Empty",
+      "wait": "Wait before a key is given",
+      "waitHint": "New sign-ups still get a key at once. A user’s first own request in Settings waits this long, then the key comes by itself. You can still approve a request early with ✓.",
+      "waitNow": "At once",
+      "waitHours": "{hours} hours"
     },
     "messages": {
       "loading": "Loading messages…",

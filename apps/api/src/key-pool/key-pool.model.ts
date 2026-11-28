@@ -44,6 +44,12 @@ export class MyPoolKeyModel {
 
   @Field({ description: 'No key is free right now: a new request joins the waiting list' })
   poolEmpty!: boolean;
+
+  @Field(() => Date, {
+    nullable: true,
+    description: 'PENDING: when the server gives you the key by itself. Null: an admin decides',
+  })
+  readyAt!: Date | null;
 }
 
 @ObjectType('PoolKey', { description: 'A key in the pool, by number only. The key is never sent' })
@@ -103,8 +109,11 @@ export class KeyPoolModel {
   @Field(() => Int, { description: 'Credits each user may spend with a lent key' })
   limit!: number;
 
-  @Field({ description: "A user's first request gets a free key at once" })
+  @Field({ description: "A user's first request gets a free key by itself, after the wait" })
   autoApprove!: boolean;
+
+  @Field(() => Int, { description: 'Hours a user waits before the key is given (0 = at once)' })
+  waitHours!: number;
 
   @Field(() => [PoolKeyModel], { description: 'Newest first' })
   keys!: PoolKeyModel[];

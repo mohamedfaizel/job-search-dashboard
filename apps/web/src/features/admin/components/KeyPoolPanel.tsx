@@ -70,6 +70,9 @@ function Count({ value, label, tone }: { value: number; label: string; tone: str
   );
 }
 
+/** Hours an admin can pick for the wait; 0 gives the key at once. */
+const WAIT_CHOICES = [0, 24, 48];
+
 function Requests({ pool }: { pool: KeyPool }) {
   const t = useTranslations('Admin.keys');
   const locale = useLocale();
@@ -81,6 +84,7 @@ function Requests({ pool }: { pool: KeyPool }) {
   const [note, setNote] = useState('');
   const limitId = useId();
   const autoId = useId();
+  const waitId = useId();
   const [limit, setLimit] = useState(String(pool.limit));
   const error = approve.error ?? deny.error ?? settings.error;
 
@@ -132,6 +136,30 @@ function Requests({ pool }: { pool: KeyPool }) {
           </span>
           <span className="text-xs text-slate-600">{t('autoApproveHint')}</span>
         </div>
+      </div>
+      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <label htmlFor={waitId} className="text-sm font-semibold text-slate-900">
+          {t('wait')}
+        </label>
+        <select
+          id={waitId}
+          value={pool.waitHours}
+          disabled={settings.isPending}
+          onChange={(event) => {
+            settings.mutate({ poolWaitHours: Number(event.target.value) });
+          }}
+          className="rounded-md border border-slate-300 px-2 py-1 text-sm"
+        >
+          {WAIT_CHOICES.includes(pool.waitHours) ? null : (
+            <option value={pool.waitHours}>{t('waitHours', { hours: pool.waitHours })}</option>
+          )}
+          {WAIT_CHOICES.map((hours) => (
+            <option key={hours} value={hours}>
+              {hours === 0 ? t('waitNow') : t('waitHours', { hours })}
+            </option>
+          ))}
+        </select>
+        <span className="w-full text-xs text-slate-600">{t('waitHint')}</span>
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
         <label htmlFor={limitId} className="text-sm font-semibold text-slate-900">

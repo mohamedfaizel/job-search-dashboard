@@ -181,6 +181,7 @@ export const poolKey: MyPoolKey = {
   limit: 500,
   used: 0,
   poolEmpty: false,
+  readyAt: null,
 };
 
 /** The AI the fake user picked in Settings. */

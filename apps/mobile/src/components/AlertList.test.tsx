@@ -76,6 +76,16 @@ describe('AlertList', () => {
     ).toBeOnTheScreen();
   });
 
+  it('says when a waiting token request comes', async () => {
+    api([notification({ id: 3, kind: 'KEY_WAIT', count: 24, jobs: [] })]);
+    await renderApp(<AlertList />);
+    expect(
+      await screen.findByText(
+        'Token request received. Please come back in about 24 hours: then your key is set by itself.',
+      ),
+    ).toBeOnTheScreen();
+  });
+
   it('shows an answer to your message and opens the message window', async () => {
     api([
       notification({ id: 4, kind: 'MESSAGE_REPLY', searchName: 'Sam', jobs: [] }),

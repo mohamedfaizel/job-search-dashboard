@@ -25,6 +25,7 @@ beforeEach(() => {
     empty: 0,
     limit: 500,
     autoApprove: true,
+    waitHours: 24,
     keys: [
       {
         id: 2,
@@ -116,6 +117,7 @@ describe('Admin › Key pool', () => {
               signupMode: 'OPEN',
               poolAutoApprove: false,
               poolKeyLimit: 300,
+              poolWaitHours: 48,
             },
           },
         });
@@ -124,7 +126,9 @@ describe('Admin › Key pool', () => {
     const user = userEvent.setup();
     renderPanel();
     await user.click(
-      await screen.findByRole('switch', { name: 'Auto-approve a user’s first request' }),
+      await screen.findByRole('switch', {
+        name: 'Give keys out by themselves to a user’s first request',
+      }),
     );
     const limit = screen.getByLabelText('Limit per user');
     await user.clear(limit);
@@ -133,9 +137,13 @@ describe('Admin › Key pool', () => {
     await user.type(limit, '-5');
     await user.tab();
     expect(limit).toHaveValue(500);
+    const wait = screen.getByLabelText('Wait before a key is given');
+    expect(wait).toHaveValue('24');
+    await user.selectOptions(wait, 'At once');
     expect(settings).toEqual([
       { input: { poolAutoApprove: false } },
       { input: { poolKeyLimit: 300 } },
+      { input: { poolWaitHours: 0 } },
     ]);
   });
 

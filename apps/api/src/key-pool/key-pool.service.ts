@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { ApiKeysService, settingsCipherKey } from '../api-keys/api-keys.service';
 import { apiError } from '../common/api-error';
 import { getErrorMessage } from '../common/errors';
@@ -20,7 +21,8 @@ import { MyPoolKeyStateKind, PoolKeyStatus } from './key-pool.model';
 export const ASK_AGAIN_DAYS = 7;
 /** Admins hear about it when this many free keys or fewer are left. */
 export const LOW_POOL = 2;
-const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 
 /** A key that is not lent and still has credits (null = not checked yet). */
 const FREE = { userId: null, OR: [{ credits: null }, { credits: { gt: 0 } }] };
@@ -57,6 +59,8 @@ export class KeyPoolService {
   // ---------- the user's side ----------
 
   async mine(userId: number, now = new Date()): Promise<MyPoolKeyModel> {
+    // A wait that is over gives the key now, even before the next timed run.
+    await this.lendDue(now, userId);
     const [{ poolKeyLimit }, lent, last, free] = await Promise.all([
       this.settings.get(),
       this.prisma.poolKey.findUnique({ where: { userId }, select: { used: true } }),
@@ -73,10 +77,16 @@ export class KeyPoolService {
       limit: poolKeyLimit,
       used: 0,
       poolEmpty: free === 0,
+      readyAt: null,
     };
     if (lent) return { ...base, state: MyPoolKeyStateKind.APPROVED, used: lent.used };
     if (last?.status === 'PENDING') {
-      return { ...base, state: MyPoolKeyStateKind.PENDING, requestedAt: last.createdAt };
+      return {
+        ...base,
+        state: MyPoolKeyStateKind.PENDING,
+        requestedAt: last.createdAt,
+        readyAt: last.autoAt,
+      };
     }
     if (last?.status === 'DENIED' && last.decidedAt) {
       const askAgainAt = new Date(last.decidedAt.getTime() + ASK_AGAIN_DAYS * DAY_MS);
@@ -93,7 +103,10 @@ export class KeyPoolService {
     return { ...base, state: MyPoolKeyStateKind.NONE };
   }
 
-  /** Asks for a key. A first request with auto-approve on gets one at once, if one is free. */
+  /**
+   * Asks for a key. A first request with auto-approve on gets one by itself: after the wait
+   * (Admin › Key pool, 24 hours by default), or at once when the wait is 0 and a key is free.
+   */
   async request(userId: number, now = new Date()): Promise<MyPoolKeyModel> {
     if (await this.keys.secret(userId, 'JOBHUNTER')) {
       throw apiError(BadRequestException, 'POOL_HAS_OWN_KEY', 'You already use your own token.');
@@ -107,12 +120,21 @@ export class KeyPoolService {
         askAgainAt: state.askAgainAt?.toISOString() ?? '',
       });
     }
-    const first = (await this.prisma.keyRequest.count({ where: { userId } })) === 0;
-    const request = await this.prisma.keyRequest.create({ data: { userId } });
-    const { poolAutoApprove } = await this.settings.get();
-    if (first && poolAutoApprove && (await this.lend(request.id, userId, true))) {
+    // The key a new account got at sign-up does not count: the first request you make yourself
+    // still comes by itself. Sign-up requests are the only ones that are auto with no autoAt.
+    const first =
+      (await this.prisma.keyRequest.count({
+        where: { userId, NOT: { auto: true, autoAt: null } },
+      })) === 0;
+    const { poolAutoApprove, poolWaitHours } = await this.settings.get();
+    const auto = first && poolAutoApprove;
+    // Every timed request gets autoAt (now when there is no wait), so it counts as asked once.
+    const autoAt = auto ? new Date(now.getTime() + poolWaitHours * HOUR_MS) : null;
+    const request = await this.prisma.keyRequest.create({ data: { userId, autoAt } });
+    if (auto && poolWaitHours === 0 && (await this.lend(request.id, userId, true))) {
       return this.mine(userId, now);
     }
+    if (auto && poolWaitHours > 0) await this.tell(userId, 'KEY_WAIT', { count: poolWaitHours });
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { name: true },
@@ -127,9 +149,9 @@ export class KeyPoolService {
   }
 
   /**
-   * A new account gets a key straight away: its first request, approved by the server, when
-   * auto-approve is on and a key is free. Later requests go to the admins as usual. Never stops
-   * the sign-up: if it fails, the user can still ask in Settings.
+   * A new account gets a key straight away from the pool, with no wait, when auto-approve is on
+   * and a key is free. If not, its first own request in Settings still comes by itself after the
+   * wait. Never stops the sign-up: if it fails, the user can still ask in Settings.
    */
   async assignOnSignup(userId: number): Promise<void> {
     try {
@@ -189,6 +211,36 @@ export class KeyPoolService {
     }
   }
 
+  /** Every 10 minutes: requests whose wait is over get their key. */
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async lendDueTick(): Promise<void> {
+    try {
+      await this.lendDue(new Date());
+    } catch (error) {
+      this.logger.warn(`Could not hand out waiting keys: ${getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Gives keys to requests whose wait is over (only `userId`'s, when given), oldest first. With
+   * no free key they stay waiting and get the next one; a user with their own token by now is
+   * skipped. Returns how many keys were given.
+   */
+  async lendDue(now: Date, userId?: number): Promise<number> {
+    const due = await this.prisma.keyRequest.findMany({
+      where: { status: 'PENDING', autoAt: { lte: now }, ...(userId ? { userId } : {}) },
+      orderBy: { id: 'asc' },
+      select: { id: true, userId: true },
+    });
+    let given = 0;
+    for (const request of due) {
+      if (await this.keys.secret(request.userId, 'JOBHUNTER')) continue;
+      if (!(await this.lend(request.id, request.userId, true))) break;
+      given += 1;
+    }
+    return given;
+  }
+
   // ---------- the admins' side ----------
 
   async pool(): Promise<KeyPoolModel> {
@@ -225,6 +277,7 @@ export class KeyPoolService {
       empty: count(PoolKeyStatus.EMPTY),
       limit: settings.poolKeyLimit,
       autoApprove: settings.poolAutoApprove,
+      waitHours: settings.poolWaitHours,
       keys: rows,
       requests: requests.map((request) => ({
         id: request.id,

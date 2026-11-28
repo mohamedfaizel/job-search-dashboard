@@ -386,7 +386,12 @@
         "deniedNote": "Notiz: „{note}“",
         "askAgain": "Du kannst am {date} wieder anfragen.",
         "useOwn": "nutze deinen eigenen Schlüssel",
-        "freeSources": "Arbeitsagentur und Karriereseiten brauchen keinen Token."
+        "freeSources": "Arbeitsagentur und Karriereseiten brauchen keinen Token.",
+        "waitTitle": "Anfrage erhalten. Bitte komm in etwa {hours} Stunden wieder.",
+        "waitText": "Dein Schlüssel ist ab {date} bereit. Du bekommst eine Glocke, wenn er eingetragen ist.",
+        "waitLeft": "{hours, plural, one {Noch etwa # Stunde} other {Noch etwa # Stunden}}",
+        "noneFreeTitle": "Noch ist kein Schlüssel frei.",
+        "noneFreeText": "Du bleibst auf der Warteliste und bekommst den nächsten freien Schlüssel. Du bekommst eine Glocke, wenn er eingetragen ist."
       }
     },
     "notify": {
@@ -2534,7 +2539,8 @@
     "kitsCostHint": "Was diese Kits mit deinem KI-Schlüssel gekostet haben. Ungefähr: Claude rechnet in US-Dollar ab.",
     "kitsSaved": "Cache sparte {percent} %",
     "kitsSavedHint": "Claude hat den Teil behalten, der für jeden Job gleich ist. Spätere Kits lesen ihn für ein Zehntel des Preises.",
-    "kitsUsedMaster": "{count, plural, one {# nutzte} other {# nutzten}} deinen Master-Lebenslauf unverändert (er passte schon)."
+    "kitsUsedMaster": "{count, plural, one {# nutzte} other {# nutzten}} deinen Master-Lebenslauf unverändert (er passte schon).",
+    "keyWait": "Token-Anfrage erhalten. Bitte komm in etwa {count} Stunden wieder: dann ist dein Schlüssel von selbst eingetragen."
   },
   "Welcome": {
     "title": "Willkommen, {name}!",
@@ -2757,8 +2763,8 @@
       "requests": "Anfragen",
       "waitingChip": "{count} warten",
       "requestsHint": "Ein Nutzer kann nur einen Schlüssel haben. Freigeben gibt ihm den nächsten freien Schlüssel.",
-      "autoApprove": "Erste Anfrage automatisch freigeben",
-      "autoApproveHint": "Wer zum ersten Mal anfragt, bekommt sofort einen Schlüssel (solange welche frei sind). Spätere Anfragen gibst du selbst frei.",
+      "autoApprove": "Schlüssel bei der ersten Anfrage von selbst vergeben",
+      "autoApproveHint": "Nach der Wartezeit unten bekommt ein neuer Nutzer von selbst einen Schlüssel (solange freie da sind). Spätere Anfragen gibst du selbst frei.",
       "limit": "Limit pro Nutzer",
       "limitHint": "Credits. Wird beim ersten Schlüssel automatisch gesetzt. Ist es erreicht, stoppen Imports, bis du es erhöhst.",
       "noRequests": "Keine Anfragen offen.",
@@ -2797,7 +2803,11 @@
       "footer": "Ist ein Schlüssel „Leer“, bekommt sein Nutzer eine Glocke und kann einen neuen anfragen. Namen siehst du nur, damit du einen Schlüssel zurückholen kannst. Jobs und Suchen der Nutzer siehst du nie.",
       "statusFREE": "Frei",
       "statusASSIGNED": "Vergeben",
-      "statusEMPTY": "Leer"
+      "statusEMPTY": "Leer",
+      "wait": "Wartezeit, bevor ein Schlüssel vergeben wird",
+      "waitHint": "Neue Konten bekommen weiter sofort einen Schlüssel. Die erste eigene Anfrage in den Einstellungen wartet so lange, dann kommt der Schlüssel von selbst. Du kannst eine Anfrage mit ✓ früher freigeben.",
+      "waitNow": "Sofort",
+      "waitHours": "{hours} Stunden"
     },
     "messages": {
       "loading": "Nachrichten werden geladen…",

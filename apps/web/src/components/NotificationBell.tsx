@@ -37,7 +37,8 @@ const KEY_POOL: Partial<
         | 'keyDenied'
         | 'keyEmpty'
         | 'keyLimit'
-        | 'keyTakenBack';
+        | 'keyTakenBack'
+        | 'keyWait';
       link: string;
     }
   >
@@ -49,6 +50,7 @@ const KEY_POOL: Partial<
   KEY_EMPTY: { text: 'keyEmpty', link: '/settings' },
   KEY_LIMIT: { text: 'keyLimit', link: '/settings' },
   KEY_TAKEN_BACK: { text: 'keyTakenBack', link: '/settings' },
+  KEY_WAIT: { text: 'keyWait', link: '/settings' },
 };
 
 /** A saved search's Autopilot sorted new jobs: queued, hidden, left for you. */

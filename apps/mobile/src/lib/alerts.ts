@@ -32,6 +32,7 @@ const KEY_POOL_TEXT: Partial<
     | 'keyEmpty'
     | 'keyLimit'
     | 'keyTakenBack'
+    | 'keyWait'
   >
 > = {
   KEY_REQUEST: 'keyRequest',
@@ -41,6 +42,7 @@ const KEY_POOL_TEXT: Partial<
   KEY_EMPTY: 'keyEmpty',
   KEY_LIMIT: 'keyLimit',
   KEY_TAKEN_BACK: 'keyTakenBack',
+  KEY_WAIT: 'keyWait',
 };
 
 /** A notification's first line, in your language, the same words as the website's bell. */

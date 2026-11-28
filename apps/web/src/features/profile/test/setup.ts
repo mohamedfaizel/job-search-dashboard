@@ -28,6 +28,7 @@ afterEach(() => {
     state: 'NONE',
     used: 0,
     poolEmpty: false,
+    readyAt: null,
     requestedAt: null,
     note: null,
     askAgainAt: null,

@@ -1316,6 +1316,8 @@ export interface AppSettings {
   poolAutoApprove: boolean;
   /** Key pool: credits each user may spend with a lent key. */
   poolKeyLimit: number;
+  /** Key pool: hours a user waits after asking before the key comes by itself (0 = at once). */
+  poolWaitHours: number;
   /** SCHEDULER_ENABLED=false in .env keeps the scheduler off whatever the switch says. */
   schedulerOffInEnv: boolean;
   stillOpenOffInEnv: boolean;
@@ -1331,6 +1333,7 @@ export type AppSettingsChange = Partial<
     | 'stillOpenOn'
     | 'poolAutoApprove'
     | 'poolKeyLimit'
+    | 'poolWaitHours'
   >
 >;
 
@@ -1388,6 +1391,8 @@ export interface MyPoolKey {
   used: number;
   /** No key is free right now: a new request joins the waiting list. */
   poolEmpty: boolean;
+  /** PENDING: when the key comes by itself. Null: an admin decides. */
+  readyAt: string | null;
 }
 
 /** A key in the Key pool, by number only. */
@@ -1415,6 +1420,8 @@ export interface KeyPool {
   empty: number;
   limit: number;
   autoApprove: boolean;
+  /** Hours a first request waits before the key comes by itself (0 = at once). */
+  waitHours: number;
   keys: PoolKey[];
   requests: KeyRequest[];
 }
