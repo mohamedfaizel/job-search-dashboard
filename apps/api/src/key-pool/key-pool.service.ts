@@ -120,16 +120,21 @@ export class KeyPoolService {
         askAgainAt: state.askAgainAt?.toISOString() ?? '',
       });
     }
-    const first = (await this.prisma.keyRequest.count({ where: { userId } })) === 0;
+    // The key a new account got at sign-up does not count: the first request you make yourself
+    // still comes by itself. Sign-up requests are the only ones that are auto with no autoAt.
+    const first =
+      (await this.prisma.keyRequest.count({
+        where: { userId, NOT: { auto: true, autoAt: null } },
+      })) === 0;
     const { poolAutoApprove, poolWaitHours } = await this.settings.get();
     const auto = first && poolAutoApprove;
-    const autoAt =
-      auto && poolWaitHours > 0 ? new Date(now.getTime() + poolWaitHours * HOUR_MS) : null;
+    // Every timed request gets autoAt (now when there is no wait), so it counts as asked once.
+    const autoAt = auto ? new Date(now.getTime() + poolWaitHours * HOUR_MS) : null;
     const request = await this.prisma.keyRequest.create({ data: { userId, autoAt } });
-    if (auto && !autoAt && (await this.lend(request.id, userId, true))) {
+    if (auto && poolWaitHours === 0 && (await this.lend(request.id, userId, true))) {
       return this.mine(userId, now);
     }
-    if (autoAt) await this.tell(userId, 'KEY_WAIT', { count: poolWaitHours });
+    if (auto && poolWaitHours > 0) await this.tell(userId, 'KEY_WAIT', { count: poolWaitHours });
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { name: true },
@@ -144,21 +149,14 @@ export class KeyPoolService {
   }
 
   /**
-   * A new account gets a key by itself when auto-approve is on and a key is free: straight away
-   * with no wait, else a first request that the server answers after the wait. Later requests go to the admins as usual. Never stops
-   * the sign-up: if it fails, the user can still ask in Settings.
+   * A new account gets a key straight away from the pool, with no wait, when auto-approve is on
+   * and a key is free. If not, its first own request in Settings still comes by itself after the
+   * wait. Never stops the sign-up: if it fails, the user can still ask in Settings.
    */
-  async assignOnSignup(userId: number, now = new Date()): Promise<void> {
+  async assignOnSignup(userId: number): Promise<void> {
     try {
-      const { poolAutoApprove, poolWaitHours } = await this.settings.get();
+      const { poolAutoApprove } = await this.settings.get();
       if (!poolAutoApprove || (await this.prisma.poolKey.count({ where: FREE })) === 0) return;
-      if (poolWaitHours > 0) {
-        // With a wait, a new account asks like everyone else: the key comes after the wait.
-        const autoAt = new Date(now.getTime() + poolWaitHours * HOUR_MS);
-        await this.prisma.keyRequest.create({ data: { userId, autoAt } });
-        await this.tell(userId, 'KEY_WAIT', { count: poolWaitHours });
-        return;
-      }
       const request = await this.prisma.keyRequest.create({ data: { userId } });
       // Taken by someone else meanwhile: forget the request, so asking later still counts as first.
       if (!(await this.lend(request.id, userId, true))) {

@@ -2805,7 +2805,7 @@
       "statusASSIGNED": "Vergeben",
       "statusEMPTY": "Leer",
       "wait": "Wartezeit, bevor ein Schlüssel vergeben wird",
-      "waitHint": "Neue Konten warten auch: Sie bekommen eine Anfrage, keinen Schlüssel sofort. Du kannst eine Anfrage mit ✓ früher freigeben.",
+      "waitHint": "Neue Konten bekommen weiter sofort einen Schlüssel. Die erste eigene Anfrage in den Einstellungen wartet so lange, dann kommt der Schlüssel von selbst. Du kannst eine Anfrage mit ✓ früher freigeben.",
       "waitNow": "Sofort",
       "waitHours": "{hours} Stunden"
     },

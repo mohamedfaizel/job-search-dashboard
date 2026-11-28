@@ -2805,7 +2805,7 @@
       "statusASSIGNED": "Assigned",
       "statusEMPTY": "Empty",
       "wait": "Wait before a key is given",
-      "waitHint": "New sign-ups wait too: they get a request, not a key at once. You can still approve a request early with ✓.",
+      "waitHint": "New sign-ups still get a key at once. A user’s first own request in Settings waits this long, then the key comes by itself. You can still approve a request early with ✓.",
       "waitNow": "At once",
       "waitHours": "{hours} hours"
     },

@@ -440,22 +440,46 @@ describe('Key pool', () => {
       });
     });
 
-    it('makes a new account wait too, instead of a key at once', async () => {
+    it('gives a new account its key at once, and its first own request still comes by itself', async () => {
       await setWait(48);
-      await addKeys('jp_pool_one_1111');
+      await addKeys('jp_pool_one_1111 jp_pool_two_2222');
       await t.anonymous('mutation ($input: SignUpInput!) { signUp(input: $input) { id } }', {
         input: { name: 'New', email: 'wait@example.com', password: 'a-long-password' },
       });
       const user = await t.prisma.user.findUniqueOrThrow({ where: { email: 'wait@example.com' } });
-      expect(await t.prisma.poolKey.count({ where: { userId: user.id } })).toBe(0);
-      const request = await t.prisma.keyRequest.findFirstOrThrow({ where: { userId: user.id } });
-      expect(request.status).toBe('PENDING');
-      expect((request.autoAt?.getTime() ?? 0) - request.createdAt.getTime()).toBeGreaterThan(
-        47 * HOUR,
-      );
-      expect(await t.prisma.notification.findMany({ where: { userId: user.id } })).toMatchObject([
-        { kind: 'KEY_WAIT', data: expect.objectContaining({ count: 48 }) },
-      ]);
+      expect(await t.prisma.poolKey.count({ where: { userId: user.id } })).toBe(1);
+      expect(
+        await t.prisma.keyRequest.findFirstOrThrow({ where: { userId: user.id } }),
+      ).toMatchObject({
+        status: 'APPROVED',
+        auto: true,
+        autoAt: null,
+      });
+
+      // Gives it back and asks: this first own request waits 48 hours, then comes by itself.
+      await t.prisma.poolKey.updateMany({ where: { userId: user.id }, data: { userId: null } });
+      await t.prisma.keyRequest.updateMany({
+        where: { userId: user.id },
+        data: { status: 'CANCELED' },
+      });
+      const asked = await pool().request(user.id);
+      expect(asked.state).toBe('PENDING');
+      expect(asked.readyAt).not.toBeNull();
+      // A second own request after that one waits for an admin.
+      await pool().cancel(user.id);
+      expect((await pool().request(user.id)).readyAt).toBeNull();
+    });
+
+    it('gives the first own request at once with no wait, and only once', async () => {
+      await addKeys('jp_pool_one_1111 jp_pool_two_2222');
+      expect(
+        (await t.asUser<{ requestPoolKey: { state: string } }>(REQUEST)).data?.requestPoolKey.state,
+      ).toBe('APPROVED');
+      await t.prisma.poolKey.updateMany({ data: { userId: null } });
+      await t.prisma.keyRequest.updateMany({ data: { status: 'CANCELED' } });
+      expect(
+        (await t.asUser<{ requestPoolKey: { state: string } }>(REQUEST)).data?.requestPoolKey.state,
+      ).toBe('PENDING');
     });
   });
 });
