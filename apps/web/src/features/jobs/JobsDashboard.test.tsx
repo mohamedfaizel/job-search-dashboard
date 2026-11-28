@@ -44,6 +44,13 @@ async function openQueue(user: ReturnType<typeof userEvent.setup>, count: number
 }
 
 describe('JobsDashboard', () => {
+  it("shows What's new once, above the jobs", async () => {
+    localStorage.removeItem('jsh.whatsNew.2026-11');
+    renderDashboard();
+    await screen.findByText('Senior Frontend Engineer');
+    expect(screen.getByRole('heading', { name: "What's new" })).toBeInTheDocument();
+  });
+
   it('shows jobs from the API', async () => {
     renderDashboard();
 

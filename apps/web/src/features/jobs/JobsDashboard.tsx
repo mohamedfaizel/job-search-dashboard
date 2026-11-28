@@ -35,6 +35,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { InfoTip } from '@/components/InfoTip';
+import { WhatsNewCard } from '@/features/welcome/WhatsNewCard';
 import { useErrorText } from '../../i18n/useErrorText';
 import { ApplyQueuePanel } from './components/ApplyQueuePanel';
 import { DEFAULT_HIDDEN_COLUMNS, MENU_COLUMNS } from './components/columns';
@@ -312,6 +313,7 @@ export function JobsDashboard() {
         </div>
       </div>
       {showingHidden && <p className="text-sm text-slate-600">{t('hiddenIntro')}</p>}
+      {!showingHidden && <WhatsNewCard />}
 
       {lastChange && (
         <p

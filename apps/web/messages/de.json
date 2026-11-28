@@ -2544,11 +2544,12 @@
   },
   "Welcome": {
     "title": "Willkommen, {name}!",
-    "intro": "Zwei kurze Schritte, dann ist die App bereit. Du kannst beide überspringen und später erledigen.",
+    "intro": "Drei kurze Schritte, dann ist die App bereit. Du kannst alle überspringen und später erledigen.",
     "skipAll": "Einrichtung überspringen",
     "loading": "Wird geladen…",
     "steps": {
       "key": "Job-Daten-Schlüssel",
+      "ai": "KI-Schlüssel",
       "resume": "Dein Lebenslauf",
       "done": "Fertig"
     },
@@ -2557,12 +2558,17 @@
     "back": "Zurück",
     "key": {
       "title": "1. Dein Job-Daten-Schlüssel",
-      "intro": "Job Search Hunter findet Jobs mit einem JobHunter-Token. Füge deins ein, um Jobs zu importieren und gespeicherte Suchen laufen zu lassen. Es bleibt privat in deinem Konto.",
+      "intro": "Job Search Hunter findet Jobs mit einem JobHunter-Token. Neue Konten bekommen oft sofort eins aus dem gemeinsamen Pool. Wenn nicht, frag danach oder füge dein eigenes ein. Es bleibt privat in deinem Konto.",
       "where": "Noch kein Token? Registriere dich mit deiner eigenen E-Mail und kopiere deinen API-Schlüssel (er beginnt mit jp_).",
       "whereLink": "Token hier holen"
     },
+    "ai": {
+      "title": "2. Dein KI-Schlüssel (optional)",
+      "intro": "Wähle Claude oder OpenAI und füge den Schlüssel ein. Er wird für den KI-Score, die fertigen Bewerbungspakete vom Autopilot und „Mit meinem Key schreiben“ genutzt. Du zahlst deine KI-Kosten selbst, die Glocke zeigt sie an.",
+      "noKey": "Kein Schlüssel? Die Kopieren-und-Öffnen-Buttons funktionieren im KI-Chat trotzdem, ohne Kosten."
+    },
     "resume": {
-      "title": "2. Dein Lebenslauf",
+      "title": "3. Dein Lebenslauf",
       "intro": "Lade deinen Lebenslauf als PDF- oder Word-Datei hoch. Er wird dein Lebenslauf auf der Lebenslauf-Seite, und Name, Telefon und Links kommen in Mein Profil › Persönlich.",
       "filled": "In Mein Profil › Persönlich eingetragen:",
       "fields": {
@@ -2583,7 +2589,27 @@
       "later": "Du kannst all das später in den Einstellungen und in Mein Profil ändern.",
       "profile": "Mein Profil prüfen",
       "addJobs": "Meine ersten Jobs finden ›",
-      "jobs": "Zu Meine Jobs ›"
+      "jobs": "Zu Meine Jobs ›",
+      "poolKey": "Job-Daten-Schlüssel gesetzt (aus dem Pool, {limit} Credits)",
+      "aiKey": "KI-Schlüssel gespeichert",
+      "noAiKey": "Noch kein KI-Schlüssel: füge ihn unter Einstellungen › API-Schlüssel hinzu"
+    },
+    "whatsNext": {
+      "title": "Wie es weitergeht",
+      "autopilotTitle": "Autopilot",
+      "autopilot": "Speichere im Stellenmarkt eine Suche und schalte den Autopilot ein. Er führt die Suche aus und schreibt fertige Pakete für gute Jobs.",
+      "bellTitle": "Die Glocke",
+      "bell": "Neue Jobs, fertige Pakete und ihre Kosten erscheinen hier.",
+      "mailTitle": "Gmail und Wochenbericht",
+      "mail": "In den Einstellungen kann Gmail Jobs in deinem Tracker verschieben, und du bekommst sonntags einen Bericht.",
+      "helpTitle": "Fragen",
+      "help": "Das ? oben öffnet ein Chatfenster für Fragen und Ideen.",
+      "never": "Sie bewirbt sich nie und sendet nichts für dich."
+    },
+    "whatsNew": {
+      "title": "Neu",
+      "intro": "Vier Dinge, die die App jetzt für dich erledigt.",
+      "close": "Neu schließen"
     }
   },
   "Admin": {
